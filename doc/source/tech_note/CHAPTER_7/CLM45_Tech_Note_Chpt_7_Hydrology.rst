@@ -9,7 +9,7 @@ changes in canopy water :math:`\Delta W_{can}` , surface water
 :math:`\Delta W_{sfc}` , snow water :math:`\Delta W_{sno}` , soil water
 :math:`\Delta w_{liq,\, i}` , and soil ice :math:`\Delta w_{ice,\, i}` ,
 and water in the unconfined aquifer :math:`\Delta W_{a}`  (all in kg
-m\ :math:`{}^{-2}` or mm of H\ :math:`{}_{2}`\ O) (Figure 7.1).
+m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (Figure 7.1).
 
 The total water balance of the system is
 
@@ -26,8 +26,8 @@ ET from vegetation (Chapter 5), :math:`E_{g}`  is ground evaporation
 :math:`q_{drai}`  is sub-surface drainage (section 7.6),
 :math:`q_{rgwl}`  and :math:`q_{snwcp,ice}`  are liquid and solid runoff
 from glaciers, wetlands, and lakes, and runoff from other surface types
-due to snow capping (section 7.7) (all in kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}`), :math:`N_{levsoi}`  is the number of soil layers
+due to snow capping (section 7.7) (all in kg m\ :sup:`-2`
+s\ :sup:`-1`), :math:`N_{levsoi}`  is the number of soil layers
 (note that hydrology calculations are only done over soil layers 1 to
 :math:`N_{levsoi}` ; ground levels :math:`N_{levsoi} +1`\ to
 :math:`N_{levgrnd}`  are currently hydrologically inactive; Lawrence et
@@ -43,7 +43,7 @@ Canopy Water
 Precipitation is either intercepted by the canopy, falls directly to the
 snow/soil surface (throughfall), or drips off the vegetation (canopy
 drip). Interception by vegetation :math:`q_{intr}`  (kg
-m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`) does not distinguish between
+m\ :sup:`-2` s\ :sup:`-1`) does not distinguish between
 liquid and solid phases
 
 .. math::
@@ -54,7 +54,7 @@ liquid and solid phases
 where :math:`L` and :math:`S` are the exposed leaf and stem area index,
 respectively (section 2.1.4), and :math:`\alpha =0.25` scales
 interception from point to grid cell (Lawrence et al. 2007). Throughfall
-(kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`), however, is divided into
+(kg m\ :sup:`-2` s\ :sup:`-1`), however, is divided into
 liquid and solid phases reaching the ground (soil or snow surface) as
 
 .. math::
@@ -88,7 +88,7 @@ where
 
 is the canopy water after accounting for interception,
 :math:`W_{can}^{n}`  is the canopy water from the previous time step,
-and :math:`W_{can,\, \max }`  (kg m\ :math:`{}^{-2}`) is the maximum
+and :math:`W_{can,\, \max }`  (kg m\ :sup:`-2`) is the maximum
 amount of water the canopy can hold
 
 .. math::
@@ -97,7 +97,7 @@ amount of water the canopy can hold
    W_{can,\, \max } =p\left(L+S\right).
 
 The maximum storage of solid water is assumed to be the same as that of
-liquid water, :math:`p=0.1` kg m\ :math:`{}^{-2}` (Dickinson et al.
+liquid water, :math:`p=0.1` kg m\ :sup:`-2` (Dickinson et al.
 1993). The canopy water is updated as
 
 .. math::
@@ -164,14 +164,14 @@ Shown are three snow layers, :math:`i=-2`, :math:`i=-1`, and
 .. image:: image2.png
 
 The state variables for snow are the mass of water :math:`w_{liq,i}` 
-(kg m\ :math:`{}^{-2}`), mass of ice :math:`w_{ice,i}`  (kg
-m\ :math:`{}^{-2}`), layer thickness :math:`\Delta z_{i}`  (m), and
+(kg m\ :sup:`-2`), mass of ice :math:`w_{ice,i}`  (kg
+m\ :sup:`-2`), layer thickness :math:`\Delta z_{i}`  (m), and
 temperature :math:`T_{i}`  (Chapter 6). The water vapor phase is
 neglected. Snow can also exist in the model without being represented by
 explicit snow layers. This occurs when the snowpack is less than a
 specified minimum snow depth (:math:`z_{sno} <0.01` m). In this case,
 the state variable is the mass of snow :math:`W_{sno}`  (kg
-m\ :math:`{}^{-2}`).
+m\ :sup:`-2`).
 
 Section 7.2.1 describes the calculation of fractional snow covered area,
 which is used in the surface albedo calculation (Chapter 3) and the
@@ -236,7 +236,7 @@ The conservation equation for mass of ice in snow layers is
 
 where :math:`q_{ice,\, i-1}`  is the rate of ice accumulation from
 precipitation or frost or the rate of ice loss from sublimation (kg
-m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`) in the top layer and
+m\ :sup:`-2` s\ :sup:`-1`) in the top layer and
 :math:`{\left(\Delta w_{ice,\, i} \right)_{p} \mathord{\left/ {\vphantom {\left(\Delta w_{ice,\, i} \right)_{p}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}` 
 is the change in ice due to phase change (melting rate) (section 6.2).
 The term :math:`q_{ice,\, i-1}`  is computed in two steps as
@@ -267,7 +267,7 @@ where
    \Delta z_{sno} =\frac{q_{grnd,\, ice} \Delta t}{f_{sno} \rho _{sno} }
 
 and :math:`\rho _{sno}`  is the bulk density of newly fallen snow (kg
-m\ :math:`{}^{-3}`) (CityplaceAnderson 1976)
+m\ :sup:`-3`) (CityplaceAnderson 1976)
 
 .. math::
    :label: 7.21) 
@@ -315,8 +315,8 @@ content is reset to zero and the liquid water content
 :math:`w_{ice,\, snl+1}^{n+1}`  up to zero.
 
 The snow water equivalent :math:`W_{sno}`  is capped to not exceed 1000
-kg m\ :math:`{}^{-2}`. If the addition of :math:`q_{frost}`  were to
-result in :math:`W_{sno} >1000` kg m\ :math:`{}^{-2}`, the frost term
+kg m\ :sup:`-2`. If the addition of :math:`q_{frost}`  were to
+result in :math:`W_{sno} >1000` kg m\ :sup:`-2`, the frost term
 :math:`q_{frost}`  is instead added to the ice runoff term
 :math:`q_{snwcp,\, ice}`  (section 7.7).
 
@@ -411,7 +411,7 @@ Black and organic carbon and mineral dust within snow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Particles within snow originate from atmospheric aerosol deposition
-(:math:`D_{sp}`  in Table 2.3 (kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`)
+(:math:`D_{sp}`  in Table 2.3 (kg m\ :sup:`-2` s\ :sup:`-1`)
 and influence snow radiative transfer (sections 3.2.1, 3.2.2, and
 3.3.3). Particle masses and mixing ratios are represented with a simple
 mass-conserving scheme. The model maintains masses of the following
@@ -453,7 +453,7 @@ radiative calculations are done. Particle masses are then redistributed
 each time step based on meltwater drainage through the snow column
 (section 7.2.3) and snow layer combination and subdivision (section
 7.2.7). The change in mass of each of the particle species
-:math:`\Delta m_{sp,\, i}`  (kg m\ :math:`{}^{-2}`) is
+:math:`\Delta m_{sp,\, i}`  (kg m\ :sup:`-2`) is
 
 .. math::
    :label: 7.38) 
@@ -464,10 +464,10 @@ where :math:`k_{sp}`  is the meltwater scavenging efficiency that is
 unique for each species (Table 7.1), :math:`q_{liq,\, i-1}`  is the flow
 of liquid water into layer :math:`i` from the layer above,
 :math:`q_{liq,\, i}`  is the flow of water out of layer :math:`i` into
-the layer below (kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`) (section
+the layer below (kg m\ :sup:`-2` s\ :sup:`-1`) (section
 7.2.3), :math:`c_{sp,\, i-1}`  and :math:`c_{sp,\, i}`  are the particle
 mass mixing ratios in layers :math:`i-1` and :math:`i` (kg
-kg\ :math:`{}^{-1}`), :math:`D_{sp}`  is the atmospheric deposition rate
+kg\ :sup:`-1`), :math:`D_{sp}`  is the atmospheric deposition rate
 (zero for all layers except layer :math:`snl+1`), and :math:`\Delta t`
 is the model time step (s). The particle mass mixing ratio is
 
@@ -530,7 +530,7 @@ destructive metamorphism of new snow (crystal breakdown due to wind or
 thermodynamic stress); snow load or overburden (pressure); and melting
 (changes in snow structure due to melt-freeze cycles plus changes in
 crystals due to liquid water). The total fractional compaction rate for
-each snow layer :math:`C_{R,\, i}`  (:math:`\text{s}^{-1}`) is the sum of the
+each snow layer :math:`C_{R,\, i}`  (s\ :sup:`-1`) is the sum of the
 three compaction processes
 
 .. math::
@@ -548,16 +548,14 @@ Compaction is not allowed if the layer is saturated
 or if the ice content is below a minimum value
 (:math:`w_{ice,\, i} \le 0.1`).
 
-Compaction as a result of destructive metamorphism :math:`C_{R1,\; i}` 
-(:math:`{\text s^{-1}}`) is temperature dependent (CityplaceAnderson 1976)
+Compaction as a result of destructive metamorphism :math:`C_{R1,\; i}` (s\ :sub:`-1`) is temperature dependent (CityplaceAnderson 1976)
 
 .. math::
    :label: 7.43) 
 
    C_{R1,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{metamorphism} =-c_{3} c_{1} c_{2} \exp \left[-c_{4} \left(T_{f} -T_{i} \right)\right]
 
-where :math:`c_{3} =2.777\times 10^{-6}`  (:math:`\text{s}^{-1}`) is the
-fractional compaction rate for :math:`T_{i} =T_{f}`, :math:`c_{4} =0.04` :math:`\text{K}^{-1}`, and
+where :math:`c_{3} =2.777\times 10^{-6}`  (s\ :sup:`-1`) is the fractional compaction rate for :math:`T_{i} =T_{f}`, :math:`c_{4} =0.04` K\ :sup:`-1`, and
 
 .. math::
    :label: 7.44) 
@@ -571,28 +569,25 @@ where
 :math:`{w_{ice,\, i} \mathord{\left/ {\vphantom {w_{ice,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
 and
 :math:`{w_{liq,\, i} \mathord{\left/ {\vphantom {w_{liq,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
-are the bulk densities of liquid water and ice (kg m\ :math:`{}^{-3}`).
+are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
-The compaction rate as a result of overburden :math:`C_{R2,\; i}` 
-(:math:`\text{s}^{-1}`) is a linear function of the snow load pressure
-:math:`P_{s,\, i}`  (:math:`\text{k} \text{g} \text{m}^{-2}`) (CityplaceAnderson 1976)
+The compaction rate as a result of overburden :math:`C_{R2,\; i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,\, i}` (kg m\ :sup:`-2`) (CityplaceAnderson 1976)
 
 .. math::
    :label: 7.45) 
 
    C_{R2,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{overburden} =-\frac{P_{s,\, i} }{\eta }
 
-where :math:`\eta`  is a viscosity coefficient (:math:`\text{kg} \text{s} \text{m}^{-2}`)
-that varies with density and temperature as
+where :math:`\eta`  is a viscosity coefficient (kg s m\ :sup:`-2`) that varies with density and temperature as
 
 .. math::
    :label: 7.46) 
 
    \eta =\eta _{0} \exp \left[c_{5} \left(T_{f} -T_{i} \right)+c_{6} \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } \right]
 
-where :math:`\eta _{0} =9\times 10^{5}`  kg s m\ :math:`{}^{-2}`, and
-:math:`c_{5} =0.08` K\ :math:`{}^{-1}`, :math:`c_{6} =0.023`
-m\ :math:`{}^{3}` kg\ :math:`{}^{-1}` are constants. The snow load
+where :math:`\eta _{0} =9\times 10^{5}`  kg s m\ :sup:`-2`, and
+:math:`c_{5} =0.08` K\ :sup:`-1`, :math:`c_{6} =0.023`
+m\ :sup:`3` kg\ :sup:`-1` are constants. The snow load
 pressure :math:`P_{s,\, i}`  is calculated for each layer as the sum of
 the ice :math:`w_{ice,\, i}`  and liquid water contents
 :math:`w_{liq,\, i}`  of the layers above plus half the ice and liquid
@@ -603,8 +598,7 @@ water contents of the layer being compacted
 
    P_{s,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{2} +\sum _{j=snl+1}^{j=i-1}\left(w_{ice,\, j} +w_{liq,\, j} \right) .
 
-The compaction rate due to melting :math:`C_{R3,\; i}` 
-(:math:`\text{s}^{-1}`) is taken to be the ratio of the change in snow ice
+The compaction rate due to melting :math:`C_{R3,\; i}` (s\ :sup:`-1`) is taken to be the ratio of the change in snow ice
 mass after the melting to the mass before melting
 
 .. math::
@@ -741,8 +735,8 @@ where :math:`h_{c} =h_{1} +h_{2}`  is the combined enthalpy
    h_{i} =\left(C_{ice} w_{ice,\, i} +C_{liq} w_{liq,\, i} \right)\left(T_{i} -T_{f} \right)+L_{f} w_{liq,\, i} .
 
 In these equations, :math:`L_{f}`  is the latent heat of fusion (J
-kg\ :math:`{}^{-1}`) and :math:`C_{liq}`  and :math:`C_{ice}`  are the
-specific heat capacities (J kg\ :math:`{}^{-1}` K\ :math:`{}^{-1}`) of
+kg\ :sup:`-1`) and :math:`C_{liq}`  and :math:`C_{ice}`  are the
+specific heat capacities (J kg\ :sup:`-1` K\ :sup:`-1`) of
 liquid water and ice, respectively (Table 2.6). After layer combination,
 the node depths and layer interfaces (Figure 7.2) are recalculated from
 
@@ -825,7 +819,7 @@ Surface Runoff, Surface Water Storage, and Infiltration
 
 The moisture input at the grid cell surface ,\ :math:`q_{liq,\, 0}` , is
 the sum of liquid precipitation reaching the ground and melt water from
-snow (kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`). The moisture flux is
+snow (kg m\ :sup:`-2` s\ :sup:`-1`). The moisture flux is
 then partitioned between surface runoff, surface water storage, and
 infiltration into the soil.
 
@@ -854,7 +848,7 @@ The fractional saturated area is a function of soil moisture
 
 where :math:`f_{\max }`  is the potential or maximum value of
 :math:`f_{sat}` , :math:`f_{over}`  is a decay factor
-(:math:`\text{m}^{-1}`), and :math:`z_{\nabla}` is the water table depth
+(m\ :sup:`-1`), and :math:`z_{\nabla}` is the water table depth
 (m) (section 7.6). The maximum saturated fraction, :math:`f_{\max }` ,
 is defined as the value of the discrete cumulative distribution function
 (CDF) of the topographic index when the grid cell mean water table depth
@@ -864,19 +858,19 @@ mean topographic index. It should be calculated explicitly from the CDF
 at each grid cell at the resolution that the model is run. However,
 because this is a computationally intensive task for global
 applications, :math:`f_{\max }`  is calculated once at
-0.125\ :math:`{}^\circ` resolution using the 1-km compound topographic
+0.125\ :sup:`o` resolution using the 1-km compound topographic
 indices (CTIs) based on the HYDRO1K dataset (Verdin and Greenlee 1996)
 from USGS following the algorithm in Niu et al. (2005) and then
 area-averaged to the desired model resolution (section 2.2.3). Pixels
 with CTIs exceeding the 95 percentile threshold in each
-0.125\ :math:`{}^\circ` grid cell are excluded from the calculation to
+0.125\ :sup:`o` grid cell are excluded from the calculation to
 eliminate biased estimation of statistics due to large CTI values at
 pixels on stream networks. For grid cells over regions without CTIs such
 as Australia, the global mean :math:`f_{\max }`  is used to fill the
 gaps. See Li et al. (2013b) for additional details. The decay factor
 :math:`f_{over}`  for global simulations was determined through
 sensitivity analysis and comparison with observed runoff to be 0.5
-m\ :math:`{}^{-1}`.
+m\ :sup:`-1`.
 
 Surface Water Storage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -884,7 +878,7 @@ Surface Water Storage
 A surface water store has been added to the model to represent wetlands
 and small, sub-grid scale water bodies. As a result, the wetland land
 unit has been removed. The state variables for surface water are the
-mass of water :math:`W_{sfc}`  (kg m\ :math:`{}^{-2}`) and temperature
+mass of water :math:`W_{sfc}`  (kg m\ :sup:`-2`) and temperature
 :math:`T_{h2osfc}`  (Chapter 6). Surface water storage and outflow are
 functions of fine spatial scale elevation variations called
 microtopography. The microtopography is assumed to be distributed
@@ -967,8 +961,8 @@ removed,
 
 is divided into inputs to surface water (:math:`q_{in,\, h2osfc}` ) and
 the soil :math:`q_{in,soil}` . If :math:`q_{in,soil}`  exceeds the
-maximum soil infiltration capacity (kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}`),
+maximum soil infiltration capacity (kg m\ :sup:`-2`
+s\ :sup:`-1`),
 
 .. math::
    :label: ZEqnNum569150 
@@ -1042,12 +1036,12 @@ mass is stated as
    \frac{\partial \theta }{\partial t} =-\frac{\partial q}{\partial z} -Q
 
 where :math:`\theta`  is the volumetric soil water content
-(mm:math:`{}^{3}` of water mm\ :math:`{}^{-3}` of soil), :math:`t` is
+(mm:sup:`3` of water mm\ :sup:`-3` of soil), :math:`t` is
 time (s), :math:`z` is height above some datum in the soil column (mm)
-(positive upwards), :math:`q` is soil water flux (kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}` or mm s\ :math:`{}^{-1}`) (positive upwards), and
-:math:`Q` is a soil moisture sink term (mm of water mm\ :math:`{}^{-1}`
-of soil s\ :math:`{}^{-1}`) (ET loss). This equation is solved
+(positive upwards), :math:`q` is soil water flux (kg m\ :sup:`-2`
+s\ :sup:`-1` or mm s\ :sup:`-1`) (positive upwards), and
+:math:`Q` is a soil moisture sink term (mm of water mm\ :sup:`-1`
+of soil s\ :sup:`-1`) (ET loss). This equation is solved
 numerically by dividing the soil column into multiple layers in the
 vertical and integrating downward over each layer with an upper boundary
 condition of the infiltration flux into the top soil layer
@@ -1062,7 +1056,7 @@ law
 
    q=-k\frac{\partial \psi _{h} }{\partial z}
 
-where :math:`k` is the hydraulic conductivity (mm s\ :math:`{}^{-1}`),
+where :math:`k` is the hydraulic conductivity (mm s\ :sup:`-1`),
 and :math:`\psi _{h}`  is the hydraulic potential (mm). The hydraulic
 potential is
 
@@ -1139,7 +1133,7 @@ where the soil moisture sink term :math:`Q` is now included.
 Hydraulic Properties
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The hydraulic conductivity :math:`k_{i}`  (mm s\ :math:`{}^{-1}`) and
+The hydraulic conductivity :math:`k_{i}`  (mm s\ :sup:`-1`) and
 the soil matric potential :math:`\psi _{i}`  (mm) for layer :math:`i`
 vary with volumetric soil water :math:`\theta _{i}`  and soil texture.
 As with the soil thermal properties (section 6.3) the hydraulic
@@ -1228,7 +1222,7 @@ matric potential :math:`\psi _{sat,\min ,i}` \ is
    \psi _{sat,\, \min ,\, i} =-10.0\times 10^{1.88-0.0131(\% sand)_{i} } .
 
 The saturated hydraulic conductivity,
-:math:`k_{sat} \left[z_{h,\, i} \right]` (mm s\ :math:`{}^{-1}`), for
+:math:`k_{sat} \left[z_{h,\, i} \right]` (mm s\ :sup:`-1`), for
 organic soils (:math:`k_{sat,\, om}` ) may be two to three orders of
 magnitude larger than that of mineral soils (:math:`k_{sat,\, \min }` ).
 Bulk soil layer values of :math:`k_{sat}` \ calculated as weighted
@@ -1303,7 +1297,7 @@ where :math:`q_{i}`  is the flux of water across interface
 :math:`z_{h,\, i}` , :math:`q_{i-1}`  is the flux of water across
 interface :math:`z_{h,\, i-1}` , and :math:`e_{i}`  is a layer-averaged
 soil moisture sink term (ET loss) defined as positive for flow out of
-the layer (mm s\ :math:`{}^{-1}`). Taking the finite difference with
+the layer (mm s\ :sup:`-1`). Taking the finite difference with
 time and evaluating the fluxes implicitly at time :math:`n+1` yields
 
 .. math::
@@ -1339,7 +1333,7 @@ the interface of two layers :math:`z_{h}` . The layer thickness is
 term :math:`e` (ET loss) is defined as positive for flow out of the
 layer.
 
-.. image:: image3
+.. image:: image3.png
 
 Note that because more than one plant functional type (PFT) may share a
 soil column, the transpiration :math:`E_{v}^{t}`  is a weighted sum of
@@ -1495,7 +1489,7 @@ derived from equation
 
    \begin{array}{l} {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } =\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } =\left(1-\frac{f_{frz,\, i} +f_{frz,\, i+1} }{2} \right)\left(2B_{i} +3\right)k_{sat} \left[z_{h,\, i} \right]\times } \\ {\qquad \left[\frac{0.5\left(\theta _{\, i} +\theta _{\, i+1} \right)}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right]^{2B_{i} +2} \left(\frac{0.5}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right)} \end{array}.
 
-7.4.2.1 Equilibrium soil matric potential and volumetric moisture
+Equilibrium soil matric potential and volumetric moisture
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 The equilibrium soil matric potential :math:`\psi _{E}`  can be derived
@@ -1579,7 +1573,7 @@ The equilibrium soil matric potential is then
 
    \psi _{E,\, i} =\psi _{sat,\, i} \left(\frac{\overline{\theta _{E,\, i} }}{\theta _{sat,\, i} } \right)^{-B_{i} } \ge -1\times 10^{8} \qquad \frac{\overline{\theta _{E,\, i} }}{\theta _{sat,\, i} } \ge 0.01
 
-7.4.2.2 Equation set for layer :math:`i=1`
+Equation set for layer :math:`i=1`
 ''''''''''''''''''''''''''''''''''''''''''
 
 For the top soil layer (:math:`i=1`), the boundary condition is the
@@ -1615,7 +1609,7 @@ equations for :math:`i=1` are
 
    r_{i} =q_{infl}^{n+1} -q_{i}^{n} +e_{i} .
 
-7.4.2.3 Equation set for layers :math:`i=2,\ldots ,N_{levsoi} -1`
+Equation set for layers :math:`i=2,\ldots ,N_{levsoi} -1`
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 The coefficients of the tridiagonal set of equations for
@@ -1641,7 +1635,7 @@ The coefficients of the tridiagonal set of equations for
 
    r_{i} =q_{i-1}^{n} -q_{i}^{n} +e_{i} .
 
-7.4.2.4 Equation set for layers :math:`i=N_{levsoi} ,\ldots N_{levsoi} +1`
+Equation set for layers :math:`i=N_{levsoi} ,\ldots N_{levsoi} +1`
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 For the lowest soil layer (:math:`i=N_{levsoi}` ), the bottom boundary
@@ -1825,7 +1819,7 @@ Groundwater-Soil Water Interactions
 Drainage or sub-surface runoff is based on the SIMTOP scheme (Niu et al.
 2005) with a modification to account for reduced drainage in frozen
 soils. In the work of Niu et al. (2005), the drainage :math:`q_{drai}` 
-(kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`) was formulated as
+(kg m\ :sup:`-2` s\ :sup:`-1`) was formulated as
 
 .. math::
    :label: ZEqnNum924767 
@@ -1863,13 +1857,13 @@ where :math:`\Omega =6`\ is an adjustable parameter, :math:`jwt` is the
 index of the layer directly above the water table,
 :math:`F_{ice} =\frac{\theta _{ice} }{\theta _{sat} }`  is the
 ice-filled fraction of the pore space of soil layer :math:`i` (kg
-m\ :math:`{}^{-2}`), and :math:`\Delta z_{i}`  is the layer thickness
+m\ :sup:`-2`), and :math:`\Delta z_{i}`  is the layer thickness
 (mm). This expression is functionally the same as that used to determine
 the ice impedance factor in section 7.4. In equation , the decay factor
-:math:`f_{drai} =2.5` m\ :math:`{}^{-1}` and the maximum drainage when
+:math:`f_{drai} =2.5` m\ :sup:`-1` and the maximum drainage when
 the water table depth is at the surface
-:math:`q_{drai,\, \max } =10\sin (\beta )` kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}` , where :math:`\beta`  is the mean grid cell
+:math:`q_{drai,\, \max } =10\sin (\beta )` kg m\ :sup:`-2`
+s\ :sup:`-1` , where :math:`\beta`  is the mean grid cell
 topographic slope in radians, were determined for global simulations
 through sensitivity analysis and comparison with observed runoff.
 
@@ -1955,7 +1949,7 @@ soil layer
 (:math:`w_{liq,\, i}^{excess} =w_{liq,\, i} -\left(\theta _{sat,\, i} -\theta _{ice,\, i} \right)\Delta z_{i} \ge 0`)
 is successively added to the layer above. Any excess liquid water that
 remains after saturating the entire soil column (plus a maximum surface
-ponding depth :math:`w_{liq}^{pond} =10` kg m\ :math:`{}^{-2}`), is
+ponding depth :math:`w_{liq}^{pond} =10` kg m\ :sup:`-2`), is
 added to drainage :math:`q_{drai}` . Second, to prevent negative
 :math:`w_{liq,\, i}` , each layer is successively brought up to
 :math:`w_{liq,\, i} =w_{liq}^{\min }`  by taking the required amount of
@@ -1993,7 +1987,7 @@ Runoff from glaciers and snow-capped surfaces
 -------------------------------------------------
 
 All surfaces are constrained to have a snow water equivalent
-:math:`W_{sno} \le 1000` kg m\ :math:`{}^{-2}`. For snow-capped
+:math:`W_{sno} \le 1000` kg m\ :sup:`-2`. For snow-capped
 surfaces, the solid and liquid precipitation reaching the snow surface
 and dew in solid or liquid form, is separated into solid
 :math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}`  runoff terms
@@ -2065,7 +2059,7 @@ CLM soil column with thicknesses of :math:`\sum^3_{i=1}{\Delta z_i}`,
 step, the soil moisture profile is determined following the algorithms
 detailed in section 7.4, and aggregated to the three VIC layers for
 runoff generation calculations. The surface runoff generated by the
-saturation excess runoff mechanism, *q\ :math:`{}_{over}`*, is
+saturation excess runoff mechanism, q\ :sub:`over`, is
 calculated using equation , but with the fractional saturated area
 defined as
 
@@ -2077,8 +2071,8 @@ defined as
 where :math:`w_{top}` and :math:`w_{m,top}` are calculated as
 :math:`\sum^6_{i=1}{{\theta }_i\Delta z_i}` and
 :math:`\sum^6_{i=1}{{\theta }_{s,i}\Delta z_i}`, respectively, and
-represent the soil moisture (kg m\ :math:`{}^{-2}`) and maximum soil
-moisture (kg m\ :math:`{}^{-2}`) in the top two VIC layers combined.
+represent the soil moisture (kg m\ :sup:`-2`) and maximum soil
+moisture (kg m\ :sup:`-2`) in the top two VIC layers combined.
 
 In equation , it is hypothesized that the spatial heterogeneity of soil
 moisture holding capacity in the top VIC layers can be represented by a
@@ -2095,13 +2089,13 @@ conceptually as
    i=i_m\left(1-{\left(1-A\right)}^{1/b_{inf}}\right)
 
 where :math:`i` and :math:`i_{m}`  are the point and maximum point soil
-moisture holding capacities (kg m\ :math:`{}^{-2}`), respectively;
+moisture holding capacities (kg m\ :sup:`-2`), respectively;
 :math:`A` is the fraction of a grid cell for which the soil moisture
 holding capacity is less than or equal to :math:`i`; and
 :math:`i_m=w_{m,top}\left(1+b_{inf}\right)`. When :math:`A` is equal to
 :math:`f_{sat}`, the corresponding point soil moisture holding capacity
 is denoted as :math:`i_0`. The maximum soil infiltration capacity (kg
-m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`) in equation becomes
+m\ :sup:`-2` s\ :sup:`-1`) in equation becomes
 
 .. math::
    :label: ZEqnNum202398 
@@ -2124,9 +2118,9 @@ The subsurface runoff in equation is parameterized as
    \right]/\mathrm{\Delta }t
 
 where :math:`w_{bot}` and :math:`w_{m,bot}` are the soil moisture (kg
-m\ :math:`{}^{-2}`) and maximum soil moisture (kg m\ :math:`{}^{-2}`) in
+m\ :sup:`-2`) and maximum soil moisture (kg m\ :sup:`-2`) in
 the bottom VIC layer, respectively, :math:`D_{smax}` is the maximum
-subsurface flow rate (kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`),
+subsurface flow rate (kg m\ :sup:`-2` s\ :sup:`-1`),
 :math:`D_s` is a fraction of :math:`D_{smax}`, :math:`W_s` is a fraction
 of :math:`w_{m,bot}`, and :math:`{\mathrm{\Theta }}_{ice,bot}` is an ice
 impedance factor determined from the ice content of the bottom VIC
@@ -2143,9 +2137,9 @@ other four parameters, :math:`b_{inf}` , :math:`D_{smax}` , :math:`D_s`
 dataset. Users can provide calibrated parameter values determined
 manually or automatically by modifying the surface dataset. Note that
 the units of :math:`D_{smax}` on the surface dataset are mm
-d\ :math:`{}^{-1}` (the traditional units for other standard VIC
-applications) which are then converted to kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}` for use in CLM. A preliminary calibration was
+d\ :sup:`-1` (the traditional units for other standard VIC
+applications) which are then converted to kg m\ :sup:`-2`
+s\ :sup:`-1` for use in CLM. A preliminary calibration was
 performed by perturbing the three parameters :math:`b_{inf}` ,
 :math:`D_{smax}` , and :math:`W_s`, and fixing :math:`D_s=0.1` globally.
 The parameter space for :math:`b_{inf}` , :math:`D_{smax}` , and
@@ -2154,7 +2148,7 @@ described by Hou et al. (2012) to produce 64 combinations of parameter
 values based on *a priori* information about the parameters. For each
 set of parameter values, a global simulation was performed using the
 compset I\_2000 (i.e., driven by satellite phenology) at a resolution of
-0.9\ :math:`{}^\circ`\ x1.25\ :math:`{}^\circ` on the basis of the
+0.9\ :sup:`o`\ x1.25\ :sup:`o` on the basis of the
 development tag betr\_m\_sci10\_clm45sci13\_clm4\_0\_54. At each model
 grid cell, the set of :math:`b_{inf}` , :math:`D_{smax}` , and
 :math:`W_s` values corresponding to the simulation that produced the

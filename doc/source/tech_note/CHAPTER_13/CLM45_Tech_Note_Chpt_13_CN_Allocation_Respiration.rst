@@ -64,14 +64,14 @@ storage pools from which new growth will be displayed in subsequent time
 steps.
 
 The total maintenance respiration demand (:math:`CF_{mr}`, gC
-m\ :sup:`-2` s\ :math:`{}^{-1}`) is calculated as a function of
+m\ :sup:`-2` s\ :sup:`-1`) is calculated as a function of
 tissue mass and nitrogen concentration, and temperature (section 13.7).
 The carbon supply to support this demand is composed of fluxes allocated
 from carbon assimilated in the current timestep
-(:math:`CF_{GPP,mr}`, gC m\ :sup:`-2` s\ :math:`{}^{-1}`)
+(:math:`CF_{GPP,mr}`, gC m\ :sup:`-2` s\ :sup:`-1`)
 and from a storage pool that is drawn down when total demand exceeds
 photosynthesis ( :math:`CF_{xs,mr}`, gC m\ :sup:`-2`
-s\ :math:`{}^{-1}`):
+s\ :sup:`-1`):
 
 .. math::
    :label: 13.1) 
@@ -105,7 +105,7 @@ and plant type are not suitable to sustained growth, the deficit in this
 pool increases until the available carbon is being allocated mostly to
 alleviate the deficit, and new growth approaches zero. The allocation
 flux to  :math:`CS_{xs}` (:math:`CF_{GPP,xs}`, gC
-m\ :sup:`-2` s\ :math:`{}^{-1}`) is given as
+m\ :sup:`-2` s\ :sup:`-1`) is given as
 
 .. math::
    :label: 13.4) 
@@ -131,7 +131,7 @@ Carbon and Nitrogen Stoichiometry of New Growth
 
 After accounting for the carbon cost of maintenance respiration, the
 remaining carbon flux from photosynthesis which can be allocated to new
-growth (:math:`CF_{avail}`, gC m\ :sup:`-2` s\ :math:`{}^{-1}`) is
+growth (:math:`CF_{avail}`, gC m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
    :label: 13.6) 
@@ -197,11 +197,11 @@ Table 13.1. Allocation and carbon:nitrogen ratio parameters
 +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
 | BDS boreal                       | 1                     | 0.3                   | 0.2                   | 0.1                   | 25                        | 42                      | 50                      | 500                     |
 +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
-| C\ :math:`{}_{3}` arctic grass   | 1                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
+| C\ :sub:`3` arctic grass         | 1                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
 +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
-| C\ :math:`{}_{3}` grass          | 2                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
+| C\ :sub:`3` grass                | 2                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
 +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
-| C\ :math:`{}_{4}` grass          | 2                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
+| C\ :sub:`4` grass                | 2                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
 +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
 | Crop R                           | 2                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
 +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
@@ -237,10 +237,10 @@ where all C:N parameters are defined as constants for a given PFT (Table
 
 Given values for the parameters in and , total carbon and nitrogen
 allocation to new growth ( :math:`CF_{alloc}`, gC
-m\ :sup:`-2` s\ :math:`{}^{-1}`, and :math:`NF_{alloc}`, gN
-m\ :sup:`-2` s\ :math:`{}^{-1}`, respectively) can be expressed as
+m\ :sup:`-2` s\ :sup:`-1`, and :math:`NF_{alloc}`, gN
+m\ :sup:`-2` s\ :sup:`-1`, respectively) can be expressed as
 functions of new leaf carbon allocation (:math:`CF_{GPP,leaf}`, gC
-m\ :sup:`-2` s\ :math:`{}^{-1}`):
+m\ :sup:`-2` s\ :sup:`-1`):
 
 .. math::
    :label: ZEqnNum555154 
@@ -263,7 +263,7 @@ Since the C:N stoichiometry for new growth allocation is defined, from
 Eq. , as :math:`C_{allom}`/ :math:`N_{allom}`, the total carbon available for new growth allocation
 (:math:`CF_{avail\_alloc}`) can be used to calculate the total
 plant nitrogen demand for new growth ( :math:`NF_{plant\_demand}`,
-gN m\ :sup:`-2` s\ :math:`{}^{-1}`) as:
+gN m\ :sup:`-2` s\ :sup:`-1`) as:
 
 .. math::
    :label: 13.13) 
@@ -282,16 +282,16 @@ Son and Gower, 1991). CLM includes one pool of retranslocated nitrogen
 (:math:`NS_{retrans}`, gN m\ :sup:`-2`), and the
 availability of nitrogen from this pool to support new growth
 (:math:`NF_{avail\_retrans}`, gN m\ :sup:`-2`
-s\ :math:`{}^{-1}`) is proportional to the plant nitrogen demand, as:
+s\ :sup:`-1`) is proportional to the plant nitrogen demand, as:
 
 .. math::
    :label: 13.14) 
 
    NF_{avail\_ retrans} =\min \left(\frac{NF_{retrans\_ ann} \frac{NF_{plant\_ demand} }{NF_{plant\_ demand\_ ann} } }{\Delta t} ,\; \frac{NS_{retrans} }{\Delta t} \right)
 
-where :math:`NF_{retrans\_ann}` (gN m\ :sup:`-2` y\ :math:`{}^{-1}`) is the previous year’s annual sum of retranslocated
+where :math:`NF_{retrans\_ann}` (gN m\ :sup:`-2` y\ :sup:`-1`) is the previous year’s annual sum of retranslocated
 nitrogen extracted from senescing tissues,
-:math:`NF_{plant\_demand\_ann}` (gN m\ :sup:`-2` y\ :math:`{}^{-1}`) is the previous year’s annual sum of
+:math:`NF_{plant\_demand\_ann}` (gN m\ :sup:`-2` y\ :sup:`-1`) is the previous year’s annual sum of
 :math:`NF_{plant\_demand}`, and :math:`\Delta`\ *t* (s) is the
 model’s biogeochemistry time step. This formulation produces an annual
 cycle in the extraction of nitrogen from :math:`NS_{retrans}`
@@ -307,7 +307,7 @@ simulation, before :math:`NF_{plant\_demand\_ann}` and
 
 The actual flux of nitrogen from the retranslocated N pool into
 allocation of new growth (:math:`NF_{retrans,alloc}`, gN
-m\ :sup:`-2` s\ :math:`{}^{-1}`) is never greater than the plant
+m\ :sup:`-2` s\ :sup:`-1`) is never greater than the plant
 demand for new nitrogen:
 
 .. math::
@@ -321,7 +321,7 @@ Plant nitrogen uptake from soil mineral nitrogen pool
 The total plant nitrogen demand is reduced by the nitrogen flux from
 :math:`NS_{retrans}` to give the plant demand for mineral nitrogen
 from the soil (:math:`NF_{plant\_demand\_soil}`, gN
-m\ :sup:`-2` s\ :math:`{}^{-1}`):
+m\ :sup:`-2` s\ :sup:`-1`):
 
 .. math::
    :label: ZEqnNum491412 
@@ -368,7 +368,7 @@ The downregulation of photosynthesis can then be calculated as:
    f_{dreg} =\frac{CF_{alloc} -CF_{avail\_ alloc} }{CF_{GPPpot} } .
 
 Total allocation to new leaf carbon
-(:math:`CF_{alloc,leaf\_tot}`, gC m\ :sup:`-2` s\ :math:`{}^{-1}`) is calculated as:
+(:math:`CF_{alloc,leaf\_tot}`, gC m\ :sup:`-2` s\ :sup:`-1`) is calculated as:
 
 .. math::
    :label: 13.21) 
@@ -550,8 +550,8 @@ following the empirical relationship reported by Ryan (1991):
 where :math:`MR_{base}` (= 2.525e\ :sup:`-6` gC gN\ :sup:`-1` s\ :sup:`-1`) is the base rate of maintenance
 respiration per unit nitrogen content, :math:`MR_{q10}` (= 2.0) is
 the temperature sensitivity for maintenance respiration,
-:math:`T_{2m}` (:math:`{}^\circ`\ C) is the air temperature at 2m
-height, :math:`Ts_{j}`* (:math:`{}^\circ`\ C) is the soil
+:math:`T_{2m}` (:sup:`o`\ C) is the air temperature at 2m
+height, :math:`Ts_{j}`* (:sup:`o`\ C) is the soil
 temperature at level *j*, and :math:`rootfr_{j}` is the fraction
 of fine roots distributed in soil level *j*.
 

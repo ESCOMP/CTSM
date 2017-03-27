@@ -66,12 +66,9 @@ The average inverse diffuse optical depth per unit leaf and stem area is
 
 where :math:`\mu '` is the direction of the scattered flux.
 
-The optical parameters :math:`\omega` , :math:`\beta` , and
-:math:`\beta _{0}` , which vary with wavelength (:math:`\Lambda` ), are
-weighted combinations of values for vegetation and snow. The model
-determines that snow is on the canopy if :math:`T_{v} \le T_{f}` , where
-:math:`T_{v}`  is the vegetation temperature (K) (Chapter 5) and
-:math:`T_{f}`  is the freezing temperature of water (K) (Table 2.6). In
+The optical parameters :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`, which vary with wavelength (:math:`\Lambda` ), are
+weighted combinations of values for vegetation and snow. The model determines that snow is on the canopy if :math:`T_{v} \le T_{f}` , where
+:math:`T_{v}` is the vegetation temperature (K) (Chapter 5) and :math:`T_{f}` is the freezing temperature of water (K) (Table 2.6). In
 this case, the optical parameters are
 
 .. math::
@@ -89,12 +86,9 @@ this case, the optical parameters are
 
    \omega _{\Lambda } \beta _{0,\, \Lambda } =\omega _{\Lambda }^{veg} \beta _{0,\, \Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} \beta _{0,\, \Lambda }^{sno} f_{wet}
 
-where :math:`f_{wet}`  is the wetted fraction of the canopy (section
-7.1). The snow and vegetation weights are applied to the products
-:math:`\omega _{\Lambda } \beta _{\Lambda }`  and
-:math:`\omega _{\Lambda } \beta _{0,\, \Lambda }`  because these
-products are used in the two-stream equations. If there is no snow on
-the canopy,
+where :math:`f_{wet}`  is the wetted fraction of the canopy (section 7.1). The snow and vegetation weights are applied to the products
+:math:`\omega _{\Lambda } \beta _{\Lambda }`  and :math:`\omega _{\Lambda } \beta _{0,\, \Lambda }`  because these
+products are used in the two-stream equations. If there is no snow on the canopy,
 
 .. math::
    :label: 3.8
@@ -449,11 +443,11 @@ Table 3.1. Plant functional type optical properties
 +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
 | BDS boreal                       | 0.25                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
 +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
-| C\ :math:`{}_{3}` arctic grass   | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+| C\ :sub:`3` arctic grass         | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
 +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
-| C\ :math:`{}_{3}` grass          | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+| C\ :sub:`3` grass                | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
 +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
-| C\ :math:`{}_{4}` grass          | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+| C\ :sub:`4` grass                | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
 +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
 | Crop R                           | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
 +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
@@ -480,7 +474,7 @@ Table 3.2. Intercepted snow optical properties
 
 +-----------------------------+-------+-------+
 | Parameter                   | vis   | nir   |
-+-----------------------------+-------+-------+
++=============================+=======+=======+
 | :math:`\omega ^{sno}`       | 0.8   | 0.4   |
 +-----------------------------+-------+-------+
 | :math:`\beta ^{sno}`        | 0.5   | 0.5   |
@@ -491,8 +485,7 @@ Table 3.2. Intercepted snow optical properties
 Ground Albedos
 ------------------
 
-The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }`  and
-diffuse :math:`\alpha _{g,\, \Lambda }`  ground albedos are weighted
+The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse :math:`\alpha _{g,\, \Lambda }`  ground albedos are weighted
 combinations of “soil” and snow albedos
 
 .. math::
@@ -505,8 +498,7 @@ combinations of “soil” and snow albedos
 
    \alpha _{g,\, \Lambda } =\alpha _{soi,\, \Lambda } \left(1-f_{sno} \right)+\alpha _{sno,\, \Lambda } f_{sno}
 
-where :math:`f_{sno}`  is the fraction of the ground covered with snow
-(section 7.2.1).
+where :math:`f_{sno}`  is the fraction of the ground covered with snow (section 7.2.1).
 
 :math:`\alpha _{soi,\, \Lambda }^{\mu }`  and
 :math:`\alpha _{soi,\, \Lambda }`  vary with glacier, lake, wetland, and
@@ -630,13 +622,10 @@ as
 
    g=\frac{\sum _{1}^{k}g_{k} \omega _{k} \tau _{k}  }{\sum _{1}^{k}\omega _{k} \tau _{k}  }
 
-For each constituent (ice, two black carbon species, two organic carbon
-species, and four dust species), :math:`\omega`, *g*, and
-the mass extinction cross-section :math:`\psi` (:math:`\text{m}^{2}  \text{kg}^{-1}`) 
-are computed offline with Mie Theory, e.g.,
-applying the computational technique from Bohren and Huffman (1983). The
-extinction optical depth for each constituent depends on its mass
-extinction cross-section and layer mass, :math:`w _{k} (\text{kg m} ^{-2}`) as
+For each constituent (ice, two black carbon species, two organic carbon species, and four dust species), :math:`\omega`, *g*, and
+the mass extinction cross-section :math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) 
+are computed offline with Mie Theory, e.g., applying the computational technique from Bohren and Huffman (1983). The
+extinction optical depth for each constituent depends on its mass  extinction cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
 
 .. math::
    :label: 3.65
@@ -708,7 +697,7 @@ When any of these three conditions occur, the Eddington approximation is
 attempted instead, and if both approximations fail, the cosine of the
 solar zenith angle is adjusted by 0.02 (conserving incident flux) and a
 warning message is produced. This situation occurs in only about 1 in
-10 :math:`{}^{6}` computations of snow albedo. After looping over the
+10 :sup:`6` computations of snow albedo. After looping over the
 five spectral bands, absorption fluxes and albedo are averaged back into
 the bulk NIR band used by the rest of CLM.
 
@@ -727,7 +716,7 @@ single timestep.
 
 The radiative transfer calculation is performed twice for each column
 containing a mass of snow greater than
-:math:`1 \times 10^{-30} \text{kg m}^{-2}` (excluding lake and urban columns); once each for
+:math:`1 \times 10^{-30}` kg\ m\ :sup:`-2` (excluding lake and urban columns); once each for
 direct-beam and diffuse incident flux. Absorption in each layer
 :math:`i` of pure snow is initially recorded as absorbed flux per unit
 incident flux on the ground (:math:`S_{sno,\, i}` ), as albedos must be
@@ -745,7 +734,7 @@ vegetation canopy) have been calculated for the current time step
 (sections 3.1 and 4.1), the layer absorption factors
 
 (:math:`S_{g,\, i}`) are multiplied by the ground-incident fluxes to
-produce solar absorption (W m\ :math:`{}^{-2}`) in each snow layer and
+produce solar absorption (W m\ :sup:`-2`) in each snow layer and
 the underlying ground.
 
 Snowpack Optical Properties
@@ -817,7 +806,7 @@ Table 3.5. Single-scatter albedo values used for snowpack impurities and ice
 | Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 0.9998   | 0.9960   | 0.9680   | 0.8730   | 0.5500   |
 +----------------------------------------------------------------+----------+----------+----------+----------+----------+
 
-Table 3.6. Mass extinction values (:math:`\text{m}^{2} \text{kg}^{-1}`) used for snowpack impurities and ice.
+Table 3.6. Mass extinction values (m\ :sup:`2` kg\ :sub:`-1`) used for snowpack impurities and ice.
 
 +----------------------------------------------------------------+----------+----------+----------+----------+----------+
 | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
@@ -912,8 +901,7 @@ each time step *t* as
    r_{e} \left(t\right)=\left[r_{e} \left(t-1\right)+dr_{e,\, dry} +dr_{e,\, wet} \right]f_{old} +r_{e,\, 0} f_{new} +r_{e,\, rfz} f_{rfrz}
 
 Here, the effective radius of freshly-fallen snow
-(:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface
-area of 60 :math:`\text{m}^{2} \text{kg}^{-1}`), and the effective
+(:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sub:`-1`), and the effective
 radius of refrozen liquid water (:math:`r_{e,rfz}`) is set to 1000\ :math:`\mu` m.
 
 Dry snow aging is based on a microphysical model described by Flanner
@@ -940,8 +928,8 @@ The parameters :math:`{(\frac{dr_{e}}{dt}})_{0}`,
 lookup table with dimensions corresponding to snow temperature,
 temperature gradient, and density. The domain covered by this lookup
 table includes temperature ranging from 223 to 273 K, temperature
-gradient ranging from 0 to 300 K m\ :math:`{}^{-1}`, and density ranging
-from 50 to 400 kg m\ :math:`{}^{-3}`. Temperature gradient is calculated
+gradient ranging from 0 to 300 K m\ :sup:`-1`, and density ranging
+from 50 to 400 kg m\ :sup:`-3`. Temperature gradient is calculated
 at the midpoint of each snow layer *n*, using mid-layer temperatures
 (:math:`T_{n}`) and snow layer thicknesses (:math:`dz_{n}`), as
 
@@ -967,8 +955,7 @@ fraction :math:`f_{liq}` as
 
    \frac{dr_{e} }{dt} =\frac{10^{18} C_{1} f_{liq} ^{3} }{4\pi r_{e} ^{2} }
 
-The constant *C*\ :math:`{}_{1}` is
-4.22\ :math:`\times`\ 10\ :math:`{}^{-13}`, and:
+The constant *C*\ :sub:`1` is 4.22\ :math:`\times`\ 10\ :sup:`-13`, and:
 :math:`f_{liq} =w_{liq} /(w_{liq} +w_{ice} )`\ (section 7.2).
 
 In cases where snow mass is greater than zero, but a snow layer has not

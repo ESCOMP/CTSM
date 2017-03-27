@@ -1,7 +1,3 @@
-.. math:: 1
-
-.. math:: 1
-
 References
 ==============
 
@@ -293,7 +289,7 @@ Farouki, O.T. 1981. The thermal properties of soils in cold regions.
 Cold Regions Sci. and Tech. 5:67-75.
 
 Farquhar, G.D., von Caemmerer, S., and Berry, J.A. 1980. A biochemical
-model of photosynthetic CO\ :math:`{}_{2}` assimilation in leaves of
+model of photosynthetic CO\ :sub:`2` assimilation in leaves of
 C\ :math:`{}_{3}` species. Planta 149:78-90.
 
 Farquhar, G.D., and von Caemmerer, S. 1982. Modeling of photosynthetic
@@ -438,7 +434,7 @@ change. J. Geophys. Res. 113:D05211. DOI:10.1029/2007JD009092.
 
 Heald, C.L., Wilkinson, M.J., Monson, R.K., Alo, C.A., Wang, G.L., and
 Guenther, A. 2009. Response of isoprene emission to ambient
-CO\ :math:`{}_{2}` changes and implications for global budgets. Global
+CO\ :sub:`2` changes and implications for global budgets. Global
 Change Biol. 15:1127-1140. DOI:10.1111/j.1365-2486.2008.01802.x
 
 Henderson-Sellers, B. 1985. New formulation of eddy diffusion
@@ -488,7 +484,7 @@ aspen and spruce stands in the north american boreal forest. Canadian
 Journal of Remote Sensing, 18: 126-133.
 
 Hunt, E.R., Jr. et al., 1996. Global net carbon exchange and
-intra-annual atmospheric CO\ :math:`{}_{2}` concentrations predicted by
+intra-annual atmospheric CO\ :sub:`2` concentrations predicted by
 an ecosystem process model and three-dimensional atmospheric transport
 model. Global Biogeochemical Cycles, 10: 431-456.
 
@@ -746,7 +742,7 @@ to simulated chronic nitrogen deposition. Ecological Applications, 7:
 Mahowald, N.M., Muhs, D.R., Levis, S., Rasch, P.J., Yoshioka, M.,
 Zender, C.S., and Luo, C. 2006. Change in atmospheric mineral aerosols
 in response to climate: last glacial period, pre-industrial, modern and
-doubled CO\ :math:`{}_{2}` climates. J. Geophys. Res\ *.* 111:D10202.
+doubled CO\ :sub:`2` climates. J. Geophys. Res\ *.* 111:D10202.
 DOI:10.1029/2005JD006653.
 
 Makela, A. 2002. Derivation of stem taper from the pipe model theory in
@@ -1206,7 +1202,7 @@ structure. J. Climate 20:3902-3923.
 
 Thornton, P.E., Lamarque, J.-F., Rosenbloom, N.A., and Mahowald, N.M.
 2007. Influence of carbon-nitrogen cycle coupling on land model response
-to CO\ :math:`{}_{2}` fertilization and climate variability. Global
+to CO\ :sub:`2` fertilization and climate variability. Global
 Biogeochem. Cycles 21:GB4018.
 
 Thornton, P.E., Doney, S.C., Lindsay, K., Moore, J.K., Mahowald, N.,

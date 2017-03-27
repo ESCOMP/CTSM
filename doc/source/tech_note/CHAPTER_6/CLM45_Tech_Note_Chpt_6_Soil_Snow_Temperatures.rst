@@ -9,10 +9,10 @@ The first law of heat conduction is
    F=-\lambda \nabla T
 
 where :math:`F` is the amount of heat conducted across a unit
-cross-sectional area in unit time (W m\ :math:`{}^{-2}`),
-:math:`\lambda`  is thermal conductivity (W m\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}`), and :math:`\nabla T` is the spatial gradient of
-temperature (K m\ :math:`{}^{-1}`). In one-dimensional form
+cross-sectional area in unit time (W m\ :sup:`-2`),
+:math:`\lambda`  is thermal conductivity (W m\ :sup:`-1`
+K\ :sup:`-1`), and :math:`\nabla T` is the spatial gradient of
+temperature (K m\ :sup:`-1`). In one-dimensional form
 
 .. math::
    :label: ZEqnNum105915 
@@ -30,7 +30,7 @@ in the form of the continuity equation is invoked as
    c\frac{\partial T}{\partial t} =-\frac{\partial F_{z} }{\partial z}
 
 where :math:`c` is the volumetric snow/soil heat capacity (J
-m\ :math:`{}^{-3}` K\ :math:`{}^{-1}`) and :math:`t` is time (s).
+m\ :sup:`-3` K\ :sup:`-1`) and :math:`t` is time (s).
 Combining equations and yields the second law of heat conduction in
 one-dimensional form
 
@@ -164,9 +164,9 @@ are defined as negative values
 Note that :math:`z_{h,\, 0}` , the interface between the bottom snow
 layer and the top soil layer, is zero. Thermal properties (i.e.,
 temperature :math:`T_{i}`  [K]; thermal conductivity
-:math:`\lambda _{i}`  [W m\ :math:`{}^{-1}` K\ :math:`{}^{-1}`];
-volumetric heat capacity :math:`c_{i}`  [J m\ :math:`{}^{-3}`
-K\ :math:`{}^{-1}`]) are defined for soil layers at the node depths
+:math:`\lambda _{i}`  [W m\ :sup:`-1` K\ :sup:`-1`];
+volumetric heat capacity :math:`c_{i}`  [J m\ :sup:`-3`
+K\ :sup:`-1`]) are defined for soil layers at the node depths
 (Figure 6.1) and for snow layers at the layer midpoints. When present,
 snow occupies a fraction of a grid cell’s area, therefore snow depth
 represents the thickness of the snowpack averaged over only the snow
@@ -175,7 +175,7 @@ of the snow covered area as :math:`\bar{z}_{sno} =f_{sno} z_{sno}` . By
 default, the grid cell average snow depth is written to the history
 file.
 
-The heat flux :math:`F_{i}`  (W m\ :math:`{}^{-2}`) from layer :math:`i`
+The heat flux :math:`F_{i}`  (W m\ :sup:`-2`) from layer :math:`i`
 to layer :math:`i+1` is
 
 .. math::
@@ -257,7 +257,7 @@ element band-diagonal system of equations.
 
 For the top soil layer :math:`i=1` , top snow layer :math:`i=snl+1`, or
 surface water layer, the heat flux from the overlying atmosphere
-:math:`h` (W m\ :math:`{}^{-2}`, defined as positive into the surface)
+:math:`h` (W m\ :sup:`-2`, defined as positive into the surface)
 is
 
 .. math::
@@ -346,10 +346,8 @@ where the partial derivative of the net longwave radiation is
 and the partial derivatives of the sensible and latent heat fluxes are
 given by equations and for non-vegetated surfaces, and by equations and
 for vegetated surfaces. :math:`\sigma`  is the Stefan-Boltzmann constant
-(W m\ :math:`{}^{-2}` K\ :math:`{}^{-4}`) (Table 2.6) and
-:math:`\varepsilon _{g}`  is the ground emissivity (section 4.2). For
-purposes of computing :math:`h` and
-:math:`\frac{\partial h}{\partial T_{g} }` , the term :math:`\lambda` 
+(W m\ :sup:`-2` K\ :sup:`-4`) (Table 2.6) and :math:`\varepsilon _{g}`  is the ground emissivity (section 4.2). For
+purposes of computing :math:`h` and :math:`\frac{\partial h}{\partial T_{g} }` , the term :math:`\lambda` 
 is arbitrarily assumed to be
 
 .. math::
@@ -359,9 +357,9 @@ is arbitrarily assumed to be
 
 where :math:`\lambda _{sub}`  and :math:`\lambda _{vap}`  are the
 latent heat of sublimation and vaporization, respectively (J
-kg\ :math:`{}^{-1}`) (Table 2.6), and :math:`w_{liq,\, snl+1}`  and
+kg\ :sup:`-1`) (Table 2.6), and :math:`w_{liq,\, snl+1}`  and
 :math:`w_{ice,\, snl+1}`  are the liquid water and ice contents of the
-top snow/soil layer, respectively (kg m\ :math:`{}^{-2}`) (Chapter 7).
+top snow/soil layer, respectively (kg m\ :sup:`-2`) (Chapter 7).
 
 For the top soil layer, :math:`i=1`, the coefficients are
 
@@ -544,7 +542,7 @@ phase change will take place as
 where :math:`T_{i}^{n+1}`  is the soil layer temperature after solution
 of the tridiagonal equation set, :math:`w_{ice,\, i}`  and
 :math:`w_{liq,\, i}`  are the mass of ice and liquid water (kg
-m\ :math:`{}^{-2}`) in each snow/soil layer, respectively, and
+m\ :sup:`-2`) in each snow/soil layer, respectively, and
 :math:`T_{f}`  is the freezing temperature of water (K) (Table 2.6). For
 the freezing process in soil layers, the concept of supercooled soil
 water from Niu and Yang (2006) is adopted. The supercooled soil water is
@@ -558,11 +556,11 @@ depression equation
    w_{liq,\, \max ,\, i} =\Delta z_{i} \theta _{sat,\, i} \left[\frac{10^{3} L_{f} \left(T_{f} -T_{i} \right)}{gT_{i} \psi _{sat,\, i} } \right]^{{-1\mathord{\left/ {\vphantom {-1 B_{i} }} \right. \kern-\nulldelimiterspace} B_{i} } } \qquad T_{i} <T_{f}
 
 where :math:`w_{liq,\, \max ,\, i}`  is the maximum liquid water in
-layer :math:`i` (kg m\ :math:`{}^{-2}`) when the soil temperature
+layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature
 :math:`T_{i}`  is below the freezing temperature :math:`T_{f}` ,
-:math:`L_{f}`  is the latent heat of fusion (J kg\ :math:`{}^{-1}`)
+:math:`L_{f}`  is the latent heat of fusion (J kg\ :sup:`-1`)
 (Table 2.6), :math:`g` is the gravitational acceleration (m
-s\ :math:`{}^{-2}`) (Table 2.6), and :math:`\psi _{sat,\, i}`  and
+s\ :sup:`-2`) (Table 2.6), and :math:`\psi _{sat,\, i}`  and
 :math:`B_{i}`  are the soil texture-dependent saturated matric potential
 (mm) and Clapp and Hornberger (1978) exponent (section 7.4.1).
 
@@ -575,7 +573,7 @@ soil layer temperature is greater than the freezing temperature
 
 The rate of phase change is assessed from the energy excess (or deficit)
 needed to change :math:`T_{i}`  to freezing temperature, :math:`T_{f}` .
-The excess or deficit of energy :math:`H_{i}`  (W m\ :math:`{}^{-2}`) is
+The excess or deficit of energy :math:`H_{i}`  (W m\ :sup:`-2`) is
 determined as follows
 
 .. math::
@@ -633,7 +631,7 @@ and this energy is used to cool or warm the snow/soil layer (if
 For the special case when snow is present (:math:`W_{sno} >0`), there
 are no explicit snow layers (:math:`snl=0`), and
 :math:`\frac{H_{1} \Delta t}{L_{f} } >0` (melting), the snow mass
-:math:`W_{sno}`  (kg m\ :math:`{}^{-2}`) is reduced according to
+:math:`W_{sno}`  (kg m\ :sup:`-2`) is reduced according to
 
 .. math::
    :label: 6.62) 
@@ -665,9 +663,9 @@ available to the top soil layer as
 
 The ice mass, liquid water content, and temperature of the top soil
 layer are then determined from equations , , and using the recalculated
-energy from equation . Snow melt :math:`M_{1S}`  (kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}`) and phase change energy :math:`E_{p,\, 1S}`  (W
-m\ :math:`{}^{-2}`) for this special case are
+energy from equation . Snow melt :math:`M_{1S}`  (kg m\ :sup:`-2`
+s\ :sup:`-1`) and phase change energy :math:`E_{p,\, 1S}`  (W
+m\ :sup:`-2`) for this special case are
 
 .. math::
    :label: 6.66) 
@@ -679,7 +677,7 @@ m\ :math:`{}^{-2}`) for this special case are
 
    E_{p,\, 1S} =L_{f} M_{1S} .
 
-The total energy of phase change :math:`E_{p}`  (W m\ :math:`{}^{-2}`)
+The total energy of phase change :math:`E_{p}`  (W m\ :sup:`-2`)
 for the snow/soil column is
 
 .. math::
@@ -694,8 +692,8 @@ where
 
    E_{p,\, i} =L_{f} \frac{\left(w_{ice,\, i}^{n} -w_{ice,\, i}^{n+1} \right)}{\Delta t} .
 
-The total snow melt :math:`M` (kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}`) is
+The total snow melt :math:`M` (kg m\ :sup:`-2`
+s\ :sup:`-1`) is
 
 .. math::
    :label: 6.70) 
@@ -769,8 +767,8 @@ organic matter fraction :math:`f_{om,i}`  is
 
    f_{om,i} =\rho _{om,i} /\rho _{om,\max } .
 
-Soil thermal conductivity :math:`\lambda _{i}`  (W m\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}`) is from Farouki (1981)
+Soil thermal conductivity :math:`\lambda _{i}`  (W m\ :sup:`-1`
+K\ :sup:`-1`) is from Farouki (1981)
 
 .. math::
    :label: 6.78) 
@@ -781,8 +779,8 @@ where :math:`\lambda _{sat,\, i}`  is the saturated thermal
 conductivity, :math:`\lambda _{dry,\, i}`  is the dry thermal
 conductivity, :math:`K_{e,\, i}`  is the Kersten number,
 :math:`S_{r,\, i}`  is the wetness of the soil with respect to
-saturation, and :math:`\lambda _{bedrock} =3` W m\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}` is the thermal conductivity assumed for the deep
+saturation, and :math:`\lambda _{bedrock} =3` W m\ :sup:`-1`
+K\ :sup:`-1` is the thermal conductivity assumed for the deep
 ground layers (typical of saturated granitic rock; Clauser and Huenges,
 1995). For glaciers and wetlands,
 
@@ -794,7 +792,7 @@ ground layers (typical of saturated granitic rock; Clauser and Huenges,
 where :math:`\lambda _{liq}`  and :math:`\lambda _{ice}`  are the
 thermal conductivities of liquid water and ice, respectively (Table
 2.6). The saturated thermal conductivity :math:`\lambda _{sat,\, i}`  (W
-m\ :math:`{}^{-1}` K\ :math:`{}^{-1}`) depends on the thermal
+m\ :sup:`-1` K\ :sup:`-1`) depends on the thermal
 conductivities of the soil solid, liquid water, and ice constituents
 
 .. math::
@@ -819,8 +817,8 @@ where the mineral soil solid thermal conductivity
 
    \lambda _{s,\, \min ,i} =\frac{8.80{\rm \; }\left(\% sand\right)_{i} +{\rm 2.92\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } ,
 
-and :math:`\lambda _{s,om} =0.25`\ W m\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}` (Farouki, 1981). :math:`\theta _{sat,\, i}`  is the
+and :math:`\lambda _{s,om} =0.25`\ W m\ :sup:`-1`
+K\ :sup:`-1` (Farouki, 1981). :math:`\theta _{sat,\, i}`  is the
 volumetric water content at saturation (porosity) (section 7.4.1).
 
 The thermal conductivity of dry soil is
@@ -831,18 +829,18 @@ The thermal conductivity of dry soil is
    \lambda _{dry,i} =(1-f_{om,i} )\lambda _{dry,\min ,i} +f_{om,i} \lambda _{dry,om}
 
 where the thermal conductivity of dry mineral soil
-:math:`\lambda _{dry,\min ,i}` \ (W m\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}`) depends on the bulk density
+:math:`\lambda _{dry,\min ,i}` \ (W m\ :sup:`-1`
+K\ :sup:`-1`) depends on the bulk density
 :math:`\rho _{d,\, i} =2700\left(1-\theta _{sat,\, i} \right)` (kg
-m\ :math:`{}^{-3}`) as
+m\ :sup:`-3`) as
 
 .. math::
    :label: 6.84) 
 
    \lambda _{dry,\, \min ,i} =\frac{0.135\rho _{d,\, i} +64.7}{2700-0.947\rho _{d,\, i} }
 
-and :math:`\lambda _{dry,om} =0.05` W m\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}` (Farouki, 1981) is the dry thermal conductivity of
+and :math:`\lambda _{dry,om} =0.05` W m\ :sup:`-1`
+K\ :sup:`-1` (Farouki, 1981) is the dry thermal conductivity of
 organic matter. The Kersten number :math:`K_{e,\, i}`  is a function of
 the degree of saturation :math:`S_{r}`  and phase of water
 
@@ -858,8 +856,8 @@ where
 
    S_{r,\, i} =\left(\frac{w_{liq,\, i} }{\rho _{liq} \Delta z_{i} } +\frac{w_{ice,\, i} }{\rho _{ice} \Delta z_{i} } \right)\frac{1}{\theta _{sat,\, i} } =\frac{\theta _{liq,\, i} +\theta _{ice,\, i} }{\theta _{sat,\, i} } \le 1.
 
-Thermal conductivity :math:`\lambda _{i}`  (W m\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}`) for snow is from Jordan (1991)
+Thermal conductivity :math:`\lambda _{i}`  (W m\ :sup:`-1`
+K\ :sup:`-1`) for snow is from Jordan (1991)
 
 .. math::
    :label: 6.87) 
@@ -868,15 +866,15 @@ K\ :math:`{}^{-1}`) for snow is from Jordan (1991)
 
 where :math:`\lambda _{air}`  is the thermal conductivity of air (Table
 2.6) and :math:`\rho _{sno,\, i}`  is the bulk density of snow (kg
-m\ :math:`{}^{-3}`)
+m\ :sup:`-3`)
 
 .. math::
    :label: 6.88) 
 
    \rho _{sno,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{\Delta z_{i} } .
 
-The volumetric heat capacity :math:`c_{i}`  (J m\ :math:`{}^{-3}`
-K\ :math:`{}^{-1}`) for soil is from de Vries (1963) and depends on the
+The volumetric heat capacity :math:`c_{i}`  (J m\ :sup:`-3`
+K\ :sup:`-1`) for soil is from de Vries (1963) and depends on the
 heat capacities of the soil solid, liquid water, and ice constituents
 
 .. math::
@@ -885,9 +883,9 @@ heat capacities of the soil solid, liquid water, and ice constituents
    c_{i} =c_{s,\, i} \left(1-\theta _{sat,\, i} \right)+\frac{w_{ice,\, i} }{\Delta z_{i} } C_{ice} +\frac{w_{liq,\, i} }{\Delta z_{i} } C_{liq}
 
 where :math:`C_{liq}`  and :math:`C_{ice}`  are the specific heat
-capacities (J kg\ :math:`{}^{-1}` K\ :math:`{}^{-1}`) of liquid water
+capacities (J kg\ :sup:`-1` K\ :sup:`-1`) of liquid water
 and ice, respectively (Table 2.6). The heat capacity of soil solids
-:math:`c_{s,i}` \ (J m\ :math:`{}^{-3}` K\ :math:`{}^{-1}`) is
+:math:`c_{s,i}` \ (J m\ :sup:`-3` K\ :sup:`-1`) is
 
 .. math::
    :label: 6.90) 
@@ -895,17 +893,17 @@ and ice, respectively (Table 2.6). The heat capacity of soil solids
    c_{s,i} =(1-f_{om,i} )c_{s,\min ,i} +f_{om,i} c_{s,om}
 
 where the heat capacity of mineral soil solids
-:math:`c_{s,\min ,\, i}`  (J m\ :math:`{}^{-3}` K\ :math:`{}^{-1}`) is
+:math:`c_{s,\min ,\, i}`  (J m\ :sup:`-3` K\ :sup:`-1`) is
 
 .. math::
    :label: 6.91) 
 
    \begin{array}{l} {c_{s,\min ,\, i} =\left(\frac{2.128{\rm \; }\left(\% sand\right)_{i} +{\rm 2.385\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } \right)\times 10^{6} \qquad i=1,\ldots ,N_{levsoi} } \\ {c_{s,\, \min ,i} =c_{s,\, bedrock} \qquad i=N_{levsoi} +1,\ldots ,N_{levgrnd} } \end{array}
 
-where :math:`c_{s,bedrock} =2\times 10^{6}`  J m\ :math:`{}^{-3}`
-K\ :math:`{}^{-1}` is the heat capacity of bedrock and
-:math:`c_{s,om} =2.5\times 10^{6}` \ J m\ :math:`{}^{-3}`
-K\ :math:`{}^{-1}` (Farouki, 1981) is the heat capacity of organic
+where :math:`c_{s,bedrock} =2\times 10^{6}`  J m\ :sup:`-3`
+K\ :sup:`-1` is the heat capacity of bedrock and
+:math:`c_{s,om} =2.5\times 10^{6}` \ J m\ :sup:`-3`
+K\ :sup:`-1` (Farouki, 1981) is the heat capacity of organic
 matter. For glaciers, wetlands, and snow
 
 .. math::

@@ -5,7 +5,7 @@ The net radiation at the surface is
 :math:`\left(\vec{S}_{v} +\vec{S}_{g} \right)-\left(\vec{L}_{v} +\vec{L}_{g} \right)`,
 where :math:`\vec{S}` is the net solar flux absorbed by the vegetation
 (“v”) and the ground (“g”) and :math:`\vec{L}` is the net longwave flux
-(positive toward the atmosphere) (W m\ :math:`{}^{-2}`).
+(positive toward the atmosphere) (W m\ :sup:`-2`).
 
 Solar Fluxes
 ----------------
@@ -51,7 +51,7 @@ The total solar radiation absorbed by the vegetation and ground is
 
 where :math:`S_{atm} \, \downarrow _{\Lambda }^{\mu }`  and
 :math:`S_{atm} \, \downarrow _{\Lambda }`  are the incident direct beam
-and diffuse solar fluxes (W m\ :math:`{}^{-2}`). For non-vegetated
+and diffuse solar fluxes (W m\ :sup:`-2`). For non-vegetated
 surfaces, :math:`e^{-K\left(L+S\right)} =1`,
 :math:`\overrightarrow{I}_{\Lambda }^{\mu } =\overrightarrow{I}_{\Lambda } =0`,
 :math:`I\, \downarrow _{\Lambda }^{\mu } =0`, and
@@ -144,7 +144,7 @@ or shaded plant area at depth :math:`x`.
 Longwave Fluxes
 -------------------
 
-The net longwave radiation (W m\ :math:`{}^{-2}`) (positive toward the
+The net longwave radiation (W m\ :sup:`-2`) (positive toward the
 atmosphere) at the surface is
 
 .. math::
@@ -154,7 +154,7 @@ atmosphere) at the surface is
 
 where :math:`L\, \uparrow`  is the upward longwave radiation from the
 surface and :math:`L_{atm} \, \downarrow`  is the downward atmospheric
-longwave radiation (W m\ :math:`{}^{-2}`). The radiative temperature
+longwave radiation (W m\ :sup:`-2`). The radiative temperature
 :math:`T_{rad}`  (K) is defined from the upward longwave radiation as
 
 .. math::
@@ -162,10 +162,8 @@ longwave radiation (W m\ :math:`{}^{-2}`). The radiative temperature
 
    T_{rad} =\left(\frac{L\, \uparrow }{\sigma } \right)^{{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} }
 
-where :math:`\sigma`  is the Stefan-Boltzmann constant (W
-m\ :math:`{}^{-2}` K\ :math:`{}^{-4}`) (Table 2.6). With reference to
-Figure 4.1, the upward longwave radiation from the surface to the
-atmosphere is
+where :math:`\sigma`  is the Stefan-Boltzmann constant (W\ m\ :sup:`-2` K\ :sup:`-4`) (Table 2.6). With reference to
+Figure 4.1, the upward longwave radiation from the surface to the atmosphere is
 
 .. math::
    :label: 4.11

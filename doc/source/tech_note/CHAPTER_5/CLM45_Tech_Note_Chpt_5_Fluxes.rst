@@ -2,15 +2,14 @@ Momentum, Sensible Heat, and Latent Heat Fluxes
 ==================================================
 
 The zonal :math:`\tau _{x}`  and meridional :math:`\tau _{y}`  momentum
-fluxes (kg m\ :math:`{}^{-1}` s\ :math:`{}^{-2}`), sensible heat flux
-:math:`H` (W m\ :math:`{}^{-2}`), and water vapor flux :math:`E` (kg
-m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`) between the atmosphere at
+fluxes (kg m\ :sup:`-1` s\ :sup:`-2`), sensible heat flux
+:math:`H` (W m\ :sup:`-2`), and water vapor flux :math:`E` (kg m\ :sup:`-2` s\ :sup:`-1`) between the atmosphere at
 reference height :math:`z_{atm,\, x}`  (m) [where :math:`x` is height
 for wind (momentum) (:math:`m`), temperature (sensible heat)
 (:math:`h`), and humidity (water vapor) (:math:`w`); with zonal and
 meridional winds :math:`u_{atm}`  and :math:`v_{atm}`  (m
-s\ :math:`{}^{-1}`), potential temperature :math:`\theta _{atm}`  (K),
-and specific humidity :math:`q_{atm}`  (kg kg\ :math:`{}^{-1}`)] and the
+s\ :sup:`-1`), potential temperature :math:`\theta _{atm}`  (K),
+and specific humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`)] and the
 surface [with :math:`u_{s}` , :math:`v_{s}` , :math:`\theta _{s}` , and
 :math:`q_{s}` ] are
 
@@ -39,7 +38,7 @@ similarity theory developed for the surface layer (i.e., the nearly
 constant flux layer above the surface sublayer). In this derivation,
 :math:`u_{s}`  and :math:`v_{s}`  are defined to equal zero at height
 :math:`z_{0m} +d` (the apparent sink for momentum) so that
-:math:`r_{am}`  is the aerodynamic resistance (s m\ :math:`{}^{-1}`) for
+:math:`r_{am}`  is the aerodynamic resistance (s m\ :sup:`-1`) for
 momentum between the atmosphere at height :math:`z_{atm,\, m}`  and the
 surface at height :math:`z_{0m} +d`. Thus, the momentum fluxes become
 
@@ -57,12 +56,12 @@ Likewise, :math:`\theta _{s}`  and :math:`q_{s}`  are defined at
 heights :math:`z_{0h} +d` and :math:`z_{0w} +d` (the apparent sinks for
 heat and water vapor, respectively
 
-:math:`r_{aw}`  are the aerodynamic resistances (s m\ :math:`{}^{-1}`)
+:math:`r_{aw}`  are the aerodynamic resistances (s m\ :sup:`-1`)
 to sensible heat and water vapor transfer between the atmosphere at
 heights :math:`z_{atm,\, h}`  and :math:`z_{atm,\, w}`  and the surface
 at heights :math:`z_{0h} +d` and :math:`z_{0w} +d`, respectively. The
-specific heat capacity of air :math:`C_{p}`  (J kg\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}`) is a constant (Table 2.6). The atmospheric potential
+specific heat capacity of air :math:`C_{p}`  (J kg\ :sup:`-1`
+K\ :sup:`-1`) is a constant (Table 2.6). The atmospheric potential
 temperature used here is
 
 .. math::
@@ -72,15 +71,13 @@ temperature used here is
 
 where :math:`T_{atm}`  is the air temperature (K) at height
 :math:`z_{atm,\, h}`  and :math:`\Gamma _{d} =0.0098` K
-m\ :math:`{}^{-1}` is the negative of the dry adiabatic lapse rate [this
+m\ :sup:`-1` is the negative of the dry adiabatic lapse rate [this
 expression is first-order equivalent to
 :math:`\theta _{atm} =T_{atm} \left({P_{srf} \mathord{\left/ {\vphantom {P_{srf}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } \right)^{{R_{da} \mathord{\left/ {\vphantom {R_{da}  C_{p} }} \right. \kern-\nulldelimiterspace} C_{p} } }` 
 (Stull 1988), where :math:`P_{srf}`  is the surface pressure (Pa),
 :math:`P_{atm}`  is the atmospheric pressure (Pa), and :math:`R_{da}` 
-is the gas constant for dry air (J kg\ :math:`{}^{-1}`
-K\ :math:`{}^{-1}`) (Table 2.6)]. By definition,
-:math:`\theta _{s} =T_{s}` . The density of moist air (kg
-m\ :math:`{}^{-3}`) is
+is the gas constant for dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6)]. By definition,
+:math:`\theta _{s} =T_{s}` . The density of moist air (kg m\ :sup:`-3`) is
 
 .. math::
    :label: 5.8
@@ -99,8 +96,8 @@ Monin-Obukhov Similarity Theory
 -----------------------------------
 
 The surface vertical kinematic fluxes of momentum
-:math:`\overline{u'w'}` and :math:`\overline{v'w'}` (:math:`\text{m}^{2} \text{s}^{-2}`), sensible heat :math:`\overline{\theta 'w'}` 
-(:math:`\text{K m} \text{s}^{-1}`), and latent heat :math:`\overline{q'w'}` (:math:`\text{kg kg }^{-1}` m s\ :math:`{}^{-1}`), where :math:`u'`, :math:`v'`,
+:math:`\overline{u'w'}` and :math:`\overline{v'w'}` (m\ :sup:`2` s\ :sub:`-2`), sensible heat :math:`\overline{\theta 'w'}` 
+(K m s :sup:`-1`), and latent heat :math:`\overline{q'w'}` (kg kg\ :sup:`-1` m s\ :sup:`-1`), where :math:`u'`, :math:`v'`,
 :math:`w'`, :math:`\theta '`, and :math:`q'` are zonal horizontal wind,
 meridional horizontal wind, vertical velocity, potential temperature,
 and specific humidity turbulent fluctuations about the mean, are defined
@@ -130,16 +127,15 @@ displacement height (m), :math:`L` is the Monin-Obukhov length scale (m)
 that accounts for buoyancy effects resulting from vertical density
 gradients (i.e., the atmospheric stability), k is the von Karman
 constant (Table 2.6), and :math:`\left|{\it u}\right|` is the
-atmospheric wind speed (m s\ :math:`{}^{-1}`). :math:`\phi _{m}` ,
+atmospheric wind speed (m s\ :sup:`-1`). :math:`\phi _{m}` ,
 :math:`\phi _{h}` , and :math:`\phi _{w}`  are universal (over any
 surface) similarity functions of :math:`\zeta`  that relate the constant
 fluxes of momentum, sensible heat, and latent heat to the mean profile
 gradients of :math:`\left|{\it u}\right|`, :math:`\theta` , and
 :math:`q` in the surface layer. In neutral conditions,
 :math:`\phi _{m} =\phi _{h} =\phi _{w} =1`. The velocity (i.e., friction
-velocity) :math:`u_{\*}`  (m s\ :math:`{}^{-1}`), temperature
-:math:`\theta _{\*}`  (K), and moisture :math:`q_{\*}`  (kg
-kg\ :math:`{}^{-1}`) scales are
+velocity) :math:`u_{\*}`  (m s\ :sup:`-1`), temperature
+:math:`\theta _{\*}`  (K), and moisture :math:`q_{\*}`  (kg kg\ :sup:`-1`) scales are
 
 .. math::
    :label: 5.13
@@ -156,12 +152,11 @@ kg\ :math:`{}^{-1}`) scales are
 
    q_{*} u_{*} =-\overline{q'w'}=-\frac{E}{\rho _{atm} }
 
-where :math:`\left|{\it \tau }\right|` is the shearing stress (kg
-m\ :math:`{}^{-1}` s\ :math:`{}^{-2}`), with zonal and meridional
+where :math:`\left|{\it \tau }\right|` is the shearing stress (kg m\ :sup:`-1` s\ :sup:`-2`), with zonal and meridional
 components :math:`\overline{u'w'}=-\frac{\tau _{x} }{\rho _{atm} }`  and
 :math:`\overline{v'w'}=-\frac{\tau _{y} }{\rho _{atm} }` , respectively,
-:math:`H` is the sensible heat flux (W m\ :math:`{}^{-2}`) and :math:`E`
-is the water vapor flux (kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`).
+:math:`H` is the sensible heat flux (W m\ :sup:`-2`) and :math:`E`
+is the water vapor flux (kg m\ :sup:`-2` s\ :sup:`-1`).
 
 The dimensionless length scale :math:`L` is the Monin-Obukhov length
 defined as
@@ -171,7 +166,7 @@ defined as
 
    L=-\frac{u_{*}^{3} }{k\left(\frac{g}{\overline{\theta _{v,\, atm} }} \right)\theta '_{v} w'} =\frac{u_{*}^{2} \overline{\theta _{v,\, atm} }}{kg\theta _{v*} }
 
-where :math:`g` is the acceleration of gravity (m s\ :math:`{}^{-2}`)
+where :math:`g` is the acceleration of gravity (m s\ :sup:`-2`)
 (Table 2.6), and
 :math:`\overline{\theta _{v,\, atm} }=\overline{\theta _{atm} }\left(1+0.61q_{atm} \right)`
 is the reference virtual potential temperature. :math:`L>0` indicates
@@ -504,7 +499,7 @@ and the atmosphere can also be written in the form
 
    E=-\rho _{atm} \frac{\left(q_{atm} -q_{s} \right)}{r_{aw} }
 
-where the aerodynamic resistances (s m\ :math:`{}^{-1}`) are
+where the aerodynamic resistances (s m\ :sup:`-1`) are
 
 .. math::
    :label: ZEqnNum660763 
@@ -566,7 +561,7 @@ definition, this includes bare soil, wetlands, and glaciers. The
 solution for lakes is described in Chapter 9. For these surfaces, the
 surface may be exposed to the atmosphere, snow covered, and/or surface
 water covered, so that the sensible heat flux :math:`H_{g}`  (W
-m\ :math:`{}^{-2}`) is, with reference to Figure 5.1,
+m\ :sup:`-2`) is, with reference to Figure 5.1,
 
 .. math::
    :label: ZEqnNum726771 
@@ -594,15 +589,13 @@ surface water :math:`T_{h2osfc}`  are
 
    H_{h2osfc} =-\rho _{atm} C_{p} \frac{\left(\theta _{atm} -T_{h2osfc} \right)}{r_{ah} }
 
-where :math:`\rho _{atm}`  is the density of atmospheric air (kg
-m\ :math:`{}^{-3}`), :math:`C_{p}`  is the specific heat capacity of air
-(J kg\ :math:`{}^{-1}` K\ :math:`{}^{-1}`) (Table 2.6),
+where :math:`\rho _{atm}`  is the density of atmospheric air (kg m\ :sup:`-3`), :math:`C_{p}`  is the specific heat capacity of air
+(J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6),
 :math:`\theta _{atm}`  is the atmospheric potential temperature (K), and
 :math:`r_{ah}`  is the aerodynamic resistance to sensible heat transfer
-(s m\ :math:`{}^{-1}`).
+(s m\ :sup:`-1`).
 
-The water vapor flux :math:`E_{g}`  (kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}`) is, with reference to Figure 5.2,
+The water vapor flux :math:`E_{g}`  (kg m\ :sup:`-2` s\ :sup:`-1`) is, with reference to Figure 5.2,
 
 .. math::
    :label: ZEqnNum419297 
@@ -624,14 +617,10 @@ s\ :math:`{}^{-1}`) is, with reference to Figure 5.2,
 
    E_{h2osfc} =-\frac{\rho _{atm} \left(q_{atm} -q_{h2osfc} \right)}{r_{aw} }
 
-where :math:`\beta _{soi}`  is an empirical function of soil water
-(Sakaguchi and Zeng 2009), :math:`q_{atm}`  is the atmospheric specific
-humidity (kg kg\ :math:`{}^{-1}`), :math:`q_{soil}` , :math:`q_{sno}` ,
-and :math:`q_{h2osfc}`  are the specific humidities (kg
-kg\ :math:`{}^{-1}`) of the soil, snow, and surface water, respectively,
-and :math:`r_{aw}`  is the aerodynamic resistance to water vapor
-transfer (s m\ :math:`{}^{-1}`). The specific humidities of the snow
-:math:`q_{sno}`  and surface water :math:`q_{h2osfc}`  are assumed to be
+where :math:`\beta _{soi}`  is an empirical function of soil water (Sakaguchi and Zeng 2009), :math:`q_{atm}`  is the atmospheric specific
+humidity (kg kg\ :sup:`-1`), :math:`q_{soil}` , :math:`q_{sno}` , and :math:`q_{h2osfc}`  are the specific humidities 
+(kg kg\ :sup:`-1`) of the soil, snow, and surface water, respectively, and :math:`r_{aw}`  is the aerodynamic resistance to water vapor
+transfer (s m\ :sup:`-1`). The specific humidities of the snow :math:`q_{sno}`  and surface water :math:`q_{h2osfc}`  are assumed to be
 at the saturation specific humidity of their respective temperatures
 
 .. math::
@@ -662,9 +651,8 @@ potential :math:`\psi`  as in Philip (1957)
 
    \alpha _{soil} =\exp \left(\frac{\psi _{1} g}{1\times 10^{3} R_{wv} T_{1} } \right)
 
-where :math:`R_{wv}`  is the gas constant for water vapor (J
-kg\ :math:`{}^{-1}` K\ :math:`{}^{-1}`) (Table 2.6), :math:`g` is the
-gravitational acceleration (m s\ :math:`{}^{-2}`) (Table 2.6), and
+where :math:`R_{wv}`  is the gas constant for water vapor (J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6), :math:`g` is the
+gravitational acceleration (m s\ :sup:`-2`) (Table 2.6), and
 :math:`\psi _{1}`  is the soil water matric potential of the top soil
 layer (mm). The soil water matric potential :math:`\psi _{1}`  is
 
@@ -686,11 +674,11 @@ soil layer with respect to saturation. The surface wetness
 
 where :math:`\Delta z_{1}`  is the thickness of the top soil layer (m),
 :math:`\rho _{liq}`  and :math:`\rho _{ice}`  are the density of liquid
-water and ice (kg m\ :math:`{}^{-3}`) (Table 2.6), :math:`w_{liq,\, 1}` 
+water and ice (kg m\ :sup:`-3`) (Table 2.6), :math:`w_{liq,\, 1}` 
 and :math:`w_{ice,\, 1}`  are the mass of liquid water and ice of the
-top soil layer (:math:`\text{kg} \text{m}^{-2}`) (Chapter 7), and
+top soil layer (kg m\ :sup:`-2`) (Chapter 7), and
 :math:`\theta _{sat,\, 1}`  is the saturated volumetric water content
-(i.e., porosity) of the top soil layer (:math:`\text{mm}^{3}` :math:`\text{mm}^{-3}`) (section 7.4.1). If
+(i.e., porosity) of the top soil layer (mm\ :sup:`3` mm\ :sup:`-3`) (section 7.4.1). If
 :math:`q_{sat}^{T_{1} } >q_{atm}`  and :math:`q_{atm} >q_{soil}` , then
 :math:`q_{soil} =q_{atm}`  and :math:`\frac{dq_{soil} }{dT} =0`. This
 prevents large increases (decreases) in :math:`q_{soil}`  for small
@@ -708,7 +696,7 @@ surface within the dry part of the soil (Sakaguchi and Zeng 2009) as
 where :math:`\theta _{fc,\, 1}`  is the field capacity of the top soil
 layer and
 :math:`0.01{\le \theta _{1} \mathord{\left/ {\vphantom {\le \theta _{1}  \theta _{fc,\, 1} \le 1}} \right. \kern-\nulldelimiterspace} \theta _{fc,\, 1} \le 1}` .
-The volumetric water content of the top soil layer (:math:`\text{mm}^{3}` :math:`\text{mm}^{-3}`) is
+The volumetric water content of the top soil layer (mm\ :sup:`3` mm\ :sup:`-3`) is
 
 .. math::
    :label: 5.77) 
@@ -716,7 +704,7 @@ The volumetric water content of the top soil layer (:math:`\text{mm}^{3}` :math:
    \theta _{1} =\frac{1}{\Delta z_{1} } \left[\frac{w_{liq,\, 1} }{\rho _{liq} } +\frac{w_{ice,\, 1} }{\rho _{ice} } \right].
 
 The volumetric water content at field capacity is derived by assuming a
-hydraulic conductivity of 0.1 mm day\ :math:`{}^{-1}` and inverting the
+hydraulic conductivity of 0.1 mm day\ :sup:`-1` and inverting the
 hydraulic conductivity function (section 7.4.1) as
 
 .. math::
@@ -725,7 +713,7 @@ hydraulic conductivity function (section 7.4.1) as
    \theta _{fc,\, 1} =\theta _{sat,\, 1} \left[\frac{0.1}{86400k_{sat,\, 1} } \right]^{\frac{1}{2B_{i} +3} }
 
 where :math:`k_{sat,\, 1}`  is the saturated hydraulic conductivity of
-the top soil layer (mm s\ :math:`{}^{-1}`) (section 7.4.1) and the
+the top soil layer (mm s\ :sup:`-1`) (section 7.4.1) and the
 exponent :math:`B_{1}`  is a function of soil texture (section 7.4.1).
 
 The roughness lengths used to calculate :math:`r_{am}` ,
@@ -748,18 +736,16 @@ Zilitinkevich (1970) is adopted by Zeng and Dickinson (1998)
    z_{0h,\, g} =z_{0w,\, g} =z_{0m,\, g} e^{-a\left({u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon } \right)^{0.45} }
 
 where the quantity
-:math:`{u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon }` 
-is the roughness Reynolds number (and may be interpreted as the Reynolds
-number of the smallest turbulent eddy in the flow) with the kinematic
-viscosity of air :math:`\upsilon =1.5\times 10^{-5}`  m\ :math:`{}^{2}`
-s\ :math:`{}^{-1}` and :math:`a=0.13`.
+:math:`{u_{\*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon }` 
+is the roughness Reynolds number (and may be interpreted as the Reynolds number of the smallest turbulent eddy in the flow) with the kinematic
+viscosity of air :math:`\upsilon =1.5\times 10^{-5}`  m\ :sup:`2` s\ :sup:`-1` and :math:`a=0.13`.
 
 The numerical solution for the fluxes of momentum, sensible heat, and
 water vapor flux from non-vegetated surfaces proceeds as follows:
 
 #. An initial guess for the wind speed :math:`V_{a}`  is obtained from
    eq. assuming an initial convective velocity :math:`U_{c} =0` m
-   s\ :math:`{}^{-1}` for stable conditions
+   s\ :sup:`-1` for stable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from
    eq. ) and :math:`U_{c} =0.5` for unstable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
@@ -886,19 +872,18 @@ where, with reference to Figure 5.1,
 
    H_{h2osfc} =-\rho _{atm} C_{p} \frac{\left(T_{s} -T_{h2osfc} \right)}{r_{ah} ^{{'} } }
 
-where :math:`\rho _{atm}`  is the density of atmospheric air (kg
-m\ :math:`{}^{-3}`), :math:`C_{p}`  is the specific heat capacity of air
-(J kg\ :math:`{}^{-1}` K\ :math:`{}^{-1}`) (Table 2.6),
+where :math:`\rho _{atm}`  is the density of atmospheric air (kg m\ :sup:`-3`), :math:`C_{p}`  is the specific heat capacity of air
+(J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6),
 :math:`\theta _{atm}`  is the atmospheric potential temperature (K), and
 :math:`r_{ah}`  is the aerodynamic resistance to sensible heat transfer
-(s m\ :math:`{}^{-1}`).
+(s m\ :sup:`-1`).
 
 Here, :math:`T_{s}`  is the surface temperature at height
 :math:`z_{0h} +d`, also referred to as the canopy air temperature.
 :math:`L` and :math:`S` are the exposed leaf and stem area indices
 (section 2.1.4), :math:`r_{b}`  is the leaf boundary layer resistance (s
-m\ :math:`{}^{-1}`), and :math:`r_{ah} ^{{'} }`  is the aerodynamic
-resistance (s m\ :math:`{}^{-1}`) to heat transfer between the ground at
+m\ :sup:`-1`), and :math:`r_{ah} ^{{'} }`  is the aerodynamic
+resistance (s m\ :sup:`-1`) to heat transfer between the ground at
 height :math:`z_{0h} ^{{'} }`  and the canopy air at height
 :math:`z_{0h} +d`.
 
@@ -938,7 +923,7 @@ where
 
 are the sensible heat conductances from the canopy air to the
 atmosphere, the ground to canopy air, and leaf surface to canopy air,
-respectively (m s\ :math:`{}^{-1}`).
+respectively (m s\ :sup:`-1`).
 
 When the expression for :math:`T_{s}`  is substituted into equation ,
 the sensible heat flux from vegetation :math:`H_{v}`  is a function of
@@ -1000,19 +985,18 @@ where, with reference to Figure 5.2,
 
    E_{h2osfc} =-\rho _{atm} \frac{\left(q_{s} -q_{h2osfc} \right)}{r_{aw} ^{{'} } +r_{litter} }
 
-where :math:`q_{atm}`  is the atmospheric specific humidity (kg
-kg\ :math:`{}^{-1}`), :math:`r_{aw}`  is the aerodynamic resistance to
-water vapor transfer (s m\ :math:`{}^{-1}`), :math:`q_{sat}^{T_{v} }` 
-(kg kg\ :math:`{}^{-1}`) is the saturation water vapor specific humidity
+where :math:`q_{atm}`  is the atmospheric specific humidity (kg kg\ :sup:`-1`), :math:`r_{aw}`  is the aerodynamic resistance to
+water vapor transfer (s m\ :sup:`-1`), :math:`q_{sat}^{T_{v} }` 
+(kg kg\ :sup:`-1`) is the saturation water vapor specific humidity
 at the vegetation temperature (section 5.5), :math:`q_{g}`  ,
 :math:`q_{sno}`  , and :math:`q_{h2osfc}`  are the specific humidities
 of the soil, snow, and surface water (section 5.2),
 :math:`r_{aw} ^{{'} }`  is the aerodynamic resistance (s
-m\ :math:`{}^{-1}`) to water vapor transfer between the ground at height
+m\ :sup:`-1`) to water vapor transfer between the ground at height
 :math:`z_{0w} ^{{'} }`  and the canopy air at height :math:`z_{0w} +d`,
 :math:`\beta _{soi}`  is an empirical function of soil water (section
 5.2), and :math:`r_{litter}`  is a resistance for the plant litter layer
-(s m\ :math:`{}^{-1}`). :math:`r_{total}`  is the total resistance to
+(s m\ :sup:`-1`). :math:`r_{total}`  is the total resistance to
 water vapor transfer from the canopy to the canopy air and includes
 contributions from leaf boundary layer and sunlit and shaded stomatal
 resistances :math:`r_{b}` , :math:`r_{s}^{sun}` , and
@@ -1063,7 +1047,7 @@ as
    r''=\left\{\begin{array}{l} {\min \left(f_{wet} +r_{dry} ^{{'} {'} } ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right)\qquad E_{v}^{w,\, pot} >0,\, \beta _{t} >0} \\ {\min \left(f_{wet} ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right)\qquad E_{v}^{w,\, pot} >0,\, \beta _{t} \le 0} \\ {1\qquad E_{v}^{w,\, pot} \le 0} \end{array}\right\}
 
 where :math:`f_{wet}`  is the fraction of leaves and stems that are wet
-(section 7.1), :math:`W_{can}`  is canopy water (kg m\ :math:`{}^{-2}`)
+(section 7.1), :math:`W_{can}`  is canopy water (kg m\ :sup:`-2`)
 (section 7.1), :math:`\Delta t` is the time step (s), and
 :math:`\beta _{t}`  is a soil moisture function limiting transpiration
 (Chapter 8). The potential evaporation from wet foliage per unit wetted
@@ -1085,7 +1069,7 @@ where :math:`f_{dry}`  is the fraction of leaves that are dry (section
 7.1), :math:`L^{sun}`  and :math:`L^{sha}`  are the sunlit and shaded
 leaf area indices (section 4.1), and :math:`r_{s}^{sun}`  and
 :math:`r_{s}^{sha}`  are the sunlit and shaded stomatal resistances (s
-m\ :math:`{}^{-1}`) (Chapter 8).
+m\ :sup:`-1`) (Chapter 8).
 
 When the expression for :math:`q_{s}`  is substituted into equation ,
 the water vapor flux from vegetation :math:`E_{v}`  is a function of
@@ -1122,7 +1106,7 @@ where
    U_{av} =V_{a} \sqrt{\frac{1}{r_{am} V_{a} } } =u_{*}
 
 is the magnitude of the wind velocity incident on the leaves
-(equivalent here to friction velocity) (m s\ :math:`{}^{-1}`) and
+(equivalent here to friction velocity) (m s\ :sup:`-1`) and
 :math:`C_{s}`  is the turbulent transfer coefficient between the
 underlying soil and the canopy air. :math:`C_{s}`  is obtained by
 interpolation between values for dense canopy and bare soil (Zeng et al.
@@ -1158,7 +1142,7 @@ determined from
    S=\frac{gz_{top} \left(T_{s} -T_{g} \right)}{T_{s} u_{*}^{2} }
 
 where :math:`g` is the gravitational acceleration (m
-s\ :math:`{}^{-2}`) (Table 2.6), and :math:`z_{top}`  is canopy top
+s\ :sup:`-2`) (Table 2.6), and :math:`z_{top}`  is canopy top
 height (m) (Table 2.2). The bare soil turbulent transfer coefficient is
 
 .. math::
@@ -1167,21 +1151,19 @@ height (m) (Table 2.2). The bare soil turbulent transfer coefficient is
    C_{s,\, bare} =\frac{k}{a} \left(\frac{z_{0m,\, g} U_{av} }{\upsilon } \right)^{-0.45}
 
 where the kinematic viscosity of air
-:math:`\upsilon =1.5\times 10^{-5}`  m\ :math:`{}^{2}`
-s\ :math:`{}^{-1}` and :math:`a=0.13`.
+:math:`\upsilon =1.5\times 10^{-5}`  m\ :sup:`2`
+s\ :sup:`-1` and :math:`a=0.13`.
 
 The litter resistance :math:`r_{litter}`  (Sakaguchi and Zeng 2009) (s
-m\ :math:`{}^{-1}`) is
+m\ :sup:`-1`) is
 
 .. math::
    :label: 5.120) 
 
    r_{litter} =\frac{1}{0.004u_{*} } \left(1-e^{-L_{litter}^{eff} } \right)
 
-where the effective litter area index :math:`L_{litter}^{eff}` 
-(:math:`\text{m}^{2}`  :math:`\text{m}^{-2}`) is the fraction of plant litter
-area index :math:`L_{litter}`  (currently set to 0.5  :math:`\text{m}^{2}`
-:math:`\text{m}^{-2}`) that is not covered by snow
+where the effective litter area index :math:`L_{litter}^{eff}` (m\ :sup:`2` m\ :sup:`-2`) is the fraction of plant litter
+area index :math:`L_{litter}`  (currently set to 0.5  m\ :sup:`2` m\ :sup:`-2`) that is not covered by snow
 
 .. math::
    :label: 5.121) 
@@ -1206,7 +1188,7 @@ The leaf boundary layer resistance :math:`r_{b}`  is
 
    r_{b} =\frac{1}{C_{v} } \left({U_{av} \mathord{\left/ {\vphantom {U_{av}  d_{leaf} }} \right. \kern-\nulldelimiterspace} d_{leaf} } \right)^{{-1\mathord{\left/ {\vphantom {-1 2}} \right. \kern-\nulldelimiterspace} 2} }
 
-where :math:`C_{v} =0.01` m s\ :math:`{}^{-1/2}` is the turbulent
+where :math:`C_{v} =0.01` m\ s\ :sup:`-1/2` is the turbulent
 transfer coefficient between the canopy surface and canopy air, and
 :math:`d_{leaf}`  is the characteristic dimension of the leaves in the
 direction of wind flow (Table 5.1).
@@ -1261,7 +1243,7 @@ length and displacement height to canopy top height, respectively (Table
 
    V=\frac{1-\exp \left\{-\beta \min \left[L+S,\, \left(L+S\right)_{cr} \right]\right\}}{1-\exp \left[-\beta \left(L+S\right)_{cr} \right]}
 
-where :math:`\beta =1` and :math:`\left(L+S\right)_{cr} =2` (:math:`\text{m}^{2}` m\ :math:`{}^{-2}`) is a critical value of exposed leaf
+where :math:`\beta =1` and :math:`\left(L+S\right)_{cr} =2` (m\ :sup:`2` m\ :sup:`-2`) is a critical value of exposed leaf
 plus stem area for which :math:`z_{0m}`  reaches its maximum.
 
 Table 5.1. Plant functional type aerodynamic parameters
@@ -1291,11 +1273,11 @@ Table 5.1. Plant functional type aerodynamic parameters
 +----------------------------------+--------------------+------------------+-------------------------+
 | BDS boreal                       | 0.120              | 0.68             | 0.04                    |
 +----------------------------------+--------------------+------------------+-------------------------+
-| C\ :math:`{}_{3}` arctic grass   | 0.120              | 0.68             | 0.04                    |
+| C\ :sub:`3` arctic grass         | 0.120              | 0.68             | 0.04                    |
 +----------------------------------+--------------------+------------------+-------------------------+
-| C\ :math:`{}_{3}` grass          | 0.120              | 0.68             | 0.04                    |
+| C\ :sub:`3` grass                | 0.120              | 0.68             | 0.04                    |
 +----------------------------------+--------------------+------------------+-------------------------+
-| C\ :math:`{}_{4}` grass          | 0.120              | 0.68             | 0.04                    |
+| C\ :sub:`4` grass                | 0.120              | 0.68             | 0.04                    |
 +----------------------------------+--------------------+------------------+-------------------------+
 | Crop R                           | 0.120              | 0.68             | 0.04                    |
 +----------------------------------+--------------------+------------------+-------------------------+
@@ -1413,7 +1395,7 @@ proceeds as follows:
 
 #. An initial guess for the wind speed :math:`V_{a}`  is obtained from
    eq. assuming an initial convective velocity :math:`U_{c} =0` m
-   s\ :math:`{}^{-1}` for stable conditions
+   s\ :sup:`-1` for stable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from
    eq. ) and :math:`U_{c} =0.5` for unstable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
@@ -1594,7 +1576,7 @@ is the sum of :math:`E'_{g}`  over all evaporating PFTs where
 relative area of the :math:`j^{th}`  PFT with respect to the column, and
 :math:`npft` is the number of PFTs on the column.
 :math:`w_{ice,\, snl+1}`  and :math:`w_{liq,\, snl+1}`  are the ice and
-liquid water contents (kg m\ :math:`{}^{-2}`) of the top snow/soil layer
+liquid water contents (kg m\ :sup:`-2`) of the top snow/soil layer
 (Chapter 7). Any resulting energy deficit is assigned to sensible heat
 as
 
@@ -1603,13 +1585,9 @@ as
 
    H''_{g} =H_{g} +\lambda \left(E'_{g} -E''_{g} \right).
 
-The ground water vapor flux :math:`E''_{g}`  is partitioned into
-evaporation of liquid water from snow/soil :math:`q_{seva}`  (kg
-m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`), sublimation from snow/soil ice
-:math:`q_{subl}`  (kg m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`), liquid dew
-on snow/soil :math:`q_{sdew}`  (kg m\ :math:`{}^{-2}`
-s\ :math:`{}^{-1}`), or frost on snow/soil :math:`q_{frost}`  (kg
-m\ :math:`{}^{-2}` s\ :math:`{}^{-1}`) as
+The ground water vapor flux :math:`E''_{g}`  is partitioned into evaporation of liquid water from snow/soil :math:`q_{seva}`  
+(kg\ m\ :sup:`-2` s\ :sup:`-1`), sublimation from snow/soil ice :math:`q_{subl}`  (kg m\ :sup:`-2` s\ :sup:`-1`), liquid dew
+on snow/soil :math:`q_{sdew}`  (kg m\ :sup:`-2` s\ :sup:`-1`), or frost on snow/soil :math:`q_{frost}`  (kg m\ :sup:`-2` s\ :sup:`-1`) as
 
 .. math::
    :label: 5.146) 
@@ -1677,7 +1655,7 @@ When converting ground water vapor flux to an energy flux, the term
 
 where :math:`\lambda _{sub}`  and :math:`\lambda _{vap}`  are the latent
 heat of sublimation and vaporization, respectively (J
-kg\ :math:`{}^{-1}`) (Table 2.6). When converting vegetation water vapor
+(kg\ :sup:`-1`) (Table 2.6). When converting vegetation water vapor
 flux to an energy flux, :math:`\lambda _{vap}`  is used.
 
 The system balances energy as
