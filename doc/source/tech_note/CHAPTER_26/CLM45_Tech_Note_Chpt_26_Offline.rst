@@ -1,5 +1,3 @@
-.. math:: 1
-
 Offline Mode
 ================
 
@@ -27,12 +25,12 @@ to be run over Antarctica and ensures data is available along coastlines
 regardless of model resolution.
 
 The forcing data is ingested into a data atmosphere model in three
-“streams”; precipitation (:math:`P`) (mm s\ :math:`{}^{-1}`), solar
-radiation (:math:`S_{atm}` ) (W m\ :math:`{}^{-2}`), and four other
+“streams”; precipitation (:math:`P`) (mm s\ :sup:`-1`), solar
+radiation (:math:`S_{atm}` ) (W m\ :sup:`-2`), and four other
 fields [atmospheric pressure :math:`P_{atm}`  (Pa), atmospheric specific
-humidity :math:`q_{atm}`  (kg kg\ :math:`{}^{-1}`), atmospheric
+humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`), atmospheric
 temperature :math:`T_{atm}`  (K), and atmospheric wind :math:`W_{atm}` 
-(m s\ :math:`{}^{-1}`)]. These are separate streams because they are
+(m s\ :sup:`-1`)]. These are separate streams because they are
 handled differently according to the type of field. In the CRUNCEP
 dataset, the precipitation stream is provided at six hour intervals and
 the data atmosphere model prescribes the same precipitation rate for
@@ -49,15 +47,15 @@ solar radiation supplied by the six-hourly forcing data is actually
 used. The solar radiation at model time step :math:`t_{M}`  is
 
 .. math::
+   :label: ZEqnNum160435 
 
-   \label{ZEqnNum160435} 
    \begin{array}{l} {S_{atm} \left(t_{M} \right)=\frac{\frac{\Delta t_{FD} }{\Delta t_{M} } S_{atm} \left(t_{FD} \right)\mu \left(t_{M} \right)}{\sum _{i=1}^{\frac{\Delta t_{FD} }{\Delta t_{M} } }\mu \left(t_{M_{i} } \right) } \qquad {\rm for\; }\mu \left(t_{M} \right)>0.001} \\ {S_{atm} \left(t_{M} \right)=0\qquad {\rm for\; }\mu \left(t_{M} \right)\le 0.001} \end{array}
 
 where :math:`\Delta t_{FD}`  is the time step of the forcing data (6
-hours :math:`\times`  3600 seconds hour\ :math:`{}^{-1}` = 21600
+hours :math:`\times`  3600 seconds hour\ :sup:`-1` = 21600
 seconds), :math:`\Delta t_{M}`  is the model time step (seconds),
 :math:`S_{atm} \left(t_{FD} \right)` is the six-hourly solar radiation
-from the forcing data (W m\ :math:`{}^{-2}`), and
+from the forcing data (W m\ :sup:`-2`), and
 :math:`\mu \left(t_{M} \right)` is the cosine of the solar zenith angle
 at model time step :math:`t_{M}`  (section 3.3). The term in the
 denominator of equation is the sum of the cosine of the solar zenith
@@ -71,46 +69,46 @@ derived from one year’s worth of hourly CAM output from CAM version
 cam3\_5\_55 as
 
 .. math::
+   :label: 26.2) 
 
-   \label{26.2)} 
    S_{atm} \, \downarrow _{vis}^{\mu } =R_{vis} \left(\alpha S_{atm} \right)
 
 .. math::
+   :label: 26.3) 
 
-   \label{26.3)} 
    S_{atm} \, \downarrow _{nir}^{\mu } =R_{nir} \left[\left(1-\alpha \right)S_{atm} \right]
 
 .. math::
+   :label: 26.4) 
 
-   \label{26.4)} 
    S_{atm} \, \downarrow _{vis} =\left(1-R_{vis} \right)\left(\alpha S_{atm} \right)
 
 .. math::
+   :label: 26.5) 
 
-   \label{26.5)} 
    S_{atm} \, \downarrow _{nir} =\left(1-R_{nir} \right)\left[\left(1-\alpha \right)S_{atm} \right].
 
 where :math:`\alpha` , the ratio of visible to total incident solar
 radiation, is assumed to be
 
 .. math::
+   :label: 26.6) 
 
-   \label{26.6)} 
    \alpha =\frac{S_{atm} \, \downarrow _{vis}^{\mu } +S_{atm} \, \downarrow _{vis}^{} }{S_{atm} } =0.5.
 
 The ratio of direct to total incident radiation in the visible
 :math:`R_{vis}`  is
 
 .. math::
+   :label: 26.7) 
 
-   \label{26.7)} 
    R_{vis} =a_{0} +a_{1} \times \alpha S_{atm} +a_{2} \times \left(\alpha S_{atm} \right)^{2} +a_{3} \times \left(\alpha S_{atm} \right)^{3} \qquad 0.01\le R_{vis} \le 0.99
 
 and in the near-infrared :math:`R_{nir}`  is
 
 .. math::
+   :label: 26.8) 
 
-   \label{26.8)} 
    R_{nir} =b_{0} +b_{1} \times \left(1-\alpha \right)S_{atm} +b_{2} \times \left[\left(1-\alpha \right)S_{atm} \right]^{2} +b_{3} \times \left[\left(1-\alpha \right)S_{atm} \right]^{3} \qquad 0.01\le R_{nir} \le 0.99
 
 where
@@ -125,42 +123,42 @@ derived as follows. The atmospheric reference height :math:`z'_{atm}`
 :math:`u_{atm} =v_{atm} ={W_{atm} \mathord{\left/ {\vphantom {W_{atm}  \sqrt{2} }} \right. \kern-\nulldelimiterspace} \sqrt{2} }` .
 The potential temperature :math:`\overline{\theta _{atm} }` (K) is set
 to the atmospheric temperature :math:`T_{atm}` . The atmospheric
-longwave radiation :math:`L_{atm} \, \downarrow`  (W m\ :math:`{}^{-2}`)
+longwave radiation :math:`L_{atm} \, \downarrow`  (W m\ :sup:`-2`)
 is derived from the atmospheric vapor pressure :math:`e_{atm}`  and
 temperature :math:`T_{atm}`  (Idso 1981) as
 
 .. math::
+   :label: 26.9) 
 
-   \label{26.9)} 
    L_{atm} \, \downarrow =\left[0.70+5.95\times 10^{-5} \times 0.01e_{atm} \exp \left(\frac{1500}{T_{atm} } \right)\right]\sigma T_{atm}^{4}
 
 where
 
 .. math::
+   :label: 26.10) 
 
-   \label{26.10)} 
    e_{atm} =\frac{P_{atm} q_{atm} }{0.622+0.378q_{atm} }
 
 and :math:`\sigma`  is the Stefan-Boltzmann constant (W
-m\ :math:`{}^{-2}` K\ :math:`{}^{-4}`) (Table 2.6). The fraction of
-precipitation :math:`P` (mm s\ :math:`{}^{-1}`) falling as rain and/or
+m\ :sup:`-2` K\ :math:`{}^{-4}`) (Table 2.6). The fraction of
+precipitation :math:`P` (mm s\ :sup:`-1`) falling as rain and/or
 snow is
 
 .. math::
+   :label: ZEqnNum336485 
 
-   \label{ZEqnNum336485} 
    q_{rain} =P\left(f_{P} \right),
 
 .. math::
+   :label: 26.12) 
 
-   \label{26.12)} 
    q_{snow} =P\left(1-f_{P} \right)
 
 where
 
 .. math::
+   :label: 26.13) 
 
-   \label{26.13)} 
    f_{P} =0<0.5\left(T_{atm} -T_{f} \right)<1.
 
 The aerosol deposition rates :math:`D_{sp}`  (14 rates as described in
@@ -171,11 +169,11 @@ If the user wishes to provide atmospheric forcing data from another
 source, the data format outlined above will need to be followed with the
 following exceptions. The data atmosphere model will accept a
 user-supplied relative humidity :math:`RH` (%) and derive specific
-humidity :math:`q_{atm}`  (kg kg\ :math:`{}^{-1}`) from
+humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`) from
 
 .. math::
+   :label: 26.14) 
 
-   \label{26.14)} 
    q_{atm} =\frac{0.622e_{atm} }{P_{atm} -0.378e_{atm} }
 
 where the atmospheric vapor pressure :math:`e_{atm}`  (Pa) is derived
@@ -190,9 +188,9 @@ temperature :math:`T_{dew}`  (K) and derive specific humidity
 :math:`q_{atm}`  from
 
 .. math::
+   :label: 26.15) 
 
-   \label{26.15)} 
-   q_{atm} =\frac{0.622e_{sat}^{T_{dew} } }{P_{atm} -0.378e_{sat}^{T_{dew} } } .
+   q_{atm} = \frac{0.622e_{sat}^{T_{dew} } }{P_{atm} -0.378e_{sat}^{T_{dew} } } .
 
 Here, :math:`e_{sat}^{T}` , the saturation vapor pressure as a function
 of temperature, is derived from Lowe’s (1977) polynomials. If not

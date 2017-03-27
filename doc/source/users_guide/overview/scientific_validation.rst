@@ -1,7 +1,7 @@
 .. _scientific-validiation:
 
 ========================
- Scientific Validiation
+ Scientific Validation
 ========================
 
 In this section we go over what has been extensively tested and scientifically validated with CLM4.5, and maybe more importantly what has NOT been tested and may NOT be scientifically validated. You can use all features of CLM, but need to realize that some things haven't been tested extensively or validated scientifically. When you use these features you may run into trouble doing so, and will need to do your own work to make sure the science is reasonable.

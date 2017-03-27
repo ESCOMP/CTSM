@@ -83,9 +83,9 @@ LD)], was derived from LandScan 2004, a population density dataset
 derived from census data, nighttime lights satellite observations, road
 proximity, and slope (Dobson et al. 2000). The urban extent data for
 TBD, HD, and MD classes are aggregated from the original 1 km resolution
-to both a 0.05\ :math:`{}^\circ` by 0.05\ :math:`{}^\circ` global grid
-for high-resolution studies or a 0.5\ :math:`{}^\circ` by
-0.5\ :math:`{}^\circ` grid. For the current implementation, the LD class
+to both a 0.05\ :sup:`o` by 0.05\ :sup:`o` global grid
+for high-resolution studies or a 0.5\ :sup:`o` by
+0.5\ :sup:`o` grid. For the current implementation, the LD class
 is not used because it is highly rural and better modeled as a
 vegetated/soil surface. Although the TBD, HD, and MD classes are
 represented as individual urban landunits, urban model history output is

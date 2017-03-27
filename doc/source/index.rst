@@ -17,6 +17,7 @@ Table of contents
    :maxdepth: 1
       
    users_guide/index.rst
+   tech_note/index.rst
 
 Indices and tables
 ==================

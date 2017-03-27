@@ -1,5 +1,3 @@
-.. math:: 1
-
 Transient Landcover Change
 ==============================
 
@@ -56,13 +54,13 @@ algorithm, and :math:`n` is the index value for the
 :math:`dynpft\_ year(n)=year_{cur}` :
 
 .. math::
+   :label: 21.1) 
 
-   \label{21.1)} 
    nt_{1} =\left\{\begin{array}{l} {1\qquad {\rm for}\qquad year_{cur} <dynpft\_ year(1)} \\ {n\qquad {\rm for}\qquad dynpft\_ year(1)\le year_{cur} <dynpft\_ year(nyears)} \\ {nyears\qquad {\rm for}\qquad year_{cur} \ge dynpft\_ year(nyears)} \end{array}\right\}
 
 .. math::
+   :label: 21.2) 
 
-   \label{21.2)} 
    nt_{2} =\left\{\begin{array}{l} {1\qquad {\rm for}\qquad year_{cur} <dynpft\_ year(1)} \\ {n+1\qquad {\rm for}\qquad dynpft\_ year(1)\le year_{cur} <dynpft\_ year(nyears)} \\ {nyears\qquad {\rm for}\qquad year_{cur} \ge dynpft\_ year(nyears)} \end{array}\right\}
 
 Interpolation of PFT weights between annual time slices in the *dynpft*
@@ -73,8 +71,8 @@ of calendar days since January 1 of the current model year
 :math:`tw_{cday}` \ :math:`{}_{ }`\ is
 
 .. math::
+   :label: 21.3) 
 
-   \label{21.3)} 
    tw_{cday} =\frac{366-cday}{365}
 
 where the numerator is 366 instead of 365 because the time manager
@@ -86,8 +84,8 @@ and :math:`w_{p} (nt_{2} )`\ obtained from the *dynpft* dataset for PFT
 PFT weight for the current time step (:math:`w_{p,t}` ) is
 
 .. math::
+   :label: 21.4) 
 
-   \label{21.4)} 
    w_{p,t} =tw_{cday} \left[w_{p} \left(nt_{1} \right)-w_{p} \left(nt_{2} \right)\right]+w_{p} \left(nt_{2} \right)
 
 The form of this equation is designed to improve roundoff accuracy
@@ -100,8 +98,8 @@ The change in weight for a PFT between the current and previous time
 steps (:math:`\Delta w_{p}` ) is
 
 .. math::
+   :label: 21.5) 
 
-   \label{21.5)} 
    \Delta w_{p} =w_{p}^{n} -w_{p}^{n-1}
 
 where *n* denotes the current time step. The area of a given PFT
@@ -118,8 +116,8 @@ unit water content before (:math:`W_{tot,1}` ) and after
 :math:`W_{tot,1}`  is
 
 .. math::
+   :label: 21.6) 
 
-   \label{21.6)} 
    W_{tot,1} =W_{a} +W_{sno} +\sum _{i=1}^{N_{levgrnd} }\left(w_{liq,i} +w_{ice,i} \right) +\sum _{j=1}^{npft}\left(W_{can,j} wt_{j,1} \right)
 
 where :math:`W_{a}`  is the aquifer water, :math:`W_{sno}`  is the snow
@@ -135,8 +133,8 @@ difference between :math:`W_{tot,2}` \ and :math:`W_{tot,1}`  is
 subtracted from the grid cell runoff
 
 .. math::
+   :label: 21.7) 
 
-   \label{21.7)} 
    R_{liq} =R_{liq} +W_{tot,2} -W_{tot,1} .
 
 Total energy is unperturbed in this case and therefore an energy
@@ -331,7 +329,7 @@ kept consistent with the original current day and potential vegetation
 CLM parameters, while remaining faithful to the stocktickerUNH assigned
 areas.
 
-21.3.6 Forest Harvest Dataset Changes
+Forest Harvest Dataset Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Discussions following the initial analysis of CCSM4 land cover change
@@ -348,12 +346,9 @@ described in Lawrence et al. (2012).
 Figure 21.1. Schematic of land cover change impacts on CLM carbon pools
 and fluxes.
 
-|image|
+.. image:: image1.png
 
 Figure 21.2. Schematic of translation of annual UNH land units to CLM4
 plant functional types.
 
-|image|
-
-.. |image| image:: image1
-.. |image| image:: image2
+.. image:: image2.png
