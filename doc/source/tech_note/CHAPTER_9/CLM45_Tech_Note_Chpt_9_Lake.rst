@@ -501,7 +501,7 @@ system is discretized into *N* layers, where
 
    N=n_{sno} +N_{levlak} +N_{levgrnd}  ,
 
- :math:`n_{sno}`  is the number of actively modeled snow layers at the
+:math:`n_{sno}`  is the number of actively modeled snow layers at the
 current timestep (section 7.2), and :math:`N_{levgrnd}` \ is as for
 vegetated land units (Chapter 6). Energy is conserved as
 

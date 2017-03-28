@@ -235,8 +235,7 @@ The fire spread rate in the downwind direction is represented as
 
    u_{p} =u_{\max } C_{m} g(W)
 
- (Arora and Boer, 2005), where :math:`u_{\max }`  (m
-s\ :sup:`-1`) is the PFT-dependent average maximum fire spread
+(Arora and Boer, 2005), where :math:`u_{\max }`  (m s\ :sup:`-1`) is the PFT-dependent average maximum fire spread
 rate in natural vegetation regions; :math:`C_{m}`  and :math:`g(W)`
 represent the dependence of :math:`u_{p}`  on fuel wetness and wind
 speed :math:`W`, respectively. :math:`u_{\max }`  is set to 0.55 m
