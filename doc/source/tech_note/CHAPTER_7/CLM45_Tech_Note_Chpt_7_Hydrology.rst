@@ -1730,7 +1730,8 @@ where
 
    s_{N_{levsoi} +1} =0.5\left(\frac{\theta _{sat,\, N_{levsoi} } +\theta _{N_{levsoi} } }{\theta _{sat,\, N_{levsoi} } } \right)\qquad 0.01\le s_{N_{levsoi} +1} \le 1,
 
- :math:`\psi _{E,\, N_{levsoi} +1}`  is evaluated from equations and ,
+:math:`\psi _{E,\, N_{levsoi} +1}`  is evaluated from equations and ,
+
 and
 
 .. math::
@@ -1914,7 +1915,7 @@ in water stored in the unconfined aquifer :math:`W_{a}`  (mm) is updated
 as
 
 .. math::
-   :label: 7.174) 
+   :label: 7.174a) 
 
    \Delta W_{a}^{} =\left(q_{recharge} -q_{drai} \right)\Delta t
 
@@ -1924,7 +1925,7 @@ layer :math:`N_{levsoi}` .
 The recharge rate is defined as positive when water enters the aquifer
 
 .. math::
-   :label: 7.174) 
+   :label: 7.174b) 
 
    q_{recharge} =\frac{\Delta \theta _{liq,\, N_{levsoi} +1} \Delta z_{N_{levsoi} +1} }{\Delta t}
 
@@ -1935,7 +1936,7 @@ calculated from the solution of the soil water equations (section 7.4),
 and :math:`\Delta z_{N_{levsoi} +1}`  (mm) is
 
 .. math::
-   :label: 7.174) 
+   :label: 7.174c) 
 
    \Delta z_{N_{levsoi} +1} =z_{\nabla }^{n} -z_{h,\, N_{levsoi} } .
 
