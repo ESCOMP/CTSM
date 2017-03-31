@@ -27,7 +27,7 @@ where :math:`N_{f}`  (count (time step)\ :sup:`-1`) is fire
 counts in the grid cell; :math:`a` (km:sup:`2`) is average fire
 spread area of a fire.
 
-18.1.1 Fire counts
+Fire counts
 ^^^^^^^^^^^^^^^^^^
 
 Fire counts :math:`N_{f}`  is taken as
@@ -176,10 +176,10 @@ influence on fire occurrence for tree PFTs as
    f_{e} =\left\{\begin{array}{cc} {0.39,} & {GDP\ge 20} \\ {1} & {GDP<20} \end{array}\right.
 
 to reproduce that the MODIS fire counts in tree-dominated regions of
-GDP\ :math:`\ge 20` k 1995US$ capita\ :sup:`-1` is 39% of that in
-other **** tree-dominated regions.
+GDP (:math:`\ge 20` k 1995US$ capita\ :sup:`-1` is 39% of that in
+other tree-dominated regions.
 
-18.1.2 Average spread area of a fire
+Average spread area of a fire
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Fire fighting capacity depends on socioeconomic conditions and affects
@@ -235,7 +235,7 @@ The fire spread rate in the downwind direction is represented as
 
    u_{p} =u_{\max } C_{m} g(W)
 
-(Arora and Boer, 2005), where :math:`u_{\max }`  (m s\ :sup:`-1`) is the PFT-dependent average maximum fire spread
+(Arora and Boer, 2005), where :math:`u_{\max }`\ (m s\ :sup:`-1`) is the PFT-dependent average maximum fire spread
 rate in natural vegetation regions; :math:`C_{m}`  and :math:`g(W)`
 represent the dependence of :math:`u_{p}`  on fuel wetness and wind
 speed :math:`W`, respectively. :math:`u_{\max }`  is set to 0.55 m
@@ -319,7 +319,7 @@ and
 Eqs. - reflect that more developed and more densely populated regions
 have a higher fire fighting capability.
 
-18.1.3 Fire impact
+Fire impact
 ^^^^^^^^^^^^^^^^^^
 
 In post-fire regions, we calculate PFT-level fire carbon emissions from
@@ -328,25 +328,25 @@ the *j*\ th PFT, :math:`{\phi}_{j}`  (g C (time step)\ :sup:`-1`, as
 .. math::
    :label: 18.26) 
 
-   \phi _{j} =A_{b,} _{j} C_{j} \bullet CC_{j}
+   \phi _{j} =A_{b,j} C_{j} \bullet CC_{j}
 
 where :math:`A_{b,j}` (km\ :sup:`2`\ (time step)\ :sup:`-1`) is burned area for the *j*\ th PFT;
 **C**\ :sub:`j` =(*C*\ :sub:`leaf`, *C*\ :sub:`stem`, *C*\ :sub:`root`, *C*\ :sub:`ts`) is a vector with carbon density 
 (g C km\ :sup:`-2`) for leaf, stem (live and dead stem), root (fine, live coarse and dead coarse root), and transfer and storage carbon pools
-as elements; **CC**\ :sub:`j` = (*CC*\ :sub:`leaf`, *CC*\ :sub:`stem`, *CC*\ :sub:`root`, *CC*\ sub:`ts`) is the corresponding combustion
+as elements; **CC**\ :sub:`j` = (*CC*\ :sub:`leaf`, *CC*\ :sub:`stem`, *CC*\ :sub:`root`, *CC*\ :sub:`ts`) is the corresponding combustion
 completeness factor vector (Table 18.1). Moreover, we assume that 30% and 20% of column-level litter and coarse woody debris are burned and
 the corresponding carbon is transferred to atmosphere.
 
 Tissue mortality due to fire leads to carbon transfers in two ways.
 First, carbon from uncombusted leaf, live stem, dead stem, root, and
 transfer and storage pools
-:math:`C^{'} _{j1} =(C_{{\rm leaf}} (1-CC_{{\rm leaf}} ),C_{{\rm livestem}} (1-CC_{{\rm stem}} ),C_{{\rm deadstem}} (1-CC_{{\rm stem}} ),C_{{\rm root}} (1-CC_{{\rm root}} ),C_{{\rm ts}} (1-CC_{{\rm ts}} ))_{j}` 
+:math:`C^{'} _{j1} =(C_{{\rm leaf}} (1-CC_{{\rm leaf}} ) ,C_{{\rm livestem}} (1-CC_{{\rm stem}} ) ,C_{{\rm deadstem}} (1-CC_{{\rm stem}} ),C_{{\rm root}} (1-CC_{{\rm root}} ),C_{{\rm ts}} (1-CC_{{\rm ts}} )) _{j}` 
 (g C km\ :sup:`-2`) is transferred to litter as
 
 .. math::
    :label: 18.27) 
 
-   \Psi _{j1} =\frac{A_{b,} _{j} }{f_{j} A_{g} } C^{'} _{j1} \bullet M_{j1}
+   \Psi _{j1} =\frac{A_{b,j} }{f_{j} A_{g} } C^{'} _{j1} \bullet M_{j1}
 
 where
 :math:`M_{j1} =(M_{{\rm leaf}} ,M_{{\rm livestem,1}} ,M_{{\rm deadstem}} ,M_{{\rm root}} ,M_{{\rm ts}} )_{j}` 
@@ -356,7 +356,7 @@ carbon from uncombusted live stems is transferred to dead stems as:
 .. math::
    :label: 18.28) 
 
-   \Psi _{j2} =\frac{A_{b,} _{j} }{f_{j} A_{g} } C_{livestem} (1-CC_{stem} )M_{livestem,2}
+   \Psi _{j2} =\frac{A_{b,j} }{f_{j} A_{g} } C_{livestem} (1-CC_{stem} )M_{livestem,2}
 
 where :math:`M_{livestem,2}`  is the corresponding mortality factor
 (Table 18.1).
@@ -371,7 +371,7 @@ killed by fire per km\ :sup:`2` (individual km\ :sup:`-2`
 .. math::
    :label: 18.29) 
 
-   P_{disturb,} _{j} =\frac{A_{b,} _{j} }{f_{j} A_{g} } P_{j} \xi _{j}
+   P_{disturb,j} =\frac{A_{b,j} }{f_{j} A_{g} } P_{j} \xi _{j}
 
 where :math:`P_{j}`  (individual km\ :sup:`-2`) is the population
 density for the *j*\ th tree PFT and :math:`\xi _{j}`  is the
@@ -545,8 +545,7 @@ CLM4.5 version driven by Qian et al. (2006) atmospheric forcing and
 climatological lightning data to earlier studies: about 2.4 Mha peatland
 was burned over Indonesia in 1997 (Page et al. 2002) and the average
 burned area of peat fires in Western Canada was 0.2 Mha
-yr\ :sup:`-1` for 1980\ :math:`\math{-}`\ 1999 (Turestky et al.
-2004).
+yr\ :sup:`-1` for 1980-1999 (Turestky et al.  2004).
 
 For tropical peat fires, :math:`f_{cli,p}`  is set as a function of
 long-term precipitation :math:`P_{60d}` :

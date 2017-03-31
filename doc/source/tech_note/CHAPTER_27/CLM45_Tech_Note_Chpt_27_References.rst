@@ -1247,7 +1247,7 @@ Statistics Division.
 
 Vallano, D.M. and Sparks, J.P. 2007. Quantifying foliar uptake of
 gaseous itrogen dioxide using enriched foliar
-:math:`\deltaup`\ :math:`{}^{15 }`\ N values. New Phytologist
+:math:`\delta^{15}`\  N values. New Phytologist
 177:946-955.
 
 van der Werf, G.R., Randerson, J.T., Giglio, L., Collatz, G.J., Mu, M.,

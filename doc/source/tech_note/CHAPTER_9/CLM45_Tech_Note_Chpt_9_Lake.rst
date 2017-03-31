@@ -192,7 +192,7 @@ where
 :math:`\nu _{0} =1.51\times 10^{-5} {\textstyle\frac{{\rm m}^{{\rm 2}} }{{\rm s}}}` 
 , :math:`T_{0} ={\rm 293.15\; K}`,
 :math:`P_{0} =1.013\times 10^{5} {\rm \; Pa}` , and
-:math:`\{P}_{ref}` is the pressure at the atmospheric reference
+:math:`P_{ref}` is the pressure at the atmospheric reference
 height. The Charnock coefficient *C* is a function of the lake fetch *F*
 (m), given in the surface data or set to 25 times the lake depth *d* by
 default:
