@@ -23,7 +23,7 @@ cell to its downstream neighboring grid cell. The change in storage
 cell (m\ :sup:`3` s\ :sup:`-1`) is
 
 .. math::
-   :label: ZEqnNum723341 
+   :label: 11.1)
 
    \frac{dS}{dt} =\sum F_{in}  -F_{out} +R
 
@@ -55,7 +55,7 @@ and channel roughness data are not available globally, so a simplified
 effective flow velocity expression is used in RTM
 
 .. math::
-   :label: 11.2) 
+   :label: 11.3) 
 
    v=\max \left(0.05,k\beta ^{1/2} \right)
 
@@ -66,14 +66,14 @@ The distance :math:`d` between two grid cell centers depends on river
 direction, latitude, and longitude as
 
 .. math::
-   :label: 11.3) 
+   :label: 11.4) 
 
    d=\sqrt{\Delta x^{2} +\Delta y^{2} } .
 
 The distance in the zonal direction :math:`\Delta x` (m) is
 
 .. math::
-   :label: 11.4) 
+   :label: 11.5) 
 
    \Delta x=\left(1\times 10^{3} \left|\theta _{i,\, j} -\theta _{i*,\, j*} \right|R_{e} \right)\left[0.5\left(\cos \phi _{i,\, j} +\cos \phi _{i*,\, j*} \right)\right]
 
@@ -86,7 +86,7 @@ are grid cell indices. The distance in the meridional direction
 :math:`\Delta y` (m) is
 
 .. math::
-   :label: 11.5) 
+   :label: 11.6) 
 
    \Delta y=\left(1\times 10^{3} \left|\theta _{i,\, j} -\theta _{i*,\, j*} \right|R_{e} \right).
 
@@ -97,7 +97,7 @@ total liquid water runoff at the land model resolution (kg
 m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 11.6) 
+   :label: 11.7) 
 
    R_{liq} =q_{over} +q_{drai} +q_{rgwl}
 
@@ -108,14 +108,14 @@ where :math:`q_{over}`  is surface runoff (section 7.3),
 9.6.3). The total ice water runoff, also at the land model resolution is
 
 .. math::
-   :label: 11.7) 
+   :label: 11.8) 
 
    R_{ice} =q_{snwcp,ice}
 
 where :math:`q_{snwcp,ice}`  is the ice runoff from snow-capped
 surfaces (section 7.7). The runoff at the land model resolution is
 interpolated to the resolution of RTM and converted to units of
-m\ :sup:`3` s\ :sup:`-1` for use in equation by multiplying
+m\ :sup:`3` s\ :sup:`-1` for use in equation (11.1) by multiplying
 by :math:`1\times 10^{-3} A` where :math:`A` is the area
 (m\ :sup:`2`) of the RTM grid cell.
 
@@ -132,7 +132,7 @@ as a diagnostic tool. The river-routing scheme conserves water globally
 as
 
 .. math::
-   :label: 11.8) 
+   :label: 11.9) 
 
    \sum _{i,\, j}\left(\frac{dS}{dt} \right) _{i,\, j} =\sum _{i,\, j}R_{i,\, j}  .
 

@@ -93,7 +93,7 @@ This can also be expressed using epsilon notation (:math:`\epsilon`), where
 
    \alpha _{A-B} =\frac{\varepsilon _{A-B} }{1000} +1
 
-In other words, if :math:`{\epsilon }_{A-B} = 4.4{\mathrm{‰}}`, then :math:`{\alpha}_{A-B} =1.0044`.
+In other words, if :math:`{\epsilon }_{A-B} = 4.4` ‰ , then :math:`{\alpha}_{A-B} =1.0044`.
 
 In addition to the stable isotopes :sup:`1`\ :sup:`2`\ C and :sup:`1`\ :sup:`3`\ C, the unstable isotope
 :sup:`1`\ :sup:`4`\ C is included in CLM. :sup:`1`\ :sup:`4`\ C can also be described using the delta notation:

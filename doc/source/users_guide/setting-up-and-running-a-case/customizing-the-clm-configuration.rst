@@ -102,7 +102,7 @@ CLM_NML_USE_CASE
      glacierMEC_pd = Running an IG case with the ice sheet model glimmer
      stdurbpt_pd = Standard Urban Point Namelist Settings
 
-     .. note::See the `the Section called Precedence of Options <CLM-URL>`_ section for the precedence of this option relative to the others.
+     .. note::See `the Section called Precedence of Options <CLM-URL>`_ section for the precedence of this option relative to the others.
 
 CLM_BLDNML_OPTS
   The option CLM_BLDNML_OPTS is for passing options to the CLM "build-namelist" script. 
@@ -343,7 +343,7 @@ When "-irrig" is used **build-namelist** will try to find surface datasets that 
 
   For a list of the history fields available see `CLM History Fields <CLM-URL>`_.
 
-  .. note: See the `the Section called Precedence of Options <CLM-URL>`_ section for the precedence of this option relative to the others.
+  .. note::See `the Section called Precedence of Options <CLM-URL>`_ section for the precedence of this option relative to the others.
 
 ``CLM_FORCE_COLDSTART`` 
    when set to on, *requires* that your simulation do a cold start from arbitrary initial conditions. If this is NOT set, it will use an initial condition file if it can find an appropriate one, and otherwise do a cold start. ``CLM_FORCE_COLDSTART`` is a good way to ensure that you are doing a cold start if that is what you want to do.
@@ -360,7 +360,7 @@ When "-irrig" is used **build-namelist** will try to find surface datasets that 
 
       An example of using ``CLM_USRDAT_NAME`` for a simulation is given in `Example 5-4 <CLM-URL>`_.
 
-   .. note:: See `the Section called Precedence of Options <CLM-URL>`_ section for the precedence of this option relative to the others.
+   .. note: See `the Section called Precedence of Options <CLM-URL>`_ section for the precedence of this option relative to the others.
 
 ``CLM_CO2_TYPE`` 
    sets the type of input CO2 for either "constant", "diagnostic" or prognostic". 
@@ -421,7 +421,7 @@ Example: user_nl_clm namelist file
 
 **Note:** The comments at the top are some guidance given in the default user_nl_clm and just give some guidance on how to set variables and use the file.
 
-**Note:** See the `the Section called Precedence of Options <CLM-link>`_ section for the precedence of this option relative to the others.
+**Note:** See `the Section called Precedence of Options <CLM-link>`_ section for the precedence of this option relative to the others.
 
 **Note:** You do NOT need to specify the namelist group that the variables are in because the CLM **build-namelist** knows the namelist that specific variable names belong to, and it puts them there.
 

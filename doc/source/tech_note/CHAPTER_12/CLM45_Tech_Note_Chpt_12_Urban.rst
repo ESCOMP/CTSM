@@ -112,7 +112,7 @@ but are not shown for clarity.
 Figure 12.2. Schematic of urban and atmospheric model coupling.
 
 The urban model is forced by the atmospheric model wind
-(:math:`u_{atm}` ), temperature (**:math:`T_{atm}` **), specific
+(:math:`u_{atm}` ), temperature (:math:`T_{atm}` ), specific
 humidity (:math:`q_{atm}` ), precipitation (:math:`P_{atm}` ), solar
 (:math:`S_{atm} \, \downarrow` ) and longwave
 (:math:`L_{atm} \, \downarrow` ) radiation at reference height
