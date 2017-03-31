@@ -749,7 +749,7 @@ contains
     !
     ! !USES:
     use landunit_varcon, only : istice, istice_mec, isturb_MIN, isturb_MAX
-    use column_varcon  , only : icol_road_perv, is_hydrologically_active
+    use column_varcon  , only : icol_road_perv
     !
     ! !ARGUMENTS:
     integer, intent(in) :: col_itype  ! col%itype value

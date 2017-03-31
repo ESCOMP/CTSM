@@ -40,6 +40,7 @@ contains
     use clm_varpar      , only : nlevsoifl, toplev_equalspace 
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb, nlayer, nlayert 
     use clm_varcon      , only : zsoi, dzsoi, zisoi, spval, nlvic, dzvic, pc, grlnd
+    use clm_varcon      , only : aquifer_water_baseline
     use landunit_varcon , only : istice, istwet, istsoil, istdlak, istcrop, istice_mec
     use column_varcon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
     use fileutils       , only : getfil
@@ -80,7 +81,7 @@ contains
     ! Initialize frost table
     ! -----------------------------------------------------------------
 
-    soilhydrology_inst%wa_col(bounds%begc:bounds%endc)  = 5000._r8
+    soilhydrology_inst%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline
     soilhydrology_inst%zwt_col(bounds%begc:bounds%endc) = 0._r8
 
     do c = bounds%begc,bounds%endc
@@ -88,6 +89,8 @@ contains
        if (.not. lun%lakpoi(l)) then  !not lake
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_road_perv) then
+                ! Note that the following hard-coded constants (on the next two lines)
+                ! seem implicitly related to aquifer_water_baseline
                 soilhydrology_inst%wa_col(c)  = 4800._r8
                 soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
              else
@@ -98,6 +101,8 @@ contains
              soilhydrology_inst%zwt_perched_col(c) = spval
              soilhydrology_inst%frost_table_col(c) = spval
           else
+             ! Note that the following hard-coded constants (on the next two lines) seem
+             ! implicitly related to aquifer_water_baseline
              soilhydrology_inst%wa_col(c)  = 4000._r8
              soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
              ! initialize frost_table, zwt_perched to bottom of soil column

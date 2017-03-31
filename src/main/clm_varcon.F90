@@ -73,7 +73,7 @@ module clm_varcon
   real(r8) :: tkair  = 0.023_r8                             ! thermal conductivity of air   [W/m/K]
   real(r8) :: tkice  = 2.290_r8                             ! thermal conductivity of ice   [W/m/K]
   real(r8) :: tkwat  = 0.57_r8                              ! thermal conductivity of water [W/m/K]
-  real(r8) :: tfrz   = SHR_CONST_TKFRZ                      ! freezing temperature [K]
+  real(r8), parameter :: tfrz   = SHR_CONST_TKFRZ           ! freezing temperature [K]
   real(r8), parameter :: tcrit  = 2.5_r8                    ! critical temperature to determine rain or snow
   real(r8) :: o2_molar_const = 0.209_r8                     ! constant atmospheric O2 molar ratio (mol/mol)
   real(r8) :: oneatm = 1.01325e5_r8                         ! one standard atmospheric pressure [Pa]
@@ -124,6 +124,8 @@ module clm_varcon
                                     ! (Clauser and Huenges, 1995)(W/m/K)
   real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000) !scs
   real(r8), parameter :: zmin_bedrock = 0.4_r8 ! minimum soil depth [m]
+
+  real(r8), parameter :: aquifer_water_baseline = 5000._r8 ! baseline value for water in the unconfined aquifer [mm]
 
   !!! C13
   real(r8), parameter :: preind_atm_del13c = -6.0   ! preindustrial value for atmospheric del13C

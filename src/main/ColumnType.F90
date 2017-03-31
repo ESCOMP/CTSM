@@ -24,6 +24,8 @@ module ColumnType
   use clm_varcon     , only : spval, ispval
   use shr_sys_mod    , only : shr_sys_abort
   use clm_varctl     , only : iulog
+  use column_varcon  , only : is_hydrologically_active
+  use LandunitType   , only : lun
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -62,6 +64,9 @@ module ColumnType
      real(r8), pointer :: z_lake               (:,:) ! layer depth for lake (m)
      real(r8), pointer :: lakedepth            (:)   ! variable lake depth (m)                             
      integer , pointer :: nbedrock             (:)   ! variable depth to bedrock index
+
+     ! other column characteristics
+     logical , pointer :: hydrologically_active(:)   ! true if this column is a hydrologically active type
 
      ! levgrnd_class gives the class in which each layer falls. This is relevant for
      ! columns where there are 2 or more fundamentally different layer types. For
@@ -125,6 +130,8 @@ contains
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
 
+    allocate(this%hydrologically_active(begc:endc))            ; this%hydrologically_active(:) = .false.
+
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -158,6 +165,7 @@ contains
     deallocate(this%topo_std   )
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)
+    deallocate(this%hydrologically_active)
 
   end subroutine Clean
 
@@ -174,12 +182,18 @@ contains
     integer, intent(in) :: itype
     !
     ! !LOCAL VARIABLES:
+    integer :: l
 
     character(len=*), parameter :: subname = 'update_itype'
     !-----------------------------------------------------------------------
 
+    l = col%landunit(c)
+
     if (col%type_is_dynamic(c)) then
        col%itype(c) = itype
+       col%hydrologically_active(c) = is_hydrologically_active( &
+            col_itype = itype, &
+            lun_itype = lun%itype(l))
     else
        write(iulog,*) subname//' ERROR: attempt to update itype when type_is_dynamic is false'
        write(iulog,*) 'c, col%itype(c), itype = ', c, col%itype(c), itype

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r230    sacks 03/31/2017 Fix dynamic landunits water and energy conservation
   clm4_5_14_r229     erik 03/10/2017 Update cime and make some changes to drv_flds_in namelist, fix some minor bugs
   clm4_5_14_r228     erik 03/07/2017 Bring in changes that were accidentally dropped as part of the clm4_5_14_r226 tag
   clm4_5_14_r227    sacks 03/06/2017 Improve performance of dynamic landunits code

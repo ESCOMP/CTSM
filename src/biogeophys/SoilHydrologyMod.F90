@@ -8,7 +8,7 @@ module SoilHydrologyMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
-  use clm_varcon        , only : e_ice, denh2o, denice, rpi
+  use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
   use EnergyFluxType    , only : energyflux_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
@@ -1257,8 +1257,8 @@ contains
              if(jwt(c) == nlevsoi) then             
                 wa(c)  = wa(c) - rsub_top(c) * dtime
                 zwt(c)     = zwt(c) + (rsub_top(c) * dtime)/1000._r8/rous
-                h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) + max(0._r8,(wa(c)-5000._r8))
-                wa(c)  = min(wa(c), 5000._r8)
+                h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) + max(0._r8,(wa(c)-aquifer_water_baseline))
+                wa(c)  = min(wa(c), aquifer_water_baseline)
              else                                
                 !-- water table within soil layers 1-9  -------------------------------------
                 !============================== RSUB_TOP =========================================

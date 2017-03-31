@@ -17,6 +17,7 @@ module initSubgridMod
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch                
+  use column_varcon  , only : is_hydrologically_active
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -412,6 +413,9 @@ contains
     col%wtlunit(ci) = wtlunit
     col%itype(ci) = ctype
     col%type_is_dynamic(ci) = l_type_is_dynamic
+    col%hydrologically_active(ci) = is_hydrologically_active( &
+         col_itype = ctype, &
+         lun_itype = lun%itype(li))
 
   end subroutine add_column
 

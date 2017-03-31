@@ -7,18 +7,19 @@ module dynInitColumnsMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod    , only : r8 => shr_kind_r8
-  use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use clm_varctl      , only : iulog  
-  use clm_varcon      , only : namec
-  use TemperatureType , only : temperature_type
-  use WaterstateType  , only : waterstate_type
-  use GridcellType    , only : grc
-  use LandunitType    , only : lun
-  use ColumnType      , only : col
-  use dynColumnTemplateMod, only : template_col_from_landunit, TEMPLATE_NONE_FOUND
+  use shr_kind_mod         , only : r8 => shr_kind_r8
+  use shr_log_mod          , only : errMsg => shr_log_errMsg
+  use decompMod            , only : bounds_type
+  use abortutils           , only : endrun
+  use clm_varctl           , only : iulog  
+  use clm_varcon           , only : namec
+  use TemperatureType      , only : temperature_type
+  use WaterstateType       , only : waterstate_type
+  use SoilHydrologyType    , only : soilhydrology_type
+  use GridcellType         , only : grc
+  use LandunitType         , only : lun
+  use ColumnType           , only : col
+  use dynColumnTemplateMod , only : template_col_from_landunit, TEMPLATE_NONE_FOUND
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -44,7 +45,8 @@ module dynInitColumnsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initialize_new_columns(bounds, cactive_prior, temperature_inst, waterstate_inst)
+  subroutine initialize_new_columns(bounds, cactive_prior, &
+       temperature_inst, waterstate_inst, soilhydrology_inst)
     !
     ! !DESCRIPTION:
     ! Do initialization for all columns that are newly-active in this time step
@@ -55,8 +57,9 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                        ! bounds
     logical                , intent(in)    :: cactive_prior( bounds%begc: ) ! column-level active flags from prior time step
-    type(temperature_type) , intent(inout) :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(temperature_type)   , intent(inout) :: temperature_inst
+    type(waterstate_type)    , intent(inout) :: waterstate_inst
+    type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c          ! column index
@@ -72,7 +75,8 @@ contains
        if (col%active(c) .and. .not. cactive_prior(c)) then
           c_template = initial_template_col_dispatcher(bounds, c, cactive_prior(bounds%begc:bounds%endc))
           if (c_template /= TEMPLATE_NONE_FOUND) then
-             call copy_state(c, c_template, temperature_inst, waterstate_inst)
+             call copy_state(c, c_template, &
+                  temperature_inst, waterstate_inst, soilhydrology_inst)
           else
              write(iulog,*) subname// ' WARNING: No template column found to initialize newly-active column'
              write(iulog,*) '-- keeping the state that was already in memory, possibly from arbitrary initialization'
@@ -211,7 +215,8 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine copy_state(c_new, c_template, temperature_inst, waterstate_inst)
+  subroutine copy_state(c_new, c_template, &
+       temperature_inst, waterstate_inst, soilhydrology_inst)
     !
     ! !DESCRIPTION:
     ! Copy a subset of state variables from a template column (c_template) to a newly-
@@ -222,8 +227,9 @@ contains
     ! !ARGUMENTS:
     integer, intent(in) :: c_new      ! index of newly-active column
     integer, intent(in) :: c_template ! index of column to use as a template
-    type(temperature_type), intent(inout) :: temperature_inst
-    type(waterstate_type) , intent(inout) :: waterstate_inst
+    type(temperature_type)  , intent(inout) :: temperature_inst
+    type(waterstate_type)   , intent(inout) :: waterstate_inst
+    type(soilhydrology_type), intent(inout) :: soilhydrology_inst
     !
     ! !LOCAL VARIABLES:
     
@@ -251,6 +257,8 @@ contains
     waterstate_inst%h2osoi_liq_col(c_new,1:) = waterstate_inst%h2osoi_liq_col(c_template,1:)
     waterstate_inst%h2osoi_ice_col(c_new,1:) = waterstate_inst%h2osoi_ice_col(c_template,1:)
     waterstate_inst%h2osoi_vol_col(c_new,1:) = waterstate_inst%h2osoi_vol_col(c_template,1:)
+
+    soilhydrology_inst%wa_col(c_new) = soilhydrology_inst%wa_col(c_template)
 
   end subroutine copy_state
 

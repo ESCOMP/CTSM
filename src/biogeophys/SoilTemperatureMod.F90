@@ -260,8 +260,6 @@ contains
          eflx_urban_heat_col     => energyflux_inst%eflx_urban_heat_col     , & ! Output: [real(r8) (:)   ]  urban heating flux (W/m**2)             
 
          emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
-         hc_soi                  => temperature_inst%hc_soi_col             , & ! Input:  [real(r8) (:)   ]  soil heat content (MJ/m2)               ! TODO: make a module variable
-         hc_soisno               => temperature_inst%hc_soisno_col          , & ! Input:  [real(r8) (:)   ]  soil plus snow plus lake heat content (MJ/m2) !TODO: make a module variable
          tssbef                  => temperature_inst%t_ssbef_col            , & ! Input:  [real(r8) (:,:) ]  temperature at previous time step [K] 
          t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Output: [real(r8) (:)   ]  surface water temperature               
          t_soisno                => temperature_inst%t_soisno_col           , & ! Output: [real(r8) (:,:) ]  soil temperature (Kelvin)             
@@ -549,10 +547,6 @@ contains
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
          l = col%landunit(c)
-         if (.not. lun%urbpoi(l)) then
-            hc_soisno(c) = 0._r8
-            hc_soi(c)    = 0._r8
-         end if
          eflx_fgr12(c)= 0._r8
       end do
 
@@ -572,14 +566,6 @@ contains
                eflx_fgr(c,j) = 0._r8
             end if
 
-            if (.not. lun%urbpoi(l)) then
-               if (j >= snl(c)+1) then
-                  hc_soisno(c) = hc_soisno(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
-               endif
-               if (j >= 1) then
-                  hc_soi(c) = hc_soi(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
-               end if
-            end if
          end do
       end do
 

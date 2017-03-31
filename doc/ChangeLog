@@ -1,4 +1,217 @@
 ===============================================================
+Tag name:  clm4_5_14_r230
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Mar 31 16:25:49 MDT 2017
+One-line Summary: Fix dynamic landunits water and energy conservation
+
+Purpose of changes
+------------------
+
+Fixes water and energy conservation with dynamic landunits. This conservation
+works by summing the water and energy contents of each grid cell before and
+after the dynamic landunits transitions, then dealing with the difference
+through runoff and sensible heat fluxes. However, the code for counting the
+water and energy contents was wrong - slightly wrong for water, and
+substantially wrong for energy. The energy counts were 6 orders of magnitude too
+small, and also were missing some terms.
+
+This tag fixes these counts, and reconciles the dynamic landunits water and
+energy accounting with the accounting done for the balance checks. It also
+refactors some of the code used in the balance checks to facilitate code sharing
+between various places.
+
+Also: adds wa_col (water in the unconfined aquifer) to the list of fields copied
+to newly-initializing columns, to avoid spurious dynlu adjustment fluxes due to
+changes in wa_col.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+- https://github.com/NCAR/CLM/issues/2 - Count energy of water in lakes in total
+  gridcell heat content
+- https://github.com/NCAR/CLM/issues/3 - Perform gridcell-level water balance
+  checks bracketing the entire run loop
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- Some renamed history variables: see below
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: not investigated, but no major changes expected
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Dave Lawrence and Keith Oleson reviewed the new code
+conceptually for scientifc correctness; Ryan Knox reviewed a slightly older
+version of the new code for counting water and energy contents
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, answers change as expected
+
+CLM tag used for the baseline comparisons: clm4_5_14_r229
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+    (1) Roundoff-level changes for all cases
+
+    (2) Large changes in diagnostics of total gridcell water and total gridcell
+        heat, due to various fixes
+
+    (3) Dynamic landunit water adjustments change substantially for glacier
+        transitions, and somewhat for transient crops
+
+    (4) Dynamic landunit heat adjustments change substantially for all runs with
+        dynamic landunits (transient glacier, transient crop): change by about
+        6 orders of magnitude
+
+    (5) Changes in transient crop cases due to copying wa_col to
+        newly-initiating columns (though answer changes may be minor for clm5
+        cases?)
+
+    (6) Possibly other changes that I'm forgetting?
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Moved code that sums water and energy contents to here, to facilitate
+          code sharing; added unit tests for *some* of it
+A       components/clm/src/biogeophys/TotalWaterAndHeatMod.F90
+A       components/clm/src/biogeophys/test/TotalWaterAndHeat_test/test_total_water_and_heat.pf
+A       components/clm/src/biogeophys/test/TotalWaterAndHeat_test/CMakeLists.txt
+A       components/clm/src/biogeophys/test/TotalWaterAndHeat_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Major rework: Use new shared routines for calculating heat and water
+          contents; adjust dynlu adjustment heat flux based on heat content of
+          dynlu adjustment runoff flux
+M       components/clm/src/dyn_subgrid/dynConsBiogeophysMod.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+
+========= Copy wa_col (water in the unconfined aquifer), to avoid large adjustments
+M       components/clm/src/dyn_subgrid/dynInitColumnsMod.F90
+M       components/clm/src/dyn_subgrid/test/dynInitColumns_test/test_init_columns.pf
+
+========= Use new routines for water content
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+
+========= New constant for baseline wa_col (water in the unconfined aquifer),
+          replacing hard-coded constants
+M       components/clm/src/main/clm_varcon.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyInitTimeConstMod.F90
+
+========= For performance: introduce col%hydrologically_active, used in place of
+          is_hydrologically_active function call
+M       components/clm/src/main/ColumnType.F90
+M       components/clm/src/main/filterMod.F90
+M       components/clm/src/main/initSubgridMod.F90
+M       components/clm/src/main/glcBehaviorMod.F90
+
+========= Changes to diagnostic fields: Remove incorrect HCSOI, HC; rename
+          GC_HEAT1 and GC_HEAT2 to HEAT_CONTENT1 and HEAT_CONTENT2; add
+          HEAT_CONTENT1_VEG; add LIQUID_WATER_TEMP1
+M       components/clm/src/biogeophys/TemperatureType.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/biogeophys/LakeTemperatureMod.F90
+
+========= Changes to diagnostic fields: Rename GC_LIQ1/2 to LIQUID_CONTENT1/2,
+          and similar for ICE; also remove some now-unused fields
+M       components/clm/src/biogeophys/WaterStateType.F90
+
+========= Minor changes to some calls
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/main/clm_driver.F90
+
+========= New stub routines
+M       components/clm/src/unit_test_stubs/main/ncdio_pio_fake.F90.in
+
+========= New unit tests
+M       components/clm/src/biogeophys/CMakeLists.txt
+M       components/clm/src/biogeophys/test/CMakeLists.txt
+
+========= Add some comments
+M       components/clm/src/main/subgridAveMod.F90
+M       components/clm/src/main/column_varcon.F90
+
+========= Remove unneeded use statements and associates
+M       components/clm/src/biogeophys/UrbanParamsType.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/main/initVerticalMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r229
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Mar 10 11:32:20 MST 2017

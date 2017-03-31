@@ -41,7 +41,6 @@ module WaterstateType
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
      real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
-     real(r8), pointer :: h2ocan_col             (:)   ! col canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
@@ -85,9 +84,7 @@ module WaterstateType
 
      ! Balance Checks
 
-     real(r8), pointer :: begwb_patch            (:)   ! water mass begining of the time step
      real(r8), pointer :: begwb_col              (:)   ! water mass begining of the time step
-     real(r8), pointer :: endwb_patch            (:)   ! water mass end of the time step
      real(r8), pointer :: endwb_col              (:)   ! water mass end of the time step
      real(r8), pointer :: errh2o_patch           (:)   ! water conservation error (mm H2O)
      real(r8), pointer :: errh2o_col             (:)   ! water conservation error (mm H2O)
@@ -184,7 +181,6 @@ contains
     allocate(this%h2osoi_ice_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_ice_col         (:,:) = nan
     allocate(this%h2osoi_liq_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liq_col         (:,:) = nan
     allocate(this%h2ocan_patch           (begp:endp))                     ; this%h2ocan_patch           (:)   = nan  
-    allocate(this%h2ocan_col             (begc:endc))                     ; this%h2ocan_col             (:)   = nan
     allocate(this%snocan_patch           (begp:endp))                     ; this%snocan_patch           (:)   = nan  
     allocate(this%liqcan_patch           (begp:endp))                     ; this%liqcan_patch           (:)   = nan  
     allocate(this%snounload_patch        (begp:endp))                     ; this%snounload_patch        (:)   = nan  
@@ -225,9 +221,7 @@ contains
     allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
 
-    allocate(this%begwb_patch            (begp:endp))                     ; this%begwb_patch            (:)   = nan
     allocate(this%begwb_col              (begc:endc))                     ; this%begwb_col              (:)   = nan
-    allocate(this%endwb_patch            (begp:endp))                     ; this%endwb_patch            (:)   = nan
     allocate(this%endwb_col              (begc:endc))                     ; this%endwb_col              (:)   = nan
     allocate(this%errh2o_patch           (begp:endp))                     ; this%errh2o_patch           (:)   = nan
     allocate(this%errh2o_col             (begc:endc))                     ; this%errh2o_col             (:)   = nan
@@ -326,22 +320,22 @@ contains
          default='inactive')
 
     this%liq1_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_LIQ1',  units='mm',  &
+    call hist_addfld1d (fname='LIQUID_CONTENT1',  units='mm',  &
          avgflag='A', long_name='initial gridcell total liq content', &
          ptr_lnd=this%liq1_grc)
 
     this%liq2_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_LIQ2',  units='mm',  &  
+    call hist_addfld1d (fname='LIQUID_CONTENT2',  units='mm',  &  
          avgflag='A', long_name='post landuse change gridcell total liq content', &              
          ptr_lnd=this%liq2_grc, default='inactive')     
 
     this%ice1_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_ICE1',  units='mm',  &  
+    call hist_addfld1d (fname='ICE_CONTENT1',  units='mm',  &  
          avgflag='A', long_name='initial gridcell total ice content', &              
          ptr_lnd=this%ice1_grc)     
 
     this%ice2_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_ICE2',  units='mm',  &  
+    call hist_addfld1d (fname='ICE_CONTENT2',  units='mm',  &  
          avgflag='A', long_name='post land cover change total ice content', &              
          ptr_lnd=this%ice2_grc, default='inactive')
 
@@ -630,7 +624,6 @@ contains
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
       this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
-      this%h2ocan_col(bounds%begc:bounds%endc) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
       this%snounload_patch(bounds%begp:bounds%endp) = 0._r8

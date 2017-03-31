@@ -5,12 +5,14 @@ module BalanceCheckMod
   ! Water and energy balance check.
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
   use clm_varctl         , only : iulog
   use clm_varcon         , only : namep, namec
+  use clm_varpar         , only : nlevsoi
   use GetGlobalValuesMod , only : GetGlobalIndex
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
@@ -20,18 +22,24 @@ module BalanceCheckMod
   use WaterfluxType      , only : waterflux_type
   use IrrigationMod      , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
+  use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake, ComputeWaterMassLake
   use GridcellType       , only : grc                
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                
+  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice,istice_mec
+  use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
+  use column_varcon      , only : icol_road_perv, icol_road_imperv
+  use clm_varcon         , only : aquifer_water_baseline
   !
   ! !PUBLIC TYPES:
   implicit none
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: BeginWaterBalance  ! Initialize water balance check
-  public :: BalanceCheck       ! Water and energy balance check
+
+  public :: BeginWaterBalance        ! Initialize water balance check
+  public :: BalanceCheck             ! Water and energy balance check
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -42,92 +50,50 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       num_hydrologyc, filter_hydrologyc, &
        soilhydrology_inst, waterstate_inst)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step
     !
-    ! !USES:
-    use subgridAveMod , only : p2c
-    use clm_varpar    , only : nlevgrnd, nlevsoi, nlevurb
-    use column_varcon , only : icol_roof, icol_sunwall, icol_shadewall 
-    use column_varcon , only : icol_road_perv, icol_road_imperv
-    !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds     
     integer                   , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
     integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
-    integer                   , intent(in)    :: num_lakec            ! number of column non-lake points in column filter
-    integer                   , intent(in)    :: filter_lakec(:)      ! column filter for non-lake points
-    integer                   , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
-    integer                   , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+    integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
+    integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(soilhydrology_type)  , intent(inout) :: soilhydrology_inst
     type(waterstate_type)     , intent(inout) :: waterstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c, p, f, j, fc                  ! indices
-    real(r8):: h2osoi_vol
+    integer :: c, j, fc                  ! indices
     !-----------------------------------------------------------------------
 
     associate(                                               & 
          zi           =>    col%zi                         , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
-
-         h2ocan_patch =>    waterstate_inst%h2ocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy water (mm H2O) (patch-level)       
-         h2osfc       =>    waterstate_inst%h2osfc_col     , & ! Input:  [real(r8) (:)   ]  surface water (mm)                      
-         h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
-         h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
-
+         
          zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
          wa           =>    soilhydrology_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
-         h2ocan_col   =>    waterstate_inst%h2ocan_col     , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O) (column level)    
          begwb        =>    waterstate_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
-      ! Determine beginning water balance for time step
-      ! patch-level canopy water averaged to column
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       if (col%hydrologically_active(c)) then
+          if(zwt(c) <= zi(c,nlevsoi)) then
+             wa(c) = aquifer_water_baseline
+          end if
+       end if
+    end do
 
-      call p2c(bounds, num_nolakec, filter_nolakec, &
-           h2ocan_patch(bounds%begp:bounds%endp), &
-           h2ocan_col(bounds%begc:bounds%endc))
+    call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
+         soilhydrology_inst, waterstate_inst, begwb(bounds%begc:bounds%endc))
 
-      do f = 1, num_hydrologyc
-         c = filter_hydrologyc(f)
-         if(zwt(c) <= zi(c,nlevsoi)) then
-            wa(c) = 5000._r8
-         end if
-      end do
-
-      do f = 1, num_nolakec
-         c = filter_nolakec(f)
-         if (col%itype(c) == icol_roof .or. col%itype(c) == icol_sunwall &
-              .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_road_imperv) then
-            begwb(c) = h2ocan_col(c) + h2osno(c)
-         else
-            begwb(c) = h2ocan_col(c) + h2osno(c) + h2osfc(c) + wa(c)
-         end if
-
-      end do
-      do j = 1, nlevgrnd
-         do f = 1, num_nolakec
-            c = filter_nolakec(f)
-            if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-                 .or. col%itype(c) == icol_roof) .and. j > nlevurb) then
-            else
-               begwb(c) = begwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-            end if
-         end do
-      end do
-
-      do f = 1, num_lakec
-         c = filter_lakec(f)
-         begwb(c) = h2osno(c)
-      end do
+    call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
+         waterstate_inst, begwb(bounds%begc:bounds%endc))
 
     end associate 
 
-   end subroutine BeginWaterBalance
+  end subroutine BeginWaterBalance
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
@@ -150,12 +116,9 @@ contains
      !
      ! !USES:
      use clm_varcon        , only : spval
-     use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
-     use column_varcon     , only : icol_road_perv, icol_road_imperv
-     use landunit_varcon   , only : istdlak, istsoil,istcrop,istwet,istice,istice_mec
      use clm_varctl        , only : create_glacier_mec_landunit
      use clm_time_manager  , only : get_step_size, get_nstep
-     use clm_initializeMod , only : surfalb_inst
+     use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod
      !

@@ -61,7 +61,21 @@ module subgridAveMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: build_scale_l2g
   private :: create_scale_l2g_lookup
-  
+
+  ! Note about the urban scaling types used for c2l_scale_type (urbanf / urbans), from
+  ! Bill Sacks and Keith Oleson: These names originally meant to distinguish between
+  ! fluxes and states. However, that isn't the right distinction. In general, urbanf
+  ! should be used for variables that are expressed as something-per-m^2 ('extensive'
+  ! state or flux variables), whereas urbans should be used for variables that are not
+  ! expressed as per-m^2 ('intensive' state variables; an example is temperature). The
+  ! urbanf scaling converts from per-m^2 of vertical wall area to per-m^2 of ground area.
+  ! One way to think about this is: In the extreme case of a near-infinite canyon_hwr due
+  ! to massively tall walls, do you want a near-infinite multiplier for the walls for the
+  ! variable in question? If so, you want urbanf; if not, you want urbans.
+  !
+  ! However, there may be some special cases, including some hydrology variables that
+  ! don't apply for urban walls.
+
   ! WJS (10-14-11): TODO:
   ! 
   ! - I believe that scale_p2c, scale_c2l and scale_l2g should be included in the sumwt
@@ -281,7 +295,7 @@ contains
     real(r8), intent(in)  :: parr( bounds%begp: )  ! input column array
     real(r8), intent(out) :: larr( bounds%begl: )  ! output landunit array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
     !
     ! !LOCAL VARIABLES:
     integer  :: p,c,l,index                     ! indices
@@ -389,7 +403,7 @@ contains
     real(r8), intent(in)  :: parr( bounds%begp: , 1: )  ! input patch array
     real(r8), intent(out) :: larr( bounds%begl: , 1: )  ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
     !
     ! !LOCAL VARIABLES:
     integer  :: j,p,c,l,index       ! indices
@@ -498,7 +512,7 @@ contains
     real(r8), intent(in)  :: parr( bounds%begp: )  ! input patch array
     real(r8), intent(out) :: garr( bounds%begg: )  ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
     !
     !  !LOCAL VARIABLES:
@@ -614,7 +628,7 @@ contains
     real(r8), intent(in)  :: parr( bounds%begp: , 1: ) ! input patch array
     real(r8), intent(out) :: garr( bounds%begg: , 1: ) ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type     ! scale factor type for averaging
-    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging (see note at top of module)
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
@@ -728,7 +742,7 @@ contains
     type(bounds_type), intent(in) :: bounds        
     real(r8), intent(in)  :: carr( bounds%begc: )  ! input column array
     real(r8), intent(out) :: larr( bounds%begl: )  ! output landunit array
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,index                       ! indices
@@ -824,7 +838,7 @@ contains
     integer , intent(in)  :: num2d                     ! size of second dimension
     real(r8), intent(in)  :: carr( bounds%begc: , 1: ) ! input column array
     real(r8), intent(out) :: larr( bounds%begl: , 1: ) ! output landunit array
-    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging (see note at top of module)
     !
     ! !LOCAL VARIABLES:
     integer  :: j,l,c,index                         ! indices
@@ -921,7 +935,7 @@ contains
     type(bounds_type), intent(in) :: bounds        
     real(r8), intent(in)  :: carr( bounds%begc: )  ! input column array
     real(r8), intent(out) :: garr( bounds%begg: )  ! output gridcell array
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
@@ -1023,7 +1037,7 @@ contains
     integer , intent(in)  :: num2d                     ! size of second dimension
     real(r8), intent(in)  :: carr( bounds%begc: , 1: ) ! input column array
     real(r8), intent(out) :: garr( bounds%begg: , 1: ) ! output gridcell array
-    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging (see note at top of module)
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
@@ -1250,6 +1264,11 @@ contains
     !-----------------------------------------------------------------------
      
     SHR_ASSERT_ALL((ubound(scale_l2g) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+
+    ! TODO(wjs, 2017-03-09) If this routine is a performance problem (which it may be,
+    ! because I think it's called a lot), then a simple optimization would be to treat
+    ! l2g_scale_type = 'unity' specially, rather than using the more general-purpose code
+    ! for this special case.
 
      call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
 

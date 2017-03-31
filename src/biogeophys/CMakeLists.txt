@@ -12,9 +12,12 @@ list(APPEND clm_sources
   RootBiophysMod.F90
   SnowHydrologyMod.F90
   SnowSnicarMod.F90
+  SoilHydrologyType.F90
   SoilStateType.F90
   SoilWaterRetentionCurveMod.F90
   TemperatureType.F90
+  TotalWaterAndHeatMod.F90
+  UrbanParamsType.F90
   WaterfluxType.F90
   WaterStateType.F90
   )

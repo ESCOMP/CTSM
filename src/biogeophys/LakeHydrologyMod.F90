@@ -30,6 +30,7 @@ module LakeHydrologyMod
   use TemperatureType      , only : temperature_type
   use WaterfluxType        , only : waterflux_type
   use WaterstateType       , only : waterstate_type
+  use TotalWaterAndHeatMod , only : ComputeWaterMassLake
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -204,14 +205,6 @@ contains
 
       ! Determine step size
       dtime = get_step_size()
-
-      ! Add soil water to water balance.
-      do j = 1, nlevgrnd
-         do fc = 1, num_lakec
-            c = filter_lakec(fc)
-            begwb(c) = begwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-         end do
-      end do
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Do precipitation onto ground, etc., from CanopyHydrology
@@ -607,15 +600,12 @@ contains
 
       ! Determine ending water balance and volumetric soil water
 
-      do fc = 1, num_lakec
-         c = filter_lakec(fc)
-         endwb(c) = h2osno(c)
-      end do
+      call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
+           waterstate_inst, endwb(bounds%begc:bounds%endc))
 
       do j = 1, nlevgrnd
          do fc = 1, num_lakec
             c = filter_lakec(fc)
-            endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
             h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
          end do
       end do

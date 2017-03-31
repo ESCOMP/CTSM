@@ -18,6 +18,7 @@ module HydrologyDrainageMod
   use WaterstateType    , only : waterstate_type
   use IrrigationMod     , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
+  use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   !
@@ -87,11 +88,6 @@ contains
          forc_rain          => atm2lnd_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                                  
          forc_snow          => atm2lnd_inst%forc_snow_downscaled_col , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                                  
 
-         wa                 => soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
-         
-         h2ocan             => waterstate_inst%h2ocan_col            , & ! Input:  [real(r8) (:)   ]  canopy water (mm H2O)                             
-         h2osfc             => waterstate_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
-         h2osno             => waterstate_inst%h2osno_col            , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                               
          begwb              => waterstate_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step              
          endwb              => waterstate_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step                   
          h2osoi_ice         => waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
@@ -154,31 +150,8 @@ contains
          end do
       end do
 
-      do fc = 1, num_nolakec
-         c = filter_nolakec(fc)
-         l = col%landunit(c)
-
-         if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
-              .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
-            endwb(c) = h2ocan(c) + h2osno(c)
-         else
-            ! add h2osfc to water balance
-            endwb(c) = h2ocan(c) + h2osno(c) + h2osfc(c) + wa(c)
-
-         end if
-      end do
-
-      do j = 1, nlevgrnd
-         do fc = 1, num_nolakec
-            c = filter_nolakec(fc)
-            if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
-                 .or. ctype(c) == icol_roof) .and. j > nlevurb) then
-
-            else
-               endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-            end if
-         end do
-      end do
+      call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
+           soilhydrology_inst, waterstate_inst, endwb(bounds%begc:bounds%endc))
 
       ! Determine wetland and land ice hydrology (must be placed here
       ! since need snow updated from CombineSnowLayers)

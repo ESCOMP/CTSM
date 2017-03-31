@@ -822,6 +822,7 @@ contains
     integer :: c          ! column index
     integer :: elev_class ! elevation class of the single column on the ice_mec landunit
     integer :: err_code
+    integer :: new_coltype
 
     character(len=*), parameter :: subname = 'update_collapsed_columns_classes'
     !-----------------------------------------------------------------------
@@ -847,7 +848,10 @@ contains
           call endrun(msg=subname//': ERROR getting elevation class')
        end if
 
-       call col%update_itype(c = c, itype = icemec_class_to_col_itype(elev_class))
+       new_coltype = icemec_class_to_col_itype(elev_class)
+       if (new_coltype /= col%itype(c)) then
+          call col%update_itype(c = c, itype = new_coltype)
+       end if
     end do
           
   end subroutine update_collapsed_columns_classes
