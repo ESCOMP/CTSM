@@ -2116,6 +2116,19 @@ Not used for snow_overburden_compaction_method=Vionnet2012
 Minimum wind speed tht results in compaction (m/s)
 </entry>
 
+<entry id="reset_snow" type="logical" category="clm_physics"
+       group="clm_snowhydrology_inparm"   >
+If set to .true., then reset the snow pack over non-glacier columns to a small value.
+This is useful when transitioning from a spinup under one set of atmospheric forcings
+to a run under a different set of atmospheric forcings: By resetting too-large snow packs,
+we make it more likely that points will remain only seasonally snow-covered under the new
+atmospheric forcings. (This is particularly true in a coupled run, where starting with a
+too-large snow pack can cool the atmosphere, thus maintaining the too-large snow pack.)
+
+WARNING: Setting this to .true. will break water conservation for approximately the first
+day of the new run. This is by design: The excess snow is completely removed from the system.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to initInterp                                                    -->
 <!-- ========================================================================================  -->

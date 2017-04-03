@@ -1,4 +1,133 @@
 ===============================================================
+Tag name:  clm4_5_14_r231
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Apr  2 19:36:02 MDT 2017
+One-line Summary: Add option to reset snow pack over non-glacier columns
+
+Purpose of changes
+------------------
+
+When going from a CLM spinup under one set of atmospheric forcings to a
+different set of atmospheric forcings, there is the possibility that columns
+that reached large snow depths in the spinup should really have only seasonal
+snow cover under the new atmosphere. This is a particular concern for the LIWG
+in some areas of Greenland that have only seasonal snow cover: there is a
+concern that the offline spinup can bake in too-high snow cover in some
+regions. This can especially be a problem because of feedbacks: starting out
+with a too-high snow cover can cool the overlying atmosphere, leading to
+persistence of the snow pack. This is also a problem because, once the snow pack
+becomes very deep, it seems that its refreezing can make it less likely that the
+snow pack will ever melt.
+
+To deal with these issues, this tag introduces a new namelist item,
+reset_snow. This is typically .false. If you set it to .true., then all snow in
+non-glacier columns is reset to 35 mm SWE over the first few time steps of the
+run.
+
+This resetting is accomplished via the snow capping mechanism. This
+implementation was chosen because it is challenging to reset the snow pack
+directly, since there are so many snow-related variables that must be kept in
+sync. The snow capping mechanism already handles this properly, so it's easiest
+to reuse this mechanism. However, unlike standard snow capping, the flux of snow
+lost through this resetting is sent into a new flux that simply disappears into
+nothingness - rather than being sent to glc and/or rof. Thus, note that - by
+design! - the flux from this snow resetting breaks conservation: We do not want
+this lost snow to affect ocean circulation, since this is essentially just a
+mechanism for adjusting an initial conditions file.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Specifying reset_snow = .true. will lead to a loss of conservation for the
+  first few time steps of the run
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable: reset_snow
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Leo van Kampenhout reviewed an initial prototype
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok
+    tests pass; namelists differ from baseline, as expected
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, NLCOMP failures as expected
+
+CLM tag used for the baseline comparisons: clm4_5_14_r230
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no - bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+List all files added and what they do:
+
+========= Unit test of new logic
+A       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_SnowCappingExcess.pf
+
+List all existing files that have been modified, and describe the changes:
+
+========= Changes as described above
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/test/SnowHydrology_test/CMakeLists.txt
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r230
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Mar 31 16:25:49 MDT 2017

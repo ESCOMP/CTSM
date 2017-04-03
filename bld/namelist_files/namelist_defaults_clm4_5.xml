@@ -259,6 +259,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <overburden_compress_tfactor>0.08d00</overburden_compress_tfactor>
 
+<reset_snow>.false.</reset_snow>
+
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
      Greenland: virtual
