@@ -3048,8 +3048,11 @@ contains
        !call ncd_io(varname='pfts1d_gi'       , data=patch%gridcell, dim1name=namep, ncid=ncid, flag='write')
        !call ncd_io(varname='pfts1d_li'       , data=patch%landunit, dim1name=namep, ncid=ncid, flag='write')
 ! commenting-in for hillslope hydrology 
-       call ncd_io(varname='pfts1d_ci'       , data=patch%column  , dim1name=namep, ncid=ncid, flag='write')
-!
+       do p=bounds%begp,bounds%endp
+          iparr(p) = GetGlobalIndex(decomp_index=patch%column(p), clmlevel=namec)
+       enddo
+       call ncd_io(varname='pfts1d_ci'       , data=iparr  , dim1name=namep, ncid=ncid, flag='write')
+
        ! ----------------------------------------------------------------
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtlunit'  , data=patch%wtlunit , dim1name=namep, ncid=ncid, flag='write')

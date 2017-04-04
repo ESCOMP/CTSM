@@ -2344,7 +2344,6 @@ contains
      real(r8) :: dgrad
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
      real(r8), parameter :: k_anisotropic = 20._r8
-     real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) 
      real(r8) :: qflx_net_latflow(bounds%begc:bounds%endc) 
      integer  :: c0, nstep
 
@@ -2366,7 +2365,7 @@ contains
           hk_l               =>    soilstate_inst%hk_l_col               , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity (mm/s)                    
          qflx_latflow_out    =>    waterflux_inst%qflx_latflow_out_col   , & ! Output: [real(r8) (:)   ] lateral saturated outflow (mm/s)
          qflx_latflow_in     =>    waterflux_inst%qflx_latflow_in_col    , & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
-         qflx_net_latflow_in =>    waterflux_inst%qflx_net_latflow_col   , & ! Output: [real(r8) (:)   ]  net lateral saturated (mm/s)
+         qdischarge          =>    waterflux_inst%qdischarge_col         , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
 
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           c_param            =>    soilhydrology_inst%c_param_col        , & ! Input:  [real(r8) (:)   ] baseflow exponent (Qb)                             
@@ -2430,8 +2429,7 @@ contains
 
           qflx_latflow_in(c) = 0._r8
           qflx_latflow_out(c) = 0._r8
-          qflx_net_latflow(c) = 0._r8
-          qflx_latflow_out_vol(c) = 0._r8
+          qdischarge(c)       = 0._r8
        end do
 
 
@@ -2483,7 +2481,7 @@ contains
 
           ! kinematic wave approximation
           if (baseflow_method == 'kinematic') then
-             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*col%hill_slope(c)
+             qdischarge(c) = transmis*col%hill_width(c)*col%hill_slope(c)
 
           endif
           ! darcy's law 
@@ -2497,11 +2495,11 @@ contains
 !what lower boundary condition to use??
 
              endif
-             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
+             qdischarge(c) = transmis*col%hill_width(c)*dgrad
           end if
 
           ! convert volumetric flow to equivalent flux
-          qflx_latflow_out(c) = 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(c)
+          qflx_latflow_out(c) = 1.e3_r8*qdischarge(c)/col%hill_area(c)
 
           ! hilltop column has no inflow
           if (col%colu(c) == ispval) then
@@ -2510,7 +2508,7 @@ contains
 
           ! current outflow is inflow to downhill column normalized by downhill area
           if (col%cold(c) /= ispval) then
-             qflx_latflow_in(col%cold(c)) = 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(col%cold(c))
+             qflx_latflow_in(col%cold(c)) = 1.e3_r8*qdischarge(c)/col%hill_area(col%cold(c))
           endif
 
         enddo

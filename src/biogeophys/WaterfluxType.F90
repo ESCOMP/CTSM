@@ -75,7 +75,7 @@ module WaterfluxType
      real(r8), pointer :: qflx_drain_col           (:)   ! col sub-surface runoff (mm H2O /s)
      real(r8), pointer :: qflx_latflow_in_col      (:)   ! col hillslope lateral flow input (mm/s) 
      real(r8), pointer :: qflx_latflow_out_col     (:)   ! col hillslope lateral flow output (mm/s) 
-     real(r8), pointer :: qflx_net_latflow_col     (:)   ! col hillslope net lateral flow  (mm/s) 
+     real(r8), pointer :: qdischarge_col           (:)   ! col hillslope discharge (m3/s)
      real(r8), pointer :: qflx_top_soil_col        (:)   ! col net water input into soil from top (mm/s)
      real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
      real(r8), pointer :: qflx_h2osfc_surf_col     (:)   ! col surface water runoff
@@ -217,7 +217,7 @@ contains
     allocate(this%qflx_drain_col           (begc:endc))              ; this%qflx_drain_col           (:)   = nan
     allocate(this%qflx_latflow_in_col      (begc:endc))              ; this%qflx_latflow_in_col      (:)   = 0._r8
     allocate(this%qflx_latflow_out_col     (begc:endc))              ; this%qflx_latflow_out_col     (:)   = 0._r8
-    allocate(this%qflx_net_latflow_col     (begc:endc))              ; this%qflx_net_latflow_col     (:)   = 0._r8
+    allocate(this%qdischarge_col           (begc:endc))              ; this%qdischarge_col           (:)   = 0._r8
     allocate(this%qflx_top_soil_col        (begc:endc))              ; this%qflx_top_soil_col        (:)   = nan
     allocate(this%qflx_h2osfc_to_ice_col   (begc:endc))              ; this%qflx_h2osfc_to_ice_col   (:)   = nan
     allocate(this%qflx_h2osfc_surf_col     (begc:endc))              ; this%qflx_h2osfc_surf_col     (:)   = nan
@@ -310,10 +310,10 @@ contains
          avgflag='A', long_name='hillcol lateral outflow', &
          ptr_col=this%qflx_latflow_out_col, c2l_scale_type='urbanf')
 
-    this%qflx_net_latflow_col(begc:endc) = spval
-    call hist_addfld1d (fname='QLATNET',  units='mm/s',  &
-         avgflag='A', long_name='hillcol net lateral flow', &
-         ptr_col=this%qflx_net_latflow_col, c2l_scale_type='urbanf',&
+    this%qdischarge_col(begc:endc) = spval
+    call hist_addfld1d (fname='QDISCHARGE',  units='m3/s',  &
+         avgflag='A', long_name='hillslope discharge from column', &
+         ptr_col=this%qdischarge_col, c2l_scale_type='urbanf',&
          default='inactive')
 
     this%qflx_liq_dynbal_grc(begg:endg) = spval
@@ -697,7 +697,7 @@ contains
           this%qflx_surf_col(c)  = 0._r8
           this%qflx_latflow_in_col(c)  = 0._r8
           this%qflx_latflow_out_col(c) = 0._r8
-          this%qflx_net_latflow_col(c) = 0._r8
+          this%qdischarge_col(c) = 0._r8
        end if
     end do
 
