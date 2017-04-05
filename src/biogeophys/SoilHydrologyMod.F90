@@ -2429,6 +2429,7 @@ contains
 
           qflx_latflow_in(c) = 0._r8
           qflx_latflow_out(c) = 0._r8
+          qflx_net_latflow(c) = 0._r8
           qdischarge(c)       = 0._r8
        end do
 
