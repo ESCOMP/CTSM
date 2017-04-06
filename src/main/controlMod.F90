@@ -357,14 +357,6 @@ contains
        end if
 
        ! ----------------------------------------------------------------------
-       !TURN OFF MEGAN VOCs if crop prognostic is on
-       ! This is a temporary place holder and should be removed once MEGAN VOCs and
-       ! crop ar compatible
-       if (use_crop) then
-          use_voc = .false.
-       end if
-
-       ! ----------------------------------------------------------------------
        ! ABORT if use_cn AND use_ed are both true
        if (use_ed .and. use_cn) then
           call endrun(msg=' ERROR: use_cn and use_ed cannot both be set to true.'//&
@@ -552,7 +544,6 @@ contains
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_voc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_ozone, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)

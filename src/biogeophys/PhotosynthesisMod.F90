@@ -1171,6 +1171,9 @@ contains
          if (lnc_opt .eqv. .false.) then     
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
             
+           if ( (slatop(patch%itype(p)) *leafcn(patch%itype(p))) .le. 0.0_r8)then
+              call endrun( "ERROR: slatop or leafcn is zero" )
+           end if
            lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
          end if   
 
@@ -2901,6 +2904,10 @@ contains
                lmr_z_sha(p,iv) = lmr25_sha * 2._r8**((t_veg(p)-(tfrz+25._r8))/10._r8)
                lmr_z_sha(p,iv) = lmr_z_sha(p,iv) / (1._r8 + exp( 1.3_r8*(t_veg(p)-(tfrz+55._r8)) ))
             end if
+
+            ! Reduce lmr w/ low lai
+            lmr_z_sun(p,iv)  = lmr_z_sun(p,iv)*min((0.2_r8*exp(3.218_r8*tlai_z(p,iv))),1._r8)
+            lmr_z_sha(p,iv)  = lmr_z_sha(p,iv)*min((0.2_r8*exp(3.218_r8*tlai_z(p,iv))),1._r8)
 
             if (par_z_sun(p,iv) <= 0._r8) then        ! night time
 

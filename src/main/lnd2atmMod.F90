@@ -13,7 +13,7 @@ module lnd2atmMod
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
   use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl           , only : iulog, use_lch4, use_voc
+  use clm_varctl           , only : iulog, use_lch4
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
   use decompMod            , only : bounds_type
   use subgridAveMod        , only : p2g, c2g 
@@ -258,7 +258,7 @@ contains
     endif
 
     ! voc emission flux
-    if (use_voc .and. shr_megan_mechcomps_n>0) then
+    if (shr_megan_mechcomps_n>0) then
        call p2g(bounds, shr_megan_mechcomps_n, &
             vocemis_inst%vocflx_patch(bounds%begp:bounds%endp,:), &
             lnd2atm_inst%flxvoc_grc  (bounds%begg:bounds%endg,:), &

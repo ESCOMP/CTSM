@@ -1,4 +1,115 @@
 ===============================================================
+Tag name:  clm4_5_15_r232
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Apr  5 23:04:37 MDT 2017
+One-line Summary: Some small changes that affect both clm4_5 and clm5_0 answers (can be considered bug fixes to clm4_5)
+
+Purpose of changes
+------------------
+
+A set of some small changes that affect answers for both CLM45 and CLM50. A fix to a rare problem where soil albedo
+could go negative from Keith Oleson and Sean Swenson, by making sure a calculated value could not go below a small value.
+A change from Will Weider to lower leaf maintence respiration (LMR) for low LAI. Always calculate btran2 even for low
+temperatures and/or low liquid water this lowers fires in boreal forests. For crop at peak LAI set hui to max of hui and 
+huigrain. Change the handling of GDDPLANT accumulator field from Keith Oleson. Get rid of the use_voc logic that just
+prevented MEGAN from activating for crop, since now MEGAN handles the crop case (since clm4_5_13_r204).
+
+Bugs fixed or introduced
+------------------------
+   2437 -- lower leaf maintence respiration for low LAI
+   2436 -- some adjustments to crop
+   2435 -- always calculate btran to lower fires in boreal forests
+   2431 -- Rare condition under which soil albedo goes negative
+   2368 -- Remove use_voc as MEGAN can now work with crop
+
+Bugs fixed (include bugzilla ID):
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self, oleson, dll, dlawren, wweider, fangli
+
+Did you follow the steps in .CLMTrunkChecklist: Yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_14_r231
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/src/biogeophys/SurfaceAlbedoMod.F90 --- Fix bug 2431 where soil albedo can got negative
+         make sure a calculated value doesn't go too small
+   M  components/clm/src/biogeophys/PhotosynthesisMod.F90 -- Add check for divide by zero fo lnc, reduce
+         lmr for low LAI
+   M  components/clm/src/biogeophys/SoilMoistStressMod.F90 - Always calculate btran2 even for low temperature
+         and/or low liquid water this lowers fires in boreal forests
+   M  components/clm/src/biogeochem/CNPhenologyMod.F90 ----- For crop at peak lai set hui to max of hui and huigrain
+   M  components/clm/src/biogeochem/CropType.F90 ----------- Change handling of GDDPLANT
+
+----------- Remove use_voc logic
+   M  components/clm/src/cpl/clm_cpl_indices.F90 ----------- Remove use_voc
+   M  components/clm/src/main/clm_instMod.F90 -------------- Remove use_voc
+   M  components/clm/src/main/controlMod.F90 --------------- Remove use_voc
+   M  components/clm/src/main/clm_varctl.F90 --------------- Remove use_voc
+   M  components/clm/src/main/clm_driver.F90 --------------- Remove use_voc
+   M  components/clm/src/main/lnd2atmMod.F90 --------------- Remove use_voc
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r231
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Apr  2 19:36:02 MDT 2017

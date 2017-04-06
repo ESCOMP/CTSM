@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_15_r232     erik 04/05/2017 Some small changes that affect both clm4_5 and clm5_0 answers (can be considered bug fixes to clm4_5)
   clm4_5_14_r231    sacks 04/02/2017 Add option to reset snow pack over non-glacier columns
   clm4_5_14_r230    sacks 03/31/2017 Fix dynamic landunits water and energy conservation
   clm4_5_14_r229     erik 03/10/2017 Update cime and make some changes to drv_flds_in namelist, fix some minor bugs

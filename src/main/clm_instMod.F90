@@ -8,7 +8,7 @@ module clm_instMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_ed, use_voc
+  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_ed
   use clm_varctl      , only : use_century_decomp, use_crop
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istice_mec, istsoil
@@ -331,9 +331,7 @@ contains
     ! Note - always initialize the memory for ch4_inst
     call ch4_inst%Init(bounds, soilstate_inst%cellorg_col(begc:endc, 1:), fsurdat)
 
-    if (use_voc ) then
-       call vocemis_inst%Init(bounds)
-    end if
+    call vocemis_inst%Init(bounds)
 
     call fireemis_inst%Init(bounds)
 

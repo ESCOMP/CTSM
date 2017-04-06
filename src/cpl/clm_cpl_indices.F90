@@ -136,7 +136,6 @@ contains
     use seq_drydep_mod , only: drydep_fields_token, lnd_drydep
     use shr_megan_mod  , only: shr_megan_fields_token, shr_megan_mechcomps_n
     use shr_fire_emis_mod,only: shr_fire_emis_fields_token, shr_fire_emis_ztop_token, shr_fire_emis_mechcomps_n
-    use clm_varctl     , only: use_voc
     use glc_elevclass_mod, only: glc_get_num_elevation_classes, glc_elevclass_as_string
     !
     ! !ARGUMENTS:
@@ -210,9 +209,7 @@ contains
     index_l2x_Fall_methane  = mct_avect_indexra(l2x,'Fall_methane',perrWith='quiet')
 
     ! MEGAN fluxes
-    ! use_voc is a temporary logic to enable turning off MEGAN fluxes when prognostic crop
-    ! is used
-    if (shr_megan_mechcomps_n>0 .and. use_voc) then
+    if (shr_megan_mechcomps_n>0) then
        index_l2x_Fall_flxvoc = mct_avect_indexra(l2x,trim(shr_megan_fields_token))
     else
        index_l2x_Fall_flxvoc = 0

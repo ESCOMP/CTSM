@@ -94,12 +94,6 @@ module clm_varctl
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
 
   !----------------------------------------------------------
-  ! Flag to turn on MEGAN VOC's
-  !----------------------------------------------------------
-
-  logical, public :: use_voc = .true. 
-
-  !----------------------------------------------------------
   ! Interpolation of finidat if requested
   !----------------------------------------------------------
 
