@@ -4,7 +4,7 @@
 
 **July 2013**
 
-**Technical Description of version 4.5 of the Community Land Model
+**Technical Description of version 5.0 of the Community Land Model
 (CLM)**
 
 ***Coordinating Lead Authors***
