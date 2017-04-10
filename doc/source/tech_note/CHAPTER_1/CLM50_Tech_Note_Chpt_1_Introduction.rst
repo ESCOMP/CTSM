@@ -281,7 +281,7 @@ The purpose of this technical note is to describe the biogeophysical and
 biogeochemical parameterizations and numerical implementation of version
 4.5 of the Community Land Model (CLM4.5). Scientific justification and
 evaluation of these parameterizations can be found in the referenced
-scientific papers (Chapter 27). This technical note and the CLM4.5
+scientific papers (:ref:`rst_References`). This technical note and the CLM4.5
 User’s Guide together provide the user with the scientific description
 and operating instructions for CLM.
 
