@@ -14,7 +14,7 @@ CLM Technical Note
    :numbered:
 
    CHAPTER_1/CLM50_Tech_Note_Chpt_1_Introduction.rst
-   CHAPTER_2/CLM45_Tech_Note_Chpt_2_Ecosystem.rst
+   CHAPTER_2/CLM50_Tech_Note_Chpt_2_Ecosystem.rst
    CHAPTER_3/CLM45_Tech_Note_Chpt_3_Surface_Albedos.rst
    CHAPTER_4/CLM45_Tech_Note_Chpt_4_Radiative_Fluxes.rst
    CHAPTER_5/CLM45_Tech_Note_Chpt_5_Fluxes.rst
