@@ -1,3 +1,5 @@
+.. _rst_Surface Albedos:
+
 Surface Albedos
 ==================
 

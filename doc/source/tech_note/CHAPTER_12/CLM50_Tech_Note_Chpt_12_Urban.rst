@@ -1,3 +1,5 @@
+.. _rst_Urban Model (CLMU):
+
 Urban Model (CLMU)
 ======================
 

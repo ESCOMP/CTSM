@@ -1,3 +1,5 @@
+.. _rst_Vegetation Phenology:
+
 Vegetation Phenology
 ========================
 

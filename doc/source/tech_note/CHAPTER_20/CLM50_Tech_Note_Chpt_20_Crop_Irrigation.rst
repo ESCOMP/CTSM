@@ -1,3 +1,5 @@
+.. _rst_Crops and Irrigation:
+
 Crops and Irrigation
 ========================
 

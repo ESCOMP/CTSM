@@ -273,8 +273,9 @@ National Laboratory); A. Bozbiyik (Bern University); C. Heald
 National Laboratory); Ying Sun and Z.-L. Yang (University of Texas at
 Austin)
 
-=================
- 1. Introduction
+.. _rst_Introduction:
+
+Introduction
 =================
 
 The purpose of this technical note is to describe the biogeophysical and

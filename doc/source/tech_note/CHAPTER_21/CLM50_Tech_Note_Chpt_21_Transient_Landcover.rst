@@ -1,3 +1,5 @@
+.. _rst_Transient Landcover Change:
+
 Transient Landcover Change
 ==============================
 

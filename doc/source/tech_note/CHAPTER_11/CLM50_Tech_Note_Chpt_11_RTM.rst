@@ -1,3 +1,5 @@
+.. _rst_River Transport Model (RTM):
+
 River Transport Model (RTM)
 ===============================
 

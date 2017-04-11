@@ -1,3 +1,5 @@
+.. _rst_Offline Mode:
+
 Offline Mode
 ================
 

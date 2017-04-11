@@ -1,3 +1,5 @@
+.. _rst_Plant Mortality:
+
 Plant Mortality
 ===================
 

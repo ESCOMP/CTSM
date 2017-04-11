@@ -1,3 +1,5 @@
+.. _rst_Soil and Snow Temperatures:
+
 Soil and Snow Temperatures
 =============================
 

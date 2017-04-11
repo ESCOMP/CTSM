@@ -1,3 +1,5 @@
+.. _rst_Lake Model:
+
 Lake Model
 =============
 

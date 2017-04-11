@@ -1,3 +1,5 @@
+.. _rst_Carbon and Nitrogen Pools, Allocation, and Respiration:
+
 Carbon and Nitrogen Pools, Allocation, and Respiration
 ==========================================================
 

@@ -1,3 +1,5 @@
+.. _rst_Dust Model:
+
 Dust Model
 ==============
 
