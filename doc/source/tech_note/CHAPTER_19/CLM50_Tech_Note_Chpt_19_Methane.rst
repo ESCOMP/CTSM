@@ -1,3 +1,5 @@
+.. _rst_Methane Model:
+
 Methane Model
 =================
 

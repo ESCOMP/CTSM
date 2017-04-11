@@ -1,3 +1,5 @@
+.. _rst_Carbon Isotopes:
+
 Carbon Isotopes
 ===================
 

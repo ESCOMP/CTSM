@@ -1,3 +1,5 @@
+.. _rst_External Nitrogen Cycle:
+
 External Nitrogen Cycle
 ===========================
 

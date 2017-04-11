@@ -1,3 +1,5 @@
+.. _rst_Stomatal Resistance and Photosynthesis:
+
 Stomatal Resistance and Photosynthesis
 =========================================
 

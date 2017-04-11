@@ -1,3 +1,5 @@
+.. _rst_Dynamic Global Vegetation Model:
+
 Dynamic Global Vegetation Model
 ===================================
 
