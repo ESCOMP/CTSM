@@ -29,6 +29,8 @@ implicit none
   call init_rootprof(NLFilename)
   
   call init_soilwater_movement
+
+  call init_root_moist_stress
   
 ! remove due to circular dependency of nlfilename, read namlist 
 ! in controlmod instead, as is done for canopyhydrology

@@ -49,6 +49,9 @@ module CNFireBaseMod
   ! !PUBLIC TYPES:
   public :: cnfire_base_type
 
+  integer, private, parameter :: num_fp = 2   ! Number of pools relevent for fire
+  integer, private, parameter :: lit_fp = 1   ! Pool for liter
+  integer, private, parameter :: cwd_fp = 2   ! Pool for CWD Course woody debris
   type, public :: cnfire_const_type
       ! !PRIVATE MEMBER DATA:
       real(r8) :: borealat = 40._r8                    ! Latitude for boreal peat fires
@@ -65,6 +68,8 @@ module CNFireBaseMod
       real(r8) :: non_boreal_peatfire_c  = 0.001_r8    ! c parameter for non-boreal peatland fire in Li et. al. (2013) (/hr)
       real(r8) :: cropfire_a1 = 0.3_r8                 ! a1 parameter for cropland fire in (Li et. al., 2014) (/hr)
       real(r8) :: occur_hi_gdp_tree = 0.39_r8          ! fire occurance for high GDP areas that are tree dominated (fraction)
+
+      real(r8) :: cmb_cmplt_fact(num_fp) = (/ 0.5_r8, 0.25_r8 /) ! combustion completion factor (unitless)
   end type
 
   !
@@ -157,13 +162,15 @@ contains
     character(len=*), parameter :: subname = 'CNFireReadNML'
     character(len=*), parameter :: nmlname = 'lifire_inparm'
     !-----------------------------------------------------------------------
-    real(r8) :: cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha, &
-                non_boreal_peatfire_c, cropfire_a1,   &
-                rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree
+    real(r8) :: cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha
+    real(r8) :: non_boreal_peatfire_c, cropfire_a1
+    real(r8) :: rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree
+    real(r8) :: lfuel, ufuel, cmb_cmplt_fact(num_fp)
 
     namelist /lifire_inparm/ cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha, &
                              non_boreal_peatfire_c, cropfire_a1,                &
-                             rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree
+                             rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree, &
+                             lfuel, ufuel, cmb_cmplt_fact
 
     if ( this%need_lightning_and_popdens ) then
        cli_scale                 = cnfire_const%cli_scale
@@ -173,9 +180,12 @@ contains
        cropfire_a1               = cnfire_const%cropfire_a1
        rh_low                    = cnfire_const%rh_low
        rh_hgh                    = cnfire_const%rh_hgh
+       lfuel                     = cnfire_const%lfuel
+       ufuel                     = cnfire_const%ufuel
        bt_min                    = cnfire_const%bt_min
        bt_max                    = cnfire_const%bt_max
        occur_hi_gdp_tree         = cnfire_const%occur_hi_gdp_tree
+       cmb_cmplt_fact(:)         = cnfire_const%cmb_cmplt_fact(:)
        ! Initialize options to default values, in case they are not specified in
        ! the namelist
 
@@ -202,9 +212,12 @@ contains
        call shr_mpi_bcast (cropfire_a1             , mpicom)
        call shr_mpi_bcast (rh_low                  , mpicom)
        call shr_mpi_bcast (rh_hgh                  , mpicom)
+       call shr_mpi_bcast (lfuel                   , mpicom)
+       call shr_mpi_bcast (ufuel                   , mpicom)
        call shr_mpi_bcast (bt_min                  , mpicom)
        call shr_mpi_bcast (bt_max                  , mpicom)
        call shr_mpi_bcast (occur_hi_gdp_tree       , mpicom)
+       call shr_mpi_bcast (cmb_cmplt_fact          , mpicom)
 
        cnfire_const%cli_scale                 = cli_scale
        cnfire_const%boreal_peatfire_c         = boreal_peatfire_c
@@ -213,9 +226,12 @@ contains
        cnfire_const%cropfire_a1               = cropfire_a1
        cnfire_const%rh_low                    = rh_low
        cnfire_const%rh_hgh                    = rh_hgh
+       cnfire_const%lfuel                     = lfuel
+       cnfire_const%ufuel                     = ufuel
        cnfire_const%bt_min                    = bt_min
        cnfire_const%bt_max                    = bt_max
        cnfire_const%occur_hi_gdp_tree         = occur_hi_gdp_tree
+       cnfire_const%cmb_cmplt_fact(:)         = cmb_cmplt_fact(:)
 
        if (masterproc) then
           write(iulog,*) ' '
@@ -386,6 +402,8 @@ contains
          fr_flab                             => pftcon%fr_flab                                                    , & ! Input: 
          fr_fcel                             => pftcon%fr_fcel                                                    , & ! Input: 
          fr_flig                             => pftcon%fr_flig                                                    , & ! Input: 
+
+         cmb_cmplt_fact                      => cnfire_const%cmb_cmplt_fact                                       , & ! Input:  [real(r8) (:)     ]  Combustion completion factor (unitless)
          
          nind                                => dgvs_inst%nind_patch                                              , & ! Input:  [real(r8) (:)     ]  number of individuals (#/m2)                      
          
@@ -849,28 +867,28 @@ contains
 
         f = farea_burned(c) 
 
-        ! change CC for litter from 0.4_r8 to 0.5_r8 and CC for CWD from 0.2_r8
-        ! to 0.25_r8 according to Li et al.(2014) 
         do j = 1, nlevdecomp
            ! carbon fluxes
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
-                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * 0.5_r8 
+                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * &
+                      cmb_cmplt_fact(lit_fp)
               end if
               if ( is_cwd(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
-                      (f-baf_crop(c)) * 0.25_r8
+                      (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
               end if
            end do
 
            ! nitrogen fluxes
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
-                 m_decomp_npools_to_fire_vr(c,j,l) = decomp_npools_vr(c,j,l) * f * 0.5_r8
+                 m_decomp_npools_to_fire_vr(c,j,l) = decomp_npools_vr(c,j,l) * f * &
+                      cmb_cmplt_fact(lit_fp)
               end if
               if ( is_cwd(l) ) then
                  m_decomp_npools_to_fire_vr(c,j,l) = decomp_npools_vr(c,j,l) * &
-                      (f-baf_crop(c)) * 0.25_r8
+                      (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
               end if
            end do
 

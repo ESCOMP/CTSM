@@ -176,6 +176,8 @@ module pftconMod
      real(r8), allocatable :: grnfill       (:)   ! parameter used in CNPhenology
      integer , allocatable :: mxmat         (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: mbbopt        (:)   ! Ball-Berry equation slope used in Photosynthesis
+     real(r8), allocatable :: medlynslope   (:)   ! Medlyn equation slope used in Photosynthesis
+     real(r8), allocatable :: medlynintercept(:)  ! Medlyn equation intercept used in Photosynthesis
      integer , allocatable :: mnNHplantdate (:)   ! minimum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mxNHplantdate (:)   ! maximum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mnSHplantdate (:)   ! minimum planting date for SouthHemisphere (YYYYMMDD)
@@ -382,6 +384,8 @@ contains
     allocate( this%lfemerg       (0:mxpft) )      
     allocate( this%grnfill       (0:mxpft) )      
     allocate( this%mbbopt        (0:mxpft) )      
+    allocate( this%medlynslope   (0:mxpft) )      
+    allocate( this%medlynintercept(0:mxpft) )      
     allocate( this%mxmat         (0:mxpft) )        
     allocate( this%mnNHplantdate (0:mxpft) )
     allocate( this%mxNHplantdate (0:mxpft) )
@@ -893,6 +897,12 @@ contains
     call ncd_io('mbbopt', this%mbbopt, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+    call ncd_io('medlynslope', this%medlynslope, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('medlynintercept', this%medlynintercept, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
     call ncd_io('mxmat', this%mxmat, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -1294,6 +1304,8 @@ contains
     deallocate( this%lfemerg)
     deallocate( this%grnfill)
     deallocate( this%mbbopt)
+    deallocate( this%medlynslope)
+    deallocate( this%medlynintercept)
     deallocate( this%mxmat)
     deallocate( this%mnNHplantdate)
     deallocate( this%mxNHplantdate)

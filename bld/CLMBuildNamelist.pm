@@ -1696,6 +1696,11 @@ sub process_namelist_inline_logic {
   ################################################
   setup_logic_century_soilbgcdecompcascade($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ####################################
+  # namelist group: cnvegcarbonstate #
+  ####################################
+  setup_logic_cnvegcarbonstate($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
   #############################################
   # namelist group: soil_resis_inparm #
   #############################################
@@ -2069,7 +2074,8 @@ sub setup_logic_create_crop_landunit {
     }
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit', 'irrig'=>$nl_flags->{'irrig'} );
   } else {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit', 'use_crop'=>$nl_flags->{'use_crop'});
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit', 
+                'use_crop'=>$nl_flags->{'use_crop'}, 'hgrid'=>$nl_flags->{'res'} );
   }
 }
 #-------------------------------------------------------------------------------
@@ -2078,7 +2084,7 @@ sub setup_logic_cnfire {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c",
-                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree" );
+                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", "cmb_cmplt_fact" );
   if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
      foreach my $item ( @fire_consts ) {
         if ( ! value_is_true($nl_flags->{'cnfireson'} ) ) {
@@ -2088,6 +2094,7 @@ sub setup_logic_cnfire {
         } else {
            my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
            add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item,
+                       'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 
                        'fire_method'=>$fire_method );
         }
      }
@@ -2311,75 +2318,84 @@ sub setup_logic_initial_conditions {
     my $nofail = 1;
     my $var = "finidat";
     if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) { $nofail = 0; }
+    my %settings;
+    $settings{'hgrid'}   = $nl_flags->{'res'};
+    $settings{'phys'}    = $physv->as_string();
+    $settings{'nofail'}  = $nofail;
+    my $fsurdat          = $nl->get_value('fsurdat');
+    $fsurdat             =~ s!(.*)/!!;
+    $settings{'fsurdat'} = $fsurdat;
+    foreach my $item ( "flanduse_timeseries", "sim_year" ) {
+       $settings{$item}    = $nl_flags->{$item};
+    }
+    if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
+       $settings{'bgc'}    = $nl_flags->{'bgc_mode'};
+       foreach my $item ( "mask", "maxpft", "irrig", "glc_nec", "crop" ) {
+          $settings{$item}    = $nl_flags->{$item};
+       }
+    } else {
+       foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
+                          "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp"
+                        ) {
+          $settings{$item}    = $nl_flags->{$item};
+       }
+    }
     if ($opts->{'ignore_ic_date'}) {
       if ( $nl_flags->{'use_crop'} eq ".true." ) {
         fatal_error("using ignore_ic_date is incompatable with crop!");
       }
-      if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                    'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
-                    'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'irrig'=>$nl_flags->{'irrig'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
-                    'crop'=>$nl_flags->{'crop'}, 'bgc'=>$nl_flags->{'bgc_mode'} );
-      } else {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                    'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
-                    'use_cn'=>$nl_flags->{'use_cn'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
-                    'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'},
-                    'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
-                    'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
-                    'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
-                    'irrigate'=>$nl_flags->{'irrigate'}, 'phys'=>$nl_flags->{'phys'} );
-      }
     } elsif ($opts->{'ignore_ic_year'}) {
-      if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                    'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
-                    'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'irrig'=>$nl_flags->{'irrig'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
-                    'crop'=>$nl_flags->{'crop'}, 'bgc'=>$nl_flags->{'bgc_mode'} );
-      } else {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                    'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
-                    'use_cn'=>$nl_flags->{'use_cn'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
-                    'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'},
-                    'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
-                    'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
-                    'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
-                    'irrigate'=>$nl_flags->{'irrigate'}, 'phys'=>$nl_flags->{'phys'} );
-      }
+       $settings{'ic_md'} = $ic_date;
     } else {
-      if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                    'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
-                    'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'irrig'=>$nl_flags->{'irrig'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
-                    'crop'=>$nl_flags->{'crop'}, 'bgc'=>$nl_flags->{'bgc_mode'} );
-      } else {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                    'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
-                    'use_cn'=>$nl_flags->{'use_cn'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
-                    'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'},
-                    'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
-                    'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
-                    'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
-                    'irrigate'=>$nl_flags->{'irrigate'}, 'phys'=>$nl_flags->{'phys'} );
-      }
+       $settings{'ic_ymd'} = $ic_date;
     }
-    my $finidat = $nl->get_value($var);
+    my $try = 0;
+    my $done = 2;
+    my $finidat;
+    do {
+       $try++;
+       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );
+       # If couldn't find a matching finidat file, check if can turn on interpolation and try to find one again
+       $finidat = $nl->get_value($var);
+       if ( ((not defined $finidat ) || $finidat =~ /null/) && ($physv->as_long() >= $physv->as_long("clm4_5")) ) {
+          # Comment this out for now until we want to activate running from a given IC file for all resolutions/configurations
+          # EBK Apr/07/2017
+          #
+          #add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "use_init_interp",
+          #           'hgrid'=>$nl_flags->{'res'}, 'phys'=>$physv->as_string() );
+          if ( value_is_true($nl->get_value("use_init_interp") ) ) {
+             # Comment this out for now until we want to activate running from a given IC file for all resolutions/configurations
+             # EBK Apr/07/2017
+             #
+             #add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
+             #           'sim_year'=>$nl_flags->{'sim_year'} );
+             my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
+             foreach my $pair ( split( /\s/, $attributes_string) ) {
+                if ( $pair =~ /^([a-z_]+)=([a-z._0-9]+)$/ ) {
+                   $settings{$1} = $2;
+                } else {
+                   fatal_error("Problem interpreting init_interp_attributes");
+                }
+             }
+          } else {
+             $try = $done;
+          }
+       } else {
+         $try = $done
+       }
+       # Exit early as we aren't interpolating from existing IC files for now
+       # EBK Apr/07/2017
+       #
+       $try = $done
+    } while( ($try < $done) && ((not defined $finidat ) || $finidat =~ /null/) );
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, "' '" );
     }
+  }
+  my $finidat = $nl->get_value('finidat');
+  if ( value_is_true($nl->get_value("use_init_interp") ) && ($finidat eq "' '") ) {
+     fatal_error("use_init_interp is set BUT finidat is NOT, need to set both" );
   }
 } # end initial conditions
 
@@ -3141,6 +3157,7 @@ sub setup_logic_cnmresp {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_photosyns {
+  # MUST be after use_hydrstress is set
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   #
@@ -3154,6 +3171,11 @@ sub setup_logic_photosyns {
      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
                  $nl, 'leafresp_method', 'phys'=>$nl_flags->{'phys'},
                  'use_cn'=>$nl_flags->{'use_cn'});
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
+                 $nl, 'modifyphoto_and_lmr_forcrop', 'phys'=>$nl_flags->{'phys'} );
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
+                 $nl, 'stomatalcond_method', 'phys'=>$nl_flags->{'phys'}, 
+                 'use_hydrstress'=>$nl_flags->{'use_hydrstress'} );
      # When CN on, must NOT be scaled by vcmax25top
      if ( value_is_true( $nl_flags->{'use_cn'} ) )  {
        if ( $nl->get_value('leafresp_method') == 0 ) {
@@ -3427,9 +3449,25 @@ sub setup_logic_century_soilbgcdecompcascade {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks',
                 'use_cn' => $nl->get_value('use_cn'), 'use_ed' => $nl->get_value('use_ed'),
                 'use_century_decomp' => $nl->get_value('use_century_decomp') );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks_depth', 
+                'use_cn' => $nl->get_value('use_cn'), 'use_ed' => $nl->get_value('use_ed'),
+                'use_century_decomp' => $nl->get_value('use_century_decomp') ); 
   }
 }
 
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnvegcarbonstate {
+  #  MUST be AFTER: setup_logic_dynamic_plant_nitrogen_alloc as depends on mm_nuptake_opt which is set there
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
+    my $mmnuptake = $nl->get_value('mm_nuptake_opt');
+    if ( ! defined($mmnuptake) ) { $mmnuptake = ".false."; }
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_vegC', 
+                'use_cn' => $nl->get_value('use_cn'), 'mm_nuptake_opt' => $mmnuptake );
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -3603,8 +3641,8 @@ sub write_output_files {
 
     @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                  lai_streams atm2lnd_inparm clm_canopyhydrology_inparm cnphenology
-                 clm_soilhydrology_inparm dynamic_subgrid
-                 finidat_consistency_checks dynpft_consistency_checks
+                 clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
+                 finidat_consistency_checks dynpft_consistency_checks 
                  clm_initinterp_inparm century_soilbgcdecompcascade
                  soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                  soilwater_movement_inparm rooting_profile_inparm
@@ -3626,6 +3664,7 @@ sub write_output_files {
       push @groups, "cnmresp_inparm";
       push @groups, "photosyns_inparm";
       push @groups, "cnfire_inparm";
+      push @groups, "cn_general";
       push @groups, "nitrif_inparm";
       push @groups, "lifire_inparm";
       push @groups, "clm_canopy_inparm";

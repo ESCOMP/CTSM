@@ -227,6 +227,18 @@
     <lname>2000_DATM%CRU_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
+  <!---I GSWP3 compsets -->
+  <compset>
+    <alias>I1850GSWCLM50BGCCROP</alias>
+    <lname>1850_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>IM1850GSWCLM50BGCCROP</alias>
+    <lname>1850_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+
   <!---I compset system tests -->
 
   <compset>
@@ -386,8 +398,18 @@
   </compset>
 
   <compset grid="g%gland">
+    <alias>IGM1850GSWCLM50BGCCROP</alias>
+    <lname>1850_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
+  </compset>
+
+  <compset grid="g%gland">
     <alias>IGMHISTCRUCLM50BGCCROP</alias>
     <lname>HIST_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
+  </compset>
+
+  <compset grid="g%gland">
+    <alias>IGMHISTGSWCLM50BGCCROP</alias>
+    <lname>HIST_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>
 
   <compset grid="g%gland">

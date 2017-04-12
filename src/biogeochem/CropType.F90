@@ -154,6 +154,13 @@ contains
     this%baset_mapping           = baset_mapping
     this%baset_latvary_intercept = baset_latvary_intercept
     this%baset_latvary_slope     = baset_latvary_slope
+    if (      trim(this%baset_mapping) == baset_map_constant ) then
+       write(iulog,*) 'baset mapping for ALL crops are constant'
+    else if ( trim(this%baset_mapping) == baset_map_latvary ) then
+       write(iulog,*) 'baset mapping for crops vary with latitude'
+    else
+       call endrun(msg="Bad value for baset_mapping in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+    end if
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -233,10 +240,12 @@ contains
          avgflag='A', long_name='crop phenology phase', &
          ptr_patch=this%cphase_patch, default='active')
 
-    this%latbaset_patch(begp:endp) = spval
-    call hist_addfld1d (fname='LATBASET', units='degree C', &
-         avgflag='A', long_name='latitude vary base temperature for gddplant', &
-         ptr_patch=this%latbaset_patch)
+    if ( (trim(this%baset_mapping) == baset_map_latvary) )then
+       this%latbaset_patch(begp:endp) = spval
+       call hist_addfld1d (fname='LATBASET', units='degree C', &
+            avgflag='A', long_name='latitude vary base temperature for gddplant', &
+            ptr_patch=this%latbaset_patch)
+    end if
 
   end subroutine InitHistory
 
@@ -248,6 +257,7 @@ contains
     use clm_instur, only : fert_cft
     use pftconMod        , only : pftcon 
     use GridcellType     , only : grc
+    use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
@@ -258,6 +268,7 @@ contains
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
 
+!DLL - added wheat & sugarcane restrictions to base T vary by lat
     do p= bounds%begp,bounds%endp
        g   = patch%gridcell(p)
        ivt = patch%itype(p)
@@ -271,7 +282,12 @@ contains
        else
           this%latbaset_patch(p)=pftcon%baset(ivt)
        end if
+       if ( trim(this%baset_mapping) == baset_map_constant ) then
+          this%latbaset_patch(p) = nan
+       end if
     end do
+!DLL -- end of mods
+
     if (use_crop) then
        do p= bounds%begp,bounds%endp
           g = patch%gridcell(p)
@@ -511,7 +527,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno, nlevgrnd
-    use pftconMod        , only : nwwheat, nirrig_wwheat, pftcon 
+    use pftconMod        , only : nwwheat, nirrig_wwheat, pftcon
     use ColumnType       , only : col
     use PatchType        , only : patch
     !
@@ -561,13 +577,13 @@ contains
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
           ivt = patch%itype(p)
-          if ( trim(this%baset_mapping) == baset_map_constant ) then
+          if ( (trim(this%baset_mapping) == baset_map_latvary) )then
              rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
-             t_ref2m_patch(p)-(SHR_CONST_TKFRZ + pftcon%baset(ivt)))) &
+             t_ref2m_patch(p)-(SHR_CONST_TKFRZ + this%latbaset_patch(p)))) &
              * dtime/SHR_CONST_CDAY
           else
              rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
-             t_ref2m_patch(p)-(SHR_CONST_TKFRZ + this%latbaset_patch(p)))) &
+             t_ref2m_patch(p)-(SHR_CONST_TKFRZ + pftcon%baset(ivt)))) &
              * dtime/SHR_CONST_CDAY
           end if
           if (ivt == nwwheat .or. ivt == nirrig_wwheat) then

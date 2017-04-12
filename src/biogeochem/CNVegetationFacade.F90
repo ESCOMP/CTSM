@@ -45,6 +45,7 @@ module CNVegetationFacade
   use perf_mod                        , only : t_startf, t_stopf
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
+  use abortutils                      , only : endrun
   use spmdMod                         , only : masterproc
   use clm_time_manager                , only : get_curr_date, get_ref_date
   use clm_time_manager                , only : get_nstep, is_end_curr_year, is_first_step
@@ -122,6 +123,9 @@ module CNVegetationFacade
      class(cnfire_method_type), allocatable :: cnfire_method
      type(dgvs_type)                :: dgvs_inst
 
+     ! Control variables
+     logical, private :: reseed_dead_plants    ! Flag to indicate if should reseed dead plants when starting up the model
+
      ! TODO(wjs, 2016-02-19) Evaluate whether some other variables should be moved in
      ! here. Whether they should be moved in depends on how tightly they are tied in with
      ! the other CN Vegetation stuff. A question to ask is: Is this module used when
@@ -168,8 +172,10 @@ module CNVegetationFacade
      procedure, public :: get_annsum_npp_patch          ! Get patch-level annual sum NPP array
      procedure, public :: get_agnpp_patch               ! Get patch-level aboveground NPP array
      procedure, public :: get_bgnpp_patch               ! Get patch-level belowground NPP array
-     procedure, public :: get_froot_carbon_patch         ! Get patch-level fine root carbon array
-     procedure, public :: get_croot_carbon_patch         ! Get patch-level coarse root carbon array
+     procedure, public :: get_froot_carbon_patch        ! Get patch-level fine root carbon array
+     procedure, public :: get_croot_carbon_patch        ! Get patch-level coarse root carbon array
+
+     procedure, private :: CNReadNML                    ! Read in the CN general namelist
   end type cn_vegetation_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -207,14 +213,18 @@ contains
     call this%cnveg_state_inst%Init(bounds)
     
     if (use_cn) then
-       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8)
+
+       ! Read in the general CN namelist
+       call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
+
+       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
-               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
-               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
        if (use_c13) then
@@ -223,12 +233,12 @@ contains
        if (use_c14) then
           call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
        end if
-       call this%cnveg_nitrogenstate_inst%Init(bounds,                  &
-            this%cnveg_carbonstate_inst%leafc_patch(begp:endp),         &
-            this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp), &
-            this%cnveg_carbonstate_inst%frootc_patch(begp:endp), &
+       call this%cnveg_nitrogenstate_inst%Init(bounds,                   &
+            this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
+            this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp),  &
+            this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
             this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
-            this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp))
+            this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp) )
        call this%cnveg_nitrogenflux_inst%Init(bounds) 
 
        call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
@@ -252,6 +262,67 @@ contains
          source=create_cnfire_method(NLFilename))
 
   end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine CNReadNML( this, NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read in the general CN control namelist
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    character(len=*)         , intent(in)    :: NLFilename                 ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'CNReadNML'
+    character(len=*), parameter :: nmlname = 'cn_general'   ! MUST match what is in namelist below
+    !-----------------------------------------------------------------------
+    logical :: reseed_dead_plants
+    namelist /cn_general/ reseed_dead_plants
+
+    reseed_dead_plants = this%reseed_dead_plants
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=cn_general, iostat=ierr)   ! Namelist name here MUST be the same as in nmlname above!
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (reseed_dead_plants      , mpicom)
+
+    this%reseed_dead_plants = reseed_dead_plants
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=cn_general)    ! Name here MUST be the same as in nmlname above!
+       write(iulog,*) ' '
+    end if
+
+    !-----------------------------------------------------------------------
+
+  end subroutine CNReadNML
+
 
   !-----------------------------------------------------------------------
   subroutine InitAccBuffer(this, bounds)
@@ -352,22 +423,32 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   
     character(len=*) , intent(in)    :: flag   
+    integer  :: reseed_patch(bounds%endp-bounds%begp+1)
+    integer  :: num_reseed_patch
     !
     ! !LOCAL VARIABLES:
+
+    integer :: begp, endp
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
 
     if (use_cn) then
-       call this%cnveg_state_inst%restart(bounds, ncid, flag=flag)
-       call this%cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
+       begp = bounds%begp
+       endp = bounds%endp
+       call this%cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
+               reseed_dead_plants=this%reseed_dead_plants, filter_reseed_patch=reseed_patch, &
+               num_reseed_patch=num_reseed_patch )
+       if ( flag /= 'read' .and. num_reseed_patch /= 0 )then
+          call endrun(msg="ERROR num_reseed should be zero and is not"//errmsg(sourcefile, __LINE__))
+       end if
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
-               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               reseed_dead_plants=this%reseed_dead_plants, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c14', &
-               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               reseed_dead_plants=this%reseed_dead_plants, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
 
        call this%cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
@@ -378,8 +459,18 @@ contains
           call this%c14_cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag, carbon_type='c14')
        end if
 
-       call this%cnveg_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
+       call this%cnveg_nitrogenstate_inst%restart(bounds, ncid, flag=flag,  &
+            leafc_patch=this%cnveg_carbonstate_inst%leafc_patch(begp:endp),         &
+            leafc_storage_patch=this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp), &
+            frootc_patch=this%cnveg_carbonstate_inst%frootc_patch(begp:endp), &
+            frootc_storage_patch=this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
+            deadstemc_patch=this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
+            filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch)
        call this%cnveg_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
+       call this%cnveg_state_inst%restart(bounds, ncid, flag=flag, &
+            cnveg_carbonstate=this%cnveg_carbonstate_inst, &
+            cnveg_nitrogenstate=this%cnveg_nitrogenstate_inst, &
+            filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch)
 
        call this%c_products_inst%restart(bounds, ncid, flag)
        if (use_c13) then

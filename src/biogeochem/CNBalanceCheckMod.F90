@@ -186,7 +186,7 @@ contains
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
-         if (abs(col_errcb(c)) > 1e-8_r8) then
+         if (abs(col_errcb(c)) > 1e-7_r8) then
             err_found = .true.
             err_index = c
          end if
@@ -320,7 +320,7 @@ contains
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
 
-         if (abs(col_errnb(c)) > 1e-4_r8) then
+         if (abs(col_errnb(c)) > 1e-3_r8) then
             err_found = .true.
             err_index = c
          end if

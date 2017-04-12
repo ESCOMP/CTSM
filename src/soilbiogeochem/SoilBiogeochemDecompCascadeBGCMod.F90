@@ -84,6 +84,7 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
 
      real(r8) :: initial_Cstocks(nsompools) ! Initial Carbon stocks for a cold-start
+     real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
      
   end type params_type
   !
@@ -121,13 +122,14 @@ contains
     character(len=*), parameter :: subname = 'DecompCascadeBGCreadNML'
     character(len=*), parameter :: nmlname = 'CENTURY_soilBGCDecompCascade'
     !-----------------------------------------------------------------------
-    real(r8) :: initial_Cstocks(nsompools)
-    namelist /CENTURY_soilBGCDecompCascade/ initial_Cstocks
+    real(r8) :: initial_Cstocks(nsompools), initial_Cstocks_depth
+    namelist /CENTURY_soilBGCDecompCascade/ initial_Cstocks, initial_Cstocks_depth
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
 
-    initial_Cstocks(:) = 200._r8
+    initial_Cstocks(:)    = 200._r8
+    initial_Cstocks_depth = 0.3
 
     if (masterproc) then
        unitn = getavu()
@@ -145,7 +147,8 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (initial_Cstocks, mpicom)
+    call shr_mpi_bcast (initial_Cstocks      , mpicom)
+    call shr_mpi_bcast (initial_Cstocks_depth, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -154,7 +157,8 @@ contains
        write(iulog,*) ' '
     end if
 
-    params_inst%initial_Cstocks(:) = initial_Cstocks(:)
+    params_inst%initial_Cstocks(:)    = initial_Cstocks(:)
+    params_inst%initial_Cstocks_depth = initial_Cstocks_depth
 
   end subroutine DecompCascadeBGCreadNML
 
@@ -371,6 +375,7 @@ contains
          is_cwd                         => decomp_cascade_con%is_cwd                             , & ! Output: [logical           (:)     ]  TRUE => pool is a cwd pool                                
          initial_cn_ratio               => decomp_cascade_con%initial_cn_ratio                   , & ! Output: [real(r8)          (:)     ]  c:n ratio for initialization of pools                    
          initial_stock                  => decomp_cascade_con%initial_stock                      , & ! Output: [real(r8)          (:)     ]  initial concentration for seeding at spinup              
+         initial_stock_soildepth        => decomp_cascade_con%initial_stock_soildepth            , & ! Output: [real(r8)          (:)     ]  soil depth for initial concentration for seeding at spinup              
          is_metabolic                   => decomp_cascade_con%is_metabolic                       , & ! Output: [logical           (:)     ]  TRUE => pool is metabolic material                        
          is_cellulose                   => decomp_cascade_con%is_cellulose                       , & ! Output: [logical           (:)     ]  TRUE => pool is cellulose                                 
          is_lignin                      => decomp_cascade_con%is_lignin                          , & ! Output: [logical           (:)     ]  TRUE => pool is lignin                                    
@@ -418,6 +423,7 @@ contains
             rf_s1s3(c,j) = t
          end do
       end do
+      initial_stock_soildepth = params_inst%initial_Cstocks_depth
 
       !-------------------  list of pools and their attributes  ------------
       floating_cn_ratio_decomp_pools(i_litr1) = .true.

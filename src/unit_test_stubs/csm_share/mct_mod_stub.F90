@@ -6,7 +6,7 @@ module mct_mod
   implicit none
 
   public :: mct_gsMap
-  public :: mct_gsMap_OP
+  public :: mct_gsMap_orderedPoints
 
   type mct_gsMap
      ! Empty, dummy type
@@ -14,8 +14,8 @@ module mct_mod
 
 contains
 
-  subroutine mct_gsMap_OP(GSMap, PEno, Points)
-    ! Stub routine that simply matches the signature of mct_gsMap_OP
+  subroutine mct_gsMap_orderedPoints(GSMap, PEno, Points)
+    ! Stub routine that simply matches the signature of mct_gsMap_orderedPoints
     ! this routine allocates the Points array, to match the documented behavior of the
     ! real routine. This is needed so that a later deallocate will succeed. But note that
     ! it is just allocated to be of size 1, so it cannot be used for any real
@@ -25,6 +25,6 @@ contains
     integer,dimension(:),pointer :: Points
 
     allocate(Points(1))
-  end subroutine mct_gsMap_OP
+  end subroutine mct_gsMap_orderedPoints
 
 end module mct_mod

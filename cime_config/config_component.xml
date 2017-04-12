@@ -34,6 +34,8 @@
       <value compset="_CLM40"      >clm4_0_default</value>
       <value compset="_CLM45"      >clm4_5_CRUNCEP</value>
       <value compset="_CLM50"      >clm5_0_cam5.5</value>
+      <value compset="DATM.+_CLM50" >clm5_0_GSW3P</value>
+      <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSW3P</value>
       <value compset="CAM.+_CLM50" >clm5_0_cam5.5</value>
     </values>
   </entry>

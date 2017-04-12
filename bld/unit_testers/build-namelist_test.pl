@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 742;
+my $ntests = 743;
 if ( defined($opts{'compare'}) ) {
    $ntests += 468;
 }
@@ -429,6 +429,11 @@ my %failtest = (
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
+                                   },
+     "interp without finidat"    =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"use_init_interp=.true. finidat=' '",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "sp and c13"                =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c13=.true.",

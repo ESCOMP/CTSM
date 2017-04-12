@@ -7,7 +7,7 @@ module ndepStreamMod
   ! interpolation.
   !
   ! !USES
-  use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_cl
+  use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_cl 
   use shr_strdata_mod, only: shr_strdata_type, shr_strdata_create
   use shr_strdata_mod, only: shr_strdata_print, shr_strdata_advance
   use mct_mod     , only: mct_ggrid
@@ -47,6 +47,7 @@ contains
    ! Initialize data stream information.  
    !
    ! Uses:
+   use shr_kind_mod     , only : CS => shr_kind_cs
    use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
@@ -66,16 +67,19 @@ contains
    type(mct_ggrid)    :: dom_clm   ! domain information 
    character(len=CL)  :: stream_fldFileName_ndep
    character(len=CL)  :: ndepmapalgo = 'bilinear'
+   character(len=CS)  :: ndep_taxmode = 'extend'
+   character(len=CL)  :: ndep_varlist = 'NDEP_year'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
    character(*), parameter :: subName = "('ndepdyn_init')"
    character(*), parameter :: F00 = "('(ndepdyn_init) ',4a)"
    !-----------------------------------------------------------------------
 
-   namelist /ndepdyn_nml/        &
-        stream_year_first_ndep,  &
-	stream_year_last_ndep,   &
-        model_year_align_ndep,   &
-        ndepmapalgo,             &
+   namelist /ndepdyn_nml/          &
+        stream_year_first_ndep,    &
+	stream_year_last_ndep,     &
+        model_year_align_ndep,     &
+        ndepmapalgo, ndep_taxmode, &
+        ndep_varlist,              &
         stream_fldFileName_ndep
 
    ! Default values for namelist
@@ -137,12 +141,12 @@ contains
         domMaskName='mask',                        &
         filePath='',                               &
         filename=(/trim(stream_fldFileName_ndep)/),&
-        fldListFile='NDEP_year',                   &
-        fldListModel='NDEP_year',                  &
+        fldListFile=ndep_varlist,                  &
+        fldListModel=ndep_varlist,                 &
         fillalgo='none',                           &
         mapalgo=ndepmapalgo,                       &
         calendar=get_calendar(),                   &
-	taxmode='extend'                           )
+	taxmode=ndep_taxmode                       )
 
    if (masterproc) then
       call shr_strdata_print(sdat,'CLMNDEP data')

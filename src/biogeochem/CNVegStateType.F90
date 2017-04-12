@@ -669,23 +669,31 @@ contains
   end subroutine initCold
 
   !------------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag)
+  subroutine Restart(this, bounds, ncid, flag, cnveg_carbonstate, &
+             cnveg_nitrogenstate, filter_reseed_patch, num_reseed_patch)
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
     use spmdMod    , only : masterproc
     use abortutils , only : endrun
+    use CNVegNitrogenStateType, only: cnveg_nitrogenstate_type
+    use CNVegCarbonStateType  , only: cnveg_carbonstate_type
     use restUtilMod
     use ncdio_pio
+    use pftconMod , only : pftcon
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   
     character(len=*) , intent(in)    :: flag   
+    type(cnveg_nitrogenstate_type), intent(in) :: cnveg_nitrogenstate
+    type(cnveg_carbonstate_type)  , intent(in) :: cnveg_carbonstate
+    integer                       , intent(out), optional :: filter_reseed_patch(:)
+    integer                       , intent(out), optional :: num_reseed_patch
     !
     ! !LOCAL VARIABLES:
-    integer          :: j,c,i   ! indices
+    integer          :: j,c,i,p ! indices
     logical          :: readvar   ! determine if variable is on initial file
     real(r8), pointer :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
     real(r8), pointer :: ptr1d(:)   ! temp. pointers for slicing larger arrays
@@ -898,6 +906,41 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='grain_flag', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%grain_flag_patch)
+    end if
+    if ( flag == 'read' .and. num_reseed_patch > 0 )then
+       if ( masterproc ) write(iulog, *) 'Reseed dead plants for CNVegState'
+       do i = 1, num_reseed_patch
+          p = filter_reseed_patch(i)
+          ! phenology variables
+          this%dormant_flag_patch(p)   = 1._r8
+          this%days_active_patch(p)    = 0._r8
+          this%onset_flag_patch(p)     = 0._r8
+          this%onset_counter_patch(p)  = 0._r8
+          this%onset_gddflag_patch(p)  = 0._r8
+          this%onset_fdd_patch(p)      = 0._r8
+          this%onset_gdd_patch(p)      = 0._r8
+          this%onset_swi_patch(p)      = 0._r8
+          this%offset_flag_patch(p)    = 0._r8
+          this%offset_counter_patch(p) = 0._r8
+          this%offset_fdd_patch(p)     = 0._r8
+          this%offset_swi_patch(p)     = 0._r8
+          this%lgsf_patch(p)           = 0._r8
+          this%bglfr_patch(p)          = 0._r8
+          this%bgtr_patch(p)           = 0._r8
+          this%annavg_t2m_patch(p)     = 280._r8
+          this%tempavg_t2m_patch(p)    = 0._r8
+          this%grain_flag_patch(p)     = 0._r8
+
+          this%c_allometry_patch(p)           = 0._r8
+          this%n_allometry_patch(p)           = 0._r8
+          this%tempsum_potential_gpp_patch(p) = 0._r8
+          this%annsum_potential_gpp_patch(p)  = 0._r8
+          this%tempmax_retransn_patch(p)      = 0._r8
+          this%annmax_retransn_patch(p)       = 0._r8
+          this%downreg_patch(p)               = 0._r8
+          this%leafcn_offset_patch(p) = spval
+          this%plantCN_patch(p)       = spval
+       end do
     end if
 
   end subroutine Restart

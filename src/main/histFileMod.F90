@@ -234,8 +234,8 @@ module histFileMod
   !
   ! NetCDF  Id's
   !
-  type(file_desc_t) :: nfid(max_tapes)       ! file ids
-  type(file_desc_t) :: ncid_hist(max_tapes)  ! file ids for history restart files
+  type(file_desc_t), target :: nfid(max_tapes)       ! file ids
+  type(file_desc_t), target :: ncid_hist(max_tapes)  ! file ids for history restart files
   integer :: time_dimid                      ! time dimension id
   integer :: hist_interval_dimid             ! time bounds dimension id
   integer :: strlen_dimid                    ! string dimension id
@@ -1715,7 +1715,7 @@ contains
     integer :: numa                ! total number of atm cells across all processors
     logical :: avoid_pnetcdf       ! whether we should avoid using pnetcdf
     logical :: lhistrest           ! local history restart flag
-    type(file_desc_t) :: lnfid     ! local file id
+    type(file_desc_t), pointer :: lnfid     ! local file id
     character(len=  8) :: curdate  ! current date
     character(len=  8) :: curtime  ! current time
     character(len=256) :: name     ! name of attribute
@@ -1737,6 +1737,11 @@ contains
     ! define output write precsion for tape
 
     ncprec = tape(t)%ncprec
+    if (lhistrest) then
+       lnfid => ncid_hist(t)
+    else
+       lnfid => nfid(t)
+    endif
     
     ! BUG(wjs, 2014-10-20, bugz 1730) Workaround for
     ! http://bugs.cgd.ucar.edu/show_bug.cgi?id=1730
@@ -1861,14 +1866,12 @@ contains
     if ( .not. lhistrest )then
        call ncd_defdim(lnfid, 'hist_interval', 2, hist_interval_dimid)
        call ncd_defdim(lnfid, 'time', ncd_unlimited, time_dimid)
-       nfid(t) = lnfid
        if (masterproc)then
           write(iulog,*) trim(subname), &
                           ' : Successfully defined netcdf history file ',t
           call shr_sys_flush(iulog)
        end if
     else
-       ncid_hist(t) = lnfid
        if (masterproc)then
           write(iulog,*) trim(subname), &
                           ' : Successfully defined netcdf restart history file ',t
@@ -2753,14 +2756,14 @@ contains
     integer , pointer :: icarr(:)        ! temporary
     integer , pointer :: ilarr(:)        ! temporary
     integer , pointer :: iparr(:)        ! temporary
-    type(file_desc_t) :: ncid            ! netcdf file
+    type(file_desc_t), pointer :: ncid            ! netcdf file
     type(bounds_type) :: bounds          
     character(len=*),parameter :: subname = 'hfields_1dinfo'
 !-----------------------------------------------------------------------
 
     call get_proc_bounds(bounds)
 
-    ncid = nfid(t)
+    ncid => nfid(t)
 
     if (mode == 'define') then
 

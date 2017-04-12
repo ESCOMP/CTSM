@@ -51,7 +51,8 @@ module dynHarvestMod
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
   logical                  :: do_harvest ! whether we're in a period when we should do harvest
-  character(len=64)        :: harvest_units ! units from harvest variables 
+  character(len=*), parameter :: string_not_set = "not_set"  ! string to initialize with to indicate string wasn't set
+  character(len=64)        :: harvest_units = string_not_set ! units from harvest variables 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !---------------------------------------------------------------------------
@@ -77,6 +78,7 @@ contains
     integer :: varnum     ! counter for harvest variables
     integer :: num_points ! number of spatial points
     integer :: ier        ! error code
+    character(len=64) :: units = string_not_set
     
     character(len=*), parameter :: subname = 'dynHarvest_init'
     !-----------------------------------------------------------------------
@@ -100,7 +102,20 @@ contains
             dyn_file=dynHarvest_file, varname=harvest_varnames(varnum), &
             dim1name=grlnd, conversion_factor=1.0_r8, &
             do_check_sums_equal_1=.false., data_shape=[num_points])
-       call harvest_inst(varnum)%get_att("units",harvest_units)
+       call harvest_inst(varnum)%get_att("units",units)
+       if ( trim(units) == string_not_set ) then
+          units = "unitless"
+       else if ( trim(units) == "unitless" ) then
+
+       else if ( trim(units) /= "gC/m2/yr" ) then
+          call endrun(msg=' bad units read in from file='//trim(units)//errMsg(sourcefile, __LINE__))
+       end if
+       if ( varnum > 1 .and. trim(units) /= trim(harvest_units) )then
+          call endrun(msg=' harvest units are inconsitent on file ='// &
+               trim(harvest_filename)//errMsg(sourcefile, __LINE__))
+       end if
+       harvest_units = units
+       units = string_not_set
     end do
     
   end subroutine dynHarvest_init
@@ -186,9 +201,7 @@ contains
     integer :: p                         ! patch index
     integer :: g                         ! gridcell index
     integer :: fp                        ! patch filter index
-!KO
     real(r8):: cm                        ! rate for carbon harvest mortality (gC/m2/yr)
-!KO
     real(r8):: am                        ! rate for fractional harvest mortality (1/yr)
     real(r8):: m                         ! rate for fractional harvest mortality (1/s)
     real(r8):: dtime                     ! model time step (s)

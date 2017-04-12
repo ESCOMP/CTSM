@@ -71,6 +71,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <leafresp_method phys="clm4_5" use_cn=".true." >1</leafresp_method>
 <leafresp_method               use_cn=".false.">0</leafresp_method>
 
+<!-- Modfy photosyntheiss and LMR for crop -->
+<modifyphoto_and_lmr_forcrop >.false.</modifyphoto_and_lmr_forcrop>
+
+<!-- Method to use for stomatal conducatance -->
+<stomatalcond_method                                       >Ball-Berry1987</stomatalcond_method>
+
 <!-- C14 concentration file -->
 <atm_c14_filename use_c14=".true." use_c14_bombspike=".true." >lnd/clm2/isotopes/atm_delta_C14_data_1850-2007_monthly_23082011.nc</atm_c14_filename>
 
@@ -175,17 +181,29 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <non_boreal_peatfire_c    fire_method="li2014qianfrc" >0.001d00</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2014qianfrc" >0.3d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2014qianfrc" >0.39d00</occur_hi_gdp_tree>
+<lfuel                    fire_method="li2014qianfrc" >75.d00</lfuel>
+<ufuel                    fire_method="li2014qianfrc" >1050.d00</ufuel>
+<cmb_cmplt_fact           fire_method="li2014qianfrc" >0.5d00, 0.25d00</cmb_cmplt_fact>
 
-<rh_low                   fire_method="li2016crufrc" >30.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSW3P"
+>30.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.5"
+>30.0d00</rh_low>
 <rh_hgh                   fire_method="li2016crufrc" >80.0d00</rh_hgh>
 <bt_min                   fire_method="li2016crufrc" >0.6d00</bt_min>
 <bt_max                   fire_method="li2016crufrc" >0.85d00</bt_max>
 <cli_scale                fire_method="li2016crufrc" >0.0156d00</cli_scale>
 <boreal_peatfire_c        fire_method="li2016crufrc" >0.4d-4</boreal_peatfire_c>
-<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" >0.0079611</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSW3P"
+>0.0079611</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.5"
+>0.0079611</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2016crufrc" >3.6d-4</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2016crufrc" >0.36d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2016crufrc" >0.33d00</occur_hi_gdp_tree>
+<lfuel                    fire_method="li2016crufrc" >75.d00</lfuel>
+<ufuel                    fire_method="li2016crufrc" >1050.d00</ufuel>
+<cmb_cmplt_fact           fire_method="li2016crufrc" >0.5d00, 0.25d00</cmb_cmplt_fact>
 
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability phys="clm5_0">.false.</use_undercanopy_stability>
@@ -286,10 +304,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c161105.nc</paramfile>
-<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c161101.nc</paramfile>
-<paramfile phys="clm4_5" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c161103.nc</paramfile>
-<paramfile phys="clm5_0" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c161103.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.vNov2016.c170409.nc</paramfile>
+<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c170317.nc</paramfile>
+<paramfile phys="clm4_5" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c170317.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c170317.nc</paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -377,6 +395,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Original initial condition file at 1 degree resolution
 
 -->
+
+<!-- Interpolate from an initial condition file at startup? -->
+<use_init_interp                               >.false.</use_init_interp>
+
+<init_interp_attributes sim_year="1850"
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_cndv=.false. use_nitrif_denitrif=.true. use_vertsoilc=.true. glc_nec=10 use_crop=.true. irrigate=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000"
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_cndv=.false. use_nitrif_denitrif=.true. use_vertsoilc=.true. glc_nec=0 use_crop=.true. irrigate=.false.
+</init_interp_attributes>
+
 <!-- Original Initial condition file with SP and BGC - at 1 degree resolution -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." ic_ymd="18500101" 
          ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >
@@ -700,6 +730,16 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 <initial_Cstocks phys="clm5_0" use_cn=".true."  use_ed=".false." use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
 <initial_Cstocks phys="clm4_5" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
 <initial_Cstocks phys="clm5_0" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
+
+<initial_Cstocks_depth phys="clm5_0" use_cn=".true."   use_ed=".false." use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm4_5" use_cn=".true."   use_ed=".false." use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm5_0" use_cn=".false."  use_ed=".true."  use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm4_5" use_cn=".false."  use_ed=".true."  use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+
+<initial_vegC phys="clm5_0" use_cn=".true."  mm_nuptake_opt=".true." >20.d00</initial_vegC>
+<initial_vegC phys="clm4_5" use_cn=".true."  mm_nuptake_opt=".true." >20.d00</initial_vegC>
+<initial_vegC phys="clm5_0" use_cn=".true."  mm_nuptake_opt=".false.">1.d00</initial_vegC>
+<initial_vegC phys="clm4_5" use_cn=".true."  mm_nuptake_opt=".false.">1.d00</initial_vegC>
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->

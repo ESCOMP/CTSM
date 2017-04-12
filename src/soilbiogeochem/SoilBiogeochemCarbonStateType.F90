@@ -49,6 +49,7 @@ module SoilBiogeochemCarbonStateType
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
 
+
   end type soilbiogeochem_carbonstate_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -371,7 +372,7 @@ contains
 
              do j = 1, nlevdecomp
                 do k = 1, ndecomp_pools
-                   if (zsoi(j) < 0.3 ) then  !! only initialize upper soil column
+                   if (zsoi(j) < decomp_cascade_con%initial_stock_soildepth ) then  !! only initialize upper soil column
                       this%decomp_cpools_vr_col(c,j,k) = decomp_cascade_con%initial_stock(k)
                    else
                       this%decomp_cpools_vr_col(c,j,k) = 0._r8

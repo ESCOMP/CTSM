@@ -1,4 +1,158 @@
 ===============================================================
+Tag name:  clm4_5_15_r233
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Apr 11 23:30:45 MDT 2017
+One-line Summary: Pull out some constants and options to namelist
+
+Purpose of changes
+------------------
+
+Pull out a list of constants and options to namelist control. Decrease a few error tolderances.
+Add in reseed_dead_plants namelist option, so can reseed dead plants for BGC on a restart.
+Reenable LND_TUNING_MODE, although currently set the same for all options. Add some new 
+compsets in. Fix a few bugs, including Jim Edward's fix for vector output.
+Start adding in the stream option for finundated. Add option to turn Medlyn photosynthesis on.
+Replace & with &amp; in namelist_definition_clm4_5.xml
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2440 Remove use of mct_gsmap_op and replace with mct_gsMap_orderedPoints
+   2430 Problem with units on new landuse.timeseries datasets
+   2184 vector (1d) history output crashes for some fields
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): Added new parameters to namelist
+   New namelists: cnvegcarbonstate and cn_general
+   New namelist items:
+         modifyphoto_and_lmr_forcrop, stomatalcond_method, lfuel, ufuel, cmb_complt_fact,
+         initial_Cstocks_depth, ndep_taxmode, ndep_varlist, init_interp_attributes, reseed_dead_plants,
+         initial_vegC, finundation_method
+   New output history variables: Remove RSCANOPY unless use_ed add: VCMX25T, JMX25T, TPU25T
+   New compsets I1850GSWCLM50BGCCROP, IM1850GSWCLM50BGCCROP, IGM1850GSWCLM50BGCCROP, IGMHISTGSWCLM50BGCCROP
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): params files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - OK (183 test fail comparison to previous namelists)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_15_r232
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: None bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+-------- Start adding ability to read finundated streams data (currently disabled)
+   A   components/clm/src/biogeochem/ch4FInundatedStreamType.F90
+
+List all existing files that have been modified, and describe the changes:
+
+   M   components/clm/bld/CLMBuildNamelist.pm --- Add setup_logic_cnvegcarbonstate, 
+         new namelists: cnvegcarbonstate and cn_general, refactor how finidat files
+         were being found to a better more general methodology that allows a second
+         go to find finidat file to interpolate from (currently disabled)
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ---- New settings:
+         modifyphoto_and_lmr_forcrop, stomatalcond_method, use_init_interp, init_interp_attributes
+         initial_Cstocks_depth, initial_vegC, and new params file with medlynslope/intercept
+   M   components/clm/bld/namelist_files/namelist_definition_clm4_5.xml -- New namelist items:
+         modifyphoto_and_lmr_forcrop, stomatalcond_method, lfuel, ufuel, cmb_complt_fact,
+         initial_Cstocks_depth, ndep_taxmode, ndep_varlist, init_interp_attributes, reseed_dead_plants,
+         initial_vegC, finundation_method
+   M   components/clm/bld/unit_testers/build-namelist_test.pl -- Test that use_init_interp=.true. with
+         finidat blank is fails
+
+   M   components/clm/cime_config/config_component.xml - Set LND_TUNING_MODE by compset
+   M   components/clm/cime_config/config_compsets.xml -- Add: I1850GSWCLM50BGCCROP, IM1850GSWCLM50BGCCROP, 
+         IGM1850GSWCLM50BGCCROP, IGMHISTGSWCLM50BGCCROP compsets
+
+   M   components/clm/src/biogeochem/CNBalanceCheckMod.F90 --- Decrease carbon error tolerance from 1xe-8 to 1xe-7
+          and nitrogen error tolerance from 1xe-4 to 1xe-3
+   M   components/clm/src/biogeochem/CNFireBaseMod.F90 ---------- Add lfuel, ufuel, cmb_cmplt_fact to namelist
+   M   components/clm/src/biogeochem/CNVegCarbonStateType.F90 --- Add InitReadNML and read in initial_vegC in
+          new cnvegcarbonstate namelist, handle reseeding with reseed_patch filter
+   M   components/clm/src/biogeochem/CNVegNitrogenStateType.F90 - Handle reseeding with reseed_patch filter for
+          restart read
+   M   components/clm/src/biogeochem/CNVegStateType.F90 --------- Handle reseeding with reseed_patch filter for
+   M   components/clm/src/biogeochem/CNVegetationFacade.F90 ----- Add namelist read CNReadNML for cn_general
+          and  reseed_dead_plants option, pass it and/or reseed filter down as appropriate
+   M   components/clm/src/biogeochem/CropType.F90 ------ Check validity of baset_mapping, set latbaset_patch to nan
+          if not used, switch logic of how activated
+   M   components/clm/src/biogeochem/ch4varcon.F90 ----- Make default private, explicitly make items public as needed
+          add finundation_mtd and valid settings, read finundation_method in namelist and check it
+   M   components/clm/src/biogeochem/dynHarvestMod.F90 - Validate units of harvest fields abort if not right
+
+   M   components/clm/src/biogeophys/CanopyStateType.F90 --- Only send RSCANOPY to history if use_ed is on
+   M   components/clm/src/biogeophys/PhotosynthesisMod.F90 - Add: stomatalcond_mtd, modifyphoto_and_lmr_forcrop namelist
+         items, add extra history output: VCMX25T, JMX25T, TPU25T
+
+   M   components/clm/src/main/GetGlobalValuesMod.F90 - Replace mct_gsMap_orderedPoints for mct_gsMap_OP
+   M   components/clm/src/main/histFileMod.F90 -------- Fix for bug 2184 from Jim Edwards
+   M   components/clm/src/main/init_hydrology.F90 ----- Call init_root_moist_stress
+   M   components/clm/src/main/ncdio_pio.F90.in ------- Replace mct_gsMap_orderedPoints for mct_gsMap_OP
+   M   components/clm/src/main/ndepStreamMod.F90 ------ Add: ndep_taxmode, ndep_varlist to namelist
+   M   components/clm/src/main/pftconMod.F90 ---------- Add: medlynslope/intercept to data/alloc/read/clean
+
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90 ------ Use decomp_cascade_con%initial_stock_soildepth
+          in place of hardcoded 0.3
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemCompetitionMod.F90 ------- Increase error tolerence allowed
+          for endrun for too much NH4 uptake predicted by FUN
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90 -- Add initial_Cstocks_depth to namelist
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeConType.F90 - Add initial_stock_soildepth set to 0.3
+
+   M   components/clm/src/unit_test_stubs/csm_share/mct_mod_stub.F90 - Replace mct_gsMap_OP with mct_gsMap_orderedPoints
+
+   M   components/clm/src/utils/quadraticMod.F90 - Allow for situations where a sqrt of a slightly negative number
+          would crash the code.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_15_r232
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Apr  5 23:04:37 MDT 2017

@@ -279,10 +279,12 @@ contains
          ptr_patch=this%elai240_patch, default='inactive')
 
     ! Ed specific field
-    this%rscanopy_patch(begp:endp) = spval
-    call hist_addfld1d (fname='RSCANOPY', units=' s m-1',  &
-         avgflag='A', long_name='canopy resistance', &
-         ptr_patch=this%rscanopy_patch, set_lake=0._r8, set_urb=0._r8)
+    if ( use_ed ) then
+       this%rscanopy_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RSCANOPY', units=' s m-1',  &
+            avgflag='A', long_name='canopy resistance', &
+            ptr_patch=this%rscanopy_patch, set_lake=0._r8, set_urb=0._r8)
+    end if
 
 !    call hist_addfld1d (fname='GCCANOPY', units='none',  &
 !         avgflag='A', long_name='Canopy Conductance: mmol m-2 s-1', &
@@ -597,6 +599,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fsun', xtype=ncd_double,  &
          dim1name='pft', long_name='sunlit fraction of canopy', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%fsun_patch)
+
     if (flag=='read' )then
        do p = bounds%begp,bounds%endp
           if (shr_infnan_isnan(this%fsun_patch(p)) ) then
