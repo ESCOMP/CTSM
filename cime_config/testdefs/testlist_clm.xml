@@ -152,12 +152,12 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SSP_D_Ld10">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/rtmColdSSP">yellowstone</machine>
       </test>
       <test name="SSP_Ld10">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/reduceOutput">hobart</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="prebeta">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/rtmColdSSP">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/rtmColdSSP">yellowstone</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/rtmColdSSP">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -197,9 +197,6 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERI_D_Ld9">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
-      </test>
-      <test name="ERP_P180x2_Ld5">
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
@@ -1317,11 +1314,6 @@
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
-      <test name="SMS">
-        <machine compiler="pgi" testtype="aux_clm40">yellowstone</machine>
-      </test>
-    </grid>
     <grid name="ne120_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -1395,11 +1387,6 @@
     <grid name="f09_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
-      </test>
-    </grid>
-    <grid name="f19_g16">
-      <test name="ERP_D">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="ne120_g16">

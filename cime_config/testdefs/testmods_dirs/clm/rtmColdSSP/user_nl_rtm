@@ -1,0 +1,4 @@
+finidat_rtm = " "
+rtmhist_mfilt = 1
+rtmhist_ndens = 2
+rtmhist_nhtfrq = 0
