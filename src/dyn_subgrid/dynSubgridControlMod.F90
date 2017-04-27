@@ -27,6 +27,7 @@ module dynSubgridControlMod
   public :: run_has_transient_landcover ! returns true if any aspects of prescribed transient landcover are enabled
   public :: get_do_harvest          ! return the value of the do_harvest control flag
   public :: get_for_testing_allow_non_annual_changes ! return true if user has requested to allow area changes at times other than the year boundary, for testing purposes
+  public :: get_for_testing_zero_dynbal_fluxes ! return true if user has requested to set the dynbal water and energy fluxes to zero, for testing purposes
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: read_namelist              ! read namelist variables
@@ -45,7 +46,15 @@ module dynSubgridControlMod
      ! where we artificially create changes more frequently so that we can run short
      ! tests. This flag is only used for error-checking, not controlling any model
      ! behavior.
-     logical :: for_testing_allow_non_annual_changes
+     logical :: for_testing_allow_non_annual_changes = .false.
+
+     ! The following is only meant for testing: If .true., set the dynbal water and
+     ! energy fluxes to zero. This is needed in some tests where we have daily rather
+     ! than annual glacier dynamics: if we allow the true dynbal adjustment fluxes in
+     ! those tests, we end up with sensible heat fluxes of thousands of W m-2 or more,
+     ! which causes CAM to blow up. However, note that setting it to true will break
+     ! water and energy conservation!
+     logical :: for_testing_zero_dynbal_fluxes = .false.
 
      logical :: initialized        = .false. ! whether this object has been initialized
   end type dyn_subgrid_control_type
@@ -106,6 +115,7 @@ contains
     logical :: do_transient_crops
     logical :: do_harvest
     logical :: for_testing_allow_non_annual_changes
+    logical :: for_testing_zero_dynbal_fluxes
     ! other local variables:
     integer :: nu_nml    ! unit for namelist file
     integer :: nml_error ! namelist i/o error flag
@@ -118,7 +128,8 @@ contains
          do_transient_pfts, &
          do_transient_crops, &
          do_harvest, &
-         for_testing_allow_non_annual_changes
+         for_testing_allow_non_annual_changes, &
+         for_testing_zero_dynbal_fluxes
 
     ! Initialize options to default values, in case they are not specified in the namelist
     flanduse_timeseries = ' '
@@ -126,6 +137,7 @@ contains
     do_transient_crops = .false.
     do_harvest         = .false.
     for_testing_allow_non_annual_changes = .false.
+    for_testing_zero_dynbal_fluxes = .false.
 
     if (masterproc) then
        nu_nml = getavu()
@@ -148,13 +160,15 @@ contains
     call shr_mpi_bcast (do_transient_crops, mpicom)
     call shr_mpi_bcast (do_harvest, mpicom)
     call shr_mpi_bcast (for_testing_allow_non_annual_changes, mpicom)
+    call shr_mpi_bcast (for_testing_zero_dynbal_fluxes, mpicom)
 
     dyn_subgrid_control_inst = dyn_subgrid_control_type( &
          flanduse_timeseries = flanduse_timeseries, &
          do_transient_pfts = do_transient_pfts, &
          do_transient_crops = do_transient_crops, &
          do_harvest = do_harvest, &
-         for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes)
+         for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes, &
+         for_testing_zero_dynbal_fluxes = for_testing_zero_dynbal_fluxes)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -313,5 +327,22 @@ contains
 
   end function get_for_testing_allow_non_annual_changes
 
+  !-----------------------------------------------------------------------
+  logical function get_for_testing_zero_dynbal_fluxes()
+    !
+    ! !DESCRIPTION:
+    ! Return true if the user has requested to set the dynbal water and energy fluxes to
+    ! zero. This should typically only be true for testing: This is needed in some tests
+    ! where we have daily rather than annual glacier dynamics: if we allow the true dynbal
+    ! adjustment fluxes in those tests, we end up with sensible heat fluxes of thousands
+    ! of W m-2 or more, which causes CAM to blow up. However, note that setting it to
+    ! true will break water and energy conservation!
+    ! -----------------------------------------------------------------------
+
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+
+    get_for_testing_zero_dynbal_fluxes = dyn_subgrid_control_inst%for_testing_zero_dynbal_fluxes
+
+  end function get_for_testing_zero_dynbal_fluxes
 
 end module dynSubgridControlMod

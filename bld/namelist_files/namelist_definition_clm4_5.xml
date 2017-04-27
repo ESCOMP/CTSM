@@ -2090,6 +2090,16 @@ error-checking, not controlling any model behavior. Do not set this in a
 production (non-test) run unless you know what you're doing!
 </entry>
 
+<entry id="for_testing_zero_dynbal_fluxes" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, set the dynbal water and energy fluxes to zero. This should typically
+only be done for testing: This is needed in some tests where we have daily
+rather than annual glacier dynamics: if we allow the true dynbal adjustment
+fluxes in those tests, we end up with sensible heat fluxes of thousands of W m-2
+or more, which causes CAM to blow up. However, note that setting it to true will
+break water and energy conservation!
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to finidat consistency checks                                    -->
 <!-- ========================================================================================  -->

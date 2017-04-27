@@ -28,6 +28,7 @@ module dynConsBiogeophysMod
   use ColumnType        , only : col                
   use PatchType         , only : patch                
   use clm_varcon        , only : tfrz, cpliq, hfus
+  use dynSubgridControlMod, only : get_for_testing_zero_dynbal_fluxes
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -148,11 +149,19 @@ contains
          heat_grc = temperature_inst%heat2_grc(bounds%begg:bounds%endg), &
          liquid_water_temp_grc = temperature_inst%liquid_water_temp2_grc(bounds%begg:bounds%endg))
 
-    do g = begg, endg
-       delta_liq(g)  = waterstate_inst%liq2_grc(g) - waterstate_inst%liq1_grc(g)
-       delta_ice(g)  = waterstate_inst%ice2_grc(g) - waterstate_inst%ice1_grc(g)
-       delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
-    end do
+    if (get_for_testing_zero_dynbal_fluxes()) then
+       do g = begg, endg
+          delta_liq(g) = 0._r8
+          delta_ice(g) = 0._r8
+          delta_heat(g) = 0._r8
+       end do
+    else
+       do g = begg, endg
+          delta_liq(g)  = waterstate_inst%liq2_grc(g) - waterstate_inst%liq1_grc(g)
+          delta_ice(g)  = waterstate_inst%ice2_grc(g) - waterstate_inst%ice1_grc(g)
+          delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
+       end do
+    end if
 
     call AdjustDeltaHeatForDeltaLiq( &
          bounds, &
