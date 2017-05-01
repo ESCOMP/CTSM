@@ -80,7 +80,11 @@ CLM testing:
     yellowstone_intel - 
     yellowstone_pgi - 
     yellowstone_gnu (clm45 only) - 
-    hobart_nag - 
+    cheyenne_intel - 
+    cheyenne_gnu --
+    hobart_nag --- 
+    hobart_pgi --- 
+    hobart_intel - 
 
 CLM tag used for the baseline comparisons: 
 

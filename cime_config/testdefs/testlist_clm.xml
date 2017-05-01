@@ -425,7 +425,7 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
       </test>
       <test name="LII_D_Ld3">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default" comment="Include a LII test with a year-2000 restart file, so that the restart file has non-zero product pools, so that we exercise the gridcell-level code in init_interp. This test is largely redundant with LII_D.f10_f10.ICLM45BGCCROP.yellowstone_gnu.clm-crop, but currently the initial conditions file for that test has 0 product pools and O2_DECOMP_DEPTH_UNSAT = 0 everywhere. That failed to catch a problem that appears when there are non-zero values in O2_DECOMP_DEPTH_UNSAT. Once the initial conditions file for the crop LII test has non-zero values for O2_DECOMP_DEPTH_UNSAT and product pools, this non-crop LII test can be removed.">yellowstone</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/defaultf09IC" comment="Include a LII test with a year-2000 restart file, so that the restart file has non-zero product pools, so that we exercise the gridcell-level code in init_interp. This test is largely redundant with LII_D.f10_f10.ICLM45BGCCROP.yellowstone_gnu.clm-crop, but currently the initial conditions file for that test has 0 product pools and O2_DECOMP_DEPTH_UNSAT = 0 everywhere. That failed to catch a problem that appears when there are non-zero values in O2_DECOMP_DEPTH_UNSAT. Once the initial conditions file for the crop LII test has non-zero values for O2_DECOMP_DEPTH_UNSAT and product pools, this non-crop LII test can be removed.">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">
@@ -540,7 +540,7 @@
         <machine compiler="intel" testtype="prebeta" testmods="clm/irrigOn_reduceOutput">yellowstone</machine>
       </test>
       <test name="LII_D">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/crop" comment="include one interpolation test involving crop (for now we also want one without glc_mec, although we could drop the requirement of having a non-glc_mec LII test if/when we switch to always using glc_mec)">yellowstone</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropf10IC" comment="include one interpolation test involving crop (for now we also want one without glc_mec, although we could drop the requirement of having a non-glc_mec LII test if/when we switch to always using glc_mec)">yellowstone</machine>
       </test>
       <test name="PEM_Ld1">
         <machine compiler="intel" testtype="prebeta" testmods="clm/crop">hobart</machine>
@@ -672,10 +672,10 @@
   <compset name="ICLM45VIC">
     <grid name="f09_g16">
       <test name="ERP_D_Ld5">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay_interp">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
       </test>
       <test name="ERP_Ld5">
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/vrtlay_interp">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">
@@ -897,6 +897,14 @@
       </test>
       <test name="ERP_P60x2_Lm36">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50cropIrrigMonth_interp">yellowstone</machine>
+      </test>
+      <test name="SMS">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/crop">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/crop">hobart</machine>
+      </test>
+      <test name="SMS_D">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/crop">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/crop">hobart</machine>
       </test>
       <test name="SMS_D_P24x1_Ld5">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/irrig_spunup" comment="Want nag _D test with irrigation on">hobart</machine>

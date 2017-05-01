@@ -51,9 +51,11 @@ contains
 ! !DESCRIPTION:
 ! Method for getting FireEmis information for a named compound 
 !
+! !USES:
+    use pftconMod , only : nc3crop
 ! !ARGUMENTS:
     character(len=*),intent(in)  :: comp_name      ! FireEmis compound name
-    real(r8),        intent(out) :: factors(npfts) ! vegitation type factors for the compound of intrest
+    real(r8),        intent(out) :: factors(:)     ! vegetation type factors for the compound of interest
     real(r8),        intent(out) :: molecwght      ! molecular weight of the compound of intrest
 !
 !EOP
@@ -71,7 +73,10 @@ contains
        call endrun(errmes)
     endif
 
-    factors(:) = comp_factors_table( ndx )%eff(:)
+    factors(:npfts) = comp_factors_table( ndx )%eff(:npfts)
+    if ( size(factors) > npfts )then
+       factors(npfts+1:) = comp_factors_table( ndx )%eff(nc3crop)
+    end if
     molecwght  = comp_factors_table( ndx )%wght
 
   end subroutine fire_emis_factors_get
@@ -91,6 +96,7 @@ contains
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
     use fileutils   , only : getfil
+    use clm_varpar  , only : mxpft
 !
 ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! FireEmis factors input file
@@ -121,6 +127,9 @@ contains
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
     npfts = n_pfts
+    if ( npfts /= mxpft .and. npfts /= 16 )then
+       call endrun('Number of PFTs on fire emissions file is NOT correct. Its neither the total number of PFTS nor 16')
+    end if
 
     ierr = pio_inq_varid(ncid,'Comp_EF',  comp_ef_vid)
     ierr = pio_inq_varid(ncid,'Comp_Name',comp_name_vid)
@@ -137,7 +146,7 @@ contains
     call  bld_hash_table_indices( comp_names )
     do i=1,n_comps
        start=(/i,1/)
-       count=(/1,16/)
+       count=(/1,npfts/)
        ierr = pio_get_var( ncid, comp_ef_vid,  start, count, comp_factors )
 
        call enter_hash_data( trim(comp_names(i)), comp_factors, comp_molecwghts(i)  )

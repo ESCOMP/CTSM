@@ -1,4 +1,201 @@
 ===============================================================
+Tag name:  clm4_5_15_r236
+Originator(s):  erik (Erik Kluzek)
+Date: Mon May  1 01:42:23 MDT 2017
+One-line Summary: New surface datasets, and landuse.timeseries files, as well as interpolating initial conditions for almost all cases
+
+Purpose of changes
+------------------
+
+New fsurdat and landuse.timeseries datasets for almost all resolutions.
+New initial conditions datasets pointed to as much as possible for all resolutions (have ability to turn off to COLDSTART for some tests).
+Normally model will now die, if it can't find initial conditions to interpolate from.
+Reasonable f09 and f19 PE layout for cheyenne. Fix another issue on Cheyenne. Add new pgi/intel tests for hobart.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2445 -- ED not working with new datasets
+   2444 -- dimensional change in URBAN_AC/URBAN_HEAT for interpolation of restart files
+   2441 -- fire emissions on cheyenne
+   2291 -- fire emissions with gnu compiler sometimes NaN, sometimes change answers for trivial changes
+   2239 -- need new initial conditions files with extra metadata on them
+
+Known bugs introduced in this tag (include bugzilla ID):
+  2447 -- Floating overflow for CLM50CROP case on hobart_nag in Photosynthesis
+  #1215 -- (in this version of cime) TestStatus sometimes needs to have write permission added
+  #? -- manage_case doesn't work
+  #? -- ./xmlquery --list-all doesn't work
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): 
+
+   All initial conditions have to be interpolated now, but there are ones that can be interpolated from for standard cases
+   NOTE NOW IF YOU WANT TO DO A COLD START USING ARBITRARY INITIAL CONDITIONS SET CLM_FORCE_COLDSTART=on
+   Also the model will normally fail if it can't find initial conditions close enough to interpolate from
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): A close finidat file will almost always be set
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+
+Changes to the datasets (e.g., parameter, surface or initial files): New fsurdat/finidat/landuse.timeseris
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: New pgi/intel tests for hobart
+
+   Expected fails removed: bug 2239, 2291, and added SMS_Ld5_D_P24x1.f10_f10.IHISTCLM50BGC.hobart_nag.clm-monthl for bug 2447
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone -  PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - PASS
+    yellowstone_pgi -  PASS
+    yellowstone_gnu (clm45 only) - PASS
+    hobart_nag --- OK
+    hobart_pgi --- OK
+    hobart_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_15_r235
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes 
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Almost all CLM45 and CLM50 configurations because of new datasets
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):  similar climate
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated:
+
+------ No longer need vrtlay_interp testmods, nor user_nl_clm for some
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropColdStart/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly_noinitial/user_nl_clm
+------- Reduce size of files
+D       components/clm/tools/mkprocdata_map/clm4054_ne30g16_I2000.clm2.h0.2000-01_c121107.nc
+D       components/clm/tools/mkprocdata_map/clm4054_f19g16_I2000.clm2.h0.2000-01_c121107.nc
+
+List all files added and what they do:
+
+------------ New test-mods with specific initial conditions
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC
+A       components/clm/tools/mkprocdata_map/clm4054_ne30g16_I2000.clm2.h0.2000-01_c170430.nc
+A       components/clm/tools/mkprocdata_map/clm4054_f19g16_I2000.clm2.h0.2000-01_c170430.nc
+
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/allActive/shell_commands - CLM_FORCE_COLDSTART=on
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropColdStart/shell_commands - CLM_FORCE_COLDSTART=on
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly_noinitial/shell_commands - CLM_FORCE_COLDSTART=on
+
+------------ New unit test for surfrdUtilsMod subroutines
+A       components/clm/src/main/test/surfrdUtils_test/test_surfrdUtils.pf
+A       components/clm/src/main/test/surfrdUtils_test/CMakeLists.txt
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/bld/CLMBuildNamelist.pm ---------------------------- Add better handling of finding finidat files
+             either with an exact match or interpolated from
+M       components/clm/bld/unit_testers/build-namelist_test.pl ------------ Add new failure tests, fix ed-test
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml -- Add init_interp_how_close and init_interp_sim_years
+M       components/clm/bld/namelist_files/namelist_defaults_overall.xml --- Start type is startup (requires finidat) for CLM45/CLM50
+             unless use_cndv is on
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ---- init_interp_how_close=75 and init_interp_sim_years=1850,2000
+            new 2-deg IC files IGM1850GSWCLM50BGCCROP, I1850CRUCLM45BGC, IGM2000GSWP3CLM50BGCCROPIRR, ICRUCLM45SP
+            redone 2-deg ICLM45BGCCROP
+            create_crop_landunit on unless ED is on
+            updated: fsurdat, flanduse.timeseries for all but 1x1_smallville_IA and 0.125x0.125
+
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml -- ICLM45VIC.yellowstone now PASS
+              SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu now PASS, new fail SMS_Ld5_D_P24x1.f10_f10.IHISTCLM50BGC.hobart_nag.clm-monthly
+
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_spunup/user_nl_clm - remove finidat and init_interp_fill_missing_with_natveg
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/user_nl_clm - set fsurdat, create_crop_landunit
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/user_nl_clm ------ create_crop_landunit = .false.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsROA/shell_commands - CLM_FORCE_COLDSTART=on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/edTest/user_nl_clm ------ remove finidat=''
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/allActive/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsROA/shell_commands - CLM_FORCE_COLDSTART=on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLA/shell_commands - CLM_FORCE_COLDSTART=on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLB/shell_commands - CLM_FORCE_COLDSTART=on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc/user_nl_clm - new finidat
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc/README
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/user_nl_clm - remove finidat
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/README
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLA/shell_commands - CLM_FORCE_COLDSTART=on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLB/shell_commands - CLM_FORCE_COLDSTART=on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/user_nl_clm - remove finidat, 
+                init_interp_fill_missing_with_natveg
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial/shell_commands- CLM_FORCE_COLDSTART=on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial/README
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm - new finidat
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm - remove finidat
+M       components/clm/cime_config/testdefs/testlist_clm.xml -- new pgi/intel hobart tests, vrtlay_interp->vrtlay,
+                use defaultf09IC cropf10IC for two LII tests
+M       components/clm/cime_config/user_nl_clm ----------- Fix documentation of irrigate, add note to use CLM_FORCE_COLDSTART
+                rather than finidat=' '
+M       components/clm/cime_config/config_component.xml - HIST and 2000 compsets for BGCCROP turn irrigation on
+M       components/clm/cime_config/config_pes.xml -- Add f09 and f19 PE layouts for cheyenne
+
+M       components/clm/src/biogeochem/FireEmisFactorsMod.F90 - Copy crop factors from generic crop CFT's
+
+M       components/clm/src/main/test/CMakeLists.txt ---------- Add new unit test
+M       components/clm/src/main/surfrdUtilsMod.F90 ----------- Add renormalize and convert_cft_to_pft functions
+             lighten tolerence for sums to equal 1 from 1.e-14 to 1.e-13
+M       components/clm/src/main/surfrdMod.F90 ---------------- Add surfrd_pftformat, surfrd_cftformat to read in old/new formats
+             for CFT or PFT, also handle conversion of new CFT format to PFT format for ED
+M       components/clm/src/biogeophys/EnergyFluxType.F90 ----- For CLM50 urban add _L to URBAN_AC/HEAT to restart files, 
+             so CLM45 won't be confused with CLM50
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_15_r235
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Apr 27 07:47:50 MDT 2017

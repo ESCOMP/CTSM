@@ -811,14 +811,14 @@ contains
        ! don't read it (instead give it a default value). This is needed to support older initial
        ! conditions for which this variable had a different size (column-level).
        if (flag == 'read') then
-          call ncd_inqvdlen(ncid, 'URBAN_AC', 1, dimlen, err_code)
+          call ncd_inqvdlen(ncid, 'URBAN_AC_L', 1, dimlen, err_code)
           if (dimlen /= numl_global) then
              do_io = .false.
              readvar = .false.
           end if
        end if
        if (do_io) then
-          call restartvar(ncid=ncid, flag=flag, varname='URBAN_AC', xtype=ncd_double,  &
+          call restartvar(ncid=ncid, flag=flag, varname='URBAN_AC_L', xtype=ncd_double,  &
                dim1name='landunit',&
                long_name='urban air conditioning flux', units='watt/m^2', &
                interpinic_flag='interp', readvar=readvar, data=this%eflx_urban_ac_lun)
@@ -831,14 +831,14 @@ contains
        ! don't read it (instead give it a default value). This is needed to support older initial
        ! conditions for which this variable had a different size (column-level).
        if (flag == 'read') then
-          call ncd_inqvdlen(ncid, 'URBAN_HEAT', 1, dimlen, err_code)
+          call ncd_inqvdlen(ncid, 'URBAN_HEAT_L', 1, dimlen, err_code)
           if (dimlen /= numl_global) then
              do_io = .false.
              readvar = .false.
           end if
        end if
        if (do_io) then
-          call restartvar(ncid=ncid, flag=flag, varname='URBAN_HEAT', xtype=ncd_double,  &
+          call restartvar(ncid=ncid, flag=flag, varname='URBAN_HEAT_L', xtype=ncd_double,  &
                dim1name='landunit',&
                long_name='urban heating flux', units='watt/m^2', &
                interpinic_flag='interp', readvar=readvar, data=this%eflx_urban_heat_lun)

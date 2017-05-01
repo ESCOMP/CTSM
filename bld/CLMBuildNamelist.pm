@@ -646,10 +646,10 @@ sub process_namelist_commandline_options {
   setup_cmdl_irrigation($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_rcp($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_simulation_year($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_dynamic_vegetation($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_ed_mode($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_vichydro($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_output_reals($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
@@ -918,6 +918,9 @@ sub setup_cmdl_fire_light_res {
        }
        if ( ! &value_is_true($nl->get_value('use_cn')) ) {
           fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
+       }
+       if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
+          fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
        }
        $nl_flags->{$var} = $val;
     }
@@ -1262,13 +1265,15 @@ sub setup_cmdl_run_type {
   my $var = "clm_start_type";
   if (defined $opts->{$var}) {
     if ($opts->{$var} eq "default" ) {
-      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
+                  'use_cndv'=>$nl_flags->{'use_cndv'} );
     } else {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
     }
   } else {
-    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
+                  'use_cndv'=>$nl_flags->{'use_cndv'} );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
 }
@@ -2068,14 +2073,18 @@ sub setup_logic_create_crop_landunit {
   # Create crop land unit
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
+  my $var = 'create_crop_landunit';
   if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
     if ( $nl_flags->{'crop'} eq "on" ) {
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit' );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
     }
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit', 'irrig'=>$nl_flags->{'irrig'} );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'irrig'=>$nl_flags->{'irrig'} );
   } else {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit', 
-                'use_crop'=>$nl_flags->{'use_crop'}, 'hgrid'=>$nl_flags->{'res'} );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
+                'use_ed'=>$nl_flags->{'use_ed'} );
+    if ( &value_is_true($nl_flags->{'use_ed'}) && &value_is_true($nl->get_value($var)) ) {
+         fatal_error( "$var is true and yet use_ed is being set, which contradicts that (use_ed requires $var to be .false." );
+    }
   }
 }
 #-------------------------------------------------------------------------------
@@ -2244,6 +2253,9 @@ sub setup_logic_demand {
     if ( $item eq "null" ) {
       next;
     }
+    if ( $item eq "finidat" ) {
+        fatal_error( "Do NOT put findat in the clm_demand list, set the clm_start_type=startup so initial conditions are required");
+    }
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
   }
 }
@@ -2305,19 +2317,27 @@ sub setup_logic_initial_conditions {
   #         AFTER: setup_logic_irrigate which is where irrigate is set
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
+  my $finidat = $nl->get_value('finidat');
   if ( $nl_flags->{'clm_start_type'} =~ /cold/ ) {
-    if (defined $nl->get_value('finidat')) {
+    if (defined $finidat ) {
       fatal_error("setting finidat is incomptable with using start_type=cold.");
     }
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                 'finidat', 'val'=>"' '", 'no_abspath'=>1);
+  } elsif ( defined $finidat ) {
+    if ( string_is_undef_or_empty($finidat) ) {
+      print "You are setting finidat to blank which signals arbitrary initial conditions\n";
+      print "But, CLM_FORCE_COLDSTART is off which is a contradiction\n";
+      fatal_error("To do a cold-start set ./xmlchange CLM_FORCE_COLDSTART=on");
+    }
   }
+  my $useinitvar = "use_init_interp";
 
-  if (not defined $nl->get_value('finidat')) {
+  if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
+    my $st_year = int( $ic_date / 10000);
     my $nofail = 1;
     my $var = "finidat";
-    if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) { $nofail = 0; }
     my %settings;
     $settings{'hgrid'}   = $nl_flags->{'res'};
     $settings{'phys'}    = $physv->as_string();
@@ -2325,8 +2345,14 @@ sub setup_logic_initial_conditions {
     my $fsurdat          = $nl->get_value('fsurdat');
     $fsurdat             =~ s!(.*)/!!;
     $settings{'fsurdat'} = $fsurdat;
-    foreach my $item ( "flanduse_timeseries", "sim_year" ) {
-       $settings{$item}    = $nl_flags->{$item};
+    #
+    # If not transient use sim_year, otherwise use date
+    #
+    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+       $settings{'sim_year'}     = $nl_flags->{'sim_year'};
+       $opts->{'ignore_ic_year'} = 1; 
+    } else {
+       delete( $settings{'sim_year'} );
     }
     if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
        $settings{'bgc'}    = $nl_flags->{'bgc_mode'};
@@ -2341,7 +2367,7 @@ sub setup_logic_initial_conditions {
        }
     }
     if ($opts->{'ignore_ic_date'}) {
-      if ( $nl_flags->{'use_crop'} eq ".true." ) {
+      if ( value_is_true($nl_flags->{'use_crop'}) ) {
         fatal_error("using ignore_ic_date is incompatable with crop!");
       }
     } elsif ($opts->{'ignore_ic_year'}) {
@@ -2351,24 +2377,43 @@ sub setup_logic_initial_conditions {
     }
     my $try = 0;
     my $done = 2;
-    my $finidat;
+    my $use_init_interp_default = $nl->get_value($useinitvar);
+    if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
+      $use_init_interp_default = ".false.";
+    }
+    $settings{$useinitvar} = $use_init_interp_default;
     do {
        $try++;
        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );
        # If couldn't find a matching finidat file, check if can turn on interpolation and try to find one again
        $finidat = $nl->get_value($var);
-       if ( ((not defined $finidat ) || $finidat =~ /null/) && ($physv->as_long() >= $physv->as_long("clm4_5")) ) {
-          # Comment this out for now until we want to activate running from a given IC file for all resolutions/configurations
-          # EBK Apr/07/2017
-          #
-          #add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "use_init_interp",
-          #           'hgrid'=>$nl_flags->{'res'}, 'phys'=>$physv->as_string() );
-          if ( value_is_true($nl->get_value("use_init_interp") ) ) {
-             # Comment this out for now until we want to activate running from a given IC file for all resolutions/configurations
-             # EBK Apr/07/2017
-             #
-             #add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
-             #           'sim_year'=>$nl_flags->{'sim_year'} );
+       if ( (not defined $finidat ) && ($physv->as_long() >= $physv->as_long("clm4_5")) ) {
+          # Delete any date settings, except for crop
+          delete( $settings{'ic_ymd'} );
+          delete( $settings{'ic_md'}  );
+          if ( value_is_true($nl_flags->{'use_crop'}) ) {
+             $settings{'ic_md'} = $ic_date;
+          }
+          add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_sim_years" );
+          add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
+          foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
+             if ( abs($st_year - $sim_yr) < $nl->get_value("init_interp_how_close") ) {
+                $settings{'sim_year'} = $sim_yr;
+             }
+          } 
+          add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
+                     'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
+                     'sim_year'=>$settings{'sim_year'}  );
+          $settings{$useinitvar} = $nl->get_value($useinitvar);
+          if ( $try > 1 ) {
+             my $group = $definition->get_group_name($useinitvar);
+             $nl->set_variable_value($group, $useinitvar, $use_init_interp_default );
+          }
+          if ( value_is_true($nl->get_value($useinitvar) ) ) {
+
+             add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
+                        'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
+                        'use_cn'=>$nl_flags->{'use_cn'} );
              my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
              foreach my $pair ( split( /\s/, $attributes_string) ) {
                 if ( $pair =~ /^([a-z_]+)=([a-z._0-9]+)$/ ) {
@@ -2378,24 +2423,23 @@ sub setup_logic_initial_conditions {
                 }
              }
           } else {
+             if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) {
+                fatal_error("clm_start_type is startup so an initial conditions (finidat) file is required, but can't find one without $useinitvar being set to true");
+             }
              $try = $done;
           }
        } else {
          $try = $done
        }
-       # Exit early as we aren't interpolating from existing IC files for now
-       # EBK Apr/07/2017
-       #
-       $try = $done
-    } while( ($try < $done) && ((not defined $finidat ) || $finidat =~ /null/) );
-    if ( (not defined $finidat ) || $finidat =~ /null/ ) {
+    } while( ($try < $done) && (not defined $finidat ) );
+    if ( not defined $finidat  ) {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, "' '" );
     }
   }
-  my $finidat = $nl->get_value('finidat');
-  if ( value_is_true($nl->get_value("use_init_interp") ) && ($finidat eq "' '") ) {
-     fatal_error("use_init_interp is set BUT finidat is NOT, need to set both" );
+  $finidat = $nl->get_value('finidat');
+  if ( value_is_true($nl->get_value($useinitvar) ) && string_is_undef_or_empty($finidat) ) {
+     fatal_error("$useinitvar is set BUT finidat is NOT, need to set both" );
   }
 } # end initial conditions
 
@@ -2756,7 +2800,7 @@ sub setup_logic_hydrology_switches {
      foreach my $var ( "origflag", "h2osfcflag", "oldfflag" ) {
         my $val = $nl->get_value($var);
         if ( defined($val) ) {
-           fatal_error( "ERROR:: $val is deprecated and can only be used with CLM4.5" );
+           fatal_error( "ERROR:: $var=$val is deprecated and can only be used with CLM4.5" );
         }
      }
   }

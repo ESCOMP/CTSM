@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 743;
+my $ntests = 747;
 if ( defined($opts{'compare'}) ) {
    $ntests += 468;
 }
@@ -309,11 +309,11 @@ print "==============================================================\n";
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 foreach my $options ( 
-                      "-bgc bgc -use_case 1850-2100_rcp2.6_transient",
-                      "-bgc sp  -use_case 1850-2100_rcp4.5_transient",
-                      "-bgc bgc -use_case 1850-2100_rcp6_transient",
+                      "-bgc bgc -use_case 1850-2100_rcp2.6_transient -namelist '&a start_ymd=20100101/'",
+                      "-bgc sp  -use_case 1850-2100_rcp4.5_transient -namelist '&a start_ymd=18501223/'",
+                      "-bgc bgc -use_case 1850-2100_rcp6_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc ed  -use_case 2000_control -no-megan",
-                      "-bgc cn  -use_case 1850-2100_rcp8.5_transient",
+                      "-bgc cn  -use_case 1850-2100_rcp8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                      ) {
    my $file = $startfile;
@@ -349,6 +349,21 @@ my %failtest = (
                                      namelst=>"finidat='$finidat'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
+                                   },
+     "clm_demand on finidat"     =>{ options=>"-clm_demand finidat -envxml_dir .",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"",
+                                   },
+     "blank IC file, not cold"   =>{ options=>"-clm_start_type startup -envxml_dir .",
+                                     namelst=>"finidat=' '",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"",
+                                   },
+     "startup without interp"    =>{ options=>"-clm_start_type startup -envxml_dir . -bgc sp -sim_year 1850",
+                                     namelst=>"use_init_interp=.false., start_ymd=19200901",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "l_ncpl is zero"            =>{ options=>"-l_ncpl 0 -envxml_dir .",
                                      namelst=>"",
@@ -730,6 +745,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
+     "useEDWcreatecrop"          =>{ options=>"-bgc ed -envxml_dir . -no-megan",
+                                     namelst=>"create_crop_landunit=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "useEDWTransient"           =>{ options=>"-bgc ed -use_case 20thC_transient -envxml_dir . -no-megan -res 10x15",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -750,7 +770,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "useHYDSTwithED"            =>{ options=>"-ed_mode -envxml_dir . -no-megan",
+     "useHYDSTwithED"            =>{ options=>"-bgc ed -envxml_dir . -no-megan",
                                      namelst=>"use_hydrstress=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
@@ -867,6 +887,7 @@ my %failtest = (
                                    },
                );
 foreach my $key ( keys(%failtest) ) {
+   print( "$key\n" );
    system( "../configure -s ".$failtest{$key}{"conopts"});
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};

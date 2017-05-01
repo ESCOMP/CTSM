@@ -109,23 +109,25 @@
     <type>char</type>
     <default_value></default_value>
     <values>
-      <value compset="%CNCR"			>-ignore_ic_year</value>
-      <value compset="_CLM45%[^_]*SP"		>-bgc sp</value>
-      <value compset="_CLM45%[^_]*CN"		>-bgc cn</value>
-      <value compset="_CLM45%[^_]*BGC"		>-bgc bgc</value>
-      <value compset="_CLM45%[^_]*CN-CROP"	>-bgc cn -crop</value>
-      <value compset="_CLM45%[^_]*BGC-CROP"	>-bgc bgc -crop</value>
-      <value compset="_CLM45%[^_]*CNDV"		>-bgc cn -dynamic_vegetation</value>
-      <value compset="_CLM45%[^_]*BGCDV"	>-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM45%[^_]*CNDV-CROP"	>-bgc cn -dynamic_vegetation -crop</value>
-      <value compset="_CLM45%[^_]*BGCDV-CROP"	>-bgc bgc -dynamic_vegetation -crop</value>
-      <value compset="_CLM45%[^_]*ED"		>-bgc ed -no-megan</value>
+      <value compset="%CNCR"			 >-ignore_ic_year</value>
+      <value compset="_CLM45%[^_]*SP"		 >-bgc sp</value>
+      <value compset="_CLM45%[^_]*CN"		 >-bgc cn</value>
+      <value compset="_CLM45%[^_]*BGC"		 >-bgc bgc</value>
+      <value compset="_CLM45%[^_]*CN-CROP"	 >-bgc cn -crop</value>
+      <value compset="_CLM45%[^_]*BGC-CROP"	 >-bgc bgc -crop</value>
+      <value compset="_CLM45%[^_]*CNDV"		 >-bgc cn -dynamic_vegetation</value>
+      <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
+      <value compset="_CLM45%[^_]*CNDV-CROP"	 >-bgc cn -dynamic_vegetation -crop</value>
+      <value compset="_CLM45%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
+      <value compset="_CLM45%[^_]*ED"		 >-bgc ed -no-megan</value>
 
-      <value compset="_CLM50%[^_]*SP"		>-bgc sp</value>
-      <value compset="_CLM50%[^_]*BGC"		>-bgc bgc</value>
-      <value compset="_CLM50%[^_]*BGCDV"	>-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM50%[^_]*BGC-CROP"	>-bgc bgc -crop</value>
-      <value compset="_CLM50%[^_]*BGCDV-CROP"	>-bgc bgc -dynamic_vegetation -crop</value>
+      <value compset="_CLM50%[^_]*SP"		 >-bgc sp</value>
+      <value compset="_CLM50%[^_]*BGC"		 >-bgc bgc</value>
+      <value compset="_CLM50%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
+      <value compset="_CLM50%[^_]*BGC-CROP"	 >-bgc bgc -crop</value>
+      <value compset="HIST.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
+      <value compset="2000.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
+      <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>

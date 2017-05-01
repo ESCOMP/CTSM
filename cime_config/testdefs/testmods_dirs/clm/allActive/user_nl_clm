@@ -5,7 +5,6 @@
 
 ! Note that we don't necessarily expect this to work with an initial
 ! conditions file that wasn't itself generated with all_active =
-! .true., so we set finidat = ' ' for this test.
+! .true., so we set CLM_FORCE_COLDSTART=on for this (in shell_commands)
 
 all_active = .true.
-finidat = ' '
