@@ -286,6 +286,7 @@ contains
     ! each of the following phenology type routines includes a filter
     ! to operate only on the relevant patches
 
+
     if ( phase == 1 ) then
        call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
             temperature_inst, cnveg_state_inst, crop_inst)
@@ -1423,7 +1424,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year
+    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, get_rad_step_size
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1456,6 +1457,7 @@ contains
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
     integer idpp      ! number of days past planting
+    real(r8) :: dtrad ! radiation time step delta t (seconds)
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
@@ -1522,6 +1524,7 @@ contains
       dayspyr = get_days_per_year()
       jday    = get_curr_calday()
       call get_curr_date(kyr, kmo, kda, mcsec)
+      dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -1912,7 +1915,7 @@ contains
               if (fert_counter(p) <= 0._r8) then
                  fert(p) = 0._r8
               else ! continue same fert application every timestep
-                 fert_counter(p) = fert_counter(p) - dt
+                 fert_counter(p) = fert_counter(p) - dtrad
               end if
 
          else   ! crop not live

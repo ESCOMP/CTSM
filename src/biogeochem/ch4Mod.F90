@@ -169,6 +169,10 @@ module ch4Mod
      real(r8), pointer, private :: f0_col                     (:)   ! col maximum inundated fraction for a gridcell (for methane code)
      real(r8), pointer, private :: p3_col                     (:)   ! col coefficient for determining finundated (m)
      real(r8), pointer, private :: pH_col                     (:)   ! col pH values for methane production
+     real(r8), pointer, private :: fws_a_col                  (:)   ! col a coefficient in fws = a * tws + b
+     real(r8), pointer, private :: fws_b_col                  (:)   ! col b coefficient in fws = a * tws + b
+     real(r8), pointer, private :: fws_hist_col                  (:) 
+
      !
      real(r8), pointer, private :: dyn_ch4bal_adjustments_col (:)   ! adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level) (g C / m^2)
      !
@@ -214,6 +218,7 @@ module ch4Mod
 
   end type ch4_type
 
+  logical, private :: finundated_tws
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------
@@ -315,6 +320,9 @@ contains
     allocate(this%zwt0_col                   (begc:endc))            ;  this%zwt0_col                   (:)   = nan
     allocate(this%f0_col                     (begc:endc))            ;  this%f0_col                     (:)   = nan
     allocate(this%p3_col                     (begc:endc))            ;  this%p3_col                     (:)   = nan
+    allocate(this%fws_a_col                  (begc:endc))            ;  this%fws_a_col                  (:)   = nan
+    allocate(this%fws_b_col                  (begc:endc))            ;  this%fws_b_col                  (:)   = nan
+    allocate(this%fws_hist_col                  (begc:endc))            ;  this%fws_hist_col                  (:)   = nan
     allocate(this%pH_col                     (begc:endc))            ;  this%pH_col                     (:)   = nan
     allocate(this%ch4_surf_flux_tot_col      (begc:endc))            ;  this%ch4_surf_flux_tot_col      (:)   = nan
     allocate(this%dyn_ch4bal_adjustments_col (begc:endc))            ; this%dyn_ch4bal_adjustments_col  (:)   = nan
@@ -379,6 +387,14 @@ contains
     else
        active = "inactive"
     end if
+
+    this%fws_hist_col(begc:endc) = spval
+    ! Using l2g_scale_type='veg' to exclude values in special landunits, which can change
+    ! from dynamic column adjustments (also want to exclude lakes here, for which
+    ! finundated is implicitly 1).
+    call hist_addfld1d (fname='FINUN_HIST', units='unitless', &
+         avgflag='A', long_name='fractional inundated area of vegetated columns', &
+         ptr_col=this%fws_hist_col, l2g_scale_type='veg')
 
     this%finundated_col(begc:endc) = spval
     ! Using l2g_scale_type='veg' to exclude values in special landunits, which can change
@@ -748,6 +764,8 @@ contains
     real(r8)     ,pointer :: f0_in (:)   ! read in - f0 
     real(r8)     ,pointer :: p3_in (:)   ! read in - p3 
     real(r8)     ,pointer :: pH_in (:)   ! read in - pH 
+    real(r8)     ,pointer :: fws_a_in (:)! read in - fws a 
+    real(r8)     ,pointer :: fws_b_in (:)! read in - fws b
     character(len=256)    :: locfn       ! local file name
     logical               :: readvar     ! If read variable from file or not
     !-----------------------------------------------------------------------
@@ -758,9 +776,11 @@ contains
     ! Initialize time constant variables
     !----------------------------------------
 
-    allocate(zwt0_in(bounds%begg:bounds%endg))
-    allocate(f0_in(bounds%begg:bounds%endg))
-    allocate(p3_in(bounds%begg:bounds%endg))
+    allocate(zwt0_in (bounds%begg:bounds%endg))
+    allocate(f0_in   (bounds%begg:bounds%endg))
+    allocate(p3_in   (bounds%begg:bounds%endg))
+    allocate(fws_a_in(bounds%begg:bounds%endg))
+    allocate(fws_b_in(bounds%begg:bounds%endg))
     if (usephfact) allocate(ph_in(bounds%begg:bounds%endg))
 
     ! Methane code parameters for finundated
@@ -783,6 +803,10 @@ contains
           call endrun(msg=' ERROR: Running with CH4 Model but P3 not on surfdata file'//&
                errMsg(sourcefile, __LINE__))
        end if
+       call ncd_io(ncid=ncid, varname='FWS_TWS_A', flag='read', data=fws_a_in, dim1name=grlnd, readvar=finundated_tws)
+       if (finundated_tws) then
+          call ncd_io(ncid=ncid, varname='FWS_TWS_B', flag='read', data=fws_b_in, dim1name=grlnd)
+       end if
     end if
 
     ! pH factor for methane model
@@ -799,14 +823,16 @@ contains
        g = col%gridcell(c)
 
        if (.not. fin_use_fsat) then
-          this%zwt0_col(c) = zwt0_in(g)
-          this%f0_col(c)   = f0_in(g)
-          this%p3_col(c)   = p3_in(g)
+          this%zwt0_col(c)  = zwt0_in(g)
+          this%f0_col(c)    = f0_in(g)
+          this%p3_col(c)    = p3_in(g)
+          this%fws_a_col(c) = fws_a_in(g)
+          this%fws_b_col(c) = fws_b_in(g)
        end if
        if (usephfact) this%pH_col(c) = pH_in(g)
     end do
 
-    deallocate(zwt0_in, f0_in, p3_in)
+    deallocate(zwt0_in, f0_in, p3_in, fws_a_in, fws_b_in)
     if (usephfact) deallocate(pH_in)
 
     !----------------------------------------
@@ -1715,12 +1741,16 @@ contains
 
          frac_h2osfc          =>   waterstate_inst%frac_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          snow_depth           =>   waterstate_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
+         tws                  =>   waterstate_inst%tws_grc                   , & ! Input:  [real(r8) (:)   ]  total water storage (kg m-2)                                   
          qflx_surf            =>   waterflux_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
 
          conc_o2_sat          =>   ch4_inst%conc_o2_sat_col                  , & ! Input:  [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
          zwt0                 =>   ch4_inst%zwt0_col                         , & ! Input:  [real(r8) (:)   ]  decay factor for finundated (m)                   
          f0                   =>   ch4_inst%f0_col                           , & ! Input:  [real(r8) (:)   ]  maximum gridcell fractional inundated area        
          p3                   =>   ch4_inst%p3_col                           , & ! Input:  [real(r8) (:)   ]  coefficient for qflx_surf_lag for finunated (s/mm)
+         fws_a                =>   ch4_inst%fws_a_col                           , & ! Input:  [real(r8) (:)   ]  a coefficient for fws = a * tws + b
+         fws_b                =>   ch4_inst%fws_b_col                           , & ! Input:  [real(r8) (:)   ]  a coefficient for fws = a * tws + b
+         fws_hist             =>   ch4_inst%fws_hist_col                           , & ! Input:  [real(r8) (:)   ]  a coefficient for fws = a * tws + b
          totcolch4_bef        =>   ch4_inst%totcolch4_bef_col                , & ! Input:  [real(r8) (:)   ]  total methane in soil column, start of timestep (g C / m^2)
 
          grnd_ch4_cond_patch  =>   ch4_inst%grnd_ch4_cond_patch              , & ! Input:  [real(r8) (:)   ]  tracer conductance for boundary layer [m/s]       
@@ -1837,10 +1867,22 @@ contains
                else
                   zwt_actual = zwt(c)
                end if
-               finundated(c) = f0(c) * exp(-zwt_actual/zwt0(c)) + p3(c)*qflx_surf_lag(c)
+               if ( .not. finundated_tws ) then
+                  finundated(c) = f0(c) * exp(-zwt_actual/zwt0(c)) + p3(c)*qflx_surf_lag(c)
+               else
+                  finundated(c) = fws_a(c) * tws(g) + fws_b(c)
+               end if
             else
-               finundated(c) = p3(c)*qflx_surf_lag(c)
+               if ( .not. finundated_tws ) then
+                  finundated(c) = p3(c)*qflx_surf_lag(c)
+               else
+                  finundated(c) = fws_a(c) * tws(g) + fws_b(c)
+               end if
             end if
+            if ( finundated_tws ) then
+               fws_hist(c) = fws_a(c)
+            end if
+
          end if
 
          if (snow_depth(c) <= 0._r8) then    ! If snow_depth<=0,use the above method to calculate finundated.

@@ -201,6 +201,7 @@ contains
     integer :: p                         ! patch index
     integer :: g                         ! gridcell index
     integer :: fp                        ! patch filter index
+    real(r8):: thistreec                 ! carbon in this tree for calculating harvest fraction (gC/m2)
     real(r8):: cm                        ! rate for carbon harvest mortality (gC/m2/yr)
     real(r8):: am                        ! rate for fractional harvest mortality (1/yr)
     real(r8):: m                         ! rate for fractional harvest mortality (1/s)
@@ -309,9 +310,10 @@ contains
 
             if (do_harvest) then
                if (harvest_units == "gC/m2/yr") then
+                  thistreec = leafc(p) + frootc(p) + livestemc(p) + deadstemc(p) + livecrootc(p) + deadcrootc(p) + xsmrpool(p)
                   cm = harvest(g)
-                  if (deadstemc(p) > 0.0_r8) then
-                     am = min(1._r8,cm/deadstemc(p))
+                  if (thistreec > 0.0_r8) then
+                     am = min(0.98_r8,cm/thistreec)    ! Only harvest up to 98% so regrowth is possible PJL
                   else
                      am = 0._r8
                   end if

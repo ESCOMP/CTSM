@@ -586,6 +586,36 @@ contains
 
     end do
     
+
+    ! calculate patch-to-column slash fluxes into litter and CWD pools
+    do p = bounds%begp, bounds%endp
+       c = patch%column(p)
+
+       ! fine and coarse root to litter and CWD slash carbon fluxes
+       cnveg_carbonflux_inst%dwt_slash_cflux_col(c) = &
+               cnveg_carbonflux_inst%dwt_slash_cflux_col(c) + &
+               dwt_frootc_to_litter(p)/dt + &
+               dwt_livecrootc_to_litter(p)/dt + &
+               dwt_deadcrootc_to_litter(p)/dt
+
+       if ( use_c13 ) then
+          c13_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) = &
+                  c13_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) + &
+                  dwt_frootc13_to_litter(p)/dt + &
+                  dwt_livecrootc13_to_litter(p)/dt + &
+                  dwt_deadcrootc13_to_litter(p)/dt
+       endif
+
+       if ( use_c14 ) then
+          c14_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) = &
+                  c14_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) + &
+                  dwt_frootc14_to_litter(p)/dt + &
+                  dwt_livecrootc14_to_litter(p)/dt + &
+                  dwt_deadcrootc14_to_litter(p)/dt
+       endif
+
+    end do
+
     
     ! calculate patch-to-column for fluxes into litter and CWD pools
     do j = 1, nlevdecomp

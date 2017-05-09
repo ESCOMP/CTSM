@@ -1,9 +1,11 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r237     erik 05/09/2017 Latest parameter file and some changes for CLM50, CLM45-transient changes answers also
   clm4_5_15_r236     erik 05/01/2017 New surface datasets, and landuse.timeseries files, as well as interpolating initial conditions for almost all cases
   clm4_5_15_r235    sacks 04/27/2017 Zero dynbal fluxes if namelist variable is set
   clm4_5_15_r234    andre 04/14/2017 Update rtm and mosart externals
-  clm4_5_15_r232     erik 04/11/2017 Some small changes that affect both clm4_5 and clm5_0 answers (can be considered bug fixes to clm4_5)
+  clm4_5_15_r233     erik 04/11/2017 Pull out some constants and options to namelist
+  clm4_5_15_r232     erik 04/05/2017 Some small changes that affect both clm4_5 and clm5_0 answers (can be considered bug fixes to clm4_5)
   clm4_5_14_r231    sacks 04/02/2017 Add option to reset snow pack over non-glacier columns
   clm4_5_14_r230    sacks 03/31/2017 Fix dynamic landunits water and energy conservation
   clm4_5_14_r229     erik 03/10/2017 Update cime and make some changes to drv_flds_in namelist, fix some minor bugs

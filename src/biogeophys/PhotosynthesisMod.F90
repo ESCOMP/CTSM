@@ -2841,6 +2841,7 @@ contains
             end if                                                                  
 
          end if                                                                     
+         lnc(p) = min(lnc(p),10._r8)
 
          ! reduce_dayl_factor .eqv. .false.  
          if (reduce_dayl_factor .eqv. .true.) then                                          

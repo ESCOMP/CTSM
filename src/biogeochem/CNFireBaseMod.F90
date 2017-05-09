@@ -56,7 +56,7 @@ module CNFireBaseMod
       ! !PRIVATE MEMBER DATA:
       real(r8) :: borealat = 40._r8                    ! Latitude for boreal peat fires
       real(r8) :: lfuel=75._r8                         ! lower threshold of fuel mass (gC/m2) for ignition, Li et al.(2014)
-      real(r8) :: ufuel=1050._r8                       ! upper threshold of fuel mass(gC/m2) for ignition 
+      real(r8) :: ufuel=650._r8                        ! upper threshold of fuel mass(gC/m2) for ignition 
       real(r8) :: g0=0.05_r8                           ! g(W) when W=0 m/s
       real(r8) :: rh_low=30.0_r8                       ! Relative humidty low (%)
       real(r8) :: rh_hgh=80.0_r8                       ! Relative humidty high (%)

@@ -2324,6 +2324,7 @@ sub setup_logic_initial_conditions {
     }
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                 'finidat', 'val'=>"' '", 'no_abspath'=>1);
+    $finidat = $nl->get_value('finidat');
   } elsif ( defined $finidat ) {
     if ( string_is_undef_or_empty($finidat) ) {
       print "You are setting finidat to blank which signals arbitrary initial conditions\n";
@@ -2403,7 +2404,7 @@ sub setup_logic_initial_conditions {
           } 
           add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
-                     'sim_year'=>$settings{'sim_year'}  );
+                     'sim_year'=>$settings{'sim_year'}, 'nofail'=>1  );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
           if ( $try > 1 ) {
              my $group = $definition->get_group_name($useinitvar);
@@ -2413,7 +2414,7 @@ sub setup_logic_initial_conditions {
 
              add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
                         'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
-                        'use_cn'=>$nl_flags->{'use_cn'} );
+                        'use_cn'=>$nl_flags->{'use_cn'}, 'nofail'=>1 );
              my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
              foreach my $pair ( split( /\s/, $attributes_string) ) {
                 if ( $pair =~ /^([a-z_]+)=([a-z._0-9]+)$/ ) {

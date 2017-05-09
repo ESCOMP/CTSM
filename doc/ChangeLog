@@ -1,4 +1,161 @@
 ===============================================================
+Tag name:  clm4_5_16_r237
+Originator(s):  erik (Erik Kluzek)
+Date: Tue May  9 15:05:51 MDT 2017
+One-line Summary: Latest parameter file and some changes for CLM50, CLM45-transient changes answers also
+
+Purpose of changes
+------------------
+
+Adjustments to CLM50 climate from Keith Oleson, Peter Lawrence, Fang Li, Rosie Fisher, Danica Lombardozzi, Will Weider, 
+Yaqiong Lu, Ben Sanderson, and David Lawrence.  Some tweaks to the code and to parameters and the parameter file for CLM50. 
+Use Medlyn 2011 stomotal conductance rather than Ball-Berry. Modify photosynthesis and leaf maintence respiration for crop. 
+Limit irrigation if river flow is on and the storage drops below a threshold. Modify a long list of parameter values including 
+41 items on the parameter file.  Only harvest up to 98% to allow for regrowth and divide by several terms rather than just deadstem. 
+Add slash harvesting fields (debris left from harvesting). Add in a hack to read in FWS_TWS_A/B if they are on the surface 
+dataset and use them to calculate finundation based on TWS rather than exponential function based on ZWT. For fires change an 
+if statement from checking if atmosphere is non-freezing to a specific soil layer.  If crops have hit peak LAI set leaf allocation 
+to a small value. Make sure some retranslocation terms are positive. Let lnc in Photosynthesis max out at 10. Only vary baset 
+for crops for spring wheat and sugarcane (irrigated and non) rather than all crops.
+
+Coupled crop cases will change since we now use the radiation time-step for fertilization rather than the model time-step.
+CLM45 cases remain the same with the exception for transient cases which change answers due to the change in how
+harvest is handled. Fix a few minor bugs that came in with clm4_5_15_r236 with specific datasets and finidat file handling in scripts
+(bugs 2448-2451).
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+
+  2452  --- Change to divisor for harvest and also allow for regrowth
+  2451  --- Bad comment marker in cropf10IC testmods
+  2450  --- Make sure finidat is reset after setting to coldstart
+  2449  --- Add no fail to init_interp_attributes and use_init_interp, needed for DV cases where interpolated IC files aren't there
+  2448  --- Misnamed dataset in CLM xml database
+
+Known bugs introduced in this tag (include bugzilla ID):
+  2457  --- Remove FINUN_HIST from history
+  2456  --- Remove extra settings of use_init_interp
+  2455  --- PGI specific error at initialization
+  2454  --- masterlist_addfld getting confused with names for species...
+  2453  --- Memory error with restart variable vcmx25t
+  2447  --- Floating overflow for CLM50CROP case on hobart_nag in Photosynthesis
+  
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): New slash harvest fields
+   SLASH_HARVESTC, DWT_SLASH_CFLUX, C13_DWT_SLASH_CFLUX, C14_DWT_SLASH_CFLUX
+
+Changes made to namelist defaults (e.g., changed parameter values): Many adjustments for CLM50
+    modifyphoto_and_lmr_forcrop     TRUE       for CLM50
+    stomatalcond_method             Medlyn2011 for CLM50 with PHS
+    limit_irrigation_if_rof_enabled TRUE       for CLM50
+    Following values modified for CLM50 cases
+    modify baseflow_scalar, rh_low, bt_min, bt_max, cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha
+           non_boreal_peatfire_c, cropfire_a1, lfuel, cmb_cmplt_fact, irrig_threshold_fraction,
+           n_melt_glcmec, br_root, initial_Cstocks_depth
+
+Changes to the datasets (e.g., parameter, surface or initial files): CLM50 parameter file clm5_params.c170413.nc
+    Update CLM50 paramsfile, fsurdat-f09-2000-crop, flanduse_timeseries-f45-hist/f10-hist
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): finundation changes are messy
+
+Changes to tests or testing: Fixed testmods for one tests
+
+Code reviewed by: self,dlawren,lawrence,oleson,rosiefisher,wweider,lifang
+
+Did you follow the steps in .CLMTrunkChecklist: Yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS (93 comparison tests fail to clm4_5_15_r236)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - PASS
+    yellowstone_pgi - PASS
+    yellowstone_gnu (clm45 only) - PASS
+    hobart_nag --- OK
+    hobart_pgi --- OK
+    hobart_intel - PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_15_r236
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: All CLM50 and CLM45-transient
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM50 compsets and any transient cases with CLM45
+             Also coupled crop cases
+    - what platforms/compilers: All
+    - nature of change:
+       Adjusted climate for CLM50 and changes to harvesting for CLM45
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -
+               modifyphoto_and_lmr_forcrop     TRUE       for CLM50
+               stomatalcond_method             Medlyn2011 for CLM50 with PHS
+               limit_irrigation_if_rof_enabled TRUE       for CLM50
+               Following values modified for CLM50 cases
+               modify baseflow_scalar, rh_low, bt_min, bt_max, cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha
+                      non_boreal_peatfire_c, cropfire_a1, lfuel, cmb_cmplt_fact, irrig_threshold_fraction,
+                      n_melt_glcmec, br_root, initial_Cstocks_depth
+               Update CLM50 paramsfile, fsurdat-f09-2000-crop, flanduse_timeseries-f45-hist/f10-hist
+   M       components/clm/bld/CLMBuildNamelist.pm ------------------------- Make sure local finidat defined for cold start
+               allow nofail for use_init_interp and init_interp_attributes
+
+   M       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC/user_nl_clm - Use \! for comment
+
+   M       components/clm/src/biogeochem/CNPhenologyMod.F90 ----------- Use radiation time-step rather than dt for Fertilization
+   M       components/clm/src/biogeochem/CNFireBaseMod.F90 ------------ Change ufuel default
+   M       components/clm/src/biogeochem/dynHarvestMod.F90 ------------ Only harvest up to 98% and divide by sum of several
+               terms rather than just deadstem (Peter Lawrence)
+   M       components/clm/src/biogeochem/ch4FInundatedStreamType.F90 -- Modify endrun call
+   M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90 ----- Slash flux to litter and CWD
+   M       components/clm/src/biogeochem/CNFireLi2016Mod.F90 ---------- Change if statement from check on forcing temp non-freezing
+              to tsoi17 non-freezing (From Fang Li)
+   M       components/clm/src/biogeochem/ch4Mod.F90 ------------------- Add ability to read in FWS_TWS_A/B terms from surface
+              dataset and use for calculation of finundated based on TWS rather than use exponential inversion on ZWT
+   M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90 ------ Add slash harvest flux fields (Peter Lawrence)
+   M       components/clm/src/biogeochem/CropType.F90 ----------------- Only do baset_map_latvary for spring wheat and sugarcane
+              both irrigated and non.
+   M       components/clm/src/biogeochem/NutrientCompetitionFlexibleCNMod.F90 - If crops have hit peaklai, then set leaf allocation to small value
+              make sure leafn_to_retransn, frootn_to_retransn and livestemn_to_retransn is positive
+   M       components/clm/src/biogeophys/PhotosynthesisMod.F90 -------- Let lnc max out at 10
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_15_r236
 Originator(s):  erik (Erik Kluzek)
 Date: Mon May  1 01:42:23 MDT 2017

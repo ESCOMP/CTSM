@@ -25,6 +25,7 @@ module NutrientCompetitionFlexibleCNMod
   use PatchType           , only : patch
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use NutrientCompetitionMethodMod, only : params_inst
+  use clm_varctl          , only : iulog
   !
   implicit none
   private
@@ -1358,6 +1359,8 @@ contains
          leafn_to_retransn     => cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:)   ]
          frootn_to_retransn    => cnveg_nitrogenflux_inst%frootn_to_retransn_patch  , & ! Output: [real(r8) (:)   ]
          livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch,& ! Output: [real(r8) (:)   ]
+         livestemn             => cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
+         frootn                => cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N
          sminn_vr              => soilbiogeochem_nitrogenstate_inst%sminn_vr_col    , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N
          btran                 => energyflux_inst%btran_patch                       , & ! Input: [real(r8) (:)    ]  transpiration wetness factor (0 to 1)
          t_scalar              => soilbiogeochem_carbonflux_inst%t_scalar_col        & ! Input:  [real(r8) (:,:) ]  soil temperature scalar for decomp
@@ -1533,7 +1536,6 @@ contains
                   ! of days has elapsed since planting
 
                else if (hui(p) >= huigrain(p)) then
-
                   aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
                        (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
                   if (astemi(p) > astemf(ivt(p))) then
@@ -1542,7 +1544,11 @@ contains
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
                           huigrain(p)),1._r8)**allconss(ivt(p)) )))
                   end if
-                  if (aleafi(p) > aleaff(ivt(p))) then
+
+                  ! If crops have hit peaklai, then set leaf allocation to small value
+                  if (peaklai(p) == 1) then 
+                     aleaf(p) = 1.e-5_r8
+                  else if (aleafi(p) > aleaff(ivt(p))) then
                      aleaf(p) = max(1.e-5_r8, max(aleaff(ivt(p)), aleaf(p) * &
                           (1._r8 - min((hui(p)-                    &
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
@@ -1572,14 +1578,11 @@ contains
                         ivt(p) /= ntrp_soybean .and. ivt(p) /= nirrig_trp_soybean)) then
                      if (grain_flag(p) == 0._r8) then
                         t1 = 1 / dt
-                        leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn(ivt(p))) - (leafc(p) / &
-                             fleafcn(ivt(p))))
-                        livestemn_to_retransn(p) = t1 * ((livestemc(p) / livewdcn(ivt(p))) - (livestemc(p) / &
-                             fstemcn(ivt(p))))
+                        leafn_to_retransn(p) = t1 * max(leafn(p)- (leafc(p) / fleafcn(ivt(p))),0._r8)
+                        livestemn_to_retransn(p) = t1 * max(livestemn(p) - (livestemc(p) / fstemcn(ivt(p))),0._r8)
                         frootn_to_retransn(p) = 0._r8
                         if (ffrootcn(ivt(p)) > 0._r8) then
-                           frootn_to_retransn(p) = t1 * ((frootc(p) / frootcn(ivt(p))) - (frootc(p) / &
-                                ffrootcn(ivt(p))))
+                           frootn_to_retransn(p) = t1 * max(frootn(p) - (frootc(p) / ffrootcn(ivt(p))),0._r8)
                         end if
                         grain_flag(p) = 1._r8
                      end if
@@ -1598,6 +1601,7 @@ contains
                f3 = astem(p) / aleaf(p)
                f5 = arepr(p) / aleaf(p)
                g1 = 0.25_r8
+
 
             else   ! .not croplive
                f1 = 0._r8

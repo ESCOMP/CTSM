@@ -338,8 +338,8 @@ contains
    else if ( finundation_mtd == finundation_mtd_ZWT_inversion  )then
        this%fldList = "FWS_TWS_A:FWS_TWS_B"
    else
-       call endrun(msg=' ERROR do NOT know what list of variables to read for this finundation_mtd type' &
-                   //errMsg(sourcefile, __LINE__))
+       call endrun(msg=' ERROR do NOT know what list of variables to read for this finundation_mtd type'// &
+                   errMsg(sourcefile, __LINE__))
    end if
 
  end subroutine ReadNML

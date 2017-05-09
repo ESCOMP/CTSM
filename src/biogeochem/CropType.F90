@@ -527,11 +527,14 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno, nlevgrnd
-    use pftconMod        , only : nwwheat, nirrig_wwheat, pftcon
+    use pftconMod        , only : nswheat, nirrig_swheat, pftcon
+    use pftconMod        , only : nwwheat, nirrig_wwheat
+    use pftconMod        , only : nsugarcane, nirrig_sugarcane
     use ColumnType       , only : col
     use PatchType        , only : patch
     !
     ! !ARGUMENTS:
+    implicit none
     class(crop_type)       , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
     real(r8)               , intent(in)    :: t_ref2m_patch( bounds%begp:)
@@ -577,7 +580,9 @@ contains
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
           ivt = patch%itype(p)
-          if ( (trim(this%baset_mapping) == baset_map_latvary) )then
+          if ( (trim(this%baset_mapping) == baset_map_latvary) .and. &
+             ((ivt == nswheat) .or. (ivt == nirrig_swheat) .or. &
+              (ivt == nsugarcane) .or. (ivt == nirrig_sugarcane)) ) then
              rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
              t_ref2m_patch(p)-(SHR_CONST_TKFRZ + this%latbaset_patch(p)))) &
              * dtime/SHR_CONST_CDAY

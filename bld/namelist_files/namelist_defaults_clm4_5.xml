@@ -72,10 +72,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <leafresp_method               use_cn=".false.">0</leafresp_method>
 
 <!-- Modfy photosyntheiss and LMR for crop -->
-<modifyphoto_and_lmr_forcrop >.false.</modifyphoto_and_lmr_forcrop>
+<modifyphoto_and_lmr_forcrop phys="clm5_0" >.true.</modifyphoto_and_lmr_forcrop>
+<modifyphoto_and_lmr_forcrop phys="clm4_5" >.false.</modifyphoto_and_lmr_forcrop>
 
 <!-- Method to use for stomatal conducatance -->
-<stomatalcond_method                                       >Ball-Berry1987</stomatalcond_method>
+<stomatalcond_method phys="clm5_0" use_hydrstress=".true." >Medlyn2011</stomatalcond_method>
+<stomatalcond_method phys="clm5_0" use_hydrstress=".false.">Ball-Berry1987</stomatalcond_method>
+<stomatalcond_method phys="clm4_5"                         >Ball-Berry1987</stomatalcond_method>
 
 <!-- C14 concentration file -->
 <atm_c14_filename use_c14=".true." use_c14_bombspike=".true." >lnd/clm2/isotopes/atm_delta_C14_data_1850-2007_monthly_23082011.nc</atm_c14_filename>
@@ -131,7 +134,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Soil hydrology -->
 <baseflow_scalar phys="clm5_0" lower_boundary_condition="1">1.d-2</baseflow_scalar>
-<baseflow_scalar phys="clm5_0" lower_boundary_condition="2">0.0090932</baseflow_scalar>
+<baseflow_scalar phys="clm5_0" lower_boundary_condition="2">0.001d00</baseflow_scalar>
 <baseflow_scalar phys="clm4_5" lower_boundary_condition="1">1.d-2</baseflow_scalar>
 <baseflow_scalar phys="clm4_5" lower_boundary_condition="2">1.d-2</baseflow_scalar>
 
@@ -188,22 +191,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSW3P"
 >30.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.5"
->30.0d00</rh_low>
+>20.0d00</rh_low>
 <rh_hgh                   fire_method="li2016crufrc" >80.0d00</rh_hgh>
-<bt_min                   fire_method="li2016crufrc" >0.6d00</bt_min>
-<bt_max                   fire_method="li2016crufrc" >0.85d00</bt_max>
-<cli_scale                fire_method="li2016crufrc" >0.0156d00</cli_scale>
-<boreal_peatfire_c        fire_method="li2016crufrc" >0.4d-4</boreal_peatfire_c>
+<bt_min                   fire_method="li2016crufrc" >0.85d00</bt_min>
+<bt_max                   fire_method="li2016crufrc" >0.98d00</bt_max>
+<cli_scale                fire_method="li2016crufrc" >0.033d00</cli_scale>
+<boreal_peatfire_c        fire_method="li2016crufrc" >0.09d-4</boreal_peatfire_c>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSW3P"
->0.0079611</pot_hmn_ign_counts_alpha>
+>0.010d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.5"
->0.0079611</pot_hmn_ign_counts_alpha>
-<non_boreal_peatfire_c    fire_method="li2016crufrc" >3.6d-4</non_boreal_peatfire_c>
-<cropfire_a1              fire_method="li2016crufrc" >0.36d00</cropfire_a1>
+>0.008d00</pot_hmn_ign_counts_alpha>
+<non_boreal_peatfire_c    fire_method="li2016crufrc" >0.17d-3</non_boreal_peatfire_c>
+<cropfire_a1              fire_method="li2016crufrc" >1.6d-4</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2016crufrc" >0.33d00</occur_hi_gdp_tree>
-<lfuel                    fire_method="li2016crufrc" >75.d00</lfuel>
+<lfuel                    fire_method="li2016crufrc" >105.d00</lfuel>
 <ufuel                    fire_method="li2016crufrc" >1050.d00</ufuel>
-<cmb_cmplt_fact           fire_method="li2016crufrc" >0.5d00, 0.25d00</cmb_cmplt_fact>
+<cmb_cmplt_fact           fire_method="li2016crufrc" >0.5d00, 0.28d00</cmb_cmplt_fact>
 
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability phys="clm5_0">.false.</use_undercanopy_stability>
@@ -239,11 +242,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <irrig_length>14400</irrig_length>
 <irrig_target_smp>-3400.</irrig_target_smp>  <!-- -3400 is a standard value for field capacity -->
 <irrig_depth>0.6</irrig_depth>
-<irrig_threshold_fraction>0.5</irrig_threshold_fraction>
+<irrig_threshold_fraction phys="clm5_0">1.0</irrig_threshold_fraction>
+<irrig_threshold_fraction phys="clm4_5">0.5</irrig_threshold_fraction>
 <irrig_river_volume_threshold>0.1</irrig_river_volume_threshold>
 
 <!--  River storage derived lake evaporation and irrigation limitation  -->
-<limit_irrigation_if_rof_enabled phys="clm5_0">.true.</limit_irrigation_if_rof_enabled>
+<limit_irrigation_if_rof_enabled phys="clm5_0">.false.</limit_irrigation_if_rof_enabled>
 <limit_irrigation_if_rof_enabled              >.false.</limit_irrigation_if_rof_enabled>
 
 <!-- Snow veg treatment -->
@@ -260,7 +264,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- For clm4_5, make this effectively unlimited -->
 <int_snow_max phys="clm4_5">1.e30</int_snow_max>
 
-<n_melt_glcmec phys="clm5_0">1.0</n_melt_glcmec>
+<n_melt_glcmec phys="clm5_0">0.5</n_melt_glcmec>
 <n_melt_glcmec phys="clm4_5">10.0</n_melt_glcmec>
 
 <wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>
@@ -304,7 +308,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.vNov2016.c170409.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c170413.nc</paramfile>
 <paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c170317.nc</paramfile>
 <paramfile phys="clm4_5" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c170317.nc</paramfile>
 <paramfile phys="clm5_0" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c170317.nc</paramfile>
@@ -406,6 +410,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_init_interp  use_cndv=".false." sim_year="1850">.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." sim_year="2000">.true.</use_init_interp>
 <use_init_interp                                    >.false.</use_init_interp>
+<use_init_interp phys="clm5_0" hgrid="0.9x1.25">.true.</use_init_interp>
+<use_init_interp phys="clm4_5" hgrid="0.9x1.25">.true.</use_init_interp>
+<use_init_interp phys="clm5_0" hgrid="1.9x2.5" >.true.</use_init_interp>
+<use_init_interp phys="clm4_5" hgrid="1.9x2.5" >.true.</use_init_interp>
+<use_init_interp phys="clm5_0" hgrid="10x15"   >.true.</use_init_interp>
+<use_init_interp phys="clm4_5" hgrid="10x15"   >.true.</use_init_interp>
+<use_init_interp phys="clm5_0" hgrid="4x5"     >.true.</use_init_interp>
+<use_init_interp phys="clm4_5" hgrid="4x5"     >.true.</use_init_interp>
 
 
 <!--
@@ -477,8 +489,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.ICRUCLM45SP.2000-01-01.0.9x1.25_g1v6_simyr2000_c170309.nc
 </finidat>
 
-
-
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="360x720cru"   sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_simyr2000_c170428.nc</fsurdat>
@@ -505,6 +515,8 @@ lnd/clm2/surfdata_map/surfdata_ne16np4_16pfts_simyr2000_c170428.nc</fsurdat>
 
 
 <!-- Crop surface datasets -->
+<fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr2000_c170428.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr2000_c170428.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
@@ -607,8 +619,10 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_78pfts_simyr1850-2015_c170428.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_simyr1850-2015_c170428.nc</flanduse_timeseries>
+<flanduse_timeseries hgrid="4x5"           sim_year_range="1850-2000"
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_4x5_hist_78pfts_simyr1850-2015_c170428.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2000"
- use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_simyr1850-2005_c170428.nc</flanduse_timeseries>
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_simyr1850-2015_c170428.nc</flanduse_timeseries>
 
 <!-- Note that this transient file only goes up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
@@ -681,7 +695,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
 <use_fun phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
 <use_fun                                                           >.false.</use_fun>
 
-<br_root phys="clm5_0" use_cn=".true." use_fun=".true.">1.1678d-06</br_root>
+<br_root phys="clm5_0" use_cn=".true." use_fun=".true.">0.83d-06</br_root>
 
 
 <!-- Scalar of leaf respiration to vcmax (used for SP mode and with luna)-->
@@ -694,12 +708,12 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
 <initial_Cstocks phys="clm4_5" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
 <initial_Cstocks phys="clm5_0" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
 
-<initial_Cstocks_depth phys="clm5_0" use_cn=".true."   use_ed=".false." use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm5_0" use_cn=".true."   use_ed=".false." use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
 <initial_Cstocks_depth phys="clm4_5" use_cn=".true."   use_ed=".false." use_century_decomp=".true." >0.3</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm5_0" use_cn=".false."  use_ed=".true."  use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm5_0" use_cn=".false."  use_ed=".true."  use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
 <initial_Cstocks_depth phys="clm4_5" use_cn=".false."  use_ed=".true."  use_century_decomp=".true." >0.3</initial_Cstocks_depth>
 
-<initial_vegC phys="clm5_0" use_cn=".true."  mm_nuptake_opt=".true." >20.d00</initial_vegC>
+<initial_vegC phys="clm5_0" use_cn=".true."  mm_nuptake_opt=".true." >100.d00</initial_vegC>
 <initial_vegC phys="clm4_5" use_cn=".true."  mm_nuptake_opt=".true." >20.d00</initial_vegC>
 <initial_vegC phys="clm5_0" use_cn=".true."  mm_nuptake_opt=".false.">1.d00</initial_vegC>
 <initial_vegC phys="clm4_5" use_cn=".true."  mm_nuptake_opt=".false.">1.d00</initial_vegC>
