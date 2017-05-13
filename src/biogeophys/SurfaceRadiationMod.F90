@@ -7,7 +7,7 @@ module SurfaceRadiationMod
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use clm_varctl        , only : use_snicar_frc, use_ed
+  use clm_varctl        , only : use_snicar_frc, use_fates
   use decompMod         , only : bounds_type
   use clm_varcon        , only : namec
   use atm2lndType       , only : atm2lnd_type
@@ -318,7 +318,7 @@ contains
     ! 6) shaded leaf area for canopy layer
     ! 7) sunlit fraction of canopy
     !
-    ! This routine has a counterpart when the ed model is turned on.  
+    ! This routine has a counterpart when the fates model is turned on.  
     ! CLMEDInterf_CanopySunShadeFracs()
     ! If changes are applied to this routine, please take a moment to review that 
     ! subroutine as well and consider if any new information related to these types of 
@@ -615,7 +615,7 @@ contains
 
        ! zero-out fsun for the urban patches
        ! the non-urban patches were set prior to this call
-       ! and split into ed and non-ed specific functions
+       ! and split into fates and non-fates specific functions
        do fp = 1,num_urbanp
           p = filter_urbanp(fp)
           fsun(p) = 0._r8

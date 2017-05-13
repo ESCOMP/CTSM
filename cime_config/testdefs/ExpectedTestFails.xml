@@ -3,6 +3,9 @@
 <expectedFails>
    <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
    <entry bugz="2447" >FAIL RUN SMS_Ld5_D_P24x1.f10_f10.IHISTCLM50BGC.hobart_nag.clm-monthly</entry>
-   <entry bugz="2388" >FAIL ERS_D_Ld5.f10_f10.ICLM45ED.hobart_nag.clm-edTest BASELINE</entry>
-   <entry bugz="2388" >FAIL SMS_D_Ld5.f10_f10.ICLM45ED.hobart_nag.clm-edTest BASELINE</entry>
+   <entry bugz="2458">ERP_P60x2_Lm36.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-clm50cropIrrigMonth_interp</entry>
+   <entry bugz="2458">FAIL ERP_Ly5.f10_f10.ICLM45BGCCROP.cheyenne_intel.clm-irrig_o3_reduceOutput COMPARE_base_rest</entry>
+   <entry bugz="2458">FAIL ERP_P60x2_Lm36.f10_f10.ICRUCLM50BGCCROP.cheyenne_intel.clm-clm50cropIrrigMonth_interp COMPARE_base_rest</entry>
+   <entry bugz="2458">FAIL PEM_Lm25.f10_f10.ICLM45BGCCROP.cheyenne_intel.clm-cropMonthOutput COMPARE_base_test</entry>
+   <entry bugz="2458">FAIL NCK_Ld1.f10_f10.ICRUCLM45.cheyenne_intel.clm-default COMPARE_base_multiinst</entry>
 </expectedFails> 

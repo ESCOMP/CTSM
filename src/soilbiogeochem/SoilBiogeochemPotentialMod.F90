@@ -16,7 +16,7 @@ module SoilBiogeochemPotentialMod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
-  use clm_varctl                         , only : use_ed, iulog
+  use clm_varctl                         , only : use_fates, iulog
   !
   implicit none
   private
@@ -134,7 +134,7 @@ contains
          fphr                             => soilbiogeochem_carbonflux_inst%fphr_col                                 & ! Output: [real(r8) (:,:)   ]  fraction of potential SOM + LITTER heterotrophic
          )
    
-   if ( .not. use_ed ) then
+   if ( .not. use_fates ) then
       ! set initial values for potential C and N fluxes
       p_decomp_cpool_loss(begc:endc, :, :) = 0._r8
       pmnf_decomp_cascade(begc:endc, :, :) = 0._r8
@@ -228,7 +228,7 @@ contains
             potential_immob_vr(c,j) = immob(c,j)
          end do
       end do
-   else  ! use_ed
+   else  ! use_fates
       ! As a first step we are making this a C-only model, so no N downregulation of fluxes. 
       do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp

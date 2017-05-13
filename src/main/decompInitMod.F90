@@ -11,16 +11,16 @@ module decompInitMod
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use spmdMod         , only : masterproc, iam, npes, mpicom, comp_id
   use abortutils      , only : endrun
-  use clm_varctl      , only : iulog, use_ed
+  use clm_varctl      , only : iulog, use_fates
   use clm_varcon      , only : grlnd
   use GridcellType    , only : grc
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
-  use PatchType       , only : patch                
-  use EDVecCohortType , only : ed_vec_cohort
+  use PatchType       , only : patch
   use glcBehaviorMod  , only : glc_behavior_type
   use decompMod
   use mct_mod         , only : mct_gsMap_init, mct_gsMap_ngseg, mct_gsMap_nlseg, mct_gsmap_gsize
+  use FatesInterfaceMod, only : fates_maxElementsPerSite
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -503,7 +503,7 @@ contains
     integer :: numl               ! total number of landunits across all processors
     integer :: numc               ! total number of columns across all processors
     integer :: nump               ! total number of patches across all processors
-    integer :: numCohort          ! ED cohorts
+    integer :: numCohort          ! fates cohorts
     integer :: icells             ! temporary
     integer :: ilunits            ! temporary
     integer :: icols              ! temporary
@@ -551,7 +551,7 @@ contains
     pstart(:) = 0
     allocate(pcount(begg:endg))
     pcount(:) = 0
-    if ( use_ed ) then
+    if ( use_fates ) then
        allocate(coStart(begg:endg))
        coStart(:) = 0
     endif
@@ -569,7 +569,7 @@ contains
        lcount(gi)  = ilunits   ! number of landunits for local gridcell index gi
        ccount(gi)  = icols     ! number of columns for local gridcell index gi
        pcount(gi)  = ipatches  ! number of patches for local gridcell index gi
-       coCount(gi) = icohorts  ! number of ED cohorts for local gricell index gi
+       coCount(gi) = icohorts  ! number of fates cohorts for local gricell index gi
     enddo
 
     ! Determine gstart, lstart, cstart, pstart, coStart for the OUTPUT 1d data structures
@@ -637,7 +637,7 @@ contains
     endif
     call scatter_data_from_master(pstart, arrayglob, grlnd)
 
-    if ( use_ed ) then
+    if ( use_fates ) then
        arrayglob(:) = 0
        call gather_data_to_master(coCount, arrayglob, grlnd)
        if (masterproc) then
@@ -725,12 +725,14 @@ contains
     call mct_gsMap_init(gsmap_patch_gdc2glo, gindex, mpicom, comp_id, locsize, globsize)
     deallocate(gindex)
 
-    if ( use_ed ) then
-       ! ED cohort gsMap
+    ! FATES gsmap for the cohort/element vector
+    
+    if ( use_fates ) then
        allocate(gindex(begCohort:endCohort))
        ioff(:) = 0
+       ci = begc
        do coi = begCohort,endCohort
-          ci = ed_vec_cohort%column(coi) ! function call to get column for this cohort idx
+          if ( mod(coi, fates_maxElementsPerSite ) == 0 ) ci = ci + 1
           gi = col%gridcell(ci)          ! convert column into gridcell
           gindex(coi) = coStart(gi) + ioff(gi)
           ioff(gi) = ioff(gi) + 1
@@ -746,7 +748,7 @@ contains
     deallocate(lstart, lcount)
     deallocate(cstart, ccount)
     deallocate(pstart, pcount)
-    if ( use_ed ) then
+    if ( use_fates ) then
        deallocate(coStart,coCount)
     endif
     deallocate(ioff)

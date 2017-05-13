@@ -13,7 +13,7 @@ module CanopyFluxesMod
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
-  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_ed, &
+  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
                                      use_luna, use_hydrstress
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
@@ -422,8 +422,8 @@ contains
          displa                 => canopystate_inst%displa_patch                , & ! Input:  [real(r8) (:)   ]  displacement height (m)                                               
          htop                   => canopystate_inst%htop_patch                  , & ! Input:  [real(r8) (:)   ]  canopy top(m)                                                         
          altmax_lastyear_indx   => canopystate_inst%altmax_lastyear_indx_col    , & ! Input:  [integer  (:)   ]  prior year maximum annual depth of thaw                                
-         altmax_indx            => canopystate_inst%altmax_indx_col             , & ! Input:  [integer  (:)   ]  maximum annual depth of thaw                                           
-         rscanopy               => canopystate_inst%rscanopy_patch              , & ! Output: [real(r8) (:,:)]   canopy resistance s/m (ED)
+         altmax_indx            => canopystate_inst%altmax_indx_col             , & ! Input:  [integer  (:)   ]  maximum annual depth of thaw
+         dleaf_patch            => canopystate_inst%dleaf_patch                 , & ! Output: [real(r8) (:)   ]  mean leaf diameter for this patch/pft
          
          watsat                 => soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)   (constant)                     
          watdry                 => soilstate_inst%watdry_col                    , & ! Input:  [real(r8) (:,:) ]  btran parameter for btran=0                      (constant)                                        
@@ -567,7 +567,9 @@ contains
       !    frac_veg_nosno_patch > 0
       ! -----------------------------------------------------------------
 
-      call clm_fates%prep_canopyfluxes(nc, fn, filterp, photosyns_inst)
+      if (use_fates) then
+         call clm_fates%prep_canopyfluxes(nc, fn, filterp, photosyns_inst)
+      end if
 
       ! Initialize
 
@@ -640,7 +642,7 @@ contains
       ! values require knowledge of the belowground root structure.
       ! --------------------------------------------------------------------------
       
-      if(use_ed)then
+      if(use_fates)then
          call clm_fates%wrap_btran(nc, fn, filterc_tmp(1:fn), soilstate_inst, waterstate_inst, &
                temperature_inst, energyflux_inst, soil_water_retention_curve)
          
@@ -724,7 +726,7 @@ contains
       end do
 
       if (found) then
-         if ( .not. use_ed ) then
+         if ( .not. use_fates ) then
             write(iulog,*)'Error: Forcing height is below canopy height for patch index '
             call endrun(decomp_index=index, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
          end if
@@ -760,6 +762,10 @@ contains
               temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp), &
               frictionvel_inst)
 
+         
+
+
+
          do f = 1, fn
             p = filterp(f)
             c = patch%column(p)
@@ -777,7 +783,16 @@ contains
             ! Bulk boundary layer resistance of leaves
 
             uaf(p) = um(p)*sqrt( 1._r8/(ram1(p)*um(p)) )
-            cf  = 0.01_r8/(sqrt(uaf(p))*sqrt(dleaf(patch%itype(p))))
+
+            ! Use pft parameter for leaf characteristic width
+            ! dleaf_patch if this is not an fates patch.
+            ! Otherwise, the value has already been loaded
+            ! during the FATES dynamics call
+            if(.not.patch%is_fates(p)) then  
+               dleaf_patch(p) = dleaf(patch%itype(p))
+            end if
+
+            cf  = 0.01_r8/(sqrt(uaf(p))*sqrt( dleaf_patch(p) ))
             rb(p)  = 1._r8/(cf*uaf(p))
             rb1(p) = rb(p)
 
@@ -822,14 +837,14 @@ contains
             rhaf(p) = eah(p)/svpts(p)
          end do
 
-         if ( use_ed ) then      
+         if ( use_fates ) then      
             
             call clm_fates%wrap_photosynthesis(nc, bounds, fn, filterp(1:fn), &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), &
                  co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
                  atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst)
 
-         else ! not use_ed
+         else ! not use_fates
 
             if ( use_hydrstress ) then
                call PhotosynthesisHydraulicStress (bounds, fn, filterp, &
@@ -866,7 +881,7 @@ contains
                     phase='sha')
             end if
 
-         end if ! end of if use_ed
+         end if ! end of if use_fates
 
          do f = 1, fn
             p = filterp(f)
@@ -1248,75 +1263,79 @@ contains
 
       end do
       
-      if ( use_ed ) then
+      if ( use_fates ) then
+         
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
+         call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
+               waterstate_inst,waterflux_inst,solarabs_inst,energyflux_inst)
+
+      else
+
+         ! Determine total photosynthesis
+         
+         call PhotosynthesisTotal(fn, filterp, &
+              atm2lnd_inst, canopystate_inst, photosyns_inst)
+         
+         ! Calculate ozone stress. This needs to be done after rssun and rsshade are
+         ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
+         ! ozone stress computed here. Thus, the ozone stress computed in timestep i is
+         ! applied in timestep (i+1).
+         
+         ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) The following dummy variable assignment is
+         ! needed with pgi 14.7 on yellowstone; without it, forc_pbot_downscaled_col gets
+         ! resized inappropriately in the following subroutine call, due to a compiler bug.
+         dummy_to_make_pgi_happy = ubound(atm2lnd_inst%forc_pbot_downscaled_col, 1)
+         call ozone_inst%CalcOzoneStress( &
+              bounds, fn, filterp, &
+              forc_pbot = atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc), &
+              forc_th   = atm2lnd_inst%forc_th_downscaled_col(bounds%begc:bounds%endc), &
+              rssun     = photosyns_inst%rssun_patch(bounds%begp:bounds%endp), &
+              rssha     = photosyns_inst%rssha_patch(bounds%begp:bounds%endp), &
+              rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
+              ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
+              tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
+         
+         !---------------------------------------------------------
+         !update Vc,max and Jmax by LUNA model
+         if(use_luna)then
+            call Acc24_Climate_LUNA(bounds, fn, filterp, &
+                 canopystate_inst, photosyns_inst, &
+                 surfalb_inst, solarabs_inst, &
+                 temperature_inst)
+            
+            if(is_end_day)then
+               
+               call Acc240_Climate_LUNA(bounds, fn, filterp, &
+                    o2(begp:endp), &
+                    co2(begp:endp), &
+                    rb(begp:endp), &
+                    rhaf(begp:endp),&
+                    temperature_inst, & 
+                    photosyns_inst, &
+                    surfalb_inst, &
+                    solarabs_inst, &
+                    waterstate_inst,&
+                    frictionvel_inst) 
+               
+               call Update_Photosynthesis_Capacity(bounds, fn, filterp, &
+                    dayl_factor(begp:endp), &
+                    atm2lnd_inst, &
+                    temperature_inst, & 
+                    canopystate_inst, &
+                    photosyns_inst, &
+                    surfalb_inst, &
+                    solarabs_inst, &
+                    waterstate_inst,&
+                    frictionvel_inst)        
+               
+               call Clear24_Climate_LUNA(bounds, fn, filterp, &
+                    canopystate_inst, photosyns_inst, &
+                    surfalb_inst, solarabs_inst, &
+                    temperature_inst)
+            endif
+            
+         endif
       end if
-
-
-      ! Determine total photosynthesis
-
-      call PhotosynthesisTotal(fn, filterp, &
-           atm2lnd_inst, canopystate_inst, photosyns_inst)
-
-      ! Calculate ozone stress. This needs to be done after rssun and rsshade are
-      ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
-      ! ozone stress computed here. Thus, the ozone stress computed in timestep i is
-      ! applied in timestep (i+1).
-      
-      ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) The following dummy variable assignment is
-      ! needed with pgi 14.7 on yellowstone; without it, forc_pbot_downscaled_col gets
-      ! resized inappropriately in the following subroutine call, due to a compiler bug.
-      dummy_to_make_pgi_happy = ubound(atm2lnd_inst%forc_pbot_downscaled_col, 1)
-      call ozone_inst%CalcOzoneStress( &
-           bounds, fn, filterp, &
-           forc_pbot = atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc), &
-           forc_th   = atm2lnd_inst%forc_th_downscaled_col(bounds%begc:bounds%endc), &
-           rssun     = photosyns_inst%rssun_patch(bounds%begp:bounds%endp), &
-           rssha     = photosyns_inst%rssha_patch(bounds%begp:bounds%endp), &
-           rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
-           ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
-           tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
-
-      !---------------------------------------------------------
-      !update Vc,max and Jmax by LUNA model
-      if(use_luna)then
-        call Acc24_Climate_LUNA(bounds, fn, filterp, &
-                   canopystate_inst, photosyns_inst, &
-                   surfalb_inst, solarabs_inst, &
-                   temperature_inst)
-
-       if(is_end_day)then
-
-          call Acc240_Climate_LUNA(bounds, fn, filterp, &
-                 o2(begp:endp), &
-                 co2(begp:endp), &
-                 rb(begp:endp), &
-                 rhaf(begp:endp),&
-                 temperature_inst, & 
-                 photosyns_inst, &
-                 surfalb_inst, &
-                 solarabs_inst, &
-                 waterstate_inst,&
-                 frictionvel_inst) 
-
-          call Update_Photosynthesis_Capacity(bounds, fn, filterp, &
-                 dayl_factor(begp:endp), &
-                 atm2lnd_inst, &
-                 temperature_inst, & 
-                 canopystate_inst, &
-                 photosyns_inst, &
-                 surfalb_inst, &
-                 solarabs_inst, &
-                 waterstate_inst,&
-                 frictionvel_inst)        
-
-           call Clear24_Climate_LUNA(bounds, fn, filterp, &
-                   canopystate_inst, photosyns_inst, &
-                   surfalb_inst, solarabs_inst, &
-                   temperature_inst)
-         endif 
- 
-      endif
 
       ! Filter out patches which have small energy balance errors; report others
 

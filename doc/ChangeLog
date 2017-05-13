@@ -1,4 +1,268 @@
 ===============================================================
+Tag name:  clm4_5_16_r238
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date: Sat May 13 11:45:15 MDT 2017
+One-line Summary: ED is now an external library 'fates'
+
+Purpose of changes
+------------------
+
+The ongoing evolution of the 'ED' library is being done by
+NGEE-Tropics as 'FATES'. This change removes the 'ED' directory and
+replace it with link an external release of fates.
+
+The primary changes are to finish creation of an interface layer to
+separate fates from CLM. There are also numerous science improvements
+in the linked fates library.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2459 - patch from Erik Kluzek
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+Changes made to namelist defaults (e.g., changed parameter values):
+
+ * ED has been completely rebranded as fates. This includes:
+    * New/renamed compsets - ICLM45ED is now ICLM45FATES, ICLM50FATES.
+    * Renamed name list variables:
+       * use_ed --> use_fates
+       * use_ed_spitfire --> use_fates_spitfire
+        
+    * New namelist variable: fates_paramfile, this can point to either
+      the clm parameter file, or a standalone fates parameter file
+      depending on user preference. All fates dimensions and variables
+      are namespaced by 'fates_'.
+
+ * Fates can not restart and interpolate from a CLM-{SP,CN,BGC}
+   initial conditions file. It must be run in cold start or restart
+   from a CLM-fates restart file.
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+ * Add tests to aux_clm45 using the fates compsets and renamed the ed
+   test mods to fates and fatesFire.
+
+ * Added the cheyenne_intel test list to aux_clm45
+
+ * all namelist tests are expected to fail because of use_ed -> use_fates rename.
+
+Code reviewed by: 
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - all tests pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    cheyenne_intel - [ experimental, see xfails list ] pass w/ xfails
+    hobart_nag - pass w/ xfails
+    hobart_pgi - not run per CLM-CMT discussion, see bugz 2447, 2455
+    hobart_intel - pass
+
+CLM tag used for the baseline comparisons: clm4_5_16_r237
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: answer changing for ED/fates
+    compsets, but bit for bit for all other clm45 and clm50 compsets
+
+  Verified not answer changing for CLM50 compsets via test suite, and
+  20 year simulation by Dave Lawrence and Keith Olseson.
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ED/fates compsets only
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): unknown
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? n/a
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: n/a
+
+   URL for LMWG diagnostics output used to validate new climate: n/a
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+  
+A  components/clm/SVN_EXTERNAL_DIRECTORIES - new SVN_EXTERNALS file for fates
+A  components/clm/src/fates
+
+List all files eliminated:
+
+D  components/clm/src/ED - removed and replaced by fates external
+
+List all files reamed:
+
+rename testmod edTest --> fates
+  default now with fire off
+A  testmods_dirs/clm/fates
+A  testmods_dirs/clm/fates/user_nl_clm
+A  testmods_dirs/clm/fates/shell_commands
+D  testmods_dirs/clm/edTest
+D  testmods_dirs/clm/edTest/user_nl_clm
+D  testmods_dirs/clm/edTest/shell_commands
+
+rename testmod edNoFire --> fatesFire
+A  testmods_dirs/clm/fatesFire
+A  testmods_dirs/clm/fatesFire/user_nl_clm
+A  testmods_dirs/clm/fatesFire/include_user_mods
+A  testmods_dirs/clm/fatesFire/shell_commands
+D  testmods_dirs/clm/edNoFire
+D  testmods_dirs/clm/edNoFire/user_nl_clm
+D  testmods_dirs/clm/edNoFire/include_user_mods
+D  testmods_dirs/clm/edNoFire/shell_commands
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+M   .ChangeLog_template - include cheyenne_intel
+M   parse_cime.cs.status - patch from Erik Kluzek bugz 2459
+
+Point build to new src/fates directory instead of src/ED
+M   clm/cime_config/buildlib
+M   clm/bld/configure
+
+Update namelist with new fates paramfile, rename use_ed to use_fates
+in namelist logic, rename functions to be fates instead of ed. Update tests.
+M   clm/bld/CLMBuildNamelist.pm
+M   clm/bld/unit_testers/build-namelist_test.pl
+M   clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml
+M   clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+M   clm/bld/test_build_namelist/t/test_do_transient_pfts.pm
+A   clm/bld/test_build_namelist/t/test_fates_mode.pm
+D   clm/bld/test_build_namelist/t/test_ed_mode.pm
+M   clm/bld/test_build_namelist/t/test_do_harvest.pm
+M   clm/bld/test_build_namelist/t/test_do_transient_crops.pm
+M   clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M   clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+Update test for fates, cheyenne_intel
+M   clm/cime_config/testdefs/ExpectedTestFails.xml
+M   clm/cime_config/testdefs/testlist_clm.xml
+
+Stub fates parameter interface for unit tests:
+M       components/clm/src/CMakeLists.txt
+A  +    components/clm/src/unit_test_stubs/utils/clmfates_paraminterfaceMod_stub.F90
+M       components/clm/src/unit_test_stubs/utils/CMakeLists.txt
+
+Rename ED compset FATES
+M   clm/cime_config/config_compsets.xml
+M   clm/cime_config/config_component.xml
+
+Fates interface
+A   clm/src/utils/clmfates_paraminterfaceMod.F90
+M   clm/src/utils/clmfates_interfaceMod.F90
+
+Rename use_ed to use_fates and other rebranding
+M   clm/src/biogeochem/CNCStateUpdate1Mod.F90
+M   clm/src/biogeochem/CNMRespMod.F90
+M   clm/src/biogeochem/CNVegetationFacade.F90
+M   clm/src/biogeochem/CNDriverMod.F90
+M   clm/src/main/clm_varpar.F90
+M   clm/src/main/subgridRestMod.F90
+M   clm/src/main/atm2lndType.F90
+M   clm/src/main/restFileMod.F90
+M   clm/src/main/initSubgridMod.F90
+M   clm/src/main/initVerticalMod.F90
+M   clm/src/main/surfrdMod.F90
+M   clm/src/biogeophys/PhotosynthesisMod.F90
+M   clm/src/biogeophys/HydrologyDrainageMod.F90
+M   clm/src/biogeophys/SurfaceAlbedoMod.F90
+M   clm/src/biogeophys/SurfaceRadiationMod.F90
+M   clm/src/biogeophys/SoilMoistStressMod.F90
+M   clm/src/biogeophys/CanopyStateType.F90
+M   clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M   clm/src/dyn_subgrid/dynEDMod.F90
+M   clm/src/dyn_subgrid/dynSubgridControlMod.F90
+M   clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90
+M   clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeCNMod.F90
+M   clm/src/soilbiogeochem/SoilBiogeochemPotentialMod.F90
+M   clm/src/soilbiogeochem/SoilBiogeochemLittVertTranspMod.F90
+M   clm/src/soilbiogeochem/SoilBiogeochemCarbonFluxType.F90
+M   clm/src/soilbiogeochem/SoilBiogeochemDecompMod.F90
+M   clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+
+
+Update logic for fates compatibility and to use clm_fates interface
+M   clm/src/biogeochem/EDBGCDynMod.F90
+M   clm/src/main/subgridWeightsMod.F90
+M   clm/src/main/decompInitMod.F90
+M   clm/src/main/clm_initializeMod.F90
+M   clm/src/main/subgridMod.F90
+M   clm/src/main/histFileMod.F90
+M   clm/src/main/controlMod.F90
+M   clm/src/main/clm_varctl.F90
+M   clm/src/main/clm_driver.F90
+M   clm/src/main/pftconMod.F90
+M   clm/src/main/initGridCellsMod.F90
+M   clm/src/main/decompMod.F90
+M   clm/src/main/clm_instMod.F90
+M   clm/src/main/readParamsMod.F90
+M   clm/src/biogeophys/CanopyTemperatureMod.F90
+M   clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M   clm/src/biogeophys/BalanceCheckMod.F90
+M   clm/src/biogeophys/WaterStateType.F90
+M   clm/src/biogeophys/TotalWaterAndHeatMod.F90
+M   clm/src/biogeophys/CanopyFluxesMod.F90
+M   clm/src/biogeophys/SoilStateInitTimeConstMod.F90
+M   clm/src/biogeophys/RootBiophysMod.F90
+M   clm/src/biogeophys/OzoneMod.F90
+
+M   clm/src/main/paramUtilMod.F90 - new generic routines used by fates interface
+M   clm/src/main/PatchType.F90 - new patch array to distinguish between fates patch and clm pft
+
+A   clm/src/biogeophys/SoilWaterPlantSinkMod.F90 - from SoilWaterMovement
+M   clm/src/biogeophys/SoilWaterMovementMod.F90 - moved to SoilWaterPlantSink
+M   clm/src/biogeophys/WaterfluxType.F90 - new variable for fates
+M   clm/src/biogeophys/SoilStateType.F90 - remove tsink
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r237
 Originator(s):  erik (Erik Kluzek)
 Date: Tue May  9 15:05:51 MDT 2017

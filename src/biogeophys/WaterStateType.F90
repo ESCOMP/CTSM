@@ -52,6 +52,12 @@ module WaterstateType
      real(r8), pointer :: ice2_grc               (:)   ! grc post land cover change total ice content
      real(r8), pointer :: tws_grc                (:)   ! grc total water storage (mm H2O)
 
+     real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
+                                                        ! in most cases, the vegetation scheme does not have a dynamic
+                                                        ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
+                                                        ! When FATES is coupled in with plant hydraulics turned on, this storage
+                                                        ! term is set to non-zero. (kg/m2 H2O)
+
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
@@ -191,6 +197,8 @@ contains
     allocate(this%ice1_grc               (begg:endg))                     ; this%ice1_grc               (:)   = nan
     allocate(this%ice2_grc               (begg:endg))                     ; this%ice2_grc               (:)   = nan
     allocate(this%tws_grc                (begg:endg))                     ; this%tws_grc                (:)   = nan
+
+    allocate(this%total_plant_stored_h2o_col(begc:endc))                  ; this%total_plant_stored_h2o_col(:) = nan
 
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
     allocate(this%snw_rds_top_col        (begc:endc))                     ; this%snw_rds_top_col        (:)   = nan
@@ -348,6 +356,14 @@ contains
     call hist_addfld1d (fname='TWS',  units='mm',  &
          avgflag='A', long_name='total water storage', &
          ptr_lnd=this%tws_grc)
+
+    ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
+    !                  I think that since the value is zero in all cases except
+    !                  for FATES plant hydraulics, it will be confusing for users
+    !                  when they see their plants have no water in output files.
+    !                  So it is not useful diagnostic information. The information
+    !                  can be provided through FATES specific history diagnostics
+    !                  if need be.
 
     ! Humidity
 
@@ -620,6 +636,11 @@ contains
        end if
     end do
 
+    ! Water Stored in plants is almost always a static entity, with the exception
+    ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
+    this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
+
+
     associate(snl => col%snl) 
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
@@ -760,6 +781,7 @@ contains
             end do
          end if
       end do
+
 
       !--------------------------------------------
       ! Set Lake water

@@ -17,7 +17,7 @@ module subgridMod
   use clm_varctl     , only : iulog
   use clm_instur     , only : wt_lunit, urban_valid, wt_cft
   use glcBehaviorMod , only : glc_behavior_type
-  use EDtypesMod, only : cohorts_per_col
+  use FatesInterfaceMod, only : fates_maxElementsPerSite
 
   implicit none
   private   
@@ -156,14 +156,14 @@ contains
 
     ! -------------------------------------------------------------------------
     ! Number of cohorts is set here
-    ! ED cohorts (via FATES) populate all natural vegetation columns.
+    ! fates cohorts (via FATES) populate all natural vegetation columns.
     ! Current implementations mostly assume that only one column contains
     ! natural vegetation, which is synonomous with the soil column. 
     ! For restart output however, we will allocate the cohort vector space
     ! based on all columns.
     ! -------------------------------------------------------------------------
 
-    ncohorts = ncols*cohorts_per_col
+    ncohorts = ncols*fates_maxElementsPerSite
 
   end subroutine subgrid_get_info_natveg
 

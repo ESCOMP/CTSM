@@ -205,7 +205,7 @@ contains
     use shr_orb_mod
     use clm_time_manager   , only : get_nstep
     use abortutils         , only : endrun
-    use clm_varctl         , only : subgridflag, use_snicar_frc, use_ed
+    use clm_varctl         , only : subgridflag, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
 
     ! !ARGUMENTS:
@@ -918,7 +918,7 @@ contains
     ! Calculate surface albedos and fluxes
     ! Only perform on vegetated pfts where coszen > 0
 
-    if (use_ed) then
+    if (use_fates) then
           
        call clm_fates%wrap_canopy_radiation(bounds, nc, &
             num_vegsol, filter_vegsol, &

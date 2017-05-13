@@ -77,11 +77,11 @@ def _main_func():
                          os.path.join(srcroot,"components","clm","src","soilbiogeochem"),
                          os.path.join(srcroot,"components","clm","src","dyn_subgrid"),
                          os.path.join(srcroot,"components","clm","src","init_interp"),
-                         os.path.join(srcroot,"components","clm","src","ED"),
-                         os.path.join(srcroot,"components","clm","src","ED","main"),
-                         os.path.join(srcroot,"components","clm","src","ED","biogeophys"),
-                         os.path.join(srcroot,"components","clm","src","ED","biogeochem"),
-                         os.path.join(srcroot,"components","clm","src","ED","fire"),
+                         os.path.join(srcroot,"components","clm","src","fates"),
+                         os.path.join(srcroot,"components","clm","src","fates","main"),
+                         os.path.join(srcroot,"components","clm","src","fates","biogeophys"),
+                         os.path.join(srcroot,"components","clm","src","fates","biogeochem"),
+                         os.path.join(srcroot,"components","clm","src","fates","fire"),
                          os.path.join(srcroot,"components","clm","src","utils"),
                          os.path.join(srcroot,"components","clm","src","cpl")]
                 with open(filepath_file, "w") as filepath:

@@ -172,7 +172,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : use_cn, create_glacier_mec_landunit, use_ed
+    use clm_varctl           , only : use_cn, create_glacier_mec_landunit, use_fates
     use dynInitColumnsMod    , only : initialize_new_columns
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynEDMod             , only : dyn_ED
@@ -258,7 +258,7 @@ contains
 
        call bgc_vegetation_inst%UpdateSubgridWeights(bounds_clump)
        
-       if (use_ed) then
+       if (use_fates) then
           call dyn_ED(bounds_clump)
        end if
 

@@ -1,6 +1,6 @@
-package test_ed_mode;
+package test_fates_mode;
 
-# Unit tests for function: ed_mode
+# Unit tests for function: fates_mode
 
 use Data::Dumper;
 use Test::More;
@@ -8,8 +8,8 @@ use Test::Exception;
 
 use parent qw(Test::Class);
 
-use CLMBuildNamelist qw(setup_cmdl_ed_mode);
-use CLMBuildNamelist qw(setup_logic_ed);
+use CLMBuildNamelist qw(setup_cmdl_fates_mode);
+use CLMBuildNamelist qw(setup_logic_fates);
 
 
 #-------------------------------------------------------------------------------
@@ -72,19 +72,19 @@ sub set_value {
 # 
 #-------------------------------------------------------------------------------
 
-# Test 1: use_century_decomp is default with ed_mode
-sub test_ed_mode__use_century_decomp : Tests {
+# Test 1: use_century_decomp is default with fates_mode
+sub test_fates_mode__use_century_decomp : Tests {
   my $self = shift;
 
-  my $msg = "Test that use_century_decomp is the default on ed_mode.\n";
+  my $msg = "Test that use_century_decomp is the default on fates_mode.\n";
 
-  my $opts = { bgc => "ed" };
-  my $nl_flags = { crop => "off"}; # the setup_cmdl_ed_mode code requires this logic
+  my $opts = { bgc => "fates" };
+  my $nl_flags = { crop => "off"}; # the setup_cmdl_fates_mode code requires this logic
 
   # include bgc because they have mutually exclusive functionality that needs to be tested
   CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-  CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-  CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+  CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+  CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
   my $group = $self->{definition}->get_group_name("use_century_decomp");
   my $result = $self->{nl}->get_variable_value($group, "use_century_decomp");
@@ -92,149 +92,149 @@ sub test_ed_mode__use_century_decomp : Tests {
   
 }
 
-# Test 2: use_vertsoilc is default with ed_mode
-sub test_ed_mode__use_vertsoilc : Tests {
+# Test 2: use_vertsoilc is default with fates_mode
+sub test_fates_mode__use_vertsoilc : Tests {
     my $self = shift;
 
-    my $msg = "Tests that use_vertsoilc is default on ed_mode.\n";
+    my $msg = "Tests that use_vertsoilc is default on fates_mode.\n";
 
-    my $opts = { bgc => "ed"};
+    my $opts = { bgc => "fates"};
     my $nl_flags = { crop => "off", };
 
     CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-    CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-    CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
     my $group = $self->{definition}->get_group_name("use_vertsoilc");
     my $result = $self->{nl}->get_variable_value($group, "use_vertsoilc");
     is($result, '.true.' ) || diag($msg);
 }
 
-# Test 3: use_ed_spit_fire is default with ed_mode
-sub test_ed_mode__use_ed_spit_fire : Tests {
+# Test 3: use_fates_spitfire is default with fates_mode
+sub test_fates_mode__use_fates_spitfire : Tests {
     my $self = shift;
 
-    my $msg = "Tests that use_ed_spit_fire is default on ed_mode.\n";
+    my $msg = "Tests that use_fates_spitfire is default on fates_mode.\n";
 
-    my $opts = { bgc => "ed"};
+    my $opts = { bgc => "fates"};
     my $nl_flags = { crop => "off", };
 
     CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-    CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-    CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
-    my $group = $self->{definition}->get_group_name("use_ed_spit_fire");
-    my $result = $self->{nl}->get_variable_value($group, "use_ed_spit_fire");
+    my $group = $self->{definition}->get_group_name("use_fates_spitfire");
+    my $result = $self->{nl}->get_variable_value($group, "use_fates_spitfire");
     is($result, '.true.' ) || diag($msg);
 }
 
-# Test 4: use_nitrif_denitrif is not default with ed_mode                                                                       
-sub test_ed_mode__use_nitrif_denitrif: Tests {
+# Test 4: use_nitrif_denitrif is not default with fates_mode
+sub test_fates_mode__use_nitrif_denitrif: Tests {
     my $self = shift;
 
-    my $msg = "Tests that us_nitrif_denitfif e i nots default on ed_mode.\n";
+    my $msg = "Tests that us_nitrif_denitfif e i nots default on fates_mode.\n";
 
-    my $opts = { bgc => "ed"};
+    my $opts = { bgc => "fates"};
     my $nl_flags = { crop => "off", };
 
     CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-    CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-    CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
     my $group = $self->{definition}->get_group_name("use_nitrif_denitrif");
     my $result = $self->{nl}->get_variable_value($group, "use_nitrif_denitrif");
     is($result, '.false.' ) || diag($msg);
 }
 
-# Test 5: use_lch4 is not default with ed_mode                                                                       
-sub test_ed_mode__use_lch4: Tests {
+# Test 5: use_lch4 is not default with fates_mode
+sub test_fates_mode__use_lch4: Tests {
      my $self = shift;
      
-     my $msg = "Tests that use_lch4 is not default on ed_mode.\n";
+     my $msg = "Tests that use_lch4 is not default on fates_mode.\n";
 
-     my $opts = { bgc => "ed"};
+     my $opts = { bgc => "fates"};
      my $nl_flags = { crop => "off", };
 
      CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-     CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-     CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+     CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+     CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
      my $group = $self->{definition}->get_group_name("use_lch4");
      my $result = $self->{nl}->get_variable_value($group, "use_lch4");
      is($result, '.false.' ) || diag($msg);
 }
 
-# Test 6: use_ed=false will crash on ed_mode
-sub test_ed_mode__use_ed_nl_contradicts_cmdl : Tests {
+# Test 6: use_fates=false will crash on fates_mode
+sub test_fates_mode__use_fates_nl_contradicts_cmdl : Tests {
     my $self = shift;
 
-    my $msg = "Tests that use_ed=false will fail on ed_mode.\n";
+    my $msg = "Tests that use_fates=false will fail on fates_mode.\n";
 
     my $opts = { };
-    my $nl_flags = { crop => "off", use_ed => ".false.", , bgc_mode => 'ed',};
+    my $nl_flags = { crop => "off", use_fates => ".false.", , bgc_mode => 'fates',};
 
-    my $group = $self->{definition}->get_group_name("use_ed");
-    $self->{nl}->set_variable_value($group, "use_ed", '.false.' );
+    my $group = $self->{definition}->get_group_name("use_fates");
+    $self->{nl}->set_variable_value($group, "use_fates", '.false.' );
 
-    dies_ok(sub { CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl},
+    dies_ok(sub { CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl},
 							$self->{physv}) }) || diag($msg);
 }
 
-# Test 7: crop=on will crash on ed_mode
-sub test_ed_mode__crop_on_nl_contradicts_cmdl : Tests {
+# Test 7: crop=on will crash on fates_mode
+sub test_fates_mode__crop_on_nl_contradicts_cmdl : Tests {
     my $self = shift;
 
-    my $msg = "Tests that crop=on will fail on ed_mode.\n";
+    my $msg = "Tests that crop=on will fail on fates_mode.\n";
 
     my $opts = { };
-    my $nl_flags = { crop => "on", bgc_mode => 'ed'};
+    my $nl_flags = { crop => "on", bgc_mode => 'fates'};
 
     my $group = $self->{definition}->get_group_name("crop");
     $self->{nl}->set_variable_value($group, "crop", 'on' );
 
-    dies_ok(sub { CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl},
+    dies_ok(sub { CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl},
 						   $self->{physv}) }) || diag($msg);
 }
 
-# Test 8: test that use_ed_spit_fire = false generates a false
-sub test_ed_mode__use_ed_spit_fire_false : Tests {
+# Test 8: test that use_fates_spitfire = false generates a false
+sub test_fates_mode__use_fates_spitfire_false : Tests {
     my $self = shift;
 
-    my $msg = "Tests that use_ed_spit_fire can be turned to false.\n";
+    my $msg = "Tests that use_fates_spitfire can be turned to false.\n";
 
-    my $opts = { bgc => "ed"};
+    my $opts = { bgc => "fates"};
     my $nl_flags = { crop => "off", };
 
-    my $group = $self->{definition}->get_group_name("use_ed_spit_fire");
-    $self->{nl}->set_variable_value($group, "use_ed_spit_fire", '.false.' );
+    my $group = $self->{definition}->get_group_name("use_fates_spitfire");
+    $self->{nl}->set_variable_value($group, "use_fates_spitfire", '.false.' );
 
     CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-    CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-    CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
-    my $result = $self->{nl}->get_variable_value($group, "use_ed_spit_fire");
+    my $result = $self->{nl}->get_variable_value($group, "use_fates_spitfire");
     is($result, '.false.' ) || diag($msg);
 
 }
 
 # Test 9: test that use_versoilc = false generates a false
-sub test_ed_mode__use_vertsoilc_false : Tests {
+sub test_fates_mode__use_vertsoilc_false : Tests {
     my $self = shift;
 
     my $msg = "Tests that use_vertsoilc can be turned to false.\n";
 
-    use CLMBuildNamelist qw(setup_cmdl_ed_mode);	
-    use CLMBuildNamelist qw(setup_logic_ed);	
+    use CLMBuildNamelist qw(setup_cmdl_fates_mode);	
+    use CLMBuildNamelist qw(setup_logic_fates);	
 
-    my $opts = { bgc => "ed"};
+    my $opts = { bgc => "fates"};
     my $nl_flags = { crop => "off", };
 
     my $group = $self->{definition}->get_group_name("use_vertsoilc");
     $self->{nl}->set_variable_value($group, "use_vertsoilc", '.false.' );
 
     CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-    CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-    CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
     my $result = $self->{nl}->get_variable_value($group, "use_vertsoilc");
     is($result, '.false.' ) || diag($msg);
@@ -242,20 +242,20 @@ sub test_ed_mode__use_vertsoilc_false : Tests {
 }
 
 # Test 10: test that use_century_decomp = false generates a false
-sub test_ed_mode__use_century_decomp_false : Tests {
+sub test_fates_mode__use_century_decomp_false : Tests {
     my $self = shift;
 
     my $msg = "Tests that use_vertsoilc can be turned to false.\n";
 
-    my $opts = { bgc => "ed"};
+    my $opts = { bgc => "fates"};
     my $nl_flags = { crop => "off", };
 
     my $group = $self->{definition}->get_group_name("use_century_decomp");
     $self->{nl}->set_variable_value($group, "use_century_decomp", '.false.' );
 
     CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-    CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-    CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
     my $result = $self->{nl}->get_variable_value($group, "use_century_decomp");
     is($result, '.false.' ) || diag($msg);
@@ -263,22 +263,22 @@ sub test_ed_mode__use_century_decomp_false : Tests {
 }
 
 # Test 11: test that use_lch4 = true generates a true
-sub test_ed_mode__use_lch4_true : Tests {
+sub test_fates_mode__use_lch4_true : Tests {
     my $self = shift;
 
     my $msg = "Tests that use_vertsoilc can be turned to false.\n";
 
-    my $opts = { bgc => "ed"};
+    my $opts = { bgc => "fates"};
     my $nl_flags = { crop => "off", };
 
     my $group = $self->{definition}->get_group_name("use_lch4");
     $self->{nl}->set_variable_value($group, "use_lch4", '.true.' );
 
     CLMBuildNamelist::setup_cmdl_bgc($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{cfg},$self->{physv});
-    CLMBuildNamelist::setup_cmdl_ed_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
-    $nl_flags->{"use_ed"} = $self->{nl}->get_value("use_ed");
+    CLMBuildNamelist::setup_cmdl_fates_mode($opts, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    $nl_flags->{"use_fates"} = $self->{nl}->get_value("use_fates");
 
-    CLMBuildNamelist::setup_logic_ed($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
+    CLMBuildNamelist::setup_logic_fates($self->{test_files}, $nl_flags, $self->{definition}, $self->{defaults}, $self->{nl}, $self->{physv});
 
     my $result = $self->{nl}->get_variable_value($group, "use_lch4");
     is($result, '.true.' ) || diag($msg);

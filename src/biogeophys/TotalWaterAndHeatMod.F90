@@ -203,8 +203,9 @@ contains
          snocan_patch =>    waterstate_inst%snocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy snow water (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
-         
-         wa           =>    soilhydrology_inst%wa_col        & ! Input:  [real(r8) (:)   ]  water in the unconfined aquifer (mm)
+         total_plant_stored_h2o => waterstate_inst%total_plant_stored_h2o_col, & 
+                                                               ! Input:  [real(r8) (:,:) ] plant internal stored water (mm H2O)
+         wa           =>    soilhydrology_inst%wa_col        & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
          )
 
     do fc = 1, num_nolakec
@@ -228,8 +229,14 @@ contains
        ! we're using snow-on-veg; otherwise they are 0. However, we can rely on
        ! h2ocan_patch being set in all cases, so we can always determine the liquid mass
        ! as (h2ocan - snocan).
+       ! Note the difference between liqcan and total_plant_stored_h2o.  The prior
+       ! is that which exists on the vegetation canopy surface, the latter is
+       ! that which exists within the plant xylems and tissues.  In cases
+       ! where FATES hydraulics is not turned on, this total_plant_stored_h2o is
+       ! non-changing, and is set to 0 for a trivial solution.
+
        liqcan = h2ocan_col(c) - snocan_col(c)
-       liquid_mass(c) = liquid_mass(c) + liqcan
+       liquid_mass(c) = liquid_mass(c) + liqcan + total_plant_stored_h2o(c)
        ice_mass(c) = ice_mass(c) + snocan_col(c)
 
        if (snl(c) < 0) then
@@ -432,6 +439,7 @@ contains
          h2osfc       => waterstate_inst%h2osfc_col, & ! surface water (mm H2O)
          h2ocan_patch => waterstate_inst%h2ocan_patch, & ! canopy water (mm H2O)
          snocan_patch => waterstate_inst%snocan_patch, & ! canopy snow water (mm H2O)
+         total_plant_stored_h2o_col => waterstate_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
          wa           => soilhydrology_inst%wa_col & ! water in the unconfined aquifer (mm)
          )
 
@@ -475,7 +483,17 @@ contains
        ! snocan and liqcan are only set if we're using snow-on-veg; otherwise they are 0.
        ! However, we can rely on h2ocan being set in all cases, so we can always
        ! determine the liquid mass as (h2ocan - snocan).
-       liqcan = h2ocan_col(c) - snocan_col(c)
+       
+       ! Note (rgk 04-2017): added total_plant_stored_h2o_col(c), which is the
+       ! water inside the plant, which is zero for all non-dynamic models. FATES hydraulics
+       ! is the only one with dynamic storage atm.
+       ! Commentary (rgk 04-2017): water has moved from the soil to the plant tissues,
+       ! and the two pools have different temperatures associated with them. However,
+       ! we are not accounting for or conserving the flux of energy between the two
+       ! pools.  The energy in the plant water should "bring with it" the internal
+       ! energy of the soil-to-root water flux.
+
+       liqcan = h2ocan_col(c) - snocan_col(c) + total_plant_stored_h2o_col(c)
        call AccumulateLiquidWaterHeat( &
             temp = heat_base_temp, &
             h2o = liqcan, &

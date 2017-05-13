@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r238    andre 05/13/2017 ED is now an external library 'fates'
   clm4_5_16_r237     erik 05/09/2017 Latest parameter file and some changes for CLM50, CLM45-transient changes answers also
   clm4_5_15_r236     erik 05/01/2017 New surface datasets, and landuse.timeseries files, as well as interpolating initial conditions for almost all cases
   clm4_5_15_r235    sacks 04/27/2017 Zero dynbal fluxes if namelist variable is set

@@ -19,7 +19,7 @@ module CNCStateUpdate1Mod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
-  use clm_varctl                         , only : use_ed, use_cn, iulog
+  use clm_varctl                         , only : use_fates, use_cn, iulog
   !
   implicit none
   private
@@ -65,7 +65,7 @@ contains
 
     dt = get_step_size_real()
 
-    if (.not. use_ed) then
+    if (.not. use_fates) then
        do j = 1,nlevdecomp
           do fc = 1, num_soilc_with_inactive
              c = filter_soilc_with_inactive(fc)
@@ -88,7 +88,7 @@ contains
     end if
 
     ! TODO(wjs, 2017-01-02) Do we need to move some of the FATES fluxes into here (from
-    ! CStateUpdate1) if use_ed is true? Specifically, some portion or all of the fluxes
+    ! CStateUpdate1) if use_fates is true? Specifically, some portion or all of the fluxes
     ! from these updates in CStateUpdate1:
     ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = cf_soil%FATES_c_to_litr_lab_c_col(c,j) * dt
     ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = cf_soil%FATES_c_to_litr_cel_c_col(c,j) * dt
@@ -189,7 +189,7 @@ contains
       ! Below is the input into the soil biogeochemistry model
 
       ! plant to litter fluxes
-      if (.not. use_ed) then    
+      if (.not. use_fates) then    
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -207,8 +207,8 @@ contains
             cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
          end do
       end do
-      else  !use_ed
-         ! here add all ed litterfall and CWD breakdown to litter fluxes
+      else  !use_fates
+         ! here add all fates litterfall and CWD breakdown to litter fluxes
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
@@ -245,7 +245,7 @@ contains
          end if
       end do
 
-    if (.not. use_ed) then    
+    if (.not. use_fates) then    
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)

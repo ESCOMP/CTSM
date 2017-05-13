@@ -17,7 +17,7 @@ module restFileMod
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
-  use clm_varctl       , only : create_glacier_mec_landunit, iulog, use_ed, use_hydrstress
+  use clm_varctl       , only : create_glacier_mec_landunit, iulog, use_fates, use_hydrstress
   use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
@@ -708,7 +708,7 @@ contains
        call check_dim(ncid, namel, numl, msg=msg)
        call check_dim(ncid, namec, numc, msg=msg)
        call check_dim(ncid, namep, nump, msg=msg)
-       if ( use_ed ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
+       if ( use_fates ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
     end if
     call check_dim(ncid, 'levsno'  , nlevsno, &
          msg = 'You can deal with this mismatch by rerunning with ' // &

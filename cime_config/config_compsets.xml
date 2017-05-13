@@ -110,8 +110,8 @@
     <lname>1850_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>I1850CLM45ED</alias>
-    <lname>1850_DATM%QIA_CLM45%ED_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1850CLM45FATES</alias>
+    <lname>1850_DATM%QIA_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
     <support_level>"Experimental, under development"</support_level>
   </compset>
   <compset>
@@ -266,13 +266,13 @@
     <lname>2000_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>ICLM45ED</alias>
-    <lname>2000_DATM%QIA_CLM45%ED_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>ICLM50FATES</alias>
+    <lname>2000_DATM%QIA_CLM50%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
     <support_level>Experimental, under development</support_level>
   </compset>
   <compset>
-    <alias>I1850CLM45ED</alias>
-    <lname>1850_DATM%QIA_CLM45%ED_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>ICLM45FATES</alias>
+    <lname>2000_DATM%QIA_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
     <support_level>Experimental, under development</support_level>
   </compset>
   <compset>

@@ -205,7 +205,7 @@ contains
 
     do p = bounds%begp,bounds%endp   
 
-       if (patch%itype(p) /= noveg) then
+       if (patch%itype(p) /= noveg .and. .not. patch%is_fates(p)) then
           c = patch%column(p)
           do lev = 1, ubj-1
              rootfr(p,lev) = .5_r8*( &
@@ -264,7 +264,7 @@ contains
     rootfr(bounds%begp:bounds%endp, :)     = 0._r8
     do p = bounds%begp,bounds%endp   
        c = patch%column(p)       
-       if (patch%itype(p) /= noveg) then
+       if (patch%itype(p) /= noveg .and. .not.patch%is_fates(p)) then
           beta = pftcon%rootprof_beta(patch%itype(p),varindx)
           do lev = 1, ubj
              rootfr(p,lev) = ( &
@@ -313,7 +313,7 @@ contains
     rootfr(bounds%begp:bounds%endp, :)     = 0._r8
     do p = bounds%begp,bounds%endp   
        c = patch%column(p)
-       if (patch%itype(p) /= noveg) then
+       if (patch%itype(p) /= noveg .and. .not.patch%is_fates(p)) then
           do lev = 1, ubj
              rootfr(p,lev) = exp(-rootprof_exp * col%z(c,lev)) * col%dz(c,lev)
           end do

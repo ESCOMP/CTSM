@@ -222,11 +222,16 @@ sub run_csstatus {
          if ( $over eq "NLCOMP" ) { 
             $over = "PASS";
          }
-         if ( $over eq "FAIL" && $fails =~ /MEMLEAK/ ) { 
-            $over = "PASS";
-         }
-         if ( $over eq "FAIL" && $fails =~ /MEMCOMP/ ) { 
-            $over = "PASS";
+         if ( $over eq "FAIL" && ($fails =~ /MEMLEAK/ || $fails =~ /TPUTCOMP/ || $fails =~ /MEMCOMP/) ) { 
+            my $status = $fails;
+            $status =~ s/MEMLEAK//;
+            $status =~ s/TPUTCOMP//;
+            $status =~ s/MEMCOMP//;
+            $status =~ s/NLCOMP//;
+            $status =~ s/BASELINE//;
+            if ( $status =~ /^\s*$/ ) {
+              $over = "PASS";
+            }
          }
          if ( $over eq "DIFF" ) { 
             my $file = glob( "${test}.*$csdate/TestStatus" );

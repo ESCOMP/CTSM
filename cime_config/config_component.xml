@@ -119,7 +119,7 @@
       <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
       <value compset="_CLM45%[^_]*CNDV-CROP"	 >-bgc cn -dynamic_vegetation -crop</value>
       <value compset="_CLM45%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
-      <value compset="_CLM45%[^_]*ED"		 >-bgc ed -no-megan</value>
+      <value compset="_CLM45%[^_]*FATES"	 >-bgc fates -no-megan</value>
 
       <value compset="_CLM50%[^_]*SP"		 >-bgc sp</value>
       <value compset="_CLM50%[^_]*BGC"		 >-bgc bgc</value>
@@ -128,6 +128,7 @@
       <value compset="HIST.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
       <value compset="2000.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
       <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
+      <value compset="_CLM50%[^_]*FATES"         >-bgc fates -no-megan</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
@@ -218,7 +219,7 @@
     <desc compset="_CLM45%[^_]*BGC"		>clm4.5 bgc (cn and methane):</desc>
     <desc compset="_CLM45%[^_]*CROP"		>clm4.5 prognostic crop:</desc>
     <desc compset="_CLM45%[^_]*VIC"		>clm4.5 vic hydrology:</desc>
-    <desc compset="_CLM45%[^_]*ED"		>clm4.5 ED (Ecosystem Demography): (experimental)</desc>
+    <desc compset="_CLM45%[^_]*FATES"		>clm4.5 FATES/ED (Ecosystem Demography): (experimental)</desc>
     <desc compset="_CLM45%[^_]*BGCDV"		>clm4.5 bgc (cn and methane) with dynamic vegetation:</desc>
     <desc compset="_CLM45%[^_]*BGCDV-CROP"	>clm4.5 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
     <desc compset="_CLM50"			>clm5.0 physics:</desc>
@@ -226,6 +227,7 @@
     <desc compset="_CLM50%[^_]*BGC"		>clm5.0 bgc (cn and methane):</desc>
     <desc compset="_CLM50%[^_]*BGC-CROP"	>clm5.0 bgc with prognostic crop:</desc>
     <desc compset="_CLM50%[^_]*BGCDV-CROP"	>clm5.0 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
+    <desc compset="_CLM50%[^_]*FATES"		>clm5.0 FATES/ED (Ecosystem Demography): (experimental)</desc>
   </description>
 
   <help>

@@ -12,7 +12,7 @@ module clm_initializeMod
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : create_glacier_mec_landunit, iulog
-  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_ed
+  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -23,7 +23,8 @@ module clm_initializeMod
   use PatchType       , only : patch         ! instance            
   use reweightMod     , only : reweight_wrapup
   use filterMod       , only : allocFilters, filter
-  use EDVecCohortType , only : ed_vec_cohort ! instance, used for domain decomp
+  use FatesInterfaceMod, only : set_fates_global_elements
+
   use clm_instMod       
   ! 
   implicit none
@@ -180,6 +181,22 @@ contains
     call surfrd_get_data(begg, endg, ldomain, fsurdat)
 
     ! ------------------------------------------------------------------------
+    ! Ask Fates to evaluate its own dimensioning needs.
+    ! This determines the total amount of space it requires in its largest
+    ! dimension.  We are currently calling that the "cohort" dimension, but
+    ! it is really a utility dimension that captures the models largest
+    ! size need.
+    ! Sets:
+    ! fates_maxElementsPerPatch
+    ! fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+    ! 
+    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
+    ! to allocate space)
+    ! ------------------------------------------------------------------------
+    
+    call set_fates_global_elements(use_fates)
+
+    ! ------------------------------------------------------------------------
     ! Determine decomposition of subgrid scale landunits, columns, patches
     ! ------------------------------------------------------------------------
 
@@ -198,11 +215,6 @@ contains
     call lun%Init  (bounds_proc%begl, bounds_proc%endl)
     call col%Init  (bounds_proc%begc, bounds_proc%endc)
     call patch%Init(bounds_proc%begp, bounds_proc%endp)
-
-    if ( use_ed ) then
-       ! INTERF-TODO:  THIS GUY NEEDS TO BE MOVED TO THE INTERFACE
-       call ed_vec_cohort%Init(bounds_proc%begCohort,bounds_proc%endCohort)
-    end if
 
     ! Build hierarchy and topological info for derived types
     ! This is needed here for the following call to decompInit_glcp
@@ -262,7 +274,7 @@ contains
     use clm_varpar            , only : nlevsno
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_ed
+    use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
     use clm_varctl            , only : use_crop
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size, get_curr_calday
@@ -654,13 +666,11 @@ contains
     deallocate(wt_nat_patch)
 
     ! --------------------------------------------------------------
-    ! Initialise the ED model state structure
+    ! Initialise the fates model state structure
     ! --------------------------------------------------------------
    
-    if ( use_ed .and. .not.is_restart() ) then
-
-       call clm_fates%init_coldstart(waterstate_inst,canopystate_inst)
-       
+    if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
+       call clm_fates%init_coldstart(waterstate_inst,canopystate_inst,soilstate_inst, frictionvel_inst)
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through

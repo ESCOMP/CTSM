@@ -10,7 +10,7 @@ module atm2lndType
   use shr_log_mod   , only : errMsg => shr_log_errMsg
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_ed, use_luna
+  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna
   use decompMod     , only : bounds_type
   use abortutils    , only : endrun
   use PatchType     , only : patch
@@ -563,7 +563,7 @@ contains
     allocate(this%prec60_patch                  (begp:endp))        ; this%prec60_patch                  (:)   = nan
     allocate(this%rh30_patch                    (begp:endp))        ; this%rh30_patch                    (:)   = nan 
     allocate(this%prec365_patch                 (begp:endp))        ; this%prec365_patch                 (:)   = nan
-    if (use_ed) then
+    if (use_fates) then
        allocate(this%prec24_patch               (begp:endp))        ; this%prec24_patch                  (:)   = nan
        allocate(this%rh24_patch                 (begp:endp))        ; this%rh24_patch                    (:)   = nan
        allocate(this%wind24_patch               (begp:endp))        ; this%wind24_patch                  (:)   = nan
@@ -848,7 +848,7 @@ contains
             subgrid_type='pft', numlev=1, init_value=0._r8)
     end if
 
-    if ( use_ed ) then
+    if ( use_fates ) then
        call init_accum_field (name='PREC24', units='m', &
             desc='24hr sum of precipitation', accum_type='runmean', accum_period=-1, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
@@ -951,7 +951,7 @@ contains
        this%t_mo_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
-    if (use_ed) then
+    if (use_fates) then
        call extract_accum_field ('PREC24', rbufslp, nstep)
        this%prec24_patch(begp:endp) = rbufslp(begp:endp)
 
@@ -1066,7 +1066,7 @@ contains
 
     end if
 
-    if (use_ed) then
+    if (use_fates) then
        call update_accum_field  ('PREC24', rbufslp, nstep)
        call extract_accum_field ('PREC24', this%prec24_patch, nstep)
 
@@ -1250,7 +1250,7 @@ contains
     deallocate(this%prec10_patch)
     deallocate(this%prec60_patch)
     deallocate(this%prec365_patch)
-    if (use_ed) then
+    if (use_fates) then
        deallocate(this%prec24_patch)
        deallocate(this%rh24_patch)
        deallocate(this%wind24_patch)

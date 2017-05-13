@@ -14,7 +14,7 @@ module  PhotosynthesisMod
   use shr_log_mod         , only : errMsg => shr_log_errMsg
   use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
   use abortutils          , only : endrun
-  use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_ed, use_luna, use_hydrstress
+  use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_fates, use_luna, use_hydrstress
   use clm_varctl          , only : iulog
   use clm_varpar          , only : nlevcan, nvegwcs, mxpft
   use clm_varcon          , only : namep, c14ratio, spval
@@ -174,10 +174,6 @@ module  PhotosynthesisMod
      real(r8), pointer, public  :: lutpu25top_patch   (:)   ! vcmax25 (umol/m2/s)
 !!
 
-
-     ! ED specific variables
-!     real(r8), pointer, public  :: psncanopy_patch   (:)   ! patch sunlit leaf photosynthesis (umol CO2 /m**2/ s) (ED specific)
-!     real(r8), pointer, public  :: lmrcanopy_patch   (:)   ! sunlit leaf maintenance respiration rate (umol CO2/m**2/s) (ED specific)
 
      ! LUNA specific variables
      real(r8), pointer, public  :: vcmx25_z_patch    (:,:) ! patch  leaf Vc,max25 (umol CO2/m**2/s) for canopy layer 
@@ -1727,9 +1723,7 @@ contains
          p = filterp(f)
          g = patch%gridcell(p)
 
-         ! INTERFACE-TODO: EDACCUMULATEFLUXES PERFORMS AN ALTERNATIVE TO THIS
-         ! THEY SHOULD BE IN-LINE SOMEWHERE
-         if (.not. use_ed) then
+         if (.not. use_fates) then
             fpsn(p)    = psnsun(p)   *laisun(p) + psnsha(p)   *laisha(p)
             fpsn_wc(p) = psnsun_wc(p)*laisun(p) + psnsha_wc(p)*laisha(p)
             fpsn_wj(p) = psnsun_wj(p)*laisun(p) + psnsha_wj(p)*laisha(p)

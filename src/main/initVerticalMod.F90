@@ -18,7 +18,7 @@ module initVerticalMod
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, soil_layerstruct
-  use clm_varctl        , only : use_ed
+  use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
   use landunit_varcon   , only : istdlak, istice_mec
@@ -311,7 +311,7 @@ contains
        end if
     end if
 
-    if(use_ed)then
+    if(use_fates)then
       call ed_hist_scpfmaps
     end if
 

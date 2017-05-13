@@ -70,13 +70,12 @@ contains
 
     associate(                                               & 
          zi           =>    col%zi                         , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
-         
          zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
          wa           =>    soilhydrology_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
          begwb        =>    waterstate_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
-    do fc = 1, num_nolakec
+   do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        if (col%hydrologically_active(c)) then
           if(zwt(c) <= zi(c,nlevsoi)) then
@@ -160,7 +159,9 @@ contains
           errh2o                  =>    waterstate_inst%errh2o_col              , & ! Output: [real(r8) (:)   ]  water conservation error (mm H2O)       
           errh2osno               =>    waterstate_inst%errh2osno_col           , & ! Output: [real(r8) (:)   ]  error in h2osno (kg m-2)                
           endwb                   =>    waterstate_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
-
+          total_plant_stored_h2o_col => waterstate_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
+          qflx_rootsoi_col        =>    waterflux_inst%qflx_rootsoi_col         , & ! Input   [real(r8) (:)   ]  water loss in soil layers to root uptake (mm H2O/s)
+                                                                                    !                            (ie transpiration demand, often = transpiration)
           qflx_rain_grnd_col      =>    waterflux_inst%qflx_rain_grnd_col       , & ! Input:  [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
           qflx_snow_grnd_col      =>    waterflux_inst%qflx_snow_grnd_col       , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_evap_soi           =>    waterflux_inst%qflx_evap_soi_col        , & ! Input:  [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
@@ -324,7 +325,8 @@ contains
              write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
              write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
              write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
-
+             write(iulog,*)'qflx_rootsoi_col(1:nlevsoil)  = ',qflx_rootsoi_col(indexc,:)*dtime
+             write(iulog,*)'total_plant_stored_h2o_col = ',total_plant_stored_h2o_col(indexc)
              write(iulog,*)'deltawb          = ',endwb(indexc)-begwb(indexc)
              write(iulog,*)'deltawb/dtime    = ',(endwb(indexc)-begwb(indexc))/dtime
              write(iulog,*)'deltaflux        = ',forc_rain_col(indexc)+forc_snow_col(indexc) - (qflx_evap_tot(indexc) + &
@@ -340,8 +342,10 @@ contains
              write(iulog,*)'errh2o                = ',errh2o(indexc)
              write(iulog,*)'forc_rain             = ',forc_rain_col(indexc)*dtime
              write(iulog,*)'forc_snow             = ',forc_snow_col(indexc)*dtime
+             write(iulog,*)'total_plant_stored_h2o_col = ',total_plant_stored_h2o_col(indexc)
              write(iulog,*)'endwb                 = ',endwb(indexc)
              write(iulog,*)'begwb                 = ',begwb(indexc)
+             
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
              write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
@@ -355,6 +359,7 @@ contains
              write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux(indexc)*dtime
              write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
              write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
+             write(iulog,*)'qflx_rootsoi_col(1:nlevsoil)  = ',qflx_rootsoi_col(indexc,:)*dtime
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if

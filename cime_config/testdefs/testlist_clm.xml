@@ -111,6 +111,7 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERP_P180x2_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="prealpha" testmods="clm/default">yellowstone</machine>
       </test>
@@ -128,6 +129,7 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ciso">hobart</machine>
       </test>
       <test name="ERP_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/drydepnomegan">cheyenne</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -149,9 +151,11 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERP_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SSP_D_Ld10">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/rtmColdSSP">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/rtmColdSSP">yellowstone</machine>
       </test>
       <test name="SSP_Ld10">
@@ -234,6 +238,7 @@
   <compset name="I1850CRUCLM50BGCCROP">
     <grid name="f10_f10">
       <test name="ERS_Ly3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KSinkMOut">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KSinkMOut">yellowstone</machine>
       </test>
     </grid>
@@ -284,6 +289,7 @@
         <machine compiler="nag" testtype="prealpha" testmods="clm/default">hobart</machine>
       </test>
       <test name="SMS_Ld1_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -294,6 +300,7 @@
     </grid>
     <grid name="1x1_vancouverCAN">
       <test name="ERS_Ld5_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1_Mmpi-serial">
@@ -311,11 +318,13 @@
   <compset name="I1PTCLM50">
     <grid name="1x1_mexicocityMEX">
       <test name="SMS_D_Ld5_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
     <grid name="1x1_vancouverCAN">
       <test name="ERS_Ld5_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1_Mmpi-serial">
@@ -373,6 +382,7 @@
     </grid>
     <grid name="1x1_mexicocityMEX">
       <test name="SMS_D_Ld1_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -383,6 +393,7 @@
     </grid>
     <grid name="T31_g37">
       <test name="ERI_D_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/SNICARFRC">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/SNICARFRC">yellowstone</machine>
       </test>
     </grid>
@@ -391,17 +402,20 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/SNICARFRC">hobart</machine>
       </test>
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_f45">
       <test name="SMS_D_Ld1_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">cheyenne</machine>
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
       </test>
       <test name="SMS_Ld1_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">cheyenne</machine>
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
@@ -416,11 +430,13 @@
   <compset name="ICLM45BGC">
     <grid name="f09_g16">
       <test name="ERI_D_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="ed" testtype="ed" testmods="clm/default">ed</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERI_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cn_conly">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cn_conly">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
       </test>
@@ -430,6 +446,8 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERI_D_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/reduceOutput">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
@@ -438,10 +456,12 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
       </test>
       <test name="ERI_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/drydepnomegan">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld3_P15x2">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -450,6 +470,8 @@
         <machine compiler="pgi" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/NoVSNoNI">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/rootlit">cheyenne</machine>
         <machine compiler="nag" testtype="prebeta" testmods="clm/reduceOutput">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/NoVSNoNI">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/rootlit">yellowstone</machine>
@@ -461,6 +483,7 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
       </test>
       <test name="ERS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -472,6 +495,7 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/oldhyd">hobart</machine>
       </test>
       <test name="SMS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="ed" testtype="ed" testmods="clm/default">ed</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -489,21 +513,25 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
     <grid name="ne30_g16">
       <test name="ERI_D_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld5">
         <machine compiler="nag" testtype="prealpha" testmods="clm/default">hobart</machine>
       </test>
       <test name="PEM_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -514,6 +542,7 @@
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/monthly" comment="tests mid-year restart, with the restart file being written in the middle of the second year">yellowstone</machine>
       </test>
       <test name="ERP_Lm54_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="tests mid-year restart, with the restart file being written after more than 2 years, which Sam Levis says is important for testing crop restarts">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="tests mid-year restart, with the restart file being written after more than 2 years, which Sam Levis says is important for testing crop restarts">yellowstone</machine>
       </test>
       <test name="ERP_Ly5_Mmpi-serial">
@@ -527,15 +556,18 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/allActive">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/allActive">yellowstone</machine>
       </test>
       <test name="ERP_Ly5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">yellowstone</machine>
       </test>
       <test name="ERP_P15x2_D">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/snowlayers_12" comment="Can be removed once we change the CLM5 default to have more than 5 snow layers (at which point we will be testing 5 layers with CLM45 and more than 5 with CLM5)">yellowstone</machine>
       </test>
       <test name="ERP_P15x2_Lm36">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">yellowstone</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/irrigOn_reduceOutput">yellowstone</machine>
       </test>
@@ -546,12 +578,14 @@
         <machine compiler="intel" testtype="prebeta" testmods="clm/crop">hobart</machine>
       </test>
       <test name="PEM_Lm25">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld3">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/interp_f19_noncrop" comment="test interpolation of non-crop to crop (also change resolution, but that is not an essential part of this test)">yellowstone</machine>
       </test>
       <test name="SMS_Lm1_D">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">yellowstone</machine>
       </test>
     </grid>
@@ -564,6 +598,7 @@
   <compset name="ICLM45BGCDVCROP">
     <grid name="1x1_numaIA">
       <test name="ERP_Ly20_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
       </test>
       <test name="SMS_Ly3_Mmpi-serial">
@@ -572,6 +607,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERP_P15x2_Lm25">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
       </test>
     </grid>
@@ -595,83 +631,96 @@
       </test>
     </grid>
   </compset>
-  <compset name="ICLM45ED">
+  <compset name="ICLM45FATES">
     <grid name="1x1_brazil">
       <test name="ERS_D_Mmpi-serial_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
     </grid>
     <grid name="5x5_amazon">
-      <test name="ERS_D_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      <test name="ERS_D_Mmpi-serial_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
       <test name="SMS_D_Mmpi-serial_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
     </grid>
     <grid name="f09_g16">
       <test name="ERS_D_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">
       <test name="ERS_D_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="ed" testtype="ed" testmods="clm/edNoFire">ed</machine>
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fatesFire">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
       <test name="SMS_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
       <test name="ERS_D_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
       </test>
       <test name="SMS_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_f45">
       <test name="SMS_D_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
       <test name="SMS_D_Lm6">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_g37">
       <test name="ERS_D_Ld5">
-        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
       </test>
     </grid>
   </compset>
   <compset name="ICLM45VIC">
     <grid name="f09_g16">
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
       </test>
       <test name="ERP_Ld5">
@@ -680,6 +729,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
       </test>
       <test name="ERP_Ld5">
@@ -688,6 +738,7 @@
     </grid>
     <grid name="f19_g16">
       <test name="SMS_Ld1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -695,7 +746,97 @@
   <compset name="ICLM50BGCDVCROP">
     <grid name="f10_f10">
       <test name="ERP_P15x2_Lm25">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
+  <compset name="ICLM50FATES">
+    <grid name="1x1_brazil">
+      <test name="ERS_D_Mmpi-serial_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="5x5_amazon">
+      <test name="ERS_D_Mmpi-serial_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Mmpi-serial_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f09_g16">
+      <test name="ERS_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f10_f10">
+      <test name="ERS_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fatesFire">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/fates">hobart</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">hobart</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+      <test name="SMS_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f19_g16">
+      <test name="ERS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+      </test>
+      <test name="SMS_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f45_f45">
+      <test name="SMS_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Lm6">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">cheyenne</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fates">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f45_g37">
+      <test name="ERS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/fates">ed</machine>
       </test>
     </grid>
   </compset>
@@ -762,11 +903,13 @@
   <compset name="ICRUCLM45">
     <grid name="f09_g16">
       <test name="SMS_Ld1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/af_bias_v5">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/af_bias_v5">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">
       <test name="NCK_Ld1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="prealpha" testmods="clm/default">yellowstone</machine>
       </test>
@@ -800,6 +943,7 @@
   <compset name="ICRUCLM45BGCCROP">
     <grid name="f19_g16">
       <test name="ERI_N2_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -807,6 +951,7 @@
   <compset name="ICRUCLM50BGC">
     <grid name="f10_f10">
       <test name="ERI_D_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
       </test>
@@ -814,6 +959,7 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
       </test>
       <test name="ERI_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/reduceOutput">cheyenne</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
@@ -822,6 +968,10 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ciso_flexCN_FUN">yellowstone</machine>
       </test>
       <test name="ERP_D_P15x2_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexCN_FUN">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/noFUN_flexCN">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/luna">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexCN_FUN">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/noFUN_flexCN">yellowstone</machine>
@@ -833,6 +983,7 @@
         <machine compiler="pgi" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_D_P15x2_Ld30">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default" comment="NOTE(bja, 201509) constrain_stress_deciduous_onset is on by default for clm50, but functionality is not exercised by nine day tests, Sean Swenson verified that it is active during 30 day tests.">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default" comment="NOTE(bja, 201509) constrain_stress_deciduous_onset is on by default for clm50, but functionality is not exercised by nine day tests, Sean Swenson verified that it is active during 30 day tests.">yellowstone</machine>
       </test>
       <test name="ERP_Ld5_P24x1">
@@ -842,6 +993,8 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/luna">hobart</machine>
       </test>
       <test name="ERS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/deepsoil_bedrock">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/deepsoil_bedrock">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -851,6 +1004,7 @@
         <machine compiler="pgi" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -861,17 +1015,21 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fire_emis">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/fire_emis">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_g37">
       <test name="ERI_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/nofire">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/nofire">yellowstone</machine>
       </test>
     </grid>
@@ -885,17 +1043,21 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/monthly">hobart</machine>
       </test>
       <test name="SMS_Ly3_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50dynroots">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50dynroots">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">
       <test name="ERP_D_P15x2_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropColdStart">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropColdStart">yellowstone</machine>
       </test>
       <test name="ERP_D_P15x2_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_spunup" comment="Want ERP _D test with irrigation on">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_spunup" comment="Want ERP _D test with irrigation on">yellowstone</machine>
       </test>
       <test name="ERP_P60x2_Lm36">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50cropIrrigMonth_interp">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50cropIrrigMonth_interp">yellowstone</machine>
       </test>
       <test name="SMS">
@@ -936,6 +1098,7 @@
         <machine compiler="pgi" testtype="aux_clm45">yellowstone</machine>
       </test>
       <test name="LII_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">yellowstone</machine>
       </test>
     </grid>
@@ -943,6 +1106,7 @@
   <compset name="IG1850CLM50">
     <grid name="T31_g37_gl4">
       <test name="SMS_Lm37">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_long" comment="Long enough test for SMB to be generated in bare land areas; add a month beyond the 3rd year to allow time for CLM to respond to CISM forcing from the 3rd year. (Note: if we had spun-up initial conditions for an IG compset, we could test this with much shorter test, if it also used the glc override options - much of the need for this long test is to allow the snow pack to spin up.)">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_long" comment="Long enough test for SMB to be generated in bare land areas; add a month beyond the 3rd year to allow time for CLM to respond to CISM forcing from the 3rd year. (Note: if we had spun-up initial conditions for an IG compset, we could test this with much shorter test, if it also used the glc override options - much of the need for this long test is to allow the snow pack to spin up.)">yellowstone</machine>
       </test>
     </grid>
@@ -957,16 +1121,19 @@
   <compset name="IG1850CRUCLM50BGC">
     <grid name="T31_g37_gl4">
       <test name="ERS_D_Ld12">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_inc_dec_bgc" comment="Tests updates of BGC variables with increasing and decreasing glacier areas">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_inc_dec_bgc" comment="Tests updates of BGC variables with increasing and decreasing glacier areas">yellowstone</machine>
       </test>
     </grid>
     <grid name="f09_g16_gl4">
       <test name="SMS_Lm1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16_gl4">
       <test name="SMS_Lm1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50dynroots">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50dynroots">yellowstone</machine>
       </test>
     </grid>
@@ -974,11 +1141,13 @@
   <compset name="IG1850CRUCLM50BGCCROP">
     <grid name="f09_g16_gl4">
       <test name="ERS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16_gl4">
       <test name="ERS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50dynroots">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50dynroots">yellowstone</machine>
       </test>
     </grid>
@@ -993,6 +1162,7 @@
   <compset name="IGCLM45BGC">
     <grid name="f19_g16_gl4">
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_changeFlags">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_changeFlags">yellowstone</machine>
       </test>
     </grid>
@@ -1026,6 +1196,7 @@
   <compset name="IGHISTCLM50">
     <grid name="T31_g37_gl4">
       <test name="ERS_D_Ld10">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_decrease" comment="test transient PFTs (via HIST) in conjunction with changing glacier area">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_decrease" comment="test transient PFTs (via HIST) in conjunction with changing glacier area">yellowstone</machine>
       </test>
     </grid>
@@ -1166,6 +1337,7 @@
   <compset name="IHISTCLM50BGC">
     <grid name="1x1_brazil">
       <test name="SMS_D_Ly2">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_bombspike1963">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_bombspike1963">yellowstone</machine>
       </test>
     </grid>
@@ -1174,6 +1346,7 @@
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/tropicAtl_subsetLate">yellowstone</machine>
       </test>
       <test name="SMS_Ly5_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/tropicAtl_subsetMid">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/tropicAtl_subsetMid">yellowstone</machine>
       </test>
       <test name="SMS_Ly8_Mmpi-serial">
@@ -1186,12 +1359,14 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
       </test>
       <test name="ERP_D_P15x2">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_decStart" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_decStart" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">yellowstone</machine>
       </test>
       <test name="ERP_D_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/decStart">hobart</machine>
       </test>
       <test name="ERP_P15x2_Lm13">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
       </test>
@@ -1203,6 +1378,7 @@
   <compset name="IHISTCLM50BGCCROP">
     <grid name="1x1_smallvilleIA">
       <test name="ERS_D_Ld7_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">yellowstone</machine>
       </test>
       <test name="ERS_Ly3_Mmpi-serial">
@@ -1214,6 +1390,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERS_Ly5_P60x1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">yellowstone</machine>
       </test>
     </grid>
@@ -1250,6 +1427,7 @@
   <compset name="IMCRUCLM50BGC">
     <grid name="f10_f10">
       <test name="ERS_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -1301,6 +1479,7 @@
     </grid>
     <grid name="f19_g16">
       <test name="SMS_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
       </test>

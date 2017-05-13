@@ -13,7 +13,7 @@ module CNVegetationFacade
   ! then have an instance of VegBase, which depending on the run, can be either a CNVeg or
   ! EDVeg instance.
   !
-  ! In addition, we probably want an implementation when running without CN or ED - i.e.,
+  ! In addition, we probably want an implementation when running without CN or fates - i.e.,
   ! an SPVeg inst. This would provide implementations for get_leafn_patch,
   ! get_downreg_patch, etc., so that we don't need to handle the non-cn case here (note
   ! that, currently, we return NaN for most of these getters, because these arrays are
@@ -98,7 +98,7 @@ module CNVegetationFacade
   ! !PUBLIC TYPES:
 
   type, public :: cn_vegetation_type
-     ! FIXME(bja, 2016-06) These need to be public for use when ED is
+     ! FIXME(bja, 2016-06) These need to be public for use when fates is
      ! turned on. Should either be moved out of here or create some ED
      ! version of the facade....
      type(cnveg_state_type)         :: cnveg_state_inst

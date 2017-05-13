@@ -6,7 +6,7 @@ module CNDriverMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : use_c13, use_c14, use_ed, use_dynroot
+  use clm_varctl                      , only : use_c13, use_c14, use_fates, use_dynroot
   use dynSubgridControlMod            , only : get_do_harvest
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf

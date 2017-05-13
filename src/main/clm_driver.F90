@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_ed
+  use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop
   use clm_varctl             , only : is_cold_start, is_interpolated_start
@@ -338,6 +338,7 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
             soilhydrology_inst, waterstate_inst)
+
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
@@ -455,10 +456,8 @@ contains
        ! The nourbanp filter is set in dySubgrid_driver (earlier in this call)
        ! over the patch index range defined by bounds_clump%begp:bounds_proc%endp
 
-       if(use_ed) then
-
+       if(use_fates) then
           call clm_fates%wrap_sunfrac(nc,atm2lnd_inst, canopystate_inst)
-          
        else
           call CanopySunShadeFracs(filter(nc)%nourbanp,filter(nc)%num_nourbanp,     &
                                    atm2lnd_inst, surfalb_inst, canopystate_inst,    &
@@ -495,6 +494,7 @@ contains
        call CanopyTemperature(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                       &
+            clm_fates,                                                        &
             atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
             waterstate_inst, waterflux_inst, energyflux_inst, temperature_inst)
        call t_stopf('bgp1')
@@ -553,17 +553,6 @@ contains
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
 
-       if (use_ed) then
-          ! if ED enabled, summarize productivity fluxes onto CLM history file structure
-          call t_startf('edclmsumprodfluxes')
-          ! INTERF-TODO: THIS NEEDS A WRAPPER call clm_fates%sumprod(bounds_clump)
-          call clm_fates%fates2hlm%SummarizeProductivityFluxes( bounds_clump, &
-                clm_fates%fates(nc)%nsites,                                   &
-                clm_fates%fates(nc)%sites,                                    &
-                clm_fates%f2hmap(nc)%fcolumn)
-          call t_stopf('edclmsumprodfluxes')
-       endif
-       
        ! Fluxes for all urban landunits
 
        call t_startf('uflux')
@@ -703,6 +692,7 @@ contains
             filter(nc)%num_urbanc, filter(nc)%urbanc,                        &
             filter(nc)%num_snowc, filter(nc)%snowc,                          &
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
+            clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
             waterflux_inst, waterstate_inst, soilhydrology_inst, aerosol_inst, &
             canopystate_inst, soil_water_retention_curve)
@@ -828,16 +818,11 @@ contains
 
                 ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
-       if ((.not. use_cn) .and. (.not. use_ed) .and. (doalb)) then 
+       if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb)) then 
           call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                waterstate_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
-       end if
-
-       ! Zero some of the FATES->CLM communicators
-       if (use_ed) then
-          call clm_fates%fates2hlm%SetValues(bounds_clump,0._r8)
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
@@ -882,27 +867,25 @@ contains
 
        end if
 
-       if ( use_ed  .and. is_beg_curr_day() ) then ! run ED at the start of each day
+       if ( use_fates  .and. is_beg_curr_day() ) then ! run fates at the start of each day
           
           if ( masterproc ) then
-             write(iulog,*)  'clm: calling ED model ', get_nstep()
+             write(iulog,*)  'clm: calling FATES model ', get_nstep()
           end if
-
-          ! INTERF-TODO: THIS CHECK WILL BE TURNED ON IN FUTURE VERSION
-!          call clm_fates%check_hlm_active(nc, bounds_clump)
 
           call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                atm2lnd_inst, soilstate_inst, temperature_inst,                   &
-               waterstate_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
+               waterstate_inst, canopystate_inst, soilbiogeochem_carbonflux_inst,&
+               frictionvel_inst)
           
           ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
           ! call to reweight_wrapup, if it's needed at all.
           call setFilters( bounds_clump, glc_behavior )
           
-       end if ! use_ed branch
+       end if ! use_fates branch
        
        
-       if ( use_ed ) then
+       if ( use_fates ) then
           
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
@@ -910,7 +893,6 @@ contains
                filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,                                    &
                bgc_vegetation_inst%cnveg_carbonflux_inst, &
                bgc_vegetation_inst%cnveg_carbonstate_inst, &
-                clm_fates%fates2hlm, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
                soilbiogeochem_state_inst,                                                          &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
@@ -926,10 +908,7 @@ contains
                 c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-                clm_fates%fates2hlm,                                                     &
-                clm_fates%fates(nc)%sites,                                               &
-                clm_fates%fates(nc)%nsites,                                              &
-                clm_fates%f2hmap(nc)%fcolumn )
+                clm_fates, nc)
        end if
 
 
@@ -1017,16 +996,6 @@ contains
                aerosol_inst, canopystate_inst, waterstate_inst, &
                lakestate_inst, temperature_inst, surfalb_inst)
 
-          ! INTERF-TOD: THIS ACTUALLY WON'T BE TO HARD TO PULL OUT
-          ! ED_Norman_Radiation() is the last thing called
-          ! in SurfaceAlbedo, we can simply remove it
-          ! The clm_fates interfac called below will split
-          ! ED norman radiation into two parts
-          ! the calculation of values relevant to FATES
-          ! and then the transfer back to CLM/ALM memory stucts
-          
-          !call clm_fates%radiation()
-
           call t_stopf('surfalb')
 
           ! Albedos for urban columns
@@ -1105,8 +1074,8 @@ contains
     ! ============================================================================
 
     ! FIX(SPM,032414) double check why this isn't called for ED
-    ! FIX(SPM, 082814) - in the ED branch RF and I commented out the if(.not.
-    ! use_ed) then statement ... double check if this is required and why
+    ! FIX(SPM, 082814) - in the fates branch RF and I commented out the if(.not.
+    ! use_fates) then statement ... double check if this is required and why
 
     if (nstep > 0) then
        call t_startf('accum')

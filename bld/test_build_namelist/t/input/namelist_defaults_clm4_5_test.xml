@@ -74,17 +74,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
 <paramfile       >lnd/clm2/paramdata/clm_params.c130821.nc</paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params.c170331.nc</fates_paramfile>
 
 
 <!--- ========================================  -->
-<!--- Defaults for use_ed = .true.              -->
+<!--- Defaults for use_fates = .true.              -->
 <!--  ========================================  -->
 
-<use_vertsoilc use_ed=".true.">.true.</use_vertsoilc>
-<use_century_decomp use_ed=".true."  >.true.</use_century_decomp>
-<use_ed_spit_fire use_ed=".true.">.true.</use_ed_spit_fire>
-<use_lch4 use_ed=".true.">.false.</use_lch4>
-<use_nitrif_denitrif use_ed=".true.">.false.</use_nitrif_denitrif>
+<use_vertsoilc use_fates=".true.">.true.</use_vertsoilc>
+<use_century_decomp use_fates=".true."  >.true.</use_century_decomp>
+<use_fates_spitfire use_fates=".true.">.true.</use_fates_spitfire>
+<use_lch4 use_fates=".true.">.false.</use_lch4>
+<use_nitrif_denitrif use_fates=".true.">.false.</use_nitrif_denitrif>
 
 
 <!--

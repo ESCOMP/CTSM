@@ -90,7 +90,7 @@ module PatchType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varcon     , only : ispval
-  use clm_varctl     , only : use_ed 
+  use clm_varctl     , only : use_fates 
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -112,10 +112,19 @@ module PatchType
      integer , pointer :: mxy      (:) ! m index for laixy(i,j,m),etc. (undefined for special landunits)
      logical , pointer :: active   (:) ! true=>do computations on this patch
 
-     ! ED only
-     logical , pointer :: is_veg   (:)
+     ! fates only
+     logical , pointer :: is_veg   (:) ! This is an ACTIVE fates patch
      logical , pointer :: is_bareground  (:)
      real(r8), pointer :: wt_ed       (:) !TODO mv ? can this be removed
+
+     
+     logical, pointer  :: is_fates (:) ! true for patch vector space reserved
+                                       ! for FATES.
+                                       ! this is static and is true for all 
+                                       ! patches within fates jurisdiction
+                                       ! including patches which are not currently
+                                       ! associated with a FATES linked-list patch
+
 
    contains
 
@@ -157,11 +166,11 @@ contains
     ! is used in RootBiogeophysMod in zeng2001_rootfr- a filter is not used
     ! in that routine - which would elimate this problem
 
-    !    if (.not. use_ed) then
     allocate(this%itype      (begp:endp)); this%itype      (:) = ispval
-    !    end if
 
-    if (use_ed) then
+    allocate(this%is_fates   (begp:endp)); this%is_fates   (:) = .false.
+
+    if (use_fates) then
        allocate(this%is_veg  (begp:endp)); this%is_veg  (:) = .false.
        allocate(this%is_bareground (begp:endp)); this%is_bareground (:) = .false.
        allocate(this%wt_ed      (begp:endp)); this%wt_ed      (:) = nan 
@@ -185,8 +194,9 @@ contains
     deallocate(this%itype   )
     deallocate(this%mxy     )
     deallocate(this%active  )
-    
-    if (use_ed) then
+    deallocate(this%is_fates)
+
+    if (use_fates) then
        deallocate(this%is_veg)
        deallocate(this%is_bareground)
        deallocate(this%wt_ed)

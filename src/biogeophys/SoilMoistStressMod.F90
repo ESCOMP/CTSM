@@ -210,6 +210,7 @@ contains
        do fc = 1, numf
           c = filter(fc)
           if(j>=jtop(c))then
+             
              !volume of liquid is no greater than effective void space
              vol_liq(c,j) = min(eff_porosity(c,j), h2osoi_liq(c,j)/(col%dz(c,j)*denh2o))
           endif

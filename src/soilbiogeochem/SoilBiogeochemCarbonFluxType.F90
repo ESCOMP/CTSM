@@ -11,7 +11,7 @@ module SoilBiogeochemCarbonFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_ed
+  use clm_varctl                         , only : use_fates
   
   ! 
   ! !PUBLIC TYPES:
@@ -133,7 +133,7 @@ contains
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
 
-     if ( use_ed ) then
+     if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
 
         allocate(this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full))
@@ -536,7 +536,7 @@ contains
 
     end do
 
-    if ( use_ed ) then
+    if ( use_fates ) then
 
        call hist_addfld_decomp(fname='FATES_c_to_litr_lab_c', units='gC/m^3/s',  type2d='levdcmp', &
                    avgflag='A', long_name='litter labile carbon flux from FATES to BGC', &
@@ -610,7 +610,7 @@ contains
     ! if  FATES is enabled, need to restart the variables used to transfer from FATES to CLM as they
     ! are persistent between daily FATES dynamics calls and half-hourly CLM timesteps
     !
-    if ( use_ed ) then
+    if ( use_fates ) then
        
        if (use_vertsoilc) then
           ptr2d => this%FATES_c_to_litr_lab_c_col
@@ -714,7 +714,7 @@ contains
        this%soilc_change_col(i)  = value_column
     end do
 
-    ! NOTE: do not zero the ED to BGC C flux variables since they need to persist from the daily ED timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
+    ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
     
   end subroutine SetValues
 

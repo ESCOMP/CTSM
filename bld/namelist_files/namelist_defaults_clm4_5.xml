@@ -38,8 +38,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Spinup state for BGC -->
 <spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm5_0" >2</spinup_state>
 <spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm4_5" >1</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_ed=".true." phys="clm5_0" >2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_ed=".true." phys="clm4_5" >1</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm5_0" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
 <spinup_state clm_accelerated_spinup="off"                               >0</spinup_state>
 
 <!-- In accelerated spinup mode reduce the amount of history output -->
@@ -48,7 +48,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS'</hist_fincl1>
-<hist_fincl1 clm_accelerated_spinup="on" use_ed=".true."
+<hist_fincl1 clm_accelerated_spinup="on" use_fates=".true."
 >'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
 >'TLAI','TWS'</hist_fincl1>
@@ -92,7 +92,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
-<suplnitro use_ed=".true." >NONE</suplnitro>
+<suplnitro use_fates=".true." >NONE</suplnitro>
 
 <!-- Albedo for glaciers -->
 <albice phys="clm5_0">0.50,0.30</albice>
@@ -118,8 +118,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_layerstruct phys="clm5_0">20SL_8.5m</soil_layerstruct>
 <soil_layerstruct phys="clm4_5">10SL_3.5m</soil_layerstruct>
 
+<use_bedrock phys="clm5_0" use_fates=".true.">.false.</use_bedrock>
 <use_bedrock phys="clm5_0">.true.</use_bedrock>
 <use_bedrock phys="clm4_5">.false.</use_bedrock>
+
 
 <!-- Rooting profile namelist defaults -->
 <rooting_profile_method_water  phys="clm5_0">1</rooting_profile_method_water>
@@ -308,10 +310,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c170413.nc</paramfile>
-<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c170317.nc</paramfile>
-<paramfile phys="clm4_5" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c170317.nc</paramfile>
-<paramfile phys="clm5_0" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c170317.nc</paramfile>
+<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c170413.nc</paramfile>
+<paramfile phys="clm4_5">lnd/clm2/paramdata/clm_params.c170317.nc</paramfile>
+
+<fates_paramfile>lnd/clm2/paramdata/fates_params.c170331.nc</fates_paramfile>
+
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -322,6 +325,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- LUNA model: Leaf Utilization of Nitrogen for Assimilation -->
 <use_luna phys="clm5_0"  >.true.</use_luna>
+<use_luna phys="clm5_0" use_fates=".true." >.false.</use_luna>
 <use_luna phys="clm4_5"  >.false.</use_luna>
 
 <!-- Flexible CN options -->
@@ -380,7 +384,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_dynroot phys="clm4_5">.false.</use_dynroot>
 <use_dynroot phys="clm5_0" bgc_mode="sp">.false.</use_dynroot>
 <use_dynroot phys="clm5_0" bgc_mode="cn">.false.</use_dynroot>
-<use_dynroot phys="clm5_0" bgc_mode="ed">.false.</use_dynroot>
+<use_dynroot phys="clm5_0" bgc_mode="fates">.false.</use_dynroot>
 <use_dynroot phys="clm5_0" bgc_mode="bgc">.false.</use_dynroot>
 
 <!-- Guardrail for ensuring leaf-Nitrogen doesn't go too small or negative on updates -->
@@ -392,8 +396,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Plant hydraulic stress -->
 <use_hydrstress phys="clm4_5"                 >.false.</use_hydrstress>
-<use_hydrstress phys="clm5_0" use_ed=".true." >.false.</use_hydrstress>
-<use_hydrstress phys="clm5_0" use_ed=".false.">.true.</use_hydrstress>
+<use_hydrstress phys="clm5_0" use_fates=".true." >.false.</use_hydrstress>
+<use_hydrstress phys="clm5_0" use_fates=".false.">.true.</use_hydrstress>
 <!--
 
      Initial condition files to use and or interpolate from
@@ -703,15 +707,15 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
 <leaf_mr_vcm phys="clm4_5" >0.015d00</leaf_mr_vcm>
 
 <!-- Initial Carbon stocks for BGC -->
-<initial_Cstocks phys="clm4_5" use_cn=".true."  use_ed=".false." use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm5_0" use_cn=".true."  use_ed=".false." use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm4_5" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm5_0" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
+<initial_Cstocks phys="clm4_5" use_cn=".true."  use_fates=".false." use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
+<initial_Cstocks phys="clm5_0" use_cn=".true."  use_fates=".false." use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
+<initial_Cstocks phys="clm4_5" use_cn=".false." use_fates=".true."  use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
+<initial_Cstocks phys="clm5_0" use_cn=".false." use_fates=".true."  use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
 
-<initial_Cstocks_depth phys="clm5_0" use_cn=".true."   use_ed=".false." use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm4_5" use_cn=".true."   use_ed=".false." use_century_decomp=".true." >0.3</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm5_0" use_cn=".false."  use_ed=".true."  use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm4_5" use_cn=".false."  use_ed=".true."  use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm5_0" use_cn=".true."   use_fates=".false." use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm4_5" use_cn=".true."   use_fates=".false." use_century_decomp=".true." >0.3</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm5_0" use_cn=".false."  use_fates=".true."  use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
+<initial_Cstocks_depth phys="clm4_5" use_cn=".false."  use_fates=".true."  use_century_decomp=".true." >0.3</initial_Cstocks_depth>
 
 <initial_vegC phys="clm5_0" use_cn=".true."  mm_nuptake_opt=".true." >100.d00</initial_vegC>
 <initial_vegC phys="clm4_5" use_cn=".true."  mm_nuptake_opt=".true." >20.d00</initial_vegC>
@@ -898,8 +902,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
 <urbantvmapalgo hgrid="5x5_amazon"          >nn</urbantvmapalgo>
 
 <!-- Create crop on a separate land-unit -->
-<create_crop_landunit     use_ed=".false.">.true.</create_crop_landunit>
-<create_crop_landunit     use_ed=".true." >.false.</create_crop_landunit>
+<create_crop_landunit     use_fates=".false.">.true.</create_crop_landunit>
+<create_crop_landunit     use_fates=".true." >.false.</create_crop_landunit>
 
 <!-- =========================================  -->
 <!-- Performance issues                         -->
@@ -2038,8 +2042,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
 <fin_use_fsat      use_cn=".true.">.false.</fin_use_fsat>
 <use_aereoxid_prog use_cn=".true.">.true.</use_aereoxid_prog>
 
-<fin_use_fsat      use_ed=".true.">.false.</fin_use_fsat>
-<use_aereoxid_prog use_ed=".true.">.true.</use_aereoxid_prog>
+<fin_use_fsat      use_fates=".true.">.false.</fin_use_fsat>
+<use_aereoxid_prog use_fates=".true.">.true.</use_aereoxid_prog>
 
 <!-- =========================================  -->
 <!-- Defaults for different BGC modes           -->
@@ -2060,11 +2064,11 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
 <use_lch4            bgc_mode="bgc" >.true.</use_lch4>
 <use_nitrif_denitrif bgc_mode="bgc" >.true.</use_nitrif_denitrif>
 
-<use_vertsoilc       bgc_mode="ed"  >.true.</use_vertsoilc>
-<use_century_decomp  bgc_mode="ed"  >.true.</use_century_decomp>
-<use_lch4            bgc_mode="ed"  >.false.</use_lch4>
-<use_nitrif_denitrif bgc_mode="ed"  >.false.</use_nitrif_denitrif>
+<use_vertsoilc       bgc_mode="fates"  >.true.</use_vertsoilc>
+<use_century_decomp  bgc_mode="fates"  >.true.</use_century_decomp>
+<use_lch4            bgc_mode="fates"  >.false.</use_lch4>
+<use_nitrif_denitrif bgc_mode="fates"  >.false.</use_nitrif_denitrif>
 
-<use_ed_spit_fire    use_ed=".true.">.true.</use_ed_spit_fire>
+<use_fates_spitfire    use_fates=".true.">.false.</use_fates_spitfire>
 
 </namelist_defaults>

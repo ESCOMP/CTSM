@@ -11,7 +11,7 @@ module clm_varpar
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, soil_layerstruct
-  use clm_varctl   , only: use_ed
+  use clm_varctl   , only: use_fates
 
   !
   ! !PUBLIC TYPES:
@@ -190,7 +190,7 @@ contains
        write(iulog, *)
     end if
 
-    if ( use_ed ) then
+    if ( use_fates ) then
        i_cwd = 0
        if (use_century_decomp) then
           ndecomp_pools = 6

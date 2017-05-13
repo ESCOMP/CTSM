@@ -16,7 +16,7 @@ module CanopyTemperatureMod
   use shr_const_mod        , only : SHR_CONST_PI
   use decompMod            , only : bounds_type
   use abortutils           , only : endrun
-  use clm_varctl           , only : iulog
+  use clm_varctl           , only : iulog, use_fates
   use PhotosynthesisMod    , only : Photosynthesis, PhotosynthesisTotal, Fractionation
   use SurfaceResistanceMod , only : calc_soilevap_resis
   use pftconMod            , only : pftcon
@@ -45,8 +45,9 @@ contains
   !------------------------------------------------------------------------------
   subroutine CanopyTemperature(bounds, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
+       clm_fates, &
        atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
-       waterstate_inst, waterflux_inst, energyflux_inst, temperature_inst)
+       waterstate_inst, waterflux_inst, energyflux_inst, temperature_inst )
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of leaf temperature
@@ -76,6 +77,9 @@ contains
     use column_varcon      , only : icol_road_imperv, icol_road_perv
     use landunit_varcon    , only : istice, istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
     use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
+    use clm_varctl         , only : use_fates
+    use CLMFatesInterfaceMod, only : hlm_fates_interface_type
+    
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -83,6 +87,7 @@ contains
     integer                , intent(in)    :: filter_nolakec(:)   ! column filter for non-lake points
     integer                , intent(in)    :: num_nolakep         ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(:)   ! patch filter for non-lake points
+    type(hlm_fates_interface_type), intent(inout)  :: clm_fates
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(canopystate_type) , intent(inout) :: canopystate_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
@@ -390,8 +395,25 @@ contains
 
       end do ! (end of columns loop)
 
-      ! Initialization
 
+      ! Set roughness and displacement
+      ! Note that FATES passes back z0m and displa at the end
+      ! of its dynamics call.  If and when crops are
+      ! enabled simultaneously with FATES, we will 
+      ! have to apply a filter here.
+      if(use_fates) then
+         call clm_fates%TransferZ0mDisp(bounds,frictionvel_inst,canopystate_inst)
+      end if
+
+      do fp = 1,num_nolakep
+         p = filter_nolakep(fp)
+         if( .not.(patch%is_fates(p))) then
+            z0m(p)    = z0mr(patch%itype(p)) * htop(p)
+            displa(p) = displar(patch%itype(p)) * htop(p)
+         end if
+      end do
+
+      ! Initialization
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
 
@@ -427,9 +449,6 @@ contains
          emv(p) = 1._r8-exp(-(elai(p)+esai(p))/avmuir)
 
          ! Roughness lengths over vegetation
-
-         z0m(p)    = z0mr(patch%itype(p)) * htop(p)
-         displa(p) = displar(patch%itype(p)) * htop(p)
 
          z0mv(p)   = z0m(p)
          z0hv(p)   = z0mv(p)
