@@ -1917,7 +1917,7 @@ contains
     real(r8) :: MO          ! Mobility index [-]
     real(r8) :: SI          ! Driftability index [-]
     real(r8) :: gamma_drift ! Scaling factor for wind drift time scale [-]
-    real(r8) :: tau         ! Effective time scale [s]
+    real(r8) :: tau_inverse ! Inverse of the effective time scale [1/s]
 
     real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
     real(r8), parameter :: rho_max = 350._r8     ! wind drift compaction / maximum density [kg/m3]
@@ -1940,8 +1940,8 @@ contains
           ! the pseudo-node for the sake of the following calculation
           zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
           gamma_drift = SI*exp(-zpseudo/0.1_r8)
-          tau = tau_ref / gamma_drift
-          compaction_rate = -max(0.0_r8, rho_max-bi)/tau
+          tau_inverse = gamma_drift / tau_ref
+          compaction_rate = -max(0.0_r8, rho_max-bi) * tau_inverse
           ! Further increase zpseudo to the bottom of the pseudo-node for
           ! the sake of calculations done on the underlying layer (i.e.,
           ! the next time through the j loop).
