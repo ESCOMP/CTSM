@@ -7,5 +7,6 @@
    <entry bugz="2458">FAIL ERP_P60x2_Lm36.f10_f10.ICRUCLM50BGCCROP.cheyenne_intel.clm-clm50cropIrrigMonth_interp COMPARE_base_rest</entry>
    <entry bugz="2458">FAIL PEM_Lm25.f10_f10.ICLM45BGCCROP.cheyenne_intel.clm-cropMonthOutput COMPARE_base_test</entry>
    <entry bugz="2461">FAIL NCK_Ld1.f10_f10.ICRUCLM45.cheyenne_intel.clm-default COMPARE_base_multiinst</entry>
+   <entry bugz="2461">FAIL NCK_Ld1.f10_f10.ICRUCLM45.yellowstone_intel.clm-default COMPARE_base_multiinst</entry>
    <entry bugz="2461">FAIL ERI_N2_Ld9.f19_g16.ICRUCLM45BGCCROP.cheyenne_intel.clm-default RUN</entry>
 </expectedFails> 

@@ -65,7 +65,7 @@ module glc2lndMod
      real(r8), pointer :: icemask_coupled_fluxes_grc (:)  => null()
 
      ! Where we should do runoff routing that is appropriate for having a dynamic icesheet underneath.
-     logical , pointer :: glc_dyn_runoff_routing_grc (:) => null()
+     real(r8), pointer :: glc_dyn_runoff_routing_grc (:) => null()
 
    contains
 
@@ -141,7 +141,7 @@ contains
     allocate(this%hflx_grc    (begg:endg,0:maxpatch_glcmec)) ;   this%hflx_grc    (:,:) = nan
     allocate(this%icemask_grc (begg:endg))                   ;   this%icemask_grc (:)   = nan
     allocate(this%icemask_coupled_fluxes_grc (begg:endg))    ;   this%icemask_coupled_fluxes_grc (:)   = nan
-    allocate(this%glc_dyn_runoff_routing_grc (begg:endg))    ;   this%glc_dyn_runoff_routing_grc (:)   = .false.
+    allocate(this%glc_dyn_runoff_routing_grc (begg:endg))    ;   this%glc_dyn_runoff_routing_grc (:)   = nan
 
   end subroutine InitAllocate
 
@@ -382,6 +382,7 @@ contains
     ! Update glc_dyn_runoff_routing field based on updated icemask_coupled_fluxes field
     !
     ! !USES:
+    use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
     class(glc2lnd_type), intent(inout) :: this
@@ -396,20 +397,60 @@ contains
 
     ! Wherever we have an icesheet that is computing and sending fluxes to the coupler -
     ! which particularly means it is computing a calving flux - we will use the
-    ! "glc_dyn_runoff_routing" scheme. In other places - including places where CISM is
-    ! not running at all, as well as places where CISM is running in diagnostic-only mode
-    ! and therefore is not sending a calving flux - we use the alternative
-    ! glc_dyn_runoff_routing=false scheme. This is needed to conserve water correctly in
-    ! the absence of a calving flux.
+    ! "glc_dyn_runoff_routing" scheme, with 0 < glc_dyn_runoff_routing <= 1. 
+    ! In these places, all or part of the snowcap flux goes to CISM rather than the runoff model.
+    ! In other places - including places where CISM is not running at all, as well as places 
+    ! where CISM is running in diagnostic-only mode and therefore is not sending a calving flux - 
+    ! we have glc_dyn_runoff_routing = 0, and the snowcap flux goes to the runoff model.
+    ! This is needed to conserve water correctly in the absence of a calving flux.
 
     do g = bounds%begg, bounds%endg
-       if (this%icemask_coupled_fluxes_grc(g) > 0._r8) then
-          this%glc_dyn_runoff_routing_grc(g) = .true.
+
+       ! Set glc_dyn_runoff_routing_grc(g) to a value in the range [0,1].
+       !
+       ! This value gives the grid cell fraction that is deemed to be coupled to the
+       ! dynamic ice sheet model. For this fraction of the grid cell, snowcap fluxes are
+       ! sent to the ice sheet model. The remainder of the grid cell sends snowcap fluxes
+       ! to the runoff model.
+       !
+       ! Note: The coupler (in prep_glc_mod.F90) assumes that the fraction coupled to the
+       !       dynamic ice sheet model is min(lfrac, Sg_icemask_l), where lfrac is the
+       !       "frac" component of fraction_lx, and Sg_icemask_l is obtained by mapping
+       !       Sg_icemask_g from the glc to the land grid. Here, ldomain%frac is
+       !       equivalent to lfrac, and this%icemask_grc is equivalent to Sg_icemask_l.
+       !       However, here we use icemask_coupled_fluxes_grc, so that we route all snow
+       !       capping to runoff in areas where the ice sheet is not generating calving
+       !       fluxes. In addition, here we need to divide by lfrac, because the coupler
+       !       multiplies by it later (and, for example, if lfrac = 0.1 and
+       !       icemask_coupled_fluxes = 1, we want all snow capping to go to the ice
+       !       sheet model, not to the runoff model).
+       !
+       ! Note: In regions where CLM overlaps the CISM domain, this%icemask_grc(g) typically
+       !       is nearly equal to ldomain%frac(g). So an alternative would be to simply set
+       !       glc_dyn_runoff_routing_grc(g) = icemask_grc(g).
+       !       The reason to cap glc_dyn_runoff_routing at lfrac is to avoid sending the
+       !       ice sheet model a greater mass of water (in the form of snowcap fluxes) 
+       !       than is allowed to fall on a CLM grid cell that is part ocean.
+
+       ! TODO(wjs, 2017-05-08) Ideally, we wouldn't have this duplication in logic
+       ! between the coupler and CLM. The best solution would be to have the coupler
+       ! itself do the partitioning of the snow capping flux between the ice sheet model
+       ! and the runoff model. A next-best solution would be to have the coupler send a
+       ! field to CLM telling it what fraction of snow capping should go to the runoff
+       ! model in each grid cell.
+
+       if (ldomain%frac(g) == 0._r8) then
+          ! Avoid divide by 0; note that, in this case, the amount going to runoff isn't
+          ! important for system-wide conservation, so we could really choose anything we
+          ! want.
+          this%glc_dyn_runoff_routing_grc(g) = this%icemask_coupled_fluxes_grc(g)
        else
-          this%glc_dyn_runoff_routing_grc(g) = .false.
+          this%glc_dyn_runoff_routing_grc(g) = &
+               min(ldomain%frac(g), this%icemask_coupled_fluxes_grc(g)) / &
+               ldomain%frac(g)
        end if
 
-       if (this%glc_dyn_runoff_routing_grc(g)) then
+       if (this%glc_dyn_runoff_routing_grc(g) > 0.0_r8) then
 
           ! Ensure that glc_dyn_runoff_routing is a subset of melt_replaced_by_ice. This
           ! is needed because glacial melt is only sent to the runoff stream in the region

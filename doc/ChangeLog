@@ -1,4 +1,135 @@
 ===============================================================
+Tag name:  clm4_5_16_r240
+Originator(s):  sacks (Bill Sacks)
+Date: Mon May 15 14:48:22 MDT 2017
+One-line Summary: Make glc_dyn_runoff_routing real-valued
+
+Purpose of changes
+------------------
+
+The glc_dyn_runoff_routing variable tracks which CLM grid cells overlap
+fully-coupled glc (CISM) grid cells, and which do not: In those that do not, CLM
+needs to send the snow capping flux directly to runoff. Previously, this value
+was a logical. However, we (Bill Lipscomb and Bill Sacks) realized that this
+really needs to be real-valued - having a value between 0 and 1 where a CLM cell
+partially overlaps the CISM domain. This is needed for complete conservation
+when we are running with a fully-coupled (two-way-coupled) glc component.
+
+This changes answers for cases with two-way-coupled CISM, but does NOT change
+answers for the typical one-way-coupled (%NOEVOLVE) case.
+
+Main changes are from Bill Lipscomb.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- There is some duplicate logic between CLM and the coupler in determining the
+  fraction of the CLM grid cell that overlaps with the active glc
+  domain. Ideally, we'd move all of the relevant logic into the coupler and
+  avoid needing it in CLM. See the TODO note in glc2lndMod.F90
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    cheyenne_intel - ok
+    hobart_nag --- ok
+    hobart_pgi --- not run
+    hobart_intel - ok
+
+    ok means tests pass, baselines fail as expected
+
+CLM tag used for the baseline comparisons: clm4_5_16_r239
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: cases with CISM two-way coupled (i.e., without %NOEVOLVE)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff, but only changes answers around the margin of
+      Greenland, so expected to be same climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/main/test/topo_test/test_topo.pf
+M       components/clm/src/main/glc2lndMod.F90
+M       components/clm/src/biogeophys/GlacierSurfaceMassBalanceMod.F90
+
+========= Add a test to the xfail list which fails sporadically due to bug 2461
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r239
 Originator(s):  sacks (Bill Sacks)
 Date: Sat May 13 20:35:52 MDT 2017

@@ -19,6 +19,7 @@ module test_topo
   use unittestFilterBuilderMod
   use ColumnType, only : col
   use column_varcon, only : col_itype_to_icemec_class
+  use domainMod, only : ldomain
 
   implicit none
 
@@ -26,7 +27,8 @@ module test_topo
   type, extends(TestCase) :: TestTopo
      logical :: topo_glc_mec_allocated = .false.
      logical :: glc2lnd_allocated = .false.
-
+     logical :: ldomain_frac_allocated = .false.
+     
      ! These are in TestTopo so they can be cleaned
      type(glc2lnd_type) :: glc2lnd_inst
      type(topo_type) :: topo
@@ -57,6 +59,9 @@ contains
     class(TestTopo), intent(inout) :: this
 
     call unittest_subgrid_teardown()
+    if (this%ldomain_frac_allocated) then
+       deallocate(ldomain%frac)
+    end if
     call teardown_elevation_classes()
     call this%topo%Clean()
     if (this%topo_glc_mec_allocated) then
@@ -129,6 +134,10 @@ contains
 
     real(r8), allocatable :: atm_topo(:)
     type(filter_col_type) :: filter_icemecc
+
+    allocate(ldomain%frac(bounds%begg:bounds%endg))
+    this%ldomain_frac_allocated = .true.
+    ldomain%frac(bounds%begg:bounds%endg) = 1._r8
 
     call this%init_glc2lnd(glc_behavior, icemask_grc)
     if (present(glc_topo)) then

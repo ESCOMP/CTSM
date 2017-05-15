@@ -314,18 +314,18 @@ contains
 
        qflx_glcice(c) = qflx_glcice_frz(c) - qflx_glcice_melt(c)
 
-       ! For glc_dyn_runoff_routing = T:
-       ! (1) Excess snow (from snow capping) has been incorporated in qflx_glcice_frz.
-       !     This flux must be included here to complete the water balance, because it is
-       !     a sink of water as far as CLM is concerned (this water will now be owned by
-       !     CISM).
+       ! For glc_dyn_runoff_routing > 0::
+       ! (1) All or part of the excess snow (from snow capping) has been incorporated in
+       !     qflx_glcice_frz.  This flux must be included here to complete the water
+       !     balance, because it is a sink of water as far as CLM is concerned (this water
+       !     will now be owned by CISM).
        ! (2) Meltwater from ice (qflx_glcice_melt) is allowed to run off and is included
        !     in qflx_qrgwl, but the water content of the ice column has not changed
        !     because an equivalent ice mass has been "borrowed" from the base of the
        !     column. So this borrowing is a source of water as far as CLM is concerned.
-       !
-       ! For glc_dyn_runoff_routing = F: Point (2) is the same as for the
-       ! glc_dyn_runoff_routing = T case: there is a source of water equal to
+       !   
+       ! For glc_dyn_runoff_routing = 0: Point (2) is the same as for the
+       ! glc_dyn_runoff_routing > 0 case: there is a source of water equal to
        ! qflx_glcice_melt. However, in this case, the sink of water is also equal to
        ! qflx_glcice_melt: We have simply replaced some liquid water with an equal amount
        ! of solid ice. Another way to think about this is:
@@ -338,9 +338,7 @@ contains
        !     because an equivalent ice mass has been "borrowed" from the base of the
        !     column. So this borrowing is a source of water as far as CLM is concerned.
        ! These two corrections cancel out, so nothing is done here.
-       if (glc_dyn_runoff_routing(g)) then
-          qflx_glcice_dyn_water_flux(c) = qflx_glcice_melt(c) - qflx_glcice_frz(c)
-       end if
+       qflx_glcice_dyn_water_flux(c) = glc_dyn_runoff_routing(g) * (qflx_glcice_melt(c) - qflx_glcice_frz(c))
     end do
 
     end associate
@@ -380,7 +378,7 @@ contains
     associate( &
          qflx_glcice_frz        => this%qflx_glcice_frz_col                   , & ! Input: [real(r8) (:)] ice growth (positive definite) (mm H2O/s)
          qflx_glcice_melt       => this%qflx_glcice_melt_col                  , & ! Input: [real(r8) (:)] ice melt (positive definite) (mm H2O/s)
-         glc_dyn_runoff_routing =>    glc2lnd_inst%glc_dyn_runoff_routing_grc   & ! Input: [real(r8) (:)]  whether we're doing runoff routing appropriate for having a dynamic icesheet
+         glc_dyn_runoff_routing =>    glc2lnd_inst%glc_dyn_runoff_routing_grc   & ! Input: [real(r8) (:)]  gridcell fraction coupled to dynamic ice sheet
          )
 
     ! Note that, because the following code only operates over the do_smb filter, that
@@ -394,51 +392,64 @@ contains
 
        ! Melt is only generated for glacier columns. But it doesn't hurt to do this for
        ! all columns in the do_smb filter: this melt term will be 0 for other columns.
+       ! Note: Ice melt is added to the runoff whether or not the column is coupled
+       ! to a dynamic glacier model.
+
        qflx_qrgwl(c) = qflx_qrgwl(c) + qflx_glcice_melt(c)
 
-       if (glc_dyn_runoff_routing(g)) then
-          ! In places where we are coupled to a dynamic glacier model, the glacier model
-          ! handles the fate of capped snow, so we do not want it sent to runoff.
+       ! For the part of the column that is coupled to a dynamic glacier model,
+       ! the glacier model handles the fate of capped snow, so we do not want it sent to runoff.
+       qflx_ice_runoff_snwcp(c) = qflx_ice_runoff_snwcp(c) - glc_dyn_runoff_routing(g)*qflx_glcice_frz(c)
 
-          qflx_ice_runoff_snwcp(c) = qflx_ice_runoff_snwcp(c) - qflx_glcice_frz(c)
-       else
-          ! In places where we are not coupled to a dynamic glacier model, CLM sends all
-          ! of the snow capping to the ocean as an ice runoff term. (This is essentially a
-          ! crude parameterization of calving, assuming steady state - i.e., all ice gain
-          ! is balanced by an ice loss.) But each unit of melt that happens is an
-          ! indication that 1 unit of the ice shouldn't have made it to the ocean - but
-          ! instead melted before it got there. So we need to correct for that by removing
-          ! 1 unit of ice runoff for each unit of melt. Note that, for a given point in
-          ! space & time, this can result in negative ice runoff. However, we expect that,
-          ! in a temporally and spatially-integrated sense (if we're near equilibrium),
-          ! this will just serve to decrease the too-high positive ice runoff.
-          !
-          ! Another way to think about this is: ice melt removes mass; the snow capping
-          ! flux also removes mass. If both the accumulation and melt remove mass, there
-          ! is a double-counting. So we need to correct that by: for each unit of ice melt
-          ! (resulting in 1 unit of liquid runoff), remove 1 unit of ice runoff. (This is
-          ! not an issue in the case of glc_dyn_runoff_routing=T, because then the snow
-          ! capping mass is retained in the LND-GLC coupled system.)
-          !
-          ! The alternative of simply not adding ice melt to the runoff stream if
-          ! glc_dyn_runoff_routing=F conserves mass, but fails to conserve energy, for a
-          ! similar reason: Ice melt in CLM removes energy; also, the ocean's melting of
-          ! the snow capping flux removes energy. If both the accumulation and melting
-          ! remove energy, there is a double-counting.
-          !
-          ! Yet another way to think about this is: When ice melted, we let the liquid run
-          ! off, and replaced it with new ice from below. But that new ice needed to come
-          ! from somewhere to keep the system in water balance. We "request" the new ice
-          ! from the ocean by generating a negataive ice runoff equivalent to the amount
-          ! we have melted (i.e., equivalent to the amount of new ice that we created from
-          ! below).
+       ! In places where we are not coupled to a dynamic glacier model, CLM sends all of
+       ! the snow capping to the ocean as an ice runoff term. (This is essentially a crude
+       ! parameterization of calving, assuming steady state - i.e., all ice gain is
+       ! balanced by an ice loss.) But each unit of melt that happens is an indication
+       ! that 1 unit of the ice shouldn't have made it to the ocean - but instead melted
+       ! before it got there. So we need to correct for that by removing 1 unit of ice
+       ! runoff for each unit of melt. Note that, for a given point in space & time, this
+       ! can result in negative ice runoff. However, we expect that, in a temporally and
+       ! spatially-integrated sense (if we're near equilibrium), this will just serve to
+       ! decrease the too-high positive ice runoff.
+       !
+       ! Another way to think about this is: ice melt removes mass; the snow capping flux
+       ! also removes mass. If both the accumulation and melt remove mass, there is a
+       ! double-counting. So we need to correct that by: for each unit of ice melt
+       ! (resulting in 1 unit of liquid runoff), remove 1 unit of ice runoff. (This is not
+       ! an issue for parts of the column coupled to the dynamic glacier model, because
+       ! then the snow capping mass is retained in the LND-GLC coupled system.)
+       !
+       ! The alternative of simply not adding ice melt to the runoff stream where
+       ! glc_dyn_runoff_routing = 0 conserves mass, but fails to conserve energy, for a
+       ! similar reason: Ice melt in CLM removes energy; also, the ocean's melting of the
+       ! snow capping flux removes energy. If both the accumulation and melting remove
+       ! energy, there is a double-counting.
+       !
+       ! Yet another way to think about this is: When ice melted, we let the liquid run
+       ! off, and replaced it with new ice from below. But that new ice needed to come
+       ! from somewhere to keep the system in water balance. We "request" the new ice from
+       ! the ocean by generating a negataive ice runoff equivalent to the amount we have
+       ! melted (i.e., equivalent to the amount of new ice that we created from below).
+       
+       ! As above: Melt is only generated for glacier columns. But it doesn't hurt to do
+       ! this for all columns in the do_smb filter: this melt term will be 0 for other
+       ! columns.
+       
+       qflx_ice_runoff_snwcp(c) = qflx_ice_runoff_snwcp(c) - (1.0_r8 - glc_dyn_runoff_routing(g)) * qflx_glcice_melt(c)
 
-          ! As above: Melt is only generated for glacier columns. But it doesn't hurt to
-          ! do this for all columns in the do_smb filter: this melt term will be 0 for
-          ! other columns.
+       ! Recall that glc_dyn_runoff_routing = min(lfrac, Sg_icemask_coupled_fluxes_l) / lfrac.
+       !
+       ! Consider a cell with lfrac = 0.8 and Sg_icemask_coupled_fluxes_l = 0.4. (For
+       ! instance, the cell might have half its land coverage in Greenland and the other
+       ! half in Ellemere.)  Given qflx_ice_runoff_snwcp(c) = 1 m/yr, half the flux (0.5
+       ! m/yr) will be sent to the runoff model, where it will be multiplied by lfrac to
+       ! give a net flux of 0.4 m/yr times the cell area.
+       !
+       ! The full SMB of 1 m/yr will be sent to the coupler's prep_glc_mod, but it will be
+       ! weighted by 0.4 when integrating over the whole ice sheet. So a net flux of 0.4
+       ! m/yr will also be applied to the ice sheet model.  The total flux of 0.8 m/yr,
+       ! split evenly between runoff and ice sheet, is what we want.
 
-          qflx_ice_runoff_snwcp(c) = qflx_ice_runoff_snwcp(c) - qflx_glcice_melt(c)
-       end if
     end do
 
     end associate
