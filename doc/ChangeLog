@@ -1,4 +1,175 @@
 ===============================================================
+Tag name:  clm4_5_16_r241
+Originator(s):  sacks (Bill Sacks)
+Date: Tue May 16 20:43:43 MDT 2017
+One-line Summary: Fix ch4 subtle dependence on processor count
+
+Purpose of changes
+------------------
+
+When we moved to using interpolated initial conditions in most cases, long tests
+that change processor counts (ERP, PEM) began to fail (bug 2458). I tracked this
+problem down to annsum_npp, annsum_counter, and specifically bug 1597.
+
+I found that, in both the original finidat and finidat_interp_dest, we have:
+
+- For coltype = 1, counter can be 0, 3600 or 5400
+
+- For coltype = 200-something (crop), counter is always 5400
+
+- For other coltypes, counter = 0 (but these shouldn't matter)
+
+My best guess is that there is some interaction between (1) the history of an
+initial conditions file, and (2) dynamic landunits, which causes annsum_counter
+to differ by column. Specifically, with (1): I think that problems arise when an
+initial conditions file has (at some point in its history) arisen from a run
+that didn't run for a complete year; e.g., this can happen in the course of
+making an interp'ed initial conditions file - for which we typically run for one
+or a few time steps. This can lead to a misalignment of the resetting of
+annsum_counter relative to when dynamic landunits kick in, and thus the counter
+can differ for different columns.
+
+This tag fixes the problem by making each column dependent on its own count,
+rather than using the count from the first column on that MPI task.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 1597: awkward conditionals to determine end of year in CN AnnualUpdate
+- 2458: ERP clm5 restart failure in clm4_5_16_r237
+
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+- https://github.com/NCAR/CLM/issues/7 : CN annsum_counter can trigger mid-year,
+  and at different times for different columns
+
+  Decision in talking with Erik and Keith was that we would not try to resolve
+  this right now - it seems that it can cause a bit of confusion, but no
+  scientific problems as far as we can tell.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik; conceptually reviewed by Keith
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    cheyenne_intel - pending; I'll check them post-tag and open an issue if any fail
+    hobart_nag --- ok
+    hobart_pgi --- not run
+    hobart_intel - ok
+
+    ok means tests pass, some baselines fail as expected
+
+CLM tag used for the baseline comparisons: clm4_5_16_r240
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Many configurations, when run for at least a year
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff; expected to be same climate, but not investigated carefully.
+
+      Answer changes can appear whenever we have an initial conditions file
+      where different columns have different values of the annsum_counter
+      restart field. This is the case for present-day restart files, as well as
+      at least one year-1850 restart file
+      (clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c170308.nc).
+
+      The impact of this problem is expected to be small, at least if the
+      differences in annsum_counter values are small (which they are for the two
+      initial conditions files I have checked, and I expect this is the case for
+      others, too): In this case, the impact is that some annually-accumulated
+      fields reach their end-of-year mark a few time steps too early or late.
+
+      However, I have not investigated the impact of this bug fix carefully.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/biogeochem/CNAnnualUpdateMod.F90
+
+========= New function to create a sub-filter based on an existing filter and a
+          column-level logical array
+M       components/clm/src/main/filterColMod.F90
+M       components/clm/src/main/test/filter_test/test_filter_col.pf
+
+========= Remove no-longer-failing tests
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r240
 Originator(s):  sacks (Bill Sacks)
 Date: Mon May 15 14:48:22 MDT 2017
