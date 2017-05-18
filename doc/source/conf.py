@@ -162,3 +162,10 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+numfig = True
+numfig_format = {'figure': 'Figure %s',
+                 'table': 'Table %s',
+                 'code-block': 'Code %s',
+                 'section': '%s',
+                }

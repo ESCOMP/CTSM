@@ -94,6 +94,8 @@ from the atmospheric specific humidity :math:`q_{atm}`
 
    e_{atm} =\frac{q_{atm} P_{atm} }{0.622+0.378q_{atm} } .
 
+.. _Monin-Obukhov Similarity Theory:
+
 Monin-Obukhov Similarity Theory
 -----------------------------------
 
@@ -430,7 +432,7 @@ calculate the surface momentum, sensible heat, and water vapor flux
 using atmospheric and surface values for :math:`\left|{\it u}\right|`,
 :math:`\theta` , and :math:`q` except that :math:`L` depends on
 :math:`u_{*}` , :math:`\theta _{*}` , and :math:`q_{*}` . However, the
-bulk CityplaceRichardson number
+bulk Richardson number
 
 .. math::
    :label: ZEqnNum750428} 
@@ -553,6 +555,8 @@ Chapter 24)
    :label: 5.61 
 
    u_{10m} =\left\{\begin{array}{l} {V_{a} \qquad z_{atm,\, m} \le 10} \\ {V_{a} -\frac{u_{*} }{k} \left[\ln \left(\frac{z_{atm,\, m} -d}{10+z_{0m} } \right)-\psi _{m} \left(\frac{z_{atm,\, m} -d}{L} \right)+\psi _{m} \left(\frac{10+z_{0m} }{L} \right)\right]\qquad z_{atm,\, m} >10} \end{array}\right\}
+
+.. _Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces:
 
 Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces
 --------------------------------------------------------------
@@ -813,6 +817,8 @@ determined analytically, are ignored for
 :math:`\frac{\partial H_{g} }{\partial T_{g} }`  and
 :math:`\frac{\partial E_{g} }{\partial T_{g} }` .
 
+.. _Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces:
+
 Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces
 --------------------------------------------------------------------------
 
@@ -827,6 +833,8 @@ sensible heat and water vapor fluxes from vegetation simultaneously
 using the ground temperature from the previous time step. In section
 5.3.1, the equations used in the iteration scheme are derived. Details
 on the numerical scheme are provided in section 5.3.2.
+
+.. _Theory:
 
 Theory
 ^^^^^^^^^^^^
@@ -1302,6 +1310,8 @@ Table 5.1. Plant functional type aerodynamic parameters
 | Soybean I                        | 0.120              | 0.68             | 0.04                    |
 +----------------------------------+--------------------+------------------+-------------------------+
 
+.. _Numerical Implementation:
+
 Numerical Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1529,6 +1539,8 @@ flux later.
 #. 2-m height air temperature :math:`T_{2m}` , specific humidity
    :math:`q_{2m}` , relative humidity :math:`RH_{2m}` \ (eqs. , , )
 
+.. _Update of Ground Sensible and Latent Heat Fluxes:
+
 Update of Ground Sensible and Latent Heat Fluxes
 ----------------------------------------------------
 
@@ -1666,6 +1678,8 @@ The system balances energy as
    :label: 5.154) 
 
    \overrightarrow{S}_{g} +\overrightarrow{S}_{v} +L_{atm} \, \downarrow -L\, \uparrow -H_{v} -H_{g} -\lambda _{vap} E_{v} -\lambda E_{g} -G=0.
+
+.. _Saturation Vapor Pressure:
 
 Saturation Vapor Pressure
 -----------------------------
