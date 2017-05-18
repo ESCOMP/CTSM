@@ -50,6 +50,8 @@ snow, and surface water layers from the overlying atmosphere (section
 temperature profile is calculated first without phase change and then
 readjusted for phase change (section 6.2).
 
+.. _Numerical Solution:
+
 Numerical Solution
 ----------------------
 
@@ -527,8 +529,12 @@ are
 
    r_{h2osfc} =T_{h2osfc}^{n} +\frac{\Delta t}{c_{i} \Delta z_{i} } \left[h_{h2osfc} ^{n} -\frac{\partial h}{\partial T_{} } T_{h2osfc}^{n} +\alpha \frac{\lambda _{h2osfc} }{z_{1} -z_{h2osfc} } \left(T_{1} -T_{h2osfc} \right)\right]_{}
 
+.. _Phase Change:
+
 Phase Change
 ----------------
+
+.. _Soil and Snow Layers:
 
 Soil and Snow Layers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -718,6 +724,8 @@ The solution for snow/soil temperatures conserves energy as
 
 where :math:`G` is the ground heat flux (section 5.4).
 
+.. _Surface Water:
+
 Surface Water
 ^^^^^^^^^^^^^^^^^^^
 
@@ -755,6 +763,8 @@ The snow depth is adjusted to account for the additional ice mass
 If :math:`H_{m}` \ is greater than :math:`W_{sfc}` , the excess heat
 :math:`\frac{L_{f} \left(H_{m} -W_{sfc} \right)}{\Delta t}`  is used to
 cool the snow layer.
+
+.. _Soil and Snow Thermal Properties:
 
 Soil and Snow Thermal Properties
 ------------------------------------

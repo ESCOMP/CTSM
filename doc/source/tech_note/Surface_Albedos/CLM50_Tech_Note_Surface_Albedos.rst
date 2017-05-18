@@ -3,6 +3,8 @@
 Surface Albedos
 ==================
 
+.. _Canopy Radiative Transfer:
+
 Canopy Radiative Transfer
 -----------------------------
 
@@ -484,6 +486,8 @@ Table 3.2. Intercepted snow optical properties
 | :math:`\beta _{0}^{sno}`    | 0.5   | 0.5   |
 +-----------------------------+-------+-------+
 
+.. _Ground Albedos:
+
 Ground Albedos
 ------------------
 
@@ -580,6 +584,8 @@ Table 3.3. Dry and saturated soil albedos
 +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
 | 10            | 0.25   | 0.39   | 0.14   | 0.28   | 20            | 0.08   | 0.16   | 0.04   | 0.08   |
 +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+
+.. _Snow Albedo:
 
 Snow Albedo
 ^^^^^^^^^^^^^^^^^
@@ -739,6 +745,8 @@ vegetation canopy) have been calculated for the current time step
 produce solar absorption (W m\ :sup:`-2`) in each snow layer and
 the underlying ground.
 
+.. _Snowpack Optical Properties:
+
 Snowpack Optical Properties
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -859,6 +867,8 @@ Table 3.7. Asymmetry scattering parameters used for snowpack impurities and ice.
 +----------------------------------------------------------------+----------+----------+----------+----------+----------+
 | Ice (:math:`r _{e}` = 1500\ :math:`\mu`\ m)                    | 0.89     | 0.90     | 0.90     | 0.92     | 0.97     |
 +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+
+.. _Snow Aging:
 
 Snow Aging
 ^^^^^^^^^^^^^^^^
