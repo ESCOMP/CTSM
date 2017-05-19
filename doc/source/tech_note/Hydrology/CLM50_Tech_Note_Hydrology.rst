@@ -11,7 +11,7 @@ changes in canopy water :math:`\Delta W_{can}` , surface water
 :math:`\Delta W_{sfc}` , snow water :math:`\Delta W_{sno}` , soil water
 :math:`\Delta w_{liq,\, i}` , and soil ice :math:`\Delta w_{ice,\, i}` ,
 and water in the unconfined aquifer :math:`\Delta W_{a}`  (all in kg
-m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (Figure 7.1).
+m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (:numref:`Hydrologic processes figure`).
 
 The total water balance of the system is
 
@@ -22,22 +22,24 @@ The total water balance of the system is
 
 where :math:`q_{rain}`  is the liquid part of precipitation,
 :math:`q_{sno}`  is the solid part of precipitation, :math:`E_{v}`  is
-ET from vegetation (Chapter 5), :math:`E_{g}`  is ground evaporation
-(Chapter 5), :math:`q_{over}`  is surface runoff (section 7.3),
-:math:`q_{h2osfc}`  is runoff from surface water storage (section 7.3),
+ET from vegetation (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), :math:`E_{g}`  is ground evaporation
+(Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), :math:`q_{over}`  is surface runoff (section :numref:`Surface Runoff`),
+:math:`q_{h2osfc}`  is runoff from surface water storage (section :numref:`Surface Runoff`),
 :math:`q_{drai}`  is sub-surface drainage (section 7.6),
 :math:`q_{rgwl}`  and :math:`q_{snwcp,ice}`  are liquid and solid runoff
 from glaciers, wetlands, and lakes, and runoff from other surface types
-due to snow capping (section 7.7) (all in kg m\ :sup:`-2`
+due to snow capping (section :numref:`Runoff from glaciers and snow-capped surfaces`) (all in kg m\ :sup:`-2`
 s\ :sup:`-1`), :math:`N_{levsoi}`  is the number of soil layers
 (note that hydrology calculations are only done over soil layers 1 to
 :math:`N_{levsoi}` ; ground levels :math:`N_{levsoi} +1`\ to
-:math:`N_{levgrnd}`  are currently hydrologically inactive; Lawrence et
-al. 2008) and :math:`\Delta t` is the time step (s).
+:math:`N_{levgrnd}`  are currently hydrologically inactive; :ref:`(Lawrence et
+al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
 
-Figure 7.1. Hydrologic processes represented in CLM.
+.. _Hydrologic processes figure:
 
-.. image:: image1.png
+.. Figure:: image1.png
+
+ Hydrologic processes represented in CLM.
 
 .. _Canopy Water:
 
@@ -57,7 +59,7 @@ liquid and solid phases
 
 where :math:`L` and :math:`S` are the exposed leaf and stem area index,
 respectively (section 2.1.4), and :math:`\alpha =0.25` scales
-interception from point to grid cell (Lawrence et al. 2007). Throughfall
+interception from point to grid cell (:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`). Throughfall
 (kg m\ :sup:`-2` s\ :sup:`-1`), however, is divided into
 liquid and solid phases reaching the ground (soil or snow surface) as
 
@@ -101,8 +103,8 @@ amount of water the canopy can hold
    W_{can,\, \max } =p\left(L+S\right).
 
 The maximum storage of solid water is assumed to be the same as that of
-liquid water, :math:`p=0.1` kg m\ :sup:`-2` (Dickinson et al.
-1993). The canopy water is updated as
+liquid water, :math:`p=0.1` kg m\ :sup:`-2` (:ref:`Dickinson et al.
+1993 <Dickinsonetal1993>`). The canopy water is updated as
 
 .. math::
    :label: 7.9) 
@@ -110,7 +112,7 @@ liquid water, :math:`p=0.1` kg m\ :sup:`-2` (Dickinson et al.
    W_{can}^{n+1} =W_{can}^{n} +q_{intr} \Delta t-\left(q_{drip,\, liq} +q_{drip,\, ice} \right)\Delta t-E_{v}^{w} \Delta t\ge 0.
 
 where :math:`E_{v}^{w}`  is the flux of water vapor from stem and leaf
-surfaces (Chapter 5). The total rate of liquid and solid precipitation
+surfaces (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The total rate of liquid and solid precipitation
 reaching the ground is then
 
 .. math::
@@ -125,13 +127,15 @@ reaching the ground is then
 
 Solid precipitation reaching the soil or snow surface,
 :math:`q_{grnd,\, ice} \Delta t`, is added immediately to the snow pack
-(section 7.2). The liquid part, :math:`q_{grnd,\, liq} \Delta t` is
-added after surface fluxes (Chapter 5) and snow/soil temperatures
-(Chapter 6) have been determined.
+(Chapter :numref:`rst_Snow Hydrology`). The liquid part, 
+:math:`q_{grnd,\, liq} \Delta t` is added after surface fluxes 
+(Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) 
+and snow/soil temperatures (Chapter :numref:`rst_Soil and Snow Temperatures`) 
+have been determined.
 
 The wetted fraction of the canopy (stems plus leaves), which is required
-for the surface albedo (section 3.1) and surface flux (Chapter 5)
-calculations is (Dickinson et al. 1993)
+for the surface albedo (section :numref:`Canopy Radiative Transfer`) and surface flux (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`)
+calculations is (:ref:`Dickinson et al.1993 <Dickinsonetal1993>`)
 
 .. math::
    :label: 7.12) 
@@ -161,8 +165,9 @@ infiltration into the soil.
 Surface Runoff
 ^^^^^^^^^^^^^^^^^^^^
 
-The simple TOPMODEL-based (Beven and Kirkby 1979) runoff model (SIMTOP)
-described by Niu et al. (2005) is implemented to parameterize runoff. A
+The simple TOPMODEL-based (:ref:`Beven and Kirkby 1979 <BevenKirkby1979>`) 
+runoff model (SIMTOP) described by :ref:`Niu et al. (2005) <Niuetal2005>` 
+is implemented to parameterize runoff. A
 key concept underlying this approach is that of fractional saturated
 area :math:`f_{sat}` , which is determined by the topographic
 characteristics and soil moisture state of a grid cell. The saturated
@@ -192,17 +197,18 @@ cell whose topographic index is larger than or equal to the grid cell
 mean topographic index. It should be calculated explicitly from the CDF
 at each grid cell at the resolution that the model is run. However,
 because this is a computationally intensive task for global
-applications, :math:`f_{\max }`  is calculated once at
-0.125\ :sup:`o` resolution using the 1-km compound topographic
-indices (CTIs) based on the HYDRO1K dataset (Verdin and Greenlee 1996)
-from USGS following the algorithm in Niu et al. (2005) and then
-area-averaged to the desired model resolution (section 2.2.3). Pixels
+applications, :math:`f_{\max }`  is calculated once at 0.125\ :sup:`o` 
+resolution using the 1-km compound topographic indices (CTIs) based on 
+the HYDRO1K dataset (:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`)
+from USGS following the algorithm in :ref:`Niu et al. (2005) <Niuetal2005>` 
+and then area-averaged to the desired model resolution (section 
+:numref:`Surface Data`). Pixels
 with CTIs exceeding the 95 percentile threshold in each
 0.125\ :sup:`o` grid cell are excluded from the calculation to
 eliminate biased estimation of statistics due to large CTI values at
 pixels on stream networks. For grid cells over regions without CTIs such
 as Australia, the global mean :math:`f_{\max }`  is used to fill the
-gaps. See Li et al. (2013b) for additional details. The decay factor
+gaps. See :ref:`Li et al. (2013b) <Lietal2013b>` for additional details. The decay factor
 :math:`f_{over}`  for global simulations was determined through
 sensitivity analysis and comparison with observed runoff to be 0.5
 m\ :sup:`-1`.
@@ -216,7 +222,8 @@ A surface water store has been added to the model to represent wetlands
 and small, sub-grid scale water bodies. As a result, the wetland land
 unit has been removed. The state variables for surface water are the
 mass of water :math:`W_{sfc}`  (kg m\ :sup:`-2`) and temperature
-:math:`T_{h2osfc}`  (Chapter 6). Surface water storage and outflow are
+:math:`T_{h2osfc}`  (Chapter :numref:`rst_Soil and Snow Temperatures`). 
+Surface water storage and outflow are
 functions of fine spatial scale elevation variations called
 microtopography. The microtopography is assumed to be distributed
 normally around the grid cell mean elevation. Given the standard
@@ -364,9 +371,10 @@ Soil Water
 Soil water is predicted from a multi-layer model, in which the vertical
 soil moisture transport is governed by infiltration, surface and
 sub-surface runoff, gradient diffusion, gravity, canopy transpiration
-through root extraction, and interactions with groundwater (Figure 7.1).
-The following derivation generally follows that of Z.-L. Yang (1998,
-unpublished manuscript) with modifications by Zeng and Decker (2009).
+through root extraction, and interactions with groundwater 
+(:numref:`Hydrologic processes figure`).
+The following derivation generally follows that of :ref:`Z.-L. Yang (1998,
+unpublished manuscript) <Yang1998>` with modifications by Zeng and Decker (2009).
 
 For one-dimensional vertical water flow in soils, the conservation of
 mass is stated as
@@ -482,11 +490,13 @@ vary with volumetric soil water :math:`\theta _{i}`  and soil texture.
 As with the soil thermal properties (section 6.3) the hydraulic
 properties of the soil are assumed to be a weighted combination of the
 mineral properties, which are determined according to sand and clay
-contents based on work by Clapp and Hornberger (1978) and Cosby et al.
-(1984), and organic properties of the soil (Lawrence and Slater 2008).
+contents based on work by :ref:`Clapp and Hornberger (1978) 
+<ClappHornberger1978>` and :ref:`Cosby et al. (1984) <Cosbyetal1984>`, 
+and organic properties of the soil 
+(:ref:`Lawrence and Slater 2008 <LawrenceSlater2008>`).
 
 The hydraulic conductivity is defined at the depth of the interface of
-two adjacent layers :math:`z_{h,\, i}`  (Figure 7.3) and is a function
+two adjacent layers :math:`z_{h,\, i}`  (:numref:`Water flux schematic figure`) and is a function
 of the saturated hydraulic conductivity
 :math:`k_{sat} \left[z_{h,\, i} \right]`, the liquid volumetric soil
 moisture of the two layers :math:`\theta _{i}`  and
@@ -500,8 +510,8 @@ moisture of the two layers :math:`\theta _{i}`  and
 
 The ice impedance factor is a function of ice content, and is meant to
 quantify the increased tortuosity of the water flow when part of the
-pore space is filled with ice. Swenson et al. (2012) used a power law
-form :math:`\Theta _{ice} =10^{-\Omega F_{ice} }`  where
+pore space is filled with ice. :ref:`Swenson et al. (2012) <Swensonetal2012>` 
+used a power law form :math:`\Theta _{ice} =10^{-\Omega F_{ice} }`  where
 :math:`\Omega =6`\ and
 :math:`F_{ice} =\frac{\theta _{ice} }{\theta _{sat} }`  is the
 ice-filled fraction of the pore space.
@@ -517,7 +527,8 @@ organic components. The water content at saturation (i.e. porosity) is
    \theta _{sat,i} =(1-f_{om,i} )\theta _{sat,\min ,i} +f_{om,i} \theta _{sat,om}
 
 where :math:`f_{om,i}`  is the soil organic matter fraction,
-:math:`\theta _{sat,om} =0.9` (Farouki 1981; Letts et al. 2000) is the
+:math:`\theta _{sat,om} =0.9` (:ref:`Farouki 1981 <Farouki1981>`; 
+:ref:`Letts et al. 2000 <Lettsetal2000>`) is the
 porosity of organic matter and the porosity of the mineral soil
 :math:`\theta _{sat,\min ,i}`  is
 
@@ -533,7 +544,7 @@ The exponent “:math:`B`” is
 
    B_{i} =(1-f_{om,i} )B_{\min ,i} +f_{om,i} B_{om}
 
-where :math:`B_{om} =2.7`\ (Letts et al. 2000) and
+where :math:`B_{om} =2.7`\ (:ref:`Letts et al. 2000 <Lettsetal2000>`) and
 
 .. math::
    :label: 7.93) 
@@ -541,7 +552,7 @@ where :math:`B_{om} =2.7`\ (Letts et al. 2000) and
    B_{\min ,i} =2.91+0.159(\% clay)_{i} .
 
 The soil matric potential (mm) is defined at the node depth
-:math:`z_{i}`  of each layer :math:`i` (Figure 7.3)
+:math:`z_{i}`  of each layer :math:`i` (:numref:`Water flux schematic figure`)
 
 .. math::
    :label: ZEqnNum316201 
@@ -574,8 +585,8 @@ by the organic soil properties even for values of :math:`f_{om}`  as low
 as 1 %. To better represent the influence of organic soil material on
 the grid cell average saturated hydraulic conductivity, the soil organic
 matter fraction is further subdivided into “connected” and “unconnected”
-fractions using a result from percolation theory (Stauffer and Aharony
-1994, Berkowitz and Balberg 1992). Assuming that the organic and mineral
+fractions using a result from percolation theory (:ref:`Stauffer and Aharony
+1994 <StaufferAharony1994>`, :ref:`Berkowitz and Balberg 1992 <BerkowitzBalberg1992>`). Assuming that the organic and mineral
 fractions are randomly distributed throughout a soil layer, percolation
 theory predicts that above a threshold value
 :math:`f_{om} =f_{threshold}` , connected flow pathways consisting of
@@ -601,7 +612,7 @@ pass through the mineral and organic components in series
    k_{sat,\, uncon} =f_{uncon} \left(\frac{\left(1-f_{om} \right)}{k_{sat,\, \min } } +\frac{\left(f_{om} -f_{perc} \right)}{k_{sat,\, om} } \right)^{-1} .
 
 where saturated hydraulic conductivity for mineral soil depends on soil
-texture (Cosby et al. 1984) as
+texture (:ref:`Cosby et al. (1984) <Cosbyetal1984>`) as
 
 .. math::
    :label: 7.99) 
@@ -621,7 +632,7 @@ as
 Numerical Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-With reference to Figure 7.3, the equation for conservation of mass
+With reference to :numref:`Water flux schematic figure`, the equation for conservation of mass
 (equation ) can be integrated over each layer as
 
 .. math::
@@ -657,7 +668,7 @@ is the change in volumetric soil liquid water of layer :math:`i` in time
 :math:`i` (mm).
 
 The water removed by transpiration in each layer :math:`e_{i}`  is a
-function of the total transpiration :math:`E_{v}^{t}`  (Chapter 5) and
+function of the total transpiration :math:`E_{v}^{t}`  (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and
 the effective root fraction :math:`r_{e,\, i}` 
 
 .. math::
@@ -665,8 +676,11 @@ the effective root fraction :math:`r_{e,\, i}`
 
    e_{i} =r_{e,\, i} E_{v}^{t} .
 
-Figure 7.3. Schematic diagram of numerical scheme used to solve for soil
-water fluxes.
+.. _Water flux schematic figure:
+
+.. Figure:: image2.png
+
+ Schematic diagram of numerical scheme used to solve for soil water fluxes.
 
 Shown are three soil layers, :math:`i-1`, :math:`i`, and :math:`i+1`.
 The soil matric potential :math:`\psi`  and volumetric soil water
@@ -678,7 +692,6 @@ the interface of two layers :math:`z_{h}` . The layer thickness is
 term :math:`e` (ET loss) is defined as positive for flow out of the
 layer.
 
-.. image:: image2.png
 
 Note that because more than one plant functional type (PFT) may share a
 soil column, the transpiration :math:`E_{v}^{t}`  is a weighted sum of
@@ -711,10 +724,10 @@ fraction for the :math:`j^{th}`  PFT
    \begin{array}{l} {\left(r_{e,\, i} \right)_{j} =\frac{\left(r_{i} \right)_{j} \left(w_{i} \right)_{j} }{\left(\beta _{t} \right)_{j} } \qquad \left(\beta _{t} \right)_{j} >0} \\ {\left(r_{e,\, i} \right)_{j} =0\qquad \left(\beta _{t} \right)_{j} =0} \end{array}
 
 and :math:`\left(r_{i} \right)_{j}`  is the fraction of roots in layer
-:math:`i` (Chapter 8), :math:`\left(w_{i} \right)_{j}`  is a soil
-dryness or plant wilting factor for layer :math:`i` (Chapter 8), and
-:math:`\left(\beta _{t} \right)_{j}`  is a wetness factor for the total
-soil column for the :math:`j^{th}`  PFT (Chapter 8).
+:math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), 
+:math:`\left(w_{i} \right)_{j}`  is a soil dryness or plant wilting factor 
+for layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), and :math:`\left(\beta _{t} \right)_{j}`  is a wetness factor for the total
+soil column for the :math:`j^{th}`  PFT (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
 The soil water fluxes in equation , which are a function of
 :math:`\theta _{liq,\, i}`  and :math:`\theta _{liq,\, i+1}`  because of
@@ -922,7 +935,7 @@ Equation set for layer :math:`i=1`
 ''''''''''''''''''''''''''''''''''''''''''
 
 For the top soil layer (:math:`i=1`), the boundary condition is the
-infiltration rate (section 7.3),
+infiltration rate (section :numref:`Surface Runoff`),
 :math:`q_{i-1}^{n+1} =-q_{infl}^{n+1}` , and the water balance equation
 is
 
@@ -1127,7 +1140,7 @@ Frozen Soils and Perched Water Table
 ----------------------------------------
 
 When soils freeze, the power-law form of the ice impedance factor
-(section 7.4.1) can greatly decrease the hydraulic conductivity of the
+(section :numref:`Hydraulic Properties`) can greatly decrease the hydraulic conductivity of the
 soil, leading to nearly impermeable soil layers. When unfrozen soil
 layers are present above relatively ice-rich frozen layers, the
 possibility exists for perched saturated zones. Lateral drainage from
@@ -1206,12 +1219,12 @@ the ice content of the soil layers interacting with the water table
 where :math:`\Omega =6`\ is an adjustable parameter, :math:`jwt` is the
 index of the layer directly above the water table,
 :math:`F_{ice} =\frac{\theta _{ice} }{\theta _{sat} }`  is the
-ice-filled fraction of the pore space of soil layer :math:`i` (kg
-m\ :sup:`-2`), and :math:`\Delta z_{i}`  is the layer thickness
-(mm). This expression is functionally the same as that used to determine
-the ice impedance factor in section 7.4. In equation , the decay factor
-:math:`f_{drai} =2.5` m\ :sup:`-1` and the maximum drainage when
-the water table depth is at the surface
+ice-filled fraction of the pore space of soil layer :math:`i` (kg 
+m\ :sup:`-2`), and :math:`\Delta z_{i}`  is the layer thickness (mm). This 
+expression is functionally the same as that used to determine the ice 
+impedance factor in section :numref:`Hydraulic Properties`. In equation , 
+the decay factor :math:`f_{drai} =2.5` m\ :sup:`-1` and the maximum drainage 
+when the water table depth is at the surface
 :math:`q_{drai,\, \max } =10\sin (\beta )` kg m\ :sup:`-2`
 s\ :sup:`-1` , where :math:`\beta`  is the mean grid cell
 topographic slope in radians, were determined for global simulations
@@ -1219,8 +1232,7 @@ through sensitivity analysis and comparison with observed runoff.
 
 Determination of water table depth :math:`z_{\nabla }`  is based on work
 by Niu et al. (2007). In this approach, a groundwater component is added
-in the form of an unconfined aquifer lying below the soil column (Figure
-7.1). The groundwater solution is dependent on whether the water table
+in the form of an unconfined aquifer lying below the soil column (:numref:`Hydrologic processes figure`). The groundwater solution is dependent on whether the water table
 is within or below the soil column. The water stored in the unconfined
 aquifer :math:`W_{a}`  has a prescribed maximum value (5000 mm). When
 the water table is within the soil column, :math:`W_{a}`  is constant
@@ -1380,136 +1392,7 @@ at the beginning and ending of the time step defined as
 
 Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`.
 The contribution of lake runoff to :math:`q_{rgwl}`  is described in
-section 9.6.3. The runoff term :math:`q_{rgwl}`  may be negative for
-glaciers and lakes, which reduces the total amount of runoff available
-to the RTM.
-
-.. _The Variable Infiltration Capacity parameterizations as a hydrologic option:
-
-The Variable Infiltration Capacity parameterizations as a hydrologic option
--------------------------------------------------------------------------------
-
-The hydrologic parameterizations from the Variable Infiltration Capacity
-(VIC) land surface model (Liang et al. 1994) have been implemented as a
-hydrologic option. VIC includes two different time scales of runoff
-generation. To capture such dynamics, the soil column in the original
-VIC model
-(http://www.hydro.washington.edu/Lettenmaier/Models/VIC/Overview/ModelOverview.shtml)
-is typically divided into three layers with variable soil depths. The
-upper two layers are designed to represent the dynamic responses of the
-soil to rainfall events for surface runoff generation, and the lower
-layer is used to characterize the seasonal soil moisture behavior and
-subsurface runoff generation. The implementation of the VIC
-parameterizations are as described in Li et al. (2011) except where
-updated for consistency with modifications to CLM hydrology in CLM4.5.
-Note that unless explicitly mentioned in this section, any descriptions
-from sections 7.1-7.7 are intact and remain valid when the VIC hydrology
-option is turned on.
-
-Three VIC soil layers are defined by aggregating multiple layers in the
-CLM soil column with thicknesses of :math:`\sum^3_{i=1}{\Delta z_i}`,
-:math:`\sum^6_{i=4}{\Delta z_i}`,
-:math:`\sum^{N_{levsoi}}_{i=7}{\Delta z_i}`, respectively. At each time
-step, the soil moisture profile is determined following the algorithms
-detailed in section 7.4, and aggregated to the three VIC layers for
-runoff generation calculations. The surface runoff generated by the
-saturation excess runoff mechanism, q\ :sub:`over`, is
-calculated using equation , but with the fractional saturated area
-defined as
-
-.. math::
-   :label: ZEqnNum627546 
-
-   f_{sat} =1-\left(1-{w_{top} \mathord{\left/ {\vphantom {w_{top}  w_{m,\, top} }} \right. \kern-\nulldelimiterspace} w_{m,\, top} } \right)^{{1\mathord{\left/ {\vphantom {1 \left(1+b_{inf} \right)}} \right. \kern-\nulldelimiterspace} \left(1+b_{inf} \right)} }
-
-where :math:`w_{top}` and :math:`w_{m,top}` are calculated as
-:math:`\sum^6_{i=1}{{\theta }_i\Delta z_i}` and
-:math:`\sum^6_{i=1}{{\theta }_{s,i}\Delta z_i}`, respectively, and
-represent the soil moisture (kg m\ :sup:`-2`) and maximum soil
-moisture (kg m\ :sup:`-2`) in the top two VIC layers combined.
-
-In equation , it is hypothesized that the spatial heterogeneity of soil
-moisture holding capacity in the top VIC layers can be represented by a
-soil moisture holding capacity curve as defined in equation , in which
-:math:`b_{inf}` is a parameter that controls the shape of the curve.
-That is, if one assumes that a grid cell (or soil column in this case)
-is composed of many pixels (or points) with varying soil moisture
-capacity, this variation across the grid cell can be represented
-conceptually as
-
-.. math::
-   :label: ZEqnNum929519 
-
-   i=i_m\left(1-{\left(1-A\right)}^{1/b_{inf}}\right)
-
-where :math:`i` and :math:`i_{m}`  are the point and maximum point soil
-moisture holding capacities (kg m\ :sup:`-2`), respectively;
-:math:`A` is the fraction of a grid cell for which the soil moisture
-holding capacity is less than or equal to :math:`i`; and
-:math:`i_m=w_{m,top}\left(1+b_{inf}\right)`. When :math:`A` is equal to
-:math:`f_{sat}`, the corresponding point soil moisture holding capacity
-is denoted as :math:`i_0`. The maximum soil infiltration capacity (kg
-m\ :sup:`-2` s\ :sup:`-1`) in equation becomes
-
-.. math::
-   :label: ZEqnNum202398 
-
-   q_{inf,\, max} =\left\{\begin{array}{l} {\left(1-f_{sat} \right)\theta _{ice,\, top} \left(\frac{w_{m,\, top} -w_{top} }{\Delta t} \right)\qquad i_{o} +q_{in,\, soil} \Delta t\ge i_{m} } \\ {\left(1-f_{sat} \right)\frac{\theta _{ice,\, top} }{\Delta t} \left\{\begin{array}{l} {\left(w_{m,\, top} -w_{top} \right)-w_{m,\, top} \times } \\ {\left[1-\max \left(1,\, \frac{\left(i_{o} +q_{in,\, soil} \Delta t\right)}{i_{m} } \right)^{1+b_{inf} } \right]} \end{array}\right\}\qquad i_{o} +q_{in,\, soil} \Delta t<i_{m} } \end{array}\right\}
-
-where :math:`\theta _{ice,\, top}`  is an ice impedance factor
-determined from the ice content of the top two VIC layers combined,
-similar to the one used in equation . Interested readers are referred to
-Wood et al. (1992) for a schematic representation of equation and
-derivations associated with equations , , and .
-
-The subsurface runoff in equation is parameterized as
-
-.. math::
-   :label: ZEqnNum411417 
-
-   q_{drai}={\mathrm{\Theta }}_{ice,bot}\left[ \begin{array}{c} \frac{D_sD_{smax}}{W_sw_{m,bot}}w_{bot}+ \\ 
-   max\left(0,\frac{w_{bot}-W_sw_{m,bot}}{{w_{m,bot}-W}_sw_{m,bot}}\right)\left(D_{smax}-\frac{D_sD_{smax}}{W_s}\right) \end{array}
-   \right]/\mathrm{\Delta }t
-
-where :math:`w_{bot}` and :math:`w_{m,bot}` are the soil moisture (kg
-m\ :sup:`-2`) and maximum soil moisture (kg m\ :sup:`-2`) in
-the bottom VIC layer, respectively, :math:`D_{smax}` is the maximum
-subsurface flow rate (kg m\ :sup:`-2` s\ :sup:`-1`),
-:math:`D_s` is a fraction of :math:`D_{smax}`, :math:`W_s` is a fraction
-of :math:`w_{m,bot}`, and :math:`{\mathrm{\Theta }}_{ice,bot}` is an ice
-impedance factor determined from the ice content of the bottom VIC
-layer, similar to the ones in equations and .
-
-As the VIC parameterizations are based on conceptual models, Huang and
-Liang (2006) recommended calibrating the VIC parameters, including
-:math:`b_{inf}` , :math:`D_{smax}` , :math:`D_s` , :math:`W_s` , and the
-second and third layer soil thicknesses using observations. In this
-implementation, the thicknesses of the VIC soil layers are fixed to
-maintain consistency with the soil water algorithms in section 7.4. The
-other four parameters, :math:`b_{inf}` , :math:`D_{smax}` , :math:`D_s`
-, and :math:`W_s` are prescribed and are included in the CLM surface
-dataset. Users can provide calibrated parameter values determined
-manually or automatically by modifying the surface dataset. Note that
-the units of :math:`D_{smax}` on the surface dataset are mm
-d\ :sup:`-1` (the traditional units for other standard VIC
-applications) which are then converted to kg m\ :sup:`-2`
-s\ :sup:`-1` for use in CLM. A preliminary calibration was
-performed by perturbing the three parameters :math:`b_{inf}` ,
-:math:`D_{smax}` , and :math:`W_s`, and fixing :math:`D_s=0.1` globally.
-The parameter space for :math:`b_{inf}` , :math:`D_{smax}` , and
-:math:`W_s` was sampled using the global sensitivity analysis framework
-described by Hou et al. (2012) to produce 64 combinations of parameter
-values based on *a priori* information about the parameters. For each
-set of parameter values, a global simulation was performed using the
-compset I\_2000 (i.e., driven by satellite phenology) at a resolution of
-0.9\ :sup:`o`\ x1.25\ :sup:`o` on the basis of the
-development tag betr\_m\_sci10\_clm45sci13\_clm4\_0\_54. At each model
-grid cell, the set of :math:`b_{inf}` , :math:`D_{smax}` , and
-:math:`W_s` values corresponding to the simulation that produced the
-lowest absolute bias compared to the climatological mean annual total
-runoff from the Global Runoff Data Center (GRDC) was selected as the
-calibrated values. These values are provided only as a reference due to
-the preliminary nature of the calibration. Interested users of the VIC
-hydrology option are encouraged to calibrate the parameters for their
-applications for improved performance.
+section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff 
+term :math:`q_{rgwl}`  may be negative for glaciers and lakes, which reduces 
+the total amount of runoff available to the river routing model (Chapter :numref:`rst_River Transport Model (RTM)`).
 

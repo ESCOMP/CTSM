@@ -4,13 +4,17 @@ Lake Model
 =============
 
 The lake model, denoted the *Lake, Ice, Snow, and Sediment Simulator*
-(LISSS), is from Subin et al. (2012a). It includes extensive
-modifications to the lake code of Zeng et al. (2002) used in CLM
+(LISSS), is from :numref:`Subin et al. (2012a) <Subinetal2012a>`. 
+It includes extensive modifications to the lake code of 
+:numref:`Zeng et al. (2002) <Zengetal20002>` used in CLM
 versions 2 through 4, which utilized concepts from the lake models of
-Bonan (1996), Henderson-Sellers (1985, 1986), Hostetler and Bartlein
-(1990) and the coupled lake-atmosphere model of Hostetler et al. (1993,
-1994). Lakes have spatially variable depth prescribed in the surface
-data (section 9.2); the surface data optionally includes lake optical
+:numref:`Bonan (1996) <Bonan1996>`, 
+:numref:`Henderson-Sellers  (1985) <Henderson-Sellers1985>`, 
+:numref:`Henderson-Sellers  (1986) <Henderson-Sellers1986>`, 
+:numref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`, 
+and the coupled lake-atmosphere model of :numref:`Hostetler et al. (1993) <Hostetleretal1993>`, :numref:`Hostetler et al. (1993) <Hostetleretal1993>`. 
+Lakes have spatially variable depth prescribed in the surface data (section 
+:numref:`External Data Lake`); the surface data optionally includes lake optical
 extinction coeffient and horizontal fetch, currently only used for site
 simulations. Lake physics includes freezing and thawing in the lake
 body, resolved snow layers, and “soil” and bedrock layers below the lake
@@ -29,6 +33,8 @@ layers (if present), the lake body, and the soil and bedrock, using the
 ground heat flux *G* as a top boundary condition. Snow, soil, and
 bedrock models generally follow the formulations for non-vegetated
 surfaces (Chapter 6), with modifications described below.
+
+.. _Vertical Discretization Lake:
 
 Vertical Discretization
 ---------------------------
@@ -62,6 +68,8 @@ follow the scheme used over non-vegetated surfaces (Chapter 6), with
 modifications to the snow layer thickness rules to keep snow layers at
 least as thick as *s*\ :sub:`min` (section 9.6.5).
 
+.. _External Data Lake:
+
 External Data
 -----------------
 
@@ -72,6 +80,8 @@ km\ :sup:`-2`. As in Subin et al. (2012a, b), the Kourzeneva
 (2012) global gridded dataset is currently used to estimate a mean lake
 depth in each grid cell, based on interpolated compilations of
 geographic information.
+
+.. _Surface Albedo Lake:
 
 Surface Albedo
 ------------------
@@ -106,8 +116,12 @@ calculated as over non-vegetated surfaces (Chapter 3). These two
 reflectances are combined to obtain the snow-fraction-weighted albedo as
 in over non-vegetated surfaces (Chapter 3).
 
+.. _Surface Fluxes and Surface Temperature Lake:
+
 Surface Fluxes and Surface Temperature
 ------------------------------------------
+
+.. _Overview of Changes from CLM4:
 
 Overview of Changes from CLM4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -136,6 +150,8 @@ Overview of Changes from CLM4
 #. Several conditions are imposed on the ground temperature
    :math:`{T}_{g}` to maintain a stable density profile at the lake
    surface eq. .
+
+.. _Surface Properties Lake:
 
 Surface Properties
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -208,6 +224,8 @@ where *A* and *B* define the fetch- and depth-limitation, respectively;
 :math:`C_{\min } =0.01` , :math:`C_{\max } =0.01`,
 :math:`\varepsilon =1` , :math:`f_{c} =100` , and *u* (m
 s\ :sup:`-1`) is the atmospheric forcing wind.
+
+.. _Surface Flux Solution Lake:
 
 Surface Flux Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -475,8 +493,12 @@ temperature solution (section 9.5.3). An energy balance check is
 included at each timestep to insure that eq. XXX is obeyed to within
 0.1 W m\ :sup:`-2`.
 
+.. _Lake Temperature:
+
 Lake Temperature
 --------------------
+
+.. _Introduction Lake:
 
 Introduction
 ^^^^^^^^^^^^^^^^^^
@@ -525,6 +547,8 @@ restricted to occur at :math:`T_{j} =T_{f}` \ in the snow-lake-soil
 system, allowing eq. to be precisely enforced and justifying the
 exclusion of :math:`c_{v,j}`  from the time derivative in eq. .
 
+.. _Overview of Changes from CLM4 2:
+
 Overview of Changes from CLM4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -546,6 +570,8 @@ arbitrary depth, except for a depth-dependent enhanced mixing (section
 diffusivity (specifically, the Brunt-Väisälä frequency term; eq. ) was
 corrected.
 
+.. _Boundary Conditions Lake:
+
 Boundary Conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -564,6 +590,8 @@ calculation of eddy diffusivity:
 
 where :math:`u_{*}` \ is the friction velocity calculated in section
 9.4.3 and *k* is the von Karman constant (Table 2.6).
+
+.. _Eddy Diffusivity and Thermal Conductivities:
 
 Eddy Diffusivity and Thermal Conductivities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -614,7 +642,7 @@ s\ :sup:`-1`) (eq. ) is used to evaluate :math:`w^{*}`  and
 :math:`k^{*}`  rather than the 10-m wind used by Henderson-Sellers
 (1985).
 
-The CityplaceRichardson number is
+The Richardson number is
 
 .. math::
    :label: 12.32) 
@@ -692,6 +720,8 @@ vegetated land units (Chapter 6), except for the adjustment of thermal
 conductivity for frost heave or excess ice (Subin et al., 2012a,
 Supporting Information).
 
+.. _Radiation Penetration:
+
 Radiation Penetration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -741,6 +771,8 @@ al. 2012a):
 
    \eta =1.1925d^{-0.424}  .
 
+.. _Heat Capacities Lake:
+
 Heat Capacities
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -760,6 +792,8 @@ The total heat capacity :math:`c_{v,i}`  for each soil, snow, and
 bedrock layer (J m\ :sup:`-2`) is determined as for vegetated land
 units (Chapter 6), as the sum of the heat capacities for the water, ice,
 and mineral constituents.
+
+.. _Crank-Nicholson Solution Lake:
 
 Crank-Nicholson Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -818,6 +852,8 @@ section 9.4.3 (the factor of 2 merely cancels out the Crank-Nicholson
    :label: 12.46) 
 
    F_{i} =\lambda _{i} \frac{T_{i} ^{n} -T_{i+1}^{n} }{z_{n+1} -z_{n} }  .
+
+.. _Phase Change Lake:
 
 Phase Change
 ^^^^^^^^^^^^^^^^^^
@@ -895,6 +931,8 @@ remainder of heat returned to the top lake layer, or the available heat
 is exhausted and the top lake layer is set to freezing. The snow
 thickness is adjusted downwards in proportion to the amount of melt,
 maintaining constant density.
+
+.. _Convection Lake:
 
 Convection
 ^^^^^^^^^^^^^^^^
@@ -983,6 +1021,8 @@ to *i* + 1, the ice fraction and temperature are set as follows, where
 
 #. Otherwise, :math:`I_{j} =0` and :math:`T_{j} =T_{unfr}` .
 
+.. _Energy Conservation Lake:
+
 Energy Conservation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1012,8 +1052,12 @@ If :math:`\left|E_{soi} \right|<0.1`\ W m\ :sup:`-2`, it is
 subtracted from the sensible heat flux and added to *G*. Otherwise, the
 model is aborted.
 
+.. _Lake Hydrology:
+
 Lake Hydrology
 ------------------
+
+.. _Overview Lake Hydrology:
 
 Overview
 ^^^^^^^^^^^^^^
@@ -1042,6 +1086,8 @@ explicit time-stepping integration of the surface flux solution,
 resolved snow layers must be a minimum of :math:`s_{\min }`  = 4 cm
 thick rather than 1 cm when the default timestep of 1800 s is used.
 
+.. _Water Balance Lake:
+
 Water Balance
 ^^^^^^^^^^^^^^^^^^^
 
@@ -1062,6 +1108,8 @@ ice runoff associated with snow-capping (below), :math:`E_{g}`  is the
 ground evaporation (section 9.4.3), and :math:`n_{levsoi}`  is the
 number of hydrologically active soil layers (as opposed to dry bedrock
 layers).
+
+.. _Precipitation, Evaporation, and Runoff Lake:
 
 Precipitation, Evaporation, and Runoff
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1120,6 +1168,8 @@ proportion as the snow ice (i.e., maintaining the same density), unless
 there was no snow before adding the frost, in which case the density is
 assumed to be 250 kg m\ :sup:`-3`.
 
+.. _Soil Hydrology Lake:
+
 Soil Hydrology
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -1152,6 +1202,8 @@ water in the layer is reset to
 This allows excess ice to be initialized (and begin to be lost only
 after the pore ice is melted, which is realistic if the excess ice is
 found in heterogeneous chunks) but irreversibly lost when melt occurs.
+
+.. _Modifications to Snow Layer Logic Lake:
 
 Modifications to Snow Layer Logic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

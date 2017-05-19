@@ -50,7 +50,7 @@ snow, and surface water layers from the overlying atmosphere (section
 temperature profile is calculated first without phase change and then
 readjusted for phase change (section 6.2).
 
-.. _Numerical Solution:
+.. _Numerical Solution Temperature:
 
 Numerical Solution
 ----------------------

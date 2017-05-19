@@ -63,7 +63,7 @@ to sensible heat and water vapor transfer between the atmosphere at
 heights :math:`z_{atm,\, h}`  and :math:`z_{atm,\, w}`  and the surface
 at heights :math:`z_{0h} +d` and :math:`z_{0w} +d`, respectively. The
 specific heat capacity of air :math:`C_{p}`  (J kg\ :sup:`-1`
-K\ :sup:`-1`) is a constant (Table 2.6). The atmospheric potential
+K\ :sup:`-1`) is a constant (:numref:`Table Physical constants`). The atmospheric potential
 temperature used here is
 
 .. math::
@@ -78,7 +78,7 @@ expression is first-order equivalent to
 :math:`\theta _{atm} =T_{atm} \left({P_{srf} \mathord{\left/ {\vphantom {P_{srf}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } \right)^{{R_{da} \mathord{\left/ {\vphantom {R_{da}  C_{p} }} \right. \kern-\nulldelimiterspace} C_{p} } }` 
 (Stull 1988), where :math:`P_{srf}`  is the surface pressure (Pa),
 :math:`P_{atm}`  is the atmospheric pressure (Pa), and :math:`R_{da}` 
-is the gas constant for dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6)]. By definition,
+is the gas constant for dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`)]. By definition,
 :math:`\theta _{s} =T_{s}` . The density of moist air (kg m\ :sup:`-3`) is
 
 .. math::
@@ -130,7 +130,7 @@ where :math:`z` is height in the surface layer (m), :math:`d` is the
 displacement height (m), :math:`L` is the Monin-Obukhov length scale (m)
 that accounts for buoyancy effects resulting from vertical density
 gradients (i.e., the atmospheric stability), k is the von Karman
-constant (Table 2.6), and :math:`\left|{\it u}\right|` is the
+constant (:numref:`Table Physical constants`), and :math:`\left|{\it u}\right|` is the
 atmospheric wind speed (m s\ :sup:`-1`). :math:`\phi _{m}` ,
 :math:`\phi _{h}` , and :math:`\phi _{w}`  are universal (over any
 surface) similarity functions of :math:`\zeta`  that relate the constant
@@ -171,7 +171,7 @@ defined as
    L=-\frac{u_{*}^{3} }{k\left(\frac{g}{\overline{\theta _{v,\, atm} }} \right)\theta '_{v} w'} =\frac{u_{*}^{2} \overline{\theta _{v,\, atm} }}{kg\theta _{v*} }
 
 where :math:`g` is the acceleration of gravity (m s\ :sup:`-2`)
-(Table 2.6), and
+(:numref:`Table Physical constants`), and
 :math:`\overline{\theta _{v,\, atm} }=\overline{\theta _{atm} }\left(1+0.61q_{atm} \right)`
 is the reference virtual potential temperature. :math:`L>0` indicates
 stable conditions. :math:`L<0` indicates unstable conditions.
@@ -186,7 +186,7 @@ stable conditions. :math:`L<0` indicates unstable conditions.
 where :math:`\overline{\theta _{atm} }` is the atmospheric potential
 temperature.
 
-Following Panofsky and Dutton (1984), the differential equations for
+Following :ref:`Panofsky and Dutton (1984)<PanofskyDutton1984>`, the differential equations for
 :math:`\phi _{m} \left(\zeta \right)`,
 :math:`\phi _{h} \left(\zeta \right)`, and
 :math:`\phi _{w} \left(\zeta \right)` can be integrated formally without
@@ -292,15 +292,14 @@ where :math:`w_{\*}`  is the convective velocity scale
 
 :math:`z_{i} =1000` is the convective boundary layer height (m), and :math:`\beta =1`.
 
-The momentum flux gradient relations are (Zeng et al. 1998)
+The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`)
 
 .. math::
    :label: 5.30
 
    \begin{array}{l} {\phi _{m} \left(\zeta \right)=0.7k^{{2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} } \left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } \qquad {\rm for\; }\zeta <-1.574{\rm \; (very\; unstable)}} \\ {\phi _{m} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} } \qquad {\rm for\; -1.574}\le \zeta <0{\rm \; (unstable)}} \\ {\phi _{m} \left(\zeta \right)=1+5\zeta \qquad {\rm for\; }0\le \zeta \le 1{\rm \; (stable)}} \\ {\phi _{m} \left(\zeta \right)=5+\zeta \qquad {\rm for\; }\zeta {\rm >1\; (very\; stable).}} \end{array}
 
-The sensible and latent heat flux gradient relations are (Zeng et al.
-1998)
+The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`)
 
 .. math::
    :label: 5.31
@@ -316,7 +315,7 @@ for very unstable and unstable conditions at :math:`\zeta _{m} =-1.574`
 for :math:`\phi _{m} \left(\zeta \right)` and
 :math:`\zeta _{h} =\zeta _{w} =-0.465` for
 :math:`\phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)`
-(Zeng et al. 1998). The flux gradient relations can be integrated to
+(:ref:`Zeng et al. 1998 <Zengetal1998>`). The flux gradient relations can be integrated to
 yield wind profiles for the following conditions:
 
 Very unstable :math:`\left(\zeta <-1.574\right)`
@@ -440,7 +439,7 @@ bulk Richardson number
    R_{iB} =\frac{\theta _{v,\, atm} -\theta _{v,\, s} }{\overline{\theta _{v,\, atm} }} \frac{g\left(z_{atm,\, m} -d\right)}{V_{a}^{2} }
 
 
-is related to :math:`\zeta`  (Arya 2001) as
+is related to :math:`\zeta`  (:ref:`Arya 2001 <Arya2001>`) as
 
 .. math::
    :label: 5.47
@@ -460,7 +459,7 @@ guess for :math:`\zeta`  and thus :math:`L` from
    \label{ZEqnNum979946} 
    \begin{array}{l} {\zeta =\frac{R_{iB} \ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)}{1-5\min \left(R_{iB} ,0.19\right)} \qquad 0.01\le \zeta \le 2\qquad {\rm for\; }R_{iB} \ge 0{\rm \; (neutral\; or\; stable)}} \\ {\zeta =R_{iB} \ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)\qquad -100\le \zeta \le -0.01\qquad {\rm for\; }R_{iB} <0{\rm \; (unstable)}} \end{array}.
 
-Upon iteration (section 5.3.2), the following is used to determine
+Upon iteration (section :numref:`Numerical Implementation`), the following is used to determine
 :math:`\zeta`  and thus :math:`L`
 
 .. math::
@@ -545,11 +544,11 @@ Relative humidity is
    RH_{2m} =\min \left(100,\, \frac{q_{2m} }{q_{sat}^{T_{2m} } } \times 100\right)
 
 where :math:`q_{sat}^{T_{2m} }`  is the saturated specific humidity at
-the 2-m temperature :math:`T_{2m}`  (section 5.5).
+the 2-m temperature :math:`T_{2m}`  (section :numref:`Saturation Vapor Pressure`).
 
 A 10-m wind speed is calculated as (note that this is not consistent
 with the 10-m wind speed calculated for the dust model as described in
-Chapter 24)
+Chapter :numref:`rst_Dust Model`)
 
 .. math::
    :label: 5.61 
@@ -562,12 +561,13 @@ Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces
 --------------------------------------------------------------
 
 Surfaces are considered non-vegetated for the surface flux calculations
-if leaf plus stem area index :math:`L+S<0.05` (section 2.1.4). By
+if leaf plus stem area index :math:`L+S<0.05` (section 
+:numref:`Phenology and vegetation burial by snow`). By
 definition, this includes bare soil, wetlands, and glaciers. The
-solution for lakes is described in Chapter 9. For these surfaces, the
+solution for lakes is described in Chapter :numref:`rst_Lake Model`. For these surfaces, the
 surface may be exposed to the atmosphere, snow covered, and/or surface
 water covered, so that the sensible heat flux :math:`H_{g}`  (W
-m\ :sup:`-2`) is, with reference to Figure 5.1,
+m\ :sup:`-2`) is, with reference to :numref:`Figure Schematic diagram of sensible heat fluxes`,
 
 .. math::
    :label: ZEqnNum726771 
@@ -596,12 +596,13 @@ surface water :math:`T_{h2osfc}`  are
    H_{h2osfc} =-\rho _{atm} C_{p} \frac{\left(\theta _{atm} -T_{h2osfc} \right)}{r_{ah} }
 
 where :math:`\rho _{atm}`  is the density of atmospheric air (kg m\ :sup:`-3`), :math:`C_{p}`  is the specific heat capacity of air
-(J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6),
+(J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`),
 :math:`\theta _{atm}`  is the atmospheric potential temperature (K), and
 :math:`r_{ah}`  is the aerodynamic resistance to sensible heat transfer
 (s m\ :sup:`-1`).
 
-The water vapor flux :math:`E_{g}`  (kg m\ :sup:`-2` s\ :sup:`-1`) is, with reference to Figure 5.2,
+The water vapor flux :math:`E_{g}`  (kg m\ :sup:`-2` s\ :sup:`-1`) is, with reference to 
+:numref:`Figure Schematic diagram of latent heat fluxes`,
 
 .. math::
    :label: ZEqnNum419297 
@@ -648,7 +649,7 @@ to be proportional to the saturation specific humidity
    q_{soil} =\alpha _{soil} q_{sat}^{T_{1} }
 
 where :math:`q_{sat}^{T_{1} }`  is the saturated specific humidity at
-the soil surface temperature :math:`T_{1}`  (section 5.5). The factor
+the soil surface temperature :math:`T_{1}`  (section :numref:`Saturation Vapor Pressure`). The factor
 :math:`\alpha _{soil}`  is a function of the surface soil water matric
 potential :math:`\psi`  as in Philip (1957)
 
@@ -657,8 +658,8 @@ potential :math:`\psi`  as in Philip (1957)
 
    \alpha _{soil} =\exp \left(\frac{\psi _{1} g}{1\times 10^{3} R_{wv} T_{1} } \right)
 
-where :math:`R_{wv}`  is the gas constant for water vapor (J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6), :math:`g` is the
-gravitational acceleration (m s\ :sup:`-2`) (Table 2.6), and
+where :math:`R_{wv}`  is the gas constant for water vapor (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`), :math:`g` is the
+gravitational acceleration (m s\ :sup:`-2`) (:numref:`Table Physical constants`), and
 :math:`\psi _{1}`  is the soil water matric potential of the top soil
 layer (mm). The soil water matric potential :math:`\psi _{1}`  is
 
@@ -668,10 +669,11 @@ layer (mm). The soil water matric potential :math:`\psi _{1}`  is
    \psi _{1} =\psi _{sat,\, 1} s_{1}^{-B_{1} } \ge -1\times 10^{8}
 
 where :math:`\psi _{sat,\, 1}`  is the saturated matric potential (mm)
-(section 7.4.1), :math:`B_{1}`  is the Clapp and Hornberger (1978)
-parameter (section 7.4.1), and :math:`s_{1}`  is the wetness of the top
-soil layer with respect to saturation. The surface wetness
-:math:`s_{1}`  is a function of the liquid water and ice content
+(section :numref:`Hydraulic Properties`), 
+:math:`B_{1}`  is the :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` 
+parameter (section :numref:`Hydraulic Properties`), 
+and :math:`s_{1}`  is the wetness of the top soil layer with respect to saturation. 
+The surface wetness :math:`s_{1}`  is a function of the liquid water and ice content
 
 .. math::
    :label: 5.75) 
@@ -680,11 +682,11 @@ soil layer with respect to saturation. The surface wetness
 
 where :math:`\Delta z_{1}`  is the thickness of the top soil layer (m),
 :math:`\rho _{liq}`  and :math:`\rho _{ice}`  are the density of liquid
-water and ice (kg m\ :sup:`-3`) (Table 2.6), :math:`w_{liq,\, 1}` 
+water and ice (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), :math:`w_{liq,\, 1}` 
 and :math:`w_{ice,\, 1}`  are the mass of liquid water and ice of the
-top soil layer (kg m\ :sup:`-2`) (Chapter 7), and
+top soil layer (kg m\ :sup:`-2`) (Chapter :numref:`rst_Hydrology`), and
 :math:`\theta _{sat,\, 1}`  is the saturated volumetric water content
-(i.e., porosity) of the top soil layer (mm\ :sup:`3` mm\ :sup:`-3`) (section 7.4.1). If
+(i.e., porosity) of the top soil layer (mm\ :sup:`3` mm\ :sup:`-3`) (section :numref:`Hydraulic Properties`). If
 :math:`q_{sat}^{T_{1} } >q_{atm}`  and :math:`q_{atm} >q_{soil}` , then
 :math:`q_{soil} =q_{atm}`  and :math:`\frac{dq_{soil} }{dT} =0`. This
 prevents large increases (decreases) in :math:`q_{soil}`  for small
@@ -711,7 +713,7 @@ The volumetric water content of the top soil layer (mm\ :sup:`3` mm\ :sup:`-3`) 
 
 The volumetric water content at field capacity is derived by assuming a
 hydraulic conductivity of 0.1 mm day\ :sup:`-1` and inverting the
-hydraulic conductivity function (section 7.4.1) as
+hydraulic conductivity function (section :numref:`Hydraulic Properties`) as
 
 .. math::
    :label: 5.78) 
@@ -719,8 +721,8 @@ hydraulic conductivity function (section 7.4.1) as
    \theta _{fc,\, 1} =\theta _{sat,\, 1} \left[\frac{0.1}{86400k_{sat,\, 1} } \right]^{\frac{1}{2B_{i} +3} }
 
 where :math:`k_{sat,\, 1}`  is the saturated hydraulic conductivity of
-the top soil layer (mm s\ :sup:`-1`) (section 7.4.1) and the
-exponent :math:`B_{1}`  is a function of soil texture (section 7.4.1).
+the top soil layer (mm s\ :sup:`-1`) (section :numref:`Hydraulic Properties`) and the
+exponent :math:`B_{1}`  is a function of soil texture (section :numref:`Hydraulic Properties`).
 
 The roughness lengths used to calculate :math:`r_{am}` ,
 :math:`r_{ah}` , and :math:`r_{aw}`  are :math:`z_{0m} =z_{0m,\, g}` ,
@@ -734,7 +736,8 @@ fluctuations in the turbulent waves behind the roughness elements, while
 for heat and water vapor transfer no such dynamical mechanism exists.
 Rather, heat and water vapor must be transferred by molecular diffusion
 across the interfacial sublayer. The following relation from
-Zilitinkevich (1970) is adopted by Zeng and Dickinson (1998)
+:ref:`Zilitinkevich (1970) <Zilitinkevich1970>` is adopted by 
+:ref:`Zeng and Dickinson 1998 <ZengDickinson1998>`
 
 .. math::
    :label: ZEqnNum844212 
@@ -789,9 +792,9 @@ water vapor flux from non-vegetated surfaces proceeds as follows:
    :math:`q_{2m}`  (eqs. , )
 
 The partial derivatives of the soil surface fluxes with respect to
-ground temperature, which are needed for the soil temperature
-calculations (section 6.1) and to update the soil surface fluxes
-(section 5.4), are
+ground temperature, which are needed for the soil temperature calculations (section 
+:numref:`Numerical Solution Temperature`) and to update the soil surface fluxes
+(section :numref:`Update of Ground Sensible and Latent Heat Fluxes`), are
 
 .. math::
    :label: ZEqnNum806472 
@@ -831,8 +834,8 @@ coupling between vegetation temperature and fluxes, Newton-Raphson
 iteration is used to solve for the vegetation temperature and the
 sensible heat and water vapor fluxes from vegetation simultaneously
 using the ground temperature from the previous time step. In section
-5.3.1, the equations used in the iteration scheme are derived. Details
-on the numerical scheme are provided in section 5.3.2.
+:numref:`Theory`, the equations used in the iteration scheme are derived. Details
+on the numerical scheme are provided in section :numref:`Numerical Implementation`.
 
 .. _Theory:
 
@@ -850,7 +853,7 @@ from the vegetation :math:`H_{v}`  and the ground :math:`H_{g}`
 
    H=H_{v} +H_{g}
 
-where, with reference to Figure 5.1,
+where, with reference to :numref:`Figure Schematic diagram of sensible heat fluxes`,
 
 .. math::
    :label: 5.84) 
@@ -883,7 +886,7 @@ where, with reference to Figure 5.1,
    H_{h2osfc} =-\rho _{atm} C_{p} \frac{\left(T_{s} -T_{h2osfc} \right)}{r_{ah} ^{{'} } }
 
 where :math:`\rho _{atm}`  is the density of atmospheric air (kg m\ :sup:`-3`), :math:`C_{p}`  is the specific heat capacity of air
-(J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6),
+(J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`),
 :math:`\theta _{atm}`  is the atmospheric potential temperature (K), and
 :math:`r_{ah}`  is the aerodynamic resistance to sensible heat transfer
 (s m\ :sup:`-1`).
@@ -891,21 +894,25 @@ where :math:`\rho _{atm}`  is the density of atmospheric air (kg m\ :sup:`-3`), 
 Here, :math:`T_{s}`  is the surface temperature at height
 :math:`z_{0h} +d`, also referred to as the canopy air temperature.
 :math:`L` and :math:`S` are the exposed leaf and stem area indices
-(section 2.1.4), :math:`r_{b}`  is the leaf boundary layer resistance (s
+(section :numref:`Phenology and vegetation burial by snow`), :math:`r_{b}`  is the leaf boundary layer resistance (s
 m\ :sup:`-1`), and :math:`r_{ah} ^{{'} }`  is the aerodynamic
 resistance (s m\ :sup:`-1`) to heat transfer between the ground at
 height :math:`z_{0h} ^{{'} }`  and the canopy air at height
 :math:`z_{0h} +d`.
 
-Figure 5.1. Schematic diagram of sensible heat fluxes for (a)
-non-vegetated surfaces and (b) vegetated surfaces.
+.. _Figure Schematic diagram of sensible heat fluxes:
 
-.. image:: image1.png
+.. figure:: image1.png
 
-Figure 5.2. Schematic diagram of water vapor fluxes for (a)
-non-vegetated surfaces and (b) vegetated surfaces.
+ Figure Schematic diagram of sensible heat fluxes for (a)
+ non-vegetated surfaces and (b) vegetated surfaces.
 
-.. image:: image2.png
+.. _Figure Schematic diagram of latent heat fluxes:
+
+.. figure:: image2.png
+
+ Figure Schematic diagram of water vapor fluxes for (a)
+ non-vegetated surfaces and (b) vegetated surfaces.
 
 Equations - can be solved for the canopy air temperature :math:`T_{s}` 
 
@@ -963,7 +970,7 @@ flux from the vegetation :math:`E_{v}`  and the ground :math:`E_{g}`
 
    E=E_{v} +E_{g}
 
-where, with reference to Figure 5.2,
+where, with reference to :numref:`Figure Schematic diagram of latent heat fluxes`,
 
 .. math::
    :label: 5.97) 
@@ -998,19 +1005,21 @@ where, with reference to Figure 5.2,
 where :math:`q_{atm}`  is the atmospheric specific humidity (kg kg\ :sup:`-1`), :math:`r_{aw}`  is the aerodynamic resistance to
 water vapor transfer (s m\ :sup:`-1`), :math:`q_{sat}^{T_{v} }` 
 (kg kg\ :sup:`-1`) is the saturation water vapor specific humidity
-at the vegetation temperature (section 5.5), :math:`q_{g}`  ,
+at the vegetation temperature (section :numref:`Saturation Vapor Pressure`), :math:`q_{g}`  ,
 :math:`q_{sno}`  , and :math:`q_{h2osfc}`  are the specific humidities
-of the soil, snow, and surface water (section 5.2),
+of the soil, snow, and surface water (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`),
 :math:`r_{aw} ^{{'} }`  is the aerodynamic resistance (s
 m\ :sup:`-1`) to water vapor transfer between the ground at height
 :math:`z_{0w} ^{{'} }`  and the canopy air at height :math:`z_{0w} +d`,
 :math:`\beta _{soi}`  is an empirical function of soil water (section
-5.2), and :math:`r_{litter}`  is a resistance for the plant litter layer
+:numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`), 
+and :math:`r_{litter}`  is a resistance for the plant litter layer
 (s m\ :sup:`-1`). :math:`r_{total}`  is the total resistance to
 water vapor transfer from the canopy to the canopy air and includes
 contributions from leaf boundary layer and sunlit and shaded stomatal
 resistances :math:`r_{b}` , :math:`r_{s}^{sun}` , and
-:math:`r_{s}^{sha}`  (Figure 5.2). The water vapor flux from vegetation
+:math:`r_{s}^{sha}`  (:numref:`Figure Schematic diagram of latent heat fluxes`). 
+The water vapor flux from vegetation
 is the sum of water vapor flux from wetted leaf and stem area
 :math:`E_{v}^{w}`  (evaporation of water intercepted by the canopy) and
 transpiration from dry leaf surfaces :math:`E_{v}^{t}` 
@@ -1057,11 +1066,11 @@ as
    r''=\left\{\begin{array}{l} {\min \left(f_{wet} +r_{dry} ^{{'} {'} } ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right)\qquad E_{v}^{w,\, pot} >0,\, \beta _{t} >0} \\ {\min \left(f_{wet} ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right)\qquad E_{v}^{w,\, pot} >0,\, \beta _{t} \le 0} \\ {1\qquad E_{v}^{w,\, pot} \le 0} \end{array}\right\}
 
 where :math:`f_{wet}`  is the fraction of leaves and stems that are wet
-(section 7.1), :math:`W_{can}`  is canopy water (kg m\ :sup:`-2`)
-(section 7.1), :math:`\Delta t` is the time step (s), and
+(section :numref:`Canopy Water`), :math:`W_{can}`  is canopy water (kg m\ :sup:`-2`)
+(section :numref:`Canopy Water`), :math:`\Delta t` is the time step (s), and
 :math:`\beta _{t}`  is a soil moisture function limiting transpiration
-(Chapter 8). The potential evaporation from wet foliage per unit wetted
-area is
+(Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`). The potential 
+evaporation from wet foliage per unit wetted area is
 
 .. math::
    :label: 5.109) 
@@ -1076,10 +1085,10 @@ The term :math:`r_{dry} ^{{'} {'} }`  is
    r_{dry} ^{{'} {'} } =\frac{f_{dry} r_{b} }{L} \left(\frac{L^{sun} }{r_{b} +r_{s}^{sun} } +\frac{L^{sha} }{r_{b} +r_{s}^{sha} } \right)
 
 where :math:`f_{dry}`  is the fraction of leaves that are dry (section
-7.1), :math:`L^{sun}`  and :math:`L^{sha}`  are the sunlit and shaded
-leaf area indices (section 4.1), and :math:`r_{s}^{sun}`  and
+:numref:`Canopy Water`), :math:`L^{sun}`  and :math:`L^{sha}`  are the sunlit and shaded
+leaf area indices (section :numref:`Solar Fluxes`), and :math:`r_{s}^{sun}`  and
 :math:`r_{s}^{sha}`  are the sunlit and shaded stomatal resistances (s
-m\ :sup:`-1`) (Chapter 8).
+m\ :sup:`-1`) (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
 When the expression for :math:`q_{s}`  is substituted into equation ,
 the water vapor flux from vegetation :math:`E_{v}`  is a function of
@@ -1119,8 +1128,7 @@ is the magnitude of the wind velocity incident on the leaves
 (equivalent here to friction velocity) (m s\ :sup:`-1`) and
 :math:`C_{s}`  is the turbulent transfer coefficient between the
 underlying soil and the canopy air. :math:`C_{s}`  is obtained by
-interpolation between values for dense canopy and bare soil (Zeng et al.
-2005)
+interpolation between values for dense canopy and bare soil (:ref:`Zeng et al. 2005 <Zengetal2005>`)
 
 .. math::
    :label: 5.115) 
@@ -1134,8 +1142,8 @@ where the weight :math:`W` is
 
    W=e^{-\left(L+S\right)} .
 
-The dense canopy turbulent transfer coefficient in Zeng et al. (2005)
-is modified from its original value of 0.004 (Dickinson et al. 1993) by
+The dense canopy turbulent transfer coefficient in :ref:`Zeng et al. (2005) <Zengetal2005>`
+is modified from its original value of 0.004 (:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`) by
 Sakaguchi and Zeng (2009) to account for stability as
 
 .. math::
@@ -1152,8 +1160,8 @@ determined from
    S=\frac{gz_{top} \left(T_{s} -T_{g} \right)}{T_{s} u_{*}^{2} }
 
 where :math:`g` is the gravitational acceleration (m
-s\ :sup:`-2`) (Table 2.6), and :math:`z_{top}`  is canopy top
-height (m) (Table 2.2). The bare soil turbulent transfer coefficient is
+s\ :sup:`-2`) (:numref:`Table Physical constants`), and :math:`z_{top}`  is canopy top
+height (m) (:numref:`Table Prescribed plant functional type heights`). The bare soil turbulent transfer coefficient is
 
 .. math::
    :label: 5.119) 
@@ -1188,8 +1196,7 @@ The effective snow cover of the litter layer is
    f_{litter}^{snow} =\frac{z_{sno} }{\Delta z_{litter} }
 
 where :math:`\Delta z_{litter} =0.05`\ m is assumed as a typical depth
-for the litter layer, and :math:`z_{sno}`  is the depth of snow (section
-7.2) (m).
+for the litter layer, and :math:`z_{sno}`  is the depth of snow (Chapter :numref:`rst_Snow Hydrology`) (m).
 
 The leaf boundary layer resistance :math:`r_{b}`  is
 
@@ -1201,12 +1208,12 @@ The leaf boundary layer resistance :math:`r_{b}`  is
 where :math:`C_{v} =0.01` m\ s\ :sup:`-1/2` is the turbulent
 transfer coefficient between the canopy surface and canopy air, and
 :math:`d_{leaf}`  is the characteristic dimension of the leaves in the
-direction of wind flow (Table 5.1).
+direction of wind flow (:numref:`Table Coefficients for saturation vapor pressure`).
 
 The partial derivatives of the fluxes from the soil beneath the canopy
 with respect to ground temperature, which are needed for the soil
-temperature calculations (section 6.1) and to update the soil surface
-fluxes (section 5.4), are
+temperature calculations (section :numref:`Numerical Solution Temperature`) and to update the soil surface
+fluxes (section :numref:`Update of Ground Sensible and Latent Heat Fluxes`), are
 
 .. math::
    :label: ZEqnNum774729 
@@ -1230,7 +1237,7 @@ The roughness lengths used to calculate :math:`r_{am}` ,
 :math:`z_{0m} =z_{0m,\, v}` , :math:`z_{0h} =z_{0h,\, v}` , and
 :math:`z_{0w} =z_{0w,\, v}` . The vegetation displacement height
 :math:`d` and the roughness lengths are a function of plant height and
-adjusted for canopy density following Zeng and Wang (2007)
+adjusted for canopy density following :ref:`Zeng and Wang (2007) <ZengWang2007>`
 
 .. math::
    :label: 5.126) 
@@ -1242,11 +1249,12 @@ adjusted for canopy density following Zeng and Wang (2007)
 
    d=z_{top} R_{d} V
 
-where :math:`z_{top}`  is canopy top height (m) (Table 2.2),
+where :math:`z_{top}`  is canopy top height (m) (:numref:`Table Prescribed plant functional type heights`),
 :math:`R_{z0m}`  and :math:`R_{d}`  are the ratio of momentum roughness
-length and displacement height to canopy top height, respectively (Table
-5.1), and :math:`z_{0m,\, g}`  is the ground momentum roughness length
-(m) (section 5.2). The fractional weight :math:`V` is determined from
+length and displacement height to canopy top height, respectively 
+(:numref:`Table Plant functional type aerodynamic parameters`), and 
+:math:`z_{0m,\, g}`  is the ground momentum roughness length
+(m) (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`). The fractional weight :math:`V` is determined from
 
 .. math::
    :label: 5.128) 
@@ -1256,59 +1264,61 @@ length and displacement height to canopy top height, respectively (Table
 where :math:`\beta =1` and :math:`\left(L+S\right)_{cr} =2` (m\ :sup:`2` m\ :sup:`-2`) is a critical value of exposed leaf
 plus stem area for which :math:`z_{0m}`  reaches its maximum.
 
-Table 5.1. Plant functional type aerodynamic parameters
+.. _Table Plant functional type aerodynamic parameters:
 
-+----------------------------------+--------------------+------------------+-------------------------+
-| Plant functional type            | :math:`R_{z0m}`    | :math:`R_{d}`    | :math:`d_{leaf}`  (m)   |
-+==================================+====================+==================+=========================+
-| NET Temperate                    | 0.055              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| NET Boreal                       | 0.055              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| NDT Boreal                       | 0.055              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BET Tropical                     | 0.075              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BET temperate                    | 0.075              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BDT tropical                     | 0.055              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BDT temperate                    | 0.055              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BDT boreal                       | 0.055              | 0.67             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BES temperate                    | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BDS temperate                    | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| BDS boreal                       | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| C\ :sub:`3` arctic grass         | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| C\ :sub:`3` grass                | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| C\ :sub:`4` grass                | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Crop R                           | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Crop I                           | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Corn R                           | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Corn I                           | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Temp Cereal R                    | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Temp Cereal I                    | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Winter Cereal R                  | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Winter Cereal I                  | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Soybean R                        | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
-| Soybean I                        | 0.120              | 0.68             | 0.04                    |
-+----------------------------------+--------------------+------------------+-------------------------+
+.. table:: Plant functional type aerodynamic parameters
+
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Plant functional type            | :math:`R_{z0m}`    | :math:`R_{d}`    | :math:`d_{leaf}`  (m)   |
+ +==================================+====================+==================+=========================+
+ | NET Temperate                    | 0.055              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | NET Boreal                       | 0.055              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | NDT Boreal                       | 0.055              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BET Tropical                     | 0.075              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BET temperate                    | 0.075              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BDT tropical                     | 0.055              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BDT temperate                    | 0.055              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BDT boreal                       | 0.055              | 0.67             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BES temperate                    | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BDS temperate                    | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | BDS boreal                       | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | C\ :sub:`3` arctic grass         | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | C\ :sub:`3` grass                | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | C\ :sub:`4` grass                | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Crop R                           | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Crop I                           | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Corn R                           | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Corn I                           | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Temp Cereal R                    | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Temp Cereal I                    | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Winter Cereal R                  | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Winter Cereal I                  | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Soybean R                        | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
+ | Soybean I                        | 0.120              | 0.68             | 0.04                    |
+ +----------------------------------+--------------------+------------------+-------------------------+
 
 .. _Numerical Implementation:
 
@@ -1323,12 +1333,12 @@ Canopy energy conservation gives
    -\overrightarrow{S}_{v} +\overrightarrow{L}_{v} \left(T_{v} \right)+H_{v} \left(T_{v} \right)+\lambda E_{v} \left(T_{v} \right)=0
 
 where :math:`\overrightarrow{S}_{v}`  is the solar radiation absorbed by
-the vegetation (section 4.1), :math:`\overrightarrow{L}_{v}`  is the net
-longwave radiation absorbed by vegetation (section 4.2), and
+the vegetation (section :numref:`Solar Fluxes`), :math:`\overrightarrow{L}_{v}`  is the net
+longwave radiation absorbed by vegetation (section :numref:`Longwave Fluxes`), and
 :math:`H_{v}`  and :math:`\lambda E_{v}`  are the sensible and latent
 heat fluxes from vegetation, respectively. The term :math:`\lambda`  is
 taken to be the latent heat of vaporization :math:`\lambda _{vap}` 
-(Table 2.6).
+(:numref:`Table Physical constants`).
 
 :math:`\overrightarrow{L}_{v}` , :math:`H_{v}` , and
 :math:`\lambda E_{v}`  depend on the vegetation temperature
@@ -1436,7 +1446,7 @@ proceeds as follows:
    :math:`r_{aw} ^{{'} }`  (eq. )
 
 #. Sunlit and shaded stomatal resistances :math:`r_{s}^{sun}`  and
-   :math:`r_{s}^{sha}`  (Chapter 8)
+   :math:`r_{s}^{sha}`  (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`)
 
 #. Sensible heat conductances :math:`c_{a}^{h}` , :math:`c_{g}^{h}` ,
    and :math:`c_{v}^{h}`  (eqs. , , )
@@ -1494,10 +1504,10 @@ flux later.
    :math:`\lambda \Delta _{3}`  are also added to the sensible heat
    flux.
 
-#. The saturated vapor pressure :math:`e_{i}`  (Chapter 8), saturated
+#. The saturated vapor pressure :math:`e_{i}`  (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), saturated
    specific humidity :math:`q_{sat}^{T_{v} }`  and its derivative
    :math:`\frac{dq_{sat}^{T_{v} } }{dT_{v} }`  at the leaf surface
-   (section 5.5), are re-evaluated based on the new :math:`T_{v}` .
+   (section :numref:`Saturation Vapor Pressure`), are re-evaluated based on the new :math:`T_{v}` .
 
 #. Canopy air temperature :math:`T_{s}`  (eq. )
 
@@ -1548,7 +1558,7 @@ The sensible and water vapor heat fluxes derived above for bare soil and
 soil beneath canopy are based on the ground surface temperature from the
 previous time step :math:`T_{g}^{n}`  and are used as the surface
 forcing for the solution of the soil temperature equations (section
-6.1). This solution yields a new ground surface temperature
+:numref:`Numerical Solution Temperature`). This solution yields a new ground surface temperature
 :math:`T_{g}^{n+1}` . The ground sensible and water vapor fluxes are
 then updated for :math:`T_{g}^{n+1}`  as
 
@@ -1591,7 +1601,7 @@ relative area of the :math:`j^{th}`  PFT with respect to the column, and
 :math:`npft` is the number of PFTs on the column.
 :math:`w_{ice,\, snl+1}`  and :math:`w_{liq,\, snl+1}`  are the ice and
 liquid water contents (kg m\ :sup:`-2`) of the top snow/soil layer
-(Chapter 7). Any resulting energy deficit is assigned to sensible heat
+(Chapter :numref:`rst_Hydrology`). Any resulting energy deficit is assigned to sensible heat
 as
 
 .. math::
@@ -1626,9 +1636,9 @@ on snow/soil :math:`q_{sdew}`  (kg m\ :sup:`-2` s\ :sup:`-1`), or frost on snow/
 The loss or gain in snow mass due to :math:`q_{seva}` ,
 :math:`q_{subl}` , :math:`q_{sdew}` , and :math:`q_{frost}`  on a snow
 surface are accounted for during the snow hydrology calculations
-(section 7.2). The loss of soil and surface water due to
+(Chapter :numref:`rst_Snow Hydrology`). The loss of soil and surface water due to
 :math:`q_{seva}`  is accounted for in the calculation of infiltration
-(section 7.3), while losses or gains due to :math:`q_{subl}` ,
+(section :numref:`Infiltration`), while losses or gains due to :math:`q_{subl}` ,
 :math:`q_{sdew}` , and :math:`q_{frost}`  on a soil surface are
 accounted for following the sub-surface drainage calculations (section
 7.6).
@@ -1641,8 +1651,8 @@ The ground heat flux :math:`G` is calculated as
    G=\overrightarrow{S}_{g} -\overrightarrow{L}_{g} -H_{g} -\lambda E_{g}
 
 where :math:`\overrightarrow{S}_{g}`  is the solar radiation absorbed by
-the ground (section 4.1), :math:`\overrightarrow{L}_{g}`  is the net
-longwave radiation absorbed by the ground (section 4.2)
+the ground (section :numref:`Solar Fluxes`), :math:`\overrightarrow{L}_{g}`  is the net
+longwave radiation absorbed by the ground (section :numref:`Longwave Fluxes`)
 
 .. math::
    :label: 5.151) 
@@ -1669,7 +1679,7 @@ When converting ground water vapor flux to an energy flux, the term
 
 where :math:`\lambda _{sub}`  and :math:`\lambda _{vap}`  are the latent
 heat of sublimation and vaporization, respectively (J
-(kg\ :sup:`-1`) (Table 2.6). When converting vegetation water vapor
+(kg\ :sup:`-1`) (:numref:`Table Physical constants`). When converting vegetation water vapor
 flux to an energy flux, :math:`\lambda _{vap}`  is used.
 
 The system balances energy as
@@ -1687,7 +1697,7 @@ Saturation Vapor Pressure
 Saturation vapor pressure :math:`e_{sat}^{T}`  (Pa) and its derivative
 :math:`\frac{de_{sat}^{T} }{dT}` , as a function of temperature
 :math:`T` (ºC), are calculated from the eighth-order polynomial fits of
-Flatau et al. (1992)
+:ref:`Flatau et al. (1992) <Flatauetal1992>`
 
 .. math::
    :label: 5.155) 
@@ -1702,10 +1712,11 @@ Flatau et al. (1992)
 where the coefficients for ice are valid for
 :math:`-75\, ^{\circ } {\rm C}\le T<0\, ^{\circ } {\rm C}` and the
 coefficients for water are valid for
-:math:`0\, ^{\circ } {\rm C}\le T\le 100\, ^{\circ } {\rm C}` (Table 5.2
-and 5.3). The saturated water vapor specific humidity
-:math:`q_{sat}^{T}`  and its derivative
-:math:`\frac{dq_{sat}^{T} }{dT}`  are
+:math:`0\, ^{\circ } {\rm C}\le T\le 100\, ^{\circ } {\rm C}` 
+(:numref:`Table Coefficients for saturation vapor pressure` and 
+:numref:`Table Coefficients for derivative of esat`). 
+The saturated water vapor specific humidity :math:`q_{sat}^{T}` and its derivative
+:math:`\frac{dq_{sat}^{T} }{dT}` are
 
 .. math::
    :label: 5.157) 
@@ -1717,51 +1728,55 @@ and 5.3). The saturated water vapor specific humidity
 
    \frac{dq_{sat}^{T} }{dT} =\frac{0.622P_{atm} }{\left(P_{atm} -0.378e_{sat}^{T} \right)^{2} } \frac{de_{sat}^{T} }{dT} .
 
-Table 5.2. Coefficients for :math:`e_{sat}^{T}` 
+.. _Table Coefficients for saturation vapor pressure:
 
-+------------------+------------------------------------------+----------------------------------------+
-|                  | water                                    | ice                                    |
-+==================+==========================================+========================================+
-| :math:`a_{0}`    | 6.11213476                               | 6.11123516                             |
-+------------------+------------------------------------------+----------------------------------------+
-| :math:`a_{1}`    | 4.44007856 :math:`\times 10^{-1}`        | 5.03109514\ :math:`\times 10^{-1}`     |
-+------------------+-------------------------------------------+---------------------------------------+
-| :math:`a_{2}`    | 1.43064234 :math:`\times 10^{-2}`        | 1.88369801\ :math:`\times 10^{-2}`     |
-+------------------+-------------------------------------------+---------------------------------------+
-| :math:`a_{3}`    | 2.64461437 :math:`\times 10^{-4}`        | 4.20547422\ :math:`\times 10^{-4}`     |
-+------------------+-------------------------------------------+---------------------------------------+
-| :math:`a_{4}`    | 3.05903558 :math:`\times 10^{-6}`        | 6.14396778\ :math:`\times 10^{-6}`     |
-+------------------+-------------------------------------------+---------------------------------------+
-| :math:`a_{5}`    | 1.96237241 :math:`\times 10^{-8}`        | 6.02780717\ :math:`\times 10^{-8}`     |
-+------------------+-------------------------------------------+---------------------------------------+
-| :math:`a_{6}`    | 8.92344772 :math:`\times 10^{-11}`       | 3.87940929\ :math:`\times 10^{-10}`    |
-+------------------+-------------------------------------------+---------------------------------------+
-| :math:`a_{7}`    | -3.73208410 :math:`\times 10^{-13}`      | 1.49436277\ :math:`\times 10^{-12}`    |
-+------------------+-------------------------------------------+---------------------------------------+
-| :math:`a_{8}`    | 2.09339997 :math:`\times 10^{-16}`       | 2.62655803\ :math:`\times 10^{-15}`    |
-+------------------+------------------------------------------+----------------------------------------+
+.. table:: Coefficients for :math:`e_{sat}^{T}` 
 
-Table 5.3. Coefficients for :math:`\frac{de_{sat}^{T} }{dT}` 
+ +------------------+------------------------------------------+----------------------------------------+
+ |                  | water                                    | ice                                    |
+ +==================+==========================================+========================================+
+ | :math:`a_{0}`    | 6.11213476                               | 6.11123516                             |
+ +------------------+------------------------------------------+----------------------------------------+
+ | :math:`a_{1}`    | 4.44007856 :math:`\times 10^{-1}`        | 5.03109514\ :math:`\times 10^{-1}`     |
+ +------------------+-------------------------------------------+---------------------------------------+
+ | :math:`a_{2}`    | 1.43064234 :math:`\times 10^{-2}`        | 1.88369801\ :math:`\times 10^{-2}`     |
+ +------------------+-------------------------------------------+---------------------------------------+
+ | :math:`a_{3}`    | 2.64461437 :math:`\times 10^{-4}`        | 4.20547422\ :math:`\times 10^{-4}`     |
+ +------------------+-------------------------------------------+---------------------------------------+
+ | :math:`a_{4}`    | 3.05903558 :math:`\times 10^{-6}`        | 6.14396778\ :math:`\times 10^{-6}`     |
+ +------------------+-------------------------------------------+---------------------------------------+
+ | :math:`a_{5}`    | 1.96237241 :math:`\times 10^{-8}`        | 6.02780717\ :math:`\times 10^{-8}`     |
+ +------------------+-------------------------------------------+---------------------------------------+
+ | :math:`a_{6}`    | 8.92344772 :math:`\times 10^{-11}`       | 3.87940929\ :math:`\times 10^{-10}`    |
+ +------------------+-------------------------------------------+---------------------------------------+
+ | :math:`a_{7}`    | -3.73208410 :math:`\times 10^{-13}`      | 1.49436277\ :math:`\times 10^{-12}`    |
+ +------------------+-------------------------------------------+---------------------------------------+
+ | :math:`a_{8}`    | 2.09339997 :math:`\times 10^{-16}`       | 2.62655803\ :math:`\times 10^{-15}`    |
+ +------------------+------------------------------------------+----------------------------------------+
+ 
+.. _Table Coefficients for derivative of esat:
 
-+------------------+----------------------------------------+----------------------------------------+
-|                  | water                                  | ice                                    |
-+==================+========================================+========================================+
-| :math:`b_{0}`    | 4.44017302\ :math:`\times 10^{-1}`     | 5.03277922\ :math:`\times 10^{-1}`     |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{1}`    | 2.86064092\ :math:`\times 10^{-2}`     | 3.77289173\ :math:`\times 10^{-2}`     |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{2}`    | 7.94683137\ :math:`\times 10^{-4}`     | 1.26801703\ :math:`\times 10^{-3}`     |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{3}`    | 1.21211669\ :math:`\times 10^{-5}`     | 2.49468427\ :math:`\times 10^{-5}`     |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{4}`    | 1.03354611\ :math:`\times 10^{-7}`     | 3.13703411\ :math:`\times 10^{-7}`     |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{5}`    | 4.04125005\ :math:`\times 10^{-10}`    | 2.57180651\ :math:`\times 10^{-9}`     |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{6}`    | -7.88037859 :math:`\times 10^{-13}`    | 1.33268878\ :math:`\times 10^{-11}`    |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{7}`    | -1.14596802 :math:`\times 10^{-14}`    | 3.94116744\ :math:`\times 10^{-14}`    |
-+------------------+----------------------------------------+----------------------------------------+
-| :math:`b_{8}`    | 3.81294516\ :math:`\times 10^{-17}`    | 4.98070196\ :math:`\times 10^{-17}`    |
-+------------------+----------------------------------------+----------------------------------------+
+.. table:: Coefficients for :math:`\frac{de_{sat}^{T} }{dT}` 
+
+ +------------------+----------------------------------------+----------------------------------------+
+ |                  | water                                  | ice                                    |
+ +==================+========================================+========================================+
+ | :math:`b_{0}`    | 4.44017302\ :math:`\times 10^{-1}`     | 5.03277922\ :math:`\times 10^{-1}`     |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{1}`    | 2.86064092\ :math:`\times 10^{-2}`     | 3.77289173\ :math:`\times 10^{-2}`     |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{2}`    | 7.94683137\ :math:`\times 10^{-4}`     | 1.26801703\ :math:`\times 10^{-3}`     |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{3}`    | 1.21211669\ :math:`\times 10^{-5}`     | 2.49468427\ :math:`\times 10^{-5}`     |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{4}`    | 1.03354611\ :math:`\times 10^{-7}`     | 3.13703411\ :math:`\times 10^{-7}`     |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{5}`    | 4.04125005\ :math:`\times 10^{-10}`    | 2.57180651\ :math:`\times 10^{-9}`     |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{6}`    | -7.88037859 :math:`\times 10^{-13}`    | 1.33268878\ :math:`\times 10^{-11}`    |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{7}`    | -1.14596802 :math:`\times 10^{-14}`    | 3.94116744\ :math:`\times 10^{-14}`    |
+ +------------------+----------------------------------------+----------------------------------------+
+ | :math:`b_{8}`    | 3.81294516\ :math:`\times 10^{-17}`    | 4.98070196\ :math:`\times 10^{-17}`    |
+ +------------------+----------------------------------------+----------------------------------------+
 
