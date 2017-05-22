@@ -31,6 +31,7 @@ module ch4FInundatedStreamType
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: Init            ! Initialize and read data in
       procedure, public :: CalcFinundated  ! Calculate finundated based on input streams
+      procedure, public :: UseStreams      ! If streams will be used
 
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate   ! Allocate data
@@ -64,7 +65,7 @@ contains
    !
    ! Uses:
    use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar
+   use clm_time_manager , only : get_calendar, get_curr_date
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
@@ -78,6 +79,7 @@ contains
    use shr_strdata_mod  , only : shr_strdata_print, shr_strdata_advance
    use spmdMod          , only : comp_id, iam
    use ch4varcon        , only : finundation_mtd_h2osfc
+   use ch4varcon        , only : finundation_mtd_ZWT_inversion, finundation_mtd_TWS_inversion
    !
    ! arguments
    implicit none
@@ -89,79 +91,122 @@ contains
    integer            :: ig, g            ! Indices
    type(mct_ggrid)    :: dom_clm          ! domain information 
    type(shr_strdata_type) :: sdat         ! input data stream
-   integer            :: index_ZWT0       ! Index of ZWT0 field
-   integer            :: index_F0         ! Index of F0 field
-   integer            :: index_P3         ! Index of P3 field
-   integer            :: index_FWS_TWS_A  ! Index of FWS_TWS_A field
-   integer            :: index_FWS_TWS_B  ! Index of FWS_TWS_B field
+   integer            :: index_ZWT0       = 0 ! Index of ZWT0 field
+   integer            :: index_F0         = 0 ! Index of F0 field
+   integer            :: index_P3         = 0 ! Index of P3 field
+   integer            :: index_FWS_TWS_A  = 0 ! Index of FWS_TWS_A field
+   integer            :: index_FWS_TWS_B  = 0 ! Index of FWS_TWS_B field
+   integer            :: year                 ! year (0, ...) for nstep+1
+   integer            :: mon                  ! month (1, ..., 12) for nstep+1
+   integer            :: day                  ! day of month (1, ..., 31) for nstep+1
+   integer            :: sec                  ! seconds into current date for nstep+1
+   integer            :: mcdate               ! Current model date (yyyymmdd)
    character(len=*), parameter :: stream_name = 'ch4finundated'
    character(*), parameter :: subName = "('ch4finundatedstream::Init')"
    !-----------------------------------------------------------------------
-   if ( finundation_mtd == finundation_mtd_h2osfc )then
+   if ( finundation_mtd /= finundation_mtd_h2osfc )then
       call this%InitAllocate( bounds )
       call control%ReadNML( bounds, NLFileName )
 
-      call clm_domain_mct (bounds, dom_clm)
+      if ( this%useStreams() )then
+         call clm_domain_mct (bounds, dom_clm)
 
-      call shr_strdata_create(sdat,name=stream_name,&
-        pio_subsystem=pio_subsystem,               & 
-        pio_iotype=shr_pio_getiotype(inst_name),   &
-        mpicom=mpicom, compid=comp_id,             &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
-        nxg=ldomain%ni, nyg=ldomain%nj,            &
-        yearFirst=1,                               &
-        yearLast=1,                                &
-        yearAlign=1,                               &
-        offset=0,                                  &
-        domFilePath='',                            &
-        domFileName=trim(control%stream_fldFileName_ch4finundated), &
-        domTvarName='time',                        &
-        domXvarName='lon' ,                        &
-        domYvarName='lat' ,                        &  
-        domAreaName='area',                        &
-        domMaskName='mask',                        &
-        filePath='',                               &
-        filename=(/trim(control%stream_fldFileName_ch4finundated)/),&
-        fldListFile=control%fldList,               &
-        fldListModel=control%fldList,              &
-        fillalgo='none',                           &
-        mapalgo=control%ch4finundatedmapalgo,      &
-        calendar=get_calendar(),                   &
-        taxmode='extend'                           )
+         call shr_strdata_create(sdat,name=stream_name,&
+           pio_subsystem=pio_subsystem,               & 
+           pio_iotype=shr_pio_getiotype(inst_name),   &
+           mpicom=mpicom, compid=comp_id,             &
+           gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
+           nxg=ldomain%ni, nyg=ldomain%nj,            &
+           yearFirst=1996,                            &
+           yearLast=1996,                             &
+           yearAlign=1,                               &
+           offset=0,                                  &
+           domFilePath='',                            &
+           domFileName=trim(control%stream_fldFileName_ch4finundated), &
+           domTvarName='time',                        &
+           domXvarName='LONGXY' ,                     &
+           domYvarName='LATIXY' ,                     &  
+           domAreaName='AREA',                        &
+           domMaskName='LANDMASK',                    &
+           filePath='',                               &
+           filename=(/trim(control%stream_fldFileName_ch4finundated)/),&
+           fldListFile=control%fldList,               &
+           fldListModel=control%fldList,              &
+           fillalgo='none',                           &
+           mapalgo=control%ch4finundatedmapalgo,      &
+           calendar=get_calendar(),                   &
+           taxmode='extend'                           )
 
-      if (masterproc) then
-         call shr_strdata_print(sdat,'CLM '//stream_name//' data')
-      endif
+         if (masterproc) then
+            call shr_strdata_print(sdat,'CLM '//stream_name//' data')
+         endif
 
-      index_ZWT0      = mct_avect_indexra(sdat%grid%data,'ZWT0',       perrwith='quiet')
-      index_F0        = mct_avect_indexra(sdat%grid%data,'F0',         perrwith='quiet')
-      index_P3        = mct_avect_indexra(sdat%grid%data,'P3',         perrwith='quiet')
-      index_FWS_TWS_A = mct_avect_indexra(sdat%grid%data,'FWS_TWS_A',  perrwith='quiet')
-      index_FWS_TWS_B = mct_avect_indexra(sdat%grid%data,'FWS_TWS_B',  perrwith='quiet')
+         if( finundation_mtd == finundation_mtd_ZWT_inversion )then
+            index_ZWT0      = mct_avect_indexra(sdat%avs(1),'ZWT0')
+            index_F0        = mct_avect_indexra(sdat%avs(1),'F0' )
+            index_P3        = mct_avect_indexra(sdat%avs(1),'P3' )
+         else if( finundation_mtd == finundation_mtd_TWS_inversion )then
+            index_FWS_TWS_A = mct_avect_indexra(sdat%avs(1),'FWS_TWS_A')
+            index_FWS_TWS_B = mct_avect_indexra(sdat%avs(1),'FWS_TWS_B')
+         end if
 
-      ! Get the data
-      ig = 0
-      do g = bounds%begg,bounds%endg
-         ig = ig+1
-         if ( index_ZWT0 > 0 )then
-            this%zwt0_gdc(g) = sdat%avs(index_ZWT0)%rAttr(index_ZWT0,ig)
-         end if
-         if ( index_F0 > 0 )then
-            this%f0_gdc(g) = sdat%avs(index_F0)%rAttr(index_F0,ig)
-         end if
-         if ( index_P3 > 0 )then
-            this%p3_gdc(g) = sdat%avs(index_P3)%rAttr(index_P3,ig)
-         end if
-         if ( index_FWS_TWS_A > 0 )then
-            this%fws_slope_gdc(g) = sdat%avs(index_FWS_TWS_A)%rAttr(index_FWS_TWS_A,ig)
-         end if
-         if ( index_FWS_TWS_B > 0 )then
-            this%fws_intercept_gdc(g) = sdat%avs(index_FWS_TWS_B)%rAttr(index_FWS_TWS_B,ig)
-         end if
-      end do
+
+         ! Explicitly set current date to a hardcoded constant value. Otherwise
+         ! using the real date can cause roundoff differences that are
+         ! detrected as issues with exact restart.  EBK M05/20/2017
+         !call get_curr_date(year, mon, day, sec)
+         year = 1996
+         mon  = 12
+         day  = 31
+         sec  = 0
+         mcdate = year*10000 + mon*100 + day
+
+         call shr_strdata_advance(sdat, mcdate, sec, mpicom, 'ch4finundated')
+
+         ! Get the data
+         ig = 0
+         do g = bounds%begg,bounds%endg
+            ig = ig+1
+            if ( index_ZWT0 > 0 )then
+               this%zwt0_gdc(g) = sdat%avs(1)%rAttr(index_ZWT0,ig)
+            end if
+            if ( index_F0 > 0 )then
+               this%f0_gdc(g) = sdat%avs(1)%rAttr(index_F0,ig)
+            end if
+            if ( index_P3 > 0 )then
+               this%p3_gdc(g) = sdat%avs(1)%rAttr(index_P3,ig)
+            end if
+            if ( index_FWS_TWS_A > 0 )then
+               this%fws_slope_gdc(g) = sdat%avs(1)%rAttr(index_FWS_TWS_A,ig)
+            end if
+            if ( index_FWS_TWS_B > 0 )then
+               this%fws_intercept_gdc(g) = sdat%avs(1)%rAttr(index_FWS_TWS_B,ig)
+            end if
+         end do
+      end if
    end if
 
   end subroutine Init
+
+  !-----------------------------------------------------------------------
+  logical function UseStreams(this)
+    !
+    ! !DESCRIPTION:
+    ! Return true if 
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(ch4finundatedstream_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    if ( trim(control%stream_fldFileName_ch4finundated) == '' )then
+       UseStreams = .false. 
+    else
+       UseStreams = .true. 
+    end if
+  end function UseStreams
 
   !-----------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
@@ -261,6 +306,7 @@ contains
           case ( finundation_mtd_TWS_inversion )
              finundated(c) = this%fws_slope_gdc(g) * tws(g) + this%fws_intercept_gdc(g)
        end select
+       finundated(c) = min( 1.0_r8, max( 0.0_r8, finundated(c) ) )
     end do
     end associate
 
@@ -335,7 +381,7 @@ contains
    this%ch4finundatedmapalgo             = ch4finundatedmapalgo
    if (      finundation_mtd == finundation_mtd_ZWT_inversion  )then
        this%fldList = "ZWT0:F0:P3"
-   else if ( finundation_mtd == finundation_mtd_ZWT_inversion  )then
+   else if ( finundation_mtd == finundation_mtd_TWS_inversion  )then
        this%fldList = "FWS_TWS_A:FWS_TWS_B"
    else
        call endrun(msg=' ERROR do NOT know what list of variables to read for this finundation_mtd type'// &

@@ -1,4 +1,144 @@
 ===============================================================
+Tag name:  clm4_5_16_r242
+Originator(s):  erik (Erik Kluzek)
+Date: Sun May 21 21:16:34 MDT 2017
+One-line Summary: Use finundated streams for CLM50, and use ndep if it comes from cpl
+
+Purpose of changes
+------------------
+
+For methane, read in inversion for TWS to Prigent Satellite dataset from a streams file for CLM50. For
+CLM45 still read in ZWT inversion parameters from the surface dataset. You can read it from the streams
+file if you provide it to the namelist. Answers change for CLM50BGC compsets because of this change to
+methane. The change does affect results outside of methane after enough time.
+
+Add option to use nitrogen deposition sent from the coupler rather than from datasets (from mvertens).
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+   bug 2462 -- TWS restart
+   bug 2457 -- remove FIND_HIST
+   bug 2454 -- species masterlist confusion
+   bug 2443 -- ndep
+   bug 2456 -- rm extra settings
+   bug 2463 -- T42 SP dataset
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): New namelist item
+    for finundated streams stream_fldfilename_ch4finundated. It can be used for both TWS_inversion
+    which is now the CLM50 default, or the ZWT_inversion (CLM45 default), but by default CLM45
+    is reading ZWT inversion parameters from the surface dataset
+
+Changes made to namelist defaults (e.g., changed parameter values): ZWT_inversion for CLM45 and TWS_inversion for CLM50
+   for inundated fraction
+
+Changes to the datasets (e.g., parameter, surface or initial files): Add 2000 T42 fsurdata file
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Add two new tests
+   Add test for hourly radiation with lightning resolution at half-degree
+   And test with reseeding and reset of snow
+
+Code reviewed by: self,mvertens
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests: 
+
+    yellowstone - OK  (94 compare tests FAIL)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - Didn't run
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    cheyenne_intel - OK
+    hobart_nag --- PASS
+    hobart_pgi --- PASS
+    hobart_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r241
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, CLM50
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50 (with finundated streams for TWS_inversion)
+    - what platforms/compilers: All
+    - nature of change: similar climate, but methane changes (which does feedback into system)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: None
+
+List all files added and what they do: Add new tests
+
+   A components/clm/cime_config/testdefs/testmods_dirs/clm/rad_hrly_light_res_half/shell_commands
+   A components/clm/cime_config/testdefs/testmods_dirs/clm/rad_hrly_light_res_half/user_nl_datm
+   A components/clm/cime_config/testdefs/testmods_dirs/clm/reseedresetsnow/user_nl_clm
+   A components/clm/cime_config/testdefs/testmods_dirs/clm/reseedresetsnow/include_user_mods
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/bld/CLMBuildNamelist.pm -------------------- Remove fin_use_fsat, set finundation_method
+        and get finundated streams file if TWS_inversion, add ch4finundated namelist group
+   M components/clm/bld/unit_testers/build-namelist_test.pl ---- Add test for change to finundated if not methane
+   M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Remove extra settings of use_init_interp,
+        add T42 present day fsurdat file, remove fin_use_fsat, set finundation_method to TWS_inversion for CLM50
+        and ZWT_inversion for CLM45, set finundation_res=1.9x2.5 and set stream_fldfilename_ch4finundated file for it
+   M components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Add: stream_fldfilename_ch4finundated, finundation_res
+        remove fin_use_fsat, correct finundation_method documentation
+
+   M components/clm/cime_config/config_compsets.xml ------- Add IGMCRUCLM50SP, IGMCRUCLM50BGCROP compsets
+   M components/clm/cime_config/testdefs/testlist_clm.xml - Change prealpha/prebeta yellowstone_intel/gnu tests to cheyenne
+        add new tests for reseedresetsnow and rad_hrly_light_res_half
+
+   M components/clm/src/main/clm_instMod.F90 -------- Pass NLFilename down to ch4 Init
+   M components/clm/src/main/clm_varctl.F90 --------- Add ndep_from_cpl variable
+   M components/clm/src/main/clm_driver.F90 --------- If ndep_from_cpl is true don't do ndep_interp
+   M components/clm/src/main/clm_initializeMod.F90 -- If ndep_from_cpl is true don't do ndep_init and ndep_interp
+   M components/clm/src/main/histFileMod.F90 -------- Add error check if field name is too long
+   M components/clm/src/biogeophys/WaterStateType.F90 - Add TWS to restart file
+
+   M components/clm/src/cpl/clm_cpl_indices.F90 --- Set ndep_from_cpl based on existance of Faxa_nhx and Faxa_noy
+   M components/clm/src/cpl/lnd_import_export.F90 - Set forc_ndep_grc if ndep_from_cpl is set, convert units
+
+   M components/clm/src/biogeochem/SpeciesNonIsotopeType.F90 --- Add trim's to strings to make sure blanks aren't added
+   M components/clm/src/biogeochem/ch4Mod.F90 ------------------ Pass NLFilename to Init, add ch4findstream data and Init to it
+          Remove fws_a/b/hist, remove fin_use_fsat use finundation_mtd Call ch4findstream%CalcFinundated is finundated streams are being
+          used (stream_fldfilename_ch4finundated is set), or if finundation_mtd_h2osfc, 
+   M components/clm/src/biogeochem/ch4FInundatedStreamType.F90 - Add UseStreams method, get streams working properly and 
+   M components/clm/src/biogeochem/SpeciesIsotopeType.F90 ------ Add trim for strings to make sure blanks don't happen
+   M components/clm/src/biogeochem/ch4varcon.F90 --------------- Remove fin_use_fsat
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r241
 Originator(s):  sacks (Bill Sacks)
 Date: Tue May 16 20:43:43 MDT 2017

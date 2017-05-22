@@ -23,6 +23,7 @@ contains
     !
     ! !USES:
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13, create_glacier_mec_landunit
+    use clm_varctl      , only: ndep_from_cpl 
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use domainMod       , only: ldomain
@@ -230,6 +231,12 @@ contains
           end do
           glc2lnd_inst%icemask_grc(g)  = x2l(index_x2l_Sg_icemask,i)
           glc2lnd_inst%icemask_coupled_fluxes_grc(g)  = x2l(index_x2l_Sg_icemask_coupled_fluxes,i)
+       end if
+
+       if (ndep_from_cpl) then
+          ! The coupler is sending ndep in units if kgN/m2/s - and clm uses units of gN/m2/sec - so the
+          ! following conversion needs to happen
+          atm2lnd_inst%forc_ndep_grc(g) = (x2l(index_x2l_Faxa_nhx, i) + x2l(index_x2l_faxa_noy, i))*1000._r8
        end if
 
     end do

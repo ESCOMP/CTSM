@@ -329,7 +329,7 @@ contains
     call topo_inst%Init(bounds)
 
     ! Note - always initialize the memory for ch4_inst
-    call ch4_inst%Init(bounds, soilstate_inst%cellorg_col(begc:endc, 1:), fsurdat)
+    call ch4_inst%Init(bounds, soilstate_inst%cellorg_col(begc:endc, 1:), fsurdat, nlfilename)
 
     call vocemis_inst%Init(bounds)
 

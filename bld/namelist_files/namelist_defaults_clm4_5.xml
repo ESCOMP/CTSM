@@ -414,15 +414,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_init_interp  use_cndv=".false." sim_year="1850">.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." sim_year="2000">.true.</use_init_interp>
 <use_init_interp                                    >.false.</use_init_interp>
-<use_init_interp phys="clm5_0" hgrid="0.9x1.25">.true.</use_init_interp>
-<use_init_interp phys="clm4_5" hgrid="0.9x1.25">.true.</use_init_interp>
-<use_init_interp phys="clm5_0" hgrid="1.9x2.5" >.true.</use_init_interp>
-<use_init_interp phys="clm4_5" hgrid="1.9x2.5" >.true.</use_init_interp>
-<use_init_interp phys="clm5_0" hgrid="10x15"   >.true.</use_init_interp>
-<use_init_interp phys="clm4_5" hgrid="10x15"   >.true.</use_init_interp>
-<use_init_interp phys="clm5_0" hgrid="4x5"     >.true.</use_init_interp>
-<use_init_interp phys="clm4_5" hgrid="4x5"     >.true.</use_init_interp>
-
 
 <!--
   Set attributes to find specific matching finidat files below
@@ -517,6 +508,9 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_simyr2000_c170428.nc</fsurdat>
 <fsurdat hgrid="ne16np4"     sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_ne16np4_16pfts_simyr2000_c170428.nc</fsurdat>
 
+<!-- Needed for SCAM (Single Column Atmosphere Model) -->
+<fsurdat hgrid="64x128"      sim_year="2000" use_crop=".false." 
+>lnd/clm2/surfdata_map/surfdata_64x128_16pfts_simyr2000_c170516.nc</fsurdat>
 
 <!-- Crop surface datasets -->
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".true." >
@@ -2039,11 +2033,15 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c170428.nc</fsurdat>
 <!-- Defaults for ch4par_in namelist            -->
 <!-- =========================================  -->
 
-<fin_use_fsat      use_cn=".true.">.false.</fin_use_fsat>
-<use_aereoxid_prog use_cn=".true.">.true.</use_aereoxid_prog>
-
-<fin_use_fsat      use_fates=".true.">.false.</fin_use_fsat>
+<finundation_method phys="clm5_0">TWS_inversion</finundation_method>
+<finundation_method phys="clm4_5">ZWT_inversion</finundation_method>
+<use_aereoxid_prog use_cn=".true."   >.true.</use_aereoxid_prog>
 <use_aereoxid_prog use_fates=".true.">.true.</use_aereoxid_prog>
+
+<finundation_res finundation_method="TWS_inversion">1.9x2.5</finundation_res>
+
+<stream_fldfilename_ch4finundated finundation_method="TWS_inversion" hgrid="1.9x2.5"
+>lnd/clm2/paramdata/finundated_inversiondata_1.9x2.5_c170507.nc</stream_fldfilename_ch4finundated>
 
 <!-- =========================================  -->
 <!-- Defaults for different BGC modes           -->

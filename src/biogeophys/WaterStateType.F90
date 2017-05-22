@@ -840,7 +840,7 @@ contains
     !
     ! !USES:
     use spmdMod          , only : masterproc
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin, spval  
+    use clm_varcon       , only : denice, denh2o, pondmx, watmin, spval, nameg
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step
@@ -918,6 +918,13 @@ contains
          dim1name='pft', &
          long_name='Canopy snow unloading', units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%snounload_patch)
+
+    ! TWS is needed when methane is on and the TWS_inversion is used to get exact
+    ! restart.
+    call restartvar(ncid=ncid, flag=flag, varname='TWS', xtype=ncd_double,  &
+         dim1name=nameg, &
+         long_name='Total Water Storage', units='mm', &
+         interpinic_flag='interp', readvar=readvar, data=this%tws_grc)
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, varname='rh10', xtype=ncd_double,  &

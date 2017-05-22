@@ -418,6 +418,16 @@
   </compset>
 
   <compset grid="g%gland">
+    <alias>IGMCRUCLM50SP</alias>
+    <lname>2000_DATM%CRU_CLM50%SP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
+  </compset>
+
+  <compset grid="g%gland">
+    <alias>IGMCRUCLM50BGCROP</alias>
+    <lname>2000_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
+  </compset>
+
+  <compset grid="g%gland">
     <alias>IGRCP85CN</alias>
     <lname>RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>

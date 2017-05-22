@@ -1,0 +1,2 @@
+ reseed_dead_plants = .true.
+ reset_snow = .true.

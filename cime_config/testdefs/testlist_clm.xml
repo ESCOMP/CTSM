@@ -22,11 +22,11 @@
     </grid>
     <grid name="f45_f45">
       <test name="SMS_Ld1">
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40ptsRLA">cheyenne</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">cheyenne</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">hobart</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
       </test>
       <test name="SMS_Ld1_Mmpi-serial">
@@ -112,8 +112,8 @@
     <grid name="f19_g16">
       <test name="ERP_P180x2_D_Ld5">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
+        <machine compiler="intel" testtype="prealpha" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="prealpha" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -260,9 +260,9 @@
   <compset name="I1PT">
     <grid name="1x1_mexicocityMEX">
       <test name="SMS_Ld1">
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="SMS_Ld1_Mmpi-serial">
@@ -345,9 +345,9 @@
     </grid>
     <grid name="f45_g37">
       <test name="ERI_Ld9">
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
@@ -416,13 +416,13 @@
       </test>
       <test name="SMS_Ld1_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">cheyenne</machine>
+        <machine compiler="intel" testtype="prealpha" testmods="clm/ptsRLA">cheyenne</machine>
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLB">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsROA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
-        <machine compiler="intel" testtype="prealpha" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="prealpha" testmods="clm/ptsRLA">yellowstone</machine>
       </test>
     </grid>
@@ -568,8 +568,8 @@
       </test>
       <test name="ERP_P15x2_Lm36">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">cheyenne</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/irrigOn_reduceOutput">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/irrigOn_reduceOutput">yellowstone</machine>
       </test>
       <test name="LII_D">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropf10IC" comment="include one interpolation test involving crop (for now we also want one without glc_mec, although we could drop the requirement of having a non-glc_mec LII test if/when we switch to always using glc_mec)">yellowstone</machine>
@@ -620,14 +620,14 @@
   <compset name="ICLM45CNTEST">
     <grid name="1x1_camdenNJ">
       <test name="ERI_D_Ld9">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/default">cheyenne</machine>
       </test>
     </grid>
   </compset>
   <compset name="ICLM45CRUBGC">
     <grid name="f19_g16">
       <test name="SMS_Ld1">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/default">cheyenne</machine>
       </test>
     </grid>
   </compset>
@@ -858,9 +858,9 @@
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
       <test name="SMS_Ld1">
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="SMS_Ld1_Mmpi-serial">
@@ -910,8 +910,8 @@
     <grid name="f10_f10">
       <test name="NCK_Ld1">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">cheyenne</machine>
+        <machine compiler="intel" testtype="prealpha" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="prealpha" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/af_bias_v5">hobart</machine>
@@ -1095,10 +1095,10 @@
     </grid>
     <grid name="f19_g16_gl4">
       <test name="ERP">
-        <machine compiler="pgi" testtype="aux_clm45">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">cheyenne</machine>
       </test>
       <test name="LII_D_Ld3">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">yellowstone</machine>
       </test>
     </grid>
@@ -1209,6 +1209,11 @@
     </grid>
   </compset>
   <compset name="IGM1850CRUCLM50BGCCROP">
+    <grid name="f19_g16">
+      <test name="ERS_D">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/reseedresetsnow">cheyenne</machine>
+      </test>
+    </grid>
     <grid name="f19_g16_gl4">
       <test name="ERP_P180x2_D_Ld5">
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/glcMEC_increase">yellowstone</machine>
@@ -1216,6 +1221,13 @@
       </test>
       <test name="SMS">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/glcMEC">hobart</machine>
+      </test>
+    </grid>
+  </compset>
+  <compset name="IGMCRUCLM50BGCROP">
+    <grid name="f09_g16">
+      <test name="ERS_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/rad_hrly_light_res_half">cheyenne</machine>
       </test>
     </grid>
   </compset>
@@ -1359,7 +1371,7 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
       </test>
       <test name="ERP_D_P15x2">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_decStart" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_decStart">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_decStart" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">yellowstone</machine>
       </test>
       <test name="ERP_D_P24x1">
@@ -1378,7 +1390,7 @@
   <compset name="IHISTCLM50BGCCROP">
     <grid name="1x1_smallvilleIA">
       <test name="ERS_D_Ld7_Mmpi-serial">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">yellowstone</machine>
       </test>
       <test name="ERS_Ly3_Mmpi-serial">
@@ -1390,7 +1402,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERS_Ly5_P60x1">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">yellowstone</machine>
       </test>
     </grid>
@@ -1598,9 +1610,9 @@
         <machine compiler="null" testtype="null">null</machine>
       </test>
       <test name="SMS_D_Ld1">
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">cheyenne</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
@@ -1614,11 +1626,11 @@
     </grid>
     <grid name="f45_f45">
       <test name="SMS_Ld5">
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40ptsRLB">cheyenne</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLB">cheyenne</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsROA">edison</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsROA">hopper</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLB">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/40ptsRLB">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLB">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLB">yellowstone</machine>
       </test>
     </grid>

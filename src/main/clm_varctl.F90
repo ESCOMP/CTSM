@@ -94,6 +94,12 @@ module clm_varctl
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
 
   !----------------------------------------------------------
+  ! Flag to read ndep rather than obtain it from coupler
+  !----------------------------------------------------------
+  
+  logical, public :: ndep_from_cpl = .false.
+
+  !----------------------------------------------------------
   ! Interpolation of finidat if requested
   !----------------------------------------------------------
 

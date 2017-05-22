@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 747;
+my $ntests = 748;
 if ( defined($opts{'compare'}) ) {
    $ntests += 468;
 }
@@ -519,6 +519,11 @@ my %failtest = (
                                      namelst=>"use_lch4=.true.,use_nitrif_denitrif=.true.,use_vertsoilc=.true.,use_century_decomp=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
+                                   },
+     "finundated and not methane"=>{ options=>"-bgc cn -envxml_dir .",
+                                     namelst=>"use_lch4=.false.,finundation_method='h2osfc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "bgc=bgc and cn-only set"   =>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_lch4=.false.,use_nitrif_denitrif=.false.,use_vertsoilc=.false.,use_century_decomp=.false.",

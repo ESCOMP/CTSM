@@ -38,16 +38,11 @@ module ch4varcon
                ! NOTE SWITCHING THIS OFF ASSUMES TRANSIENT CARBON SUPPLY FROM LAKES; COUPLED MODEL WILL NOT CONSERVE CARBON
                ! IN THIS MODE.
 
+  ! inundatrion fraction -- which is used in methane code and potentially soil code
   integer, public :: finundation_mtd        ! Finundation method type to use, one of the following
-  integer, public, parameter :: finundation_mtd_h2osfc        = 0 ! Use prognostic h2osfc
+  integer, public, parameter :: finundation_mtd_h2osfc        = 0 ! Use prognostic fsat h2osfc
   integer, public, parameter :: finundation_mtd_ZWT_inversion = 1 ! Use inversion of ZWT to Prigent satellite inundation obs. data
   integer, public, parameter :: finundation_mtd_TWS_inversion = 2 ! Use inversion of TWS to Prigent satellite inundation obs. data
-
-  logical, public :: fin_use_fsat = .false. ! Use fsat rather than the inversion to Prigent satellite inundation obs. (applied to
-                                    ! CLM water table depth and surface runoff) to calculated finundated which is
-                                    ! used in methane code and potentially soil code
-                                    !!!! Attn EK: Set this to true when Sean Swenson's prognostic, tested
-                                       ! fsat is integrated. (CLM4 fsat is bad for these purposes.)
 
   logical, public :: usefrootc = .false.    ! Use CLMCN fine root C rather than ann NPP & LAI based parameterization to
                                     ! calculate tiller C for aerenchyma area calculation.
@@ -108,7 +103,7 @@ contains
 
     ! Driver
     namelist /ch4par_in/ &
-         ch4offline, fin_use_fsat, replenishlakec, allowlakeprod, finundation_method
+         ch4offline, replenishlakec, allowlakeprod, finundation_method
 
     ! Production
     namelist /ch4par_in/ &
@@ -159,7 +154,6 @@ contains
     call mpi_bcast (allowlakeprod,      1 , MPI_LOGICAL, 0, mpicom, ierr)            
     call mpi_bcast (usephfact,          1 , MPI_LOGICAL, 0, mpicom, ierr)            
     call mpi_bcast (replenishlakec,     1 , MPI_LOGICAL, 0, mpicom, ierr)            
-    call mpi_bcast (fin_use_fsat,       1 , MPI_LOGICAL, 0, mpicom, ierr)            
     call mpi_bcast (finundation_mtd,    1 , MPI_INTEGER, 0, mpicom, ierr)            
     call mpi_bcast (usefrootc,          1 , MPI_LOGICAL, 0, mpicom, ierr)            
     call mpi_bcast (ch4offline,         1 , MPI_LOGICAL, 0, mpicom, ierr)            
@@ -170,7 +164,6 @@ contains
        write(iulog,*)'allowlakeprod      = ', allowlakeprod
        write(iulog,*)'usephfact          = ', usephfact
        write(iulog,*)'replenishlakec     = ', replenishlakec
-       write(iulog,*)'fin_use_fsat       = ', fin_use_fsat
        write(iulog,*)'finundation_method = ', finundation_method
        write(iulog,*)'usefrootc          = ', usefrootc
        write(iulog,*)'ch4offline         = ', ch4offline

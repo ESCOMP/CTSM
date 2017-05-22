@@ -11,7 +11,7 @@ module clm_driver
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
-  use clm_varctl             , only : use_crop
+  use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : is_cold_start, is_interpolated_start
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
@@ -372,7 +372,9 @@ contains
 
     if (use_cn) then
        call t_startf('bgc_interp')
-       call ndep_interp(bounds_proc, atm2lnd_inst)
+       if (.not. ndep_from_cpl) then
+          call ndep_interp(bounds_proc, atm2lnd_inst)
+       end if
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
     end if

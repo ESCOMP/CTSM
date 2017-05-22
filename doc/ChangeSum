@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r242     erik 05/21/2017 Use finundated streams for CLM50, and use ndep if it comes from cpl
   clm4_5_16_r241    sacks 05/16/2017 Fix ch4 subtle dependence on processor count
   clm4_5_16_r240    sacks 05/15/2017 Make glc_dyn_runoff_routing real-valued
   clm4_5_16_r239    sacks 05/13/2017 Avoid division by zero in snow WindDriftCompaction

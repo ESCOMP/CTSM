@@ -345,6 +345,12 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
+    ! Ensure that new field name isn't too long
+
+    if (len_trim(fname) > max_namlen ) then
+       write(iulog,*) trim(subname),' ERROR: field name too long: ', trim(fname)
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
     ! Ensure that new field doesn't already exist
 
     do n = 1,nfmaster

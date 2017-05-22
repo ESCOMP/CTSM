@@ -81,7 +81,7 @@ contains
 
     fname = trim(basename) // trim(this%species_name)
     if (present(suffix)) then
-       fname = fname // suffix
+       fname = trim(fname) // trim(suffix)
     end if
 
   end function hist_fname
@@ -104,9 +104,9 @@ contains
     !-----------------------------------------------------------------------
 
     species_name_lcase = shr_string_toLower(trim(this%species_name))
-    fname = trim(basename) // species_name_lcase
+    fname = trim(basename) // trim(species_name_lcase)
     if (present(suffix)) then
-       fname = fname // suffix
+       fname = trim(fname) // trim(suffix)
     end if
 
   end function rest_fname

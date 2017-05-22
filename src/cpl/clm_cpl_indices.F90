@@ -104,6 +104,9 @@ module clm_cpl_indices
   integer, public ::index_x2l_Faxa_dstdry3    ! flux: Size 3 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry4    ! flux: Size 4 dust -- dry deposition
  
+  integer, public ::index_x2l_Faxa_nhx        ! flux nhx from atm
+  integer, public ::index_x2l_Faxa_noy        ! flux noy from atm
+
   integer, public ::index_x2l_Flrr_flood      ! rtm->lnd rof flood flux
   integer, public ::index_x2l_Flrr_volr       ! rtm->lnd rof volr total volume
   integer, public ::index_x2l_Flrr_volrmch    ! rtm->lnd rof volr main channel volume
@@ -136,6 +139,7 @@ contains
     use seq_drydep_mod , only: drydep_fields_token, lnd_drydep
     use shr_megan_mod  , only: shr_megan_fields_token, shr_megan_mechcomps_n
     use shr_fire_emis_mod,only: shr_fire_emis_fields_token, shr_fire_emis_ztop_token, shr_fire_emis_mechcomps_n
+    use clm_varctl     , only:  ndep_from_cpl
     use glc_elevclass_mod, only: glc_get_num_elevation_classes, glc_elevclass_as_string
     !
     ! !ARGUMENTS:
@@ -267,6 +271,13 @@ contains
     index_x2l_Faxa_dstwet2  = mct_avect_indexra(x2l,'Faxa_dstwet2')
     index_x2l_Faxa_dstwet3  = mct_avect_indexra(x2l,'Faxa_dstwet3')
     index_x2l_Faxa_dstwet4  = mct_avect_indexra(x2l,'Faxa_dstwet4')
+
+    index_x2l_Faxa_nhx      = mct_avect_indexra(x2l,'Faxa_nhx', perrWith='quiet')
+    index_x2l_Faxa_noy      = mct_avect_indexra(x2l,'Faxa_noy', perrWith='quiet')
+
+    if (index_x2l_Faxa_nhx > 0 .and. index_x2l_Faxa_noy > 0) then
+       ndep_from_cpl = .true.
+    end if
 
     index_x2l_Flrr_flood    = mct_avect_indexra(x2l,'Flrr_flood')
 
