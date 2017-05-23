@@ -52,7 +52,7 @@ Arah, J. and Vinten, A., 1995. Simplified models of anoxia and
 denitrification in aggregated and simple-structured soils. European
 Journal of Soil Science 46:507-517.
 
-.. _Arendt, A., et al. 2012. Randolph Glacier Inventory: A Dataset of Global
+.. _Arendtetal2012:
 
 Arendt, A., et al. 2012. Randolph Glacier Inventory: A Dataset of Global
 Glacier Outlines Version: 1.0, Global Land Ice Measurements from Space,
@@ -343,6 +343,8 @@ Degens, B. and Sparling, G., 1996. Changes in aggregation do not
 correspond with changes in labile organic C fractions in soil amended
 with :math:`{}^{14}`\ C-glucose. Soil Biology and Biochemistry, 28(4/5):
 453-462.
+
+.. _deVries1963:
 
 de Vries, D.A. 1963. Thermal Properties of Soils. In: W.R. van Wijk
 (editor) Physics of the Plant Environment. North-Holland, Amsterdam.
@@ -1692,6 +1694,17 @@ Swenson, S.C. and Lawrence, D.M. 2012. A New Fractional Snow Covered
 Area Parameterization for the Community Land Model and its Effect on the
 Surface Energy Balance. JGR, 117, D21107. DOI:10.1029/2012JD018178.
 
+.. _SwensonLawrence2014:
+Swenson, S.C., and D. M. Lawrence. 2014. Assessing a dry surface 
+layer-based soil resistance parameterization for the Community Land Model 
+using GRACE and FLUXNET-MTE data. JGR, 119, 10, 299–10,312, 
+DOI:10.1002/2014JD022314.
+
+.. _SwensonLawrence2015:
+Swenson, S.C., and D. M. Lawrence. 2015. A GRACE-based assessment of 
+interannual groundwater dynamics in the Community Land Model. WRR, 51, 
+doi:10.1002/2015WR017582.
+
 .. _TaWeiland1992:
 
 Ta, C.T. and Weiland, R.T. 1992. Nitrogen partitioning in maize during
@@ -1920,7 +1933,7 @@ hydrology parameterization with subgrid variability for general
 circulation models. J. Geophys. Res. 97(D3):2717–2728.
 DOI:10.1029/91JD01786.
 
-.. _World Bank2004:
+.. _WorldBank2004:
 
 World Bank, 2004. World development indicators 2004, Oxford University
 Press, New York, 416 pp.

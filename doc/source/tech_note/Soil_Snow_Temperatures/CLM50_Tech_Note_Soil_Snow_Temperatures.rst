@@ -46,82 +46,17 @@ surface water temperatures for a fifteen-layer soil column with up to
 five overlying layers of snow and a single surface water layer with the
 boundary conditions of :math:`h` as the heat flux into the top soil,
 snow, and surface water layers from the overlying atmosphere (section
-6.1) and zero heat flux at the bottom of the soil column. The
-temperature profile is calculated first without phase change and then
-readjusted for phase change (section 6.2).
+:numref:`Numerical Solution Temperature`) and zero heat flux at the bottom 
+of the soil column. The temperature profile is calculated first without 
+phase change and then readjusted for phase change (section :numref:`Phase Change`).
 
 .. _Numerical Solution Temperature:
 
 Numerical Solution
 ----------------------
 
-The soil column is discretized into fifteen layers (Table 6.1) where the
-depth of soil layer :math:`i`, or node depth, :math:`z_{i}`  (m), is
-
-.. math::
-   :label: ZEqnNum185766 
-
-   z_{i} =f_{s} \left\{\exp \left[0.5\left(i-0.5\right)\right]-1\right\}
-
-where :math:`f_{s} =0.025` is a scaling factor. The thickness of each
-layer :math:`\Delta z_{i}`  (m) is
-
-.. math::
-   :label: 6.6) 
-
-   \Delta z_{i} =\left\{\begin{array}{l} {0.5\left(z_{1} +z_{2} \right)\qquad i=1} \\ {0.5\left(z_{i+1} -z_{i-1} \right)\qquad i=2,3,\ldots ,N_{levgrnd} -1} \\ {z_{N} -z_{N-1} \qquad i=N_{levgrnd} } \end{array}\right\}
-
-where :math:`N_{levgrnd} =15` is the number of soil layers. The depths
-at the layer interfaces :math:`z_{h,\, i}`  (m) are
-
-.. math::
-   :label: 6.7) 
-
-   z_{h,\, i} =\left\{\begin{array}{l} {0.5\left(z_{i} +z_{i+1} \right)\qquad i=1,2,\ldots ,N_{levgrnd} -1} \\ {z_{N_{levgrnd} } +0.5\Delta z_{N_{levgrnd} } \qquad i=N_{levgrnd} } \end{array}\right\}.
-
-The exponential form of equation is to obtain more soil layers near the
-soil surface where the soil water gradient is generally strong (section
-7.4).
-
-Table 6.1. Soil layer structure.
-
-Layer node depth (:math:`z_{i}` ), thickness (:math:`\Delta z_{i}` ),
-and depth at layer interface (:math:`z_{h,\, i}` ) for fifteen-layer
-soil column. All in meters.
-
-+---------------+------------------+-------------------------+-----------------------+
-| Layer         | :math:`z_{i}`    | :math:`\Delta z_{i}`    | :math:`z_{h,\, i}`    |
-+===============+==================+=========================+=======================+
-| 1 (top)       | 0.0071           | 0.0175                  | 0.0175                |
-+---------------+------------------+-------------------------+-----------------------+
-| 2             | 0.0279           | 0.0276                  | 0.0451                |
-+---------------+------------------+-------------------------+-----------------------+
-| 3             | 0.0623           | 0.0455                  | 0.0906                |
-+---------------+------------------+-------------------------+-----------------------+
-| 4             | 0.1189           | 0.0750                  | 0.1655                |
-+---------------+------------------+-------------------------+-----------------------+
-| 5             | 0.2122           | 0.1236                  | 0.2891                |
-+---------------+------------------+-------------------------+-----------------------+
-| 6             | 0.3661           | 0.2038                  | 0.4929                |
-+---------------+------------------+-------------------------+-----------------------+
-| 7             | 0.6198           | 0.3360                  | 0.8289                |
-+---------------+------------------+-------------------------+-----------------------+
-| 8             | 1.0380           | 0.5539                  | 1.3828                |
-+---------------+------------------+-------------------------+-----------------------+
-| 9             | 1.7276           | 0.9133                  | 2.2961                |
-+---------------+------------------+-------------------------+-----------------------+
-| 10            | 2.8646           | 1.5058                  | 3.8019                |
-+---------------+------------------+-------------------------+-----------------------+
-| 11            | 4.7392           | 2.4826                  | 6.2845                |
-+---------------+------------------+-------------------------+-----------------------+
-| 12            | 7.8298           | 4.0931                  | 10.3775               |
-+---------------+------------------+-------------------------+-----------------------+
-| 13            | 12.9253          | 6.7484                  | 17.1259               |
-+---------------+------------------+-------------------------+-----------------------+
-| 14            | 21.3265          | 11.1262                 | 28.2520               |
-+---------------+------------------+-------------------------+-----------------------+
-| 15 (bottom)   | 35.1776          | 13.8512                 | 42.1032               |
-+---------------+------------------+-------------------------+-----------------------+
+The soil column is discretized into 25 layers (section :numref:`Vertical Discretization`)
+where :math:`N_{levgrnd} = 25` is the number of soil layers (:numref:`Table Soil layer structure`).
 
 The overlying snow pack is modeled with up to five layers depending on
 the total snow depth. The layers from top to bottom are indexed in the
@@ -209,9 +144,6 @@ equals the heat flux from the interface to :math:`i+1` (depth
 where :math:`T_{m}`  is the temperature at the interface of layers
 :math:`i` and :math:`i+1`.
 
-Figure 6.1. Schematic diagram of numerical scheme used to solve for soil
-temperature.
-
 Shown are three soil layers, :math:`i-1`, :math:`i`, and :math:`i+1`.
 The thermal conductivity :math:`\lambda` , specific heat capacity
 :math:`c`, and temperature :math:`T` are defined at the layer node depth
@@ -222,8 +154,11 @@ interface of two layers
 :math:`z_{h}` . The layer thickness is :math:`\Delta z`. The heat fluxes
 :math:`F_{i-1}`  and :math:`F_{i}`  are defined as positive upwards.
 
-.. image:: image1.png
+.. _Figure Soil Temperature Schematic:
 
+.. figure:: image1.png
+
+ Schematic diagram of numerical scheme used to solve for soil temperature.
 
 The energy balance for the :math:`i^{th}`  layer is
 
@@ -769,23 +704,31 @@ cool the snow layer.
 Soil and Snow Thermal Properties
 ------------------------------------
 
-The thermal and hydraulic (section 6.3 and 7.4.1) properties of the soil
-are assumed to be a weighted combination of the mineral and organic
-properties of the soil (Lawrence and Slater 2008). The soil layer
-organic matter fraction :math:`f_{om,i}`  is
+The thermal properties of the soil are assumed to be a weighted combination of 
+the mineral and organic properties of the soil 
+(:ref:`Lawrence and Slater 2008 <LawrenceSlater2008>`). 
+The soil layer organic matter fraction :math:`f_{om,i}`  is
 
 .. math::
    :label: 6.77) 
 
    f_{om,i} =\rho _{om,i} /\rho _{om,\max } .
 
-Soil thermal conductivity :math:`\lambda _{i}`  (W m\ :sup:`-1`
-K\ :sup:`-1`) is from Farouki (1981)
+Soil thermal conductivity :math:`\lambda _{i}`  (W m\ :sup:`-1` K\ :sup:`-1`) 
+is from :ref:`Farouki (1981) <Farouki1981>`
 
 .. math::
    :label: 6.78) 
 
-   \begin{array}{l} {\lambda _{i} =\left\{\begin{array}{l} {K_{e,\, i} \lambda _{sat,\, i} +\left(1-K_{e,\, i} \right)\lambda _{dry,\, i} \qquad S_{r,\, i} >1\times 10^{-7} } \\ {\lambda _{dry,\, i} \qquad S_{r,\, i} \le 1\times 10^{-7} } \end{array}\right\}\qquad i=1,\ldots ,N_{levsoi} } \\ {\lambda _{i} =\lambda _{bedrock} \qquad i=N_{levsoi} +1,\ldots N_{levgrnd} } \end{array}
+   \begin{array}{lr} 
+   \lambda _{i} = \left\{
+   \begin{array}{lr} 
+   K_{e,\, i} \lambda _{sat,\, i} +\left(1-K_{e,\, i} \right)\lambda _{dry,\, i} &\qquad S_{r,\, i} > 1\times 10^{-7}  \\ 
+   \lambda _{dry,\, i} &\qquad S_{r,\, i} \le 1\times 10^{-7}  
+   \end{array}\right\} &\qquad i=1,\ldots ,N_{levsoi}  \\ 
+
+   \lambda _{i} =\lambda _{bedrock} &\qquad i=N_{levsoi} +1,\ldots N_{levgrnd}  
+   \end{array}
 
 where :math:`\lambda _{sat,\, i}`  is the saturated thermal
 conductivity, :math:`\lambda _{dry,\, i}`  is the dry thermal
@@ -793,8 +736,8 @@ conductivity, :math:`K_{e,\, i}`  is the Kersten number,
 :math:`S_{r,\, i}`  is the wetness of the soil with respect to
 saturation, and :math:`\lambda _{bedrock} =3` W m\ :sup:`-1`
 K\ :sup:`-1` is the thermal conductivity assumed for the deep
-ground layers (typical of saturated granitic rock; Clauser and Huenges,
-1995). For glaciers and wetlands,
+ground layers (typical of saturated granitic rock; 
+:ref:`Clauser and Huenges 1995 <ClauserHuenges1995>`). For glaciers and wetlands,
 
 .. math::
    :label: 6.79) 
@@ -830,8 +773,8 @@ where the mineral soil solid thermal conductivity
    \lambda _{s,\, \min ,i} =\frac{8.80{\rm \; }\left(\% sand\right)_{i} +{\rm 2.92\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } ,
 
 and :math:`\lambda _{s,om} =0.25`\ W m\ :sup:`-1`
-K\ :sup:`-1` (Farouki, 1981). :math:`\theta _{sat,\, i}`  is the
-volumetric water content at saturation (porosity) (section 7.4.1).
+K\ :sup:`-1` (:ref:`Farouki 1981 <Farouki1981>`). :math:`\theta _{sat,\, i}`  is the
+volumetric water content at saturation (porosity) (section :numref:`Hydraulic Properties`).
 
 The thermal conductivity of dry soil is
 
@@ -852,14 +795,18 @@ m\ :sup:`-3`) as
    \lambda _{dry,\, \min ,i} =\frac{0.135\rho _{d,\, i} +64.7}{2700-0.947\rho _{d,\, i} }
 
 and :math:`\lambda _{dry,om} =0.05` W m\ :sup:`-1`
-K\ :sup:`-1` (Farouki, 1981) is the dry thermal conductivity of
+K\ :sup:`-1` (:ref:`Farouki 1981 <Farouki1981>`) is the dry thermal conductivity of
 organic matter. The Kersten number :math:`K_{e,\, i}`  is a function of
 the degree of saturation :math:`S_{r}`  and phase of water
 
 .. math::
    :label: 6.85) 
 
-   K_{e,\, i} =\left\{\begin{array}{l} {\log \left(S_{r,\, i} \right)+1\ge 0\qquad T_{i} \ge T_{f} } \\ {S_{r,\, i} \qquad T_{i} <T_{f} } \end{array}\right\}
+   K_{e,\, i} = \left\{
+   \begin{array}{lr} 
+   \log \left(S_{r,\, i} \right)+1\ge 0 &\qquad T_{i} \ge T_{f}  \\ 
+   S_{r,\, i} &\qquad T_{i} <T_{f}  
+   \end{array}\right\}
 
 where
 
@@ -869,24 +816,23 @@ where
    S_{r,\, i} =\left(\frac{w_{liq,\, i} }{\rho _{liq} \Delta z_{i} } +\frac{w_{ice,\, i} }{\rho _{ice} \Delta z_{i} } \right)\frac{1}{\theta _{sat,\, i} } =\frac{\theta _{liq,\, i} +\theta _{ice,\, i} }{\theta _{sat,\, i} } \le 1.
 
 Thermal conductivity :math:`\lambda _{i}`  (W m\ :sup:`-1`
-K\ :sup:`-1`) for snow is from Jordan (1991)
+K\ :sup:`-1`) for snow is from :ref:`Jordan (1991) <Jordan1991>`
 
 .. math::
    :label: 6.87) 
 
    \lambda _{i} =\lambda _{air} +\left(7.75\times 10^{-5} \rho _{sno,\, i} +1.105\times 10^{-6} \rho _{sno,\, i}^{2} \right)\left(\lambda _{ice} -\lambda _{air} \right)
 
-where :math:`\lambda _{air}`  is the thermal conductivity of air (Table
-2.6) and :math:`\rho _{sno,\, i}`  is the bulk density of snow (kg
-m\ :sup:`-3`)
+where :math:`\lambda _{air}`  is the thermal conductivity of air (:numref:`Table Physical Constants`) 
+and :math:`\rho _{sno,\, i}`  is the bulk density of snow (kg m\ :sup:`-3`)
 
 .. math::
    :label: 6.88) 
 
    \rho _{sno,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{\Delta z_{i} } .
 
-The volumetric heat capacity :math:`c_{i}`  (J m\ :sup:`-3`
-K\ :sup:`-1`) for soil is from de Vries (1963) and depends on the
+The volumetric heat capacity :math:`c_{i}`  (J m\ :sup:`-3` K\ :sup:`-1`) for 
+soil is from :ref:`de Vries (1963) <deVries1963>` and depends on the
 heat capacities of the soil solid, liquid water, and ice constituents
 
 .. math::
@@ -896,7 +842,7 @@ heat capacities of the soil solid, liquid water, and ice constituents
 
 where :math:`C_{liq}`  and :math:`C_{ice}`  are the specific heat
 capacities (J kg\ :sup:`-1` K\ :sup:`-1`) of liquid water
-and ice, respectively (Table 2.6). The heat capacity of soil solids
+and ice, respectively (:numref:`Table Physical Constants`). The heat capacity of soil solids
 :math:`c_{s,i}` \ (J m\ :sup:`-3` K\ :sup:`-1`) is
 
 .. math::
@@ -910,12 +856,15 @@ where the heat capacity of mineral soil solids
 .. math::
    :label: 6.91) 
 
-   \begin{array}{l} {c_{s,\min ,\, i} =\left(\frac{2.128{\rm \; }\left(\% sand\right)_{i} +{\rm 2.385\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } \right)\times 10^{6} \qquad i=1,\ldots ,N_{levsoi} } \\ {c_{s,\, \min ,i} =c_{s,\, bedrock} \qquad i=N_{levsoi} +1,\ldots ,N_{levgrnd} } \end{array}
+   \begin{array}{lr} 
+   c_{s,\min ,\, i} =\left(\frac{2.128{\rm \; }\left(\% sand\right)_{i} +{\rm 2.385\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } \right)\times 10^{6} &\qquad i=1,\ldots ,N_{levsoi}  \\ 
+   c_{s,\, \min ,i} =c_{s,\, bedrock} &\qquad i=N_{levsoi} +1,\ldots ,N_{levgrnd}  
+   \end{array}
 
 where :math:`c_{s,bedrock} =2\times 10^{6}`  J m\ :sup:`-3`
 K\ :sup:`-1` is the heat capacity of bedrock and
 :math:`c_{s,om} =2.5\times 10^{6}` \ J m\ :sup:`-3`
-K\ :sup:`-1` (Farouki, 1981) is the heat capacity of organic
+K\ :sup:`-1` (ref:`Farouki 1981 <Farouki1981>`) is the heat capacity of organic
 matter. For glaciers, wetlands, and snow
 
 .. math::
