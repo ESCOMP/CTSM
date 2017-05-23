@@ -3,6 +3,8 @@
 Crops and Irrigation
 ========================
 
+.. _Summary of CLM4.5 updates relative to the CLM4.0:
+
 Summary of CLM4.5 updates relative to the CLM4.0
 -----------------------------------------------------
 
@@ -29,6 +31,8 @@ refers to the interactive crop management model:
 
 These updates appear in detail in section 20.4. Most also appear in
 Drewniak et al. (2013).
+
+.. _The crop model:
 
 The crop model
 -------------------
@@ -65,6 +69,8 @@ while helping human societies answer questions about changing food,
 energy, and water resources in response to climate, environmental, land
 use, and land management change (e.g., Kucharik and Brye 2003; Lobell et al. 2006).
 
+.. _Crop plant functional types:
+
 Crop plant functional types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -95,6 +101,8 @@ CLM setting). Managed crop PFTs in the human managed land unit do not
 share soil columns and thus permit for differences in land management
 between crops.
 
+.. _Phenology:
+
 Phenology
 ^^^^^^^^^^^^^^^^
 
@@ -108,6 +116,8 @@ Phase 1 starts at planting and ends with leaf emergence, phase 2
 continues from leaf emergence to the beginning of grain fill, and phase
 3 starts from the beginning of grain fill and ends with physiological
 maturity and harvest.
+
+.. _Planting:
 
 Planting
 '''''''''''''''''
@@ -175,6 +185,8 @@ outside the above ranges, then it equals the minimum or maximum value in
 the range. Also  :math:`{T}_{f}` equals 273.15 K,
 :math:`{T}_{2m}` has units of K, and *GDD* has units of :sup:`o`\ days.
 
+.. _Leaf emergence:
+
 Leaf emergence
 '''''''''''''''''''''''
 
@@ -188,6 +200,8 @@ time step of phase 2, at which moment all seed C is transferred to leaf
 C. Subsequently, the leaf area index generally increases and reaches
 a maximum value during phase 2.
 
+.. _Grain fill:
+
 Grain fill
 '''''''''''''''''''
 
@@ -199,6 +213,8 @@ percentage itself is an empirical function of :math:`{GDD}_{mat}`
 (not shown). In phase 3, the leaf area index begins to decline in
 response to a background litterfall rate calculated as the inverse of
 leaf longevity for the pft as done in the CN part of the model.
+
+.. _Harvest:
 
 Harvest
 ''''''''''''''''
@@ -215,6 +231,8 @@ flow of live stem C and N to litter for corn, soybean, and temperate
 cereals. This is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N to dead stems first, rather than to litter.
 
+.. _Allocation:
+
 Allocation
 ^^^^^^^^^^^^^^^^^
 
@@ -223,6 +241,8 @@ Simulated C assimilation begins every year upon leaf emergence in phase
 2 and ends with harvest at the end of phase 3; therefore, so does the
 allocation of such C to the crop’s leaf, live stem, fine root, and
 reproductive pools.
+
+.. _Leaf emergence to grain fill:
 
 Leaf emergence to grain fill
 '''''''''''''''''''''''''''''''''''''
@@ -241,6 +261,8 @@ coefficients (Table 20.2), and *h* is a heat unit threshold defined in
 section 20.2.3. At a crop-specific maximum leaf area index,
 :math:`{L}_{max}` (Table 20.2), carbon allocation is directed
 exclusively to the fine roots.
+
+.. _Grain fill to harvest:
 
 Grain fill to harvest
 ''''''''''''''''''''''''''''''
@@ -268,6 +290,8 @@ calculated in phase 2, :math:`d_{L}` , :math:`d_{alloc}^{leaf}`  and
 allocation decline factors, and :math:`a_{leaf}^{f}`  and
 :math:`a_{livestem}^{f}`  are final values of these allocation
 coefficients (Table 20.2).
+
+.. _General comments:
 
 General comments
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -411,6 +435,8 @@ allocation. Numbers in the first column correspond to the list of pfts in Table 
 Notes: Crop growth phases and corresponding variables are described in
 the text
 
+.. _The irrigation model:
+
 The irrigation model
 -------------------------
 
@@ -480,8 +506,12 @@ added to  :math:`{q}_{grnd,liq}`: section 7.1). Added irrigation is
 removed from total liquid runoff ( :math:`{R}_{liq}`: Chapter 11),
 simulating removal from nearby rivers.
 
+.. _The details about what is new in CLM4.5:
+
 The details about what is new in CLM4.5
 --------------------------------------------
+
+.. _Interactive irrigation for corn, temperate cereals, and soybean:
 
 Interactive irrigation for corn, temperate cereals, and soybean
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -527,6 +557,8 @@ or without irrigation. In simulations without irrigation, the rainfed
 and irrigated crops merge into just rainfed crops at run time. Surface
 datasets with 16 pfts can be used for all other CLM simulations.
 
+.. _Interactive fertilization:
+
 Interactive fertilization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -562,6 +594,8 @@ the counter is reached.
 The crop fertilization scheme was developed in versions of the CLM prior
 to CLM4.5. In CLM4.5, crops with fertilization may be simulated over
 productive.
+
+.. _Biological nitrogen fixation for soybeans:
 
 Biological nitrogen fixation for soybeans
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -606,6 +640,8 @@ pool for use that time step. Nitrogen fixation occurs after the plant
 has accumulated 15%\ :math:`{GDD}_{mat}` and before
 75%\  :math:`{GDD}_{mat}`, so before grain fill begins.
 
+.. _Modified C\:N ratios for crops:
+
 Modified C:N ratios for crops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -624,6 +660,8 @@ resulting C:N ratio of the plant tissue is reflective of measurements at
 harvest. All C:N ratios were determined by calibration process, through
 comparisons of model output versus observations of plant carbon
 throughout the growth season.
+
+.. _Nitrogen retranslocation for crops:
 
 Nitrogen retranslocation for crops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -698,6 +736,8 @@ fine root, and reproductive pools.
 +----------------------------+--------+---------------------+-----------+
 | :math:`CN_{repr}^{f}`      | 50     | 40                  | 60        |
 +----------------------------+--------+---------------------+-----------+
+
+.. _Separate reproductive pool:
 
 Separate reproductive pool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

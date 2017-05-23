@@ -103,7 +103,11 @@ The conservation equation for mass of ice in snow layers is
 .. math::
    :label: 8.17) 
 
-   \frac{\partial w_{ice,\, i} }{\partial t} =\left\{\begin{array}{l} {f_{sno} q_{ice,\, i-1} -\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} \qquad i=snl+1} \\ {-\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} \qquad i=snl+2,\ldots ,0} \end{array}\right\}
+   \frac{\partial w_{ice,\, i} }{\partial t} =
+   \left\{\begin{array}{lr} 
+   f_{sno} \ q_{ice,\, i-1} -\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} & \qquad i=snl+1 \\ 
+   -\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} & \qquad i=snl+2,\ldots ,0 
+   \end{array}\right\}
 
 where :math:`q_{ice,\, i-1}`  is the rate of ice accumulation from
 precipitation or frost or the rate of ice loss from sublimation (kg
@@ -143,7 +147,12 @@ m\ :sup:`-3`) (:ref:`Anderson (1976) <Anderson1976>`)
 .. math::
    :label: 8.21) 
 
-   \rho _{sno} =\left\{\begin{array}{l} {50+1.7\left(17\right)^{1.5} \qquad T_{atm} >T_{f} +2} \\ {50+1.7\left(T_{atm} -T_{f} +15\right)^{1.5} \qquad T_{f} -15<T_{atm} \le T_{f} +2} \\ {50\qquad T_{atm} \le T_{f} -15} \end{array}\right\}
+   \rho _{sno} = 
+   \left\{\begin{array}{lr} 
+   50 + 1.7 \left(17\right)^{1.5} & \qquad T_{atm} >T_{f} +2 \ \\ 
+   50+1.7 \left(T_{atm} -T_{f} + 15\right)^{1.5} & \qquad T_{f} - 15 < T_{atm} \le T_{f} + 2 \ \\ 
+   50 &\qquad T_{atm} \le T_{f} - 15 
+   \end{array}\right\}
 
 where :math:`T_{atm}`  is the atmospheric temperature (K), and
 :math:`T_{f}`  is the freezing temperature of water (K) (Table 2.6). The

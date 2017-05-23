@@ -612,7 +612,7 @@ The water vapor flux :math:`E_{g}`  (kg m\ :sup:`-2` s\ :sup:`-1`) is, with refe
 .. math::
    :label: 5.67 
 
-   E_{soil} =-\frac{\beta _{soi} \rho _{atm} \left(q_{atm} -q_{soil} \right)}{r_{aw} }
+   E_{soil} =-\frac{\rho _{atm} \left(q_{atm} -q_{soil} \right)}{r_{aw} + r_{soil}}
 
 .. math::
    :label: 5.68 
@@ -624,11 +624,11 @@ The water vapor flux :math:`E_{g}`  (kg m\ :sup:`-2` s\ :sup:`-1`) is, with refe
 
    E_{h2osfc} =-\frac{\rho _{atm} \left(q_{atm} -q_{h2osfc} \right)}{r_{aw} }
 
-where :math:`\beta _{soi}`  is an empirical function of soil water (Sakaguchi and Zeng 2009), :math:`q_{atm}`  is the atmospheric specific
-humidity (kg kg\ :sup:`-1`), :math:`q_{soil}` , :math:`q_{sno}` , and :math:`q_{h2osfc}`  are the specific humidities 
-(kg kg\ :sup:`-1`) of the soil, snow, and surface water, respectively, and :math:`r_{aw}`  is the aerodynamic resistance to water vapor
-transfer (s m\ :sup:`-1`). The specific humidities of the snow :math:`q_{sno}`  and surface water :math:`q_{h2osfc}`  are assumed to be
-at the saturation specific humidity of their respective temperatures
+where :math:`q_{atm}`  is the atmospheric specific humidity (kg kg\ :sup:`-1`), :math:`q_{soil}` , :math:`q_{sno}` , 
+and :math:`q_{h2osfc}`  are the specific humidities (kg kg\ :sup:`-1`) of the soil, snow, and surface water, respectively, 
+:math:`r_{aw}`  is the aerodynamic resistance to water vapor transfer (s m\ :sup:`-1`), and  :math:`r _{soi}`  is the soil 
+resistance to water vapor transfer (s m\ :sup:`-1`). The specific humidities of the snow :math:`q_{sno}`  and surface water 
+:math:`q_{h2osfc}`  are assumed to be at the saturation specific humidity of their respective temperatures
 
 .. math::
    :label: 5.70) 
@@ -692,37 +692,71 @@ top soil layer (kg m\ :sup:`-2`) (Chapter :numref:`rst_Hydrology`), and
 prevents large increases (decreases) in :math:`q_{soil}`  for small
 increases (decreases) in soil moisture in very dry soils.
 
-The function :math:`\beta _{soi}`  ranges from 0 to 1 and is intended to
-represent the molecular diffusion process from the soil pore to the
-surface within the dry part of the soil (Sakaguchi and Zeng 2009) as
+The resistance to water vapor transfer occurring within the soil matrix 
+:math:`r_{soil}` is  
 
 .. math::
    :label: 5.76) 
 
-   \beta _{soi} =\left\{\begin{array}{l} {1\qquad \theta _{1} \ge \theta _{fc,\, 1} {\rm \; or\; }q_{atm} -q_{soil} >0} \\ {0.25\left(1-f_{sno} -f_{h2osfc} \right)\left[1-\cos \left(\pi \frac{\theta _{1} }{\theta _{fc,\, 1} } \right)\right]^{2} +f_{sno} +f_{h2osfc} \qquad \theta _{1} <\theta _{fc,\, 1} } \end{array}\right\}.
+   r_{soil} = \frac{DSL}{D_{v} \tau}
 
-where :math:`\theta _{fc,\, 1}`  is the field capacity of the top soil
-layer and
-:math:`0.01{\le \theta _{1} \mathord{\left/ {\vphantom {\le \theta _{1}  \theta _{fc,\, 1} \le 1}} \right. \kern-\nulldelimiterspace} \theta _{fc,\, 1} \le 1}` .
-The volumetric water content of the top soil layer (mm\ :sup:`3` mm\ :sup:`-3`) is
+where :math:`DSL` is the thickness of the dry surface layer, :math:`D_{v}` 
+is the molecular diffusivity of water vapor in air and :math:`\tau` 
+describes the tortuosity of the vapor flow paths through 
+the soil matrix (:ref:`Swenson and Lawrence 2014 <SwensonLawrence2014>`).  
 
-.. math::
-   :label: 5.77) 
-
-   \theta _{1} =\frac{1}{\Delta z_{1} } \left[\frac{w_{liq,\, 1} }{\rho _{liq} } +\frac{w_{ice,\, 1} }{\rho _{ice} } \right].
-
-The volumetric water content at field capacity is derived by assuming a
-hydraulic conductivity of 0.1 mm day\ :sup:`-1` and inverting the
-hydraulic conductivity function (section :numref:`Hydraulic Properties`) as
+The thickness of the dry surface layer is given by
 
 .. math::
-   :label: 5.78) 
+   :label: 5.77)
 
-   \theta _{fc,\, 1} =\theta _{sat,\, 1} \left[\frac{0.1}{86400k_{sat,\, 1} } \right]^{\frac{1}{2B_{i} +3} }
+   DSL = 
+   \begin{array}{lr}
+   D_{max} \ \frac{\left( \theta_{init} - \theta_{1}\right)}
+   {\left(\theta_{init} - \theta_{air}\right)} & \qquad \theta_{1} < \theta_{init} \\
+   0 &  \qquad \theta_{1} \ge \theta_{init}
+   \end{array}
 
-where :math:`k_{sat,\, 1}`  is the saturated hydraulic conductivity of
-the top soil layer (mm s\ :sup:`-1`) (section :numref:`Hydraulic Properties`) and the
-exponent :math:`B_{1}`  is a function of soil texture (section :numref:`Hydraulic Properties`).
+where :math:`D_{max}` is a parameter specifying the length scale 
+of the maximum DSL thickness (default value = 15 mm), 
+:math:`\theta_{init}` is the moisture value at which the DSL initiates, 
+:math:`\theta_{1}` is the moisture value of the top model soil layer, 
+and :math:`\theta_{air}` is the 'air dry' soil moisture value 
+(:ref:`Dingman 2002 <Dingman2002>`):
+
+.. math::
+   :label: 5.78)
+
+   \theta_{air} = \Phi \left( \frac{\Psi_{sat}}{\Psi_{air}} \right)^{\frac{1}{B_{1}}} \ .
+
+where :math:`\Phi` is the porosity, :math:`\Psi_{sat}` is the saturated 
+soil matric potential, :math:`\Psi_{air} = 10^{7}` mm is the air dry 
+matric potential, and :math:`B_{1}` is a function of soil texture (section 
+:numref:`Hydraulic Properties`). 
+
+The soil tortuosity is 
+
+.. math::
+   :label: 5.79)
+
+   \tau = \Phi^{2}_{air}\left(\frac{\Phi_{air}}{\Phi}\right)^{\frac{3}{B_{1}}}
+
+where :math:`\Phi_{air}` is the air filled pore space
+
+.. math::
+   :label: 5.80) 
+
+   \Phi_{air} = \Phi - \theta_{air} \ .
+
+:math:`D_{v}` depends on temperature
+
+.. math::
+   :label: 5.81) 
+
+   D_{v} = 2.12 \times 10^{-5} \left(\frac{T_{1}}{T_{f}}\right)^{1.75} \ .
+
+where :math:`T_{1}` is the temperature of the top soil layer and 
+:math:`T_{f}` is the freezing temperature of water (:numref:`Table Physical Constants`).
 
 The roughness lengths used to calculate :math:`r_{am}` ,
 :math:`r_{ah}` , and :math:`r_{aw}`  are :math:`z_{0m} =z_{0m,\, g}` ,
@@ -942,7 +976,7 @@ are the sensible heat conductances from the canopy air to the
 atmosphere, the ground to canopy air, and leaf surface to canopy air,
 respectively (m s\ :sup:`-1`).
 
-When the expression for :math:`T_{s}`  is substituted into equation ,
+When the expression for :math:`T_{s}`  is substituted into equation :eq:`ZEqnNum675188`,
 the sensible heat flux from vegetation :math:`H_{v}`  is a function of
 :math:`\theta _{atm}` , :math:`T_{g}` , and :math:`T_{v}` 
 
