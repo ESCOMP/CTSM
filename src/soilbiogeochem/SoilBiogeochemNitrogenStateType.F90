@@ -9,7 +9,7 @@ module SoilBiogeochemNitrogenStateType
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
@@ -169,7 +169,7 @@ contains
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
-               ptr_col=data2dptr, default='inactive')
+               ptr_col=data2dptr)
        endif
 
        data1dptr => this%decomp_npools_col(:,l)
@@ -211,7 +211,7 @@ contains
     this%ntrunc_col(begc:endc) = spval
     call hist_addfld1d (fname='COL_NTRUNC', units='gN/m^2',  &
          avgflag='A', long_name='column-level sink for N truncation', &
-         ptr_col=this%ntrunc_col)
+         ptr_col=this%ntrunc_col, default='inactive')
 
     ! add suffix if number of soil decomposition depths is greater than 1
     if (nlevdecomp > 1) then
@@ -221,17 +221,22 @@ contains
     endif
 
     if (use_nitrif_denitrif) then
-       this%smin_no3_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMIN_NO3'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral NO3 (vert. res.)', &
-            ptr_col=this%smin_no3_vr_col)
-
-       this%smin_nh4_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMIN_NH4'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral NH4 (vert. res.)', &
-            ptr_col=this%smin_nh4_vr_col)
-
        if ( nlevdecomp_full > 1 ) then
+          data2dptr => this%smin_no3_vr_col(begc:endc,1:nlevsoi)
+          call hist_addfld_decomp (fname='SMIN_NO3'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='soil mineral NO3 (vert. res.)', &
+               ptr_col=data2dptr)
+
+          data2dptr => this%smin_nh4_vr_col(begc:endc,1:nlevsoi)
+          call hist_addfld_decomp (fname='SMIN_NH4'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='soil mineral NH4 (vert. res.)', &
+               ptr_col=data2dptr)
+
+          data2dptr => this%sminn_vr_col(begc:endc,1:nlevsoi)
+          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='soil mineral N', &
+               ptr_col=data2dptr)
+
           this%smin_no3_col(begc:endc) = spval
           call hist_addfld1d (fname='SMIN_NO3', units='gN/m^2', &
                avgflag='A', long_name='soil mineral NO3', &
@@ -242,16 +247,14 @@ contains
                avgflag='A', long_name='soil mineral NH4', &
                ptr_col=this%smin_nh4_col)
        endif
-
-       this%sminn_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral N', &
-            ptr_col=this%sminn_vr_col)
     else
-       this%sminn_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral N', &
-            ptr_col=this%sminn_vr_col)
+       if ( nlevdecomp_full > 1 ) then
+          data2dptr => this%sminn_vr_col(begc:endc,1:nlevsoi) 
+          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3', type2d='levsoi', &
+               avgflag='A', long_name='soil mineral N', &
+               ptr_col=data2dptr)
+       end if
+
     end if
 
     this%totlitn_col(begc:endc) = spval

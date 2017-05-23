@@ -36,6 +36,8 @@ module WaterstateType
      real(r8), pointer :: h2osno_old_col         (:)   ! col snow mass for previous time step (kg/m2) (new)
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
+     real(r8), pointer :: h2osoi_liq_tot_col     (:)   ! vertically summed col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
+     real(r8), pointer :: h2osoi_ice_tot_col     (:)   ! vertically summed col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
@@ -186,6 +188,8 @@ contains
     allocate(this%h2osoi_liqvol_col      (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liqvol_col      (:,:) = nan
     allocate(this%h2osoi_ice_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_ice_col         (:,:) = nan
     allocate(this%h2osoi_liq_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liq_col         (:,:) = nan
+    allocate(this%h2osoi_ice_tot_col     (begc:endc))                     ; this%h2osoi_ice_tot_col     (:)   = nan
+    allocate(this%h2osoi_liq_tot_col     (begc:endc))                     ; this%h2osoi_liq_tot_col     (:)   = nan
     allocate(this%h2ocan_patch           (begp:endp))                     ; this%h2ocan_patch           (:)   = nan  
     allocate(this%snocan_patch           (begp:endp))                     ; this%snocan_patch           (:)   = nan  
     allocate(this%liqcan_patch           (begp:endp))                     ; this%liqcan_patch           (:)   = nan  
@@ -246,7 +250,7 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use clm_varctl     , only : create_glacier_mec_landunit, use_cn, use_lch4
     use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno
+    use clm_varpar     , only : nlevsno, nlevsoi
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
@@ -278,25 +282,40 @@ contains
          avgflag='A', long_name='Snow ice content', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
-    this%h2osoi_vol_col(begc:endc,:) = spval
-    call hist_addfld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levgrnd', &
+    data2dptr => this%h2osoi_vol_col(begc:endc,1:nlevsoi)
+    call hist_addfld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levsoi', &
          avgflag='A', long_name='volumetric soil water (vegetated landunits only)', &
          ptr_col=this%h2osoi_vol_col, l2g_scale_type='veg')
 
-    this%h2osoi_liq_col(begc:endc,:) = spval
-    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levgrnd', &
-         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
-         ptr_col=this%h2osoi_liq_col, l2g_scale_type='veg')
+!    this%h2osoi_liq_col(begc:endc,:) = spval
+!    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levgrnd', &
+!         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
+!         ptr_col=this%h2osoi_liq_col, l2g_scale_type='veg')
 
-    this%h2osoi_ice_col(begc:endc,:) = spval
-    call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levgrnd', &
+    data2dptr => this%h2osoi_liq_col(begc:endc,1:nlevsoi) 
+    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levsoi', &
+         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
+         ptr_col=data2dptr, l2g_scale_type='veg')
+
+    data2dptr => this%h2osoi_ice_col(begc:endc,1:nlevsoi)
+    call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levsoi', &
          avgflag='A', long_name='soil ice (vegetated landunits only)', &
-         ptr_col=this%h2osoi_ice_col, l2g_scale_type='veg')
+         ptr_col=data2dptr, l2g_scale_type='veg')
 
     this%h2osoi_liqice_10cm_col(begc:endc) = spval
     call hist_addfld1d (fname='SOILWATER_10CM',  units='kg/m2', &
          avgflag='A', long_name='soil liquid water + ice in top 10cm of soil (veg landunits only)', &
          ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+
+    this%h2osoi_liq_tot_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTSOILLIQ',  units='kg/m2', &
+         avgflag='A', long_name='vertically summed soil liquid water (veg landunits only)', &
+         ptr_col=this%h2osoi_liq_tot_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+
+    this%h2osoi_ice_tot_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTSOILICE',  units='kg/m2', &
+         avgflag='A', long_name='vertically summed soil cie (veg landunits only)', &
+         ptr_col=this%h2osoi_ice_tot_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
 
     this%h2ocan_patch(begp:endp) = spval 
     call hist_addfld1d (fname='H2OCAN', units='mm',  &
@@ -380,12 +399,12 @@ contains
     this%rh_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='RH2M_R', units='%',  &
          avgflag='A', long_name='Rural 2m specific humidity', &
-         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval)
+         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%rh_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='RH2M_U', units='%',  &
          avgflag='A', long_name='Urban 2m relative humidity', &
-         ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
+         ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%rh_af_patch(begp:endp) = spval
     call hist_addfld1d (fname='RHAF', units='fraction', &
@@ -454,7 +473,7 @@ contains
     this%snow_depth_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOW_DEPTH',  units='m',  &
          avgflag='A', long_name='snow height of snow covered area', &
-         ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')!, default='inactive')
+         ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='SNOW_DEPTH_ICE', units='m',  &
          avgflag='A', long_name='snow height of snow covered area (ice landunits only)', &
@@ -498,7 +517,7 @@ contains
        this%wf_col(begc:endc) = spval
        call hist_addfld1d (fname='WF', units='proportion', &
             avgflag='A', long_name='soil water as frac. of whc for top 0.05 m', &
-            ptr_col=this%wf_col)
+            ptr_col=this%wf_col, default='inactive')
     end if
 
     this%h2osno_top_col(begc:endc) = spval

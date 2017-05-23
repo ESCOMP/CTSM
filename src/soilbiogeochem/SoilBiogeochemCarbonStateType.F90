@@ -5,7 +5,7 @@ module SoilBiogeochemCarbonStateType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
   use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state, use_fates 
   use landunit_varcon                    , only : istcrop, istsoil
@@ -142,10 +142,10 @@ contains
        this%decomp_cpools_col(begc:endc,:) = spval
        do l  = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,:,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levdcmp', &
+             call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levsoi', &
                   avgflag='A', long_name=longname, &
                   ptr_col=data2dptr)
           endif
@@ -163,14 +163,11 @@ contains
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 1 meter'
              call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                   avgflag='A', long_name=longname, &
-                  ptr_col=data1dptr, default = 'inactive')
+                  ptr_col=data1dptr, default='inactive')
           endif
        end do
  
        this%totlitc_col(begc:endc) = spval
-       call hist_addfld1d (fname='LITTERC', units='gC/m^2', &
-            avgflag='A', long_name='litter C', &
-            ptr_col=this%totlitc_col)
        call hist_addfld1d (fname='TOTLITC', units='gC/m^2', &
             avgflag='A', long_name='total litter carbon', &
             ptr_col=this%totlitc_col)
@@ -178,9 +175,6 @@ contains
        this%totsomc_col(begc:endc) = spval
        call hist_addfld1d (fname='TOTSOMC', units='gC/m^2', &
             avgflag='A', long_name='total soil organic matter carbon', &
-            ptr_col=this%totsomc_col)
-       call hist_addfld1d (fname='SOILC', units='gC/m^2', &
-            avgflag='A', long_name='soil C', &
             ptr_col=this%totsomc_col)
 
        if ( nlevdecomp_full > 1 ) then
@@ -200,7 +194,7 @@ contains
        this%ctrunc_col(begc:endc) = spval
        call hist_addfld1d (fname='COL_CTRUNC', units='gC/m^2',  &
             avgflag='A', long_name='column-level sink for C truncation', &
-            ptr_col=this%ctrunc_col)
+            ptr_col=this%ctrunc_col, default='inactive')
 
        this%dyn_cbal_adjustments_col(begc:endc) = spval
        call hist_addfld1d (fname='DYN_COL_SOIL_ADJUSTMENTS_C', units='gC/m^2', &
@@ -220,12 +214,12 @@ contains
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,:,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
              fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levdcmp', &
+             call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levsoi', &
                   avgflag='A', long_name=longname, &
-                  ptr_col=data2dptr)
+                  ptr_col=data2dptr, default='inactive')
           endif
 
           data1dptr => this%decomp_cpools_col(:,l)
@@ -263,7 +257,7 @@ contains
        this%ctrunc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_COL_CTRUNC', units='gC13/m^2',  &
             avgflag='A', long_name='C13 column-level sink for C truncation', &
-            ptr_col=this%ctrunc_col)
+            ptr_col=this%ctrunc_col, default='inactive')
 
        this%dyn_cbal_adjustments_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_DYN_COL_SOIL_ADJUSTMENTS_C', units='gC13/m^2', &
@@ -282,11 +276,11 @@ contains
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,:,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
              fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levdcmp', &
-                  avgflag='A', long_name=longname, ptr_col=data2dptr)
+             call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levsoi', &
+                  avgflag='A', long_name=longname, ptr_col=data2dptr, default='inactive')
           endif
 
           data1dptr => this%decomp_cpools_col(:,l)
@@ -329,7 +323,7 @@ contains
        this%ctrunc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_COL_CTRUNC', units='gC14/m^2', &
             avgflag='A', long_name='C14 column-level sink for C truncation', &
-            ptr_col=this%ctrunc_col)
+            ptr_col=this%ctrunc_col, default='inactive')
 
        this%dyn_cbal_adjustments_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_DYN_COL_SOIL_ADJUSTMENTS_C', units='gC14/m^2', &

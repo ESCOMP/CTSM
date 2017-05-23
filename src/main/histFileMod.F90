@@ -121,6 +121,7 @@ module histFileMod
   public :: htapes_fieldlist     ! Define the contents of each history file based on namelist
   !
   ! !PRIVATE MEMBER FUNCTIONS:
+  private :: is_mapping_upto_subgrid   ! Is this field being mapped up to a higher subgrid level?
   private :: masterlist_make_active    ! Add a field to a history file default "on" list
   private :: masterlist_addfld         ! Add a field to the master field list
   private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
@@ -821,6 +822,41 @@ contains
   end subroutine htapes_fieldlist
 
   !-----------------------------------------------------------------------
+  logical function is_mapping_upto_subgrid( type1d, type1d_out ) result ( mapping)
+    !
+    ! !DESCRIPTION:
+    ! 
+    ! Return true if this field will be mapped into a higher subgrid level
+    ! If false it will be output on it's native grid
+    !
+    ! !ARGUMENTS:
+    implicit none
+    character(len=8), intent(in) :: type1d      ! clm pointer 1d type
+    character(len=8), intent(in) :: type1d_out  ! history buffer 1d type
+    !
+    mapping = .false.
+    if (type1d_out == nameg .or. type1d_out == grlnd) then
+       if (type1d == namep) then
+          mapping = .true.
+       else if (type1d == namec) then
+          mapping = .true.
+       else if (type1d == namel) then
+          mapping = .true.
+       end if
+    else if (type1d_out == namel ) then
+       if (type1d == namep) then
+          mapping = .true.
+       else if (type1d == namec) then
+          mapping = .true.
+       end if
+    else if (type1d_out == namec ) then
+       if (type1d == namep) then
+          mapping = .true.
+       end if
+    end if
+  end function is_mapping_upto_subgrid
+
+  !-----------------------------------------------------------------------
   subroutine htape_addfld (t, f, avgflag)
     !
     ! !DESCRIPTION:
@@ -843,6 +879,7 @@ contains
     integer :: nump                 ! total number of pfts across all processors
     integer :: num2d                ! size of second dimension (e.g. .number of vertical levels)
     integer :: beg1d_out,end1d_out  ! history output per-proc 1d beginning and ending indices
+    integer :: beg1d,end1d          ! beginning and ending indices for this field (assume already set)
     integer :: num1d_out            ! history output 1d size
     type(bounds_type) :: bounds     
     character(len=*),parameter :: subname = 'htape_addfld'
@@ -939,15 +976,25 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
+    ! Output bounds for the field
     tape(t)%hlist(n)%field%beg1d_out = beg1d_out
     tape(t)%hlist(n)%field%end1d_out = end1d_out
     tape(t)%hlist(n)%field%num1d_out = num1d_out
+
+    ! Fields native bounds
+    beg1d = masterlist(f)%field%beg1d
+    end1d = masterlist(f)%field%end1d
     
     ! Alloccate and initialize history buffer and related info
 
     num2d = tape(t)%hlist(n)%field%num2d
-    allocate (tape(t)%hlist(n)%hbuf(beg1d_out:end1d_out,num2d))
-    allocate (tape(t)%hlist(n)%nacs(beg1d_out:end1d_out,num2d))
+    if ( is_mapping_upto_subgrid( type1d, type1d_out ) ) then
+       allocate (tape(t)%hlist(n)%hbuf(beg1d_out:end1d_out,num2d))
+       allocate (tape(t)%hlist(n)%nacs(beg1d_out:end1d_out,num2d))
+    else
+       allocate (tape(t)%hlist(n)%hbuf(beg1d:end1d,num2d))
+       allocate (tape(t)%hlist(n)%nacs(beg1d:end1d,num2d))
+    end if
     tape(t)%hlist(n)%hbuf(:,:) = 0._r8
     tape(t)%hlist(n)%nacs(:,:) = 0
 
@@ -1011,7 +1058,7 @@ contains
     ! call to p2g, and the lack of explicit bounds on its arguments; see also bug 1786)
     !
     ! !USES:
-    use subgridAveMod   , only : p2g, c2g, l2g
+    use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
@@ -1023,6 +1070,7 @@ contains
     integer  :: hpindex                 ! history pointer index
     integer  :: k                       ! gridcell, landunit, column or patch index
     integer  :: beg1d,end1d             ! beginning and ending indices
+    integer  :: beg1d_out,end1d_out     ! beginning and ending indices on output grid
     logical  :: check_active            ! true => check 'active' flag of each point (this refers to a point being active, NOT a history field being active)
     logical  :: valid                   ! true => history operation is valid
     logical  :: map2gcell               ! true => map clm pointer field to gridcell
@@ -1036,7 +1084,7 @@ contains
     integer , pointer :: nacs(:,:)      ! accumulation counter
     real(r8), pointer :: field(:)       ! clm 1d pointer field
     logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft) (this refers to a point being active, NOT a history field being active)
-    real(r8) :: field_gcell(bounds%begg:bounds%endg)  ! gricell level field (used if mapping to gridcell is done)
+    real(r8), allocatable :: field_gcell(:)  ! gricell level field (used if mapping to gridcell is done)
     integer j
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_1d'
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
@@ -1049,6 +1097,8 @@ contains
     hbuf           => tape(t)%hlist(f)%hbuf
     beg1d          =  tape(t)%hlist(f)%field%beg1d
     end1d          =  tape(t)%hlist(f)%field%end1d
+    beg1d_out      =  tape(t)%hlist(f)%field%beg1d_out
+    end1d_out      =  tape(t)%hlist(f)%field%end1d_out
     type1d         =  tape(t)%hlist(f)%field%type1d
     type1d_out     =  tape(t)%hlist(f)%field%type1d_out
     p2c_scale_type =  tape(t)%hlist(f)%field%p2c_scale_type
@@ -1061,24 +1111,29 @@ contains
 
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
+       SHR_ASSERT(beg1d_out == bounds%begg, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(end1d_out == bounds%endg, errMsg(sourcefile, __LINE__))
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
           ! for some fields, the lower bound has been reset to 1 due to taking a pointer
           ! to an array slice. Thus, this code will NOT work properly if done within a
           ! threaded region! (See also bug 1786)
+          allocate( field_gcell(beg1d_out:end1d_out) )
           call p2g(bounds, &
                field, &
                field_gcell(bounds%begg:bounds%endg), &
                p2c_scale_type, c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namec) then
+          allocate( field_gcell(beg1d_out:end1d_out) )
           call c2g(bounds, &
                field, &
                field_gcell(bounds%begg:bounds%endg), &
                c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namel) then
+          allocate( field_gcell(beg1d_out:end1d_out) )
           call l2g(bounds, &
                field, &
                field_gcell(bounds%begg:bounds%endg), &
@@ -1086,13 +1141,60 @@ contains
           map2gcell = .true.
        end if
     end if
+    if (type1d_out == namel ) then
+       SHR_ASSERT(beg1d_out == bounds%begl, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(end1d_out == bounds%endl, errMsg(sourcefile, __LINE__))
+       if (type1d == namep) then
+          ! In this and the following calls, we do NOT explicitly subset field using
+          ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! for some fields, the lower bound has been reset to 1 due to taking a pointer
+          ! to an array slice. Thus, this code will NOT work properly if done within a
+          ! threaded region! (See also bug 1786)
+          allocate( field_gcell(beg1d_out:end1d_out) )
+          call p2l(bounds, &
+               field, &
+               field_gcell(beg1d_out:end1d_out), &
+               p2c_scale_type, c2l_scale_type)
+          map2gcell = .true.
+       else if (type1d == namec) then
+          allocate( field_gcell(beg1d_out:end1d_out) )
+          call c2l(bounds, &
+               field, &
+               field_gcell(beg1d_out:end1d_out), &
+               c2l_scale_type)
+          map2gcell = .true.
+       end if
+    end if
+    if (type1d_out == namec ) then
+       SHR_ASSERT(beg1d_out == bounds%begc, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(end1d_out == bounds%endc, errMsg(sourcefile, __LINE__))
+       if (type1d == namep) then
+          ! In this and the following calls, we do NOT explicitly subset field using
+          ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! for some fields, the lower bound has been reset to 1 due to taking a pointer
+          ! to an array slice. Thus, this code will NOT work properly if done within a
+          ! threaded region! (See also bug 1786)
+          allocate( field_gcell(beg1d_out:end1d_out) )
+          call p2c(bounds, &
+               field, &
+               field_gcell(beg1d_out:end1d_out), &
+               p2c_scale_type)
+          map2gcell = .true.
+       end if
+    end if
+    if ( map2gcell .and. .not. is_mapping_upto_subgrid(type1d, type1d_out) )then
+       call endrun(msg=trim(subname)//' ERROR: mapping upto subgrid level is inconsistent'//errMsg(sourcefile, __LINE__))
+    end if
+    if ( .not. map2gcell .and. is_mapping_upto_subgrid(type1d, type1d_out) )then
+       call endrun(msg=trim(subname)//' ERROR: mapping upto subgrid level is inconsistent'//errMsg(sourcefile, __LINE__))
+    end if
 
     if (map2gcell) then  ! Map to gridcell
 
        ! note that in this case beg1d = begg and end1d=endg
        select case (avgflag)
        case ('I') ! Instantaneous
-          do k = bounds%begg,bounds%endg
+          do k = beg1d_out, end1d_out
              if (field_gcell(k) /= spval) then
                 hbuf(k,1) = field_gcell(k)
              else
@@ -1101,7 +1203,7 @@ contains
              nacs(k,1) = 1
           end do
        case ('A', 'SUM') ! Time average / sum
-          do k = bounds%begg,bounds%endg
+          do k = beg1d_out, end1d_out
              if (field_gcell(k) /= spval) then
                 if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
                 hbuf(k,1) = hbuf(k,1) + field_gcell(k)
@@ -1111,7 +1213,7 @@ contains
              end if
           end do
        case ('X') ! Maximum over time
-          do k = bounds%begg,bounds%endg
+          do k = beg1d_out, end1d_out
              if (field_gcell(k) /= spval) then
                 if (nacs(k,1) == 0) hbuf(k,1) = -1.e50_r8
                 hbuf(k,1) = max( hbuf(k,1), field_gcell(k) )
@@ -1121,7 +1223,7 @@ contains
              nacs(k,1) = 1
           end do
        case ('M') ! Minimum over time
-          do k = bounds%begg,bounds%endg
+          do k = beg1d_out, end1d_out
              if (field_gcell(k) /= spval) then
                 if (nacs(k,1) == 0) hbuf(k,1) = +1.e50_r8
                 hbuf(k,1) = min( hbuf(k,1), field_gcell(k) )
@@ -1134,6 +1236,7 @@ contains
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end select
+       deallocate( field_gcell )
 
     else  ! Do not map to gridcell
 
@@ -1249,7 +1352,7 @@ contains
     ! call to p2g, and the lack of explicit bounds on its arguments; see also bug 1786)
     !
     ! !USES:
-    use subgridAveMod   , only : p2g, c2g, l2g
+    use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
@@ -1263,6 +1366,7 @@ contains
     integer  :: k                       ! gridcell, landunit, column or patch index
     integer  :: j                       ! level index
     integer  :: beg1d,end1d             ! beginning and ending indices
+    integer  :: beg1d_out,end1d_out     ! beginning and ending indices for output level
     logical  :: check_active            ! true => check 'active' flag of each point (this refers to a point being active, NOT a history field being active)
     logical  :: valid                   ! true => history operation is valid
     logical  :: map2gcell               ! true => map clm pointer field to gridcell
@@ -1279,7 +1383,7 @@ contains
     logical           :: field_allocated! whether 'field' was allocated here
     logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft) 
                                         !(this refers to a point being active, NOT a history field being active)
-    real(r8) :: field_gcell(bounds%begg:bounds%endg,num2d) ! gridcell level field (used if mapping to gridcell is done)
+    real(r8), allocatable :: field_gcell(:,:) ! gridcell level field (used if mapping to gridcell is done)
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
@@ -1290,6 +1394,8 @@ contains
     hbuf                => tape(t)%hlist(f)%hbuf
     beg1d               =  tape(t)%hlist(f)%field%beg1d
     end1d               =  tape(t)%hlist(f)%field%end1d
+    beg1d_out           =  tape(t)%hlist(f)%field%beg1d_out
+    end1d_out           =  tape(t)%hlist(f)%field%end1d_out
     type1d              =  tape(t)%hlist(f)%field%type1d
     type1d_out          =  tape(t)%hlist(f)%field%type1d_out
     p2c_scale_type      =  tape(t)%hlist(f)%field%p2c_scale_type
@@ -1325,30 +1431,80 @@ contains
 
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
+       SHR_ASSERT(beg1d_out == bounds%begg, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(end1d_out == bounds%endg, errMsg(sourcefile, __LINE__))
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
           ! for some fields, the lower bound has been reset to 1 due to taking a pointer
           ! to an array slice. Thus, this code will NOT work properly if done within a
           ! threaded region! (See also bug 1786)
+          allocate(field_gcell(bounds%begg:bounds%endg,num2d) )
           call p2g(bounds, num2d, &
                field, &
                field_gcell(bounds%begg:bounds%endg, :), &
                p2c_scale_type, c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namec) then
+          allocate(field_gcell(bounds%begg:bounds%endg,num2d) )
           call c2g(bounds, num2d, &
                field, &
                field_gcell(bounds%begg:bounds%endg, :), &
                c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namel) then
+          allocate(field_gcell(bounds%begg:bounds%endg,num2d) )
           call l2g(bounds, num2d, &
                field, &
                field_gcell(bounds%begg:bounds%endg, :), &
                l2g_scale_type)
           map2gcell = .true.
        end if
+    else if ( type1d_out == namel )then
+       SHR_ASSERT(beg1d_out == bounds%begl, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(end1d_out == bounds%endl, errMsg(sourcefile, __LINE__))
+       if (type1d == namep) then
+          ! In this and the following calls, we do NOT explicitly subset field using
+          ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! for some fields, the lower bound has been reset to 1 due to taking a pointer
+          ! to an array slice. Thus, this code will NOT work properly if done within a
+          ! threaded region! (See also bug 1786)
+          allocate(field_gcell(beg1d_out:end1d_out,num2d))
+          call p2l(bounds, num2d, &
+               field, &
+               field_gcell(beg1d_out:end1d_out, :), &
+               p2c_scale_type, c2l_scale_type)
+          map2gcell = .true.
+       else if (type1d == namec) then
+          allocate(field_gcell(beg1d_out:end1d_out,num2d))
+          call c2l(bounds, num2d, &
+               field, &
+               field_gcell(beg1d_out:end1d_out, :), &
+               c2l_scale_type)
+          map2gcell = .true.
+       end if
+    else if ( type1d_out == namec )then
+       SHR_ASSERT(beg1d_out == bounds%begc, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(end1d_out == bounds%endc, errMsg(sourcefile, __LINE__))
+       if (type1d == namep) then
+          ! In this and the following calls, we do NOT explicitly subset field using
+          ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! for some fields, the lower bound has been reset to 1 due to taking a pointer
+          ! to an array slice. Thus, this code will NOT work properly if done within a
+          ! threaded region! (See also bug 1786)
+          allocate(field_gcell(beg1d_out:end1d_out,num2d))
+          call p2c(bounds, num2d, &
+               field, &
+               field_gcell(beg1d_out:end1d_out, :), &
+               p2c_scale_type)
+          map2gcell = .true.
+       end if
+    end if
+    if ( map2gcell .and. .not. is_mapping_upto_subgrid(type1d, type1d_out) )then
+       call endrun(msg=trim(subname)//' ERROR: mapping upto subgrid level is inconsistent'//errMsg(sourcefile, __LINE__))
+    end if
+    if ( .not. map2gcell .and. is_mapping_upto_subgrid(type1d, type1d_out) )then
+       call endrun(msg=trim(subname)//' ERROR: mapping upto subgrid level is inconsistent'//errMsg(sourcefile, __LINE__))
     end if
 
     if (map2gcell) then  ! Map to gridcell
@@ -1357,7 +1513,7 @@ contains
        select case (avgflag)
        case ('I') ! Instantaneous
           do j = 1,num2d
-             do k = bounds%begg,bounds%endg
+             do k = beg1d_out, end1d_out
                 if (field_gcell(k,j) /= spval) then
                    hbuf(k,j) = field_gcell(k,j)
                 else
@@ -1368,7 +1524,7 @@ contains
           end do
        case ('A', 'SUM') ! Time average / sum
           do j = 1,num2d
-             do k = bounds%begg,bounds%endg
+             do k = beg1d_out, end1d_out
                 if (field_gcell(k,j) /= spval) then
                    if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
                    hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)
@@ -1380,7 +1536,7 @@ contains
           end do
        case ('X') ! Maximum over time
           do j = 1,num2d
-             do k = bounds%begg,bounds%endg
+             do k = beg1d_out, end1d_out
                 if (field_gcell(k,j) /= spval) then
                    if (nacs(k,j) == 0) hbuf(k,j) = -1.e50_r8
                    hbuf(k,j) = max( hbuf(k,j), field_gcell(k,j) )
@@ -1392,7 +1548,7 @@ contains
           end do
        case ('M') ! Minimum over time
           do j = 1,num2d
-             do k = bounds%begg,bounds%endg
+             do k = beg1d_out, end1d_out
                 if (field_gcell(k,j) /= spval) then
                    if (nacs(k,j) == 0) hbuf(k,j) = +1.e50_r8
                    hbuf(k,j) = min( hbuf(k,j), field_gcell(k,j) )
@@ -1406,6 +1562,7 @@ contains
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end select
+       deallocate( field_gcell )
 
     else  ! Do not map to gridcell
 
@@ -1629,7 +1786,7 @@ contains
     integer :: k                   ! 1d index
     integer :: j                   ! 2d index
     logical :: aflag               ! averaging flag
-    integer :: beg1d_out,end1d_out ! hbuf 1d beginning and ending indices
+    integer :: beg1d,end1d         ! hbuf 1d beginning and ending indices
     integer :: num2d               ! hbuf size of second dimension (e.g. number of vertical levels)
     character(len=avgflag_strlen)  :: avgflag   ! averaging flag
     real(r8), pointer :: hbuf(:,:) ! history buffer
@@ -1641,8 +1798,13 @@ contains
 
     do f = 1,tape(t)%nflds
        avgflag   =  tape(t)%hlist(f)%avgflag
-       beg1d_out =  tape(t)%hlist(f)%field%beg1d_out
-       end1d_out =  tape(t)%hlist(f)%field%end1d_out
+       if ( is_mapping_upto_subgrid(tape(t)%hlist(f)%field%type1d, tape(t)%hlist(f)%field%type1d_out) )then
+          beg1d =  tape(t)%hlist(f)%field%beg1d_out
+          end1d =  tape(t)%hlist(f)%field%end1d_out
+       else
+          beg1d =  tape(t)%hlist(f)%field%beg1d
+          end1d =  tape(t)%hlist(f)%field%end1d
+       end if
        num2d     =  tape(t)%hlist(f)%field%num2d
        nacs      => tape(t)%hlist(f)%nacs
        hbuf      => tape(t)%hlist(f)%hbuf
@@ -1654,7 +1816,7 @@ contains
        end if
 
        do j = 1, num2d
-          do k = beg1d_out, end1d_out
+          do k = beg1d, end1d
              if (aflag .and. nacs(k,j) /= 0) then
                 hbuf(k,j) = hbuf(k,j) / float(nacs(k,j))
              end if
@@ -2089,7 +2251,7 @@ contains
           else if (ifld == 5) then
              long_name='slope of soil water retention curve'; units = 'unitless'
           else if (ifld == 6) then
-             long_name='saturated hydraulic conductivity'; units = 'unitless'
+             long_name='saturated hydraulic conductivity'; units = 'mm s-1'
           else
              call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(sourcefile, __LINE__))
           end if
@@ -2648,6 +2810,8 @@ contains
     integer :: f                         ! field index
     integer :: k                         ! 1d index
     integer :: c,l,p                     ! indices
+    integer :: beg1d                     ! on-node 1d field pointer start index
+    integer :: end1d                     ! on-node 1d field pointer end index
     integer :: beg1d_out                 ! on-node 1d hbuf pointer start index
     integer :: end1d_out                 ! on-node 1d hbuf pointer end index
     integer :: num1d_out                 ! size of hbuf first dimension (overall all nodes)
@@ -2659,6 +2823,7 @@ contains
     character(len=max_chars) :: units    ! units
     character(len=max_namlen):: varname  ! variable name
     character(len=32) :: avgstr          ! time averaging type
+    character(len=hist_dim_name_length)  :: type1d          ! field 1d type
     character(len=hist_dim_name_length)  :: type1d_out      ! history output 1d type
     character(len=hist_dim_name_length)  :: type2d          ! history output 2d type
     character(len=32) :: dim1name        ! temporary
@@ -2688,7 +2853,10 @@ contains
        long_name  = tape(t)%hlist(f)%field%long_name
        units      = tape(t)%hlist(f)%field%units
        avgflag    = tape(t)%hlist(f)%avgflag
+       type1d     = tape(t)%hlist(f)%field%type1d
        type1d_out = tape(t)%hlist(f)%field%type1d_out
+       beg1d      = tape(t)%hlist(f)%field%beg1d
+       end1d      = tape(t)%hlist(f)%field%end1d
        beg1d_out  = tape(t)%hlist(f)%field%beg1d_out
        end1d_out  = tape(t)%hlist(f)%field%end1d_out
        num1d_out  = tape(t)%hlist(f)%field%num1d_out

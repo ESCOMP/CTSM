@@ -2834,7 +2834,7 @@ contains
        this%dwt_seedc_to_leaf_grc(begg:endg) = spval
        call hist_addfld1d (fname='DWT_SEEDC_TO_LEAF', units='gC/m^2/s', &
             avgflag='A', long_name='seed source to patch-level leaf', &
-            ptr_gcell=this%dwt_seedc_to_leaf_grc)
+            ptr_gcell=this%dwt_seedc_to_leaf_grc, default='inactive')
 
        this%dwt_seedc_to_leaf_patch(begp:endp) = spval
        call hist_addfld1d (fname='DWT_SEEDC_TO_LEAF_PATCH', units='gC/m^2/s', &
@@ -2846,7 +2846,7 @@ contains
        this%dwt_seedc_to_deadstem_grc(begg:endg) = spval
        call hist_addfld1d (fname='DWT_SEEDC_TO_DEADSTEM', units='gC/m^2/s', &
             avgflag='A', long_name='seed source to patch-level deadstem', &
-            ptr_gcell=this%dwt_seedc_to_deadstem_grc)
+            ptr_gcell=this%dwt_seedc_to_deadstem_grc, default='inactive')
 
        this%dwt_seedc_to_deadstem_patch(begp:endp) = spval
        call hist_addfld1d (fname='DWT_SEEDC_TO_DEADSTEM_PATCH', units='gC/m^2/s', &
@@ -2874,6 +2874,14 @@ contains
             avgflag='A', &
             long_name='conversion C flux (immediate loss to atm), dribbled throughout the year', &
             ptr_gcell=this%dwt_conv_cflux_dribbled_grc)
+
+       this%dwt_wood_productc_gain_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DWT_WOOD_PRODUCTC_GAIN_PATCH', units='gC/m^2/s', &
+            avgflag='A', &
+            long_name='patch-level landcover change-driven addition to wood product pools' // &
+            '(0 at all times except first timestep of year) ' // &
+            '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+            ptr_patch=this%dwt_wood_productc_gain_patch, default='inactive')
 
         this%dwt_slash_cflux_col(begc:endc) = spval
         call hist_addfld1d (fname='DWT_SLASH_CFLUX', units='gC/m^2/s', &
@@ -2908,7 +2916,7 @@ contains
        this%crop_seedc_to_leaf_patch(begp:endp) = spval
        call hist_addfld1d (fname='CROP_SEEDC_TO_LEAF', units='gC/m^2/s', &
             avgflag='A', long_name='crop seed source to leaf', &
-            ptr_patch=this%crop_seedc_to_leaf_patch)
+            ptr_patch=this%crop_seedc_to_leaf_patch, default='inactive')
 
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='SR', units='gC/m^2/s', &
@@ -3008,7 +3016,7 @@ contains
        this%dwt_seedc_to_leaf_grc(begg:endg) = spval
        call hist_addfld1d (fname='C13_DWT_SEEDC_TO_LEAF', units='gC13/m^2/s', &
             avgflag='A', long_name='C13 seed source to patch-level leaf', &
-            ptr_gcell=this%dwt_seedc_to_leaf_grc)
+            ptr_gcell=this%dwt_seedc_to_leaf_grc, default='inactive')
 
        this%dwt_seedc_to_leaf_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DWT_SEEDC_TO_LEAF_PATCH', units='gC13/m^2/s', &
@@ -3020,7 +3028,7 @@ contains
        this%dwt_seedc_to_deadstem_grc(begg:endg) = spval
        call hist_addfld1d (fname='C13_DWT_SEEDC_TO_DEADSTEM', units='gC13/m^2/s', &
             avgflag='A', long_name='C13 seed source to patch-level deadstem', &
-            ptr_gcell=this%dwt_seedc_to_deadstem_grc)
+            ptr_gcell=this%dwt_seedc_to_deadstem_grc, default='inactive')
 
        this%dwt_seedc_to_deadstem_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DWT_SEEDC_TO_DEADSTEM_PATCH', units='gC13/m^2/s', &
@@ -3082,7 +3090,7 @@ contains
        this%crop_seedc_to_leaf_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_CROP_SEEDC_TO_LEAF', units='gC13/m^2/s', &
             avgflag='A', long_name='C13 crop seed source to leaf', &
-            ptr_patch=this%crop_seedc_to_leaf_patch)
+            ptr_patch=this%crop_seedc_to_leaf_patch, default='inactive')
 
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_SR', units='gC13/m^2/s', &
@@ -3157,7 +3165,7 @@ contains
        this%dwt_seedc_to_leaf_grc(begg:endg) = spval
        call hist_addfld1d (fname='C14_DWT_SEEDC_TO_LEAF', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 seed source to patch-level leaf', &
-            ptr_gcell=this%dwt_seedc_to_leaf_grc)
+            ptr_gcell=this%dwt_seedc_to_leaf_grc, default='inactive')
 
        this%dwt_seedc_to_leaf_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DWT_SEEDC_TO_LEAF_PATCH', units='gC14/m^2/s', &
@@ -3169,7 +3177,7 @@ contains
        this%dwt_seedc_to_deadstem_grc(begg:endg) = spval
        call hist_addfld1d (fname='C14_DWT_SEEDC_TO_DEADSTEM', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 seed source to patch-level deadstem', &
-            ptr_gcell=this%dwt_seedc_to_deadstem_grc)
+            ptr_gcell=this%dwt_seedc_to_deadstem_grc, default='inactive')
 
        this%dwt_seedc_to_deadstem_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DWT_SEEDC_TO_DEADSTEM_PATCH', units='gC14/m^2/s', &
@@ -3231,7 +3239,7 @@ contains
        this%crop_seedc_to_leaf_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_CROP_SEEDC_TO_LEAF', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 crop seed source to leaf', &
-            ptr_patch=this%crop_seedc_to_leaf_patch)
+            ptr_patch=this%crop_seedc_to_leaf_patch, default='inactive')
 
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_SR', units='gC14/m^2/s', &

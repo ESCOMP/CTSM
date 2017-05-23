@@ -4,6 +4,36 @@
 
 <definitions_variables>
 
+  <!-- Descriptions of all the different valid configurations for difference model versions -->
+  <description>
+    <desc compset="_CLM40%[^_]*SP"              >clm4.0 Satellite phenology:</desc>
+    <desc compset="_CLM40%[^_]*CN_"             >clm4.0 cn:</desc>
+    <desc compset="_CLM40%[^_]*CNDV_"           >clm4.0 cndv:</desc>
+    <desc compset="_CLM40%[^_]*CN-CROP"         >clm4.0 CN with prognostic crop:</desc>
+    <desc compset="_CLM40%[^_]*CNDV-CROP"       >clm4.0 CNDV with prognostic crop:</desc>
+
+    <desc compset="_CLM45%[^_]*SP_"             >clm4.5 Satellite phenology:</desc>
+    <desc compset="_CLM45%[^_]*SP-VIC"          >clm4.5 Satellite phenology with VIC hydrology:</desc>
+    <desc compset="_CLM45%[^_]*CN_"             >clm4.5 cn:</desc>
+    <desc compset="_CLM45%[^_]*CNDV_"           >clm4.5 cn with dynamic vegetation:</desc>
+    <desc compset="_CLM45%[^_]*BGC_"            >clm4.5 bgc (cn and methane):</desc>
+    <desc compset="_CLM45%[^_]*CN-CROP"         >clm4.5 cn with prognostic crop:</desc>
+    <desc compset="_CLM45%[^_]*CNDV-CROP"       >clm4.5 cn with dynamic vegetation with prognostic crop:</desc>
+    <desc compset="_CLM45%[^_]*BGC-CROP"        >clm4.5 bgc (cn and methane) with prognostic crop:</desc>
+    <desc compset="_CLM45%[^_]*FATES"           >clm4.5 FATES (Functionally Assembled Terrestrial Ecosystem Simulator): (experimental)</desc>
+    <desc compset="_CLM45%[^_]*BGCDV_"          >clm4.5 bgc (cn and methane) with dynamic vegetation:</desc>
+    <desc compset="_CLM45%[^_]*BGCDV-CROP"      >clm4.5 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
+
+    <desc compset="_CLM50%[^_]*SP"              >clm5.0 Satellite phenology:</desc>
+    <desc compset="_CLM50%[^_]*BGC_"            >clm5.0 bgc (cn and methane):</desc>
+    <desc compset="_CLM50%[^_]*BGCDV_"          >clm5.0 bgc (cn and methane) with dynamic vegetation:</desc>
+    <desc compset="_CLM50%[^_]*BGC-CROP"        >clm5.0 bgc with prognostic crop:</desc>
+    <desc compset="HIST.*_CLM50%[^_]*BGC-CROP"  >clm5.0 bgc with prognostic crop and irrigation:</desc>
+    <desc compset="2000.*_CLM50%[^_]*BGC-CROP"  >clm5.0 bgc (cn and methane) with dynamic vegetation and prognostic crop and irrigation:</desc>
+    <desc compset="_CLM50%[^_]*BGCDV-CROP"      >clm5.0 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
+    <desc compset="_CLM50%[^_]*FATES"           >clm5.0 FATES (Functionally Assembled Terrestrial Ecosystem Simulator): (experimental)</desc>
+  </description>
+
   <entry id="COMP_LND">
     <type>char</type>
     <valid_values>clm</valid_values>
@@ -109,7 +139,6 @@
     <type>char</type>
     <default_value></default_value>
     <values>
-      <value compset="%CNCR"			 >-ignore_ic_year</value>
       <value compset="_CLM45%[^_]*SP"		 >-bgc sp</value>
       <value compset="_CLM45%[^_]*CN"		 >-bgc cn</value>
       <value compset="_CLM45%[^_]*BGC"		 >-bgc bgc</value>
@@ -205,30 +234,6 @@
       (arbitrary initial conditions). Setting this value in the xml file will take
       precedence over any settings for finidat in the $CASEROOT/user_clm_clm file.</desc>
   </entry>
-
-  <description>
-    <desc compset="_CLM40"			>clm4.0 physics:</desc>
-    <desc compset="_CLM40%[^_]*SP"		>clm4.0 Satellite phenology:</desc>
-    <desc compset="_CLM40%[^_]*CN"		>clm4.0 cn:</desc>
-    <desc compset="_CLM40%[^_]*CNDV"		>clm4.0 cndv:</desc>
-    <desc compset="_CLM40%[^_]*CROP"		>clm4.0 prognostic crop:</desc>
-    <desc compset="_CLM45"			>clm4.5 physics:</desc>
-    <desc compset="_CLM45%[^_]*SP"		>clm4.5 Satellite phenology:</desc>
-    <desc compset="_CLM45%[^_]*CN"		>clm4.5 cn:</desc>
-    <desc compset="_CLM45%[^_]*CNDV"		>clm4.5 cn with dynamic vegetation:</desc>
-    <desc compset="_CLM45%[^_]*BGC"		>clm4.5 bgc (cn and methane):</desc>
-    <desc compset="_CLM45%[^_]*CROP"		>clm4.5 prognostic crop:</desc>
-    <desc compset="_CLM45%[^_]*VIC"		>clm4.5 vic hydrology:</desc>
-    <desc compset="_CLM45%[^_]*FATES"		>clm4.5 FATES/ED (Ecosystem Demography): (experimental)</desc>
-    <desc compset="_CLM45%[^_]*BGCDV"		>clm4.5 bgc (cn and methane) with dynamic vegetation:</desc>
-    <desc compset="_CLM45%[^_]*BGCDV-CROP"	>clm4.5 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
-    <desc compset="_CLM50"			>clm5.0 physics:</desc>
-    <desc compset="_CLM50%[^_]*SP"		>clm5.0 Satellite phenology:</desc>
-    <desc compset="_CLM50%[^_]*BGC"		>clm5.0 bgc (cn and methane):</desc>
-    <desc compset="_CLM50%[^_]*BGC-CROP"	>clm5.0 bgc with prognostic crop:</desc>
-    <desc compset="_CLM50%[^_]*BGCDV-CROP"	>clm5.0 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
-    <desc compset="_CLM50%[^_]*FATES"		>clm5.0 FATES/ED (Ecosystem Demography): (experimental)</desc>
-  </description>
 
   <help>
     =========================================

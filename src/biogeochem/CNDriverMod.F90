@@ -12,6 +12,7 @@ module CNDriverMod
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
   use clm_varctl                      , only : use_crop
+  use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
@@ -281,9 +282,11 @@ contains
        call CNNFert(bounds, num_soilc,filter_soilc, &
             cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst)
 
-       call  CNSoyfix (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            waterstate_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
-            soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+       if (.not. use_fun) then  ! if FUN is active, then soy fixation handled by FUN
+          call  CNSoyfix (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               waterstate_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
+               soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+       end if
     end if
 
     call t_startf('CNMResp')

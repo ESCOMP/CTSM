@@ -239,7 +239,7 @@ contains
        this%altmax_lastyear_col(begc:endc) = spval
        call hist_addfld1d (fname='ALTMAX_LASTYEAR', units='m', &
             avgflag='A', long_name='maximum prior year active layer thickness', &
-            ptr_col=this%altmax_lastyear_col)
+            ptr_col=this%altmax_lastyear_col, default='inactive')
     end if
 
     ! Allow active layer fields to be optionally output even if not running CN

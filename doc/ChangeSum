@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r243    andre 05/23/2017 History output cleanup from Dave Lawrence
   clm4_5_16_r242     erik 05/21/2017 Use finundated streams for CLM50, and use ndep if it comes from cpl
   clm4_5_16_r241    sacks 05/16/2017 Fix ch4 subtle dependence on processor count
   clm4_5_16_r240    sacks 05/15/2017 Make glc_dyn_runoff_routing real-valued

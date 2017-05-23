@@ -327,12 +327,12 @@ contains
        this%leafc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='leaf C storage', &
-            ptr_patch=this%leafc_storage_patch)    
+            ptr_patch=this%leafc_storage_patch, default='inactive')    
 
        this%leafc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_XFER', units='gC/m^2', &
             avgflag='A', long_name='leaf C transfer', &
-            ptr_patch=this%leafc_xfer_patch)    
+            ptr_patch=this%leafc_xfer_patch, default='inactive')    
 
        this%leafc_storage_xfer_acc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_STORAGE_XFER_ACC', units='gC/m^2', &
@@ -352,12 +352,12 @@ contains
        this%frootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='fine root C storage', &
-            ptr_patch=this%frootc_storage_patch)   
+            ptr_patch=this%frootc_storage_patch, default='inactive')   
 
        this%frootc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTC_XFER', units='gC/m^2', &
             avgflag='A', long_name='fine root C transfer', &
-            ptr_patch=this%frootc_xfer_patch)    
+            ptr_patch=this%frootc_xfer_patch, default='inactive')    
 
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC', units='gC/m^2', &
@@ -367,12 +367,12 @@ contains
        this%livestemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='live stem C storage', &
-            ptr_patch=this%livestemc_storage_patch)    
+            ptr_patch=this%livestemc_storage_patch, default='inactive')    
 
        this%livestemc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC_XFER', units='gC/m^2', &
             avgflag='A', long_name='live stem C transfer', &
-            ptr_patch=this%livestemc_xfer_patch)     
+            ptr_patch=this%livestemc_xfer_patch, default='inactive')     
 
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC', units='gC/m^2', &
@@ -382,12 +382,12 @@ contains
        this%deadstemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='dead stem C storage', &
-            ptr_patch=this%deadstemc_storage_patch)    
+            ptr_patch=this%deadstemc_storage_patch, default='inactive')    
 
        this%deadstemc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC_XFER', units='gC/m^2', &
             avgflag='A', long_name='dead stem C transfer', &
-            ptr_patch=this%deadstemc_xfer_patch)    
+            ptr_patch=this%deadstemc_xfer_patch, default='inactive')    
 
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC', units='gC/m^2', &
@@ -397,12 +397,12 @@ contains
        this%livecrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='live coarse root C storage', &
-            ptr_patch=this%livecrootc_storage_patch)     
+            ptr_patch=this%livecrootc_storage_patch, default='inactive')     
 
        this%livecrootc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC_XFER', units='gC/m^2', &
             avgflag='A', long_name='live coarse root C transfer', &
-            ptr_patch=this%livecrootc_xfer_patch)    
+            ptr_patch=this%livecrootc_xfer_patch, default='inactive')    
 
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTC', units='gC/m^2', &
@@ -412,22 +412,22 @@ contains
        this%deadcrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='dead coarse root C storage', &
-            ptr_patch=this%deadcrootc_storage_patch)   
+            ptr_patch=this%deadcrootc_storage_patch, default='inactive')   
 
        this%deadcrootc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTC_XFER', units='gC/m^2', &
             avgflag='A', long_name='dead coarse root C transfer', &
-            ptr_patch=this%deadcrootc_xfer_patch)   
+            ptr_patch=this%deadcrootc_xfer_patch, default='inactive')   
 
        this%gresp_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='GRESP_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='growth respiration storage', &
-            ptr_patch=this%gresp_storage_patch)    
+            ptr_patch=this%gresp_storage_patch, default='inactive')    
 
        this%gresp_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='GRESP_XFER', units='gC/m^2', &
             avgflag='A', long_name='growth respiration transfer', &
-            ptr_patch=this%gresp_xfer_patch)     
+            ptr_patch=this%gresp_xfer_patch, default='inactive')     
 
        this%cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL', units='gC/m^2', &
@@ -442,7 +442,7 @@ contains
        this%ctrunc_patch(begp:endp) = spval
        call hist_addfld1d (fname='PFT_CTRUNC', units='gC/m^2', &
             avgflag='A', long_name='patch-level sink for C truncation', &
-            ptr_patch=this%ctrunc_patch)
+            ptr_patch=this%ctrunc_patch, default='inactive')
 
        this%dispvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DISPVEGC', units='gC/m^2', &
@@ -610,7 +610,7 @@ contains
        this%ctrunc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PFT_CTRUNC', units='gC13/m^2', &
             avgflag='A', long_name='C13 patch-level sink for C truncation', &
-            ptr_patch=this%ctrunc_patch)
+            ptr_patch=this%ctrunc_patch, default='inactive')
 
        this%dispvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DISPVEGC', units='gC13/m^2', &

@@ -249,6 +249,7 @@ contains
 
          beta            =>   lakestate_inst%betaprime_col         , & ! Output: [real(r8) (:)   ]  col effective beta: sabg_lyr(p,jtop) for snow layers, beta otherwise
          lake_icefrac    =>   lakestate_inst%lake_icefrac_col      , & ! Output: [real(r8) (:,:) ]  col mass fraction of lake layer that is frozen
+         lake_icefracsurf => lakestate_inst%lake_icefracsurf_col   , & ! Output: [real(r8) (:,:) ]  col mass fraction of surface lake layer that is frozen
          lake_icethick   =>   lakestate_inst%lake_icethick_col     , & ! Output: [real(r8) (:)   ]  col ice thickness (m) (integrated if lakepuddling)
          savedtke1       =>   lakestate_inst%savedtke1_col         , & ! Output: [real(r8) (:)   ]  col top level eddy conductivity (W/mK)      
          lakeresist      =>   lakestate_inst%lakeresist_col        , & ! Output: [real(r8) (:)   ]  col (Needed for calc. of grnd_ch4_cond) (s/m) 
@@ -930,6 +931,7 @@ contains
                    lake_icefrac(c,i) = 0._r8
                    t_lake(c,i) = tav_unfr(c) + tfrz
                 end if
+      
                 zsum(c) = zsum(c) + dz_lake(c,i)
 
                 rhow(c,i) = (1._r8 - lake_icefrac(c,i)) * & 
@@ -1032,12 +1034,13 @@ contains
     end do
     ! This loop assumes only one point per column.
 
-    ! lake_icethick diagnostic.
+    ! lake_icethickness and lake_icefraction at surface diagnostic.
     do j = 1, nlevlak
        do fc = 1, num_lakec
           c = filter_lakec(fc)
 
           if (j == 1) lake_icethick(c) = 0._r8
+          if (j == 1) lake_icefracsurf(c) = lake_icefrac(c,1)
 
           lake_icethick(c) = lake_icethick(c) + lake_icefrac(c,j)*dz_lake(c,j)*denh2o/denice
                                                            ! Convert from nominal to physical thickness

@@ -128,7 +128,7 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(iulog,*)'p2c_2d error: scale type ',p2c_scale_type,' not supported'
+       write(iulog,*)'p2c_1d error: scale type ',p2c_scale_type,' not supported'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -301,7 +301,7 @@ contains
     integer  :: p,c,l,index                     ! indices
     logical  :: found                              ! temporary for error check
     real(r8) :: sumwt(bounds%begl:bounds%endl)     ! sum of weights
-    real(r8) :: scale_p2c(bounds%begc:bounds%endc) ! scale factor for patch->column mapping
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp) ! scale factor for patch->column mapping
     real(r8) :: scale_c2l(bounds%begc:bounds%endc) ! scale factor for column->landunit mapping
     !------------------------------------------------------------------------
 

@@ -367,6 +367,7 @@ contains
     character(10) :: active
     integer       :: begc,endc
     integer       :: begg,endg 
+    real(r8), pointer :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
     !---------------------------------------------------------------------
 
     begc = bounds%begc; endc = bounds%endc
@@ -398,7 +399,7 @@ contains
     ! finundated is implicitly 1).
     call hist_addfld1d (fname='FINUNDATED_LAG', units='unitless',  &
          avgflag='A', long_name='time-lagged inundated fraction of vegetated columns', &
-         ptr_col=this%finundated_lag_col, l2g_scale_type='veg')
+         ptr_col=this%finundated_lag_col, l2g_scale_type='veg', default='inactive')
 
     this%ch4_surf_diff_sat_col(begc:endc) = spval
     call hist_addfld1d (fname='CH4_SURF_DIFF_SAT', units='mol/m2/s',  &
@@ -658,17 +659,19 @@ contains
     this%conc_o2_sat_col(begc:endc,1:nlevgrnd) = spval
     ! Using l2g_scale_type='veg_plus_lake' to exclude mass in non-lake special landunits,
     ! which can arise from dynamic column adjustments
-    call hist_addfld2d (fname='CONC_O2_SAT', units='mol/m3', type2d='levgrnd', &
+    data2dptr => this%conc_o2_sat_col(:,1:nlevsoi)
+    call hist_addfld2d (fname='CONC_O2_SAT', units='mol/m3', type2d='levsoi', &
          avgflag='A', long_name='O2 soil Concentration for inundated / lake area', &
-         ptr_col=this%conc_o2_sat_col, l2g_scale_type='veg_plus_lake')
+         ptr_col=data2dptr, l2g_scale_type='veg_plus_lake')
 
     this%conc_o2_unsat_col(begc:endc,1:nlevgrnd) = spval
     ! Using l2g_scale_type='veg' to exclude mass in special landunits, which can arise
     ! from dynamic column adjustments. (We also exclude lakes here, because they don't
     ! have any unsaturated area.)
-    call hist_addfld2d (fname='CONC_O2_UNSAT', units='mol/m3', type2d='levgrnd', &
+    data2dptr => this%conc_o2_unsat_col(:,1:nlevsoi)
+    call hist_addfld2d (fname='CONC_O2_UNSAT', units='mol/m3', type2d='levsoi', &
          avgflag='A', long_name='O2 soil Concentration for non-inundated area', &
-         ptr_col=this%conc_o2_unsat_col, l2g_scale_type='veg')
+         ptr_col=data2dptr, l2g_scale_type='veg')
 
     this%ch4co2f_grc(begg:endg) = spval
     call hist_addfld1d (fname='FCH4TOCO2', units='gC/m2/s', &
@@ -693,7 +696,7 @@ contains
     this%qflx_surf_lag_col(begc:endc) = spval
     call hist_addfld1d (fname='QOVER_LAG', units='mm/s',  &
          avgflag='A', long_name='time-lagged surface runoff for soil columns', &
-         ptr_col=this%qflx_surf_lag_col)
+         ptr_col=this%qflx_surf_lag_col, default='inactive')
 
     if (allowlakeprod) then
        this%lake_soilc_col(begc:endc,1:nlevgrnd) = spval

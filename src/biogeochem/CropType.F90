@@ -244,7 +244,7 @@ contains
        this%latbaset_patch(begp:endp) = spval
        call hist_addfld1d (fname='LATBASET', units='degree C', &
             avgflag='A', long_name='latitude vary base temperature for gddplant', &
-            ptr_patch=this%latbaset_patch)
+            ptr_patch=this%latbaset_patch, default='inactive')
     end if
 
   end subroutine InitHistory

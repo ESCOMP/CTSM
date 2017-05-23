@@ -41,6 +41,7 @@ module CNProductsMod
      ! Fluxes: gains
      real(r8), pointer :: dwt_prod10_gain_grc(:)  ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
      real(r8), pointer :: dwt_prod100_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to 100-year wood product pool
+     real(r8), pointer :: dwt_woodprod_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to wood product pools
      real(r8), pointer :: dwt_cropprod1_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to 1-year crop product pool
      real(r8), pointer :: hrv_deadstem_to_prod10_patch(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
      real(r8), pointer :: hrv_deadstem_to_prod10_grc(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
@@ -128,6 +129,8 @@ contains
 
     allocate(this%dwt_prod10_gain_grc(begg:endg)) ; this%dwt_prod10_gain_grc(:) = nan
     allocate(this%dwt_prod100_gain_grc(begg:endg)) ; this%dwt_prod100_gain_grc(:) = nan
+    allocate(this%dwt_woodprod_gain_grc(begg:endg)) ; this%dwt_woodprod_gain_grc(:) = nan
+
     allocate(this%dwt_cropprod1_gain_grc(begg:endg)) ; this%dwt_cropprod1_gain_grc(:) = nan
 
     allocate(this%hrv_deadstem_to_prod10_patch(begp:endp)) ; this%hrv_deadstem_to_prod10_patch(:) = nan
@@ -180,7 +183,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = '10-yr wood product ' // this%species%get_species(), &
-         ptr_gcell = this%prod10_grc)
+         ptr_gcell = this%prod10_grc, default='inactive')
 
     this%prod100_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -188,7 +191,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = '100-yr wood product ' // this%species%get_species(), &
-         ptr_gcell = this%prod100_grc)
+         ptr_gcell = this%prod100_grc, default='inactive')
 
     this%tot_woodprod_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -204,7 +207,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'landcover change-driven addition to 10-yr wood product pool', &
-         ptr_gcell = this%dwt_prod10_gain_grc)
+         ptr_gcell = this%dwt_prod10_gain_grc, default='inactive')
 
     this%dwt_prod100_gain_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -212,7 +215,15 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'landcover change-driven addition to 100-yr wood product pool', &
-         ptr_gcell = this%dwt_prod100_gain_grc)
+         ptr_gcell = this%dwt_prod100_gain_grc, default='inactive')
+
+    this%dwt_woodprod_gain_grc(begg:endg) = spval
+    call hist_addfld1d( &
+         fname = this%species%hist_fname('DWT_WOODPROD', suffix='_GAIN'), &
+         units = 'g' // this%species%get_species() // '/m^2/s', &
+         avgflag = 'A', &
+         long_name = 'landcover change-driven addition to wood product pools', &
+         ptr_gcell = this%dwt_woodprod_gain_grc)
 
     this%dwt_cropprod1_gain_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -236,7 +247,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'loss from 10-yr wood product pool', &
-         ptr_gcell = this%prod10_loss_grc)
+         ptr_gcell = this%prod10_loss_grc, default='inactive')
 
     this%prod100_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -244,7 +255,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'loss from 100-yr wood product pool', &
-         ptr_gcell = this%prod100_loss_grc)
+         ptr_gcell = this%prod100_loss_grc, default='inactive')
 
     this%tot_woodprod_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -718,6 +729,10 @@ contains
             this%cropprod1_loss_grc(g) + &
             this%prod10_loss_grc(g) + &
             this%prod100_loss_grc(g)
+
+       this%dwt_woodprod_gain_grc(g) = &
+            this%dwt_prod100_gain_grc(g) + &
+            this%dwt_prod10_gain_grc(g)
     end do
 
   end subroutine ComputeSummaryVars

@@ -253,17 +253,17 @@ subroutine InitHistory(this, bounds)
     this%appar_temp_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='APPAR_TEMP', units='C',  &
             avgflag='A', long_name='2 m apparent temperature', &
-            ptr_patch=this%appar_temp_ref2m_patch)
+            ptr_patch=this%appar_temp_ref2m_patch, default='inactive')
 
     this%appar_temp_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='APPAR_TEMP_U', units='C',  &
             avgflag='A', long_name='Urban 2 m apparent temperature', &
-            ptr_patch=this%appar_temp_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%appar_temp_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%appar_temp_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='APPAR_TEMP_R', units='C',  &
             avgflag='A', long_name='Rural 2 m apparent temperature', &
-            ptr_patch=this%appar_temp_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%appar_temp_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%swbgt_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWBGT', units='C',  &
@@ -313,77 +313,77 @@ subroutine InitHistory(this, bounds)
     this%wb_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='WBA', units='C',  &
             avgflag='A', long_name='2 m Wet Bulb', &
-            ptr_patch=this%wb_ref2m_patch)
+            ptr_patch=this%wb_ref2m_patch, default='inactive')
 
     this%wb_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='WBA_U', units='C',  &
             avgflag='A', long_name='Urban 2 m Wet Bulb', &
-            ptr_patch=this%wb_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%wb_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%wb_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='WBA_R', units='C',  &
             avgflag='A', long_name='Rural 2 m Wet Bulb', &
-            ptr_patch=this%wb_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%wb_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%teq_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='TEQ', units='K',  &
             avgflag='A', long_name='2 m Equiv Temp', &
-            ptr_patch=this%teq_ref2m_patch)
+            ptr_patch=this%teq_ref2m_patch, default='inactive')
 
     this%teq_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TEQ_U', units='K',  &
             avgflag='A', long_name='Urban 2 m Equiv Temp', &
-            ptr_patch=this%teq_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%teq_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%teq_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TEQ_R', units='K',  &
             avgflag='A', long_name='Rural 2 m Equiv Temp', &
-            ptr_patch=this%teq_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%teq_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%ept_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='EPT', units='K',  &
             avgflag='A', long_name='2 m Equiv Pot Temp', &
-            ptr_patch=this%ept_ref2m_patch)
+            ptr_patch=this%ept_ref2m_patch, default='inactive')
 
     this%ept_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='EPT_U', units='K',  &
             avgflag='A', long_name='Urban 2 m Equiv Pot Temp', &
-            ptr_patch=this%ept_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%ept_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%ept_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='EPT_R', units='K',  &
             avgflag='A', long_name='Rural 2 m Equiv Pot Temp', &
-            ptr_patch=this%ept_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%ept_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%discomf_index_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISCOI', units='C',  &
             avgflag='A', long_name='2 m Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2m_patch)
+            ptr_patch=this%discomf_index_ref2m_patch, default='inactive')
 
     this%discomf_index_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISCOI_U', units='C',  &
             avgflag='A', long_name='Urban 2 m Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%discomf_index_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%discomf_index_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISCOI_R', units='C',  &
             avgflag='A', long_name='Rural 2 m Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%discomf_index_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%discomf_index_ref2mS_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISCOIS', units='C',  &
             avgflag='A', long_name='2 m Stull Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2mS_patch)
+            ptr_patch=this%discomf_index_ref2mS_patch, default='inactive')
 
     this%discomf_index_ref2mS_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISCOIS_U', units='C',  &
             avgflag='A', long_name='Urban 2 m Stull Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2mS_u_patch, set_nourb=spval)
+            ptr_patch=this%discomf_index_ref2mS_u_patch, set_nourb=spval, default='inactive')
 
     this%discomf_index_ref2mS_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISCOIS_R', units='C',  &
             avgflag='A', long_name='Rural 2 m Stull Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2mS_r_patch, set_spec=spval)
+            ptr_patch=this%discomf_index_ref2mS_r_patch, set_spec=spval, default='inactive')
 
     this%nws_hi_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='HIA', units='C',  &
@@ -403,62 +403,62 @@ subroutine InitHistory(this, bounds)
     this%thip_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='THIP', units='C',  &
             avgflag='A', long_name='2 m Temp Hum Index Physiology', &
-            ptr_patch=this%thip_ref2m_patch)
+            ptr_patch=this%thip_ref2m_patch, default='inactive')
 
     this%thip_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='THIP_U', units='C',  &
             avgflag='A', long_name='Urban 2 m Temp Hum Index Physiology', &
-            ptr_patch=this%thip_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%thip_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%thip_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='THIP_R', units='C',  &
             avgflag='A', long_name='Rural 2 m Temp Hum Index Physiology', &
-            ptr_patch=this%thip_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%thip_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%thic_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='THIC', units='C',  &
             avgflag='A', long_name='2 m Temp Hum Index Comfort', &
-            ptr_patch=this%thic_ref2m_patch)
+            ptr_patch=this%thic_ref2m_patch, default='inactive')
 
     this%thic_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='THIC_U', units='C',  &
             avgflag='A', long_name='Urban 2 m Temp Hum Index Comfort', &
-            ptr_patch=this%thic_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%thic_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%thic_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='THIC_R', units='C',  &
             avgflag='A', long_name='Rural 2 m Temp Hum Index Comfort', &
-            ptr_patch=this%thic_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%thic_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%swmp65_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWMP65', units='C',  &
             avgflag='A', long_name='2 m Swamp Cooler Temp 65% Eff', &
-            ptr_patch=this%swmp65_ref2m_patch)
+            ptr_patch=this%swmp65_ref2m_patch, default='inactive')
 
     this%swmp65_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWMP65_U', units='C',  &
             avgflag='A', long_name='Urban 2 m Swamp Cooler Temp 65% Eff', &
-            ptr_patch=this%swmp65_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%swmp65_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%swmp65_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWMP65_R', units='C',  &
             avgflag='A', long_name='Rural 2 m Swamp Cooler Temp 65% Eff', &
-            ptr_patch=this%swmp65_ref2m_r_patch, set_spec=spval)
+            ptr_patch=this%swmp65_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%swmp80_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWMP80', units='C',  &
             avgflag='A', long_name='2 m Swamp Cooler Temp 80% Eff', &
-            ptr_patch=this%swmp80_ref2m_patch)
+            ptr_patch=this%swmp80_ref2m_patch, default='inactive')
 
     this%swmp80_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWMP80_U', units='C',  &
             avgflag='A', long_name='Urban 2 m Swamp Cooler Temp 80% Eff', &
-            ptr_patch=this%swmp80_ref2m_u_patch, set_nourb=spval)
+            ptr_patch=this%swmp80_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%swmp80_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWMP80_R', units='C',  &
                avgflag='A', long_name='Rural 2 m Swamp Cooler Temp 80% Eff', &
-               ptr_patch=this%swmp80_ref2m_r_patch, set_spec=spval)
+               ptr_patch=this%swmp80_ref2m_r_patch, set_spec=spval, default='inactive')
 
 end subroutine InitHistory
 

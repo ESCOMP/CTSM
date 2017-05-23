@@ -309,7 +309,7 @@ contains
     this%t_grnd_u_col(begc:endc) = spval
     call hist_addfld1d (fname='TG_U', units='K',  &
          avgflag='A', long_name='Urban ground temperature', &
-         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans')
+         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans', default='inactive')
 
     this%t_lake_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TLAKE',  units='K', type2d='levlak', &
@@ -339,7 +339,7 @@ contains
     this%t_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_R', units='K',  &
          avgflag='A', long_name='Rural 2m air temperature', &
-         ptr_patch=this%t_ref2m_r_patch, set_spec=spval)
+         ptr_patch=this%t_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%t_ref2m_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV', units='K',  &
@@ -354,27 +354,27 @@ contains
     this%t_ref2m_min_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_R', units='K',  &
          avgflag='A', long_name='Rural daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval)
+         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval, default='inactive')
 
     this%t_ref2m_max_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_R', units='K',  &
          avgflag='A', long_name='Rural daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval)
+         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval, default='inactive')
 
     this%t_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_U', units='K',  &
          avgflag='A', long_name='Urban 2m air temperature', &
-         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval)
+         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%t_ref2m_min_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_U', units='K',  &
          avgflag='A', long_name='Urban daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval)
+         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval, default='inactive')
 
     this%t_ref2m_max_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval)
+         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
 
     this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV', units='K',  &
@@ -394,7 +394,7 @@ contains
     this%t_grnd_r_col(begc:endc) = spval
     call hist_addfld1d (fname='TG_R', units='K',  &
          avgflag='A', long_name='Rural ground temperature', &
-         ptr_col=this%t_grnd_r_col, set_spec=spval)
+         ptr_col=this%t_grnd_r_col, set_spec=spval, default='inactive')
 
     this%t_soisno_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TSOI',  units='K', type2d='levgrnd', &
@@ -418,7 +418,7 @@ contains
     this%t_a10_patch(begp:endp) = spval
     call hist_addfld1d (fname='T10', units='K',  &
          avgflag='A', long_name='10-day running mean of 2-m temperature', &
-         ptr_patch=this%t_a10_patch, default=active)
+         ptr_patch=this%t_a10_patch, default='inactive')
 
     if (use_cn .and.  use_crop )then
        this%t_a5min_patch(begp:endp) = spval
@@ -448,22 +448,26 @@ contains
        this%t_roof_inner_lun(begl:endl) = spval
        call hist_addfld1d(fname='TROOF_INNER', units='K',  &
             avgflag='A', long_name='roof inside surface temperature', &
-            ptr_lunit=this%t_roof_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_roof_inner_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
 
        this%t_sunw_inner_lun(begl:endl) = spval
        call hist_addfld1d(fname='TSUNW_INNER', units='K',  &
             avgflag='A', long_name='sunwall inside surface temperature', &
-            ptr_lunit=this%t_sunw_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_sunw_inner_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
 
        this%t_shdw_inner_lun(begl:endl) = spval
        call hist_addfld1d(fname='TSHDW_INNER', units='K',  &
             avgflag='A', long_name='shadewall inside surface temperature', &
-            ptr_lunit=this%t_shdw_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_shdw_inner_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
 
        this%t_floor_lun(begl:endl) = spval
        call hist_addfld1d(fname='TFLOOR', units='K',  &
             avgflag='A', long_name='floor temperature', &
-            ptr_lunit=this%t_floor_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_floor_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
     end if
 
     this%heat1_grc(begg:endg) = spval
@@ -472,7 +476,7 @@ contains
          ptr_lnd=this%heat1_grc)
     call hist_addfld1d (fname='HEAT_CONTENT1_VEG',  units='J/m^2',  &
          avgflag='A', long_name='initial gridcell total heat content - vegetated landunits only', &
-         ptr_lnd=this%heat1_grc, l2g_scale_type='veg')
+         ptr_lnd=this%heat1_grc, l2g_scale_type='veg', default='inactive')
 
     this%heat2_grc(begg:endg) = spval
     call hist_addfld1d (fname='HEAT_CONTENT2',  units='J/m^2',  &

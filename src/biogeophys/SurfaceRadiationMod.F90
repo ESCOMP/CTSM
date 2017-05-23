@@ -266,22 +266,23 @@ contains
     this%fsr_sno_vd_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRVD', units='W/m^2',  &
          avgflag='A', long_name='direct vis reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_vd_patch, default='inactive')
+         ptr_patch=this%fsr_sno_vd_patch)
 
     this%fsr_sno_nd_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRND', units='W/m^2',  &
          avgflag='A', long_name='direct nir reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_nd_patch, default='inactive')
+         ptr_patch=this%fsr_sno_nd_patch)
 
     this%fsr_sno_vi_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRVI', units='W/m^2',  &
          avgflag='A', long_name='diffuse vis reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_vi_patch, default='inactive')
+         ptr_patch=this%fsr_sno_vi_patch)
 
     this%fsr_sno_ni_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRNI', units='W/m^2',  &
          avgflag='A', long_name='diffuse nir reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_ni_patch, default='inactive')
+         ptr_patch=this%fsr_sno_ni_patch)
+
 
   end subroutine InitHistory
 
@@ -580,8 +581,8 @@ contains
           fsds_sno_vd     =>    surfrad_inst%fsds_sno_vd_patch    , & ! Output: [real(r8) (:)   ] incident visible, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
-          fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    ,  & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-         frac_sno_eff     => waterstate_inst%frac_sno_eff_col          & !Input: 
+          fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
+          frac_sno_eff    => waterstate_inst%frac_sno_eff_col       & !Input: 
   
           )
 

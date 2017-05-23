@@ -276,7 +276,7 @@ contains
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use clm_varpar     , only : nlevsno, nlevgrnd
-    use clm_varctl     , only : use_cn
+    use clm_varctl     , only : use_cn, use_hydrstress
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use ncdio_pio      , only : ncd_inqvdlen
     implicit none
@@ -322,12 +322,12 @@ contains
     this%eflx_snomelt_r_col(begc:endc) = spval
     call hist_addfld1d (fname='FSM_R',  units='W/m^2',  &
          avgflag='A', long_name='Rural snow melt heat flux', &
-         ptr_col=this%eflx_snomelt_r_col, set_spec=spval)
+         ptr_col=this%eflx_snomelt_r_col, set_spec=spval, default='inactive')
 
     this%eflx_snomelt_u_col(begc:endc) = spval
     call hist_addfld1d (fname='FSM_U',  units='W/m^2',  &
          avgflag='A', long_name='Urban snow melt heat flux', &
-         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval)
+         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
 
     this%eflx_lwrad_net_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA', units='W/m^2',  &
@@ -450,12 +450,12 @@ contains
     this%eflx_soil_grnd_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='FGR_R', units='W/m^2',  &
          avgflag='A', long_name='Rural heat flux into soil/snow including snow melt and snow light transmission', &
-         ptr_patch=this%eflx_soil_grnd_r_patch, set_spec=spval)
+         ptr_patch=this%eflx_soil_grnd_r_patch, set_spec=spval, default='inactive')
 
     this%eflx_lwrad_net_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA_U', units='W/m^2',  &
          avgflag='A', long_name='Urban net infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
+         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
 
     this%eflx_soil_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
@@ -465,12 +465,12 @@ contains
     this%eflx_lwrad_out_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRE_U', units='W/m^2',  &
          avgflag='A', long_name='Urban emitted infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
+         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
 
     this%eflx_sh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSH_U', units='W/m^2',  &
          avgflag='A', long_name='Urban sensible heat', &
-         ptr_patch=this%eflx_sh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
+         ptr_patch=this%eflx_sh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
 
     this%eflx_sh_precip_conversion_col(begc:endc) = spval
     call hist_addfld1d (fname = 'FSH_PRECIP_CONVERSION', units='W/m^2', &
@@ -480,12 +480,12 @@ contains
     this%eflx_lh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_LH_TOT_U', units='W/m^2',  &
          avgflag='A', long_name='Urban total evaporation', &
-         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
+         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
 
     this%eflx_soil_grnd_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FGR_U', units='W/m^2',  &
          avgflag='A', long_name='Urban heat flux into soil/snow including snow melt', &
-         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
+         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
 
     this%netrad_patch(begp:endp) = spval
     call hist_addfld1d (fname='Rnet', units='W/m^2',  &
@@ -627,9 +627,12 @@ contains
          ptr_patch=this%tauy_patch)
 
     this%btran_patch(begp:endp) = spval
-    call hist_addfld1d (fname='BTRAN', units='unitless',  &
-         avgflag='A', long_name='transpiration beta factor', &
-         ptr_patch=this%btran_patch, set_lake=spval, set_urb=spval)
+    if (.not. use_hydrstress) then
+       call hist_addfld1d (fname='BTRAN', units='unitless',  &
+            avgflag='A', long_name='transpiration beta factor', &
+            ptr_patch=this%btran_patch, set_lake=spval, set_urb=spval)
+    end if
+
     this%btran_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='BTRANMN', units='unitless',  &
          avgflag='A', long_name='daily minimum of transpiration beta factor', &

@@ -192,7 +192,7 @@ contains
     this%frost_table_col(begc:endc) = spval
     call hist_addfld1d (fname='FROST_TABLE',  units='m',  &
          avgflag='A', long_name='frost table depth (vegetated landunits only)', &
-         ptr_col=this%frost_table_col, l2g_scale_type='veg')
+         ptr_col=this%frost_table_col, l2g_scale_type='veg', default='inactive')
 
     this%zwt_col(begc:endc) = spval
     call hist_addfld1d (fname='ZWT',  units='m',  &

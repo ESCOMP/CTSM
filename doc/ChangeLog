@@ -1,4 +1,225 @@
 ===============================================================
+Tag name:  clm4_5_16_r243
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Tue May 23 16:27:42 MDT 2017
+One-line Summary: History output cleanup from Dave Lawrence
+
+Purpose of changes
+------------------
+
+* Reduce default history output by setting numerous variables to
+  default=inactive, limiting some 3d vars to active soil layers only.
+
+* Update default history output for CLM5.
+
+* Added diagnostic new output for DWT_WOOD_PRODUCTC_GAIN_PATCH,
+  GS_MOL, lake_icefracsurf_col, h2osoi_liq_tot_col, h2osoi_ice_tot_col
+
+* Remove double accounting for CNSoy fixation when FUN is on.
+
+* Bug fixes to allow landunit-level and column-level averaging and
+  vector output using the hist_type1d_pertape namelist option (LAND
+  for land-unit, COL for column-level).  Note that if a user asks for
+  a variable at a subgrid level that is not available at that subgrid
+  level, the model will crash ungracefully.  An example would be
+  asking for TOT_WOODPRODC at the land-unit level when this variable
+  is only available at the grid cell level, or asking for H2OSOI at
+  the pft-level when H2OSOI is a column-level variable.  Code may be
+  added in a future tag that will inform the user of the error.
+
+* Add usermods dir for recommended clm5 crop default output. To use
+  the usermod when creating a new case:
+
+  ./create_newcase --compset HIST_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV \
+                   --user-mods-dir clm/clm5_OutputCrop \
+                   ... machine, compiler, grid, case name, etc...
+
+
+Bugs fixed or introduced
+------------------------
+
+None, but see note below in testing about c14 bombspike test.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+  The default history output has been reduced. You may need to
+  explicitly request fields of interest from the namelist.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: unknown
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Dave Lawrence, Ben Andre
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - all tests pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    cheyenne_intel - ok, see note below
+    hobart_nag - ok 
+    hobart_pgi - ok 
+    hobart_intel - ok
+
+CLM tag used for the baseline comparisons: clm4_5_16_r242, no
+  yellowstone intel baselines were generated for clm4_5_16_r242
+
+  Baselines comparisons for clm45/clm5 tests show:
+    1. changes in fields sizes (expected, restrict vertical fields to nlevsoi)
+    
+    2. different fields on current and baseline files (expected, new default active/inactive)
+
+    3. no RMS differences, except the following tests:
+
+       These tests failed baseline comparisons with RMS differences in
+       testing due to the soy nitrogen double accounting fix.
+
+       ERP_P60x2_Lm36.f10_f10.ICRUCLM50BGCCROP.cheyenne_intel.clm-clm50cropIrrigMonth_interp
+       ERS_Ly3.f10_f10.I1850CRUCLM50BGCCROP.cheyenne_intel.clm-clm50KSinkMOut
+       ERS_Ly5_P60x1.f10_f10.IHISTCLM50BGCCROP.cheyenne_intel.clm-cropMonthOutput
+
+       ERP_P60x2_Lm36.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-clm50cropIrrigMonth_interp
+       ERS_Ly3.f10_f10.I1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KSinkMOut
+       ERS_Ly5_P60x1.f10_f10.IHISTCLM50BGCCROP.yellowstone_intel.clm-cropMonthOutput
+
+    The ciso-c14 bombspike1963 test failed baseline test with RMS
+    differences in C14_* fields on cheyenne_intel. This did not have
+    differences when tested against r273 and yellowstone_intel. This
+    seems to be intermintent, there was at least one test run with
+    r242 cheyenne_intel where this passed without RMS differences.
+    
+    SMS_D_Ly2.1x1_brazil.IHISTCLM50BGC.cheyenne_intel.clm-ciso_bombspike1963
+
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: some clm5 compsets
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+  
+    - what code configurations: removal of double accounting for soy
+      nitrogen fixation from clm5 crop runs with fun active. See tests
+      above.
+
+    - what platforms/compilers: all
+    
+    - nature of change (roundoff; larger than roundoff/same climate;
+      new climate): unknown, presumed larger than roundoff same
+      climate.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? n/a
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: n/a
+
+   URL for LMWG diagnostics output used to validate new climate: n/a
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: 
+
+New usermods with default output for clm5 crop runs
+  A   clm/cime_config/usermods_dirs/clm/clm5_OutputCrop
+  A   clm/cime_config/usermods_dirs/clm/clm5_OutputCrop/user_nl_clm
+  A   clm/cime_config/usermods_dirs/clm/clm5_OutputCrop/shell_commands
+
+List all existing files that have been modified, and describe the changes:
+
+  M    clm/cime_config/config_component.xml - update component description from Erik Kluzek
+
+Set history fields active/inactive:
+  M    clm/src/biogeochem/CNVegCarbonStateType.F90
+  M    clm/src/biogeochem/CNVegNitrogenStateType.F90
+  M    clm/src/biogeochem/CNVegNitrogenFluxType.F90
+  M    clm/src/biogeochem/CropType.F90
+  M    clm/src/biogeophys/EnergyFluxType.F90 - don't output btran unless hydrstress active
+  M    clm/src/biogeophys/TemperatureType.F90
+  MM   clm/src/biogeophys/HumanIndexMod.F90
+  M    clm/src/biogeophys/SoilHydrologyType.F90
+  M    clm/src/biogeophys/SolarAbsorbedType.F90
+  M    clm/src/biogeophys/CanopyStateType.F90
+  M    clm/src/biogeophys/SurfaceRadiationMod.F90
+  M    clm/src/biogeophys/WaterfluxType.F90 - variable renaming
+  M    clm/src/biogeophys/SoilStateType.F90
+
+New diag output, set default active/inactive fields:
+  M    clm/src/biogeochem/CNVegCarbonFluxType.F90
+  M    clm/src/biogeochem/CNProductsMod.F90
+  M    clm/src/biogeophys/PhotosynthesisMod.F90
+  M    clm/src/biogeophys/LakeStateType.F90
+  M    clm/src/biogeophys/LakeTemperatureMod.F90
+  M    clm/src/biogeophys/HydrologyNoDrainageMod.F90 - vertically summed water state calc
+  M    clm/src/biogeophys/WaterStateType.F90
+
+
+Default active/inactive history fields, restrict output to nlevsoi:
+  M    clm/src/biogeochem/ch4Mod.F90
+  M    clm/src/soilbiogeochem/SoilBiogeochemStateType.F90
+  M    clm/src/soilbiogeochem/SoilBiogeochemNitrogenFluxType.F90
+  M    clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90
+  M    clm/src/soilbiogeochem/SoilBiogeochemCarbonFluxType.F90
+  M    clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+
+
+FUN Soy Nitrogen Fixation double accounting:
+  M    clm/src/biogeochem/CNDriverMod.F90
+
+Subgrid mapping:
+  M    clm/src/main/histFileMod.F90
+  M    clm/src/main/subgridAveMod.F90
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r242
 Originator(s):  erik (Erik Kluzek)
 Date: Sun May 21 21:16:34 MDT 2017

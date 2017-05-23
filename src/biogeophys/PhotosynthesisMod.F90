@@ -168,7 +168,6 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: rssha_z_patch     (:,:) ! patch canopy layer: shaded leaf stomatal resistance (s/m)
      real(r8), pointer, public  :: rssun_patch       (:)   ! patch sunlit stomatal resistance (s/m)
      real(r8), pointer, public  :: rssha_patch       (:)   ! patch shaded stomatal resistance (s/m)
-!ylu add
      real(r8), pointer, public  :: luvcmax25top_patch (:)   ! vcmax25 !     (umol/m2/s)
      real(r8), pointer, public  :: lujmax25top_patch  (:)   ! vcmax25 (umol/m2/s)
      real(r8), pointer, public  :: lutpu25top_patch   (:)   ! vcmax25 (umol/m2/s)
@@ -309,7 +308,6 @@ contains
     allocate(this%rssha_z_patch     (begp:endp,1:nlevcan)) ; this%rssha_z_patch     (:,:) = nan
     allocate(this%rssun_patch       (begp:endp))           ; this%rssun_patch       (:)   = nan
     allocate(this%rssha_patch       (begp:endp))           ; this%rssha_patch       (:)   = nan
-!ylu
     allocate(this%luvcmax25top_patch(begp:endp))           ; this%luvcmax25top_patch(:) = nan
     allocate(this%lujmax25top_patch (begp:endp))           ; this%lujmax25top_patch(:)  = nan
     allocate(this%lutpu25top_patch  (begp:endp))           ; this%lutpu25top_patch(:)   = nan
@@ -445,12 +443,35 @@ contains
     this%rssun_patch(begp:endp) = spval
     call hist_addfld1d (fname='RSSUN', units='s/m',  &
          avgflag='M', long_name='sunlit leaf stomatal resistance', &
-         ptr_patch=this%rssun_patch, set_lake=spval, set_urb=spval, default='inactive')
+         ptr_patch=this%rssun_patch, set_lake=spval, set_urb=spval)
 
     this%rssha_patch(begp:endp) = spval
     call hist_addfld1d (fname='RSSHA', units='s/m',  &
          avgflag='M', long_name='shaded leaf stomatal resistance', &
-         ptr_patch=this%rssha_patch, set_lake=spval, set_urb=spval, default='inactive')
+         ptr_patch=this%rssha_patch, set_lake=spval, set_urb=spval)
+
+    this%gs_mol_sun_patch(begp:endp,:) = spval
+    this%gs_mol_sha_patch(begp:endp,:) = spval
+    if (nlevcan>1) then 
+       call hist_addfld2d (fname='GSSUN', units='umol H20/m2/s', type2d='nlevcan', &
+          avgflag='A', long_name='sunlit leaf stomatal conductance', &
+          ptr_patch=this%gs_mol_sun_patch, set_lake=spval, set_urb=spval)
+
+       call hist_addfld2d (fname='GSSHA', units='umol H20/m2/s', type2d='nlevcan', &
+          avgflag='A', long_name='shaded leaf stomatal conductance', &
+          ptr_patch=this%gs_mol_sha_patch, set_lake=spval, set_urb=spval)
+    else
+       ptr_1d => this%gs_mol_sun_patch(begp:endp,1)
+       call hist_addfld1d (fname='GSSUN', units='umol H20/m2/s', &
+          avgflag='A', long_name='sunlit leaf stomatal conductance', &
+          ptr_patch=ptr_1d)
+
+       ptr_1d => this%gs_mol_sha_patch(begp:endp,1)
+       call hist_addfld1d (fname='GSSHA', units='umol H20/m2/s', &
+          avgflag='A', long_name='shaded leaf stomatal conductance', &
+          ptr_patch=ptr_1d)
+
+    endif
 
     if(use_luna)then  
        if(nlevcan>1)then
@@ -478,7 +499,7 @@ contains
          call hist_addfld1d (fname='PNLCZ', units='unitless', &
             avgflag='A', long_name='Proportion of nitrogen allocated for light capture', &
             ptr_patch=ptr_1d,default='inactive')
-!ylu add for output the true vcmax that crops used
+
          this%luvcmax25top_patch(begp:endp) = spval
          call hist_addfld1d (fname='VCMX25T', units='umol/m2/s',  &
             avgflag='M', long_name='canopy profile of vcmax25', &
@@ -494,12 +515,11 @@ contains
             avgflag='M', long_name='canopy profile of tpu', &
             ptr_patch=this%lutpu25top_patch, set_lake=spval, set_urb=spval)
 
-
        endif
-        this%fpsn24_patch = spval 
-        call hist_addfld1d (fname='FPSN24', units='umol CO2/m**2 ground/day',&
-             avgflag='A', long_name='24 hour accumulative patch photosynthesis starting from mid-night', &
-             ptr_patch=this%fpsn24_patch,default='inactive')
+       this%fpsn24_patch = spval 
+       call hist_addfld1d (fname='FPSN24', units='umol CO2/m**2 ground/day',&
+           avgflag='A', long_name='24 hour accumulative patch photosynthesis starting from mid-night', &
+           ptr_patch=this%fpsn24_patch, default='inactive')
    
     endif
 
@@ -728,9 +748,20 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%rc13_psnsha_patch)
     endif
 
+    call restartvar(ncid=ncid, flag=flag, varname='GSSUN', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', &
+         long_name='sunlit leaf stomatal conductance', units='umol H20/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sun_patch)
+    
+    call restartvar(ncid=ncid, flag=flag, varname='GSSHA', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', &
+         long_name='shaded leaf stomatal conductance', units='umol H20/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_patch)
+    
     call restartvar(ncid=ncid, flag=flag, varname='lnca', xtype=ncd_double,  &
        dim1name='pft', long_name='leaf N concentration', units='gN leaf/m^2', &
        interpinic_flag='interp', readvar=readvar, data=this%lnca_patch)
+
     if(use_luna) then
       call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
@@ -2575,7 +2606,6 @@ contains
          ap         => photosyns_inst%ap_phs_patch           , & ! Output: [real(r8) (:,:,:) ]  product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
          ag         => photosyns_inst%ag_phs_patch           , & ! Output: [real(r8) (:,:,:) ]  co-limited gross leaf photosynthesis (umol CO2/m**2/s)
          vcmax_z    => photosyns_inst%vcmax_z_phs_patch      , & ! Output: [real(r8) (:,:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)
-!ylu add
          luvcmax25top => photosyns_inst%luvcmax25top_patch   , & !  Output: [real(r8) (:) ]  maximum rate of carboxylation (umol co2/m**2/s)
          lujmax25top  => photosyns_inst%lujmax25top_patch    , & ! Output: [real(r8) (:) ]  maximum rate of carboxylation (umol co2/m**2/s)
          lutpu25top   => photosyns_inst%lutpu25top_patch     , & ! Output: [real(r8) (:) ]  maximum rate of carboxylation (umol co2/m**2/s)
@@ -2876,11 +2906,9 @@ contains
          jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
          tpu25top  = 0.167_r8 * vcmax25top
          kp25top   = 20000._r8 * vcmax25top
-!ylu
          luvcmax25top(p) = vcmax25top
          lujmax25top(p) = jmax25top
          lutpu25top(p)=tpu25top
-!!
 
          ! Nitrogen scaling factor. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593 used
          ! kn = 0.11. Here, derive kn from vcmax25 as in Lloyd et al (2010) Biogeosciences, 7, 1833-1859

@@ -32,6 +32,7 @@ module LakeStateType
      real(r8), pointer :: betaprime_col     (:)   ! col effective beta: sabg_lyr(p,jtop) for snow layers, beta otherwise
      real(r8), pointer :: savedtke1_col     (:)   ! col top level eddy conductivity from previous timestep (W/mK)
      real(r8), pointer :: lake_icefrac_col  (:,:) ! col mass fraction of lake layer that is frozen
+     real(r8), pointer :: lake_icefracsurf_col(:) ! col mass fraction of surface lake layer that is frozen
      real(r8), pointer :: lake_icethick_col (:)   ! col ice thickness (m) (integrated if lakepuddling)
      real(r8), pointer :: lakeresist_col    (:)   ! col [s/m] (Needed for calc. of grnd_ch4_cond)
      real(r8), pointer :: ram1_lake_patch   (:)   ! patch aerodynamical resistance (s/m)
@@ -93,9 +94,10 @@ contains
     allocate(this%lakeresist_col     (begc:endc))           ; this%lakeresist_col     (:)   = nan
     allocate(this%savedtke1_col      (begc:endc))           ; this%savedtke1_col      (:)   = spval  
     allocate(this%lake_icefrac_col   (begc:endc,1:nlevlak)) ; this%lake_icefrac_col   (:,:) = nan
+    allocate(this%lake_icefracsurf_col (begc:endc))         ; this%lake_icefracsurf_col (:)   = nan
     allocate(this%lake_icethick_col  (begc:endc))           ; this%lake_icethick_col  (:)   = nan
     allocate(this%ust_lake_col       (begc:endc))           ; this%ust_lake_col       (:)   = spval   
-    allocate(this%ram1_lake_patch      (begp:endp))           ; this%ram1_lake_patch      (:)   = nan
+    allocate(this%ram1_lake_patch    (begp:endp))           ; this%ram1_lake_patch      (:)   = nan
     allocate(this%lake_raw_col       (begc:endc))           ; this%lake_raw_col       (:)   = nan
     allocate(this%ks_col             (begc:endc))           ; this%ks_col             (:)   = nan
     allocate(this%ws_col             (begc:endc))           ; this%ws_col             (:)   = nan
@@ -127,7 +129,12 @@ contains
     this%lake_icefrac_col(begc:endc,:) = spval
     call hist_addfld2d (fname='LAKEICEFRAC',  units='unitless', type2d='levlak', &
          avgflag='A', long_name='lake layer ice mass fraction', &
-         ptr_col=this%lake_icefrac_col)
+         ptr_col=this%lake_icefrac_col, default='inactive')
+
+    this%lake_icefracsurf_col(begc:endc) = spval
+    call hist_addfld1d (fname='LAKEICEFRAC_SURF',  units='unitless', &
+         avgflag='A', long_name='surface lake layer ice mass fraction', &
+         ptr_col=this%lake_icefracsurf_col, set_nolake=spval)
     
     this%lake_icethick_col(begc:endc) = spval ! This will be more useful than LAKEICEFRAC for many users.
     call hist_addfld1d (fname='LAKEICETHICK', units='m', &

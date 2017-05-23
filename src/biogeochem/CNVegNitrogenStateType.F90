@@ -208,7 +208,7 @@ contains
             ptr_patch=this%grainn_patch)
        call hist_addfld1d (fname='CROPSEEDN_DEFICIT', units='gN/m^2', &
             avgflag='A', long_name='N used for crop seed that needs to be repaid', &
-            ptr_patch=this%cropseedn_deficit_patch)
+            ptr_patch=this%cropseedn_deficit_patch, default='inactive')
     end if
 
     this%leafn_patch(begp:endp) = spval
@@ -219,12 +219,12 @@ contains
     this%leafn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='leaf N storage', &
-         ptr_patch=this%leafn_storage_patch)     
+         ptr_patch=this%leafn_storage_patch, default='inactive')     
 
     this%leafn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_XFER', units='gN/m^2', &
          avgflag='A', long_name='leaf N transfer', &
-         ptr_patch=this%leafn_xfer_patch)     
+         ptr_patch=this%leafn_xfer_patch, default='inactive')     
 
     if ( use_fun ) then
        this%leafn_storage_xfer_acc_patch(begp:endp) = spval
@@ -246,12 +246,12 @@ contains
     this%frootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='fine root N storage', &
-         ptr_patch=this%frootn_storage_patch)     
+         ptr_patch=this%frootn_storage_patch, default='inactive')     
 
     this%frootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='fine root N transfer', &
-         ptr_patch=this%frootn_xfer_patch)     
+         ptr_patch=this%frootn_xfer_patch, default='inactive')     
 
     this%livestemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN', units='gN/m^2', &
@@ -261,12 +261,12 @@ contains
     this%livestemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='live stem N storage', &
-         ptr_patch=this%livestemn_storage_patch)    
+         ptr_patch=this%livestemn_storage_patch, default='inactive')    
 
     this%livestemn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_XFER', units='gN/m^2', &
          avgflag='A', long_name='live stem N transfer', &
-         ptr_patch=this%livestemn_xfer_patch)     
+         ptr_patch=this%livestemn_xfer_patch, default='inactive')     
 
     this%deadstemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN', units='gN/m^2', &
@@ -276,12 +276,12 @@ contains
     this%deadstemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='dead stem N storage', &
-         ptr_patch=this%deadstemn_storage_patch)    
+         ptr_patch=this%deadstemn_storage_patch, default='inactive')    
 
     this%deadstemn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_XFER', units='gN/m^2', &
          avgflag='A', long_name='dead stem N transfer', &
-         ptr_patch=this%deadstemn_xfer_patch)    
+         ptr_patch=this%deadstemn_xfer_patch, default='inactive')    
 
     this%livecrootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN', units='gN/m^2', &
@@ -291,12 +291,12 @@ contains
     this%livecrootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='live coarse root N storage', &
-         ptr_patch=this%livecrootn_storage_patch)    
+         ptr_patch=this%livecrootn_storage_patch, default='inactive')    
 
     this%livecrootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='live coarse root N transfer', &
-         ptr_patch=this%livecrootn_xfer_patch)    
+         ptr_patch=this%livecrootn_xfer_patch, default='inactive')    
 
     this%deadcrootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN', units='gN/m^2', &
@@ -306,12 +306,12 @@ contains
     this%deadcrootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='dead coarse root N storage', &
-         ptr_patch=this%deadcrootn_storage_patch)    
+         ptr_patch=this%deadcrootn_storage_patch, default='inactive')    
 
     this%deadcrootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='dead coarse root N transfer', &
-         ptr_patch=this%deadcrootn_xfer_patch)    
+         ptr_patch=this%deadcrootn_xfer_patch, default='inactive')    
 
     this%retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='RETRANSN', units='gN/m^2', &
@@ -326,7 +326,7 @@ contains
     this%ntrunc_patch(begp:endp) = spval
     call hist_addfld1d (fname='PFT_NTRUNC', units='gN/m^2', &
          avgflag='A', long_name='patch-level sink for N truncation', &
-         ptr_patch=this%ntrunc_patch)
+         ptr_patch=this%ntrunc_patch, default='inactive')
 
     this%dispvegn_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISPVEGN', units='gN/m^2', &

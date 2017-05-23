@@ -8,6 +8,7 @@ module SoilBiogeochemNitrogenFluxType
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
+  use CNSharedParamsMod                  , only : use_fun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use abortutils                         , only : endrun
   use LandunitType                       , only : lun                
@@ -346,7 +347,7 @@ contains
           endif
           call hist_addfld1d (fname=fieldname, units='gN/m^2', &
                avgflag='A', long_name=longname, &
-               ptr_col=data1dptr)
+               ptr_col=data1dptr, default='inactive')
        end if
 
        !-- transfer fluxes (none from terminal pool, if present)
@@ -359,7 +360,7 @@ contains
                ' N to '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))//' N'
           call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
                avgflag='A', long_name=longname, &
-               ptr_col=data1dptr)
+               ptr_col=data1dptr, default='inactive')
        end if
 
        ! vertically resolved fluxes
@@ -446,7 +447,7 @@ contains
                   'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
              call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
                   avgflag='A', long_name=longname, &
-                  ptr_col=data1dptr)
+                  ptr_col=data1dptr, default='inactive')
           endif
 
           if ( nlevdecomp_full > 1 ) then       
@@ -540,14 +541,14 @@ contains
        this%f_nit_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='F_NIT'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='nitrification flux', &
-            ptr_col=this%f_nit_vr_col)
+            ptr_col=this%f_nit_vr_col, default='inactive')
     end if
 
     if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
        this%f_denit_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='F_DENIT'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
             avgflag='A', long_name='denitrification flux', &
-            ptr_col=this%f_denit_vr_col)
+            ptr_col=this%f_denit_vr_col, default='inactive')
     end if
 
     if (use_nitrif_denitrif .and.  nlevdecomp_full > 1 ) then 
@@ -821,14 +822,14 @@ contains
        this%fert_to_sminn_col(begc:endc) = spval
        call hist_addfld1d (fname='FERT_TO_SMINN', units='gN/m^2/s', &
             avgflag='A', long_name='fertilizer to soil mineral N', &
-            ptr_col=this%fert_to_sminn_col)
+            ptr_col=this%fert_to_sminn_col, default='inactive')
     end if
 
-    if (use_crop) then
+    if (use_crop .and. .not. use_fun) then
        this%soyfixn_to_sminn_col(begc:endc) = spval
        call hist_addfld1d (fname='SOYFIXN_TO_SMINN', units='gN/m^2/s', &
             avgflag='A', long_name='Soybean fixation to soil mineral N', &
-            ptr_col=this%soyfixn_to_sminn_col)
+            ptr_col=this%soyfixn_to_sminn_col, default='inactive')
     end if
 
   end subroutine InitHistory
