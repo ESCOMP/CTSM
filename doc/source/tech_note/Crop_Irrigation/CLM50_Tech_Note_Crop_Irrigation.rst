@@ -3,34 +3,43 @@
 Crops and Irrigation
 ========================
 
-.. _Summary of CLM4.5 updates relative to the CLM4.0:
-
-Summary of CLM4.5 updates relative to the CLM4.0
+Summary of CLM5.0 updates relative to the CLM4.5
 -----------------------------------------------------
 
 We describe here the complete crop and irrigation parameterizations that
-appear in CLM4.5. Corresponding information for CLM4.0 appeared on the
-CLM4.0 web site in a pdf document independent of the CLM4.0 Technical
+appear in CLM5.0. Corresponding information for CLM4.5 appeared on the
+CLM4.5 web site in a pdf document independent of the CLM4.5 Technical
 Note (Oleson et al. 2010a). The CLM4.0 crop model description also
 appeared in Levis et al. (2012).
 
-CLM4.5 includes the following updates to the CROP option, where CROP
-refers to the interactive crop management model:
+CLM5.0 includes the following updates to the CROP option, where CROP
+refers to the interactive crop management model and is included by default with the BGC configuration:
 
-- Interactive irrigation
+- New crop functional types
 
-- Interactive fertilization
+- All crop areas are actively managed
 
-- Biological nitrogen fixation for soybeans
+- Fertilization rates updated based on crop type and geographic region
 
-- Modified C:N ratios for crops
+- Irrigation updates
 
-- Nitrogen retranslocation for crops
+- Phenological triggers vary by latitude for some crop types
 
-- Separate reproductive pool
+- Ability to simulate transient crop management
 
-These updates appear in detail in section 20.4. Most also appear in
-Drewniak et al. (2013).
+- Adjustments to allocation and phenological parameters
+
+- Crops reaching their maximum LAI triggers the grain fill phase
+
+- Grain C and N pools are included in a 1-year product pool
+
+- C for annual crop seeding comes from the grain C pool
+
+- Initial seed C for planting is increased from 1 to 3 g C/m^2 
+
+
+These updates appear in detail in the sections below. Many also appear in
+Levis et al. (2016).
 
 .. _The crop model:
 
@@ -59,7 +68,7 @@ management parameterizations from AgroIBIS (March 2003 version) were
 coupled as a proof-of-concept to the Community Land Model version 3
 [CLM3.0, Oleson et al. (2004)] (not published), then coupled to the
 CLM3.5 (Levis et al. 2009) and later released to the community with
-CLM4CN (Levis et al. 2012).
+CLM4CN (Levis et al. 2012) and CLM4.5.
 
 With interactive crop management and, therefore, a more accurate
 representation of agricultural landscapes, we hope to improve the CLM’s

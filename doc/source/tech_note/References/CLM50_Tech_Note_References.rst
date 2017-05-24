@@ -1288,7 +1288,9 @@ Oleson, K.W., Bonan, G.B., Feddema, J., Vertenstein, M., and Kluzek, E.
 Community Land Model (CLMU). NCAR Technical Note NCAR/TN-480+STR,
 National Center for Atmospheric Research, Boulder, CO, 169 pp.
 
-.. _Olson1963:
+Oleson, K.W., et al. 2013. Technical description of version 4.5 of the 
+Community Land Model (CLM). NCAR Technical Note NCAR/TN-503+STR,
+National Center for Atmospheric Research, Boulder, CO, 420 pp.
 
 Olson, J.S., 1963. Energy storage and the balance of producers and
 decomposers in ecological systems. Ecology 44:322-331.
