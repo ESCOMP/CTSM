@@ -3,13 +3,13 @@
 ==============
  Getting Help
 ==============
-In addition to this users-guide there are several other resources that are available to help you use CLM4.5. The first one is the CESM1.2.0 User's-Guide, which documents the entire process of creating cases with CESM1.2.0. The next is the CESM bulletin board which is a web-site for exchanging information between users of CESM. There are also CLM web-pages specific for CLM, and finally there is an email address to report bugs that you find in CESM1.2.0.
+In addition to this users-guide there are several other resources that are available to help you use CLM5.0. The first one is the CESM1.2.0 User's-Guide, which documents the entire process of creating cases with CESM1.2.0. The next is the CESM bulletin board which is a web-site for exchanging information between users of CESM. There are also CLM web-pages specific for CLM, and finally there is an email address to report bugs that you find in CESM1.2.0.
 
 ---------------------------
 The CESM User's-Guide
 ---------------------------
 
-CLM4.5 in CESM1.2.0 is always run from within the standard CESM1.2.0 build and run scripts. Therefore, the user of CLM4.5 should familiarize themselves with the CESM1.2.0 scripts and understand how to work with them. User's-Guide documentation on the CESM1.2.0 scripts are available from the following web-page. The purpose of this CLM4.5 in CESM1.2.0 User's Guide is to give the CLM4.5 user more complete details on how to work with CLM and the set of tools that support CLM, as well as to give examples that are unique to the use of CLM. However, the CESM1.2.0 Scripts User's-Guide remains the primary source to get detailed information on how to build and run the CESM system.
+CLM5.0 in CESM2.0 is always run from within the standard CESM2.0 build and run scripts. Therefore, the user of CLM4.5 should familiarize themselves with the CESM1.2.0 scripts and understand how to work with them. User's-Guide documentation on the CESM1.2.0 scripts are available from the following web-page. The purpose of this CLM4.5 in CESM1.2.0 User's Guide is to give the CLM4.5 user more complete details on how to work with CLM and the set of tools that support CLM, as well as to give examples that are unique to the use of CLM. However, the CESM1.2.0 Scripts User's-Guide remains the primary source to get detailed information on how to build and run the CESM system.
 
 `cesmrel; Scripts User's-Guide (http://www.cesm.ucar.edu/models/cesm1.2/cesm/doc/usersguide/book1.html) <CLM-URL>`_
 
