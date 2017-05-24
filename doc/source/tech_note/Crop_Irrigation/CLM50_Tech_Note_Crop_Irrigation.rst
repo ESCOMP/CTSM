@@ -443,68 +443,110 @@ The irrigation model
 The CLM includes the option to irrigate cropland areas that are equipped
 for irrigation. The application of irrigation responds dynamically to
 the soil moisture conditions simulated by the CLM. This irrigation
-algorithm is based loosely on the implementation of Ozdogan et al.
-(2010).
+algorithm is based loosely on the implementation of 
+:ref:`Ozdogan et al. (2010) <Ozdoganetal2010>`.
 
 When irrigation is enabled, the crop areas of each grid cell are divided
 into irrigated and rainfed fractions according to a dataset of areas
-equipped for irrigation (Portmann et al. 2010). Irrigated and rainfed
-crops are placed on separate soil columns, so that irrigation is only
-applied to the soil beneath irrigated crops.
+equipped for irrigation (:ref:`Portmann et al. 2010 <Portmannetal2010>`). 
+Irrigated and rainfed crops are placed on separate soil columns, so that 
+irrigation is only applied to the soil beneath irrigated crops.
 
 In irrigated croplands, a check is made once per day to determine
 whether irrigation is required on that day. This check is made in the
 first time step after 6 AM local time. Irrigation is required if crop
-leaf area :math:`>` 0, and :math:`\beta_{t} < 1`, i.e., water is limiting for photosynthesis (see section 8.4).
+leaf area :math:`>` 0, and the available soil water is below a specified 
+threshold.
 
-If irrigation is required, the model computes the deficit between the
-current soil moisture content and a target soil moisture content; this
-deficit is the amount of water that will be added through irrigation.
-The target soil moisture content in each soil layer *i*
-(:math:`{s}_{target,i}`, kg m\ :sup:`-2`) is a weighted
-average of the minimum soil moisture content that results in no water
-stress in that layer (:math:`{s}_{o,i}`, kg m\ :sup:`-2`) and
-the soil moisture content at saturation in that layer (:math:`{w}_{sat,i}`, kg m\ :sup:`-2`):
+The soil moisture deficit :math:`D_{irrig}` is 
 
 .. math::
-   :label: 25.7) 
+   :label: 25.61) 
 
-   w_{target,i} =(1-0.7)\cdot w_{o,i} +0.7\cdot w_{sat,i}
+   D_{irrig} = \left\{
+   \begin{array}{lr}    
+   w_{thresh} - w_{avail} &\qquad w_{thresh} > w_{avail} \\
+   0 &\qquad w_{thresh} \le w_{avail}    
+   \end{array} \right\}
 
-:math:`{w}_{o,i}` is determined by inverting equation 8.19 in Oleson
-et al. (2010a) to solve for the value of :math:`{s}_{i}` (soil
-wetness) that makes :math:`\Psi_{i} = \Psi_{o}` (where :math:`\Psi_{i}` is
-the soil water matric potential and :math:`\Psi_{o}` is
-the soil water potential when stomata are fully open), and then
-converting this value to units of kg m\ :sup:`-2`.
-:math:`{w}_{sat,i}` is calculated simply by converting effective
-porosity (section 7.4) to units of kg m\ :sup:`-2`. The value 0.7
-was determined empirically, in order to give global, annual irrigation
-amounts that approximately match observed gross irrigation water use
-around the year 2000 (i.e., total water withdrawals for irrigation:
-:math:`\sim` 2500 – 3000 km\ :sup:`3` year\ :sup:`-1`
-(Shiklomanov 2000)). The total water deficit (:math:`{w}_{deficit}`,
-kg m\ :sup:`-2`) of the column is then determined by:
+where :math:`w_{thresh}` is the irrigation moisture threshold (mm) and 
+:math:`w_{avail}` is the available moisture (mm).  The moisture threshold 
+is
 
 .. math::
-   :label: 25.8) 
+   :label: 25.62) 
 
-   w_{deficit} =\sum _{i}\max \left(w_{target,i} -w_{liq,i} ,0\right)
+   w_{thresh} = f_{thresh} \left(w_{target} - w_{wilt}\right) + w_{wilt}
 
-where  :math:`{w}_{liq,i}` (kg m\ :sup:`-2`) is the current
-soil water content of layer *i* (Chapter 7). The max function means that
-a surplus in one layer cannot make up for a deficit in another layer.
-The sum is taken only over soil layers that contain roots. In addition,
-if the temperature of any soil layer is below freezing, then the sum
-only includes layers above the top-most frozen soil layer.
+where :math:`w_{target}` is the irrigation target soil moisture (mm) 
 
-The amount of water added to this column through irrigation is then
-equal to :math:`{w}_{deficit}`. This irrigation is applied at a
-constant rate over the following four hours. Irrigation water is applied
+.. math::
+   :label: 25.63) 
+
+   w_{target} = \sum_{j=1}^{N_{irr}} \theta_{target} \Delta z_{j} \ ,
+
+:math:`w_{wilt}` is the wilting point soil moisture (mm) 
+
+.. math::
+   :label: 25.64) 
+
+   w_{wilt} = \sum_{j=1}^{N_{irr}} \theta_{wilt} \Delta z_{j} \ ,
+
+and :math:`f_{thresh}` is a tuning parameter.  The available moisture in 
+the soil is 
+
+.. math::
+   :label: 25.65) 
+
+   w_{avail} = \sum_{j=1}^{N_{irr}} \theta_{j} \Delta z_{j} \ ,
+
+:math:`N_{irr}` is the index of the soil layer corresponding to a specified 
+depth :math:`z_{irrig}` (:numref:`Table Irrigation parameters`) and 
+:math:`\Delta z` is the thickness of the soil layer (section 
+:numref:`Vertical Discretization`).  :math:`\theta_{j}` is the 
+volumetric soil moisture in layer :math:`j` (section :numref:`Soil Water`).
+:math:`\theta_{target}` and 
+:math:`\theta_{wilt}` are the target and wilting point volumetric 
+soil moisture values, respectively, and are determined by inverting 
+:eq:`ZEqnNum316201` using soil matric 
+potential parameters :math:`\Psi_{target}` and :math:`\Psi_{wilt}` 
+(:numref:`Table Irrigation parameters`). After the soil moisture deficit 
+:math:`D_{irrig}` is calculated, irrigation in an amount equal to 
+:math:`\frac{D_{irrig}}{T_{irrig}}` (mm/s) is applied uniformly over 
+the irrigation period :math:`T_{irrig}` (s).  Irrigation water is applied
 directly to the ground surface, bypassing canopy interception (i.e.,
-added to  :math:`{q}_{grnd,liq}`: section 7.1). Added irrigation is
-removed from total liquid runoff ( :math:`{R}_{liq}`: Chapter 11),
-simulating removal from nearby rivers.
+added to  :math:`{q}_{grnd,liq}`: section :numref:`Canopy Water`). 
+
+To conserve mass, irrigation is removed from river water storage (Chapter 11).  
+When river water storage is inadequate to meet irrigation demand, 
+there are two options: 1) the additional water can be removed from the 
+ocean model, or 2) the irrigation demand can be reduced such that 
+river water storage is maintained above a specified threshold.  
+
+.. _Table Irrigation parameters:
+
+.. table:: Irrigation parameters
+
+ +--------------------------------------+-------------+
+ | Parameter                            |             |
+ +======================================+=============+
+ | :math:`f_{thresh}`                   |  1.0        |
+ +--------------------------------------+-------------+
+ | :math:`z_{irrig}`       (m)          |  0.6        |
+ +--------------------------------------+-------------+
+ | :math:`\Psi_{target}`   (mm)         | -3400       |
+ +--------------------------------------+-------------+
+ | :math:`\Psi_{wilt}`     (mm)         | -150000     |
+ +--------------------------------------+-------------+
+
+.. add a reference to surface data in chapter2
+  To accomplish this we downloaded
+  data of percent irrigated and percent rainfed corn, soybean, and
+  temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`),
+  available online from
+  *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*
+
+
 
 .. _The details about what is new in CLM4.5:
 
@@ -525,7 +567,7 @@ exclusive in CLM4.0.
 In CLM4.5 we have reversed this situation. Now the irrigation model can
 be used only while running with CROP. To accomplish this we downloaded
 data of percent irrigated and percent rainfed corn, soybean, and
-temperate cereals (wheat, barley, and rye) (Portmann et al. 2010),
+temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`),
 available online from
 
 *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*

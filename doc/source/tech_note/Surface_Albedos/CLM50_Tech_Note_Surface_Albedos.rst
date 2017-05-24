@@ -9,8 +9,8 @@ Canopy Radiative Transfer
 -----------------------------
 
 Radiative transfer within vegetative canopies is calculated from the
-two-stream approximation of Dickinson (1983) and Sellers (1985) as
-described by Bonan (1996)
+two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and 
+:ref:`Sellers (1985) <Sellers1985>` as described by :ref:`Bonan (1996) <Bonan1996>`
 
 .. math::
    :label: 3.1
@@ -33,10 +33,10 @@ stem elements in the direction :math:`\cos ^{-1} \mu` ,
 leaf and stem area, :math:`\omega`  is a scattering coefficient,
 :math:`\beta`  and :math:`\beta _{0}`  are upscatter parameters for
 diffuse and direct beam radiation, respectively, :math:`L` is the
-exposed leaf area index (section 2.1.4), and :math:`S` is the exposed
-stem area index (section 2.1.4). Given the direct beam albedo
-:math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse albedo
-:math:`\alpha _{g,\, \Lambda }`  of the ground (section 3.2), these
+exposed leaf area index , and :math:`S` is the exposed stem area index 
+(section :numref:`Phenology and vegetation burial by snow`). Given the 
+direct beam albedo :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse albedo
+:math:`\alpha _{g,\, \Lambda }`  of the ground (section :numref:`Ground Albedos`), these
 equations are solved to calculate the fluxes, per unit incident flux,
 absorbed by the vegetation, reflected by the vegetation, and transmitted
 through the vegetation for direct and diffuse radiation and for visible
@@ -45,7 +45,7 @@ through the vegetation for direct and diffuse radiation and for visible
 radiation is partitioned to sunlit and shaded fractions of the canopy.
 The optical parameters :math:`G\left(\mu \right)`, :math:`\bar{\mu }`,
 :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`  are calculated
-based on work in Sellers (1985) as follows.
+based on work in :ref:`Sellers (1985) <Sellers1985>` as follows.
 
 The relative projected area of leaves and stems in the direction
 :math:`\cos ^{-1} \mu`  is
@@ -70,10 +70,12 @@ The average inverse diffuse optical depth per unit leaf and stem area is
 
 where :math:`\mu '` is the direction of the scattered flux.
 
-The optical parameters :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`, which vary with wavelength (:math:`\Lambda` ), are
-weighted combinations of values for vegetation and snow. The model determines that snow is on the canopy if :math:`T_{v} \le T_{f}` , where
-:math:`T_{v}` is the vegetation temperature (K) (Chapter 5) and :math:`T_{f}` is the freezing temperature of water (K) (Table 2.6). In
-this case, the optical parameters are
+The optical parameters :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`, 
+which vary with wavelength (:math:`\Lambda` ), are weighted combinations of values 
+for vegetation and snow. The model determines that snow is on the canopy if 
+:math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter 
+:numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and :math:`T_{f}` is the 
+freezing temperature of water (K) (:numref:`Table Physical Constants`). In this case, the optical parameters are
 
 .. math::
    :label: 3.5
@@ -90,7 +92,7 @@ this case, the optical parameters are
 
    \omega _{\Lambda } \beta _{0,\, \Lambda } =\omega _{\Lambda }^{veg} \beta _{0,\, \Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} \beta _{0,\, \Lambda }^{sno} f_{wet}
 
-where :math:`f_{wet}`  is the wetted fraction of the canopy (section 7.1). The snow and vegetation weights are applied to the products
+where :math:`f_{wet}`  is the wetted fraction of the canopy (section :numref:`Canopy Water`). The snow and vegetation weights are applied to the products
 :math:`\omega _{\Lambda } \beta _{\Lambda }`  and :math:`\omega _{\Lambda } \beta _{0,\, \Lambda }`  because these
 products are used in the two-stream equations. If there is no snow on the canopy,
 
@@ -413,12 +415,13 @@ The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
 
    h_{10} =\frac{-s_{1} \left(u_{2} -\bar{\mu }h\right)}{d_{2} } .
 
-Plant functional type optical properties (Table 3.1) for trees and
-shrubs are from Dorman and Sellers (1989). Leaf and stem optical
+Plant functional type optical properties (:numref:`Table Plant functional type optical properties`) 
+for trees and shrubs are from :ref:`Dorman and Sellers (1989) <DormanSellers1989>`. Leaf and stem optical
 properties (placeVIS and NIR reflectance and transmittance) were derived
 for grasslands and crops from full optical range spectra of measured
-optical properties (Asner et al. 1998). Optical properties for
-intercepted snow (Table 3.2) are from Sellers et al. (1986).
+optical properties (:ref:`Asner et al. 1998 <Asneretal1998>`). Optical properties for
+intercepted snow (:numref:`Table Intercepted snow optical properties`) are 
+:ref:`from Sellers et al. (1986) <Sellersetal1986>`.
 
 .. _Table Plant functional type optical properties:
 
@@ -495,7 +498,8 @@ intercepted snow (Table 3.2) are from Sellers et al. (1986).
 Ground Albedos
 ------------------
 
-The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse :math:`\alpha _{g,\, \Lambda }`  ground albedos are weighted
+The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }`  and diffuse 
+:math:`\alpha _{g,\, \Lambda }`  ground albedos are weighted
 combinations of “soil” and snow albedos
 
 .. math::
@@ -508,11 +512,12 @@ combinations of “soil” and snow albedos
 
    \alpha _{g,\, \Lambda } =\alpha _{soi,\, \Lambda } \left(1-f_{sno} \right)+\alpha _{sno,\, \Lambda } f_{sno}
 
-where :math:`f_{sno}`  is the fraction of the ground covered with snow (section 7.2.1).
+where :math:`f_{sno}`  is the fraction of the ground covered with snow 
+(section :numref:`Snow Covered Area Fraction`).
 
 :math:`\alpha _{soi,\, \Lambda }^{\mu }`  and
 :math:`\alpha _{soi,\, \Lambda }`  vary with glacier, lake, wetland, and
-soil surfaces. Glacier albedos are from Paterson (1994)
+soil surfaces. Glacier albedos are from :ref:`Paterson (1994) <Paterson1994>`
 
 .. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.6
 
@@ -526,13 +531,13 @@ zenith angle :math:`\mu`
 
    \alpha _{soi,\, \Lambda }^{\mu } =\alpha _{soi,\, \Lambda } =0.05\left(\mu +0.15\right)^{-1} .
 
-Frozen lake and wetland albedos are from NCAR LSM (Bonan 1996)
+Frozen lake and wetland albedos are from NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`)
 
 .. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.60
 
 .. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.40.
 
-As in NCAR LSM (Bonan 1996), soil albedos vary with color class
+As in NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`), soil albedos vary with color class
 
 .. math::
    :label: 3.61
@@ -540,18 +545,20 @@ As in NCAR LSM (Bonan 1996), soil albedos vary with color class
    \alpha _{soi,\, \Lambda }^{\mu } =\alpha _{soi,\, \Lambda } =\left(\alpha _{sat,\, \Lambda } +\Delta \right)\le \alpha _{dry,\, \Lambda }
 
 where :math:`\Delta`  depends on the volumetric water content of the
-first soil layer :math:`\theta _{1}`  (section 7.4) as
+first soil layer :math:`\theta _{1}`  (section :numref:`Soil Water`) as
 :math:`\Delta =0.11-0.40\theta _{1} >0`, and
 :math:`\alpha _{sat,\, \Lambda }`  and
 :math:`\alpha _{dry,\, \Lambda }`  are albedos for saturated and dry
-soil color classes (Table 3.3).
+soil color classes (:numref:`Table Dry and saturated soil albedos`).
 
 CLM soil colors are prescribed so that they best reproduce observed
 MODIS local solar noon surface albedo values at the CLM grid cell
-following the methods of Lawrence and Chase (2007). The soil colors are
-fitted over the range of 20 soil classes shown in Table 3.3 and compared
+following the methods of :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. 
+The soil colors are fitted over the range of 20 soil classes shown in 
+:numref:`Table Dry and saturated soil albedos` and compared
 to the MODIS monthly local solar noon all-sky surface albedo as
-described in Strahler et al. (1999) and Schaaf et al. (2002). The CLM
+described in :ref:`Strahler et al. (1999) <Strahleretal1999>` and 
+:ref:`Schaaf et al. (2002) <Schaafetal2002>`. The CLM
 two-stream radiation model was used to calculate the model equivalent
 surface albedo using climatological monthly soil moisture along with the
 vegetation parameters of PFT fraction, LAI, and SAI. The soil color that
@@ -563,31 +570,33 @@ snow-free surface albedo for the year, the soil color derived from
 snow-affected albedo was used to give a representative soil color that
 included the effects of the minimum permanent snow cover.
 
-Table 3.3. Dry and saturated soil albedos
+.. _Table Dry and saturated soil albedos:
 
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| Color Class   | vis    | nir    | vis    | nir    | Color Class   | vis    | nir    | vis    | nir    |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 1             | 0.36   | 0.61   | 0.25   | 0.50   | 11            | 0.24   | 0.37   | 0.13   | 0.26   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 2             | 0.34   | 0.57   | 0.23   | 0.46   | 12            | 0.23   | 0.35   | 0.12   | 0.24   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 3             | 0.32   | 0.53   | 0.21   | 0.42   | 13            | 0.22   | 0.33   | 0.11   | 0.22   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 4             | 0.31   | 0.51   | 0.20   | 0.40   | 14            | 0.20   | 0.31   | 0.10   | 0.20   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 5             | 0.30   | 0.49   | 0.19   | 0.38   | 15            | 0.18   | 0.29   | 0.09   | 0.18   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 6             | 0.29   | 0.48   | 0.18   | 0.36   | 16            | 0.16   | 0.27   | 0.08   | 0.16   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 7             | 0.28   | 0.45   | 0.17   | 0.34   | 17            | 0.14   | 0.25   | 0.07   | 0.14   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 8             | 0.27   | 0.43   | 0.16   | 0.32   | 18            | 0.12   | 0.23   | 0.06   | 0.12   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 9             | 0.26   | 0.41   | 0.15   | 0.30   | 19            | 0.10   | 0.21   | 0.05   | 0.10   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
-| 10            | 0.25   | 0.39   | 0.14   | 0.28   | 20            | 0.08   | 0.16   | 0.04   | 0.08   |
-+---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+.. table:: Dry and saturated soil albedos
+
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | Color Class   | vis    | nir    | vis    | nir    | Color Class   | vis    | nir    | vis    | nir    |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 1             | 0.36   | 0.61   | 0.25   | 0.50   | 11            | 0.24   | 0.37   | 0.13   | 0.26   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 2             | 0.34   | 0.57   | 0.23   | 0.46   | 12            | 0.23   | 0.35   | 0.12   | 0.24   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 3             | 0.32   | 0.53   | 0.21   | 0.42   | 13            | 0.22   | 0.33   | 0.11   | 0.22   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 4             | 0.31   | 0.51   | 0.20   | 0.40   | 14            | 0.20   | 0.31   | 0.10   | 0.20   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 5             | 0.30   | 0.49   | 0.19   | 0.38   | 15            | 0.18   | 0.29   | 0.09   | 0.18   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 6             | 0.29   | 0.48   | 0.18   | 0.36   | 16            | 0.16   | 0.27   | 0.08   | 0.16   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 7             | 0.28   | 0.45   | 0.17   | 0.34   | 17            | 0.14   | 0.25   | 0.07   | 0.14   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 8             | 0.27   | 0.43   | 0.16   | 0.32   | 18            | 0.12   | 0.23   | 0.06   | 0.12   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 9             | 0.26   | 0.41   | 0.15   | 0.30   | 19            | 0.10   | 0.21   | 0.05   | 0.10   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ | 10            | 0.25   | 0.39   | 0.14   | 0.28   | 20            | 0.08   | 0.16   | 0.04   | 0.08   |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
 
 .. _Snow Albedo:
 
@@ -596,16 +605,18 @@ Snow Albedo
 
 Snow albedo and solar absorption within each snow layer are simulated
 with the Snow, Ice, and Aerosol Radiative Model (SNICAR), which
-incorporates a two-stream radiative transfer solution from Toon et al.
-(1989). Albedo and the vertical absorption profile depend on solar
-zenith angle, albedo of the substrate underlying snow, mass
+incorporates a two-stream radiative transfer solution from 
+:ref:`Toon et al. (1989) <Toonetal1989>`. Albedo and the vertical absorption 
+profile depend on solar zenith angle, albedo of the substrate underlying snow, mass
 concentrations of atmospheric-deposited aerosols (black carbon, mineral
 dust, and organic carbon), and ice effective grain size
 (:math:`r_{e}`), which is simulated with a snow aging routine
-described in section 3.2.3. Representation of impurity mass
-concentrations within the snowpack is described in section 7.2.4.
-Implementation of SNICAR in CLM is also described somewhat by Flanner
-and Zender (2005) and Flanner et al. (2007).
+described in section :numref:`Snow Aging`. Representation of impurity mass
+concentrations within the snowpack is described in section 
+:numref:`Black and organic carbon and mineral dust within snow`.
+Implementation of SNICAR in CLM is also described somewhat by 
+:ref:`Flanner and Zender (2005) <FlannerZender2005>` and 
+:ref:`Flanner et al. (2007) <Flanneretal2007>`.
 
 The two-stream solution requires the following bulk optical properties
 for each snow layer and spectral band: extinction optical depth
@@ -615,7 +626,7 @@ calculations are identical to snow layers applied elsewhere in CLM,
 except for the case when snow mass is greater than zero but no snow
 layers exist. When this occurs, a single radiative layer is specified to
 have the column snow mass and an effective grain size of freshly-fallen
-snow (section 3.2.3). The bulk optical properties are weighted functions
+snow (section :numref:`Snow Aging`). The bulk optical properties are weighted functions
 of each constituent *k*, computed for each snow layer and spectral band
 as
 
@@ -634,39 +645,42 @@ as
 
    g=\frac{\sum _{1}^{k}g_{k} \omega _{k} \tau _{k}  }{\sum _{1}^{k}\omega _{k} \tau _{k}  }
 
-For each constituent (ice, two black carbon species, two organic carbon species, and four dust species), :math:`\omega`, *g*, and
-the mass extinction cross-section :math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) 
-are computed offline with Mie Theory, e.g., applying the computational technique from Bohren and Huffman (1983). The
-extinction optical depth for each constituent depends on its mass  extinction cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
+For each constituent (ice, two black carbon species, two organic carbon species, and 
+four dust species), :math:`\omega`, *g*, and the mass extinction cross-section 
+:math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) are computed offline with Mie Theory, e.g., 
+applying the computational technique from :ref:`Bohren and Huffman (1983) <BohrenHuffman1983>`. 
+The extinction optical depth for each constituent depends on its mass  extinction 
+cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
 
 .. math::
    :label: 3.65
 
    \tau _{k} =\psi _{k} w_{k}
 
-The two-stream solution (Toon et al. 1989) applies a tri-diagonal matrix
+The two-stream solution (:ref:`Toon et al. (1989) <Toonetal1989>`) applies a tri-diagonal matrix
 solution to produce upward and downward radiative fluxes at each layer
 interface, from which net radiation, layer absorption, and surface
 albedo are easily derived. Solar fluxes are computed in five spectral
-bands, listed in Table 3.4. Because snow albedo varies strongly across
+bands, listed in :numref:`Table Spectral bands and weights used for snow radiative transfer`. 
+Because snow albedo varies strongly across
 the solar spectrum, it was determined that four bands were needed to
 accurately represent the near-infrared (NIR) characteristics of snow,
 whereas only one band was needed for the visible spectrum. Boundaries of
 the NIR bands were selected to capture broad radiative features and
-maximize accuracy and computational efficiency. We partition NIR
-(0.7-5.0 :math:`\mu` m) surface downwelling flux from CLM
-according to the weights listed in Table 3.4, which are unique for
-diffuse and direct incident flux. These fixed weights were determined
-with offline hyperspectral radiative transfer calculations for an
-atmosphere typical of mid-latitude winter (Flanner et al. 2007). The
-tri-diagonal solution includes intermediate terms that allow for easy
+maximize accuracy and computational efficiency. We partition NIR (0.7-5.0 
+:math:`\mu` m) surface downwelling flux from CLM according to the weights listed 
+in :numref:`Table Spectral bands and weights used for snow radiative transfer`, 
+which are unique for diffuse and direct incident flux. These fixed weights were 
+determined with offline hyperspectral radiative transfer calculations for an
+atmosphere typical of mid-latitude winter (:ref:`Flanner et al. (2007) <Flanneretal2007>`). 
+The tri-diagonal solution includes intermediate terms that allow for easy
 interchange of two-stream techniques. We apply the Eddington solution
-for the visible band (following Wiscombe and Warren 1980) and the
-hemispheric mean solution (Toon et al. 1989) for NIR bands. These
+for the visible band (following :ref:`Wiscombe and Warren 1980 <WiscombeWarren1980>`) and the
+hemispheric mean solution ((:ref:`Toon et al. (1989) <Toonetal1989>`) for NIR bands. These
 choices were made because the Eddington scheme works well for highly
 scattering media, but can produce negative albedo for absorptive NIR
 bands with diffuse incident flux. Delta scalings are applied to
-:math:`\tau`, :math:`\omega`, and :math:`g` (Wiscombe and Warren 1980) in
+:math:`\tau`, :math:`\omega`, and :math:`g` (:ref:`Wiscombe and Warren 1980 <WiscombeWarren1980>`) in
 all spectral bands, producing effective values (denoted with \*) that
 are applied in the two-stream solution
 
@@ -685,21 +699,23 @@ are applied in the two-stream solution
 
    g^{*} =\frac{g}{1+g}
 
-Table 3.4. Spectral bands and weights used for snow radiative transfer
+.. _Table Spectral bands and weights used for snow radiative transfer:
 
-+---------------------------------------------------------+----------------------+------------------+
-| Spectral band                                           | Direct-beam weight   | Diffuse weight   |
-+=========================================================+======================+==================+
-| Band 1: 0.3-0.7\ :math:`\mu`\ m (visible)               |                      |                  |
-+---------------------------------------------------------+----------------------+------------------+
-| Band 2: 0.7-1.0\ :math:`\mu`\ m (near-IR)               | 0.494                | 0.586            |
-+---------------------------------------------------------+----------------------+------------------+
-| Band 3: 1.0-1.2\ :math:`\mu`\ m (near-IR)               | 0.181                | 0.202            |
-+---------------------------------------------------------+----------------------+------------------+
-| Band 4: 1.2-1.5\ :math:`\mu`\ m (near-IR)               | 0.121                | 0.109            |
-+---------------------------------------------------------+----------------------+------------------+
-| Band 5: 1.5-5.0\ :math:`\mu`\ m (near-IR)               | 0.204                | 0.103            |
-+---------------------------------------------------------+----------------------+------------------+
+.. table:: Spectral bands and weights used for snow radiative transfer
+
+ +---------------------------------------------------------+----------------------+------------------+
+ | Spectral band                                           | Direct-beam weight   | Diffuse weight   |
+ +=========================================================+======================+==================+
+ | Band 1: 0.3-0.7\ :math:`\mu`\ m (visible)               |                      |                  |
+ +---------------------------------------------------------+----------------------+------------------+
+ | Band 2: 0.7-1.0\ :math:`\mu`\ m (near-IR)               | 0.494                | 0.586            |
+ +---------------------------------------------------------+----------------------+------------------+
+ | Band 3: 1.0-1.2\ :math:`\mu`\ m (near-IR)               | 0.181                | 0.202            |
+ +---------------------------------------------------------+----------------------+------------------+
+ | Band 4: 1.2-1.5\ :math:`\mu`\ m (near-IR)               | 0.121                | 0.109            |
+ +---------------------------------------------------------+----------------------+------------------+
+ | Band 5: 1.5-5.0\ :math:`\mu`\ m (near-IR)               | 0.204                | 0.103            |
+ +---------------------------------------------------------+----------------------+------------------+
 
 Under direct-beam conditions, singularities in the radiative
 approximation are occasionally approached in spectral bands 4 and 5 that
@@ -743,7 +759,8 @@ absorption fluxes that are used for column temperature calculations are
 This weighting is performed for direct-beam and diffuse, visible and NIR
 fluxes. After the ground-incident fluxes (transmitted through the
 vegetation canopy) have been calculated for the current time step
-(sections 3.1 and 4.1), the layer absorption factors
+(sections :numref:`Canopy Radiative Transfer` and :numref:`Solar Fluxes`), 
+the layer absorption factors
 
 (:math:`S_{g,\, i}`) are multiplied by the ground-incident fluxes to
 produce solar absorption (W m\ :sup:`-2`) in each snow layer and
@@ -779,98 +796,107 @@ weighted by the diffuse albedo for a semi-infinite snowpack (:math:`\alpha _{sno
 Inclusion of this additional albedo weight was found to improve accuracy
 of the five-band albedo solutions (relative to 470-band solutions)
 because of the strong dependence of optically-thick snowpack albedo on
-ice grain single-scatter albedo (Flanner et al. 2007). The lookup tables
-contain optical properties for lognormal distributions of ice particles
-over the range of effective radii: 30\ :math:`\mu`\ m
-:math:`< r _{e} < \text{1500} \mu \text{m}`, at 1 :math:`\mu` m resolution. Single-scatter albedos for the end-members of this size
-range are listed in Table 3.5.
+ice grain single-scatter albedo (:ref:`Flanner et al. (2007) <Flanneretal2007>`). 
+The lookup tables contain optical properties for lognormal distributions of ice 
+particles over the range of effective radii: 30\ :math:`\mu`\ m
+:math:`< r _{e} < \text{1500} \mu \text{m}`, at 1 :math:`\mu` m resolution. 
+Single-scatter albedos for the end-members of this size range are listed in 
+:numref:`Table Single-scatter albedo values used for snowpack impurities and ice`.
 
-Optical properties for black carbon are described in Flanner et al.
-(2007). Single-scatter albedo, mass extinction cross-section, and
+Optical properties for black carbon are described in :ref:`Flanner et al. (2007) <Flanneretal2007>`. 
+Single-scatter albedo, mass extinction cross-section, and
 asymmetry parameter values for all snowpack species, in the five
-spectral bands used, are listed in Tables 3.5, 3.6, and 3.7. These
-properties were also derived with Mie Theory, using various published
+spectral bands used, are listed in :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`, 
+:numref:`Table Mass extinction values`, and 
+:numref:`Table Asymmetry scattering parameters used for snowpack impurities and ice`. 
+These properties were also derived with Mie Theory, using various published
 sources of indices of refraction and assumptions about particle size
 distribution. Weighting into the five CLM spectral bands was determined
 only with incident solar flux, as in equation .
 
-Table 3.5. Single-scatter albedo values used for snowpack impurities and ice
+.. _Table Single-scatter albedo values used for snowpack impurities and ice:
 
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
-+================================================================+==========+==========+==========+==========+==========+
-| Hydrophilic black carbon                                       | 0.516    | 0.434    | 0.346    | 0.276    | 0.139    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophobic black carbon                                       | 0.288    | 0.187    | 0.123    | 0.089    | 0.040    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophilic organic carbon                                     | 0.997    | 0.994    | 0.990    | 0.987    | 0.951    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophobic organic carbon                                     | 0.963    | 0.921    | 0.860    | 0.814    | 0.744    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 1                                                         | 0.979    | 0.994    | 0.993    | 0.993    | 0.953    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 2                                                         | 0.944    | 0.984    | 0.989    | 0.992    | 0.983    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 3                                                         | 0.904    | 0.965    | 0.969    | 0.973    | 0.978    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 4                                                         | 0.850    | 0.940    | 0.948    | 0.953    | 0.955    |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 0.9999   | 0.9999   | 0.9992   | 0.9938   | 0.9413   |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 0.9998   | 0.9960   | 0.9680   | 0.8730   | 0.5500   |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
+.. table:: Single-scatter albedo values used for snowpack impurities and ice
 
-Table 3.6. Mass extinction values (m\ :sup:`2` kg\ :sub:`-1`) used for snowpack impurities and ice.
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
+ +================================================================+==========+==========+==========+==========+==========+
+ | Hydrophilic black carbon                                       | 0.516    | 0.434    | 0.346    | 0.276    | 0.139    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophobic black carbon                                       | 0.288    | 0.187    | 0.123    | 0.089    | 0.040    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophilic organic carbon                                     | 0.997    | 0.994    | 0.990    | 0.987    | 0.951    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophobic organic carbon                                     | 0.963    | 0.921    | 0.860    | 0.814    | 0.744    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 1                                                         | 0.979    | 0.994    | 0.993    | 0.993    | 0.953    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 2                                                         | 0.944    | 0.984    | 0.989    | 0.992    | 0.983    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 3                                                         | 0.904    | 0.965    | 0.969    | 0.973    | 0.978    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 4                                                         | 0.850    | 0.940    | 0.948    | 0.953    | 0.955    |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 0.9999   | 0.9999   | 0.9992   | 0.9938   | 0.9413   |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 0.9998   | 0.9960   | 0.9680   | 0.8730   | 0.5500   |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
 
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
-+================================================================+==========+==========+==========+==========+==========+
-| Hydrophilic black carbon                                       | 25369    | 12520    | 7739     | 5744     | 3527     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophobic black carbon                                       | 11398    | 5923     | 4040     | 3262     | 2224     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophilic organic carbon                                     | 37774    | 22112    | 14719    | 10940    | 5441     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophobic organic carbon                                     | 3289     | 1486     | 872      | 606      | 248      |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 1                                                         | 2687     | 2420     | 1628     | 1138     | 466      |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 2                                                         | 841      | 987      | 1184     | 1267     | 993      |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 3                                                         | 388      | 419      | 400      | 397      | 503      |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 4                                                         | 197      | 203      | 208      | 205      | 229      |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 55.7     | 56.1     | 56.3     | 56.6     | 57.3     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 1.09     | 1.09     | 1.09     | 1.09     | 1.1      |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
+.. _Table Mass extinction values:
 
-Table 3.7. Asymmetry scattering parameters used for snowpack impurities and ice.
+.. table:: Mass extinction values (m\ :sup:`2` kg\ :sub:`-1`) used for snowpack impurities and ice
 
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
-+================================================================+==========+==========+==========+==========+==========+
-| Hydrophilic black carbon                                       | 0.52     | 0.34     | 0.24     | 0.19     | 0.10     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophobic black carbon                                       | 0.35     | 0.21     | 0.15     | 0.11     | 0.06     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophilic organic carbon                                     | 0.77     | 0.75     | 0.72     | 0.70     | 0.64     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Hydrophobic organic carbon                                     | 0.62     | 0.57     | 0.54     | 0.51     | 0.44     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 1                                                         | 0.69     | 0.72     | 0.67     | 0.61     | 0.44     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 2                                                         | 0.70     | 0.65     | 0.70     | 0.72     | 0.70     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 3                                                         | 0.79     | 0.75     | 0.68     | 0.63     | 0.67     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Dust 4                                                         | 0.83     | 0.79     | 0.77     | 0.76     | 0.73     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Ice (:math:`r _{e}` = 30\ :math:`\mu`\ m)                      | 0.88     | 0.88     | 0.88     | 0.88     | 0.90     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
-| Ice (:math:`r _{e}` = 1500\ :math:`\mu`\ m)                    | 0.89     | 0.90     | 0.90     | 0.92     | 0.97     |
-+----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
+ +================================================================+==========+==========+==========+==========+==========+
+ | Hydrophilic black carbon                                       | 25369    | 12520    | 7739     | 5744     | 3527     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophobic black carbon                                       | 11398    | 5923     | 4040     | 3262     | 2224     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophilic organic carbon                                     | 37774    | 22112    | 14719    | 10940    | 5441     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophobic organic carbon                                     | 3289     | 1486     | 872      | 606      | 248      |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 1                                                         | 2687     | 2420     | 1628     | 1138     | 466      |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 2                                                         | 841      | 987      | 1184     | 1267     | 993      |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 3                                                         | 388      | 419      | 400      | 397      | 503      |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 4                                                         | 197      | 203      | 208      | 205      | 229      |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 55.7     | 56.1     | 56.3     | 56.6     | 57.3     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 1.09     | 1.09     | 1.09     | 1.09     | 1.1      |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+
+.. _Table Asymmetry scattering parameters used for snowpack impurities and ice:
+
+.. table:: Asymmetry scattering parameters used for snowpack impurities and ice.
+
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
+ +================================================================+==========+==========+==========+==========+==========+
+ | Hydrophilic black carbon                                       | 0.52     | 0.34     | 0.24     | 0.19     | 0.10     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophobic black carbon                                       | 0.35     | 0.21     | 0.15     | 0.11     | 0.06     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophilic organic carbon                                     | 0.77     | 0.75     | 0.72     | 0.70     | 0.64     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Hydrophobic organic carbon                                     | 0.62     | 0.57     | 0.54     | 0.51     | 0.44     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 1                                                         | 0.69     | 0.72     | 0.67     | 0.61     | 0.44     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 2                                                         | 0.70     | 0.65     | 0.70     | 0.72     | 0.70     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 3                                                         | 0.79     | 0.75     | 0.68     | 0.63     | 0.67     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Dust 4                                                         | 0.83     | 0.79     | 0.77     | 0.76     | 0.73     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Ice (:math:`r _{e}` = 30\ :math:`\mu`\ m)                      | 0.88     | 0.88     | 0.88     | 0.88     | 0.90     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
+ | Ice (:math:`r _{e}` = 1500\ :math:`\mu`\ m)                    | 0.89     | 0.90     | 0.90     | 0.92     | 0.97     |
+ +----------------------------------------------------------------+----------+----------+----------+----------+----------+
 
 .. _Snow Aging:
 
@@ -881,9 +907,9 @@ Snow aging is represented as evolution of the ice effective grain size
 (:math:`r_{e}`). Previous studies have shown that use of spheres
 which conserve the surface area-to-volume ratio (or specific surface
 area) of ice media composed of more complex shapes produces relatively
-small errors in simulated hemispheric fluxes (e.g., Grenfell and Warren
-1999). Effective radius is the surface area-weighted mean radius of an
-ensemble of spherical particles and is directly related to specific
+small errors in simulated hemispheric fluxes (e.g., :ref:`Grenfell and Warren
+1999 <GrenfellWarren1999>`). Effective radius is the surface area-weighted mean 
+radius of an ensemble of spherical particles and is directly related to specific
 surface area (*SSA*) as
 :math:`r_{e} ={3\mathord{\left/ {\vphantom {3 \left(\rho _{ice} SSA\right)}} \right. \kern-\nulldelimiterspace} \left(\rho _{ice} SSA\right)}` ,
 where :math:`\rho_{ice}` is the density of ice. Hence,
@@ -892,7 +918,7 @@ snowpack microphysical state to dry snow radiative characteristics.
 
 Wet snow processes can also drive rapid changes in albedo. The presence
 of liquid water induces rapid coarsening of the surrounding ice grains
-(e.g., Brun 1989), and liquid water tends to refreeze into large ice
+(e.g., :ref:`Brun 1989 <Brun1989>`), and liquid water tends to refreeze into large ice
 clumps that darken the bulk snowpack. The presence of small liquid
 drops, by itself, does not significantly darken snowpack, as ice and
 water have very similar indices of refraction throughout the solar
@@ -920,9 +946,9 @@ Here, the effective radius of freshly-fallen snow
 (:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sub:`-1`), and the effective
 radius of refrozen liquid water (:math:`r_{e,rfz}`) is set to 1000\ :math:`\mu` m.
 
-Dry snow aging is based on a microphysical model described by Flanner
-and Zender (2006). This model simulates diffusive vapor flux amongst
-collections of ice crystals with various size and inter-particle
+Dry snow aging is based on a microphysical model described by :ref:`Flanner
+and Zender (2006) <FlannerZender2006>`. This model simulates diffusive vapor flux 
+amongst collections of ice crystals with various size and inter-particle
 spacing. Specific surface area and effective radius are prognosed for
 any combination of snow temperature, temperature gradient, density, and
 initial size distribution. The combination of warm snow, large
@@ -960,7 +986,7 @@ top soil layer, and for the top snow layer it is assumed that
 :math:`T_{n-1}` = :math:`T_{n}`.
 
 The contribution of liquid water to enhanced metamorphism is based on
-parametric equations published by Brun (1989), who measured grain
+parametric equations published by :ref:`Brun (1989) <Brun1989>`, who measured grain
 growth rates under different liquid water contents. This relationship,
 expressed in terms of :math:`r_{e} (\mu \text{m})` and
 subtracting an offset due to dry aging, depends on the mass liquid water
@@ -972,15 +998,17 @@ fraction :math:`f_{liq}` as
    \frac{dr_{e} }{dt} =\frac{10^{18} C_{1} f_{liq} ^{3} }{4\pi r_{e} ^{2} }
 
 The constant *C*\ :sub:`1` is 4.22\ :math:`\times`\ 10\ :sup:`-13`, and:
-:math:`f_{liq} =w_{liq} /(w_{liq} +w_{ice} )`\ (section 7.2).
+:math:`f_{liq} =w_{liq} /(w_{liq} +w_{ice} )`\ (Chapter :numref:`rst_Snow Hydrology`).
 
 In cases where snow mass is greater than zero, but a snow layer has not
 yet been defined, :math:`r_{e}` is set to :math:`r_{e,0}`. When snow layers are combined or
 divided, :math:`r_{e}` is calculated as a mass-weighted mean of
 the two layers, following computations of other state variables (section
-7.2.7). Finally, the allowable range of :math:`r_{e}`,
+:numref:`Snow Layer Combination and Subdivision`). Finally, the allowable range of :math:`r_{e}`,
 corresponding to the range over which Mie optical properties have been
 defined, is 30-1500\ :math:`\mu` m.
+
+.. _Solar Zenith Angle:
 
 Solar Zenith Angle
 ----------------------
@@ -1008,8 +1036,8 @@ where :math:`d` is calendar day (:math:`d=0.0` at 0Z on January 1), and
 :math:`\theta`  is longitude (radians) (positive east of the
 CityplaceGreenwich meridian).
 
-The solar declination angle :math:`\delta`  is calculated as in Berger
-(1978a,b) and is valid for one million years past or hence, relative to
+The solar declination angle :math:`\delta`  is calculated as in :ref:`Berger
+(1978a,b) <Berger1978a>` and is valid for one million years past or hence, relative to
 1950 A.D. The orbital parameters may be specified directly or the
 orbital parameters are calculated for the desired year. The required
 orbital parameters to be input by the user are the obliquity of the
@@ -1018,7 +1046,7 @@ Earth :math:`\varepsilon`  (degrees,
 :math:`e` (:math:`0.0<e<0.1`), and the longitude of the perihelion
 relative to the moving vernal equinox :math:`\tilde{\omega }`
 (:math:`0^{\circ } <\tilde{\omega }<360^{\circ }` ) (unadjusted for the
-apparent orbit of the Sun around the Earth (Berger et al. 1993)). The
+apparent orbit of the Sun around the Earth (:ref:`Berger et al. 1993 <Bergeretal1993>`)). The
 solar declination :math:`\delta`  (radians) is
 
 .. math::
@@ -1036,10 +1064,10 @@ The obliquity of the Earth :math:`\varepsilon`  (degrees) is
 
    \varepsilon =\varepsilon *+\sum _{i=1}^{i=47}A_{i}  \cos \left(f_{i} t+\delta _{i} \right)
 
-where :math:`\varepsilon *` is a constant of integration (Table 3.8),
+where :math:`\varepsilon *` is a constant of integration (:numref:`Table Orbital parameters`),
 :math:`A_{i}` , :math:`f_{i}` , and :math:`\delta _{i}`  are amplitude,
-mean rate, and phase terms in the cosine series expansion (Berger
-1978a,b), and :math:`t=t_{0} -1950` where :math:`t_{0}`  is the year.
+mean rate, and phase terms in the cosine series expansion (:ref:`Berger
+(1978a,b) <Berger1978a>`, and :math:`t=t_{0} -1950` where :math:`t_{0}`  is the year.
 The series expansion terms are not shown here but can be found in the
 source code file shr\_orb\_mod.F90.
 
@@ -1087,7 +1115,7 @@ where
 
 are the cosine and sine series expansions for :math:`e`, and
 :math:`M_{j}` , :math:`g_{j}` , and :math:`B_{j}`  are amplitude, mean
-rate, and phase terms in the series expansions (Berger 1978a,b). The
+rate, and phase terms in the series expansions (:ref:`Berger (1978a,b) <Berger1978a>`). The
 longitude of the perihelion relative to the moving vernal equinox
 :math:`\tilde{\omega }` (degrees) is
 
@@ -1110,9 +1138,9 @@ orbit relative to the fixed stars. The general precession :math:`\psi`
    \psi =\frac{\tilde{\psi }t}{3600} +\zeta +\sum _{i=1}^{78}F_{i}  \sin \left(f_{i} ^{{'} } t+\delta _{i} ^{{'} } \right)
 
 where :math:`\tilde{\psi }` (arcseconds) and :math:`\zeta`  (degrees)
-are constants (Table 3.8), and :math:`F_{i}` , :math:`f_{i} ^{{'} }` ,
+are constants (:numref:`Table Orbital parameters`), and :math:`F_{i}` , :math:`f_{i} ^{{'} }` ,
 and :math:`\delta _{i} ^{{'} }`  are amplitude, mean rate, and phase
-terms in the sine series expansion (Berger 1978a,b). The longitude of
+terms in the sine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`)). The longitude of
 the perihelion :math:`\Pi`  (radians) depends on the sine and cosine
 series expansions for the eccentricity :math:`e`\ as follows:
 
@@ -1125,16 +1153,18 @@ The numerical solution for the longitude of the perihelion
 :math:`\tilde{\omega }` is constrained to be between 0 and 360 degrees
 (measured from the autumn equinox). A constant 180 degrees is then added
 to :math:`\tilde{\omega }` because the Sun is considered as revolving
-around the Earth (geocentric coordinate system) (Berger et al. 1993).
+around the Earth (geocentric coordinate system) (:ref:`Berger et al. 1993 <Bergeretal1993>`)).
 
-Table 3.8. Orbital parameters
+.. _Table Orbital parameters:
 
-+--------------------------------------+-------------+
-| Parameter                            |             |
-+======================================+=============+
-| :math:`\varepsilon *`                | 23.320556   |
-+--------------------------------------+-------------+
-| :math:`\tilde{\psi }` (arcseconds)   | 50.439273   |
-+--------------------------------------+-------------+
-| :math:`\zeta`  (degrees)             | 3.392506    |
-+--------------------------------------+-------------+
+.. table:: Orbital parameters
+
+ +--------------------------------------+-------------+
+ | Parameter                            |             |
+ +======================================+=============+
+ | :math:`\varepsilon *`                | 23.320556   |
+ +--------------------------------------+-------------+
+ | :math:`\tilde{\psi }` (arcseconds)   | 50.439273   |
+ +--------------------------------------+-------------+
+ | :math:`\zeta`  (degrees)             | 3.392506    |
+ +--------------------------------------+-------------+

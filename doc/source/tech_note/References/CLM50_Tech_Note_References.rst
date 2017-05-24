@@ -134,6 +134,8 @@ of hydraulic conductivity in porous media. Transport in Porous Media
 Beven, K.J., and Kirkby, M.J. 1979. A physically based variable
 contributing area model of basin hydrology. Hydrol. Sci. Bull. 24:43-69.
 
+.. _BohrenHuffman1983:
+
 Bohren, C. F., and Huffman, D. R. 1983. Absorption and scattering of
 light by small particles. John Wiley & Sons, New York, NY.
 
@@ -1382,7 +1384,7 @@ Pollmer, W.G., Eberhard, D., Klein, D., and Dhillon, B.S. 1979. Genetic
 control of nitrogen uptake and translocation in maize. Crop Sci.
 19:82-86.
 
-.. _Portmann2010:
+.. _Portmannetal2010:
 
 Portmann, F.T., Siebert, S., and Döll, P. 2010. MIRCA2000 - Global
 monthly irrigated and rainfed crop areas around the year 2000: A new
@@ -1695,12 +1697,14 @@ Area Parameterization for the Community Land Model and its Effect on the
 Surface Energy Balance. JGR, 117, D21107. DOI:10.1029/2012JD018178.
 
 .. _SwensonLawrence2014:
+
 Swenson, S.C., and D. M. Lawrence. 2014. Assessing a dry surface 
 layer-based soil resistance parameterization for the Community Land Model 
 using GRACE and FLUXNET-MTE data. JGR, 119, 10, 299–10,312, 
 DOI:10.1002/2014JD022314.
 
 .. _SwensonLawrence2015:
+
 Swenson, S.C., and D. M. Lawrence. 2015. A GRACE-based assessment of 
 interannual groundwater dynamics in the Community Land Model. WRR, 51, 
 doi:10.1002/2015WR017582.

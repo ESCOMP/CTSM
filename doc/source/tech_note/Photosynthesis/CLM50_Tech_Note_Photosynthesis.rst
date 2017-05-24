@@ -562,8 +562,9 @@ functional type
 
 where :math:`z_{h,\, i}`  (m) is the depth from the soil surface to the
 interface between layers :math:`i` and :math:`i+1` (:math:`z_{h,\, 0}` ,
-the soil surface) (section 6.1), and :math:`r_{a}`  and :math:`r_{b}` 
-are plant-dependent root distribution parameters adopted from :ref:`Zeng (2001) <Zeng2001>` 
+the soil surface) (section :numref:`Vertical Discretization`), and :math:`r_{a}`  
+and :math:`r_{b}` are plant-dependent root distribution parameters adopted from 
+:ref:`Zeng (2001) <Zeng2001>` 
 (:numref:`Table Plant functional type root distribution parameters`).
 
 .. _Table Plant functional type root distribution parameters:
