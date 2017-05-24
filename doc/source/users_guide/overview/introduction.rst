@@ -4,21 +4,21 @@
 Introduction
 ==============
 
-The Community Land Model (CLM4.5 in CESM1.2.0) is the latest in a
+The Community Land Model (CLM5.0 in CESM2.0) is the latest in a
 series of global land models developed by t he CESM Land Model Working
 Group (LMWG) and maintained at the National Center for Atmospheric
 Research (NCAR). This guide is intended to instruct both the novice
 and experienced user on running CLM. This guide pertains to the latest
-version CLM4.5 in CESM1.2.0 available for download from the public
+version CLM5.0 in CESM2.0 available for download from the public
 release subversion repository as a part of CESM1.2.0. Documentation
 may be different if you are using an older version, you should either
 use the documentation for that release version, update to the latest
 version, or use the documentation inside your own source tree. There
 is information in the ChangeLog file and in the `What is new with
-CLM4.5 in CESM1.2.0 since previous public releases? <CLM-URL>`_
+CLM5.0 in CESM2.0 since previous public releases? <CLM-URL>`_
 regarding the changes from previous versions of CESM.
 
-.. note:: This release of CLM4.5 in CESM1.2.0 includes BOTH CLM4.0
+.. note:: This release of CLM5.0 in CESM1.2.0 includes BOTH CLM4.0
  physics used in previous releases as well as the updated CLM4.5
  physics. Both CLM as well as CLM support tools allow you to trigger
  between the two physics modes. Most often when we refer to CLM4.0 we
