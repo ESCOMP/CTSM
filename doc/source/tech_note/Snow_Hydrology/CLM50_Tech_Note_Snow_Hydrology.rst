@@ -3,9 +3,8 @@
 Snow Hydrology
 ===============
 
-The model parameterizes 
-The parameterizations for snow are based primarily on Anderson (1976),
-country-regionplaceJordan (1991), and Dai and Zeng (1997). The snowpack
+The parameterizations for snow are based primarily on :ref:`Anderson (1976) <Anderson1976>`,
+:ref:`Jordan (1991) <Jordan1991>`, and :ref:`Dai and Zeng (1997) <DaiZeng1997>`. The snowpack
 can have up to five layers. These layers are indexed in the Fortran code
 as :math:`i=-4,-3,-2,-1,0` where layer :math:`i=0` is the snow layer
 next to the top soil layer and layer :math:`i=-4` is the top layer of a
@@ -55,7 +54,8 @@ Snow Covered Area Fraction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The fraction of the ground covered by snow, :math:`f_{sno}` , is based
-on the method of Swenson and Lawrence (2012). Because the processes
+on the method of :ref:`Swenson and Lawrence (2012) <SwensonLawrence2012>`.  
+Because the processes
 governing snowfall and snowmelt differ, changes in :math:`f_{sno}`  are
 calculated separately for accumulation and depletion. When snowfall
 occurs, :math:`f_{sno}`  is updated as
@@ -103,7 +103,11 @@ The conservation equation for mass of ice in snow layers is
 .. math::
    :label: 8.17) 
 
-   \frac{\partial w_{ice,\, i} }{\partial t} =\left\{\begin{array}{l} {f_{sno} q_{ice,\, i-1} -\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} \qquad i=snl+1} \\ {-\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} \qquad i=snl+2,\ldots ,0} \end{array}\right\}
+   \frac{\partial w_{ice,\, i} }{\partial t} =
+   \left\{\begin{array}{lr} 
+   f_{sno} \ q_{ice,\, i-1} -\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} & \qquad i=snl+1 \\ 
+   -\frac{\left(\Delta w_{ice,\, i} \right)_{p} }{\Delta t} & \qquad i=snl+2,\ldots ,0 
+   \end{array}\right\}
 
 where :math:`q_{ice,\, i-1}`  is the rate of ice accumulation from
 precipitation or frost or the rate of ice loss from sublimation (kg
@@ -138,12 +142,17 @@ where
    \Delta z_{sno} =\frac{q_{grnd,\, ice} \Delta t}{f_{sno} \rho _{sno} }
 
 and :math:`\rho _{sno}`  is the bulk density of newly fallen snow (kg
-m\ :sup:`-3`) (CityplaceAnderson 1976)
+m\ :sup:`-3`) (:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
    :label: 8.21) 
 
-   \rho _{sno} =\left\{\begin{array}{l} {50+1.7\left(17\right)^{1.5} \qquad T_{atm} >T_{f} +2} \\ {50+1.7\left(T_{atm} -T_{f} +15\right)^{1.5} \qquad T_{f} -15<T_{atm} \le T_{f} +2} \\ {50\qquad T_{atm} \le T_{f} -15} \end{array}\right\}
+   \rho _{sno} = 
+   \left\{\begin{array}{lr} 
+   50 + 1.7 \left(17\right)^{1.5} & \qquad T_{atm} >T_{f} +2 \ \\ 
+   50+1.7 \left(T_{atm} -T_{f} + 15\right)^{1.5} & \qquad T_{f} - 15 < T_{atm} \le T_{f} + 2 \ \\ 
+   50 &\qquad T_{atm} \le T_{f} - 15 
+   \end{array}\right\}
 
 where :math:`T_{atm}`  is the atmospheric temperature (K), and
 :math:`T_{f}`  is the freezing temperature of water (K) (Table 2.6). The
@@ -260,7 +269,7 @@ where the volumetric liquid water :math:`\theta _{liq,\, i}`  and ice
 
 and :math:`S_{r} =0.033` is the irreducible water saturation (snow
 holds a certain amount of liquid water due to capillary retention after
-drainage has ceased (Anderson 1976)). The water holding capacity of the
+drainage has ceased (:ref:`Anderson (1976) <Anderson1976>`)). The water holding capacity of the
 underlying layer limits the flow of water :math:`q_{liq,\, i}` 
 calculated in equation , unless the underlying layer is the surface soil
 layer, as
@@ -357,7 +366,7 @@ is the model time step (s). The particle mass mixing ratio is
    c_{i} =\frac{m_{sp,\, i} }{w_{liq,\, i} +w_{ice,\, i} } .
 
 Values of :math:`k_{sp}`  are partially derived from experiments
-published by Conway et al. (1996). Particles masses are re-distributed
+published by :ref:`Conway et al. (1996) <Conwayetal1996>`. Particles masses are re-distributed
 proportionately with snow mass when layers are combined or divided, thus
 conserving particle mass within the snow column. The mass of particles
 carried out with meltwater through the bottom snow layer is assumed to
@@ -367,7 +376,7 @@ model.
 .. _Table Meltwater scavenging:
 
 .. table:: Meltwater scavenging efficiency for particles within snow
-
+ 
  +------------------------------------------+-------------------+
  | Species                                  | :math:`k_{sp}`    |
  +==========================================+===================+
@@ -410,8 +419,7 @@ Snow Compaction
 
 Snow compaction is initiated after the soil hydrology calculations
 [surface runoff (section :numref:`Surface Runoff`), infiltration (section 
-:numref:`Infiltration`), soil water (section :numref:`Soil Water`), 
-groundwater-soilwater interactions (section 8.6)] are
+:numref:`Infiltration`), soil water (section :numref:`Soil Water`)] are
 complete. Compaction of snow includes three types of processes:
 destructive metamorphism of new snow (crystal breakdown due to wind or
 thermodynamic stress); snow load or overburden (pressure); and melting
@@ -435,7 +443,7 @@ Compaction is not allowed if the layer is saturated
 or if the ice content is below a minimum value
 (:math:`w_{ice,\, i} \le 0.1`).
 
-Compaction as a result of destructive metamorphism :math:`C_{R1,\; i}` (s\ :sub:`-1`) is temperature dependent (CityplaceAnderson 1976)
+Compaction as a result of destructive metamorphism :math:`C_{R1,\; i}` (s\ :sub:`-1`) is temperature dependent (:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
    :label: 8.43) 
@@ -458,7 +466,7 @@ and
 :math:`{w_{liq,\, i} \mathord{\left/ {\vphantom {w_{liq,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
 are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
-The compaction rate as a result of overburden :math:`C_{R2,\; i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,\, i}` (kg m\ :sup:`-2`) (CityplaceAnderson 1976)
+The compaction rate as a result of overburden :math:`C_{R2,\; i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,\, i}` (kg m\ :sup:`-2`) (:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
    :label: 8.45) 
@@ -520,7 +528,7 @@ After the determination of snow temperature including phase change(Chapter
 :numref:`rst_Snow Hydrology`), and the compaction calculations (section 
 :numref:`Snow Compaction`) , the number of snow layers is adjusted by
 either combining or subdividing layers. The combination and subdivision
-of snow layers is based on Jordan (1991).
+of snow layers is based on :ref:`Jordan (1991) <Jordan1991>`.
 
 .. _Combination:
 

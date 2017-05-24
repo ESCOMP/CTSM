@@ -9,6 +9,8 @@ where :math:`\vec{S}` is the net solar flux absorbed by the vegetation
 (“v”) and the ground (“g”) and :math:`\vec{L}` is the net longwave flux
 (positive toward the atmosphere) (W m\ :sup:`-2`).
 
+.. _Solar Fluxes:
+
 Solar Fluxes
 ----------------
 
@@ -142,6 +144,8 @@ depth :math:`x`. These fluxes are normalized by the sunlit or shaded
 fraction at depth :math:`x`, defined by
 :math:`f_{sun} =\exp \left(-Kx\right)`, to give fluxes per unit sunlit
 or shaded plant area at depth :math:`x`.
+
+.. _Longwave Fluxes:
 
 Longwave Fluxes
 -------------------

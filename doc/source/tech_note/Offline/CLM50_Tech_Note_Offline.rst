@@ -4,24 +4,26 @@ Offline Mode
 ================
 
 In offline mode (uncoupled to an atmospheric model), the atmospheric
-forcing required by CLM (Table 2.3) is supplied by observed datasets.
-The standard forcing provided with the model is a 110-year (1901-2010)
-dataset (CRUNCEP; Viovy 2011) that is a combination of two existing
-datasets; the CRU TS3.2 0.5\ :math:`{}^\circ` X 0.5\ :math:`{}^\circ`
-monthly data covering the period 1901 to 2002 (Mitchell and Jones 2005)
+forcing required by CLM (:numref:`Table Atmospheric input to land model`) 
+is supplied by observed datasets.  The standard forcing provided with the 
+model is a 110-year (1901-2010) dataset (CRUNCEP; :ref:`Viovy 2011 <Viovy2011>`) 
+that is a combination of two existing datasets; the CRU TS3.2 0.5\ 
+:math:`{}^\circ` X 0.5\ :math:`{}^\circ` monthly data covering the period 
+1901 to 2002 (:ref:`Mitchell and Jones 2005 <MitchellJones2005>`)
 and the NCEP reanalysis 2.5\ :math:`{}^\circ` X 2.5\ :math:`{}^\circ`
 6-hourly data covering the period 1948 to 2010. The CRUNCEP dataset has
 been used to force CLM for studies of vegetation growth,
-evapotranspiration, and gross primary production (Mao et al. 2012, Mao
-et al. 2013, Shi et al. 2013) and for the TRENDY (trends in net
-land-atmosphere carbon exchange over the period 1980-2010) project (Piao
-et al. 2012). Version 4 is used here (Viovy 2011). Alternative forcing
-datasets can also be used (e.g., the Qian et al. (2006) dataset used for
+evapotranspiration, and gross primary production (:ref:`Mao et al. 2012 <Maoetal2012>`, 
+:ref:`Mao et al. 2013 <Maoetal2013>`, :ref:`Shi et al. 2013 <Shietal2013>`) 
+and for the TRENDY (trends in net land-atmosphere carbon exchange over the period 
+1980-2010) project (:ref:`Piao et al. 2012 <Piaoetal2012>`). Version 4 is used 
+here (:ref:`Viovy 2011 <Viovy2011>`). Alternative forcing datasets can also be used 
+(e.g., the :ref:`Qian et al. (2006) <Qianetal2006>` dataset used for
 previous versions of CLM is still available).
 
 Here, the CRUNCEP dataset, which does not include data over oceans,
-lakes, and Antarctica is modified. This missing data is filled with Qian
-et al. (2006) data from 1948 that is interpolated by the data atmosphere
+lakes, and Antarctica is modified. This missing data is filled with 
+:ref:`Qian et al. (2006) <Qianetal2006>` data from 1948 that is interpolated by the data atmosphere
 model to the 0.5\ :math:`{}^\circ` CRUNCEP grid. This allows the model
 to be run over Antarctica and ensures data is available along coastlines
 regardless of model resolution.
@@ -119,7 +121,7 @@ and
 :math:`b_{0} =0.29548,b_{1} =0.00504,b_{2} =-1.4957\times 10^{-5} ,b_{3} =1.4881\times 10^{-8}` 
 are coefficients from polynomial fits to the placeCAM data.
 
-The additional atmospheric forcing variables required by Table 2.3 are
+The additional atmospheric forcing variables required by :numref:`Table Atmospheric input to land model` are
 derived as follows. The atmospheric reference height :math:`z'_{atm}` 
 (m) is set to 30 m. The directional wind components are derived as
 :math:`u_{atm} =v_{atm} ={W_{atm} \mathord{\left/ {\vphantom {W_{atm}  \sqrt{2} }} \right. \kern-\nulldelimiterspace} \sqrt{2} }` .
@@ -141,8 +143,8 @@ where
 
    e_{atm} =\frac{P_{atm} q_{atm} }{0.622+0.378q_{atm} }
 
-and :math:`\sigma`  is the Stefan-Boltzmann constant (W
-m\ :sup:`-2` K\ :math:`{}^{-4}`) (Table 2.6). The fraction of
+and :math:`\sigma`  is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ 
+:math:`{}^{-4}`) (:numref:`Table Physical constants`). The fraction of
 precipitation :math:`P` (mm s\ :sup:`-1`) falling as rain and/or
 snow is
 
@@ -164,8 +166,9 @@ where
    f_{P} =0<0.5\left(T_{atm} -T_{f} \right)<1.
 
 The aerosol deposition rates :math:`D_{sp}`  (14 rates as described in
-Table 2.3) are provided by a time-varying, globally-gridded aerosol
-deposition file developed by Lamarque et al. (2010).
+:numref:`Table Atmospheric input to land model`) are provided by a 
+time-varying, globally-gridded aerosol deposition file developed by 
+:ref:`Lamarque et al. (2010) <Lamarqueetal2010>`.
 
 If the user wishes to provide atmospheric forcing data from another
 source, the data format outlined above will need to be followed with the
@@ -183,7 +186,7 @@ from the water (:math:`T_{atm} >T_{f}` ) or ice
 (:math:`T_{atm} \le T_{f}` ) saturation vapor pressure
 :math:`e_{sat}^{T_{atm} }`  as
 :math:`e_{atm} =\frac{RH}{100} e_{sat}^{T_{atm} }`  where :math:`T_{f}` 
-is the freezing temperature of water (K) (Table 2.6), and
+is the freezing temperature of water (K) (:numref:`Table Physical constants`), and
 :math:`P_{atm}`  is the pressure at height :math:`z_{atm}`  (Pa). The
 data atmosphere model will also accept a user-supplied dew point
 temperature :math:`T_{dew}`  (K) and derive specific humidity
@@ -195,7 +198,7 @@ temperature :math:`T_{dew}`  (K) and derive specific humidity
    q_{atm} = \frac{0.622e_{sat}^{T_{dew} } }{P_{atm} -0.378e_{sat}^{T_{dew} } } .
 
 Here, :math:`e_{sat}^{T}` , the saturation vapor pressure as a function
-of temperature, is derived from Lowe’s (1977) polynomials. If not
+of temperature, is derived from :ref:`Lowe’s (1977) <Lowe1977>` polynomials. If not
 provided by the user, the atmospheric pressure :math:`P_{atm}`  (Pa) is
 set equal to the standard atmospheric pressure :math:`P_{std} =101325`
 Pa, and surface pressure :math:`P_{srf}`  (Pa) is set equal

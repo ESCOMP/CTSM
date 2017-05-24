@@ -3,6 +3,8 @@
 Crops and Irrigation
 ========================
 
+.. _Summary of CLM5.0 updates relative to the CLM4.5:
+
 Summary of CLM5.0 updates relative to the CLM4.5
 -----------------------------------------------------
 
@@ -41,6 +43,8 @@ refers to the interactive crop management model and is included by default with 
 These updates appear in detail in the sections below. Many also appear in
 Levis et al. (2016).
 
+.. _The crop model:
+
 The crop model
 -------------------
 
@@ -76,6 +80,8 @@ while helping human societies answer questions about changing food,
 energy, and water resources in response to climate, environmental, land
 use, and land management change (e.g., Kucharik and Brye 2003; Lobell et al. 2006).
 
+.. _Crop plant functional types:
+
 Crop plant functional types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -106,6 +112,8 @@ CLM setting). Managed crop PFTs in the human managed land unit do not
 share soil columns and thus permit for differences in land management
 between crops.
 
+.. _Phenology:
+
 Phenology
 ^^^^^^^^^^^^^^^^
 
@@ -119,6 +127,8 @@ Phase 1 starts at planting and ends with leaf emergence, phase 2
 continues from leaf emergence to the beginning of grain fill, and phase
 3 starts from the beginning of grain fill and ends with physiological
 maturity and harvest.
+
+.. _Planting:
 
 Planting
 '''''''''''''''''
@@ -186,6 +196,8 @@ outside the above ranges, then it equals the minimum or maximum value in
 the range. Also  :math:`{T}_{f}` equals 273.15 K,
 :math:`{T}_{2m}` has units of K, and *GDD* has units of :sup:`o`\ days.
 
+.. _Leaf emergence:
+
 Leaf emergence
 '''''''''''''''''''''''
 
@@ -199,6 +211,8 @@ time step of phase 2, at which moment all seed C is transferred to leaf
 C. Subsequently, the leaf area index generally increases and reaches
 a maximum value during phase 2.
 
+.. _Grain fill:
+
 Grain fill
 '''''''''''''''''''
 
@@ -210,6 +224,8 @@ percentage itself is an empirical function of :math:`{GDD}_{mat}`
 (not shown). In phase 3, the leaf area index begins to decline in
 response to a background litterfall rate calculated as the inverse of
 leaf longevity for the pft as done in the CN part of the model.
+
+.. _Harvest:
 
 Harvest
 ''''''''''''''''
@@ -226,6 +242,8 @@ flow of live stem C and N to litter for corn, soybean, and temperate
 cereals. This is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N to dead stems first, rather than to litter.
 
+.. _Allocation:
+
 Allocation
 ^^^^^^^^^^^^^^^^^
 
@@ -234,6 +252,8 @@ Simulated C assimilation begins every year upon leaf emergence in phase
 2 and ends with harvest at the end of phase 3; therefore, so does the
 allocation of such C to the crop’s leaf, live stem, fine root, and
 reproductive pools.
+
+.. _Leaf emergence to grain fill:
 
 Leaf emergence to grain fill
 '''''''''''''''''''''''''''''''''''''
@@ -252,6 +272,8 @@ coefficients (Table 20.2), and *h* is a heat unit threshold defined in
 section 20.2.3. At a crop-specific maximum leaf area index,
 :math:`{L}_{max}` (Table 20.2), carbon allocation is directed
 exclusively to the fine roots.
+
+.. _Grain fill to harvest:
 
 Grain fill to harvest
 ''''''''''''''''''''''''''''''
@@ -279,6 +301,8 @@ calculated in phase 2, :math:`d_{L}` , :math:`d_{alloc}^{leaf}`  and
 allocation decline factors, and :math:`a_{leaf}^{f}`  and
 :math:`a_{livestem}^{f}`  are final values of these allocation
 coefficients (Table 20.2).
+
+.. _General comments:
 
 General comments
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -422,77 +446,125 @@ allocation. Numbers in the first column correspond to the list of pfts in Table 
 Notes: Crop growth phases and corresponding variables are described in
 the text
 
+.. _The irrigation model:
+
 The irrigation model
 -------------------------
 
 The CLM includes the option to irrigate cropland areas that are equipped
 for irrigation. The application of irrigation responds dynamically to
 the soil moisture conditions simulated by the CLM. This irrigation
-algorithm is based loosely on the implementation of Ozdogan et al.
-(2010).
+algorithm is based loosely on the implementation of 
+:ref:`Ozdogan et al. (2010) <Ozdoganetal2010>`.
 
 When irrigation is enabled, the crop areas of each grid cell are divided
 into irrigated and rainfed fractions according to a dataset of areas
-equipped for irrigation (Portmann et al. 2010). Irrigated and rainfed
-crops are placed on separate soil columns, so that irrigation is only
-applied to the soil beneath irrigated crops.
+equipped for irrigation (:ref:`Portmann et al. 2010 <Portmannetal2010>`). 
+Irrigated and rainfed crops are placed on separate soil columns, so that 
+irrigation is only applied to the soil beneath irrigated crops.
 
 In irrigated croplands, a check is made once per day to determine
 whether irrigation is required on that day. This check is made in the
 first time step after 6 AM local time. Irrigation is required if crop
-leaf area :math:`>` 0, and :math:`\beta_{t} < 1`, i.e., water is limiting for photosynthesis (see section 8.4).
+leaf area :math:`>` 0, and the available soil water is below a specified 
+threshold.
 
-If irrigation is required, the model computes the deficit between the
-current soil moisture content and a target soil moisture content; this
-deficit is the amount of water that will be added through irrigation.
-The target soil moisture content in each soil layer *i*
-(:math:`{s}_{target,i}`, kg m\ :sup:`-2`) is a weighted
-average of the minimum soil moisture content that results in no water
-stress in that layer (:math:`{s}_{o,i}`, kg m\ :sup:`-2`) and
-the soil moisture content at saturation in that layer (:math:`{w}_{sat,i}`, kg m\ :sup:`-2`):
+The soil moisture deficit :math:`D_{irrig}` is 
 
 .. math::
-   :label: 25.7) 
+   :label: 25.61) 
 
-   w_{target,i} =(1-0.7)\cdot w_{o,i} +0.7\cdot w_{sat,i}
+   D_{irrig} = \left\{
+   \begin{array}{lr}    
+   w_{thresh} - w_{avail} &\qquad w_{thresh} > w_{avail} \\
+   0 &\qquad w_{thresh} \le w_{avail}    
+   \end{array} \right\}
 
-:math:`{w}_{o,i}` is determined by inverting equation 8.19 in Oleson
-et al. (2010a) to solve for the value of :math:`{s}_{i}` (soil
-wetness) that makes :math:`\Psi_{i} = \Psi_{o}` (where :math:`\Psi_{i}` is
-the soil water matric potential and :math:`\Psi_{o}` is
-the soil water potential when stomata are fully open), and then
-converting this value to units of kg m\ :sup:`-2`.
-:math:`{w}_{sat,i}` is calculated simply by converting effective
-porosity (section 7.4) to units of kg m\ :sup:`-2`. The value 0.7
-was determined empirically, in order to give global, annual irrigation
-amounts that approximately match observed gross irrigation water use
-around the year 2000 (i.e., total water withdrawals for irrigation:
-:math:`\sim` 2500 – 3000 km\ :sup:`3` year\ :sup:`-1`
-(Shiklomanov 2000)). The total water deficit (:math:`{w}_{deficit}`,
-kg m\ :sup:`-2`) of the column is then determined by:
+where :math:`w_{thresh}` is the irrigation moisture threshold (mm) and 
+:math:`w_{avail}` is the available moisture (mm).  The moisture threshold 
+is
 
 .. math::
-   :label: 25.8) 
+   :label: 25.62) 
 
-   w_{deficit} =\sum _{i}\max \left(w_{target,i} -w_{liq,i} ,0\right)
+   w_{thresh} = f_{thresh} \left(w_{target} - w_{wilt}\right) + w_{wilt}
 
-where  :math:`{w}_{liq,i}` (kg m\ :sup:`-2`) is the current
-soil water content of layer *i* (Chapter 7). The max function means that
-a surplus in one layer cannot make up for a deficit in another layer.
-The sum is taken only over soil layers that contain roots. In addition,
-if the temperature of any soil layer is below freezing, then the sum
-only includes layers above the top-most frozen soil layer.
+where :math:`w_{target}` is the irrigation target soil moisture (mm) 
 
-The amount of water added to this column through irrigation is then
-equal to :math:`{w}_{deficit}`. This irrigation is applied at a
-constant rate over the following four hours. Irrigation water is applied
+.. math::
+   :label: 25.63) 
+
+   w_{target} = \sum_{j=1}^{N_{irr}} \theta_{target} \Delta z_{j} \ ,
+
+:math:`w_{wilt}` is the wilting point soil moisture (mm) 
+
+.. math::
+   :label: 25.64) 
+
+   w_{wilt} = \sum_{j=1}^{N_{irr}} \theta_{wilt} \Delta z_{j} \ ,
+
+and :math:`f_{thresh}` is a tuning parameter.  The available moisture in 
+the soil is 
+
+.. math::
+   :label: 25.65) 
+
+   w_{avail} = \sum_{j=1}^{N_{irr}} \theta_{j} \Delta z_{j} \ ,
+
+:math:`N_{irr}` is the index of the soil layer corresponding to a specified 
+depth :math:`z_{irrig}` (:numref:`Table Irrigation parameters`) and 
+:math:`\Delta z` is the thickness of the soil layer (section 
+:numref:`Vertical Discretization`).  :math:`\theta_{j}` is the 
+volumetric soil moisture in layer :math:`j` (section :numref:`Soil Water`).
+:math:`\theta_{target}` and 
+:math:`\theta_{wilt}` are the target and wilting point volumetric 
+soil moisture values, respectively, and are determined by inverting 
+:eq:`ZEqnNum316201` using soil matric 
+potential parameters :math:`\Psi_{target}` and :math:`\Psi_{wilt}` 
+(:numref:`Table Irrigation parameters`). After the soil moisture deficit 
+:math:`D_{irrig}` is calculated, irrigation in an amount equal to 
+:math:`\frac{D_{irrig}}{T_{irrig}}` (mm/s) is applied uniformly over 
+the irrigation period :math:`T_{irrig}` (s).  Irrigation water is applied
 directly to the ground surface, bypassing canopy interception (i.e.,
-added to  :math:`{q}_{grnd,liq}`: section 7.1). Added irrigation is
-removed from total liquid runoff ( :math:`{R}_{liq}`: Chapter 11),
-simulating removal from nearby rivers.
+added to  :math:`{q}_{grnd,liq}`: section :numref:`Canopy Water`). 
+
+To conserve mass, irrigation is removed from river water storage (Chapter 11).  
+When river water storage is inadequate to meet irrigation demand, 
+there are two options: 1) the additional water can be removed from the 
+ocean model, or 2) the irrigation demand can be reduced such that 
+river water storage is maintained above a specified threshold.  
+
+.. _Table Irrigation parameters:
+
+.. table:: Irrigation parameters
+
+ +--------------------------------------+-------------+
+ | Parameter                            |             |
+ +======================================+=============+
+ | :math:`f_{thresh}`                   |  1.0        |
+ +--------------------------------------+-------------+
+ | :math:`z_{irrig}`       (m)          |  0.6        |
+ +--------------------------------------+-------------+
+ | :math:`\Psi_{target}`   (mm)         | -3400       |
+ +--------------------------------------+-------------+
+ | :math:`\Psi_{wilt}`     (mm)         | -150000     |
+ +--------------------------------------+-------------+
+
+.. add a reference to surface data in chapter2
+  To accomplish this we downloaded
+  data of percent irrigated and percent rainfed corn, soybean, and
+  temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`),
+  available online from
+  *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*
+
+
+
+.. _The details about what is new in CLM4.5:
 
 The details about what is new in CLM4.5
 --------------------------------------------
+
+.. _Interactive irrigation for corn, temperate cereals, and soybean:
 
 Interactive irrigation for corn, temperate cereals, and soybean
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -506,7 +578,7 @@ exclusive in CLM4.0.
 In CLM4.5 we have reversed this situation. Now the irrigation model can
 be used only while running with CROP. To accomplish this we downloaded
 data of percent irrigated and percent rainfed corn, soybean, and
-temperate cereals (wheat, barley, and rye) (Portmann et al. 2010),
+temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`),
 available online from
 
 *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*
@@ -537,6 +609,8 @@ We intend surface datasets with 24 pfts only for CROP simulations with
 or without irrigation. In simulations without irrigation, the rainfed
 and irrigated crops merge into just rainfed crops at run time. Surface
 datasets with 16 pfts can be used for all other CLM simulations.
+
+.. _Interactive fertilization:
 
 Interactive fertilization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -573,6 +647,8 @@ the counter is reached.
 The crop fertilization scheme was developed in versions of the CLM prior
 to CLM4.5. In CLM4.5, crops with fertilization may be simulated over
 productive.
+
+.. _Biological nitrogen fixation for soybeans:
 
 Biological nitrogen fixation for soybeans
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -617,6 +693,8 @@ pool for use that time step. Nitrogen fixation occurs after the plant
 has accumulated 15%\ :math:`{GDD}_{mat}` and before
 75%\  :math:`{GDD}_{mat}`, so before grain fill begins.
 
+.. _Modified C\:N ratios for crops:
+
 Modified C:N ratios for crops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -635,6 +713,8 @@ resulting C:N ratio of the plant tissue is reflective of measurements at
 harvest. All C:N ratios were determined by calibration process, through
 comparisons of model output versus observations of plant carbon
 throughout the growth season.
+
+.. _Nitrogen retranslocation for crops:
 
 Nitrogen retranslocation for crops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -709,6 +789,8 @@ fine root, and reproductive pools.
 +----------------------------+--------+---------------------+-----------+
 | :math:`CN_{repr}^{f}`      | 50     | 40                  | 60        |
 +----------------------------+--------+---------------------+-----------+
+
+.. _Separate reproductive pool:
 
 Separate reproductive pool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

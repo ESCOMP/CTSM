@@ -1,17 +1,22 @@
-.. _rst_Surface Characterization and Model Input Requirements:
+.. _rst_Surface Characterization, Vertical Discretization, and Model Input Requirements:
 
-Surface Characterization and Model Input Requirements
-========================================================
+Surface Characterization, Vertical Discretization, and Model Input Requirements
+===================================================================================
+
+.. _Surface Characterization:
 
 Surface Characterization 
 -----------------------------
+
+.. _Surface Heterogeneity and Data Structure:
 
 Surface Heterogeneity and Data Structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spatial land surface heterogeneity in CLM is represented as a nested
 subgrid hierarchy in which grid cells are composed of multiple land
-units, snow/soil columns, and PFTs (Figure 2.1). Each grid cell can have
+units, snow/soil columns, and PFTs (:numref:`Figure CLM subgrid hierarchy`). 
+Each grid cell can have
 a different number of land units, each land unit can have a different
 number of columns, and each column can have multiple PFTs. The first
 subgrid level, the land unit, is intended to capture the broadest
@@ -43,15 +48,17 @@ single crop occupying each column. The urban land units have five
 columns (roof, sunlit walls and shaded walls, and pervious and
 impervious canyon floor) (Oleson et al. 2010b).
 
-Figure 2.1. Configuration of the CLM subgrid hierarchy.
+.. _Figure CLM subgrid hierarchy:
+
+.. Figure:: image1.png
+
+  Configuration of the CLM subgrid hierarchy.
 
 Note that the Crop land unit is only used when the model is run with the
 crop model active. Abbreviations: TBD – Tall Building District; HD –
 High Density; MD – Medium Density, G – Glacier, L – Lake, U – Urban, C –
 Crop, V – Vegetated, PFT – Plant Functional Type, I – Irrigated, U –
 Unirrigated .
-
-.. image:: image1.png
 
 The third subgrid level is referred to as the PFT level, but it also
 includes the treatment for bare ground. It is intended to capture the
@@ -62,7 +69,7 @@ structure may coexist on a single column. All fluxes to and from the
 surface are defined at the PFT level, as are the vegetation state
 variables (e.g. vegetation temperature and canopy water storage). On the
 crop land unit, several different crop types can be represented on each
-crop land unit column (see Chapter 20 for details).
+crop land unit column (see Chapter :numref:`rst_Crops and Irrigation` for details).
 
 In addition to state and flux variable data structures for conserved
 components at each subgrid level (e.g., energy, water, carbon), each
@@ -76,162 +83,179 @@ and the fraction of canopy that is wet are defined as physical state
 variables at the PFT level.
 
 The standard configuration of the model subgrid hierarchy is illustrated
-in Figure 2.1. Here, only four PFTs are shown associated with the single
+in :numref:`Figure CLM subgrid hierarchy`. Here, only four PFTs are shown 
+associated with the single
 column beneath the vegetated land unit but up to sixteen are possible.
 The crop land unit is present only when the crop model is active.
 
 Note that the biogeophysical processes related to soil and snow require
 PFT level properties to be aggregated to the column level. For example,
 the net heat flux into the ground is required as a boundary condition
-for the solution of snow/soil temperatures (Chapter 6). This column
+for the solution of snow/soil temperatures (Chapter :numref:`rst_Soil and Snow Temperatures`). This column
 level property must be determined by aggregating the net heat flux from
 all PFTs sharing the column. This is generally accomplished in the model
 by computing a weighted sum of the desired quantity over all PFTs whose
 weighting depends on the PFT area relative to all PFTs, unless otherwise
 noted in the text.
 
+.. _Vegetation Composition:
+
 Vegetation Composition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Vegetated surfaces are comprised of up to 15 possible plant functional
-types (PFTs) plus bare ground (Table 2.1). An additional PFT is
-added if the irrigation model is active and six additional PFTs are
-added if the crop model is active (Chapter 20). These plant types differ
-in leaf and stem optical properties that determine reflection,
-transmittance, and absorption of solar radiation (Table 3.1), root
+types (PFTs) plus bare ground (:numref:`Table Plant functional types`). An 
+additional PFT is added if 
+the irrigation model is active and six additional PFTs are added if the 
+crop model is active (Chapter :numref:`rst_Crops and Irrigation`). These 
+plant types differ in leaf and stem optical properties that determine reflection,
+transmittance, and absorption of solar radiation (:numref:`Table Plant functional type optical properties`), root
 distribution parameters that control the uptake of water from the soil
-(Table 8.3), aerodynamic parameters that determine resistance to heat,
-moisture, and momentum transfer (Table 5.1), and photosynthetic
+(:numref:`Table Plant functional type root distribution parameters`), aerodynamic parameters that determine resistance to heat,
+moisture, and momentum transfer (:numref:`Table Plant functional type aerodynamic parameters`), and photosynthetic
 parameters that determine stomatal resistance, photosynthesis, and
-transpiration (Tables 8.1, 8.2). The composition and abundance of PFTs
+transpiration (:numref:`Table Plant functional type (PFT) photosynthetic parameters`, 
+:numref:`Table Temperature dependence parameters for C3 photosynthesis`). The composition and abundance of PFTs
 within a grid cell can either be prescribed as time-invariant fields
 (e.g., using the present day dataset described in section 21.3.3) or can
 evolve with time if the model is run in transient landcover mode
-(Chapter 21).
+(Chapter :numref:`rst_Transient Landcover Change`).
 
-Table 2.1. Plant functional types
+.. _Table Plant functional types:
 
-+--------------------------------------------------------------+-------------------+
-| Plant functional type                                        | Acronym           |
-+==============================================================+===================+
-| Needleleaf evergreen tree – temperate                        | NET Temperate     |
-+--------------------------------------------------------------+-------------------+
-| Needleleaf evergreen tree - boreal                           | NET Boreal        |
-+--------------------------------------------------------------+-------------------+
-| Needleleaf deciduous tree – boreal                           | NDT Boreal        |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf evergreen tree – tropical                          | BET Tropical      |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf evergreen tree – temperate                         | BET Temperate     |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf deciduous tree – tropical                          | BDT Tropical      |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf deciduous tree – temperate                         | BDT Temperate     |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf deciduous tree – boreal                            | BDT Boreal        |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf evergreen shrub - temperate                        | BES Temperate     |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf deciduous shrub – temperate                        | BDS Temperate     |
-+--------------------------------------------------------------+-------------------+
-| Broadleaf deciduous shrub – boreal                           | BDS Boreal        |
-+--------------------------------------------------------------+-------------------+
-| C\ :sub:`3` arctic grass                                     | -                 |
-+--------------------------------------------------------------+-------------------+
-| C\ :sub:`3` grass                                            | -                 |
-+--------------------------------------------------------------+-------------------+
-| C\ :sub:`4` grass                                            | -                 |
-+--------------------------------------------------------------+-------------------+
-| C\ :sub:`3` Unmanaged Rainfed Crop                           | Crop R            |
-+--------------------------------------------------------------+-------------------+
-| :sup:`1`\ C\ :sub:`3` Unmanaged Irrigated Crop               | Crop I            |
-+--------------------------------------------------------------+-------------------+
-| :sup:`2`\ Rainfed Corn                                       | Corn R            |
-+--------------------------------------------------------------+-------------------+
-| :sup:`2`\ Irrigated Corn                                     | Corn I            |
-+--------------------------------------------------------------+-------------------+
-| :sup:`2`\ Rainfed Temperate Cereals                          | Temp Cereal R     |
-+--------------------------------------------------------------+-------------------+
-| :sup:`2`\ Irrigated Temperate Cereals                        | Temp Cereal I     |
-+--------------------------------------------------------------+-------------------+
-| :sup:`3`\ Rainfed Winter Cereals                             | Winter Cereal R   |
-+--------------------------------------------------------------+-------------------+
-| :sup:`3`\ Irrigated Winter Cereals                           | Winter Cereal I   |
-+--------------------------------------------------------------+-------------------+
-| :sup:`2`\ Rainfed Soybean                                    | Soybean R         |
-+--------------------------------------------------------------+-------------------+
-| :sup:`2`\ Irrigated Soybean                                  | Soybean I         |
-+--------------------------------------------------------------+-------------------+
+.. table:: Plant functional types
+ 
+ +--------------------------------------------------------------+-------------------+
+ | Plant functional type                                        | Acronym           |
+ +==============================================================+===================+
+ | Needleleaf evergreen tree – temperate                        | NET Temperate     |
+ +--------------------------------------------------------------+-------------------+
+ | Needleleaf evergreen tree - boreal                           | NET Boreal        |
+ +--------------------------------------------------------------+-------------------+
+ | Needleleaf deciduous tree – boreal                           | NDT Boreal        |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf evergreen tree – tropical                          | BET Tropical      |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf evergreen tree – temperate                         | BET Temperate     |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf deciduous tree – tropical                          | BDT Tropical      |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf deciduous tree – temperate                         | BDT Temperate     |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf deciduous tree – boreal                            | BDT Boreal        |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf evergreen shrub - temperate                        | BES Temperate     |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf deciduous shrub – temperate                        | BDS Temperate     |
+ +--------------------------------------------------------------+-------------------+
+ | Broadleaf deciduous shrub – boreal                           | BDS Boreal        |
+ +--------------------------------------------------------------+-------------------+
+ | C\ :sub:`3` arctic grass                                     | -                 |
+ +--------------------------------------------------------------+-------------------+
+ | C\ :sub:`3` grass                                            | -                 |
+ +--------------------------------------------------------------+-------------------+
+ | C\ :sub:`4` grass                                            | -                 |
+ +--------------------------------------------------------------+-------------------+
+ | C\ :sub:`3` Unmanaged Rainfed Crop                           | Crop R            |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`1`\ C\ :sub:`3` Unmanaged Irrigated Crop               | Crop I            |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`2`\ Rainfed Corn                                       | Corn R            |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`2`\ Irrigated Corn                                     | Corn I            |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`2`\ Rainfed Temperate Cereals                          | Temp Cereal R     |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`2`\ Irrigated Temperate Cereals                        | Temp Cereal I     |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`3`\ Rainfed Winter Cereals                             | Winter Cereal R   |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`3`\ Irrigated Winter Cereals                           | Winter Cereal I   |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`2`\ Rainfed Soybean                                    | Soybean R         |
+ +--------------------------------------------------------------+-------------------+
+ | :sup:`2`\ Irrigated Soybean                                  | Soybean I         |
+ +--------------------------------------------------------------+-------------------+
 
-:sup:`1`\ Only used if irrigation is active (Chapter 20).
-:sup:`2`\ Only used if crop model is active (Chapter 20).
-:sup:`3`\ Reserved for future implementations of crop model (Chapter 20).
+:sup:`1`\ Only used if irrigation is active (Chapter :numref:`rst_Crops and Irrigation`).
+:sup:`2`\ Only used if crop model is active (Chapter :numref:`rst_Crops and Irrigation`).
+:sup:`3`\ Reserved for future implementations of crop model (Chapter :numref:`rst_Crops and Irrigation`).
+
+.. _Vegetation Structure:
 
 Vegetation Structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Vegetation structure is defined by leaf and stem area indices
-(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ) (Table 2.2). Separate leaf and
-stem area indices and canopy heights are prescribed or calculated for each PFT. Daily leaf and stem area indices are obtained from gridded
-datasets of monthly values (section 2.2.3). Canopy top and bottom heights are also obtained from gridded datasets. However, these are
-currently invariant in space and time and were obtained from PFT-specific values (Bonan et al. 2002a). When the biogeochemistry model
-is active, vegetation state (LAI, SAI, canopy top and bottom heights) are calculated prognostically (see Chapter 14).
+(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ) 
+(:numref:`Table Prescribed plant functional type heights`). Separate leaf and
+stem area indices and canopy heights are prescribed or calculated for each PFT. Daily leaf 
+and stem area indices are obtained from griddeddatasets of monthly values (section 
+:numref:`Surface Data`). Canopy top and bottom heights are also obtained from gridded datasets. 
+However, these are currently invariant in space and time and were obtained from PFT-specific 
+values (:ref:`Bonan et al. 2002a <Bonanetal2002a>`). When the biogeochemistry model is active, 
+vegetation state (LAI, SAI, canopy top and bottom heights) are calculated prognostically 
+(see Chapter :numref:`rst_Vegetation Phenology and Turnover`).
 
-Table 2.2. Prescribed plant functional type heights
+.. _Table Prescribed plant functional type heights:
 
-+-----------------------------------+------------------------+------------------------+
-| Plant functional type             | :math:`z_{top}`  (m)   | :math:`z_{bot}`  (m)   |
-+===================================+========================+========================+
-| NET Temperate                     | 17                     | 8.5                    |
-+-----------------------------------+------------------------+------------------------+
-| NET Boreal                        | 17                     | 8.5                    |
-+-----------------------------------+------------------------+------------------------+
-| NDT Boreal                        | 14                     | 7                      |
-+-----------------------------------+------------------------+------------------------+
-| BET Tropical                      | 35                     | 1                      |
-+-----------------------------------+------------------------+------------------------+
-| BET temperate                     | 35                     | 1                      |
-+-----------------------------------+------------------------+------------------------+
-| BDT tropical                      | 18                     | 10                     |
-+-----------------------------------+------------------------+------------------------+
-| BDT temperate                     | 20                     | 11.5                   |
-+-----------------------------------+------------------------+------------------------+
-| BDT boreal                        | 20                     | 11.5                   |
-+-----------------------------------+------------------------+------------------------+
-| BES temperate                     | 0.5                    | 0.1                    |
-+-----------------------------------+------------------------+------------------------+
-| BDS temperate                     | 0.5                    | 0.1                    |
-+-----------------------------------+------------------------+------------------------+
-| BDS boreal                        | 0.5                    | 0.1                    |
-+-----------------------------------+------------------------+------------------------+
-| C\ :math:`{}_{3}` arctic grass    | 0.5                    | 0.01                   |
-+-----------------------------------+------------------------+------------------------+
-| C\ :math:`{}_{3}` grass           | 0.5                    | 0.01                   |
-+-----------------------------------+------------------------+------------------------+
-| C\ :math:`{}_{4}` grass           | 0.5                    | 0.01                   |
-+-----------------------------------+------------------------+------------------------+
-| Crop R                            | 0.5                    | 0.01                   |
-+-----------------------------------+------------------------+------------------------+
-| Crop I                            | 0.5                    | 0.01                   |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Corn R                  | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Corn I                  | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Temp Cereal R           | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Temp Cereal I           | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Winter Cereal R         | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Winter Cereal I         | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Soybean R               | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
-| :sup:`1`\ Soybean I               | -                      | -                      |
-+-----------------------------------+------------------------+------------------------+
+.. table:: Prescribed plant functional type heights
 
-:sup:`1`\ Determined by the crop model (Chapter 20)
+ +-----------------------------------+------------------------+------------------------+
+ | Plant functional type             | :math:`z_{top}`  (m)   | :math:`z_{bot}`  (m)   |
+ +===================================+========================+========================+
+ | NET Temperate                     | 17                     | 8.5                    |
+ +-----------------------------------+------------------------+------------------------+
+ | NET Boreal                        | 17                     | 8.5                    |
+ +-----------------------------------+------------------------+------------------------+
+ | NDT Boreal                        | 14                     | 7                      |
+ +-----------------------------------+------------------------+------------------------+
+ | BET Tropical                      | 35                     | 1                      |
+ +-----------------------------------+------------------------+------------------------+
+ | BET temperate                     | 35                     | 1                      |
+ +-----------------------------------+------------------------+------------------------+
+ | BDT tropical                      | 18                     | 10                     |
+ +-----------------------------------+------------------------+------------------------+
+ | BDT temperate                     | 20                     | 11.5                   |
+ +-----------------------------------+------------------------+------------------------+
+ | BDT boreal                        | 20                     | 11.5                   |
+ +-----------------------------------+------------------------+------------------------+
+ | BES temperate                     | 0.5                    | 0.1                    |
+ +-----------------------------------+------------------------+------------------------+
+ | BDS temperate                     | 0.5                    | 0.1                    |
+ +-----------------------------------+------------------------+------------------------+
+ | BDS boreal                        | 0.5                    | 0.1                    |
+ +-----------------------------------+------------------------+------------------------+
+ | C\ :math:`{}_{3}` arctic grass    | 0.5                    | 0.01                   |
+ +-----------------------------------+------------------------+------------------------+
+ | C\ :math:`{}_{3}` grass           | 0.5                    | 0.01                   |
+ +-----------------------------------+------------------------+------------------------+
+ | C\ :math:`{}_{4}` grass           | 0.5                    | 0.01                   |
+ +-----------------------------------+------------------------+------------------------+
+ | Crop R                            | 0.5                    | 0.01                   |
+ +-----------------------------------+------------------------+------------------------+
+ | Crop I                            | 0.5                    | 0.01                   |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Corn R                  | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Corn I                  | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Temp Cereal R           | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Temp Cereal I           | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Winter Cereal R         | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Winter Cereal I         | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Soybean R               | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+ | :sup:`1`\ Soybean I               | -                      | -                      |
+ +-----------------------------------+------------------------+------------------------+
+
+:sup:`1`\ Determined by the crop model (Chapter :numref:`rst_Crops and Irrigation`)
+
+.. _Phenology and vegetation burial by snow:
 
 Phenology and vegetation burial by snow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -240,11 +264,12 @@ When the biogeochemistry model is inactive, leaf and stem area indices
 (m\ :sup:`2` leaf area m\ :sup:`-2` ground area) are updated
 daily by linearly interpolating between monthly values. Monthly PFT leaf
 area index values are developed from the 1-km MODIS-derived monthly grid
-cell average leaf area index of Myneni et al. (2002), as described in
-Lawrence and Chase (2007). Stem area index is calculated from the
-monthly PFT leaf area index using the methods of Zeng et al. (2002). The
-leaf and stem area indices are adjusted for vertical burying by snow
-(Wang and Zeng 2009) as
+cell average leaf area index of :ref:`Myneni et al. (2002) <Mynenietal2002>`, 
+as described in :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. Stem area 
+ndex is calculated from the monthly PFT leaf area index using the methods of 
+:ref:`Zeng et al. (2002) <Zengetal2002>`. The leaf and stem area indices are 
+adjusted for vertical burying by snow (:ref:`Wang and Zeng 2009 <WangZeng2009>`) 
+as
 
 .. math::
    :label: 2.1 
@@ -261,78 +286,186 @@ snow, :math:`A` is the remaining exposed leaf or stem area,
    {f_{veg}^{sno} = \frac{z_{sno} -z_{bot} }{z_{top} -z_{bot} }         \qquad {\rm for\; tree\; and\; shrub}} \\ 
    {f_{veg}^{sno} = \frac{\min \left(z_{sno} ,\, z_{c} \right)}{z_{c} } \qquad {\rm for\; grass\; and\; crop}} 
 
-where :math:`z_{sno} -z_{bot} \ge 0,{\rm \; }0\le f_{veg}^{sno} \le 1`, :math:`z_{sno}`  is the depth of snow (m) (section 7.2), and
-:math:`z_{c} = 0.2` is the snow depth when short vegetation is assumed to be completely buried by snow (m). For numerical reasons, exposed leaf
-and stem area are set to zero if less than 0.05. If the sum of exposed leaf and stem area is zero, then the surface is treated as snow-covered
-ground.
+where :math:`z_{sno} -z_{bot} \ge 0,{\rm \; }0\le f_{veg}^{sno} \le 1`, :math:`z_{sno}`  is the depth of snow (m) 
+(Chapter :numref:`rst_Snow Hydrology`), and :math:`z_{c} = 0.2` is the snow depth when short vegetation is assumed to 
+be completely buried by snow (m). For numerical reasons, exposed leaf and stem area are set to zero if less than 
+0.05. If the sum of exposed leaf and stem area is zero, then the surface is treated as snow-covered ground.
+
+.. _Vertical Discretization:
+
+Vertical Discretization
+----------------------------
+..
+ (this was taken from Initialization; is it still needed?
+ Vegetated and glacier land units have fifteen vertical layers, while
+ lakes have ten. For soil points, temperature calculations are done over
+ all layers, :math:`N_{levgrnd} =15`, while hydrology calculations are
+ done over the top ten layers, :math:`N_{levsoi} =10`, the bottom five
+ layers being specified as bedrock. 
+
+.. _Soil Layers:
+
+Soil Layers
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The soil column can be discretized into an arbitrary number of layers.  The default 
+vertical discretization (:numref:`Table Soil layer structure`) uses 
+:math:`N_{levgrnd} = 25` layers, of which :math:`N_{levsoi} = 20` are hydrologically and 
+biogeochemically active.  The deepest 5 layers are only included in the thermodynamical 
+calculations (:ref:`Lawrence et al. 2008 <Lawrenceetal2008>`) described in Chapter 
+:numref:`rst_Soil and Snow Temperatures`.
+
+The layer structure of the soil is described by the node depth, :math:`z_{i}`  
+(m), the thickness of each layer, :math:`\Delta z_{i}`  (m), and the depths
+at the layer interfaces :math:`z_{h,\, i}`  (m).
+
+.. _Table Soil layer structure:
+
+.. table:: Soil layer structure
+
+ +---------------+------------------+------------------------+------------------------+
+ | Layer         | :math:`z_{i}`    | :math:`\Delta z_{i}`   | :math:`z_{h,\, i}`     |
+ +===============+==================+========================+========================+
+ |    1          |   0.010          |   0.020                |   0.020                |
+ +---------------+------------------+------------------------+------------------------+
+ |    2          |   0.040          |   0.040                |   0.060                |
+ +---------------+------------------+------------------------+------------------------+
+ |    3          |   0.090          |   0.060                |   0.120                |
+ +---------------+------------------+------------------------+------------------------+
+ |    4          |   0.160          |   0.080                |   0.200                |
+ +---------------+------------------+------------------------+------------------------+
+ |    5          |   0.260          |   0.120                |   0.320                |
+ +---------------+------------------+------------------------+------------------------+
+ |    6          |   0.400          |   0.160                |   0.480                |
+ +---------------+------------------+------------------------+------------------------+
+ |    7          |   0.580          |   0.200                |   0.680                |
+ +---------------+------------------+------------------------+------------------------+
+ |    8          |   0.800          |   0.240                |   0.920                |
+ +---------------+------------------+------------------------+------------------------+
+ |    9          |   1.060          |   0.280                |   1.200                |
+ +---------------+------------------+------------------------+------------------------+
+ |   10          |   1.360          |   0.320                |   1.520                |
+ +---------------+------------------+------------------------+------------------------+
+ |   11          |   1.700          |   0.360                |   1.880                |
+ +---------------+------------------+------------------------+------------------------+
+ |   12          |   2.080          |   0.400                |   2.280                |
+ +---------------+------------------+------------------------+------------------------+
+ |   13          |   2.500          |   0.440                |   2.720                |
+ +---------------+------------------+------------------------+------------------------+
+ |   14          |   2.990          |   0.540                |   3.260                |
+ +---------------+------------------+------------------------+------------------------+
+ |   15          |   3.580          |   0.640                |   3.900                |
+ +---------------+------------------+------------------------+------------------------+
+ |   16          |   4.270          |   0.740                |   4.640                |
+ +---------------+------------------+------------------------+------------------------+
+ |   17          |   5.060          |   0.840                |   5.480                |
+ +---------------+------------------+------------------------+------------------------+
+ |   18          |   5.950          |   0.940                |   6.420                |
+ +---------------+------------------+------------------------+------------------------+
+ |   19          |   6.940          |   1.040                |   7.460                |
+ +---------------+------------------+------------------------+------------------------+
+ |   20          |   8.030          |   1.140                |   8.600                |
+ +---------------+------------------+------------------------+------------------------+
+ |   21          |   9.795          |   2.390                |  10.990                |
+ +---------------+------------------+------------------------+------------------------+
+ |   22          |  13.328          |   4.676                |  15.666                |
+ +---------------+------------------+------------------------+------------------------+
+ |   23          |  19.483          |   7.635                |  23.301                |
+ +---------------+------------------+------------------------+------------------------+
+ |   24          |  28.871          |  11.140                |  34.441                |
+ +---------------+------------------+------------------------+------------------------+
+ |   25          |  41.998          |  15.115                |  49.556                |
+ +---------------+------------------+------------------------+------------------------+
+
+Layer node depth (:math:`z_{i}` ), thickness (:math:`\Delta z_{i}` ), and depth at 
+layer interface (:math:`z_{h,\, i}` ) for default soil column. All in meters.
+
+.. _Depth to Bedrock:
+
+Depth to Bedrock
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The hydrologically and biogeochemically active portion of the soil column can be 
+restricted to a thickness less than that of the maximum soil depth.  By providing 
+a depth-to-bedrock dataset, which may vary spatially, the number of layers used 
+in the hydrologic and biogeochemical calculations, :math:`N_{bedrock}`, may be 
+specified, subject to the constraint :math:`N_{bedrock} \le N_{levsoi}` 
+
+.. _Model Input Requirements:
 
 Model Input Requirements
 ----------------------------
 
+.. _Atmospheric Coupling:
+
 Atmospheric Coupling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The current state of the atmosphere (Table 2.3) at a given time step is
+The current state of the atmosphere (:numref:`Table Atmospheric input to land model`) 
+at a given time step is
 used to force the land model. This atmospheric state is provided by an
 atmospheric model in coupled mode or from an observed dataset in offline
-mode (Chapter 26). The land model then initiates a full set of
+mode (Chapter :numref:`rst_Offline Mode`). The land model then initiates a full set of
 calculations for surface energy, constituent, momentum, and radiative
 fluxes. The land model calculations are implemented in two steps. The
 land model proceeds with the calculation of surface energy, constituent,
 momentum, and radiative fluxes using the snow and soil hydrologic states
 from the previous time step. The land model then updates the soil and
 snow hydrology calculations based on these fluxes. These fields are
-passed to the atmosphere (Table 2.4). The albedos sent to the atmosphere
+passed to the atmosphere (:numref:`Table Land model output to atmospheric model`). The albedos sent to the atmosphere
 are for the solar zenith angle at the next time step but with surface
 conditions from the current time step.
 
-Table 2.3. Atmospheric input to land model
+.. _Table Atmospheric input to land model:
 
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Field                                                | variable name                                  | units                                           |                          
-+======================================================+================================================+=================================================+
-| :sup:`1`\ Reference height                           | :math:`z'_{atm}`                               | m                                               |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Zonal wind at :math:`z_{atm}`                        | :math:`u_{atm}`                                | m s\ :sup:`-1`                                  |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Meridional wind at :math:`z_{atm}`                   | :math:`v_{atm}`                                | m s\ :sup:`-1`                                  |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Potential temperature                                | :math:`\overline{\theta _{atm} }`              | K                                               |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Specific humidity at :math:`z_{atm}`                 | :math:`q_{atm}`                                | kg kg\ :sup:`-1`                                |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Pressure at :math:`z_{atm}`                          | :math:`P_{atm}`                                | Pa                                              |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Temperature at :math:`z_{atm}`                       | :math:`T_{atm}`                                | K                                               |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Incident longwave radiation                          | :math:`L_{atm} \, \downarrow`                  | W m\ :sup:`-2`                                  |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| :sup:`2`\ Liquid precipitation                       | :math:`q_{rain}`                               | mm s\ :sup:`-1`                                 |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| :sup:`2`\ Solid precipitation                        | :math:`q_{sno}`                                | mm s\ :sup:`-1`                                 |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Incident direct beam visible solar radiation         | :math:`S_{atm} \, \downarrow _{vis}^{\mu }`    | W m\ :sup:`-2`                                  |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Incident direct beam near-infrared solar radiation   | :math:`S_{atm} \, \downarrow _{nir}^{\mu }`    | W m\ :sup:`-2`                                  |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Incident diffuse visible solar radiation             | :math:`S_{atm} \, \downarrow _{vis}`           | W m\ :sup:`-2`                                  |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Incident diffuse near-infrared solar radiation       | :math:`S_{atm} \, \downarrow _{nir}`           | W m\ :sup:`-2`                                  |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| Carbon dioxide (CO:sub:`2`) concentration            | :math:`c_{a}`                                  | ppmv                                            |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| :sup:`3`\ Aerosol deposition rate                    | :math:`D_{sp}`                                 | kg m\ :sup:`-2` s\ :sup:`-1`                    |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| :sup:`4`\ Nitrogen deposition rate                   | :math:`NF_{ndep\_ s{\it min}n}`                | g (N) m\ :sup:`-2` yr\ :sup:`-1`                |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
-| :sup:`5`\ Lightning frequency                        | :math:`I_{l}`                                  | flash km\ :sup:`-2` hr\ :sup:`-1`               |
-+------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+.. table:: Atmospheric input to land model
+
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Field                                                | variable name                                  | units                                           |
+ +======================================================+================================================+=================================================+
+ | :sup:`1`\ Reference height                           | :math:`z'_{atm}`                               | m                                               |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Zonal wind at :math:`z_{atm}`                        | :math:`u_{atm}`                                | m s\ :sup:`-1`                                  |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Meridional wind at :math:`z_{atm}`                   | :math:`v_{atm}`                                | m s\ :sup:`-1`                                  |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Potential temperature                                | :math:`\overline{\theta _{atm} }`              | K                                               |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Specific humidity at :math:`z_{atm}`                 | :math:`q_{atm}`                                | kg kg\ :sup:`-1`                                |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Pressure at :math:`z_{atm}`                          | :math:`P_{atm}`                                | Pa                                              |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Temperature at :math:`z_{atm}`                       | :math:`T_{atm}`                                | K                                               |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Incident longwave radiation                          | :math:`L_{atm} \, \downarrow`                  | W m\ :sup:`-2`                                  |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | :sup:`2`\ Liquid precipitation                       | :math:`q_{rain}`                               | mm s\ :sup:`-1`                                 |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | :sup:`2`\ Solid precipitation                        | :math:`q_{sno}`                                | mm s\ :sup:`-1`                                 |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Incident direct beam visible solar radiation         | :math:`S_{atm} \, \downarrow _{vis}^{\mu }`    | W m\ :sup:`-2`                                  |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Incident direct beam near-infrared solar radiation   | :math:`S_{atm} \, \downarrow _{nir}^{\mu }`    | W m\ :sup:`-2`                                  |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Incident diffuse visible solar radiation             | :math:`S_{atm} \, \downarrow _{vis}`           | W m\ :sup:`-2`                                  |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Incident diffuse near-infrared solar radiation       | :math:`S_{atm} \, \downarrow _{nir}`           | W m\ :sup:`-2`                                  |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Carbon dioxide (CO:sub:`2`) concentration            | :math:`c_{a}`                                  | ppmv                                            |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | :sup:`3`\ Aerosol deposition rate                    | :math:`D_{sp}`                                 | kg m\ :sup:`-2` s\ :sup:`-1`                    |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | :sup:`4`\ Nitrogen deposition rate                   | :math:`NF_{ndep\_ s{\it min}n}`                | g (N) m\ :sup:`-2` yr\ :sup:`-1`                |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | :sup:`5`\ Lightning frequency                        | :math:`I_{l}`                                  | flash km\ :sup:`-2` hr\ :sup:`-1`               |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
 
 :sup:`1`\ The atmospheric reference height received from the
 atmospheric model :math:`z'_{atm}`  is assumed to be the height above
 the surface as defined by the roughness length :math:`z_{0}`  plus
 displacement height :math:`d`. Thus, the reference height used for flux
-computations (Chapter 5) is :math:`z_{atm} =z'_{atm} +z_{0} +d`. The
+computations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) 
+is :math:`z_{atm} =z'_{atm} +z_{0} +d`. The
 reference heights for temperature, wind, and specific humidity
 (:math:`z_{atm,\, h}` , :math:`z_{atm,\, {\it m}}` ,
 :math:`z_{atm,\, w}` ) are required. These are set equal
@@ -365,7 +498,7 @@ sea-surface temperatures and emissions (Lamarque et al. 2010) for
 short-lived gases and aerosols; observed concentrations were specified
 for methane, N\ :sub:`2`\ O, the ozone-depleting substances (CFCs)
 ,and CO\ :sub:`2`. The fluxes are used by the snow-related
-parameterizations (Chapters 3 and 7).
+parameterizations (Chapters :numref:`rst_Surface Albedos` and numref:`rst_Snow Hydrology`).
 
 :sup:`4`\ The nitrogen deposition rate is required by the
 biogeochemistry model when active and represents the total deposition of
@@ -388,7 +521,7 @@ required but is calculated directly from
 :math:`\rho _{atm} =\frac{P_{atm} -0.378e_{atm} }{R_{da} T_{atm} }` 
 where :math:`P_{atm}`  is atmospheric pressure (Pa), :math:`e_{atm}`  is
 atmospheric vapor pressure (Pa), :math:`R_{da}`  is the gas constant for
-dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (Table 2.6), and
+dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`), and
 :math:`T_{atm}`  is the atmospheric temperature (K). The atmospheric
 vapor pressure :math:`e_{atm}`  is derived from atmospheric specific
 humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`) as
@@ -398,58 +531,62 @@ The O\ :sub:`2` partial pressure (Pa) is required but is
 calculated from molar ratio and the atmospheric pressure
 :math:`P_{atm}`  as :math:`o_{i} =0.209P_{atm}` .
 
-Table 2.4. Land model output to atmospheric model
+.. _Table Land model output to atmospheric model:
 
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Field                                 | Variable name                                  | units                                                        |
-+=======================================+================================================+==============================================================+
-| :sup:`1`\ Latent heat flux            | :math:`\lambda _{vap} E_{v} +\lambda E_{g}`    | W m\ :sup:`-2`                                               |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Sensible heat flux                    | :math:`H_{v} +H_{g}`                           | W m\ :sup:`-2`                                               |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Water vapor flux                      | :math:`E_{v} +E_{g}`                           | mm s\ :sup:`-1`                                              |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Zonal momentum flux                   | :math:`\tau _{x}`                              | kg m\ :sup:`-1` s\ :sup:`-2`                                 |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Meridional momentum flux              | :math:`\tau _{y}`                              | kg m\ :sup:`-1` s\ :sup:`-2`                                 |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Emitted longwave radiation            | :math:`L\, \uparrow`                           | W m\ :sup:`-2`                                               |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Direct beam visible albedo            | :math:`I\, \uparrow _{vis}^{\mu }`             | -                                                            |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Direct beam near-infrared albedo      | :math:`I\, \uparrow _{nir}^{\mu }`             | -                                                            |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Diffuse visible albedo                | :math:`I\, \uparrow _{vis}`                    | -                                                            |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Diffuse near-infrared albedo          | :math:`I\, \uparrow _{nir}`                    | -                                                            |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Absorbed solar radiation              | :math:`\vec{S}`                                | W m\ :sup:`-2`                                               |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Radiative temperature                 | :math:`T_{rad}`                                | K                                                            |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Temperature at 2 meter height         | :math:`T_{2m}`                                 | K                                                            |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Specific humidity at 2 meter height   | :math:`q_{2m}`                                 | kg kg\ :sup:`-1`                                             |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Snow water equivalent                 | :math:`W_{sno}`                                | m                                                            |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Aerodynamic resistance                | :math:`r_{am}`                                 | s m\ :sup:`-1`                                               |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Friction velocity                     | :math:`u_{*}`                                  | m s\ :sup:`-1`                                               |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| :sup:`2`\ Dust flux                   | :math:`F_{j}`                                  | kg m\ :sup:`-2` s\ :sup:`-1`                                 |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
-| Net ecosystem exchange                | NEE                                            | kgCO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`                     |
-+---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+.. table:: Land model output to atmospheric model
+
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Field                                 | Variable name                                  | units                                                        |
+ +=======================================+================================================+==============================================================+
+ | :sup:`1`\ Latent heat flux            | :math:`\lambda _{vap} E_{v} +\lambda E_{g}`    | W m\ :sup:`-2`                                               |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Sensible heat flux                    | :math:`H_{v} +H_{g}`                           | W m\ :sup:`-2`                                               |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Water vapor flux                      | :math:`E_{v} +E_{g}`                           | mm s\ :sup:`-1`                                              |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Zonal momentum flux                   | :math:`\tau _{x}`                              | kg m\ :sup:`-1` s\ :sup:`-2`                                 |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Meridional momentum flux              | :math:`\tau _{y}`                              | kg m\ :sup:`-1` s\ :sup:`-2`                                 |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Emitted longwave radiation            | :math:`L\, \uparrow`                           | W m\ :sup:`-2`                                               |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Direct beam visible albedo            | :math:`I\, \uparrow _{vis}^{\mu }`             | -                                                            |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Direct beam near-infrared albedo      | :math:`I\, \uparrow _{nir}^{\mu }`             | -                                                            |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Diffuse visible albedo                | :math:`I\, \uparrow _{vis}`                    | -                                                            |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Diffuse near-infrared albedo          | :math:`I\, \uparrow _{nir}`                    | -                                                            |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Absorbed solar radiation              | :math:`\vec{S}`                                | W m\ :sup:`-2`                                               |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Radiative temperature                 | :math:`T_{rad}`                                | K                                                            |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Temperature at 2 meter height         | :math:`T_{2m}`                                 | K                                                            |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Specific humidity at 2 meter height   | :math:`q_{2m}`                                 | kg kg\ :sup:`-1`                                             |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Snow water equivalent                 | :math:`W_{sno}`                                | m                                                            |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Aerodynamic resistance                | :math:`r_{am}`                                 | s m\ :sup:`-1`                                               |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Friction velocity                     | :math:`u_{*}`                                  | m s\ :sup:`-1`                                               |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | :sup:`2`\ Dust flux                   | :math:`F_{j}`                                  | kg m\ :sup:`-2` s\ :sup:`-1`                                 |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Net ecosystem exchange                | NEE                                            | kgCO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`                     |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
 
 :sup:`1`\ :math:`\lambda _{vap}`  is the latent heat of
-vaporization (J kg\ :sup:`-1`) (Table 2.6) and :math:`\lambda`  is
+vaporization (J kg\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\lambda`  is
 either the latent heat of vaporization :math:`\lambda _{vap}`  or latent
 heat of sublimation :math:`\lambda _{sub}`  (J kg\ :sup:`-1`)
-(Table 2.6) depending on the liquid water and ice content of the top
+(:numref:`Table Physical constants`) depending on the liquid water and ice content of the top
 snow/soil layer (section 5.4).
 
 :sup:`2`\ There are :math:`j=1,\ldots ,4` dust transport bins.
+
+.. _Initialization:
 
 Initialization
 ^^^^^^^^^^^^^^^^^^^^
@@ -468,11 +605,7 @@ fields that are required from the restart or initial conditions files
 can be obtained by examining the code. Arbitrary initial conditions are
 specified as follows.
 
-Vegetated and glacier land units have fifteen vertical layers, while
-lakes have ten. For soil points, temperature calculations are done over
-all layers, :math:`N_{levgrnd} =15`, while hydrology calculations are
-done over the top ten layers, :math:`N_{levsoi} =10`, the bottom five
-layers being specified as bedrock. Soil points are initialized with
+Soil points are initialized with
 surface ground temperature :math:`T_{g}`  and soil layer temperature
 :math:`T_{i}` , for :math:`i=1,\ldots ,N_{levgrnd}` , of 274 K,
 vegetation temperature :math:`T_{v}`  of 283 K, no snow or canopy water
@@ -504,16 +637,19 @@ ice contents are initialized as :math:`w_{liq,\, i} =0` and
 :math:`w_{liq,\, i} =\Delta z_{i} \rho _{liq} \theta _{i}`  and
 :math:`w_{ice,\, i} =0` for :math:`T_{i} >T_{f}` , where
 :math:`\rho _{ice}`  and :math:`\rho _{liq}`  are the densities of ice
-and liquid water (kg m\ :sup:`-3`) (Table 2.6), and :math:`T_{f}` 
-is the freezing temperature of water (K) (Table 2.6). All vegetated and
+and liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`T_{f}` 
+is the freezing temperature of water (K) (:numref:`Table Physical constants`). All vegetated and
 glacier land units are initialized with water stored in the unconfined
 aquifer and unsaturated soil :math:`W_{a} =4000` mm and water table
 depth :math:`z_{\nabla }`  at five meters below the soil column.
 
+.. _Surface Data:
+
 Surface Data
 ^^^^^^^^^^^^^^^^^^
 
-Required surface data for each land grid cell are listed in Table 2.5
+Required surface data for each land grid cell are listed in 
+:numref:`Table Surface data required for CLM and their base spatial resolution`
 and include the glacier, lake, and urban fractions of the grid cell
 (vegetated and crop occupy the remainder), the fractional cover of each
 plant functional type (PFT), monthly leaf and stem area index and canopy
@@ -523,53 +659,55 @@ elevation, biogenic volatile organic compounds (BVOCs) emissions
 factors, population density, gross domestic production, peat area
 fraction, and peak month of agricultural burning. Optional surface data
 include crop irrigation and managed crops. All fields are aggregated to
-the model’s grid from high-resolution input datasets (Table 2.5) that
+the model’s grid from high-resolution input datasets (
+:numref:`Table Surface data required for CLM and their base spatial resolution`) that
 are obtained from a variety of sources described below.
 
-Table 2.5. Surface data required for CLM and their base spatial
-resolution
+.. _Table Surface data required for CLM and their base spatial resolution:
 
-+--------------------------------------------+---------------------------+
-| Surface Field                              | Resolution                |
-+============================================+===========================+
-| Percent glacier                            | 0.05\ :sup:`o`            |
-+--------------------------------------------+---------------------------+
-| Percent lake and lake depth                | 0.05\ :sup:`o`            |
-+--------------------------------------------+---------------------------+
-| Percent urban                              | 0.05\ :sup:`o`            |
-+--------------------------------------------+---------------------------+
-| Percent plant functional types (PFTs)      | 0.05\ :sup:`o`            |
-+--------------------------------------------+---------------------------+
-| Monthly leaf and stem area index           | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Canopy height (top, bottom)                | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Soil color                                 | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Percent sand, percent clay                 | 0.083\ :sup:`o`           |
-+--------------------------------------------+---------------------------+
-| Soil organic matter density                | 0.083\ :sup:`o`           |
-+--------------------------------------------+---------------------------+
-| Maximum fractional saturated area          | 0.125\ :sup:`o`           |
-+--------------------------------------------+---------------------------+
-| Elevation                                  | 1km                       |
-+--------------------------------------------+---------------------------+
-| Slope                                      | 1km                       |
-+--------------------------------------------+---------------------------+
-| Biogenic Volatile Organic Compounds        | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Crop Irrigation                            | 0.083\ :sup:`o`           |
-+--------------------------------------------+---------------------------+
-| Managed crops                              | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Population density                         | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Gross domestic production                  | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Peat area fraction                         | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
-| Peak month of agricultural waste burning   | 0.5\ :sup:`o`             |
-+--------------------------------------------+---------------------------+
+.. table:: Surface data required for CLM and their base spatial resolution
+
+ +--------------------------------------------+---------------------------+
+ | Surface Field                              | Resolution                |
+ +============================================+===========================+
+ | Percent glacier                            | 0.05\ :sup:`o`            |
+ +--------------------------------------------+---------------------------+
+ | Percent lake and lake depth                | 0.05\ :sup:`o`            |
+ +--------------------------------------------+---------------------------+
+ | Percent urban                              | 0.05\ :sup:`o`            |
+ +--------------------------------------------+---------------------------+
+ | Percent plant functional types (PFTs)      | 0.05\ :sup:`o`            |
+ +--------------------------------------------+---------------------------+
+ | Monthly leaf and stem area index           | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Canopy height (top, bottom)                | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Soil color                                 | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Percent sand, percent clay                 | 0.083\ :sup:`o`           |
+ +--------------------------------------------+---------------------------+
+ | Soil organic matter density                | 0.083\ :sup:`o`           |
+ +--------------------------------------------+---------------------------+
+ | Maximum fractional saturated area          | 0.125\ :sup:`o`           |
+ +--------------------------------------------+---------------------------+
+ | Elevation                                  | 1km                       |
+ +--------------------------------------------+---------------------------+
+ | Slope                                      | 1km                       |
+ +--------------------------------------------+---------------------------+
+ | Biogenic Volatile Organic Compounds        | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Crop Irrigation                            | 0.083\ :sup:`o`           |
+ +--------------------------------------------+---------------------------+
+ | Managed crops                              | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Population density                         | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Gross domestic production                  | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Peat area fraction                         | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
+ | Peak month of agricultural waste burning   | 0.5\ :sup:`o`             |
+ +--------------------------------------------+---------------------------+
 
 At the base spatial resolution of 0.05\ :sup:`o`, the percentage of
 each PFT is defined with respect to the vegetated portion of the grid
@@ -584,9 +722,10 @@ The percentage glacier mask was derived from vector data of global
 glacier and ice sheet spatial coverage. Vector data for glaciers (ice
 caps, icefields and mountain glaciers) were taken from the first
 globally complete glacier inventory, the Randolph Glacier Inventory
-version 1.0 (RGIv1.0: Arendt et al. 2012). Vector data for the Greenland
-Ice Sheet were provided by Frank Paul and Tobias Bolch (University of
-Zurich: Rastner et al. 2012). Antarctic Ice Sheet data were provided by
+version 1.0 (RGIv1.0: :ref:`Arendt et al. 2012 <Arendtetal2012>`). 
+Vector data for the Greenland Ice Sheet were provided by Frank Paul and 
+Tobias Bolch (University of Zurich: :ref:`Rastner et al. 2012 <Rastneretal2012>`). 
+Antarctic Ice Sheet data were provided by
 Andrew Bliss (University of Alaska) and were extracted from the
 Scientific Committee on Antarctic Research (SCAR) Antarctic Digital
 Database version 5.0. Floating ice is only provided for the Antarctic
@@ -611,75 +750,80 @@ elevation are needed when running CLM4 with multiple glacier elevation
 classes.
 
 Percent lake and lake depth are area-averaged from the 90-second
-resolution data of Kourzeneva (2009, 2010) to the 0.05\ :sup:`o`
+resolution data of :ref:`Kourzeneva (2009, 2010) <Kourzeneva2009>` to the 0.05\ :sup:`o`
 resolution using the MODIS land-mask. Percent urban is derived from
 LandScan 2004, a population density dataset derived from census data,
 nighttime lights satellite observations, road proximity and slope
-(Dobson et al. 2000) as described by Jackson et al. (2010) at 1km
+(:ref:`Dobson et al. 2000 <Dobsonetal2000>`) as described by 
+:ref:`Jackson et al. (2010) <Jacksonetal2010>` at 1km
 resolution and aggregated to 0.05\ :sup:`o`. A number of urban
 radiative, thermal, and morphological fields are also required and are
-obtained from Jackson et al. (2010). Their description can be found in
-Table 3 of the Community Land Model Urban (CLMU) technical note (Oleson
-et al. 2010b).
+obtained from :ref:`Jackson et al. (2010) <Jacksonetal2010>`. Their description can be found in
+Table 3 of the Community Land Model Urban (CLMU) technical note (:ref:`Oleson
+et al. 2010b <Olesonetal2010b>`).
 
 Percent PFTs are derived from MODIS satellite data as described in
-Lawrence and Chase (2007) (section 21.3.3). Prescribed PFT leaf area
-index is derived from the MODIS satellite data of Myneni et al. (2002)
-using the de-aggregation methods described in Lawrence and Chase (2007)
+:ref:`Lawrence and Chase (2007) <LawrenceChase2007>` (section 21.3.3). 
+Prescribed PFT leaf area index is derived from the MODIS satellite data of 
+:ref:`Myneni et al. (2002) <Mynenietal2002>` using the de-aggregation methods 
+described in :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`
 (section 2.2.3). Prescribed PFT stem area index is derived from PFT leaf
-area index phenology combined with the methods of Zeng et al. (2002).
-Prescribed canopy top and bottom heights are from Bonan (1996) as
-described in Bonan et al. (2002b). If the biogeochemistry model is
+area index phenology combined with the methods of :ref:`Zeng et al. (2002) <Zengetal2002>`.
+Prescribed canopy top and bottom heights are from :ref:`Bonan (1996) <Bonan1996>` as
+described in :ref:`Bonan et al. (2002b) <Bonanetal2002b>`. If the biogeochemistry model is
 active, it supplies the leaf and stem area index and canopy top and
 bottom heights dynamically, and the prescribed values are ignored.
 
-Soil color determines dry and saturated soil albedo (section 3.2). Soil
-colors are from Lawrence and Chase (2007) (section 3.2).
+Soil color determines dry and saturated soil albedo (section :numref:`Ground Albedos`). 
+Soil colors are from :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`.
 
 The soil texture and organic matter content determine soil thermal and
 hydrologic properties (sections 6.3 and 7.4.1). The International
 Geosphere-Biosphere Programme (IGBP) soil dataset (Global Soil Data Task
 2000) of 4931 soil mapping units and their sand and clay content for
 each soil layer were used to create a mineral soil texture dataset
-(Bonan et al. 2002b). Soil organic matter data is merged from two
-sources. The majority of the globe is from ISRIC-WISE (Batjes, 2006).
+:ref:`(Bonan et al. 2002b) <Bonanetal2002b>`. Soil organic matter data is merged from two
+sources. The majority of the globe is from ISRIC-WISE (:ref:`Batjes, 2006 <Batjes2006>`).
 The high latitudes come from the 0.25\ :sup:`o` version of the
-Northern Circumpolar Soil Carbon Database (Hugelius et al. 2012). Both
+Northern Circumpolar Soil Carbon Database (:ref:`Hugelius et al. 2012 <Hugeliusetal2012>`). Both
 datasets report carbon down to 1m depth. Carbon is partitioned across
-the top seven CLM4 layers (:math:`\sim`\ 1m depth) as in Lawrence and
-Slater (2008).
+the top seven CLM4 layers (:math:`\sim`\ 1m depth) as in 
+:ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`.
 
 The maximum fractional saturated area (:math:`f_{\max }` ) is used in
 determining surface runoff and infiltration (section 7.3). Maximum
 fractional saturated area at 0.125\ :sup:`o` resolution is
 calculated from 1-km compound topographic indices (CTIs) based on the
-USGS HYDRO1K dataset (Verdin and Greenlee 1996) following the algorithm
-in Niu et al. (2005). :math:`f_{\max }`  is the ratio between the number
+USGS HYDRO1K dataset (:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`) 
+following the algorithm in :ref:`Niu et al. (2005) <Niuetal2005>`. 
+:math:`f_{\max }`  is the ratio between the number
 of 1-km pixels with CTIs equal to or larger than the mean CTI and the
 total number of pixels in a 0.125\ :sup:`o` grid cell. See
-section 7.3.1 and Li et al. (2013b) for further details. Slope and
-elevation are also obtained from the USGS HYDRO1K 1-km dataset (Verdin
-and Greenlee 1996). Slope is used in the River Transport Model (Chapter
-11) and in the surface water parameterization (section 7.3.2), and
+section 7.3.1 and :ref:`Li et al. (2013b) <Lietal2013b>` for further details. Slope and
+elevation are also obtained from the USGS HYDRO1K 1-km dataset 
+(:ref:`Verdin and Greenlee 1996 <VerdinGreenlee1996>`).  Slope is used in the 
+surface water parameterization (section :numref:`Surface Water Storage`), and
 elevation is used to calculate the grid cell standard deviation of
-topography for the snow cover fraction parameterization (section 7.2.1).
+topography for the snow cover fraction parameterization (section :numref:`Snow Covered Area Fraction`).
 
 Biogenic Volatile Organic Compounds emissions factors are from the Model
 of Emissions of Gases and Aerosols from Nature version 2.1 (MEGAN2.1;
-Guenther et al. 2012).
+:ref:`Guenther et al. 2012 <Guentheretal2012>`).
 
 The default list of PFTs includes an unmanaged crop treated as a second
-C3 grass (Table 2.1). The unmanaged crop has grid cell fractional cover
-assigned from MODIS satellite data (Lawrence and Chase 2007). A managed
+C3 grass (:numref:`Table Plant functional types`). The unmanaged crop has grid cell fractional cover
+assigned from MODIS satellite data (:ref:`Lawrence and Chase (2007) <LawrenceChase2007>`). A managed
 crop option uses grid cell fractional cover from the present-day crop
-dataset of Ramankutty and Foley (1998) (CLM4CNcrop). Managed crops are
-assigned in the proportions given by Ramankutty and Foley (1998) without
+dataset of :ref:`Ramankutty and Foley (1998) <RamankuttyFoley1998>` 
+(CLM4CNcrop). Managed crops are assigned in the proportions given by 
+:ref:`Ramankutty and Foley (1998) <RamankuttyFoley1998>` without
 exceeding the area previously assigned to the unmanaged crop. The
 unmanaged crop continues to occupy any of its original area that remains
 and continues to be handled just by the CN part of CLM4CNcrop. The
 managed crop types (corn, soybean, and temperate cereals) were chosen
 based on the availability of corresponding algorithms in AgroIBIS
-(Kucharik et al. 2000; Kucharik and Brye 2003). Temperate cereals
+(:ref:`Kucharik et al. 2000 <Kuchariketal2000>`; 
+:ref:`Kucharik and Brye 2003 <KucharikBrye2003>`). Temperate cereals
 include wheat, barley, and rye here. All temperate cereals are treated
 as summer crops (like spring wheat, for example) at this time. Winter
 cereals (such as winter wheat) may be introduced in a future version of
@@ -695,12 +839,13 @@ not share soil columns and thus permit for differences in land
 management between crops.
 
 CLM includes the option to irrigate cropland areas that are equipped for
-irrigation. The application of irrigation responds dynamically to
-climate (see Chapter 20). In CLM, irrigation is implemented for the C3
-generic crop only. When irrigation is enabled, the cropland area of each
-grid cell is divided into an irrigated and unirrigated fraction
-according to a dataset of areas equipped for irrigation (Siebert et al.
-2005). The area of irrigated cropland in each grid cell is given by the
+irrigation. The application of irrigation responds dynamically to climate 
+(see Chapter :numref:`rst_Crops and Irrigation`). In CLM, irrigation is 
+implemented for the C3 generic crop only. When irrigation is enabled, the 
+cropland area of each grid cell is divided into an irrigated and unirrigated 
+fraction according to a dataset of areas equipped for irrigation 
+(:ref:`Siebert et al. (2005) <Siebertetal2005>`). The area of irrigated 
+cropland in each grid cell is given by the
 smaller of the grid cell’s total cropland area, according to the default
 CLM4 dataset, and the grid cell’s area equipped for irrigation. The
 remainder of the grid cell’s cropland area (if any) is then assigned to
@@ -708,7 +853,7 @@ unirrigated cropland. Irrigated and unirrigated crops are placed on
 separate soil columns, so that irrigation is only applied to the soil
 beneath irrigated crops.
 
-Several input datasets are required for the fire model (Li et al. 2013a)
+Several input datasets are required for the fire model (:ref:`Li et al. 2013a <Lietal2013a>`)
 including population density, gross domestic production, peat area
 fraction, and peak month of agricultural waste burning. Population
 density at 0.5\ :sup:`o` resolution for 1850-2100 combines 5-min
@@ -717,18 +862,20 @@ Database of the Global Environment version 3.1 (HYDEv3.1) with
 0.5\ :sup:`o` resolution population density data for 1990, 1995,
 2000, and 2005 from the Gridded Population of the World version 3
 dataset (GPWv3) (CIESIN, 2005). Gross Domestic Production (GDP) per
-capita in 2000 at 0.5\ :sup:`o` is from Van Vuuren et al. (2006),
+capita in 2000 at 0.5\ :sup:`o` is from :ref:`Van Vuuren et al. (2006) <VanVuurenetal2006>`,
 which is the base-year GDP data for IPCC-SRES and derived from
 country-level World Bank’s World Development Indicators (WDI) measured
-in constant 1995 US$ (World Bank, 2004) and the UN Statistics Database
-(UNSTAT, 2005). The peatland area fraction at 0.5\ :sup:`o`
+in constant 1995 US$ (:ref:`World Bank, 2004 <WorldBank2004>`) and the UN Statistics Database
+(:ref:`UNSTAT, 2005 <UNSTAT2005>`). The peatland area fraction at 0.5\ :sup:`o`
 resolution is derived from three vector datasets: peatland data in
-Indonesia and Malaysian Borneo (Olson et al. 2001); peatland data in
-Canada (Tarnocai et al. 2011); and bog, fen and mire data in boreal
+Indonesia and Malaysian Borneo (:ref:`Olson et al. 2001 <Olsonetal2001>`); peatland data in
+Canada (:ref:`Tarnocai et al. 2011 <Tarnocaietal2011>`); and bog, fen and mire data in boreal
 regions (north of 45\ :sup:`o`\ N) outside Canada provided by the
-Global Lakes and Wetlands Database (GLWD) (Lehner and Döll, 2004). The
-climatological peak month for agricultural waste burning is from van der
-Werf et al. (2010).
+Global Lakes and Wetlands Database (GLWD) (:ref:`Lehner and Döll, 2004 <LehnerDoll2004>`). The
+climatological peak month for agricultural waste burning is from :ref:`van der
+Werf et al. (2010) <vanderWerfetal2010>`.
+
+.. _Adjustable Parameters and Physical Constants:
 
 Adjustable Parameters and Physical Constants
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -737,10 +884,13 @@ Values of certain adjustable parameters inherent in the biogeophysical
 or biogeochemical parameterizations have either been obtained from the
 literature or calibrated based on comparisons with observations. These
 are described in the text. Physical constants, generally shared by all
-of the components in the coupled modeling system, are presented in Table
-2.6.
+of the components in the coupled modeling system, are presented in 
+:numref:`Table Physical constants`.
 
-.. csv-table:: Table 2.6. Physical constants
+
+.. _Table Physical constants:
+
+.. csv-table:: Physical constants
    :header: "description", "name", "value", "units"
    :widths: 40, 20, 20, 20
 
