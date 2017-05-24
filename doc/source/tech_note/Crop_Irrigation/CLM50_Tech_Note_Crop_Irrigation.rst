@@ -282,14 +282,14 @@ phase 3. Other allocation coefficients change to:
 .. math::
    :label: ZEqnNum833921 
 
-   \begin{array}{l} 
-   {a_{leaf} =a_{leaf}^{i,3} {\rm \; \; \; when\; \; \; }a_{leaf}^{i,3} \le a_{leaf}^{f} {\rm \; \; \; else...}} \\ 
-   {a_{leaf} =a_{leaf} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} {\rm \; \; \; where\; \; \; }\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1} \\ 
-   {} \\ 
-   {a_{livestem} =a_{livestem}^{i,3} {\rm \; \; \; when\; \; \; }a_{livestem}^{i,3} \le a_{livestem}^{f} {\rm \; \; \; else...}} \\ 
-   {a_{livestem} =a_{livestem} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} {\rm \; \; \; where\; \; \; }\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1} \\ 
-   {} \\ 
-   {a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf} } 
+   \begin{array}{lr} 
+   a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le a_{leaf}^{f} \quad {\rm else} \\ 
+   a_{leaf} =a_{leaf} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1 \\ 
+    \\ 
+   a_{livestem} =a_{livestem}^{i,3} & {\rm when} \quad a_{livestem}^{i,3} \le a_{livestem}^{f} \quad {\rm else} \\ 
+   a_{livestem} =a_{livestem} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1 \\ 
+    \\ 
+   a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf} 
    \end{array}
 
 where :math:`a_{leaf}^{i,3}`  and :math:`a_{livestem}^{i,3}`  (initial
