@@ -82,6 +82,12 @@ Axelsson, E., and Axelsson, B. 1986. Changes in carbon allocation
 patterns in spruce and pine trees following irrigation and
 fertilization. Tree Phys. 2:189-204.
 
+.. _BadgerandDirmeyer2015:
+
+Badger, A.M., and Dirmeyer, P.A., 2015. Climate response to Amazon forest
+replacement by heterogeneous crop cover. Hydrol. Earth. Syst. Sci. 19:4547-
+4557. 
+
 .. _Bairdetal2004:
 
 Baird, A.J., Beckwith, C.W., Waldron, S. and Waddington, J.M., 2004.
@@ -989,6 +995,12 @@ Levis, S., Bonan, G., Kluzek, E., Thornton, P., Jones, A., Sacks, W.,
 and Kucharik, C 2012. Interactive crop management in the Community Earth
 System Model (CESM1): Seasonal influences on land-atmosphere fluxes. J.
 Climate 25: 4839-4859. DOI:10.1175/JCLI-D-11-00446.1.
+
+.. _Levisetal2016:
+
+Levis, S., Badger, A., Drewniak, B., Nevison, C., Ren, X. 2016. CLMcrop
+yields and water requirements: avoided impacts by choosing RCP 4.5 over 8.5.
+Climatic Change. DOI:10.1007/s10584-016-1654-9. 
 
 .. _Lietal2000:
 
