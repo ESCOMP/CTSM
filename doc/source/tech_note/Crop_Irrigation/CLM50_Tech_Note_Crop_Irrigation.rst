@@ -9,8 +9,7 @@ Summary of CLM5.0 updates relative to the CLM4.5
 We describe here the complete crop and irrigation parameterizations that
 appear in CLM5.0. Corresponding information for CLM4.5 appeared on the
 CLM4.5 web site in a pdf document independent of the CLM4.5 Technical
-Note (Oleson et al. 2010a). The CLM4.0 crop model description also
-appeared in Levis et al. (2012).
+Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`). 
 
 CLM5.0 includes the following updates to the CROP option, where CROP
 refers to the interactive crop management model and is included by default with the BGC configuration:
@@ -21,7 +20,7 @@ refers to the interactive crop management model and is included by default with 
 
 - Fertilization rates updated based on crop type and geographic region
 
-- Irrigation updates
+- New Irrigation triggers
 
 - Phenological triggers vary by latitude for some crop types
 
@@ -39,7 +38,7 @@ refers to the interactive crop management model and is included by default with 
 
 
 These updates appear in detail in the sections below. Many also appear in
-Levis et al. (2016).
+Levis et al. (:ref:`2016 <Levisetal2016>`).
 
 .. _The crop model:
 
@@ -62,13 +61,14 @@ biogeophysical and biogeochemical effects not only of natural but also
 human-managed land cover.
 
 AgroIBIS is a state-of-the-art land surface model with options to
-simulate dynamic vegetation (Kucharik et al. 2000) and interactive
-crop management (Kucharik and Brye 2003). The interactive crop
+simulate dynamic vegetation (:ref:`Kucharik et al. 2000 <Kuchariketal2000>`) and interactive
+crop management (:ref:`Kucharik and Brye 2003 <KucharikBrye2003>`). The interactive crop
 management parameterizations from AgroIBIS (March 2003 version) were
 coupled as a proof-of-concept to the Community Land Model version 3
-[CLM3.0, Oleson et al. (2004)] (not published), then coupled to the
-CLM3.5 (Levis et al. 2009) and later released to the community with
-CLM4CN (Levis et al. 2012) and CLM4.5.
+[CLM3.0, :ref:`Oleson et al. (2004) <Olesonetal2004>`] (not published), then coupled to the
+CLM3.5 (:ref:`Levis et al. 2009 <Levisetal2009>`) and later released to the community with
+CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), with additional updates 
+available by request after the release of CLM4.5 (:ref:`Levis et al. 2016 <Levisetal2016>`).
 
 With interactive crop management and, therefore, a more accurate
 representation of agricultural landscapes, we hope to improve the CLM’s
@@ -76,39 +76,37 @@ simulated biogeophysics and biogeochemistry. These advances may improve
 fully coupled simulations with the Community Earth System Model (CESM),
 while helping human societies answer questions about changing food,
 energy, and water resources in response to climate, environmental, land
-use, and land management change (e.g., Kucharik and Brye 2003; Lobell et al. 2006).
+use, and land management change (e.g., :ref:`Kucharik and Brye 2003 <KucharikBrye2003>; Lobell et al. 2006 <Lobelletal2006>`).
 
 .. _Crop plant functional types:
 
 Crop plant functional types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+To allow crops to coexist with natural vegetation in a grid cell, the 
+vegetated land unit is separated into a naturally vegetated land unit and
+a managed crop land unit. Unlike the plant functional types (pfts) in the
+naturally vegetated land unit, the managed crop pfts in the managed crop 
+land unit do not share soil columns and thus permit for differences in the 
+land management between crops. Crop grid cell coverage is assigned from 
+satellite data (similar to all natural pfts), and the managed crop type
+proportions within the crop area is based on the dataset created by
+(:ref:`Portmann et al. 2010 <Portmannetal2010>`) for present day and
+extrapolated through time using the LUMIP data (insert citation). Each 
+actively managed crop type has a rainfed and an irrigated pft that are on
+independent soil columns. Actively managed crop types (Table XX) are chosen 
+based on the availability of corresponding algorithms in AgroIBIS and as 
+developed by Badger and Dirmeyer (:ref:`2015 <BadgerandDirmeyer2015>`) and
+described by Levis et al. (:ref:`2016 <Levisetal2016>`). A parameterization 
+for winter cereals is developed but is not included in CLM5.0 due to the 
+inability to distinguish between winter and summer cereals in the LUMIP dataset (insert citation). 
+
 CLM’s default list of plant functional types (pfts) includes an
-unmanaged crop (Table 2.1) treated as a second C3 grass. The unmanaged
+unmanaged crop (Table 2.1) treated as a second C3 grass, as well as several 
+additional crop types that do not have associated parameters. The unmanaged
 crop has grid cell coverage assigned from satellite data, as do all
-natural pfts when CLM’s dynamic vegetation model (CNDV; Castillo et al. 2012) is not active.
+natural pfts when CLM’s crop model is not active. [include remapping text here].
 
-The new crop pfts used in the CLM get grid cell coverage from the
-present-day crop dataset of Portmann et al. (2010). We assign these
-managed crops in the proportions given by Portmann et al. (2010) without
-exceeding the area previously assigned to the unmanaged crop. The
-unmanaged crop continues to occupy any of its original area that remains
-and continues to be handled just by the carbon/nitrogen cycling part of
-the CLM (i.e., CN). The managed crop types (corn, soybean, and temperate
-cereals) were chosen based on the availability of corresponding
-algorithms in AgroIBIS. Temperate cereals include wheat, barley, and rye
-here. We treat all temperate cereals as summer crops (like spring wheat,
-for example) at this time. We may introduce winter cereals (such as
-winter wheat) in a future version of the model.
-
-To allow crops to coexist with natural vegetation in a grid cell and be
-treated by separate models (i.e., CLM4.5CNcrop versus CLM4.5CNDV), we
-separate the vegetated land unit into a naturally vegetated land unit
-and a human managed land unit. Plant functional types in the naturally
-vegetated land unit share one soil column and compete for water (default
-CLM setting). Managed crop PFTs in the human managed land unit do not
-share soil columns and thus permit for differences in land management
-between crops.
 
 .. _Phenology:
 
