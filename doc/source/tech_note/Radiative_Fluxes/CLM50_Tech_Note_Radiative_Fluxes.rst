@@ -32,14 +32,17 @@ albedos (section 3.2). :math:`L` and :math:`S` are the exposed leaf area
 index and stem area index (section 2.1.4). :math:`K` is the optical
 depth of direct beam per unit leaf and stem area (section 3.1).
 
-Figure 4.1. Schematic diagram of (a) direct beam radiation, (b) diffuse
-solar radiation, and (c) longwave radiation absorbed, transmitted, and
-reflected by vegetation and ground.
+.. Figure 4.1. Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground.
+
+.. _Figure schematic diagram of radiation:
+
+.. Figure:: image1.png
+
+ Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground.
 
 For clarity, terms involving :math:`T^{n+1} -T^{n}`  are not shown in
 (c).
 
-.. image:: image1.png
 
 The total solar radiation absorbed by the vegetation and ground is
 

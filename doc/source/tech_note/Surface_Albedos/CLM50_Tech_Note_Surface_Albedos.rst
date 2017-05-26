@@ -41,7 +41,7 @@ equations are solved to calculate the fluxes, per unit incident flux,
 absorbed by the vegetation, reflected by the vegetation, and transmitted
 through the vegetation for direct and diffuse radiation and for visible
 (:math:`<` 0.7\ :math:`\mu {\rm m}`) and near-infrared
-(:math:`ge` 0.7\ :math:`\mu {\rm m}`) wavebands. The absorbed
+(:math:`\geq` 0.7\ :math:`\mu {\rm m}`) wavebands. The absorbed
 radiation is partitioned to sunlit and shaded fractions of the canopy.
 The optical parameters :math:`G\left(\mu \right)`, :math:`\bar{\mu }`,
 :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`  are calculated
@@ -156,15 +156,15 @@ Using this approximation, for vertical leaves (:math:`\chi _{L} =-1`,
 and for horizontal leaves (:math:`\chi _{L} =1`,
 :math:`\bar{\theta }=0^{{\rm o}}` ) ,
 :math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} =\alpha _{\Lambda }` ,
-which agree with both Dickinson (1983) and Sellers (1985). For random
+which agree with both :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>`. For random
 (spherically distributed) leaves (:math:`\chi _{L} =0`,
 :math:`\bar{\theta }=60^{{\rm o}}` ), the approximation yields
 :math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={5\mathord{\left/ {\vphantom {5 8}} \right. \kern-\nulldelimiterspace} 8} \alpha _{\Lambda } +{3\mathord{\left/ {\vphantom {3 8}} \right. \kern-\nulldelimiterspace} 8} \tau _{\Lambda }` 
-whereas the approximate solution of Dickinson (1983) is
+whereas the approximate solution of :ref:`Dickinson (1983) <Dickinson1983>` is
 :math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} \alpha _{\Lambda } +{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} \tau _{\Lambda }` .
 This discrepancy arises from the fact that a spherical leaf angle
 distribution has a true mean leaf inclination
-:math:`\bar{\theta }\approx 57` (Campbell and Norman 1998) in equation ,
+:math:`\bar{\theta }\approx 57` :ref:`(Campbell and Norman 1998) <CampbellNorman1998>` in equation ,
 while :math:`\bar{\theta }=60` in equation . The upscatter for direct
 beam radiation is
 
@@ -178,7 +178,11 @@ where the single scattering albedo is
 .. math::
    :label: 3.16
 
-   \begin{array}{rcl} {a_{s} \left(\mu \right)_{\Lambda } } & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \int _{0}^{1}\frac{\mu 'G\left(\mu \right)}{\mu G\left(\mu '\right)+\mu 'G\left(\mu \right)}  d\mu '} \\ {} & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \frac{G\left(\mu \right)}{\mu \phi _{2} +G\left(\mu \right)} \left[1-\frac{\mu \phi _{1} }{\mu \phi _{2} +G\left(\mu \right)} \ln \left(\frac{\mu \phi _{1} +\mu \phi _{2} +G\left(\mu \right)}{\mu \phi _{1} } \right)\right].} \end{array}
+   \begin{array}{rcl} {a_{s} \left(\mu \right)_{\Lambda } } & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \int _{0}^{1}\frac{\mu 'G\left(\mu \right)}{\mu G\left(\mu '\right)+\mu 'G\left(\mu \right)}  d\mu '} \\ {} & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \frac{G\left(\mu \right)}{\min (\mu \phi _{2} +G\left(\mu \right),1e-6)} \left[1-\frac{\mu \phi _{1} }{\min (\mu \phi _{2} +G\left(\mu \right),1e-6)} \ln \left(\frac{\mu \phi _{1} +\min (\mu \phi _{2} +G\left(\mu \right),1e-6)}{\mu \phi _{1} } \right)\right].} \end{array}
+
+Note here the restriction on :math:`\mu \phi _{2} +G\left(\mu \right)`.  We have seen cases where small values
+can cause unrealistic single scattering albedo associated with the log calculation, 
+thereby eventually causing a negative soil albedo.
 
 The upward diffuse fluxes per unit incident direct beam and diffuse flux
 (i.e., the surface albedos) are
@@ -206,7 +210,7 @@ radiation, respectively, are
 
    I\, \downarrow _{\Lambda } =h_{9} s_{1} +\frac{h_{10} }{s_{1} } .
 
-With reference to Figure 4.1, the direct beam flux transmitted through
+With reference to :numref:`Figure schematic diagram of radiation`, the direct beam flux transmitted through
 the canopy, per unit incident flux, is :math:`e^{-K\left(L+S\right)}` ,
 and the direct beam and diffuse fluxes absorbed by the vegetation, per
 unit incident flux, are
@@ -223,7 +227,7 @@ unit incident flux, are
 
 These fluxes are partitioned to the sunlit and shaded canopy using an
 analytical solution to the two-stream approximation for sunlit and
-shaded leaves (Dai et al. 2004), as described by Bonan et al. (2011).
+shaded leaves :ref:`(Dai et al. 2004) <Daietal2004>`, as described by :ref:`Bonan et al. (2011) <Bonanetal2011>`.
 The absorption of direct beam radiation by sunlit leaves is
 
 .. math::
@@ -277,8 +281,8 @@ with
    a_{2} =h_{9} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{10} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right. \kern-\nulldelimiterspace} s_{1} } }{K-h} \right].
 
 The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
-:math:`h`, :math:`s_{1}` , and :math:`s_{2}`  are from Sellers (1985)
-[note the error in :math:`h_{4}`  in Sellers (1985)]:
+:math:`h`, :math:`s_{1}` , and :math:`s_{2}`  are from :ref:`Sellers (1985) <Sellers1985>`
+[note the error in :math:`h_{4}`  in :ref:`Sellers (1985) <Sellers1985>`]:
 
 .. math::
    :label: 3.31
@@ -417,11 +421,11 @@ The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
 
 Plant functional type optical properties (:numref:`Table Plant functional type optical properties`) 
 for trees and shrubs are from :ref:`Dorman and Sellers (1989) <DormanSellers1989>`. Leaf and stem optical
-properties (placeVIS and NIR reflectance and transmittance) were derived
+properties (VIS and NIR reflectance and transmittance) were derived
 for grasslands and crops from full optical range spectra of measured
 optical properties (:ref:`Asner et al. 1998 <Asneretal1998>`). Optical properties for
-intercepted snow (:numref:`Table Intercepted snow optical properties`) are 
-:ref:`from Sellers et al. (1986) <Sellersetal1986>`.
+intercepted snow (:numref:`Table Intercepted snow optical properties`) are from
+:ref:`Sellers et al. (1986) <Sellersetal1986>`.
 
 .. _Table Plant functional type optical properties:
 
@@ -458,25 +462,23 @@ intercepted snow (:numref:`Table Intercepted snow optical properties`) are
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
  | C\ :sub:`4` grass                | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Crop R                           | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | C\ :sub:`3` Crop                 | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Crop I                           | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Temp Corn                        | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Corn R                           | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Spring Wheat                     | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Corn I                           | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Temp Soybean                     | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Temp Cereal R                    | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Cotton                           | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Temp Cereal I                    | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Rice                             | 0.65                 | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Winter Cereal R                  | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Sugarcane                        | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Winter Cereal I                  | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Tropical Corn                    | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Soybean R                        | -0.5                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
- +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Soybean I                        | -0.5                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Tropical Soybean                 | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
 
 .. _Table Intercepted snow optical properties:
