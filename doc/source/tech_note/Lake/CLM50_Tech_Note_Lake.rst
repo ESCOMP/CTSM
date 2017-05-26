@@ -4,17 +4,17 @@ Lake Model
 =============
 
 The lake model, denoted the *Lake, Ice, Snow, and Sediment Simulator*
-(LISSS), is from :numref:`Subin et al. (2012a) <Subinetal2012a>`. 
+(LISSS), is from :ref:`Subin et al. (2012a) <Subinetal2012a>`. 
 It includes extensive modifications to the lake code of 
-:numref:`Zeng et al. (2002) <Zengetal20002>` used in CLM
+:ref:`Zeng et al. (2002) <Zengetal2002>` used in CLM
 versions 2 through 4, which utilized concepts from the lake models of
-:numref:`Bonan (1996) <Bonan1996>`, 
-:numref:`Henderson-Sellers  (1985) <Henderson-Sellers1985>`, 
-:numref:`Henderson-Sellers  (1986) <Henderson-Sellers1986>`, 
-:numref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`, 
-and the coupled lake-atmosphere model of :numref:`Hostetler et al. (1993) <Hostetleretal1993>`, :numref:`Hostetler et al. (1993) <Hostetleretal1993>`. 
+:ref:`Bonan (1996) <Bonan1996>`, 
+:ref:`Henderson-Sellers  (1985) <Henderson-Sellers1985>`, 
+:ref:`Henderson-Sellers  (1986) <Henderson-Sellers1986>`, 
+:ref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`, 
+and the coupled lake-atmosphere model of :ref:`Hostetler et al. (1993) <Hostetleretal1993>`, :ref:`Hostetler et al. (1993) <Hostetleretal1993>`. 
 Lakes have spatially variable depth prescribed in the surface data (section 
-:numref:`External Data Lake`); the surface data optionally includes lake optical
+:ref:`External Data Lake`); the surface data optionally includes lake optical
 extinction coeffient and horizontal fetch, currently only used for site
 simulations. Lake physics includes freezing and thawing in the lake
 body, resolved snow layers, and “soil” and bedrock layers below the lake
