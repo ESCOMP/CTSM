@@ -17,13 +17,15 @@ slower decomposition rates, based on the Century model (Parton et al.
 allow :math:`{n}_{lev}` to equal 1, as in CLM4.0, or to equal the
 number of soil levels used for the soil hydrology (default 10).
 
-Figure 15.1. Schematic of decomposition model in CLM.
+.. _Figure Schematic of decomposition model in CLM:
+
+.. figure:: image1.png
+
+ Schematic of decomposition model in CLM.
 
 Model is structured to allow different representations of the soil C and
 N decomposition cascade, as well as a vertically-explicit treatment of
 soil biogeochemistry.
-
-.. image:: image1.png
 
 For the single-level model structure, the fundamental equation for
 carbon balance of the decomposing pools is:
@@ -60,11 +62,13 @@ pools. Further discussion of the vertical distribution of carbon inputs
 Discussion of the vertical model and analysis of both decomposition
 structures is in Koven et al (2013).
 
-Figure 15.2. Pool structure, transitions, respired fractions (numbers at
-end of arrows), and turnover times (numbers in boxes) for the 2
-alternate soil decomposition models included in CLM.
+.. _Figure Pool structure:
 
-.. image:: image2.png
+.. figure:: image2.png
+
+ Pool structure, transitions, respired fractions (numbers at 
+ end of arrows), and turnover times (numbers in boxes) for the 2
+ alternate soil decomposition models included in CLM.
 
 CLM-CN Pool Structure, Rate Constants and Parameters
 ---------------------------------------------------------
@@ -90,39 +94,39 @@ estimate exponential decay rates and respiration fractions (Thornton,
 conducted at constant temperature and under moist conditions with
 relatively high mineral nitrogen concentrations, and so the resulting
 rate constants are assumed not limited by the availability of water or
-mineral nitrogen. Table 15.1 lists the base decomposition rates for each
+mineral nitrogen. :numref:`Table Decomposition rate constants` lists the base decomposition rates for each
 litter and SOM pool, as well as a base rate for physical fragmentation
 for the coarse woody debris pool (CWD).
 
-Table 15.1. Decomposition rate constants for litter and SOM pools, C:N
-ratios, and acceleration parameters (see section 15.8 for explanation)
-for the CLM-CN decomposition pool structure.
+.. _Table Decomposition rate constants:
 
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-|                          | Biome-BGC                                      | CLM-CN                                        |               |                                         |
-+==========================+================================================+===============================================+===============+=========================================+
-|                          | :math:`{k}_{disc1}`\ (d\ :sup:`-1`)            | :math:`{k}_{disc2}` (hr\ :sup:`-1`)           | *C:N ratio*   | Acceleration term (:math:`{a}_{i}`)     |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{Lit1}`       | 0.7                                            | 0.04892                                       | -             | 1                                       |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{Lit2}`       | 0.07                                           | 0.00302                                       | -             | 1                                       |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{Lit3}`       | 0.014                                          | 0.00059                                       | -             | 1                                       |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{SOM1}`       | 0.07                                           | 0.00302                                       | 12            | 1                                       |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{SOM2}`       | 0.014                                          | 0.00059                                       | 12            | 1                                       |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{SOM3}`       | 0.0014                                         | 0.00006                                       | 10            | 5                                       |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{SOM4}`       | 0.0001                                         | 0.000004                                      | 10            | 70                                      |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
-| :math:`{k}_{CWD}`        | 0.001                                          | 0.00004                                       | -             | 1                                       |
-+--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+.. table:: Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the CLM-CN decomposition pool structure.
 
-The first column of Table 15.1 gives the rates as used for the Biome-BGC
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ |                          | Biome-BGC                                      | CLM-CN                                        |               |                                         |
+ +==========================+================================================+===============================================+===============+=========================================+
+ |                          | :math:`{k}_{disc1}`\ (d\ :sup:`-1`)            | :math:`{k}_{disc2}` (hr\ :sup:`-1`)           | *C:N ratio*   | Acceleration term (:math:`{a}_{i}`)     |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{Lit1}`       | 0.7                                            | 0.04892                                       | -             | 1                                       |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{Lit2}`       | 0.07                                           | 0.00302                                       | -             | 1                                       |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{Lit3}`       | 0.014                                          | 0.00059                                       | -             | 1                                       |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{SOM1}`       | 0.07                                           | 0.00302                                       | 12            | 1                                       |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{SOM2}`       | 0.014                                          | 0.00059                                       | 12            | 1                                       |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{SOM3}`       | 0.0014                                         | 0.00006                                       | 10            | 5                                       |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{SOM4}`       | 0.0001                                         | 0.000004                                      | 10            | 70                                      |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+ | :math:`{k}_{CWD}`        | 0.001                                          | 0.00004                                       | -             | 1                                       |
+ +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
+
+The first column of :numref:`Table Decomposition rate constants` gives the rates as used for the Biome-BGC
 model, which uses a discrete-time model with a daily timestep. The
-second column of Table 15.1 shows the rates transformed for a one-hour
+second column of :numref:`Table Decomposition rate constants` shows the rates transformed for a one-hour
 discrete timestep typical of CLM-CN. The transformation is based on the
 conversion of the initial discrete-time value (:math:`{k}_{disc1}`)
 first to a continuous time value (:math:`{k}_{cont}`), then to the
@@ -150,27 +154,29 @@ or SOM pools that is released as CO\ :sub:`2` due to heterotrophic
 respiration. Respiration fractions and exponential decay rates are
 estimated simultaneously from the results of microcosm decomposition
 experiments (Thornton, 1998). The same values are used in CLM-CN and
-Biome-BGC (Table 15.2).
+Biome-BGC (:numref:`Table Respiration fractions for litter and SOM pools`).
 
-Table 15.2. Respiration fractions for litter and SOM pools
+.. _Table Respiration fractions for litter and SOM pools:
 
-+---------------------------+-----------------------+
-| Pool                      | *rf*                  |
-+===========================+=======================+
-|  :math:`{rf}_{Lit1}`      | 0.39                  |
-+---------------------------+-----------------------+
-|  :math:`{rf}_{Lit2}`      | 0.55                  |
-+---------------------------+-----------------------+
-|  :math:`{rf}_{Lit3}`      | 0.29                  |
-+---------------------------+-----------------------+
-|  :math:`{rf}_{SOM1}`      | 0.28                  |
-+---------------------------+-----------------------+
-|  :math:`{rf}_{SOM2}`      | 0.46                  |
-+---------------------------+-----------------------+
-|  :math:`{rf}_{SOM3}`      | 0.55                  |
-+---------------------------+-----------------------+
-|  :math:`{rf}_{SOM4}`      |  :math:`{1.0}^{a}`    |
-+---------------------------+-----------------------+
+.. table:: Respiration fractions for litter and SOM pools
+
+ +---------------------------+-----------------------+
+ | Pool                      | *rf*                  |
+ +===========================+=======================+
+ |  :math:`{rf}_{Lit1}`      | 0.39                  |
+ +---------------------------+-----------------------+
+ |  :math:`{rf}_{Lit2}`      | 0.55                  |
+ +---------------------------+-----------------------+
+ |  :math:`{rf}_{Lit3}`      | 0.29                  |
+ +---------------------------+-----------------------+
+ |  :math:`{rf}_{SOM1}`      | 0.28                  |
+ +---------------------------+-----------------------+
+ |  :math:`{rf}_{SOM2}`      | 0.46                  |
+ +---------------------------+-----------------------+
+ |  :math:`{rf}_{SOM3}`      | 0.55                  |
+ +---------------------------+-----------------------+ 
+ |  :math:`{rf}_{SOM4}`      |  :math:`{1.0}^{a}`    |
+ +---------------------------+-----------------------+
 
 :sup:`a`:math:`{}^{a}` The respiration fraction for pool SOM4 is 1.0 by
 definition: since there is no pool downstream of SOM4, the entire carbon
@@ -184,49 +190,51 @@ decay model; the two structures differ in the number of pools, the
 connections between those pools, the turnover times of the pools, and
 the respired fraction during each transition (Figure 15.2). The turnover
 times are different for the Century-based pool structure, following
-those described in Parton et al. (1988) (Table 15.3).
+those described in Parton et al. (1988) (:numref:`Table Turnover times`).
 
-Table 15.3. Turnover times, C:N ratios, and acceleration parameters (see
-section 15.8 for explanation) for the Century-based decomposition
-cascade.
+.. _Table Turnover times:
 
-+------------+------------------------+-------------+-------------------------------------------+
-|            | Turnover time (year)   | C:N ratio   | Acceleration term (:math:`{a}_{i}`)       |
-+============+========================+=============+===========================================+
-| CWD        | 4.1                    | -           | 1                                         |
-+------------+------------------------+-------------+-------------------------------------------+
-| Litter 1   | 0.066                  | -           | 1                                         |
-+------------+------------------------+-------------+-------------------------------------------+
-| Litter 2   | 0.25                   | -           | 1                                         |
-+------------+------------------------+-------------+-------------------------------------------+
-| Litter 3   | 0.25                   | -           | 1                                         |
-+------------+------------------------+-------------+-------------------------------------------+
-| SOM 1      | 0.17                   | 8           | 1                                         |
-+------------+------------------------+-------------+-------------------------------------------+
-| SOM 2      | 6.1                    | 11          | 15                                        |
-+------------+------------------------+-------------+-------------------------------------------+
-| SOM 3      | 270                    | 11          | 675                                       |
-+------------+------------------------+-------------+-------------------------------------------+
+.. table:: Turnover times, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the Century-based decomposition cascade.
 
-Likewise, values for the respiration fraction of Century-based structure are in Table 15.4.
+ +------------+------------------------+-------------+-------------------------------------------+
+ |            | Turnover time (year)   | C:N ratio   | Acceleration term (:math:`{a}_{i}`)       |
+ +============+========================+=============+===========================================+
+ | CWD        | 4.1                    | -           | 1                                         |
+ +------------+------------------------+-------------+-------------------------------------------+
+ | Litter 1   | 0.066                  | -           | 1                                         |
+ +------------+------------------------+-------------+-------------------------------------------+
+ | Litter 2   | 0.25                   | -           | 1                                         |
+ +------------+------------------------+-------------+-------------------------------------------+
+ | Litter 3   | 0.25                   | -           | 1                                         |
+ +------------+------------------------+-------------+-------------------------------------------+
+ | SOM 1      | 0.17                   | 8           | 1                                         |
+ +------------+------------------------+-------------+-------------------------------------------+
+ | SOM 2      | 6.1                    | 11          | 15                                        |
+ +------------+------------------------+-------------+-------------------------------------------+
+ | SOM 3      | 270                    | 11          | 675                                       |
+ +------------+------------------------+-------------+-------------------------------------------+
 
-Table 15.4. Respiration fractions for litter and SOM pools for Century-based structure
+Likewise, values for the respiration fraction of Century-based structure are in :numref:`Table Respiration fractions for Century-based structure`.
 
-+---------------------------+----------+
-| Pool                      | *rf*     |
-+===========================+==========+
-|  :math:`{rf}_{Lit1}`      | 0.55     |
-+---------------------------+----------+
-|  :math:`{rf}_{Lit2}`      | 0.5      |
-+---------------------------+----------+
-|  :math:`{rf}_{Lit3}`      | 0.5      |
-+---------------------------+----------+
-|  :math:`{rf}_{SOM1}`      | f(txt)   |
-+---------------------------+----------+
-|  :math:`{rf}_{SOM2}`      | 0.55     |
-+---------------------------+----------+
-|  :math:`{rf}_{SOM3}`      | 0.55     |
-+---------------------------+----------+
+.. _Table Respiration fractions for Century-based structure:
+
+.. table::  Respiration fractions for litter and SOM pools for Century-based structure
+
+ +---------------------------+----------+
+ | Pool                      | *rf*     |
+ +===========================+==========+
+ |  :math:`{rf}_{Lit1}`      | 0.55     |
+ +---------------------------+----------+
+ |  :math:`{rf}_{Lit2}`      | 0.5      |
+ +---------------------------+----------+
+ |  :math:`{rf}_{Lit3}`      | 0.5      |
+ +---------------------------+----------+
+ |  :math:`{rf}_{SOM1}`      | f(txt)   |
+ +---------------------------+----------+
+ |  :math:`{rf}_{SOM2}`      | 0.55     |
+ +---------------------------+----------+
+ |  :math:`{rf}_{SOM3}`      | 0.55     |
+ +---------------------------+----------+
 
 Environmental modifiers on decomposition rate
 --------------------------------------------------

@@ -113,10 +113,9 @@ resolution.
 
 .. _Figure schematic representation of urban:
 
-.. Figure:: image1.png
+.. figure:: image1.png
 
  Schematic representation of the urban land unit. See the text for description of notation. Incident, reflected, and net solar and longwave radiation are calculated for each individual surface but are not shown for clarity.
-
 
 .. Figure 12.2. Schematic of urban and atmospheric model coupling
 

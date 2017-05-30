@@ -210,7 +210,7 @@ radiation, respectively, are
 
    I\, \downarrow _{\Lambda } =h_{9} s_{1} +\frac{h_{10} }{s_{1} } .
 
-With reference to :numref:`Figure schematic diagram of radiation`, the direct beam flux transmitted through
+With reference to :numref:`Figure Radiation Schematic`, the direct beam flux transmitted through
 the canopy, per unit incident flux, is :math:`e^{-K\left(L+S\right)}` ,
 and the direct beam and diffuse fluxes absorbed by the vegetation, per
 unit incident flux, are
