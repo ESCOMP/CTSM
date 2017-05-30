@@ -221,6 +221,12 @@ biomass across multiple biogeographical regions. Ecol. Appl. 10:95-114.
 Busing, R.T. 2005. Tree mortality, canopy turnover, and woody detritus
 in old cove forests of the southern Appalachians. Ecology 86:73-84.
 
+.. _Buzanetal2015:
+
+Buzan, J.R., Oleson, K., and Huber, M. 2015: Implementation and 
+comparison of a suite of heat stress metrics within the Community Land 
+Model version 4.5, Geosci. Model Dev., 8, 151-170, doi:10.5194/gmd-8-151-2015.
+
 .. _CampbellNorman1998:
 
 Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental
@@ -1611,6 +1617,12 @@ areas. Hydrol Earth Syst Sc 9:535–547
 Simpson, R.J., Lambers, H., and Dalling, M.J. 1983. Nitrogen
 redistribution during grain growth in wheat (Triticum avestivum L.).
 Plant Physiol. 71:7-14.
+
+.. _Sivak2013:
+
+Sivak, M. 2013. Air conditioning versus heating: climate control is more
+energy demanding in Minneapolis than in Miami. Environ. Res. Lett., 8, 
+doi:10.1088/1748-9326/8/1/014050.
 
 .. _Smithetal2005:
 
