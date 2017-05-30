@@ -577,6 +577,8 @@ included the effects of the minimum permanent snow cover.
 .. table:: Dry and saturated soil albedos
 
  +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ |               |       Dry       |    Saturated    |               |       Dry       |    Saturated    |
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
  | Color Class   | vis    | nir    | vis    | nir    | Color Class   | vis    | nir    | vis    | nir    |
  +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
  | 1             | 0.36   | 0.61   | 0.25   | 0.50   | 11            | 0.24   | 0.37   | 0.13   | 0.26   |
@@ -708,7 +710,7 @@ are applied in the two-stream solution
  +---------------------------------------------------------+----------------------+------------------+
  | Spectral band                                           | Direct-beam weight   | Diffuse weight   |
  +=========================================================+======================+==================+
- | Band 1: 0.3-0.7\ :math:`\mu`\ m (visible)               |                      |                  |
+ | Band 1: 0.3-0.7\ :math:`\mu`\ m (visible)               | (1.0)                | (1.0)            |
  +---------------------------------------------------------+----------------------+------------------+
  | Band 2: 0.7-1.0\ :math:`\mu`\ m (near-IR)               | 0.494                | 0.586            |
  +---------------------------------------------------------+----------------------+------------------+
@@ -739,15 +741,18 @@ boundary condition, SNICAR simulates solar absorption in all snow layers
 as well as the underlying soil or ground. With a thin snowpack,
 penetrating solar radiation to the underlying soil can be quite large
 and heat cannot be released from the soil to the atmosphere in this
-situation. Thus, solar radiation penetration is limited to snowpacks
-with total snow depth greater than or equal to 0.1 m
-(:math:`z_{sno} \ge 0.1`) to prevent unrealistic soil warming within a
-single timestep.
+situation. Thus, if the snowpack has total snow depth less than 0.1 m
+(:math:`z_{sno} < 0.1`) and there are no explicit snow layers, the solar
+radiation is absorbed by the top soil layer.  If there is a single snow layer,
+the solar radiation is absorbed in that layer.  If there is more than a single
+snow layer, 75% of the solar radiation is absorbed in the top snow layer,
+and 25% is absorbed in the next lowest snow layer. This prevents unrealistic
+soil warming within a single timestep.
 
 The radiative transfer calculation is performed twice for each column
 containing a mass of snow greater than
 :math:`1 \times 10^{-30}` kg\ m\ :sup:`-2` (excluding lake and urban columns); once each for
-direct-beam and diffuse incident flux. Absorption in each layer
+direct-beam and diffuse incident flux. Absorption in each layer 
 :math:`i` of pure snow is initially recorded as absorbed flux per unit
 incident flux on the ground (:math:`S_{sno,\, i}` ), as albedos must be
 calculated for the next timestep with unknown incident flux. The snow
@@ -775,7 +780,7 @@ Snowpack Optical Properties
 
 Ice optical properties for the five spectral bands are derived offline
 and stored in a namelist-defined lookup table for online retrieval (see
-CLM4.5 User’s Guide). Mie properties are first computed at fine spectral
+CLM5.0 User’s Guide). Mie properties are first computed at fine spectral
 resolution (470 bands), and are then weighted into the five bands
 applied by CLM according to incident solar flux,
 :math:`I^{\downarrow } (\lambda )`. For example, the broadband
@@ -846,7 +851,7 @@ only with incident solar flux, as in equation .
 
 .. _Table Mass extinction values:
 
-.. table:: Mass extinction values (m\ :sup:`2` kg\ :sub:`-1`) used for snowpack impurities and ice
+.. table:: Mass extinction values (m\ :sup:`2` kg\ :sup:`-1`) used for snowpack impurities and ice
 
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
  | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
@@ -945,7 +950,7 @@ each time step *t* as
    r_{e} \left(t\right)=\left[r_{e} \left(t-1\right)+dr_{e,\, dry} +dr_{e,\, wet} \right]f_{old} +r_{e,\, 0} f_{new} +r_{e,\, rfz} f_{rfrz}
 
 Here, the effective radius of freshly-fallen snow
-(:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sub:`-1`), and the effective
+(:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sup:`-1`), and the effective
 radius of refrozen liquid water (:math:`r_{e,rfz}`) is set to 1000\ :math:`\mu` m.
 
 Dry snow aging is based on a microphysical model described by :ref:`Flanner
@@ -1036,7 +1041,7 @@ The solar hour angle :math:`h` (radians) is
 
 where :math:`d` is calendar day (:math:`d=0.0` at 0Z on January 1), and
 :math:`\theta`  is longitude (radians) (positive east of the
-CityplaceGreenwich meridian).
+Greenwich meridian).
 
 The solar declination angle :math:`\delta`  is calculated as in :ref:`Berger
 (1978a,b) <Berger1978a>` and is valid for one million years past or hence, relative to
