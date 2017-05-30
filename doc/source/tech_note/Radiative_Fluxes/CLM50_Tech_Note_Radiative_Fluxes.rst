@@ -14,7 +14,7 @@ where :math:`\vec{S}` is the net solar flux absorbed by the vegetation
 Solar Fluxes
 ----------------
 
-:numref:`Figure schematic diagram of radiation` illustrates the direct beam and diffuse fluxes in the canopy.
+:numref:`Figure Radiation Schematic` illustrates the direct beam and diffuse fluxes in the canopy.
 :math:`I\, \uparrow _{\Lambda }^{\mu }`  and
 :math:`I\, \uparrow _{\Lambda }`  are the upward diffuse fluxes, per
 unit incident direct beam and diffuse flux (section :numref:`Canopy Radiative Transfer`).
@@ -34,13 +34,13 @@ index and stem area index (section :numref:`Phenology and vegetation burial by s
 :math:`K` is the optical
 depth of direct beam per unit leaf and stem area (section :numref:`Canopy Radiative Transfer`).
 
-.. Figure 4.1. Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground.
+.. _Figure Radiation Schematic:
 
-.. _Figure schematic diagram of radiation:
+.. figure:: image1.png
 
-.. Figure:: image1.png
-
- Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground.
+ Schematic diagram of (a) direct beam radiation, (b) diffuse
+ solar radiation, and (c) longwave radiation absorbed, transmitted, and
+ reflected by vegetation and ground.
 
 For clarity, terms involving :math:`T^{n+1} -T^{n}`  are not shown in
 (c).
@@ -176,10 +176,8 @@ longwave radiation (W m\ :sup:`-2`). The radiative temperature
 
    T_{rad} =\left(\frac{L\, \uparrow }{\sigma } \right)^{{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} }
 
-where :math:`\sigma`  is the Stefan-Boltzmann constant (W\ m\ :sup:`-2` K\ :sup:`-4`) 
-(:numref:`Table Physical constants`). With reference to
-:numref:`Figure schematic diagram of radiation`, the upward longwave radiation 
-from the surface to the atmosphere is
+where :math:`\sigma`  is the Stefan-Boltzmann constant (W\ m\ :sup:`-2` K\ :sup:`-4`) (Table 2.6). With reference to
+:numref:`Figure Radiation Schematic`, the upward longwave radiation from the surface to the atmosphere is
 
 .. math::
    :label: 4.11

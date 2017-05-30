@@ -83,8 +83,8 @@ flux
 
 where the saltation constant :math:`c_{s}` equals 2.61 and
 :math:`\rho _{atm}`  is the atmospheric density (kg m\ :sup:`-3`)
-(Table 2.3), :math:`g` the acceleration of gravity (m
-s\ :sup:`-2`) (Table 2.6). The threshold wind friction speed for saltation :math:`u_{*t}`  (m s\ :sup:`-1`) is
+(:numref:`Table Atmospheric input to land model`), :math:`g` the acceleration of gravity (m
+s\ :sup:`-2`) (:numref:`Table Physical constants`). The threshold wind friction speed for saltation :math:`u_{*t}`  (m s\ :sup:`-1`) is
 
 .. math::
    :label: ZEqnNum888452 
@@ -120,7 +120,7 @@ where :math:`a=M_{clay}^{-1}`  for tuning purposes,
 :math:`\theta _{1}`  is the volumetric soil moisture in the top soil
 layer (m:math:`{}^{3 }`\ m\ :sup:`-3`) (section 7.4),
 :math:`\rho _{liq}`  is the density of liquid water (kg
-m\ :sup:`-3`) (Table 2.6), and :math:`\rho _{d,\, 1}`  is the bulk
+m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`\rho _{d,\, 1}`  is the bulk
 density of soil in the top soil layer (kg m\ :sup:`-3`) defined as
 in section 6.3 rather than as in Zender et al. (2003).
 :math:`Re_{*t}^{f}`  from equation is the threshold friction Reynolds
@@ -172,34 +172,36 @@ mode :math:`i` carried in each of *:math:`J=4`* transport bins :math:`j`
 where :math:`m_{i}` , :math:`\tilde{D}_{v,\, i}` , and
 :math:`\sigma _{g,\, i}`  are the mass fraction, mass median diameter,
 and geometric standard deviation assigned to each particle source mode
-:math:`i` (Table 24.1), while :math:`D_{j,\, \min }`  and
+:math:`i` (:numref:`Table Dust Mass fraction`), while :math:`D_{j,\, \min }`  and
 :math:`D_{j,\, \max }`  are the minimum and maximum diameters (m) in
-each transport bin :math:`j` ** (Table 24.2).
+each transport bin :math:`j` ** (:numref:`Table Dust Minimum and maximum particle diameters`).
 
-Table 24.1. Mass fraction :math:`m_{i}` , mass median diameter
-:math:`\tilde{D}_{v,\, i}` , and geometric standard deviation
-:math:`\sigma _{g,\, i}` , per dust source mode :math:`i`
+.. _Table Dust Mass fraction:
 
-+-------------+-----------------------------+-----------------------------------+-----------------------------+
-| :math:`i`   | :math:`m_{i}`  (fraction)   | :math:`\tilde{D}_{v,\, i}`  (m)   | :math:`\sigma _{g,\, i}`    |
-+=============+=============================+===================================+=============================+
-| 1           | 0.036                       | 0.832 x 10\ :math:`{}^{-6}`       | 2.1                         |
-+-------------+-----------------------------+-----------------------------------+-----------------------------+
-| 2           | 0.957                       | 4.820 x 10\ :math:`{}^{-6}`       | 1.9                         |
-+-------------+-----------------------------+-----------------------------------+-----------------------------+
-| 3           | 0.007                       | 19.38 x 10\ :math:`{}^{-6}`       | 1.6                         |
-+-------------+-----------------------------+-----------------------------------+-----------------------------+
+.. table:: Mass fraction :math:`m_{i}` , mass median diameter :math:`\tilde{D}_{v,\, i}` , and geometric standard deviation :math:`\sigma _{g,\, i}` , per dust source mode :math:`i`
 
-Table 24.2. Minimum and maximum particle diameters in each dust transport bin :math:`j`
+ +-------------+-----------------------------+-----------------------------------+-----------------------------+
+ | :math:`i`   | :math:`m_{i}`  (fraction)   | :math:`\tilde{D}_{v,\, i}`  (m)   | :math:`\sigma _{g,\, i}`    |
+ +=============+=============================+===================================+=============================+
+ | 1           | 0.036                       | 0.832 x 10\ :math:`{}^{-6}`       | 2.1                         |
+ +-------------+-----------------------------+-----------------------------------+-----------------------------+
+ | 2           | 0.957                       | 4.820 x 10\ :math:`{}^{-6}`       | 1.9                         |
+ +-------------+-----------------------------+-----------------------------------+-----------------------------+
+ | 3           | 0.007                       | 19.38 x 10\ :math:`{}^{-6}`       | 1.6                         |
+ +-------------+-----------------------------+-----------------------------------+-----------------------------+
 
-+-------------+-------------------------------+-------------------------------+
-| :math:`j`   | :math:`D_{j,\, \min }`  (m)   | :math:`D_{j,\, \max }`  (m)   |
-+=============+===============================+===============================+
-| 1           | 0.1 x 10\ :math:`{}^{-6}`     | 1.0 x 10\ :math:`{}^{-6}`     |
-+-------------+-------------------------------+-------------------------------+
-| 2           | 1.0 x 10\ :math:`{}^{-6}`     | 2.5 x 10\ :math:`{}^{-6}`     |
-+-------------+-------------------------------+-------------------------------+
-| 3           | 2.5 x 10\ :math:`{}^{-6}`     | 5.0 x 10\ :math:`{}^{-6}`     |
-+-------------+-------------------------------+-------------------------------+
-| 4           | 5.0 x 10\ :math:`{}^{-6}`     | 10.0 x 10\ :math:`{}^{-6}`    |
-+-------------+-------------------------------+-------------------------------+
+.. _Table Dust Minimum and maximum particle diameters:
+
+.. table:: Minimum and maximum particle diameters in each dust transport bin :math:`j`
+
+ +-------------+-------------------------------+-------------------------------+
+ | :math:`j`   | :math:`D_{j,\, \min }`  (m)   | :math:`D_{j,\, \max }`  (m)   |
+ +=============+===============================+===============================+
+ | 1           | 0.1 x 10\ :math:`{}^{-6}`     | 1.0 x 10\ :math:`{}^{-6}`     |
+ +-------------+-------------------------------+-------------------------------+
+ | 2           | 1.0 x 10\ :math:`{}^{-6}`     | 2.5 x 10\ :math:`{}^{-6}`     |
+ +-------------+-------------------------------+-------------------------------+
+ | 3           | 2.5 x 10\ :math:`{}^{-6}`     | 5.0 x 10\ :math:`{}^{-6}`     |
+ +-------------+-------------------------------+-------------------------------+
+ | 4           | 5.0 x 10\ :math:`{}^{-6}`     | 10.0 x 10\ :math:`{}^{-6}`    |
+ +-------------+-------------------------------+-------------------------------+

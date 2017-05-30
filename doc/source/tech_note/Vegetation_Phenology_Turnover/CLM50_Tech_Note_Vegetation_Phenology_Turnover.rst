@@ -31,9 +31,11 @@ maintained as a separate state variable for each tissue type. Storage
 reduce the complexity of accounting for transfers into and out of
 storage over the course of a single growing season.
 
-Figure 14.1. Example of annual phenology cycle for seasonal deciduous.
+.. _Figure annual phenology cycle:
 
-.. image:: image1.png
+.. figure:: image1.png
+
+ Example of annual phenology cycle for seasonal deciduous.
 
 14.1.1 Onset Periods
 ^^^^^^^^^^^^^^^^^^^^

@@ -11,7 +11,7 @@ changes in canopy water :math:`\Delta W_{can}` , surface water
 :math:`\Delta W_{sfc}` , snow water :math:`\Delta W_{sno}` , soil water
 :math:`\Delta w_{liq,\, i}` , and soil ice :math:`\Delta w_{ice,\, i}` ,
 and water in the unconfined aquifer :math:`\Delta W_{a}`  (all in kg
-m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (:numref:`Hydrologic processes figure`).
+m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (:numref:`Figure Hydrologic processes`).
 
 The total water balance of the system is
 
@@ -35,7 +35,7 @@ s\ :sup:`-1`), :math:`N_{levsoi}`  is the number of soil layers
 :math:`N_{levgrnd}`  are currently hydrologically inactive; :ref:`(Lawrence et
 al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
 
-.. _Hydrologic processes figure:
+.. _Figure Hydrologic processes:
 
 .. Figure:: image1.png
 
@@ -379,7 +379,7 @@ Soil Water
 Soil water is predicted from a multi-layer model, in which the vertical
 soil moisture transport is governed by infiltration, surface and
 sub-surface runoff, gradient diffusion, gravity, and canopy transpiration
-through root extraction (:numref:`Hydrologic processes figure`).
+through root extraction (:numref:`Figure Hydrologic processes`).
 The following derivation generally follows that of :ref:`Z.-L. Yang (1998,
 unpublished manuscript) <Yang1998>`.
 
@@ -467,7 +467,7 @@ and organic properties of the soil
 (:ref:`Lawrence and Slater 2008 <LawrenceSlater2008>`).
 
 The hydraulic conductivity is defined at the depth of the interface of
-two adjacent layers :math:`z_{h,\, i}`  (:numref:`Water flux schematic figure`) and is a function
+two adjacent layers :math:`z_{h,\, i}`  (:numref:`Figure Water flux schematic`) and is a function
 of the saturated hydraulic conductivity
 :math:`k_{sat} \left[z_{h,\, i} \right]`, the liquid volumetric soil
 moisture of the two layers :math:`\theta _{i}`  and
@@ -527,7 +527,7 @@ where :math:`B_{om} = 2.7` \ (:ref:`Letts et al. 2000 <Lettsetal2000>`) and
    B_{\min ,i} =2.91+0.159(\% clay)_{i} .
 
 The soil matric potential (mm) is defined at the node depth
-:math:`z_{i}`  of each layer :math:`i` (:numref:`Water flux schematic figure`)
+:math:`z_{i}`  of each layer :math:`i` (:numref:`Figure Water flux schematic`)
 
 .. math::
    :label: ZEqnNum316201 
@@ -610,7 +610,7 @@ as
 Numerical Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-With reference to :numref:`Water flux schematic figure`, the equation for conservation of mass
+With reference to :numref:`Figure Water flux schematic`, the equation for conservation of mass
 (equation :eq:`ZEqnNum790844`) can be integrated over each layer as
 
 .. math::
@@ -654,7 +654,7 @@ the effective root fraction :math:`r_{e,\, i}`
 
    e_{i} =r_{e,\, i} E_{v}^{t} .
 
-.. _Water flux schematic figure:
+.. _Figure Water flux schematic:
 
 .. Figure:: image2.png
 

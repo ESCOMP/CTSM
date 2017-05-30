@@ -106,7 +106,7 @@ temperature :math:`T_{i}`  [K]; thermal conductivity
 :math:`\lambda _{i}`  [W m\ :sup:`-1` K\ :sup:`-1`];
 volumetric heat capacity :math:`c_{i}`  [J m\ :sup:`-3`
 K\ :sup:`-1`]) are defined for soil layers at the node depths
-(Figure 6.1) and for snow layers at the layer midpoints. When present,
+(:numref:`Figure Soil Temperature Schematic`) and for snow layers at the layer midpoints. When present,
 snow occupies a fraction of a grid cell’s area, therefore snow depth
 represents the thickness of the snowpack averaged over only the snow
 covered area. The grid cell average snow depth is related to the depth
@@ -130,7 +130,8 @@ where the thermal conductivity at the interface
 
    \lambda \left[z_{h,\, i} \right]=\left\{\begin{array}{l} {\frac{\lambda _{i} \lambda _{i+1} \left(z_{i+1} -z_{i} \right)}{\lambda _{i} \left(z_{i+1} -z_{h,\, i} \right)+\lambda _{i+1} \left(z_{h,\, i} -z_{i} \right)} \qquad i=snl+1,\ldots ,N_{levgrnd} -1} \\ {0\qquad i=N_{levgrnd} } \end{array}\right\}.
 
-These equations are derived, with reference to Figure 6.1, assuming
+These equations are derived, with reference to 
+:numref:`Figure Soil Temperature Schematic`, assuming
 that the heat flux from :math:`i` (depth :math:`z_{i}` ) to the
 interface between :math:`i` and :math:`i+1` (depth :math:`z_{h,\, i}` )
 equals the heat flux from the interface to :math:`i+1` (depth

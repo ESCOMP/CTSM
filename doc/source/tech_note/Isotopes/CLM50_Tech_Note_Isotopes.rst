@@ -235,7 +235,9 @@ datasets spanning the 20\ :math:`{}^{th}` century: (Levin and Kromer,
 2004; Manning and Melhuish, 1994; Nydal and Lövseth, 1996; Turnbull et
 al. 2007). This is shown in Figure 25.1.
 
-Figure 25.1. Atmospheric :math:`\mathrm{\Delta}`\ :sup:`14`\ C
-used to drive :sup:`14`\ C model over the historical period.
+.. _Figure Atmospheric Delta C14:
 
-.. image:: image1.png
+.. figure:: image1.png
+
+ Atmospheric :math:`\mathrm{\Delta}`\ :sup:`14`\ C
+ used to drive :sup:`14`\ C model over the historical period.
