@@ -103,15 +103,22 @@ climate and socioeconomic considerations. The surface dataset creation
 routines (see CLM4.5 User’s Guide) aggregate the data to the desired
 resolution.
 
-Figure 12.1. Schematic representation of the urban land unit.
+.. _Figure Schematic representation of the urban land unit:
+
+.. figure:: image1.png
+
+ Schematic representation of the urban land unit.
 
 See the text for description of notation. Incident, reflected, and net
 solar and longwave radiation are calculated for each individual surface
 but are not shown for clarity.
 
-.. image:: image1.png
 
-Figure 12.2. Schematic of urban and atmospheric model coupling.
+.. _Figure Schematic of urban and atmospheric model coupling:
+
+.. figure:: image2.png
+
+ Schematic of urban and atmospheric model coupling.
 
 The urban model is forced by the atmospheric model wind
 (:math:`u_{atm}` ), temperature (:math:`T_{atm}` ), specific
@@ -129,4 +136,4 @@ absorbed shortwave (:math:`\vec{S}`) radiation. Air temperature
 (:math:`u_{c}` ) within the urban canopy layer are diagnosed by the
 urban model. :math:`H` is the average building height.
 
-.. image:: image2.png
+

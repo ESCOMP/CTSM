@@ -14,7 +14,7 @@ where :math:`\vec{S}` is the net solar flux absorbed by the vegetation
 Solar Fluxes
 ----------------
 
-Figure 4.1 illustrates the direct beam and diffuse fluxes in the canopy.
+:numref:`Figure Radiation Schematic` illustrates the direct beam and diffuse fluxes in the canopy.
 :math:`I\, \uparrow _{\Lambda }^{\mu }`  and
 :math:`I\, \uparrow _{\Lambda }`  are the upward diffuse fluxes, per
 unit incident direct beam and diffuse flux (section 3.1).
@@ -32,14 +32,17 @@ albedos (section 3.2). :math:`L` and :math:`S` are the exposed leaf area
 index and stem area index (section 2.1.4). :math:`K` is the optical
 depth of direct beam per unit leaf and stem area (section 3.1).
 
-Figure 4.1. Schematic diagram of (a) direct beam radiation, (b) diffuse
-solar radiation, and (c) longwave radiation absorbed, transmitted, and
-reflected by vegetation and ground.
+.. _Figure Radiation Schematic:
+
+.. figure:: image1.png
+
+ Schematic diagram of (a) direct beam radiation, (b) diffuse
+ solar radiation, and (c) longwave radiation absorbed, transmitted, and
+ reflected by vegetation and ground.
 
 For clarity, terms involving :math:`T^{n+1} -T^{n}`  are not shown in
 (c).
 
-.. image:: image1.png
 
 The total solar radiation absorbed by the vegetation and ground is
 
@@ -169,7 +172,7 @@ longwave radiation (W m\ :sup:`-2`). The radiative temperature
    T_{rad} =\left(\frac{L\, \uparrow }{\sigma } \right)^{{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} }
 
 where :math:`\sigma`  is the Stefan-Boltzmann constant (W\ m\ :sup:`-2` K\ :sup:`-4`) (Table 2.6). With reference to
-Figure 4.1, the upward longwave radiation from the surface to the atmosphere is
+:numref:`Figure Radiation Schematic`, the upward longwave radiation from the surface to the atmosphere is
 
 .. math::
    :label: 4.11

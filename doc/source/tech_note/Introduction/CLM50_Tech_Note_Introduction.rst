@@ -120,123 +120,127 @@ Jinyun Tang, Zong-Liang Yang**
 
 **LIST OF FIGURES**
 
-- Figure 1.1. Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from Lawrence et al. (2011) for CLM4.5).
+- :numref:`Figure Land processes` Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from Lawrence et al. (2011) for CLM4.5).
 
-- Figure 2.1. Configuration of the CLM subgrid hierarchy. 
+- :numref:`Figure CLM subgrid hierarchy` Configuration of the CLM subgrid hierarchy. 
 
-- Figure 4.1. Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground. 
+- :numref:`Figure Radiation Schematic` Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground. 
 
-- Figure 5.1. Schematic diagram of sensible heat fluxes for (a) non-vegetated surfaces and (b) vegetated surfaces. 
+- :numref:`Figure Schematic diagram of sensible heat fluxes` Schematic diagram of sensible heat fluxes for (a) non-vegetated surfaces and (b) vegetated surfaces. 
 
-- Figure 5.2. Schematic diagram of water vapor fluxes for (a) non-vegetated surfaces and (b) vegetated surfaces. 
+- :numref:`Figure Schematic diagram of latent heat fluxes` Schematic diagram of water vapor fluxes for (a) non-vegetated surfaces and (b) vegetated surfaces. 
 
-- Figure 6.1. Schematic diagram of numerical scheme used to solve for soil temperature. 
+- :numref:`Figure Soil Temperature Schematic`. Schematic diagram of numerical scheme used to solve for soil temperature. 
 
-- Figure 7.1. Hydrologic processes represented in CLM.
+- :numref:`Figure Hydrologic processes` Hydrologic processes represented in CLM.
 
-- Figure 7.2. Example of three layer snow pack (snl=-3). 
+- :numref:`Figure Water flux schematic` Schematic diagram of numerical scheme used to solve for soil water fluxes. 
 
-- Figure 7.3. Schematic diagram of numerical scheme used to solve for soil water fluxes. 
+- :numref:`three layer snow pack` Example of three layer snow pack (snl=-3). 
 
-- Figure 12.1. Schematic representation of the urban land unit.
+- :numref:`Figure Schematic representation of the urban land unit` Schematic representation of the urban land unit.
 
-- Figure 12.2. Schematic of urban and atmospheric model coupling.
+- :numref:`Figure Schematic of urban and atmospheric model coupling` Schematic of urban and atmospheric model coupling.
 
-- Figure 13.1. Vegetation fluxes and pools. 
+- :numref:`Figure Vegetation fluxes and pools` Vegetation fluxes and pools. 
 
-- Figure 13.2: Carbon and nitrogen pools. 
+- :numref:`Figure Carbon and nitrogen pools` Carbon and nitrogen pools. 
 
-- Figure 14.1. Example of annual phenology cycle for seasonal deciduous. 
+- :numref:`Figure annual phenology cycle` Example of annual phenology cycle for seasonal deciduous. 
 
-- Figure 14.2. Example fluxes and pools sizes for an onset growth period of 15 days, with initial transfer pool size of 100 gC m-2 and a timestep of one hour. a) Flux leaving transfer pool (e.g. CFleaf\_xfer,leaf). b) Carbon content of transfer pool and its associated display pool (e.g. CSleaf\_xfer and CSleaf, respectively).
+- 14.2. Example fluxes and pools sizes for an onset growth period of 15 days, with initial transfer pool size of 100 gC m-2 and a timestep of one hour. a) Flux leaving transfer pool (e.g. CFleaf\_xfer,leaf). b) Carbon content of transfer pool and its associated display pool (e.g. CSleaf\_xfer and CSleaf, respectively).
 
-- Figure 14.3. Example fluxes and pool sizes for an offset (litterfall) period of 15 days, with initial display pool size of 100 gC m-2 and a timestep of one hour. a) Litterfall flux (e.g CFleaf,litter). b) Carbon content of display pool and litter pool through the litterfall period, ignoring the losses from litter pool due to decomposition during this period. 
+- 14.3. Example fluxes and pool sizes for an offset (litterfall) period of 15 days, with initial display pool size of 100 gC m-2 and a timestep of one hour. a) Litterfall flux (e.g CFleaf,litter). b) Carbon content of display pool and litter pool through the litterfall period, ignoring the losses from litter pool due to decomposition during this period. 
 
-- Figure 15.1. Schematic of decomposition model in CLM.
+- :numref:`Figure Schematic of decomposition model in CLM` Schematic of decomposition model in CLM.
 
-- Figure 15.2. Pool structure, transitions, respired fractions (numbers at end of arrows), and turnover times (numbers in boxes) for the 2 alternate soil decomposition models included in CLM.  
+- :numref:`Figure Pool structure` Pool structure, transitions, respired fractions (numbers at end of arrows), and turnover times (numbers in boxes) for the 2 alternate soil decomposition models included in CLM.  
 
-- Figure 16.1. Biological nitrogen fixation as a function of annual net primary production. 300Figure 19.1. Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux. (left) Fully inundated portion of a CLM gridcell and (right) variably saturated portion of a gridcell. 
+- :numref:`Figure Biological nitrogen fixation` Biological nitrogen fixation as a function of annual net primary production. 
 
-- Figure 21.1. Schematic of land cover change impacts on CLM carbon pools and fluxes. 
+- :numref:`Figure Methane Schematic` Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux. (left) Fully inundated portion of a CLM gridcell and (right) variably saturated portion of a gridcell. 
 
-- Figure 21.2. Schematic of translation of annual UNH land units to CLM4 plant functional types. 
+- :numref:`Figure Schematic of land cover change` Schematic of land cover change impacts on CLM carbon pools and fluxes. 
 
-- Figure 25.1. Atmospheric :math:`\mathrm{\Delta}` 14C used to drive 14C model over the historical period. 
+- :numref:`Figure Schematic of translation of annual UNH land units` Schematic of translation of annual UNH land units to CLM4 plant functional types. 
+
+- :numref:`Figure Atmospheric Delta C14` Atmospheric :math:`\mathrm{\Delta}` 14C used to drive 14C model over the historical period. 
 
 **LIST OF TABLES**
 
-- Table 2.1. Plant functional types 
+- :numref:`Table Plant functional types` Plant functional types 
 
-- Table 2.2. Prescribed plant functional type heights 
+- :numref:`Table Prescribed plant functional type heights` Prescribed plant functional type heights 
 
-- Table 2.3. Atmospheric input to land model
+- :numref:`Table Soil layer structure` Soil layer structure
 
-- Table 2.4. Land model output to atmospheric model 
+- :numref:`Table Atmospheric input to land model` Atmospheric input to land model
 
-- Table 2.5. Surface data required for CLM4.5 and their base spatial resolution 
+- :numref:`Table Land model output to atmospheric model` Land model output to atmospheric model 
 
-- Table 2.6. Physical constants 
+- :numref:`Table Surface data required for CLM and their base spatial resolution` Surface data required for CLM4.5 and their base spatial resolution 
 
-- Table 3.1. Plant functional type optical properties
+- :numref:`Table Physical constants` Physical constants 
 
-- Table 3.2. Intercepted snow optical properties 
+- :numref:`Table Plant functional type optical properties` Plant functional type optical properties
 
-- Table 3.3. Dry and saturated soil albedos 
+- :numref:`Table Intercepted snow optical properties` Intercepted snow optical properties 
 
-- Table 3.4. Spectral bands and weights used for snow radiative transfer 
+- :numref:`Table Dry and saturated soil albedos` Dry and saturated soil albedos 
 
-- Table 3.5. Single-scatter albedo values used for snowpack impurities and ice 
+- :numref:`Table Spectral bands and weights used for snow radiative transfer` Spectral bands and weights used for snow radiative transfer 
 
-- Table 3.6. Mass extinction values (m2 kg-1) used for snowpack impurities and ice. 
+- :numref:`Table Single-scatter albedo values used for snowpack impurities and ice` Single-scatter albedo values used for snowpack impurities and ice 
 
-- Table 3.7. Asymmetry scattering parameters used for snowpack impurities and ice. 
+- :numref:`Table Mass extinction values` Mass extinction values (m2 kg-1) used for snowpack impurities and ice. 
 
-- Table 3.8. Orbital parameters 
+- :numref:`Table Asymmetry scattering parameters used for snowpack impurities and ice` Asymmetry scattering parameters used for snowpack impurities and ice. 
 
-- Table 5.1. Plant functional type aerodynamic parameters 
+- :numref:`Table Orbital parameters` Orbital parameters 
 
-- Table 5.2. Coefficients for e\ :sub:`sat`\ :sup:`T` 
+- :numref:`Table Plant functional type aerodynamic parameters` Plant functional type aerodynamic parameters 
 
-- Table 5.3. Coefficients for 112Table 6.1. Soil layer structure.
+- :numref:`Table Coefficients for saturation vapor pressure` Coefficients for e\ :sub:`sat`\ :sup:`T` 
 
-- Table 7.1. Meltwater scavenging efficiency for particles within snow
+- :numref:`Table Coefficients for derivative of esat` Coefficients for 112:numref:`` 6.1. Soil layer structure.
 
-- Table 7.2. Minimum and maximum thickness of snow layers (m) 
+- :numref:`Table Meltwater scavenging` Meltwater scavenging efficiency for particles within snow
 
-- Table 8.1. Plant functional type (PFT) photosynthetic parameters. 
+- :numref:`Table snow layer thickness` Minimum and maximum thickness of snow layers (m) 
 
-- Table 8.2. Temperature dependence parameters for C3 photosynthesis. 
+- :numref:`Table Plant functional type (PFT) photosynthetic parameters` Plant functional type (PFT) photosynthetic parameters. 
 
-- Table8.3. Plant functional type root distribution parameters. 
+- :numref:`Table Temperature dependence parameters for C3 photosynthesis` Temperature dependence parameters for C3 photosynthesis. 
 
-- Table 13.1. Allocation and carbon:nitrogen ratio parameters 
+- :numref:`Table Plant functional type root distribution parameters` Plant functional type root distribution parameters. 
 
-- Table 15.1. Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the CLM-CN decomposition pool structure. 
+- :numref:`Table Allocation and CN ratio parameters` Allocation and carbon:nitrogen ratio parameters 
 
-- Table 15.2. Respiration fractions for litter and SOM pools 
+- :numref:`Table Decomposition rate constants` Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the CLM-CN decomposition pool structure. 
 
-- Table 15.3. Respiration fractions for litter and SOM pools for Century-based structure 
+- :numref:`Table Respiration fractions for litter and SOM pools` Respiration fractions for litter and SOM pools 
 
-- Table 15.4.Turnover times, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the Century-based decomposition cascade. 
+- :numref:`Table Turnover times` Turnover times, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the Century-based decomposition cascade. 
 
-- Table 18.1. PFT-specific combustion completeness and fire mortality factors. 
+- :numref:`Table Respiration fractions for Century-based structure` Respiration fractions for litter and SOM pools for Century-based structure 
 
-- Table 19.1. Parameter descriptions and sensitivity analysis ranges applied in the methane model. 
+- :numref:`Table PFT-specific combustion completeness and fire mortality` PFT-specific combustion completeness and fire mortality factors. 
 
-- Table 19.2. Temperature dependence of aqueous and gaseous diffusion coefficients for CH4 and O2.
+- :numref:`Table Methane Parameter descriptions`  Parameter descriptions and sensitivity analysis ranges applied in the methane model. 
 
-- Table 20.1. Crop plant functional types (pfts) in CLM4.5CNcrop and their parameters relating to phenology and morphology. Numbers in the first column correspond to the list of pfts in Table 2.1. 
+- :numref:`Table Temperature dependence of aqueous and gaseous diffusion` Temperature dependence of aqueous and gaseous diffusion coefficients for CH4 and O2.
 
-- Table 20.2. Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in Table 2.1.
+- :numref:`Table Crop plant functional types` Crop plant functional types (pfts) in CLM4.5CNcrop and their parameters relating to phenology and morphology. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`. 
 
-- Table 20.3. Pre- and post-grain fill C:N ratios for crop leaf, stem, fine root, and reproductive pools. 
+- :numref:`Table Crop pfts in CLM4.5CNcrop and their parameters` Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
 
-- Table 22.1. Plant functional type (PFT) biogeography rules with respect to climate. 
+- :numref:`Table Pre- and post-grain fill CN ratios` Pre- and post-grain fill C:N ratios for crop leaf, stem, fine root, and reproductive pools. 
 
-- Table 24.1. Mass fraction m\ :sub:`i` , mass median diameter :sub:`v, i` , and geometric standard deviation :sub:`g, i` , per dust source mode i 
+- :numref:`Table Plant functional type (PFT) biogeography rules` Plant functional type (PFT) biogeography rules with respect to climate. 
 
-- Table 24.2. Minimum and maximum particle diameters in each dust transport bin j 
+- :numref:`Table Dust Mass fraction` Mass fraction m\ :sub:`i` , mass median diameter :sub:`v, i` , and geometric standard deviation :sub:`g, i` , per dust source mode i 
+
+- :numref:`Table Dust Minimum and maximum particle diameters` Minimum and maximum particle diameters in each dust transport bin j 
 
 **ACKNOWLEDGEMENTS**
 
@@ -295,17 +299,17 @@ Inception of CLM
 The early development of the Community Land Model can be described as
 the merging of a community-developed land model focusing on
 biogeophysics and a concurrent effort at NCAR to expand the NCAR Land
-Surface Model (NCAR LSM, Bonan 1996) to include the carbon cycle,
+Surface Model (NCAR LSM, :ref:`Bonan 1996<Bonan1996>`) to include the carbon cycle,
 vegetation dynamics, and river routing. The concept of a
 community-developed land component of the Community Climate System Model
 (CCSM) was initially proposed at the CCSM Land Model Working Group
 (LMWG) meeting in February 1996. Initial software specifications and
 development focused on evaluating the best features of three existing
-land models: the NCAR LSM (Bonan 1996, 1998) used in the Community
+land models: the NCAR LSM (:ref:`Bonan 1996, 1998<Bonan1996>`) used in the Community
 Climate Model (CCM3) and the initial version of CCSM; the Institute of
-Atmospheric Physics, Chinese Academy of Sciences land model (IAP94) (Dai
-and Zeng 1997); and the Biosphere-Atmosphere Transfer Scheme (BATS)
-(Dickinson et al. 1993) used with CCM2. A scientific steering committee
+Atmospheric Physics, Chinese Academy of Sciences land model (IAP94) (:ref:`Dai
+and Zeng 1997<DaiZeng1997>`); and the Biosphere-Atmosphere Transfer Scheme (BATS)
+(:ref:`Dickinson et al. 1993<Dickinsonetal1993>`) used with CCM2. A scientific steering committee
 was formed to review the initial specifications of the design provided
 by Robert Dickinson, Gordon Bonan, Xubin Zeng, and Yongjiu Dai and to
 facilitate further development. Steering committee members were selected
@@ -329,11 +333,11 @@ Oleson, M. Bosilovich, Zong-Liang Yang, Ian Baker, P. Houser, and P.
 Dirmeyer at the LMWG meeting hosted by COLA (Center for
 Ocean-Land-Atmosphere Studies) in November 1999. Field data used for
 validation included sites adopted by the Project for Intercomparison of
-Land-surface Parameterization Schemes (Henderson-Sellers et al. 1993)
-(Cabauw, Valdai, Red-Arkansas river basin) and others [FIFE (Sellers et
-al. 1988), BOREAS (Sellers et al. 1995), HAPEX-MOBILHY (André et al.
-1986), ABRACOS (Gash et al. 1996), Sonoran Desert (Unland et al. 1996),
-GSWP (Dirmeyer et al. 1999)]. Y. Dai also presented results from a
+Land-surface Parameterization Schemes (:ref:`Henderson-Sellers et al. 1993<Henderson-Sellersetal1993>`)
+(Cabauw, Valdai, Red-Arkansas river basin) and others [FIFE (:ref:`Sellers et
+al. 1988<Sellersetal1988>`), BOREAS :ref:`(Sellers et al. 1995<Sellersetal1995>`), HAPEX-MOBILHY (:ref:`André et al.
+1986<Andréetal1986>`), ABRACOS (:ref:`Gash et al. 1996<Gashetal1996>`), Sonoran Desert (:ref:`Unland et al. 1996<Unlandetal1996>`),
+GSWP (:ref:`Dirmeyer et al. 1999<Dirmeyeretal1999>`)]. Y. Dai also presented results from a
 preliminary coupling of the Common Land Model to CCM3, indicating that
 the land model could be successfully coupled to a climate model.
 
@@ -348,9 +352,9 @@ and soil temperatures. Sam Levis reported on efforts to incorporate a
 river routing model to deliver runoff to the ocean model in CCSM. Soon
 after the workshop, the code was delivered to NCAR for implementation
 into the CCSM framework. Documentation for the Common Land Model is
-provided by Dai et al. (2001) while the coupling with CCM3 is described
-in Zeng et al. (2002). The model was introduced to the modeling
-community in Dai et al. (2003).
+provided by :ref:`Dai et al. (2001)<Daietal2001>` while the coupling with CCM3 is described
+in :ref:`Zeng et al. (2002)<Zengetal2002>`. The model was introduced to the modeling
+community in :ref:`Dai et al. (2003)<Daietal2003>`.
 
 CLM2
 ^^^^^^^^^^
@@ -361,8 +365,8 @@ cycling, vegetation dynamics, and river routing. The preservation of
 these advancements necessitated several modifications to the Common Land
 Model. The biome-type land cover classification scheme was replaced with
 a plant functional type (PFT) representation with the specification of
-PFTs and leaf area index from satellite data (Oleson and Bonan 2000;
-Bonan et al. 2002a, b). This also required modifications to
+PFTs and leaf area index from satellite data (:ref:`Oleson and Bonan 2000<OlesonBonan2000>`;
+:ref:`Bonan et al. 2002a, b<Bonanetal2002a>`). This also required modifications to
 parameterizations for vegetation albedo and vertical burying of
 vegetation by snow. Changes were made to canopy scaling, leaf
 physiology, and soil water limitations on photosynthesis to resolve
@@ -382,7 +386,7 @@ K. Oleson reported on initial results from a coupling of CCM3 with CLM2
 at the June 2001 CCSM Workshop LMWG meeting. Generally, the CLM2
 preserved most of the improvements seen in the Common Land Model,
 particularly with respect to surface air temperature, runoff, and snow.
-These simulations are documented in Bonan et al. (2002a). Further small
+These simulations are documented in :ref:`Bonan et al. (2002a)<Bonanetal2002a>`. Further small
 improvements to the biogeophysical parameterizations, ongoing software
 development, and extensive analysis and validation within CAM2 and CCSM2
 culminated in the release of CLM2 to the community in May 2002.
@@ -414,14 +418,14 @@ added stability corrections to the diagnostic 2-m air temperature
 calculation which reduced biases in this temperature. Competition
 between PFTs for water, in which PFTs share a single soil column, is the
 default mode of operation in this model version. CLM3 was released to
-the community in June 2004. Dickinson et al. (2006) describe the climate
-statistics of CLM3 when coupled to CCSM3.0. Hack et al. (2006) provide
+the community in June 2004.:ref:`Dickinson et al. (2006)<Dickinsonetal2006>` describe the climate
+statistics of CLM3 when coupled to CCSM3.0. :ref:`Hack et al. (2006)<Hacketal2006>` provide
 an analysis of selected features of the land hydrological cycle.
-Lawrence et al. (2007) examine the impact of changes in CLM3
+:ref:`Lawrence et al. (2007)<Lawrenceetal2007>` examine the impact of changes in CLM3
 hydrological parameterizations on partitioning of evapotranspiration
 (ET) and its effect on the timescales of ET response to precipitation
 events, interseasonal soil moisture storage, soil moisture memory, and
-land-atmosphere coupling. Qian et al. (2006) evaluate CLM3’s performance
+land-atmosphere coupling. :ref:`Qian et al. (2006)<Qianetal2006>` evaluate CLM3’s performance
 in simulating soil moisture content, runoff, and river discharge when
 forced by observed precipitation, temperature and other atmospheric
 data.
@@ -442,16 +446,16 @@ integration, canopy interception, frozen soil, soil water availability,
 and soil evaporation, a TOPMODEL-based model for surface and subsurface
 runoff, a groundwater model for determining water table depth, and the
 introduction of a factor to simulate nitrogen limitation on plant
-productivity. Oleson et al. (2008a) show that CLM3.5 exhibits
+productivity. :ref:`Oleson et al. (2008a)<Olesonetal2008a>` show that CLM3.5 exhibits
 significant improvements over CLM3 in its partitioning of global ET
 which result in wetter soils, less plant water stress, increased
 transpiration and photosynthesis, and an improved annual cycle of total
 water storage. Phase and amplitude of the runoff annual cycle is
 generally improved. Dramatic improvements in vegetation biogeography
 result when CLM3.5 is coupled to a dynamic global vegetation model.
-Stöckli et al. (2008) examine the performance of CLM3.5 at local scales
+:ref:`Stöckli et al. (2008)<Stocklietal2008>` examine the performance of CLM3.5 at local scales
 by making use of a network of long-term ground-based ecosystem
-observations [FLUXNET (Baldocchi et al. 2001)]. Data from 15 FLUXNET
+observations [FLUXNET (:ref:`Baldocchi et al. 2001<Baldocchietal2001>`)]. Data from 15 FLUXNET
 sites were used to demonstrate significantly improved soil hydrology and
 energy partitioning in CLM3.5. CLM3.5 was released to the community in
 May, 2007.
@@ -462,7 +466,7 @@ CLM4
 The motivation for the next version of the model, CLM4, was to
 incorporate several recent scientific advances in the understanding and
 representation of land surface processes, expand model capabilities, and
-improve surface and atmospheric forcing datasets (Lawrence et al. 2011).
+improve surface and atmospheric forcing datasets (:ref:`Lawrence et al. 2011<Lawrenceetal2011>`).
 Included in the first category are more sophisticated representations of
 soil hydrology and snow processes. In particular, new treatments of soil
 column-groundwater interactions, soil evaporation, aerodynamic
@@ -488,25 +492,25 @@ ecosystem process model Biome-BGC (Biome BioGeochemical Cycles),
 originating at the Numerical Terradynamic Simulation Group (NTSG) at the
 University of Montana, under the guidance of Prof. Steven Running.
 Biome-BGC itself is an extension of an earlier model, Forest-BGC
-**(Running and Coughlan, 1988; Running and Gower, 1991)**, which
+(:ref:`Running and Coughlan, 1988<RunningCoughlan1988>`; :ref:`Running and Gower, 1991<RunningGower1991>`), which
 simulates water, carbon, and, to a limited extent, nitrogen fluxes for
 forest ecosystems. Forest-BGC was designed to be driven by remote
 sensing inputs of vegetation structure, and so used a diagnostic
 (prescribed) leaf area index, or, in the case of the dynamic allocation
-version of the model **(Running and Gower, 1991)**, prescribed maximum
+version of the model (:ref:`Running and Gower, 1991<RunningGower1991>`), prescribed maximum
 leaf area index.
 
 Biome-BGC expanded on the Forest-BGC logic by introducing a more
-mechanistic calculation of leaf and canopy scale photosynthesis **(Hunt
-and Running, 1992)**, and extending the physiological parameterizations
-to include multiple woody and non-woody vegetation types **(Hunt et al.
-1996; Running and Hunt, 1993)**. Later versions of Biome-BGC introduced
+mechanistic calculation of leaf and canopy scale photosynthesis (:ref:`Hunt
+and Running, 1992<Huntrunning1992>`), and extending the physiological parameterizations
+to include multiple woody and non-woody vegetation types (:ref:`Hunt et al.
+1996<Huntetal1996>`; :ref:`Running and Hunt, 1993<RunningHunt1993>`). Later versions of Biome-BGC introduced
 more mechanistic descriptions of belowground carbon and nitrogen cycles,
 nitrogen controls on photosynthesis and decomposition, sunlit and shaded
 canopies, vertical gradient in leaf morphology, and explicit treatment
-of fire and harvest disturbance and regrowth dynamics **(Kimball et al.
-1997; Thornton, 1998; Thornton et al. 2002; White et al. 2000)**.
-Biome-BGC version 4.1.2 **(Thornton et al. 2002)** provided a point of
+of fire and harvest disturbance and regrowth dynamics (:ref:`Kimball et al.
+1997<Kimballetal1997>`; :ref:`Thornton, 1998<Thornton1998>`; :ref:`Thornton et al. 2002<Thorntonetal2002>`; :ref:`White et al. 2000<Whiteetal2000>`).
+Biome-BGC version 4.1.2 (:ref:`Thornton et al. 2002<Thorntonetal2002>`) provided a point of
 departure for integrating new biogeochemistry components into CLM4.
 
 CLM4 was released to the community in June, 2010 along with the
@@ -535,26 +539,26 @@ problems or biases.
 The main modifications include updates to canopy processes including a
 revised canopy radiation scheme and canopy scaling of leaf processes,
 co-limitations on photosynthesis, revisions to photosynthetic parameters
-(Bonan et al. 2011), 
+(:ref:`Bonan et al. 2011<Bonanetal2011>`), 
 
 .. todo:: had three stars here - need to resolve this
 
 temperature acclimation of photosynthesis, and
 improved stability of the iterative solution in the photosynthesis and
-stomatal conductance model (Sun et al. 2012). Hydrology updates include
+stomatal conductance model (:ref:`Sun et al. 2012<Sunetal2012>`). Hydrology updates include
 modifications such that hydraulic properties of frozen soils are
 determined by liquid water content only rather than total water content
 and the introduction of an ice impedance function, and other corrections
 that increase the consistency between soil water state and water table
 position and allow for a perched water table above icy permafrost ground
-(Swenson et al. 2012). A new snow cover fraction parameterization is
+(:ref:`Swenson et al. 2012<Swensonetal2012>`). A new snow cover fraction parameterization is
 incorporated that reflects the hysteresis in fractional snow cover for a
-given snow depth between accumulation and melt phases (Swenson and
-Lawrence, 2012). The lake model in CLM4 is replaced with a completely
-revised and more realistic lake model (Subin et al. 2012a). A surface
+given snow depth between accumulation and melt phases (:ref:`Swenson and
+Lawrence, 2012<SwensonLawrence2012>`). The lake model in CLM4 is replaced with a completely
+revised and more realistic lake model (:ref:`Subin et al. 2012a<Subinetal2012a>`). A surface
 water store is introduced, replacing the wetland land unit and
 permitting prognostic wetland distribution modeling, and the surface
-energy fluxes are calculated separately (Swenson and Lawrence, 2012) for
+energy fluxes are calculated separately (:ref:`Swenson and Lawrence, 2012<SwensonLawrence2012>`) for
 snow-covered, water-covered, and snow/water-free portions of vegetated
 and crop land units, and snow-covered and snow-free portions of glacier
 land units. Globally constant river flow velocity is replaced with
@@ -562,28 +566,28 @@ variable flow velocity based on mean grid cell slope. A vertically
 resolved soil biogeochemistry scheme is introduced with base
 decomposition rates modified by soil temperature, water, and oxygen
 limitations and also including vertical mixing of soil carbon and
-nitrogen due to bioturbation, cryoturbation, and diffusion (Koven et al.
-2013). The litter and soil carbon and nitrogen pool structure as well as
+nitrogen due to bioturbation, cryoturbation, and diffusion (:ref:`Koven et al.
+2013<Kovenetal2013>`). The litter and soil carbon and nitrogen pool structure as well as
 nitrification and denitrification are modified based on the Century
 model and biological fixation is revised to distribute fixation more
-realistically over the year (Koven et al. 2013). The fire model is
+realistically over the year (:ref:`Koven et al. 2013<Kovenetal2013>`). The fire model is
 replaced with a model that includes representations of natural and
 anthropogenic triggers and suppression as well as agricultural,
-deforestation, and peat fires (Li et al. 2012a,b; Li et al. 2013a). The
+deforestation, and peat fires (:ref:`Li et al. 2012a,b<Lietal2012a>`; :ref:`Li et al. 2013a<Lietal2013a>`). The
 biogenic volatile organic compounds model is updated to MEGAN2.1
-(Guenther et al. 2012).
+(:ref:`Guenther et al. 2012<Guentheretal2012>`).
 
 Additions to the model include a methane production, oxidation, and
-emissions model (Riley et al. 2011a) and an extension of the crop model
-to include interactive fertilization, organ pools (Drewniak et al.
-2013), and irrigation (Sacks et al. 2009). Elements of the Variable
+emissions model (:ref:`Riley et al. 2011a<Rileyetal2011a>`) and an extension of the crop model
+to include interactive fertilization, organ pools (:ref:`Drewniak et al.
+2013<Drewniaketal2013>`), and irrigation (:ref:`Sacks et al. 2009<Sacksetal2009>`). Elements of the Variable
 Infiltration Capacity (VIC) model are included as an alternative
-optional runoff generation scheme (Li et al. 2011). There is also an
-option to run with a multilayer canopy (Bonan et al. 2012). Multiple
+optional runoff generation scheme (:ref:`Li et al. 2011<Lietal2011>`). There is also an
+option to run with a multilayer canopy (:ref:`Bonan et al. 2012<Bonanetal2012>`). Multiple
 urban density classes, rather than the single dominant urban density
 class used in CLM4, are modeled in the urban land unit. Carbon
-(:math:`{}^{13}`\ C and :math:`{}^{14}`\ C) isotopes are enabled (Koven
-et al. 2013). Minor changes include a switch of the C3 Arctic grass and
+(:math:`{}^{13}`\ C and :math:`{}^{14}`\ C) isotopes are enabled (:ref:`Koven
+et al. 2013<Kovenetal2013>`). Minor changes include a switch of the C3 Arctic grass and
 shrub phenology from stress deciduous to seasonal deciduous and a change
 in the glacier bare ice albedo to better reflect recent estimates.
 Finally, the carbon and nitrogen cycle spinup is accelerated and
@@ -594,9 +598,9 @@ Finally, the predominantly low resolution input data for provided with
 CLM4 to create CLM4 surface datasets is replaced with newer and higher
 resolution input datasets where possible (see section 2.2.3 for
 details). The default meteorological forcing dataset provided with CLM4
-(Qian et al. 2006) is replaced with the 1901-2010 CRUNCEP forcing
+(:ref:`Qian et al. 2006)<Qianetal2006>` is replaced with the 1901-2010 CRUNCEP forcing
 dataset (see Chapter 26) for CLM4.5, though users can also still use the
-Qian et al. (2006) dataset or other alternative forcing datasets.
+:ref:`Qian et al. (2006)<Qianetal2006>` dataset or other alternative forcing datasets.
 
 CLM4.5 was released to the community in June 2013 along with the
 Community Earth System Model version 1.2 (CESM1.2).
@@ -607,73 +611,75 @@ Biogeophysical and Biogeochemical Processes
 Biogeophysical and biogeochemical processes are simulated for each
 subgrid land unit, column, and plant functional type (PFT) independently
 and each subgrid unit maintains its own prognostic variables (see
-section 2.1.1 for definitions of subgrid units). The same atmospheric
+section :numref:`Surface Heterogeneity and Data Structure` for definitions 
+of subgrid units). The same atmospheric
 forcing is used to force all subgrid units within a grid cell. The
 surface variables and fluxes required by the atmosphere are obtained by
 averaging the subgrid quantities weighted by their fractional areas. The
-processes simulated include (Figure 1.1):
+processes simulated include (:numref:`Figure Land processes`):
 
 #. Surface characterization including land type heterogeneity and
-   ecosystem structure (Chapter 2)
+   ecosystem structure (Chapter :numref:`rst_Surface Characterization, Vertical Discretization, and Model Input Requirements`)
 
 #. Absorption, reflection, and transmittance of solar radiation (Chapter
-   3, 4)
+   :numref:`rst_Surface Albedos`, :numref:`rst_Radiative Fluxes`)
 
-#. Absorption and emission of longwave radiation (Chapter 4)
+#. Absorption and emission of longwave radiation (Chapter :numref:`rst_Radiative Fluxes`)
 
 #. Momentum, sensible heat (ground and canopy), and latent heat (ground
-   evaporation, canopy evaporation, transpiration) fluxes (Chapter 5)
+   evaporation, canopy evaporation, transpiration) fluxes (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`)
 
-#. Heat transfer in soil and snow including phase change (Chapter 6)
+#. Heat transfer in soil and snow including phase change (Chapter :numref:`rst_Soil and Snow Temperatures`)
 
-#. Canopy hydrology (interception, throughfall, and drip) (Chapter 7)
-
-#. Snow hydrology (snow accumulation and melt, compaction, water
-   transfer between snow layers) (Chapter 7)
+#. Canopy hydrology (interception, throughfall, and drip) (Chapter :numref:`rst_Hydrology`)
 
 #. Soil hydrology (surface runoff, infiltration, redistribution of water
-   within the column, sub-surface drainage, groundwater) (Chapter 7)
+   within the column, sub-surface drainage, groundwater) (Chapter :numref:`rst_Hydrology`)
 
-#. Stomatal physiology and photosynthesis (Chapter 8)
+#. Snow hydrology (snow accumulation and melt, compaction, water
+   transfer between snow layers) (Chapter :numref:`rst_Snow Hydrology`)
 
-#. place Lake temperatures and fluxes (Chapter 9)
+#. Stomatal physiology and photosynthesis (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`)
 
-#. Glacier processes (Chapter 10)
+#. Lake temperatures and fluxes (Chapter :numref:`rst_Lake Model`)
 
-#. Routing of runoff from rivers to ocean (Chapter 11)
+#. Glacier processes (Chapter :numref:`rst_Glaciers`)
 
-#. Urban energy balance and climate (Chapter 12)
+#. Routing of runoff from rivers to ocean (Chapter :numref:`rst_River Transport Model (RTM)`)
+
+#. Urban energy balance and climate (Chapter :numref:`rst_Urban Model (CLMU)`)
 
 #. Vegetation carbon and nitrogen allocation and respiration (Chapter
-   13)
+   :numref:`rst_CN Allocation`)
 
-#. Vegetation phenology (Chapter 14)
+#. Vegetation phenology (Chapter :numref:`rst_Vegetation Phenology and Turnover`)
 
-#. Soil and litter carbon decomposition (Chapter 15)
+#. Soil and litter carbon decomposition (Chapter :numref:`rst_Decomposition`)
 
 #. Nitrogen cycling including deposition, biological fixation,
-   denitrification, leaching, and losses due to fire (Chapter 16)
+   denitrification, leaching, and losses due to fire (Chapter :numref:`rst_External Nitrogen Cycle`)
 
-#. Plant mortality (Chapter 17)
+#. Plant mortality (Chapter :numref:`rst_Plant Mortality`)
 
 #. Fire ignition and suppression, including natural, deforestation, and
-   agricultural fire (Chapter 18)
+   agricultural fire (Chapter :numref:`rst_Fire`)
 
-#. Methane production, oxidation, and emissions (Chapter 19)
+#. Methane production, oxidation, and emissions (Chapter :numref:`rst_Methane Model`)
 
-#. Crop dynamics and irrigation (Chapter 20)
+#. Crop dynamics and irrigation (Chapter :numref:`rst_Crops and Irrigation`)
 
-#. Land cover and land use change including wood harvest (Chapter 21)
+#. Land cover and land use change including wood harvest (Chapter :numref:`rst_Transient Landcover Change`)
 
-#. Dynamic global vegetation distribution (Chapter 22)
+#. Dynamic global vegetation distribution (Chapter :numref:`rst_Dynamic Global Vegetation Model`)
 
-#. Biogenic volatile organic compound emissions (Chapter 23)
+#. Biogenic volatile organic compound emissions (Chapter :numref:`rst_Biogenic Volatile Organic Compounds (BVOCs)`)
 
-#. Dust mobilization and deposition (Chapter 24)
+#. Dust mobilization and deposition (Chapter :numref:`rst_Dust Model`)
 
-#. Carbon isotope fractionation (Chapter 25)
+#. Carbon isotope fractionation (Chapter :numref:`rst_Carbon Isotopes`)
 
-Figure 1.1. Land biogeophysical, biogeochemical, and landscape processes
-simulated by CLM (adapted from Lawrence et al. (2011) for CLM4.5).
+.. _Figure Land processes:
 
-.. image:: image1.png
+.. figure:: image1.png
+
+ Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from :ref:`Lawrence et al. (2011)<Lawrenceetal2011>` for CLM4.5).

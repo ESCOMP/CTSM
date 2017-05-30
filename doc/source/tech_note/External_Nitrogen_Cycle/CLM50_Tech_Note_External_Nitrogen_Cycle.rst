@@ -88,10 +88,12 @@ on the carbon supply to nitrogen fixing microorganisms (Cleveland et al.
 where :math:`{NF}_{nfix,sminn}` (gN m\ :sup:`-2` s\ :sup:`-1`) is the rate of BNF. Eq. is plotted over a range of
 annual NPP in Figure 16.1.
 
-Figure 16.1. Biological nitrogen fixation as a function of annual net
-primary production.
+.. _Figure Biological nitrogen fixation:
 
-.. image:: image1.png
+.. figure:: image1.png
+
+ Biological nitrogen fixation as a function of annual net
+primary production.
 
 Because of the empirical nature of this NPP-BNF relationship, the
 timescale for calculating NPP and thus BNF is unconstrained. Using
