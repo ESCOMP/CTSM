@@ -80,17 +80,17 @@ photosynthesis ( :math:`CF_{xs,mr}`, gC m\ :sup:`-2`
 s\ :sup:`-1`):
 
 .. math::
-   :label: 19.1) 
+   :label: 19.1 
 
    CF_{mr} =CF_{GPP,mr} +CF_{xs,mr}
 
 .. math::
-   :label: 19.2) 
+   :label: 19.2 
 
    CF_{GPP,mr} =\_ \left\{\begin{array}{l} {CF_{mr} \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPPpot} } \\ {CF_{GPPpot} \qquad {\rm for\; }CF_{mr} >CF_{GPPpot} } \end{array}\right.
 
 .. math::
-   :label: 19.3) 
+   :label: 19.3 
 
    CF_{xs,mr} =\_ \left\{\begin{array}{l} {0\qquad \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPPpot} } \\ {CF_{mr} -CF_{GPPpot} \qquad {\rm for\; }CF_{mr} >CF_{GPPpot} } \end{array}\right.
 
@@ -114,12 +114,12 @@ flux to  :math:`CS_{xs}` (:math:`CF_{GPP,xs}`, gC
 m\ :sup:`-2` s\ :sup:`-1`) is given as
 
 .. math::
-   :label: 19.4) 
+   :label: 19.4 
 
    CF_{GPP,xs,pot} =\left\{\begin{array}{l} {0\qquad \qquad \qquad {\rm for\; }CS_{xs} \ge 0} \\ {-CS_{xs} /(86400\tau _{xs} )\qquad {\rm for\; }CS_{xs} <0} \end{array}\right.
 
 .. math::
-   :label: 19.5) 
+   :label: 19.5 
 
    CF_{GPP,xs} =\left\{\begin{array}{l} {CF_{GPP,xs,pot} \qquad \qquad \qquad {\rm for\; }CF_{GPP,xs,pot} \le CF_{GPPpot} -CF_{GPP,mr} } \\ {\max (CF_{GPPpot} -CF_{GPP,mr} ,0)\qquad {\rm for\; }CF_{GPP,xs,pot} >CF_{GPPpot} -CF_{GPP,mr} } \end{array}\right.
 
@@ -140,7 +140,7 @@ remaining carbon flux from photosynthesis which can be allocated to new
 growth (:math:`CF_{avail}`, gC m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 19.6) 
+   :label: 19.6 
 
    CF_{avail\_ alloc} =CF_{GPPpot} -CF_{GPP,mr} -CF_{GPP,xs} .
 
@@ -151,7 +151,7 @@ between various tissue types. The allometric parameters are defined as
 follows:
 
 .. math::
-   :label: ZEqnNum650137 
+   :label: 19.7
 
    \begin{array}{l} {a_{1} ={\rm \; ratio\; of\; new\; fine\; root\; :\; new\; leaf\; carbon\; allocation}} \\ {a_{2} ={\rm \; ratio\; of\; new\; coarse\; root\; :\; new\; stem\; carbon\; allocation}} \\ {a_{3} ={\rm \; ratio\; of\; new\; stem\; :\; new\; leaf\; carbon\; allocation}} \\ {a_{4} ={\rm \; ratio\; new\; live\; wood\; :\; new\; total\; wood\; allocation}} \\ {g_{1} ={\rm ratio\; of\; growth\; respiration\; carbon\; :\; new\; growth\; carbon.\; }} \end{array}
 
@@ -166,7 +166,7 @@ ratio for carbon allocation between new stem and new leaf increases with
 increasing net primary production (NPP), as
 
 .. math::
-   :label: 19.8) 
+   :label: 19.8 
 
    a_{3} =\frac{2.7}{1+e^{-0.004NPP_{ann} -300} } -0.4
 
@@ -236,7 +236,7 @@ Carbon to nitrogen ratios are defined for different tissue types as
 follows:
 
 .. math::
-   :label: ZEqnNum413927 
+   :label: 19.9
 
    \begin{array}{l} {CN_{leaf} =\_ {\rm \; C:N\; for\; leaf}} \\ {CN_{fr} =\_ {\rm \; C:N\; for\; fine\; root}} \\ {CN_{lw} =\_ {\rm \; C:N\; for\; live\; wood\; (in\; stem\; and\; coarse\; root)}} \\ {CN_{dw} =\_ {\rm \; C:N\; for\; dead\; wood\; (in\; stem\; and\; coarse\; root)}} \end{array}
 
@@ -251,19 +251,19 @@ functions of new leaf carbon allocation (:math:`CF_{GPP,leaf}`, gC
 m\ :sup:`-2` s\ :sup:`-1`):
 
 .. math::
-   :label: ZEqnNum555154 
+   :label: 19.10
 
    \begin{array}{l} {CF_{alloc} =CF_{GPP,leaf} {\kern 1pt} C_{allom} } \\ {NF_{alloc} =CF_{GPP,leaf} {\kern 1pt} N_{allom} } \end{array}
 
 where
 
 .. math::
-   :label: 19.11) 
+   :label: 19.11 
 
    \begin{array}{l} {C_{allom} =\left\{\begin{array}{l} {\left(1+g_{1} \right)\left(1+a_{1} +a_{3} \left(1+a_{2} \right)\right)\qquad {\rm for\; woody\; PFT}} \\ {1+g_{1} +a_{1} \left(1+g_{1} \right)\qquad \qquad {\rm for\; non-woody\; PFT}} \end{array}\right. } \\ {} \end{array}
 
 .. math::
-   :label: 19.12) 
+   :label: 19.12
 
    N_{allom} =\left\{\begin{array}{l} {\frac{1}{CN_{leaf} } +\frac{a_{1} }{CN_{fr} } +\frac{a_{3} a_{4} \left(1+a_{2} \right)}{CN_{lw} } +} \\ {\qquad \frac{a_{3} \left(1-a_{4} \right)\left(1+a_{2} \right)}{CN_{dw} } \qquad {\rm for\; woody\; PFT}} \\ {\frac{1}{CN_{leaf} } +\frac{a_{1} }{CN_{fr} } \qquad \qquad \qquad {\rm for\; non-woody\; PFT.}} \end{array}\right.
 
@@ -274,7 +274,7 @@ plant nitrogen demand for new growth ( :math:`NF_{plant\_demand}`,
 gN m\ :sup:`-2` s\ :sup:`-1`) as:
 
 .. math::
-   :label: 19.13) 
+   :label: 19.13 
 
    NF_{plant\_ demand} =CF_{avail\_ alloc} \frac{N_{allom} }{C_{allom} } .
 
@@ -293,7 +293,7 @@ availability of nitrogen from this pool to support new growth
 s\ :sup:`-1`) is proportional to the plant nitrogen demand, as:
 
 .. math::
-   :label: 19.14) 
+   :label: 19.14 
 
    NF_{avail\_ retrans} =\min \left(\frac{NF_{retrans\_ ann} \frac{NF_{plant\_ demand} }{NF_{plant\_ demand\_ ann} } }{\Delta t} ,\; \frac{NS_{retrans} }{\Delta t} \right)
 
@@ -319,7 +319,7 @@ m\ :sup:`-2` s\ :sup:`-1`) is never greater than the plant
 demand for new nitrogen:
 
 .. math::
-   :label: 19.15) 
+   :label: 19.15 
 
    NF_{retrans,alloc} =\min \left(NF_{plant\_ demand} ,NF_{avail\_ retrans} \right)
 
@@ -332,7 +332,7 @@ from the soil (:math:`NF_{plant\_demand\_soil}`, gN
 m\ :sup:`-2` s\ :sup:`-1`):
 
 .. math::
-   :label: ZEqnNum491412 
+   :label: 19.16
 
    NF_{plant\_ demand\_ soil} =NF_{plant\_ demand} -NF_{retrans,alloc} .
 
@@ -346,7 +346,7 @@ mineral nitrogen supply and competition with heterotrophs. Plant uptake
 from the soil mineral nitrogen pool is then given as:
 
 .. math::
-   :label: 19.17) 
+   :label: 19.17 
 
    NF_{sminn,alloc} =NF_{plant\_ demand\_ soil} f_{plant\_ demand}
 
@@ -356,7 +356,7 @@ Final carbon and nitrogen allocation
 The total flux of allocated nitrogen is given as:
 
 .. math::
-   :label: 19.18) 
+   :label: 19.18 
 
    NF_{alloc} =NF_{retrans,alloc} +NF_{sminn,alloc}
 
@@ -364,14 +364,14 @@ From the stoichiometric relationship in Eq. , the associated carbon
 allocation flux is:
 
 .. math::
-   :label: 19.19) 
+   :label: 19.19 
 
    CF_{alloc} =NF_{alloc} \frac{C_{allom} }{N_{allom} } .
 
 The downregulation of photosynthesis can then be calculated as:
 
 .. math::
-   :label: 19.20) 
+   :label: 19.20 
 
    f_{dreg} =\frac{CF_{alloc} -CF_{avail\_ alloc} }{CF_{GPPpot} } .
 
@@ -379,7 +379,7 @@ Total allocation to new leaf carbon
 (:math:`CF_{alloc,leaf\_tot}`, gC m\ :sup:`-2` s\ :sup:`-1`) is calculated as:
 
 .. math::
-   :label: 19.21) 
+   :label: 19.21 
 
    CF_{alloc,leaf\_ tot} =\frac{CF_{alloc} }{C_{allom} } .
 
@@ -395,124 +395,124 @@ storage pools (where storage is indicated with *\_stor*) for the various
 tissue types are given as:
 
 .. math::
-   :label: 19.22) 
+   :label: 19.22 
 
    CF_{alloc,leaf} \_ =CF_{alloc,leaf\_ tot} f_{cur}
 
 .. math::
-   :label: 19.23) 
+   :label: 19.23 
 
    CF_{alloc,leaf\_ stor} \_ =CF_{alloc,leaf\_ tot} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.24) 
+   :label: 19.24 
 
    CF_{alloc,froot} \_ =CF_{alloc,leaf\_ tot} a_{1} f_{cur}
 
 .. math::
-   :label: 19.25) 
+   :label: 19.25 
 
    CF_{alloc,froot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{1} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.26) 
+   :label: 19.26
 
    CF_{alloc,livestem} \_ =CF_{alloc,leaf\_ tot} a_{3} a_{4} f_{cur}
 
 .. math::
-   :label: 19.27) 
+   :label: 19.27
 
    CF_{alloc,livestem\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{3} a_{4} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.28) 
+   :label: 19.28
 
    CF_{alloc,deadstem} \_ =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)f_{cur}
 
 .. math::
-   :label: 19.29) 
+   :label: 19.29
 
    CF_{alloc,deadstem\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.30) 
+   :label: 19.30
 
    CF_{alloc,livecroot} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} f_{cur}
 
 .. math::
-   :label: 19.31) 
+   :label: 19.31
 
    CF_{alloc,livecroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.32) 
+   :label: 19.32
 
    CF_{alloc,deadcroot} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)f_{cur}
 
 .. math::
-   :label: 19.33) 
+   :label: 19.33
 
    CF_{alloc,deadcroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right).
 
 The corresponding nitrogen allocation fluxes are given as:
 
 .. math::
-   :label: 19.34) 
+   :label: 19.34
 
    NF_{alloc,leaf} \_ =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } f_{cur}
 
 .. math::
-   :label: 19.35) 
+   :label: 19.35
 
    NF_{alloc,leaf\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.36) 
+   :label: 19.36
 
    NF_{alloc,froot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } f_{cur}
 
 .. math::
-   :label: 19.37) 
+   :label: 19.37
 
    NF_{alloc,froot\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.38) 
+   :label: 19.38
 
    NF_{alloc,livestem} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } f_{cur}
 
 .. math::
-   :label: 19.39) 
+   :label: 19.39
 
    NF_{alloc,livestem\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.40) 
+   :label: 19.40
 
    NF_{alloc,deadstem} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
 
 .. math::
-   :label: 19.41) 
+   :label: 19.41
 
    NF_{alloc,deadstem\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.42) 
+   :label: 19.42
 
    NF_{alloc,livecroot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } f_{cur}
 
 .. math::
-   :label: 19.43) 
+   :label: 19.43
 
    NF_{alloc,livecroot\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.44) 
+   :label: 19.44
 
    NF_{alloc,deadcroot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
 
 .. math::
-   :label: 19.45) 
+   :label: 19.45
 
    NF_{alloc,deadcroot\_ stor} \_ =\frac{CF_{alloc,leaf} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right).
 
@@ -536,22 +536,22 @@ functions tissue nitrogen content and the relevant temperature,
 following the empirical relationship reported by Ryan (1991):
 
 .. math::
-   :label: 19.46) 
+   :label: 19.46
 
    CF_{mr\_ leaf} \_ =NS_{leaf} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
-   :label: 19.47) 
+   :label: 19.47
 
    CF_{mr\_ livestem} \_ =NS_{livestem} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
-   :label: 19.48) 
+   :label: 19.48
 
    CF_{mr\_ livecroot} \_ =NS_{livecroot} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
-   :label: 19.49) 
+   :label: 19.49
 
    CF_{mr\_ froot} \_ =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
 
@@ -574,7 +574,7 @@ common base maintenance respiration rate for all live tissue types.
 The total maintenance respiration cost is then given as:
 
 .. math::
-   :label: 19.50) 
+   :label: 19.50
 
    CF_{mr} =CF_{mr\_ leaf} +CF_{mr\_ froot} +CF_{mr\_ livestem} +CF_{mr\_ livecroot} .
 
