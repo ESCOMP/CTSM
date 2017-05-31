@@ -106,7 +106,7 @@ resolution.
 
 .. Figure 12.1. Schematic representation of the urban land unit
 
-.. _Figure schematic representation of urban:
+.. _Figure schematic representation of the urban land unit:
 
 .. Figure:: image1.png
 
