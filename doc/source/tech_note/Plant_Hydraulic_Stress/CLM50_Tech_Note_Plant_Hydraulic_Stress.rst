@@ -230,7 +230,7 @@ PHS explicitly models root, stem, shaded leaf, and sunlit leaf water potential a
    \psi=\left[\psi_{sunleaf},\psi_{shadeleaf},\psi_{stem},\psi_{root}\right]
 
 .. math::
-   :label: 11.21)
+   :label: 11.21
 
    \begin{aligned}
    E_{sun}&=q_{1a}\\
@@ -240,10 +240,10 @@ PHS explicitly models root, stem, shaded leaf, and sunlit leaf water potential a
    &=\sum_{i=1}^{nlevsoi}{q_{3,i}}
    \end{aligned}
 
-The demand terms (left-hand side) are decreasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, water stress increases, causing a decrease in transpiration demand. The supply terms (right-hand side) are increasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, the gradients in water potential increase, causing an increase in vegetation water supply. PHS takes a Newton's method approach to iteratively solve for the vegetation water potentials that satisfy equations in (11.21).
+The demand terms (left-hand side) are decreasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, water stress increases, causing a decrease in transpiration demand. The supply terms (right-hand side) are increasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, the gradients in water potential increase, causing an increase in vegetation water supply. PHS takes a Newton's method approach to iteratively solve for the vegetation water potentials that satisfy :eq:`11.21`.
 
 .. math::
-   :label: 11.21)
+   :label: 11.22)
 
    ff
 
