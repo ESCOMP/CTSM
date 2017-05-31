@@ -45,12 +45,12 @@ momentum between the atmosphere at height :math:`z_{atm,\, m}`  and the
 surface at height :math:`z_{0m} +d`. Thus, the momentum fluxes become
 
 .. math::
-   :label: 
+   :label: 5.5
 
    \tau _{x} =-\rho _{atm} \frac{u_{atm} }{r_{am} }
 
 .. math::
-   :label: 
+   :label: 5.6
 
    \tau _{y} =-\rho _{atm} \frac{v_{atm} }{r_{am} } .
 
@@ -76,7 +76,7 @@ where :math:`T_{atm}`  is the air temperature (K) at height
 m\ :sup:`-1` is the negative of the dry adiabatic lapse rate [this
 expression is first-order equivalent to
 :math:`\theta _{atm} =T_{atm} \left({P_{srf} \mathord{\left/ {\vphantom {P_{srf}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } \right)^{{R_{da} \mathord{\left/ {\vphantom {R_{da}  C_{p} }} \right. \kern-\nulldelimiterspace} C_{p} } }` 
-(Stull 1988), where :math:`P_{srf}`  is the surface pressure (Pa),
+(:ref:`Stull 1988 <Stull1988>`), where :math:`P_{srf}`  is the surface pressure (Pa),
 :math:`P_{atm}`  is the atmospheric pressure (Pa), and :math:`R_{da}` 
 is the gas constant for dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`)]. By definition,
 :math:`\theta _{s} =T_{s}` . The density of moist air (kg m\ :sup:`-3`) is
@@ -109,7 +109,7 @@ from Monin-Obukhov similarity applied to the surface layer. This theory
 states that when scaled appropriately, the dimensionless mean horizontal
 wind speed, mean potential temperature, and mean specific humidity
 profile gradients depend on unique functions of
-:math:`\zeta =\frac{z-d}{L}`  (Zeng et al. 1998) as
+:math:`\zeta =\frac{z-d}{L}`  (:ref:`Zeng et al. 1998<Zengetal1998>`) as
 
 .. math::
    :label: 5.10
@@ -162,8 +162,7 @@ components :math:`\overline{u'w'}=-\frac{\tau _{x} }{\rho _{atm} }`  and
 :math:`H` is the sensible heat flux (W m\ :sup:`-2`) and :math:`E`
 is the water vapor flux (kg m\ :sup:`-2` s\ :sup:`-1`).
 
-The dimensionless length scale :math:`L` is the Monin-Obukhov length
-defined as
+The length scale :math:`L` is the Monin-Obukhov length defined as
 
 .. math::
    :label: 5.16
@@ -179,7 +178,7 @@ stable conditions. :math:`L<0` indicates unstable conditions.
 :math:`\theta _{v*}`  is defined as
 
 .. math::
-   :label: ZEqnNum632600 
+   :label: 5.17
 
    \theta _{v*} u_{*} =\left[\theta _{*} \left(1+0.61q_{atm} \right)+0.61\overline{\theta _{atm} }q_{*} \right]u_{*}
 
@@ -246,7 +245,7 @@ Defining the surface values
 and the atmospheric values at :math:`z_{2} =z_{atm,\, x}` 
 
 .. math::
-   :label: ZEqnNum228149 
+   :label: 5.24
 
    \left|{\it u}\right|_{2} =V_{a} {\rm =\; }\sqrt{u_{atm}^{2} +v_{atm}^{2} +U_{c}^{2} } \ge 1,
 
@@ -280,15 +279,18 @@ surface fluxes as follows
 .. math::
    :label: 5.28
 
-   {U_{c} = 0\ \qquad \zeta \ge {\rm 0}  {\rm (stable)}} \\ 
-   {U_{c} =  \beta w_{\*}  \qquad \zeta <0  {\rm (unstable})} 
+   U_{c} = \left\{
+   \begin{array}{ll} 
+   0 & \qquad \zeta \ge {\rm 0} \quad {\rm (stable)} \\ 
+   \beta w_{*} & \qquad \zeta < 0 \quad {\rm (unstable)} 
+   \end{array} \right\}
 
-where :math:`w_{\*}`  is the convective velocity scale
+where :math:`w_{*}`  is the convective velocity scale
 
 .. math::
    :label: 5.29
 
-   w_{\*} =\left(\frac{-gu_{\*} \theta _{v*} z_{i} }{\overline{\theta _{v,\, atm} }} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } ,
+   w_{*} =\left(\frac{-gu_{\*} \theta _{v*} z_{i} }{\overline{\theta _{v,\, atm} }} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } ,
 
 :math:`z_{i} =1000` is the convective boundary layer height (m), and :math:`\beta =1`.
 
@@ -297,14 +299,24 @@ The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`
 .. math::
    :label: 5.30
 
-   \begin{array}{l} {\phi _{m} \left(\zeta \right)=0.7k^{{2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} } \left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } \qquad {\rm for\; }\zeta <-1.574{\rm \; (very\; unstable)}} \\ {\phi _{m} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} } \qquad {\rm for\; -1.574}\le \zeta <0{\rm \; (unstable)}} \\ {\phi _{m} \left(\zeta \right)=1+5\zeta \qquad {\rm for\; }0\le \zeta \le 1{\rm \; (stable)}} \\ {\phi _{m} \left(\zeta \right)=5+\zeta \qquad {\rm for\; }\zeta {\rm >1\; (very\; stable).}} \end{array}
+   \begin{array}{llr} 
+   \phi _{m} \left(\zeta \right)=0.7k^{{2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} } \left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } & \qquad {\rm for\; }\zeta <-1.574 & \ {\rm \; (very\; unstable)} \\ 
+   \phi _{m} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 4}} \right. \kern-\nulldelimiterspace} 4} } & \qquad {\rm for\; -1.574}\le \zeta <0 & \ {\rm \; (unstable)} \\ 
+   \phi _{m} \left(\zeta \right)=1+5\zeta & \qquad {\rm for\; }0\le \zeta \le 1& \ {\rm \; (stable)} \\ 
+   \phi _{m} \left(\zeta \right)=5+\zeta & \qquad {\rm for\; }\zeta  >1 & \ {\rm\; (very\; stable).} 
+   \end{array}
 
 The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`)
 
 .. math::
    :label: 5.31
 
-   \begin{array}{l} {\phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=0.9k^{{4\mathord{\left/ {\vphantom {4 3}} \right. \kern-\nulldelimiterspace} 3} } \left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } \qquad {\rm for\; }\zeta <-0.465{\rm \; (very\; unstable)}} \\ {\phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 2}} \right. \kern-\nulldelimiterspace} 2} } \qquad {\rm for\; -0.465}\le \zeta <0{\rm \; (unstable)}} \\ {\phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=1+5\zeta \qquad {\rm for\; }0\le \zeta \le 1{\rm \; (stable)}} \\ {\phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=5+\zeta \qquad {\rm for\; }\zeta {\rm >1\; (very\; stable).}} \end{array}
+   \begin{array}{llr} 
+   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=0.9k^{{4\mathord{\left/ {\vphantom {4 3}} \right. \kern-\nulldelimiterspace} 3} } \left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } & \qquad {\rm for\; }\zeta <-0.465 & \ {\rm \; (very\; unstable)} \\ 
+   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=\left(1-16\zeta \right)^{-{1\mathord{\left/ {\vphantom {1 2}} \right. \kern-\nulldelimiterspace} 2} } & \qquad {\rm for\; -0.465}\le \zeta <0 & \ {\rm \; (unstable)} \\ 
+   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=1+5\zeta & \qquad {\rm for\; }0\le \zeta \le 1 & \ {\rm \; (stable)} \\ 
+   \phi _{h} \left(\zeta \right)=\phi _{w} \left(\zeta \right)=5+\zeta & \qquad {\rm for\; }\zeta  >1 & \ {\rm \; (very\; stable).} 
+   \end{array}
 
 To ensure continuous functions of
 :math:`\phi _{m} \left(\zeta \right)`,
@@ -321,28 +333,28 @@ yield wind profiles for the following conditions:
 Very unstable :math:`\left(\zeta <-1.574\right)`
 
 .. math::
-   :label: ZEqnNum566843 
+   :label: 5.32
 
    V_{a} =\frac{u_{*} }{k} \left\{\left[\ln \frac{\zeta _{m} L}{z_{0m} } -\psi _{m} \left(\zeta _{m} \right)\right]+1.14\left[\left(-\zeta \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } -\left(-\zeta _{m} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} } \right]+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right\}
 
 Unstable :math:`\left(-1.574\le \zeta <0\right)`
 
 .. math::
-   :label: ZEqnNum309568 
+   :label: 5.33
 
    V_{a} =\frac{u_{*} }{k} \left\{\left[\ln \frac{z_{atm,\, m} -d}{z_{0m} } -\psi _{m} \left(\zeta \right)\right]+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right\}
 
 Stable :math:`\left(0\le \zeta \le 1\right)`
 
 .. math::
-   :label: ZEqnNum973766 
+   :label: 5.34
 
    V_{a} =\frac{u_{*} }{k} \left\{\left[\ln \frac{z_{atm,\, m} -d}{z_{0m} } +5\zeta \right]-5\frac{z_{0m} }{L} \right\}
 
 Very stable :math:`\left(\zeta >1\right)`
 
 .. math::
-   :label: ZEqnNum310559 
+   :label: 5.35
 	   
    V_{a} =\frac{u_{*} }{k} \left\{\left[\ln \frac{L}{z_{0m} } +5\right]+\left[5\ln \zeta +\zeta -1\right]-5\frac{z_{0m} }{L} \right\}
 
@@ -362,14 +374,14 @@ The potential temperature profiles are:
 Very unstable :math:`\left(\zeta <-0.465\right)`
 
 .. math::
-   :label: ZEqnNum382106 
+   :label: 5.37
 
    \theta _{atm} -\theta _{s} =\frac{\theta _{*} }{k} \left\{\left[\ln \frac{\zeta _{h} L}{z_{0h} } -\psi _{h} \left(\zeta _{h} \right)\right]+0.8\left[\left(-\zeta _{h} \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } -\left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } \right]+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right\}
 
 Unstable :math:`\left(-0.465\le \zeta <0\right)`
 
 .. math::
-   :label: ZEqnNum767002 
+   :label: 5.38
 
    \theta _{atm} -\theta _{s} =\frac{\theta _{*} }{k} \left\{\left[\ln \frac{z_{atm,\, h} -d}{z_{0h} } -\psi _{h} \left(\zeta \right)\right]+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right\}
 
@@ -377,14 +389,14 @@ Unstable :math:`\left(-0.465\le \zeta <0\right)`
 Stable :math:`\left(0\le \zeta \le 1\right)`
 
 .. math::
-   :label: ZEqnNum556410 
+   :label: 5.39
 
    \theta _{atm} -\theta _{s} =\frac{\theta _{*} }{k} \left\{\left[\ln \frac{z_{atm,\, h} -d}{z_{0h} } +5\zeta \right]-5\frac{z_{0h} }{L} \right\}
 
 Very stable :math:`\left(\zeta >1\right)`
 
 .. math::
-   :label: ZEqnNum846197 
+   :label: 5.40
 
    \theta _{atm} -\theta _{s} =\frac{\theta _{*} }{k} \left\{\left[\ln \frac{L}{z_{0h} } +5\right]+\left[5\ln \zeta +\zeta -1\right]-5\frac{z_{0h} }{L} \right\}.
 
@@ -393,28 +405,28 @@ The specific humidity profiles are:
 Very unstable :math:`\left(\zeta <-0.465\right)`
 
 .. math::
-   :label: ZEqnNum299834 
+   :label: 5.41
 
    q_{atm} -q_{s} =\frac{q_{*} }{k} \left\{\left[\ln \frac{\zeta _{w} L}{z_{0w} } -\psi _{w} \left(\zeta _{w} \right)\right]+0.8\left[\left(-\zeta _{w} \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } -\left(-\zeta \right)^{{-1\mathord{\left/ {\vphantom {-1 3}} \right. \kern-\nulldelimiterspace} 3} } \right]+\psi _{w} \left(\frac{z_{0w} }{L} \right)\right\}
 
 Unstable :math:`\left(-0.465\le \zeta <0\right)`
 
 .. math::
+   :label: 5.42
 
-   \label{ZEqnNum142122} 
    q_{atm} -q_{s} =\frac{q_{*} }{k} \left\{\left[\ln \frac{z_{atm,\, w} -d}{z_{0w} } -\psi _{w} \left(\zeta \right)\right]+\psi _{w} \left(\frac{z_{0w} }{L} \right)\right\}
 
 Stable :math:`\left(0\le \zeta \le 1\right)`
 
 .. math::
-   :label: ZEqnNum350694 
+   :label: 5.43
 
    q_{atm} -q_{s} =\frac{q_{*} }{k} \left\{\left[\ln \frac{z_{atm,\, w} -d}{z_{0w} } +5\zeta \right]-5\frac{z_{0w} }{L} \right\}
 
 Very stable :math:`\left(\zeta >1\right)`
 
 .. math::
-   :label: ZEqnNum211437 
+   :label: 5.44
 
    q_{atm} -q_{s} =\frac{q_{*} }{k} \left\{\left[\ln \frac{L}{z_{0w} } +5\right]+\left[5\ln \zeta +\zeta -1\right]-5\frac{z_{0w} }{L} \right\}
 
@@ -434,7 +446,7 @@ using atmospheric and surface values for :math:`\left|{\it u}\right|`,
 bulk Richardson number
 
 .. math::
-   :label: ZEqnNum750428} 
+   :label: 5.46
 
    R_{iB} =\frac{\theta _{v,\, atm} -\theta _{v,\, s} }{\overline{\theta _{v,\, atm} }} \frac{g\left(z_{atm,\, m} -d\right)}{V_{a}^{2} }
 
@@ -455,27 +467,35 @@ stable conditions to determine :math:`\psi _{m} \left(\zeta \right)` and
 guess for :math:`\zeta`  and thus :math:`L` from
 
 .. math::
+   :label: 5.48
 
-   \label{ZEqnNum979946} 
-   \begin{array}{l} {\zeta =\frac{R_{iB} \ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)}{1-5\min \left(R_{iB} ,0.19\right)} \qquad 0.01\le \zeta \le 2\qquad {\rm for\; }R_{iB} \ge 0{\rm \; (neutral\; or\; stable)}} \\ {\zeta =R_{iB} \ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)\qquad -100\le \zeta \le -0.01\qquad {\rm for\; }R_{iB} <0{\rm \; (unstable)}} \end{array}.
+   \begin{array}{lcr}
+   \zeta =\frac{R_{iB} \ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)}{1-5\min \left(R_{iB} ,0.19\right)} & \qquad 0.01\le \zeta \le 2 & \qquad {\rm for\; }R_{iB} \ge 0 {\rm \; (neutral\; or\; stable)} \\ 
+   \zeta =R_{iB} \ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right) & \qquad -100\le \zeta \le -0.01 & \qquad {\rm for\; }R_{iB} <0 \ {\rm \; (unstable)}
+   \end{array}.
 
 Upon iteration (section :numref:`Numerical Implementation`), the following is used to determine
 :math:`\zeta`  and thus :math:`L`
 
 .. math::
+   :label: 5.49
 
-   \label{ZEqnNum153243} 
    \zeta =\frac{\left(z_{atm,\, m} -d\right)kg\theta _{v*} }{u_{*}^{2} \overline{\theta _{v,\, atm} }}
 
 where
 
-.. math:: \begin{array}{l} {0.01\le \zeta \le 2\qquad {\rm for\; }\zeta \ge 0{\rm \; (neutral\; or\; stable)}} \\ {{\rm -100}\le \zeta \le {\rm -0.01}\qquad {\rm for\; }\zeta <0{\rm \; (unstable)}} \end{array}.
+.. math:: 
+
+   \begin{array}{cr} 
+   0.01\le \zeta \le 2 & \qquad {\rm for\; }\zeta \ge 0{\rm \; (neutral\; or\; stable)} \\ 
+   {\rm -100}\le \zeta \le {\rm -0.01} & \qquad {\rm for\; }\zeta <0{\rm \; (unstable)}
+   \end{array}.
 
 The difference in virtual potential air temperature between the
 reference height and the surface is
 
 .. math::
-   :label: ZEqnNum516498 
+   :label: 5.50
 
    \theta _{v,\, atm} -\theta _{v,\, s} =\left(\theta _{atm} -\theta _{s} \right)\left(1+0.61q_{atm} \right)+0.61\overline{\theta _{atm} }\left(q_{atm} -q_{s} \right).
 
@@ -483,39 +503,39 @@ The momentum, sensible heat, and water vapor fluxes between the surface
 and the atmosphere can also be written in the form
 
 .. math::
-   :label: ZEqnNum567382 
+   :label: 5.51
 
    \tau _{x} =-\rho _{atm} \frac{\left(u_{atm} -u_{s} \right)}{r_{am} }
 
 .. math::
-   :label: ZEqnNum615113 
+   :label: 5.52
 
    \tau _{y} =-\rho _{atm} \frac{\left(v_{atm} -v_{s} \right)}{r_{am} }
 
 .. math::
-   :label: ZEqnNum588623 
+   :label: 5.53
 
    H=-\rho _{atm} C_{p} \frac{\left(\theta _{atm} -\theta _{s} \right)}{r_{ah} }
 
 .. math::
-   :label: ZEqnNum154565 
+   :label: 5.54
 
    E=-\rho _{atm} \frac{\left(q_{atm} -q_{s} \right)}{r_{aw} }
 
 where the aerodynamic resistances (s m\ :sup:`-1`) are
 
 .. math::
-   :label: ZEqnNum660763 
+   :label: 5.55
 
    r_{am} =\frac{V_{a} }{u_{*}^{2} } =\frac{1}{k^{2} V_{a} } \left[\ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)-\psi _{m} \left(\frac{z_{atm,\, m} -d}{L} \right)+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right]^{2}
 
 .. math::
-   :label: ZEqnNum193138 
+   :label: 5.56
 
    \begin{array}{l} {r_{ah} =\frac{\theta _{atm} -\theta _{s} }{\theta _{*} u_{*} } =\frac{1}{k^{2} V_{a} } \left[\ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)-\psi _{m} \left(\frac{z_{atm,\, m} -d}{L} \right)+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right]} \\ {\qquad \left[\ln \left(\frac{z_{atm,\, h} -d}{z_{0h} } \right)-\psi _{h} \left(\frac{z_{atm,\, h} -d}{L} \right)+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right]} \end{array}
 
 .. math::
-   :label: ZEqnNum382229 
+   :label: 5.57
 
    \begin{array}{l} {r_{aw} =\frac{q_{atm} -q_{s} }{q_{*} u_{*} } =\frac{1}{k^{2} V_{a} } \left[\ln \left(\frac{z_{atm,\, m} -d}{z_{0m} } \right)-\psi _{m} \left(\frac{z_{atm,\, m} -d}{L} \right)+\psi _{m} \left(\frac{z_{0m} }{L} \right)\right]} \\ {\qquad \left[\ln \left(\frac{z_{atm,\, {\it w}} -d}{z_{0w} } \right)-\psi _{w} \left(\frac{z_{atm,\, w} -d}{L} \right)+\psi _{w} \left(\frac{z_{0w} }{L} \right)\right]} \end{array}.
 
@@ -523,7 +543,7 @@ A 2-m height “screen” temperature is useful for comparison with
 observations
 
 .. math::
-   :label: ZEqnNum664652 
+   :label: 5.58
 
    T_{2m} =\theta _{s} +\frac{\theta _{*} }{k} \left[\ln \left(\frac{2+z_{0h} }{z_{0h} } \right)-\psi _{h} \left(\frac{2+z_{0h} }{L} \right)+\psi _{h} \left(\frac{z_{0h} }{L} \right)\right]
 
@@ -532,14 +552,14 @@ for sensible heat (:math:`z_{0h} +d`). Similarly, a 2-m height specific
 humidity is defined as
 
 .. math::
-   :label: ZEqnNum735237 
+   :label: 5.59
 
    q_{2m} =q_{s} +\frac{q_{*} }{k} \left[\ln \left(\frac{2+z_{0w} }{z_{0w} } \right)-\psi _{w} \left(\frac{2+z_{0w} }{L} \right)+\psi _{w} \left(\frac{z_{0w} }{L} \right)\right].
 
 Relative humidity is
 
 .. math::
-   :label: ZEqnNum299365 
+   :label: 5.60
 
    RH_{2m} =\min \left(100,\, \frac{q_{2m} }{q_{sat}^{T_{2m} } } \times 100\right)
 
@@ -570,7 +590,7 @@ water covered, so that the sensible heat flux :math:`H_{g}`  (W
 m\ :sup:`-2`) is, with reference to :numref:`Figure Schematic diagram of sensible heat fluxes`,
 
 .. math::
-   :label: ZEqnNum726771 
+   :label: 5.62
 
    H_{g} =\left(1-f_{sno} -f_{h2osfc} \right)H_{soil} +f_{sno} H_{snow} +f_{h2osfc} H_{h2osfc}
 
@@ -605,7 +625,7 @@ The water vapor flux :math:`E_{g}`  (kg m\ :sup:`-2` s\ :sup:`-1`) is, with refe
 :numref:`Figure Schematic diagram of latent heat fluxes`,
 
 .. math::
-   :label: ZEqnNum419297 
+   :label: 5.66
 
    E_{g} =\left(1-f_{sno} -f_{h2osfc} \right)E_{soil} +f_{sno} E_{snow} +f_{h2osfc} E_{h2osfc}
 
@@ -631,12 +651,12 @@ resistance to water vapor transfer (s m\ :sup:`-1`). The specific humidities of 
 :math:`q_{h2osfc}`  are assumed to be at the saturation specific humidity of their respective temperatures
 
 .. math::
-   :label: 5.70) 
+   :label: 5.70 
 
    q_{sno} =q_{sat}^{T_{snl+1} }
 
 .. math::
-   :label: 5.71) 
+   :label: 5.71 
 
    q_{h2osfc} =q_{sat}^{T_{h2osfc} }
 
@@ -644,17 +664,17 @@ The specific humidity of the soil surface :math:`q_{soil}`  is assumed
 to be proportional to the saturation specific humidity
 
 .. math::
-   :label: 5.72) 
+   :label: 5.72 
 
    q_{soil} =\alpha _{soil} q_{sat}^{T_{1} }
 
 where :math:`q_{sat}^{T_{1} }`  is the saturated specific humidity at
 the soil surface temperature :math:`T_{1}`  (section :numref:`Saturation Vapor Pressure`). The factor
 :math:`\alpha _{soil}`  is a function of the surface soil water matric
-potential :math:`\psi`  as in Philip (1957)
+potential :math:`\psi`  as in :ref:`Philip (1957)<Philip1957>`
 
 .. math::
-   :label: 5.73) 
+   :label: 5.73 
 
    \alpha _{soil} =\exp \left(\frac{\psi _{1} g}{1\times 10^{3} R_{wv} T_{1} } \right)
 
@@ -664,7 +684,7 @@ gravitational acceleration (m s\ :sup:`-2`) (:numref:`Table Physical constants`)
 layer (mm). The soil water matric potential :math:`\psi _{1}`  is
 
 .. math::
-   :label: 5.74) 
+   :label: 5.74 
 
    \psi _{1} =\psi _{sat,\, 1} s_{1}^{-B_{1} } \ge -1\times 10^{8}
 
@@ -676,7 +696,7 @@ and :math:`s_{1}`  is the wetness of the top soil layer with respect to saturati
 The surface wetness :math:`s_{1}`  is a function of the liquid water and ice content
 
 .. math::
-   :label: 5.75) 
+   :label: 5.75 
 
    s_{1} =\frac{1}{\Delta z_{1} \theta _{sat,\, 1} } \left[\frac{w_{liq,\, 1} }{\rho _{liq} } +\frac{w_{ice,\, 1} }{\rho _{ice} } \right]\qquad 0.01\le s_{1} \le 1.0
 
@@ -693,22 +713,22 @@ prevents large increases (decreases) in :math:`q_{soil}`  for small
 increases (decreases) in soil moisture in very dry soils.
 
 The resistance to water vapor transfer occurring within the soil matrix 
-:math:`r_{soil}` is  
+:math:`r_{soil}` (s m\ :sup:`-1`) is 
 
 .. math::
-   :label: 5.76) 
+   :label: 5.76 
 
    r_{soil} = \frac{DSL}{D_{v} \tau}
 
-where :math:`DSL` is the thickness of the dry surface layer, :math:`D_{v}` 
-is the molecular diffusivity of water vapor in air and :math:`\tau` 
-describes the tortuosity of the vapor flow paths through 
+where :math:`DSL` is the thickness of the dry surface layer (m), :math:`D_{v}` 
+is the molecular diffusivity of water vapor in air (m\ :sup:`2` s\ :sup:`-2`) 
+and :math:`\tau` (*unitless*) describes the tortuosity of the vapor flow paths through 
 the soil matrix (:ref:`Swenson and Lawrence 2014 <SwensonLawrence2014>`).  
 
 The thickness of the dry surface layer is given by
 
 .. math::
-   :label: 5.77)
+   :label: 5.77
 
    DSL = 
    \begin{array}{lr}
@@ -719,44 +739,47 @@ The thickness of the dry surface layer is given by
 
 where :math:`D_{max}` is a parameter specifying the length scale 
 of the maximum DSL thickness (default value = 15 mm), 
-:math:`\theta_{init}` is the moisture value at which the DSL initiates, 
-:math:`\theta_{1}` is the moisture value of the top model soil layer, 
-and :math:`\theta_{air}` is the 'air dry' soil moisture value 
-(:ref:`Dingman 2002 <Dingman2002>`):
+:math:`\theta_{init}` (mm\ :sup:`3` mm\ :sup:`-3`) is the moisture value 
+at which the DSL initiates, :math:`\theta_{1}` (mm\ :sup:`3` mm\ :sup:`-3`) 
+is the moisture value of the top model soil layer, and 
+:math:`\theta_{air}` (mm\ :sup:`3` mm\ :sup:`-3`) is the 'air dry' soil 
+moisture value (:ref:`Dingman 2002 <Dingman2002>`):
 
 .. math::
-   :label: 5.78)
+   :label: 5.78
 
    \theta_{air} = \Phi \left( \frac{\Psi_{sat}}{\Psi_{air}} \right)^{\frac{1}{B_{1}}} \ .
 
-where :math:`\Phi` is the porosity, :math:`\Psi_{sat}` is the saturated 
-soil matric potential, :math:`\Psi_{air} = 10^{7}` mm is the air dry 
-matric potential, and :math:`B_{1}` is a function of soil texture (section 
+where :math:`\Phi` is the porosity (mm\ :sup:`3` mm\ :sup:`-3`), 
+:math:`\Psi_{sat}` is the saturated soil matric potential (mm), 
+:math:`\Psi_{air} = 10^{7}` mm is the air dry matric potential, and 
+:math:`B_{1}` is a function of soil texture (section 
 :numref:`Hydraulic Properties`). 
 
 The soil tortuosity is 
 
 .. math::
-   :label: 5.79)
+   :label: 5.79
 
    \tau = \Phi^{2}_{air}\left(\frac{\Phi_{air}}{\Phi}\right)^{\frac{3}{B_{1}}}
 
-where :math:`\Phi_{air}` is the air filled pore space
+where :math:`\Phi_{air}` (mm\ :sup:`3` mm\ :sup:`-3`) is the air filled pore space
 
 .. math::
-   :label: 5.80) 
+   :label: 5.80 
 
    \Phi_{air} = \Phi - \theta_{air} \ .
 
 :math:`D_{v}` depends on temperature
 
 .. math::
-   :label: 5.81) 
+   :label: 5.81 
 
    D_{v} = 2.12 \times 10^{-5} \left(\frac{T_{1}}{T_{f}}\right)^{1.75} \ .
 
-where :math:`T_{1}` is the temperature of the top soil layer and 
-:math:`T_{f}` is the freezing temperature of water (:numref:`Table Physical Constants`).
+where :math:`T_{1}` (K) is the temperature of the top soil layer and 
+:math:`T_{f}` (K) is the freezing temperature of water 
+(:numref:`Table Physical Constants`).
 
 The roughness lengths used to calculate :math:`r_{am}` ,
 :math:`r_{ah}` , and :math:`r_{aw}`  are :math:`z_{0m} =z_{0m,\, g}` ,
@@ -774,7 +797,7 @@ across the interfacial sublayer. The following relation from
 :ref:`Zeng and Dickinson 1998 <ZengDickinson1998>`
 
 .. math::
-   :label: ZEqnNum844212 
+   :label: 5.82
 
    z_{0h,\, g} =z_{0w,\, g} =z_{0m,\, g} e^{-a\left({u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right. \kern-\nulldelimiterspace} \upsilon } \right)^{0.45} }
 
@@ -787,43 +810,43 @@ The numerical solution for the fluxes of momentum, sensible heat, and
 water vapor flux from non-vegetated surfaces proceeds as follows:
 
 #. An initial guess for the wind speed :math:`V_{a}`  is obtained from
-   eq. assuming an initial convective velocity :math:`U_{c} =0` m
+   :eq:`5.24` assuming an initial convective velocity :math:`U_{c} =0` m
    s\ :sup:`-1` for stable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from
-   eq. ) and :math:`U_{c} =0.5` for unstable conditions
+   :eq:`5.50` ) and :math:`U_{c} =0.5` for unstable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
 
 #. An initial guess for the Monin-Obukhov length :math:`L` is obtained
-   from the bulk Richardson number using eqs. and .
+   from the bulk Richardson number using :eq:`5.46` and :eq:`5.48`.
 
 #. The following system of equations is iterated three times:
 
-#. Friction velocity :math:`u_{*}`  (eqs. , , , )
+#. Friction velocity :math:`u_{*}`  (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
-#. Potential temperature scale :math:`\theta _{*}`  (eqs. , , , )
+#. Potential temperature scale :math:`\theta _{*}`  (:eq:`5.37` , :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
 
-#. Humidity scale :math:`q_{*}`  (eqs. , , , )
+#. Humidity scale :math:`q_{*}`  (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
 
 #. Roughness lengths for sensible :math:`z_{0h,\, g}`  and latent heat
-   :math:`z_{0w,\, g}`  (eq. )
+   :math:`z_{0w,\, g}`  (:eq:`5.82` )
 
-#. Virtual potential temperature scale :math:`\theta _{v*}`  (eq. )
+#. Virtual potential temperature scale :math:`\theta _{v*}`  ( :eq:`5.17`)
 
-#. Wind speed including the convective velocity, :math:`V_{a}`  (eq. )
+#. Wind speed including the convective velocity, :math:`V_{a}`  ( :eq:`5.24`)
 
-#. Monin-Obukhov length :math:`L` (eq. )
+#. Monin-Obukhov length :math:`L` (:eq:`5.49`)
 
 #. Aerodynamic resistances :math:`r_{am}` , :math:`r_{ah}` , and
-   :math:`r_{aw}`  (eqs. , , )
+   :math:`r_{aw}`  (:eq:`5.55`, :eq:`5.56`, :eq:`5.57`)
 
-#. Momentum fluxes :math:`\tau _{x}` , :math:`\tau _{y}`  (eqs. , )
+#. Momentum fluxes :math:`\tau _{x}` , :math:`\tau _{y}`  (:eq:`5.5`, :eq:`5.6`)
 
-#. Sensible heat flux :math:`H_{g}`  (eq. )
+#. Sensible heat flux :math:`H_{g}`  (:eq:`5.62`)
 
-#. Water vapor flux :math:`E_{g}`  (eq. )
+#. Water vapor flux :math:`E_{g}`  (:eq:`5.66`)
 
 #. 2-m height air temperature :math:`T_{2m}`  and specific humidity
-   :math:`q_{2m}`  (eqs. , )
+   :math:`q_{2m}`  (:eq:`5.58` , :eq:`5.59`)
 
 The partial derivatives of the soil surface fluxes with respect to
 ground temperature, which are needed for the soil temperature calculations (section 
@@ -831,19 +854,19 @@ ground temperature, which are needed for the soil temperature calculations (sect
 (section :numref:`Update of Ground Sensible and Latent Heat Fluxes`), are
 
 .. math::
-   :label: ZEqnNum806472 
+   :label: 5.83
 
    \frac{\partial H_{g} }{\partial T_{g} } =\frac{\rho _{atm} C_{p} }{r_{ah} }
 
 .. math::
-   :label: ZEqnNum497230 
+   :label: 5.84
 
    \frac{\partial E_{g} }{\partial T_{g} } =\frac{\beta _{soi} \rho _{atm} }{r_{aw} } \frac{dq_{g} }{dT_{g} }
 
 where
 
 .. math::
-   :label: 5.82) 
+   :label: 5.85 
 
    \frac{dq_{g} }{dT_{g} } =\left(1-f_{sno} -f_{h2osfc} \right)\alpha _{soil} \frac{dq_{sat}^{T_{soil} } }{dT_{soil} } +f_{sno} \frac{dq_{sat}^{T_{sno} } }{dT_{sno} } +f_{h2osfc} \frac{dq_{sat}^{T_{h2osfc} } }{dT_{h2osfc} } .
 
@@ -883,39 +906,41 @@ at height :math:`z_{0h} +d` and the atmosphere at height
 from the vegetation :math:`H_{v}`  and the ground :math:`H_{g}` 
 
 .. math::
-   :label: ZEqnNum550014 
+   :label: 5.86
 
    H=H_{v} +H_{g}
 
 where, with reference to :numref:`Figure Schematic diagram of sensible heat fluxes`,
 
 .. math::
-   :label: 5.84) 
+   :label: 5.87 
 
    H=-\rho _{atm} C_{p} \frac{\left(\theta _{atm} -T_{s} \right)}{r_{ah} }
 
 .. math::
-   :label: ZEqnNum675188 
+   :label: 5.88
 
    H_{v} =-\rho _{atm} C_{p} \left(T_{s} -T_{v} \right)\frac{\left(L+S\right)}{r_{b} }
 
 .. math::
-   :label: ZEqnNum293573 
+   :label: 5.89
 
-   H_{g} =\left(1-f_{sno} -f_{h2osfc} \right)H_{soil} +f_{sno} H_{snow} +f_{h2osfc} H_{h2osfc}
+   H_{g} =\left(1-f_{sno} -f_{h2osfc} \right)H_{soil} +f_{sno} H_{snow} +f_{h2osfc} H_{h2osfc} \ ,
+
+where
 
 .. math::
-   :label: 5.87) 
+   :label: 5.90 
 
    H_{soil} =-\rho _{atm} C_{p} \frac{\left(T_{s} -T_{1} \right)}{r_{ah} ^{{'} } }
 
 .. math::
-   :label: 5.88) 
+   :label: 5.91
 
    H_{sno} =-\rho _{atm} C_{p} \frac{\left(T_{s} -T_{snl+1} \right)}{r_{ah} ^{{'} } }
 
 .. math::
-   :label: 5.89) 
+   :label: 5.92 
 
    H_{h2osfc} =-\rho _{atm} C_{p} \frac{\left(T_{s} -T_{h2osfc} \right)}{r_{ah} ^{{'} } }
 
@@ -948,27 +973,28 @@ height :math:`z_{0h} ^{{'} }`  and the canopy air at height
  Figure Schematic diagram of water vapor fluxes for (a)
  non-vegetated surfaces and (b) vegetated surfaces.
 
-Equations - can be solved for the canopy air temperature :math:`T_{s}` 
+Equations :eq:`5.86` - :eq:`5.89` can be solved for the canopy air 
+temperature :math:`T_{s}` 
 
 .. math::
-   :label: ZEqnNum103571 
+   :label: 5.93
 
    T_{s} =\frac{c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} +c_{v}^{h} T_{v} }{c_{a}^{h} +c_{g}^{h} +c_{v}^{h} }
 
 where
 
 .. math::
-   :label: ZEqnNum298904 
+   :label: 5.94
 
    c_{a}^{h} =\frac{1}{r_{ah} }
 
 .. math::
-   :label: ZEqnNum991533 
+   :label: 5.95
 
    c_{g}^{h} =\frac{1}{r_{ah} ^{{'} } }
 
 .. math::
-   :label: ZEqnNum284616 
+   :label: 5.96
 
    c_{v}^{h} =\frac{\left(L+S\right)}{r_{b} }
 
@@ -976,22 +1002,22 @@ are the sensible heat conductances from the canopy air to the
 atmosphere, the ground to canopy air, and leaf surface to canopy air,
 respectively (m s\ :sup:`-1`).
 
-When the expression for :math:`T_{s}`  is substituted into equation :eq:`ZEqnNum675188`,
+When the expression for :math:`T_{s}`  is substituted into equation :eq:`5.88`,
 the sensible heat flux from vegetation :math:`H_{v}`  is a function of
 :math:`\theta _{atm}` , :math:`T_{g}` , and :math:`T_{v}` 
 
 .. math::
-   :label: ZEqnNum362496 
+   :label: 5.97
 
-   H_{v} =-\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} -\left(c_{a}^{h} +c_{g}^{h} \right)T_{v} \right]\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
+   H_{v} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} -\left(c_{a}^{h} +c_{g}^{h} \right)T_{v} \right]\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
 
 Similarly, the expression for :math:`T_{s}`  can be substituted into
 equation to obtain the sensible heat flux from ground :math:`H_{g}` 
 
 .. math::
-   :label: ZEqnNum527667 
+   :label: 5.98
 
-   H_{g} =-\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{v}^{h} T_{v} -\left(c_{a}^{h} +c_{v}^{h} \right)T_{g} \right]\frac{c_{g}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
+   H_{g} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{v}^{h} T_{v} -\left(c_{a}^{h} +c_{v}^{h} \right)T_{g} \right]\frac{c_{g}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
 
 The air within the canopy is assumed to have negligible capacity to
 store water vapor so that the water vapor flux :math:`E` between the
@@ -1000,41 +1026,43 @@ surface at height :math:`z_{0w} +d` and the atmosphere at height
 flux from the vegetation :math:`E_{v}`  and the ground :math:`E_{g}` 
 
 .. math::
-   :label: ZEqnNum365017 
+   :label: 5.99
 
-   E=E_{v} +E_{g}
+   E = E_{v} +E_{g}
 
 where, with reference to :numref:`Figure Schematic diagram of latent heat fluxes`,
 
 .. math::
-   :label: 5.97) 
+   :label: 5.100 
 
-   E=-\rho _{atm} \frac{\left(q_{atm} -q_{s} \right)}{r_{aw} }
-
-.. math::
-   :label: ZEqnNum351492 
-
-   E_{v} =-\rho _{atm} \frac{\left(q_{s} -q_{sat}^{T_{v} } \right)}{r_{total} }
+   E = -\rho _{atm} \frac{\left(q_{atm} -q_{s} \right)}{r_{aw} }
 
 .. math::
-   :label: ZEqnNum145330 
+   :label: 5.101
 
-   E_{g} =\left(1-f_{sno} -f_{h2osfc} \right)E_{soil} +f_{sno} E_{snow} +f_{h2osfc} E_{h2osfc}
-
-.. math::
-   :label: 5.100) 
-
-   E_{soil} =-\rho _{atm} \frac{\beta _{soi} \left(q_{s} -q_{soil} \right)}{r_{aw} ^{{'} } +r_{litter} }
+   E_{v} = -\rho _{atm} \frac{\left(q_{s} -q_{sat}^{T_{v} } \right)}{r_{total} }
 
 .. math::
-   :label: 5.101) 
+   :label: 5.102
 
-   E_{sno} =-\rho _{atm} \frac{\left(q_{s} -q_{sno} \right)}{r_{aw} ^{{'} } +r_{litter} }
+   E_{g} = \left(1-f_{sno} -f_{h2osfc} \right)E_{soil} +f_{sno} E_{snow} +f_{h2osfc} E_{h2osfc} \ ,
+
+where
 
 .. math::
-   :label: 5.102) 
+   :label: 5.103 
 
-   E_{h2osfc} =-\rho _{atm} \frac{\left(q_{s} -q_{h2osfc} \right)}{r_{aw} ^{{'} } +r_{litter} }
+   E_{soil} = -\rho _{atm} \frac{\beta _{soi} \left(q_{s} -q_{soil} \right)}{r_{aw} ^{{'} } +r_{soil} }
+
+.. math::
+   :label: 5.104 
+
+   E_{sno} = -\rho _{atm} \frac{\left(q_{s} -q_{sno} \right)}{r_{aw} ^{{'} } +r_{soil} }
+
+.. math::
+   :label: 5.105 
+
+   E_{h2osfc} = -\rho _{atm} \frac{\left(q_{s} -q_{h2osfc} \right)}{r_{aw} ^{{'} } +r_{soil} }
 
 where :math:`q_{atm}`  is the atmospheric specific humidity (kg kg\ :sup:`-1`), :math:`r_{aw}`  is the aerodynamic resistance to
 water vapor transfer (s m\ :sup:`-1`), :math:`q_{sat}^{T_{v} }` 
@@ -1047,7 +1075,7 @@ m\ :sup:`-1`) to water vapor transfer between the ground at height
 :math:`z_{0w} ^{{'} }`  and the canopy air at height :math:`z_{0w} +d`,
 :math:`\beta _{soi}`  is an empirical function of soil water (section
 :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`), 
-and :math:`r_{litter}`  is a resistance for the plant litter layer
+and :math:`r_{soil}`  (:eq:`5.76`) is a resistance to diffusion through the soil 
 (s m\ :sup:`-1`). :math:`r_{total}`  is the total resistance to
 water vapor transfer from the canopy to the canopy air and includes
 contributions from leaf boundary layer and sunlit and shaded stomatal
@@ -1059,34 +1087,34 @@ is the sum of water vapor flux from wetted leaf and stem area
 transpiration from dry leaf surfaces :math:`E_{v}^{t}` 
 
 .. math::
-   :label: 5.103) 
+   :label: 5.106 
 
    E_{v} =E_{v}^{w} +E_{v}^{t} .
 
-Equations - can be solved for the canopy specific humidity
+Equations :eq:`5.99` - :eq:`5.102` can be solved for the canopy specific humidity
 :math:`q_{s}` 
 
 .. math::
-   :label: ZEqnNum362168 
+   :label: 5.107
 
    q_{s} =\frac{c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} +c_{v}^{w} q_{sat}^{T_{v} } }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} }
 
 where
 
 .. math::
-   :label: ZEqnNum533553 
+   :label: 5.108
 
    c_{a}^{w} =\frac{1}{r_{aw} }
 
 .. math::
-   :label: ZEqnNum544982 
+   :label: 5.109
 
    c_{v}^{w} =\frac{\left(L+S\right)}{r_{b} } r''
 
 .. math::
-   :label: ZEqnNum888691 
+   :label: 5.110
 
-   c_{g}^{w} =\frac{\beta _{soi} }{r_{aw} ^{{'} } +r_{litter} }
+   c_{g}^{w} =\frac{1}{r_{aw} ^{{'} } +r_{soil} }
 
 are the water vapor conductances from the canopy air to the atmosphere,
 the leaf to canopy air, and ground to canopy air, respectively. The term
@@ -1095,9 +1123,14 @@ transpiration and limited by available water and potential evaporation
 as
 
 .. math::
-   :label: ZEqnNum166006 
+   :label: 5.111
 
-   r''=\left\{\begin{array}{l} {\min \left(f_{wet} +r_{dry} ^{{'} {'} } ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right)\qquad E_{v}^{w,\, pot} >0,\, \beta _{t} >0} \\ {\min \left(f_{wet} ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right)\qquad E_{v}^{w,\, pot} >0,\, \beta _{t} \le 0} \\ {1\qquad E_{v}^{w,\, pot} \le 0} \end{array}\right\}
+   r'' = \left\{
+   \begin{array}{lr} 
+   \min \left(f_{wet} +r_{dry} ^{{'} {'} } ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right) & \qquad E_{v}^{w,\, pot} >0,\, \beta _{t} >0 \\ 
+   \min \left(f_{wet} ,\, \frac{E_{v}^{w,\, pot} r_{dry} ^{{'} {'} } +\frac{W_{can} }{\Delta t} }{E_{v}^{w,\, pot} } \right) & \qquad E_{v}^{w,\, pot} >0,\, \beta _{t} \le 0 \\ 
+   1 & \qquad E_{v}^{w,\, pot} \le 0 
+   \end{array}\right\}
 
 where :math:`f_{wet}`  is the fraction of leaves and stems that are wet
 (section :numref:`Canopy Water`), :math:`W_{can}`  is canopy water (kg m\ :sup:`-2`)
@@ -1107,14 +1140,14 @@ where :math:`f_{wet}`  is the fraction of leaves and stems that are wet
 evaporation from wet foliage per unit wetted area is
 
 .. math::
-   :label: 5.109) 
+   :label: 5.112
 
    E_{v}^{w,\, pot} =-\frac{\rho _{atm} \left(q_{s} -q_{sat}^{T_{v} } \right)}{r_{b} } .
 
 The term :math:`r_{dry} ^{{'} {'} }`  is
 
 .. math::
-   :label: 5.110) 
+   :label: 5.113 
 
    r_{dry} ^{{'} {'} } =\frac{f_{dry} r_{b} }{L} \left(\frac{L^{sun} }{r_{b} +r_{s}^{sun} } +\frac{L^{sha} }{r_{b} +r_{s}^{sha} } \right)
 
@@ -1124,21 +1157,21 @@ leaf area indices (section :numref:`Solar Fluxes`), and :math:`r_{s}^{sun}`  and
 :math:`r_{s}^{sha}`  are the sunlit and shaded stomatal resistances (s
 m\ :sup:`-1`) (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
-When the expression for :math:`q_{s}`  is substituted into equation ,
+When the expression for :math:`q_{s}`  is substituted into equation :eq:`5.101`,
 the water vapor flux from vegetation :math:`E_{v}`  is a function of
 :math:`q_{atm}` , :math:`q_{g}` , and :math:`q_{sat}^{T_{v} }` 
 
 .. math::
-   :label: ZEqnNum256012 
+   :label: 5.114
 
    E_{v} =-\rho _{atm} \left[c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} -\left(c_{a}^{w} +c_{g}^{w} \right)q_{sat}^{T_{v} } \right]\frac{c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } .
 
 Similarly, the expression for :math:`q_{s}`  can be substituted into
-equation to obtain the water vapor flux from the ground beneath the
+:eq:`5.84` to obtain the water vapor flux from the ground beneath the
 canopy :math:`E_{g}` 
 
 .. math::
-   :label: ZEqnNum243941 
+   :label: 5.115
 
    E_{g} =-\rho _{atm} \left[c_{a}^{w} q_{atm} +c_{v}^{w} q_{sat}^{T_{v} } -\left(c_{a}^{w} +c_{v}^{w} \right)q_{g} \right]\frac{c_{g}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } .
 
@@ -1147,14 +1180,14 @@ ground at height :math:`z_{0h} ^{{'} }`  (:math:`z_{0w} ^{{'} }` ) and
 the canopy air at height :math:`z_{0h} +d` (:math:`z_{0w} +d`) are
 
 .. math::
-   :label: ZEqnNum496775 
+   :label: 5.116
 
    r_{ah} ^{{'} } =r_{aw} ^{{'} } =\frac{1}{C_{s} U_{av} }
 
 where
 
 .. math::
-   :label: ZEqnNum781547 
+   :label: 5.117
 
    U_{av} =V_{a} \sqrt{\frac{1}{r_{am} V_{a} } } =u_{*}
 
@@ -1162,80 +1195,43 @@ is the magnitude of the wind velocity incident on the leaves
 (equivalent here to friction velocity) (m s\ :sup:`-1`) and
 :math:`C_{s}`  is the turbulent transfer coefficient between the
 underlying soil and the canopy air. :math:`C_{s}`  is obtained by
-interpolation between values for dense canopy and bare soil (:ref:`Zeng et al. 2005 <Zengetal2005>`)
+interpolation between values for dense canopy and bare soil 
+(:ref:`Zeng et al. 2005 <Zengetal2005>`)
 
 .. math::
-   :label: 5.115) 
+   :label: 5.118
 
    C_{s} =C_{s,\, bare} W+C_{s,\, dense} (1-W)
 
 where the weight :math:`W` is
 
 .. math::
-   :label: 5.116) 
+   :label: 5.119 
 
    W=e^{-\left(L+S\right)} .
 
-The dense canopy turbulent transfer coefficient in :ref:`Zeng et al. (2005) <Zengetal2005>`
-is modified from its original value of 0.004 (:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`) by
-Sakaguchi and Zeng (2009) to account for stability as
-
-.. math::
-   :label: 5.117) 
-
-   C_{s,\, dense} =\left\{\begin{array}{l} {0.004\qquad T_{s} -T_{g} \le 0} \\ {\frac{0.004}{1+\gamma \min \left(S,10\right)} \qquad T_{s} -T_{g} >0} \end{array}\right\}
-
-where :math:`\gamma =0.5` and :math:`S` is a stability parameter
-determined from
-
-.. math::
-   :label: 5.118) 
-
-   S=\frac{gz_{top} \left(T_{s} -T_{g} \right)}{T_{s} u_{*}^{2} }
-
-where :math:`g` is the gravitational acceleration (m
-s\ :sup:`-2`) (:numref:`Table Physical constants`), and :math:`z_{top}`  is canopy top
-height (m) (:numref:`Table Prescribed plant functional type heights`). The bare soil turbulent transfer coefficient is
-
-.. math::
-   :label: 5.119) 
-
-   C_{s,\, bare} =\frac{k}{a} \left(\frac{z_{0m,\, g} U_{av} }{\upsilon } \right)^{-0.45}
-
-where the kinematic viscosity of air
-:math:`\upsilon =1.5\times 10^{-5}`  m\ :sup:`2`
-s\ :sup:`-1` and :math:`a=0.13`.
-
-The litter resistance :math:`r_{litter}`  (Sakaguchi and Zeng 2009) (s
-m\ :sup:`-1`) is
+The dense canopy turbulent transfer coefficient 
+(:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`) is 
 
 .. math::
    :label: 5.120) 
 
-   r_{litter} =\frac{1}{0.004u_{*} } \left(1-e^{-L_{litter}^{eff} } \right)
+   C_{s,\, dense} =0.004 \ .
 
-where the effective litter area index :math:`L_{litter}^{eff}` (m\ :sup:`2` m\ :sup:`-2`) is the fraction of plant litter
-area index :math:`L_{litter}`  (currently set to 0.5  m\ :sup:`2` m\ :sup:`-2`) that is not covered by snow
-
-.. math::
-   :label: 5.121) 
-
-   L_{litter}^{eff} =L_{litter} \left[1-\min \left(f_{litter}^{snow} ,\, 1\right)\right].
-
-The effective snow cover of the litter layer is
+The bare soil turbulent transfer coefficient is
 
 .. math::
-   :label: 5.122) 
+   :label: 5.121 
 
-   f_{litter}^{snow} =\frac{z_{sno} }{\Delta z_{litter} }
+   C_{s,\, bare} =\frac{k}{a} \left(\frac{z_{0m,\, g} U_{av} }{\upsilon } \right)^{-0.45}
 
-where :math:`\Delta z_{litter} =0.05`\ m is assumed as a typical depth
-for the litter layer, and :math:`z_{sno}`  is the depth of snow (Chapter :numref:`rst_Snow Hydrology`) (m).
+where the kinematic viscosity of air
+:math:`\upsilon =1.5\times 10^{-5}`  m\ :sup:`2` s\ :sup:`-1` and :math:`a=0.13`.
 
 The leaf boundary layer resistance :math:`r_{b}`  is
 
 .. math::
-   :label: ZEqnNum181758 
+   :label: 5.122
 
    r_{b} =\frac{1}{C_{v} } \left({U_{av} \mathord{\left/ {\vphantom {U_{av}  d_{leaf} }} \right. \kern-\nulldelimiterspace} d_{leaf} } \right)^{{-1\mathord{\left/ {\vphantom {-1 2}} \right. \kern-\nulldelimiterspace} 2} }
 
@@ -1246,16 +1242,17 @@ direction of wind flow (:numref:`Table Coefficients for saturation vapor pressur
 
 The partial derivatives of the fluxes from the soil beneath the canopy
 with respect to ground temperature, which are needed for the soil
-temperature calculations (section :numref:`Numerical Solution Temperature`) and to update the soil surface
-fluxes (section :numref:`Update of Ground Sensible and Latent Heat Fluxes`), are
+temperature calculations (section :numref:`Numerical Solution Temperature`) 
+and to update the soil surface fluxes (section 
+:numref:`Update of Ground Sensible and Latent Heat Fluxes`), are
 
 .. math::
-   :label: ZEqnNum774729 
+   :label: 5.123
 
    \frac{\partial H_{g} }{\partial T_{g} } =\frac{\rho _{atm} C_{p} }{r'_{ah} } \frac{c_{a}^{h} +c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} }
 
 .. math::
-   :label: ZEqnNum562232 
+   :label: 5.124
 
    \frac{\partial E_{g} }{\partial T_{g} } =\frac{\beta _{soi} \rho _{atm} }{r'_{aw} +r_{litter} } \frac{c_{a}^{w} +c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } \frac{dq_{g} }{dT_{g} } .
 
@@ -1267,35 +1264,38 @@ determined analytically, are ignored for
 :math:`\frac{\partial E_{g} }{\partial T_{g} }` .
 
 The roughness lengths used to calculate :math:`r_{am}` ,
-:math:`r_{ah}` , and :math:`r_{aw}`  from equations , , and are
+:math:`r_{ah}` , and :math:`r_{aw}`  from :eq:`5.55`, :eq:`5.56`, and :eq:`5.57` are
 :math:`z_{0m} =z_{0m,\, v}` , :math:`z_{0h} =z_{0h,\, v}` , and
 :math:`z_{0w} =z_{0w,\, v}` . The vegetation displacement height
 :math:`d` and the roughness lengths are a function of plant height and
 adjusted for canopy density following :ref:`Zeng and Wang (2007) <ZengWang2007>`
 
 .. math::
-   :label: 5.126) 
+   :label: 5.125
 
-   z_{0m,\, v} =z_{0h,\, v} =z_{0w,\, v} =\exp \left[V\ln \left(z_{top} R_{z0m} \right)+\left(1-V\right)\ln \left(z_{0m,\, g} \right)\right]
+   z_{0m,\, v} = z_{0h,\, v} =z_{0w,\, v} =\exp \left[V\ln \left(z_{top} R_{z0m} \right)+\left(1-V\right)\ln \left(z_{0m,\, g} \right)\right]
 
 .. math::
-   :label: 5.127) 
+   :label: 5.126 
 
-   d=z_{top} R_{d} V
+   d = z_{top} R_{d} V
 
-where :math:`z_{top}`  is canopy top height (m) (:numref:`Table Prescribed plant functional type heights`),
+where :math:`z_{top}`  is canopy top height (m) 
+(:numref:`Table Prescribed plant functional type heights`),
 :math:`R_{z0m}`  and :math:`R_{d}`  are the ratio of momentum roughness
 length and displacement height to canopy top height, respectively 
-(:numref:`Table Plant functional type aerodynamic parameters`), and 
-:math:`z_{0m,\, g}`  is the ground momentum roughness length
-(m) (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`). The fractional weight :math:`V` is determined from
+(:numref:`Table Plant functional type aerodynamic parameters`), and :math:`z_{0m,\, g}` 
+is the ground momentum roughness length (m) (section 
+:numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`). The 
+fractional weight :math:`V` is determined from
 
 .. math::
-   :label: 5.128) 
+   :label: 5.127 
 
-   V=\frac{1-\exp \left\{-\beta \min \left[L+S,\, \left(L+S\right)_{cr} \right]\right\}}{1-\exp \left[-\beta \left(L+S\right)_{cr} \right]}
+   V = \frac{1-\exp \left\{-\beta \min \left[L+S,\, \left(L+S\right)_{cr} \right]\right\}}{1-\exp \left[-\beta \left(L+S\right)_{cr} \right]}
 
-where :math:`\beta =1` and :math:`\left(L+S\right)_{cr} =2` (m\ :sup:`2` m\ :sup:`-2`) is a critical value of exposed leaf
+where :math:`\beta =1` and :math:`\left(L+S\right)_{cr} = 2` 
+(m\ :sup:`2` m\ :sup:`-2`) is a critical value of exposed leaf
 plus stem area for which :math:`z_{0m}`  reaches its maximum.
 
 .. _Table Plant functional type aerodynamic parameters:
@@ -1362,7 +1362,7 @@ Numerical Implementation
 Canopy energy conservation gives
 
 .. math::
-   :label: 5.129) 
+   :label: 5.128
 
    -\overrightarrow{S}_{v} +\overrightarrow{L}_{v} \left(T_{v} \right)+H_{v} \left(T_{v} \right)+\lambda E_{v} \left(T_{v} \right)=0
 
@@ -1381,7 +1381,7 @@ non-linear systems of equations can be applied to iteratively solve for
 :math:`T_{v}`  as
 
 .. math::
-   :label: ZEqnNum247755 
+   :label: 5.129
 
    \Delta T_{v} =\frac{\overrightarrow{S}_{v} -\overrightarrow{L}_{v} -H_{v} -\lambda E_{v} }{\frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } +\frac{\partial H_{v} }{\partial T_{v} } +\frac{\partial \lambda E_{v} }{\partial T_{v} } }
 
@@ -1391,17 +1391,17 @@ where :math:`\Delta T_{v} =T_{v}^{n+1} -T_{v}^{n}`  and the subscript
 The partial derivatives are
 
 .. math::
-   :label: 5.131) 
+   :label: 5.130 
 
    \frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } =4\varepsilon _{v} \sigma \left[2-\varepsilon _{v} \left(1-\varepsilon _{g} \right)\right]T_{v}^{3}
 
 .. math::
-   :label: 5.132) 
+   :label: 5.131 
 
    \frac{\partial H_{v} }{\partial T_{v} } =\rho _{atm} C_{p} \left(c_{a}^{h} +c_{g}^{h} \right)\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} }
 
 .. math::
-   :label: 5.133) 
+   :label: 5.132 
 
    \frac{\partial \lambda E_{v} }{\partial T_{v} } =\lambda \rho _{atm} \left(c_{a}^{w} +c_{g}^{w} \right)\frac{c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } \frac{dq_{sat}^{T_{v} } }{dT_{v} } .
 
@@ -1418,17 +1418,17 @@ between stable and unstable conditions. The total water vapor flux
 flux :math:`H_{v}`  are updated for changes in leaf temperature as
 
 .. math::
-   :label: ZEqnNum420059 
+   :label: 5.133
 
    E_{v} =-\rho _{atm} \left[c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} -\left(c_{a}^{w} +c_{g}^{w} \right)\left(q_{sat}^{T_{v} } +\frac{dq_{sat}^{T_{v} } }{dT_{v} } \Delta T_{v} \right)\right]\frac{c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} }
 
 .. math::
-   :label: ZEqnNum554100 
+   :label: 5.134
 
    E_{v}^{t} =-r_{dry} ^{{'} {'} } \rho _{atm} \left[c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} -\left(c_{a}^{w} +c_{g}^{w} \right)\left(q_{sat}^{T_{v} } +\frac{dq_{sat}^{T_{v} } }{dT_{v} } \Delta T_{v} \right)\right]\frac{c_{v}^{h} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} }
 
 .. math::
-   :label: ZEqnNum839021 
+   :label: 5.135
 
    H_{v} =-\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} -\left(c_{a}^{h} +c_{g}^{h} \right)\left(T_{v} +\Delta T_{v} \right)\right]\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
 
@@ -1440,57 +1440,57 @@ proceeds as follows:
    obtained from
 
    .. math::
-      :label: 5.137) 
+      :label: 5.136 
 
       T_{s} =\frac{T_{g} +\theta _{atm} }{2}
 
    .. math::
-      :label: 5.138) 
+      :label: 5.137 
 
       q_{s} =\frac{q_{g} +q_{atm} }{2} .
 
 #. An initial guess for the wind speed :math:`V_{a}`  is obtained from
-   eq. assuming an initial convective velocity :math:`U_{c} =0` m
+   :eq:`5.24` assuming an initial convective velocity :math:`U_{c} =0` m
    s\ :sup:`-1` for stable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from
-   eq. ) and :math:`U_{c} =0.5` for unstable conditions
+   :eq:`5.50` ) and :math:`U_{c} =0.5` for unstable conditions
    (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
 
 #. An initial guess for the Monin-Obukhov length :math:`L` is obtained
-   from the bulk Richardson number using equation and .
+   from the bulk Richardson number using equation and  :eq:`5.46` and :eq:`5.48`.
 
 #. Iteration proceeds on the following system of equations:
 
-#. Friction velocity :math:`u_{*}`  (eqs. , , , )
+#. Friction velocity :math:`u_{*}`  (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
-#. Ratio :math:`\frac{\theta _{*} }{\theta _{atm} -\theta _{s} }`  (eqs.
-   , , , )
+#. Ratio :math:`\frac{\theta _{*} }{\theta _{atm} -\theta _{s} }` 
+   (:eq:`5.37` , :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
 
-#. Ratio :math:`\frac{q_{*} }{q_{atm} -q_{s} }`  (eqs. , , , )
+#. Ratio :math:`\frac{q_{*} }{q_{atm} -q_{s} }`  (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
 
 #. Aerodynamic resistances :math:`r_{am}` , :math:`r_{ah}` , and
-   :math:`r_{aw}`  (eqs. , , )
+   :math:`r_{aw}`  (:eq:`5.55`, :eq:`5.56`, :eq:`5.57`)
 
 #. Magnitude of the wind velocity incident on the leaves :math:`U_{av}` 
-   (eq. )
+   (:eq:`5.117` )
 
-#. Leaf boundary layer resistance :math:`r_{b}`  (eq. )
+#. Leaf boundary layer resistance :math:`r_{b}`  (:eq:`5.136` )
 
 #. Aerodynamic resistances :math:`r_{ah} ^{{'} }`  and
-   :math:`r_{aw} ^{{'} }`  (eq. )
+   :math:`r_{aw} ^{{'} }`  (:eq:`5.116` )
 
 #. Sunlit and shaded stomatal resistances :math:`r_{s}^{sun}`  and
    :math:`r_{s}^{sha}`  (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`)
 
 #. Sensible heat conductances :math:`c_{a}^{h}` , :math:`c_{g}^{h}` ,
-   and :math:`c_{v}^{h}`  (eqs. , , )
+   and :math:`c_{v}^{h}`  (:eq:`5.94`, :eq:`5.95`, :eq:`5.96`)
 
 #. Latent heat conductances :math:`c_{a}^{w}` , :math:`c_{v}^{w}` , and
-   :math:`c_{g}^{w}`  (eqs. , , )
+   :math:`c_{g}^{w}`  (:eq:`5.108`, :eq:`5.109`, :eq:`5.110`)
 
-#. Sensible heat flux from vegetation :math:`H_{v}`  (eq. )
+#. Sensible heat flux from vegetation :math:`H_{v}`  (:eq:`5.97` )
 
-#. Latent heat flux from vegetation :math:`\lambda E_{v}`  (eq. )
+#. Latent heat flux from vegetation :math:`\lambda E_{v}`  (:eq:`5.101` )
 
 #. If the latent heat flux has changed sign from the latent heat flux
    computed at the previous iteration
@@ -1500,23 +1500,23 @@ proceeds as follows:
    (:math:`\Delta _{1} =0.1\lambda E_{v} ^{n+1} -\lambda E_{v} ^{n+1}` )
    is added to the sensible heat flux later.
 
-#. Change in vegetation temperature :math:`\Delta T_{v}`  (eq. ) and
+#. Change in vegetation temperature :math:`\Delta T_{v}`  (:eq:`5.129` ) and
    update the vegetation temperature as
    :math:`T_{v}^{n+1} =T_{v}^{n} +\Delta T_{v}` . :math:`T_{v}`  is
    constrained to change by no more than 1ºK in one iteration. If this
    limit is exceeded, the energy error is
 
    .. math::
-      :label: 5.139) 
+      :label: 5.138 
 
       \Delta _{2} =\overrightarrow{S}_{v} -\overrightarrow{L}_{v} -\frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } \Delta T_{v} -H_{v} -\frac{\partial H_{v} }{\partial T_{v} } \Delta T_{v} -\lambda E_{v} -\frac{\partial \lambda E_{v} }{\partial T_{v} } \Delta T_{v}
 
 where :math:`\Delta T_{v} =1{\rm \; or\; }-1`. The error
 :math:`\Delta _{2}`  is added to the sensible heat flux later.
 
-#. Water vapor flux :math:`E_{v}`  (eq. )
+#. Water vapor flux :math:`E_{v}`  (:eq:`5.133` )
 
-#. Transpiration :math:`E_{v}^{t}`  (eq. if :math:`\beta _{t} >0`,
+#. Transpiration :math:`E_{v}^{t}`  (:eq:`5.134` if :math:`\beta_{t} >0`,
    otherwise :math:`E_{v}^{t} =0`)
 
 #. The water vapor flux :math:`E_{v}`  is constrained to be less than or
@@ -1526,26 +1526,28 @@ where :math:`\Delta T_{v} =1{\rm \; or\; }-1`. The error
    The energy error due to this constraint is
 
    .. math::
-      :label: 5.140) 
+      :label: 5.139
 
       \Delta _{3} =\max \left(0,\, E_{v} -E_{v}^{t} -\frac{W_{can} }{\Delta t} \right).
 
 The error :math:`\lambda \Delta _{3}`  is added to the sensible heat
 flux later.
 
-#. Sensible heat flux :math:`H_{v}`  (eq. ). The three energy error
+#. Sensible heat flux :math:`H_{v}`  (:eq:`` ). The three energy error
    terms, :math:`\Delta _{1}` , :math:`\Delta _{2}` , and
    :math:`\lambda \Delta _{3}`  are also added to the sensible heat
    flux.
 
-#. The saturated vapor pressure :math:`e_{i}`  (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), saturated
+#. The saturated vapor pressure :math:`e_{i}`  (Chapter 
+   :numref:`rst_Stomatal Resistance and Photosynthesis`), saturated
    specific humidity :math:`q_{sat}^{T_{v} }`  and its derivative
    :math:`\frac{dq_{sat}^{T_{v} } }{dT_{v} }`  at the leaf surface
-   (section :numref:`Saturation Vapor Pressure`), are re-evaluated based on the new :math:`T_{v}` .
+   (section :numref:`Saturation Vapor Pressure`), are re-evaluated based on 
+   the new :math:`T_{v}` .
 
-#. Canopy air temperature :math:`T_{s}`  (eq. )
+#. Canopy air temperature :math:`T_{s}`  (:eq:`5.93` )
 
-#. Canopy air specific humidity :math:`q_{s}`  (eq. )
+#. Canopy air specific humidity :math:`q_{s}`  (:eq:`5.107` )
 
 #. Temperature difference :math:`\theta _{atm} -\theta _{s}` 
 
@@ -1561,11 +1563,11 @@ flux later.
    where :math:`\frac{q_{*} }{q_{atm} -q_{s} }`  was calculated earlier
    in the iteration
 
-#. Virtual potential temperature scale :math:`\theta _{v*}`  (eq. )
+#. Virtual potential temperature scale :math:`\theta _{v*}`  (:eq:`5.17` )
 
-#. Wind speed including the convective velocity, :math:`V_{a}`  (eq. )
+#. Wind speed including the convective velocity, :math:`V_{a}`  (:eq:`5.24` )
 
-#. Monin-Obukhov length :math:`L` (eq. )
+#. Monin-Obukhov length :math:`L` (:eq:`5.49` )
 
 #. The iteration is stopped after two or more steps if
    :math:`\tilde{\Delta }T_{v} <0.01` and
@@ -1574,14 +1576,14 @@ flux later.
    :math:`\tilde{\Delta }T_{v} =\max \left(\left|T_{v}^{n+1} -T_{v}^{n} \right|,\, \left|T_{v}^{n} -T_{v}^{n-1} \right|\right)`,
    or after forty iterations have been carried out.
 
-#. Momentum fluxes :math:`\tau _{x}` , :math:`\tau _{y}`  (eqs. , )
+#. Momentum fluxes :math:`\tau _{x}` , :math:`\tau _{y}`  (:eq:`5.5`, :eq:`5.6`)
 
-#. Sensible heat flux from ground :math:`H_{g}`  (eq. )
+#. Sensible heat flux from ground :math:`H_{g}`  (:eq:`5.89` )
 
-#. Water vapor flux from ground :math:`E_{g}`  (eq. )
+#. Water vapor flux from ground :math:`E_{g}`  (:eq:`5.102` )
 
 #. 2-m height air temperature :math:`T_{2m}` , specific humidity
-   :math:`q_{2m}` , relative humidity :math:`RH_{2m}` \ (eqs. , , )
+   :math:`q_{2m}` , relative humidity :math:`RH_{2m}` \ (:eq:`5.58` , :eq:`5.59`, :eq:`5.60`)
 
 .. _Update of Ground Sensible and Latent Heat Fluxes:
 
@@ -1592,17 +1594,17 @@ The sensible and water vapor heat fluxes derived above for bare soil and
 soil beneath canopy are based on the ground surface temperature from the
 previous time step :math:`T_{g}^{n}`  and are used as the surface
 forcing for the solution of the soil temperature equations (section
-:numref:`Numerical Solution Temperature`). This solution yields a new ground surface temperature
-:math:`T_{g}^{n+1}` . The ground sensible and water vapor fluxes are
-then updated for :math:`T_{g}^{n+1}`  as
+:numref:`Numerical Solution Temperature`). This solution yields a new ground 
+surface temperature :math:`T_{g}^{n+1}` . The ground sensible and water 
+vapor fluxes are then updated for :math:`T_{g}^{n+1}`  as
 
 .. math::
-   :label: 5.141) 
+   :label: 5.140 
 
    H'_{g} =H_{g} +\left(T_{g}^{n+1} -T_{g}^{n} \right)\frac{\partial H_{g} }{\partial T_{g} }
 
 .. math::
-   :label: 5.142) 
+   :label: 5.141 
 
    E'_{g} =E_{g} +\left(T_{g}^{n+1} -T_{g}^{n} \right)\frac{\partial E_{g} }{\partial T_{g} }
 
@@ -1611,18 +1613,18 @@ vapor fluxes derived from equations and for non-vegetated surfaces and
 equations and for vegetated surfaces using :math:`T_{g}^{n}` . One
 further adjustment is made to :math:`H'_{g}`  and :math:`E'_{g}` . If
 the soil moisture in the top snow/soil layer is not sufficient to
-support the updated ground evaporation, i.e., if :math:`E'_{g} >0` and
-:math:`f_{evap} <1` where
+support the updated ground evaporation, i.e., if :math:`E'_{g} > 0` and
+:math:`f_{evap} < 1` where
 
 .. math::
-   :label: 5.143) 
+   :label: 5.142 
 
    f_{evap} =\frac{{\left(w_{ice,\; snl+1} +w_{liq,\, snl+1} \right)\mathord{\left/ {\vphantom {\left(w_{ice,\; snl+1} +w_{liq,\, snl+1} \right) \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} }{\sum _{j=1}^{npft}\left(E'_{g} \right)_{j} \left(wt\right)_{j}  } \le 1,
 
 an adjustment is made to reduce the ground evaporation accordingly as
 
 .. math::
-   :label: 5.144) 
+   :label: 5.143 
 
    E''_{g} =f_{evap} E'_{g} .
 
@@ -1635,35 +1637,38 @@ relative area of the :math:`j^{th}`  PFT with respect to the column, and
 :math:`npft` is the number of PFTs on the column.
 :math:`w_{ice,\, snl+1}`  and :math:`w_{liq,\, snl+1}`  are the ice and
 liquid water contents (kg m\ :sup:`-2`) of the top snow/soil layer
-(Chapter :numref:`rst_Hydrology`). Any resulting energy deficit is assigned to sensible heat
+(Chapter :numref:`rst_Hydrology`). Any resulting energy deficit is assigned 
+to sensible heat
 as
 
 .. math::
-   :label: 5.145) 
+   :label: 5.144 
 
    H''_{g} =H_{g} +\lambda \left(E'_{g} -E''_{g} \right).
 
-The ground water vapor flux :math:`E''_{g}`  is partitioned into evaporation of liquid water from snow/soil :math:`q_{seva}`  
-(kg\ m\ :sup:`-2` s\ :sup:`-1`), sublimation from snow/soil ice :math:`q_{subl}`  (kg m\ :sup:`-2` s\ :sup:`-1`), liquid dew
-on snow/soil :math:`q_{sdew}`  (kg m\ :sup:`-2` s\ :sup:`-1`), or frost on snow/soil :math:`q_{frost}`  (kg m\ :sup:`-2` s\ :sup:`-1`) as
+The ground water vapor flux :math:`E''_{g}`  is partitioned into evaporation 
+of liquid water from snow/soil :math:`q_{seva}` (kg\ m\ :sup:`-2` s\ :sup:`-1`), 
+sublimation from snow/soil ice :math:`q_{subl}`  (kg m\ :sup:`-2` s\ :sup:`-1`), 
+liquid dew on snow/soil :math:`q_{sdew}`  (kg m\ :sup:`-2` s\ :sup:`-1`), or 
+frost on snow/soil :math:`q_{frost}`  (kg m\ :sup:`-2` s\ :sup:`-1`) as
 
 .. math::
-   :label: 5.146) 
+   :label: 5.145 
 
    q_{seva} =\max \left(E''_{sno} \frac{w_{liq,\, snl+1} }{w_{ice,\; snl+1} +w_{liq,\, snl+1} } ,0\right)\qquad E''_{sno} \ge 0,\, w_{ice,\; snl+1} +w_{liq,\, snl+1} >0
 
 .. math::
-   :label: 5.147) 
+   :label: 5.146 
 
    q_{subl} =E''_{sno} -q_{seva} \qquad E''_{sno} \ge 0
 
 .. math::
-   :label: 5.148) 
+   :label: 5.147 
 
    q_{sdew} =\left|E''_{sno} \right|\qquad E''_{sno} <0{\rm \; and\; }T_{g} \ge T_{f}
 
 .. math::
-   :label: 5.149) 
+   :label: 5.148 
 
    q_{frost} =\left|E''_{sno} \right|\qquad E''_{sno} <0{\rm \; and\; }T_{g} <T_{f} .
 
@@ -1675,12 +1680,12 @@ surface are accounted for during the snow hydrology calculations
 (section :numref:`Infiltration`), while losses or gains due to :math:`q_{subl}` ,
 :math:`q_{sdew}` , and :math:`q_{frost}`  on a soil surface are
 accounted for following the sub-surface drainage calculations (section
-7.6).
+:numref:`Lateral Sub-surface Runoff`).
 
 The ground heat flux :math:`G` is calculated as
 
 .. math::
-   :label: 5.150) 
+   :label: 5.149 
 
    G=\overrightarrow{S}_{g} -\overrightarrow{L}_{g} -H_{g} -\lambda E_{g}
 
@@ -1689,14 +1694,14 @@ the ground (section :numref:`Solar Fluxes`), :math:`\overrightarrow{L}_{g}`  is 
 longwave radiation absorbed by the ground (section :numref:`Longwave Fluxes`)
 
 .. math::
-   :label: 5.151) 
+   :label: 5.150 
 
    \vec{L}_{g} =L_{g} \uparrow -\delta _{veg} \varepsilon _{g} L_{v} \, \downarrow -\left(1-\delta _{veg} \right)\varepsilon _{g} L_{atm} \, \downarrow +4\varepsilon _{g} \sigma \left(T_{g}^{n} \right)^{3} \left(T_{g}^{n+1} -T_{g}^{n} \right),
 
 where
 
 .. math::
-   :label: 5.152) 
+   :label: 5.151 
 
    L_{g} \uparrow =\varepsilon _{g} \sigma \left[\left(1-f_{sno} -f_{h2osfc} \right)\left(T_{1}^{n} \right)^{4} +f_{sno} \left(T_{sno}^{n} \right)^{4} +f_{h2osfc} \left(T_{h2osfc}^{n} \right)^{4} \right]
 
@@ -1707,7 +1712,7 @@ When converting ground water vapor flux to an energy flux, the term
 :math:`\lambda`  is arbitrarily assumed to be
 
 .. math::
-   :label: 5.153) 
+   :label: 5.152 
 
    \lambda =\left\{\begin{array}{l} {\lambda _{sub} \qquad {\rm if\; }w_{liq,\, snl+1} =0{\rm \; and\; }w_{ice,\, snl+1} >0} \\ {\lambda _{vap} \qquad {\rm otherwise}} \end{array}\right\}
 
@@ -1719,7 +1724,7 @@ flux to an energy flux, :math:`\lambda _{vap}`  is used.
 The system balances energy as
 
 .. math::
-   :label: 5.154) 
+   :label: 5.153 
 
    \overrightarrow{S}_{g} +\overrightarrow{S}_{v} +L_{atm} \, \downarrow -L\, \uparrow -H_{v} -H_{g} -\lambda _{vap} E_{v} -\lambda E_{g} -G=0.
 
@@ -1734,12 +1739,12 @@ Saturation vapor pressure :math:`e_{sat}^{T}`  (Pa) and its derivative
 :ref:`Flatau et al. (1992) <Flatauetal1992>`
 
 .. math::
-   :label: 5.155) 
+   :label: 5.154 
 
    e_{sat}^{T} =100\left[a_{0} +a_{1} T+\cdots +a_{n} T^{n} \right]
 
 .. math::
-   :label: 5.156) 
+   :label: 5.155 
 
    \frac{de_{sat}^{T} }{dT} =100\left[b_{0} +b_{1} T+\cdots +b_{n} T^{n} \right]
 
@@ -1753,12 +1758,12 @@ The saturated water vapor specific humidity :math:`q_{sat}^{T}` and its derivati
 :math:`\frac{dq_{sat}^{T} }{dT}` are
 
 .. math::
-   :label: 5.157) 
+   :label: 5.156 
 
    q_{sat}^{T} =\frac{0.622e_{sat}^{T} }{P_{atm} -0.378e_{sat}^{T} }
 
 .. math::
-   :label: 5.158) 
+   :label: 5.157 
 
    \frac{dq_{sat}^{T} }{dT} =\frac{0.622P_{atm} }{\left(P_{atm} -0.378e_{sat}^{T} \right)^{2} } \frac{de_{sat}^{T} }{dT} .
 

@@ -392,7 +392,7 @@ mass is stated as
    \frac{\partial \theta }{\partial t} =-\frac{\partial q}{\partial z} -Q
 
 where :math:`\theta`  is the volumetric soil water content
-(mm:sup:`3` of water mm\ :sup:`-3` of soil), :math:`t` is
+(mm\ :sup:`3` of water mm\ :sup:`-3` of soil), :math:`t` is
 time (s), :math:`z` is height above some datum in the soil column (mm)
 (positive upwards), :math:`q` is soil water flux (kg m\ :sup:`-2`
 s\ :sup:`-1` or mm s\ :sup:`-1`) (positive upwards), and
