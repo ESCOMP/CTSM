@@ -1551,7 +1551,7 @@ Schnell, S. and King, G.M., 1996. Responses of methanotrophic activity
 in soils and cultures to water stress. Applied and Environmental
 Microbiology 62:3203-3209.
 
-.. _Segers, R., 1998. Methane production and methane consumption: a review
+.. _Segers1998:
 
 Segers, R., 1998. Methane production and methane consumption: a review
 of processes underlying wetland methane fluxes. Biogeochemistry
