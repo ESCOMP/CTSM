@@ -18,7 +18,7 @@ gridcell according to density class. The urban landunit is based on the
 “urban canyon” concept of :ref:`Oke (1987) <Oke1987>` in which 
 the canyon geometry is
 described by building height (:math:`H`) and street width (:math:`W`)
-(:numref:`Figure schematic representation of urban`). The canyon system 
+(:numref:`Figure schematic representation of the urban landunit`). The canyon system 
 consists of roofs, walls, and canyon
 floor. Walls are further divided into shaded and sunlit components. The
 canyon floor is divided into pervious (e.g., to represent residential
@@ -28,7 +28,7 @@ pervious fraction; instead evaporation is parameterized by a simplified
 bulk scheme.
 
 Each of the five urban surfaces is treated as a column within the
-landunit (:numref:`Figure schematic representation of urban`). 
+landunit (:numref:`Figure schematic representation of the urban landunit`). 
 Radiation parameterizations account for trapping
 of solar and longwave radiation inside the canyon. Momentum fluxes are
 determined for the urban landunit using a roughness length and
@@ -106,7 +106,7 @@ resolution.
 
 .. Figure 12.1. Schematic representation of the urban land unit
 
-.. _Figure schematic representation of the urban land unit:
+.. _Figure schematic representation of the urban landunit:
 
 .. Figure:: image1.png
 
