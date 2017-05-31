@@ -93,7 +93,7 @@ annual NPP in Figure 16.1.
 .. figure:: image1.png
 
  Biological nitrogen fixation as a function of annual net
-primary production.
+ primary production.
 
 Because of the empirical nature of this NPP-BNF relationship, the
 timescale for calculating NPP and thus BNF is unconstrained. Using
