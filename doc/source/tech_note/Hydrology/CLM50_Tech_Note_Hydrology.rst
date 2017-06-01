@@ -16,7 +16,7 @@ m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (:numref:`Figure Hydrologic processes`).
 The total water balance of the system is
 
 .. math::
-   :label: 7.1) 
+   :label: 7.1
 
    \begin{array}{l} {\Delta W_{can} +\Delta W_{sfc} +\Delta W_{sno} +} \\ {\sum _{i=1}^{N_{levsoi} }\left(\Delta w_{liq,\, i} +\Delta w_{ice,\, i} \right)+\Delta W_{a} =\left(\begin{array}{l} {q_{rain} +q_{sno} -E_{v} -E_{g} -q_{over} } \\ {-q_{h2osfc} -q_{drai} -q_{rgwl} -q_{snwcp,\, ice} } \end{array}\right) \Delta t} \end{array}
 
@@ -53,42 +53,43 @@ m\ :sup:`-2` s\ :sup:`-1`) does not distinguish between
 liquid and solid phases
 
 .. math::
-   :label: 7.2) 
+   :label: 7.2
 
    q_{intr} =\alpha \left(q_{rain} +q_{sno} \right)\left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}
 
 where :math:`L` and :math:`S` are the exposed leaf and stem area index,
-respectively (section 2.1.4), and :math:`\alpha =0.25` scales
-interception from point to grid cell (:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`). Throughfall
+respectively (section :numref:`Phenology and vegetation burial by snow`), 
+and :math:`\alpha =0.25` scales interception from point to grid cell 
+(:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`). Throughfall
 (kg m\ :sup:`-2` s\ :sup:`-1`), however, is divided into
 liquid and solid phases reaching the ground (soil or snow surface) as
 
 .. math::
-   :label: 7.3) 
+   :label: 7.3
 
    q_{thru,\, liq} =q_{rain} \left[1-\alpha \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}\right]
 
 .. math::
-   :label: 7.4) 
+   :label: 7.4
 
    q_{thru,\, ice} =q_{sno} \left[1-\alpha \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}\right].
 
 Similarly, the canopy drip is
 
 .. math::
-   :label: 7.5) 
+   :label: 7.5
 
    q_{drip,\, liq} =\frac{W_{can}^{intr} -W_{can,\, \max } }{\Delta t} \frac{q_{rain} }{q_{rain} +q_{sno} } \ge 0
 
 .. math::
-   :label: 7.6) 
+   :label: 7.6
 
    q_{drip,\, ice} =\frac{W_{can}^{intr} -W_{can,\, \max } }{\Delta t} \frac{q_{sno} }{q_{rain} +q_{sno} } \ge 0
 
 where
 
 .. math::
-   :label: 7.7) 
+   :label: 7.7
 
    W_{can}^{intr} =W_{can}^{n} +q_{intr} \Delta t\ge 0
 
@@ -98,7 +99,7 @@ and :math:`W_{can,\, \max }`  (kg m\ :sup:`-2`) is the maximum
 amount of water the canopy can hold
 
 .. math::
-   :label: 7.8) 
+   :label: 7.8
 
    W_{can,\, \max } =p\left(L+S\right).
 
@@ -107,7 +108,7 @@ liquid water, :math:`p=0.1` kg m\ :sup:`-2` (:ref:`Dickinson et al.
 1993 <Dickinsonetal1993>`). The canopy water is updated as
 
 .. math::
-   :label: 7.9) 
+   :label: 7.9
 
    W_{can}^{n+1} =W_{can}^{n} +q_{intr} \Delta t-\left(q_{drip,\, liq} +q_{drip,\, ice} \right)\Delta t-E_{v}^{w} \Delta t\ge 0.
 
@@ -116,12 +117,12 @@ surfaces (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`)
 reaching the ground is then
 
 .. math::
-   :label: ZEqnNum946822 
+   :label: 7.10
 
    q_{grnd,liq} =q_{thru,\, liq} +q_{drip,\, liq}
 
 .. math::
-   :label: ZEqnNum339590 
+   :label: 7.11
 
    q_{grnd,ice} =q_{thru,\, ice} +q_{drip,\, ice} .
 
@@ -138,7 +139,7 @@ for the surface albedo (section :numref:`Canopy Radiative Transfer`) and surface
 calculations is (:ref:`Dickinson et al.1993 <Dickinsonetal1993>`)
 
 .. math::
-   :label: 7.12) 
+   :label: 7.12
 
    f_{wet} =
    \left\{\begin{array}{lr} 
@@ -149,7 +150,7 @@ calculations is (:ref:`Dickinson et al.1993 <Dickinsonetal1993>`)
 while the fraction of the canopy that is dry and transpiring is
 
 .. math::
-   :label: 7.13) 
+   :label: 7.13
 
    f_{dry} =
    \left\{\begin{array}{lr} 
@@ -183,21 +184,21 @@ portion of a grid cell contributes to surface runoff, :math:`q_{over}` ,
 by the saturation excess mechanism (Dunne runoff)
 
 .. math::
-   :label: ZEqnNum549608 
+   :label: 7.64
 
    q_{over} =f_{sat} q_{liq,\, 0}
 
 The fractional saturated area is a function of soil moisture
 
 .. math::
-   :label: 7.65) 
+   :label: 7.65
 
-   f_{sat} =f_{\max } \exp \left(-0.5f_{over} z_{\nabla } \right)
+   f_{sat} = f_{\max } \exp \left(-0.5 f_{over} z_{\nabla } \right)
 
-where :math:`f_{\max }`  is the potential or maximum value of
-:math:`f_{sat}` , :math:`f_{over}`  is a decay factor
-(m\ :sup:`-1`), and :math:`z_{\nabla}` is the water table depth
-(m) (section 7.6). The maximum saturated fraction, :math:`f_{\max }` ,
+where :math:`f_{\max }` is the potential or maximum value of 
+:math:`f_{sat}`, :math:`f_{over}` is a decay factor (m\ :sup:`-1`), and 
+:math:`z_{\nabla}` is the water table depth (m) (section 
+:numref:`Lateral Sub-surface Runoff`). The maximum saturated fraction, :math:`f_{\max }` ,
 is defined as the value of the discrete cumulative distribution function
 (CDF) of the topographic index when the grid cell mean water table depth
 is zero. Thus, :math:`f_{\max }`  is the percent of pixels in a grid
@@ -242,7 +243,7 @@ height (relative to the grid cell mean elevation) of the surface water,
 :math:`d`, by
 
 .. math::
-   :label: ZEqnNum277892 
+   :label: 7.66
 
    W_{sfc} =\frac{d}{2} \left(1+erf\left(\frac{d}{\sigma _{micro} \sqrt{2} } \right)\right)+\frac{\sigma _{micro} }{\sqrt{2\pi } } e^{\frac{-d^{2} }{2\sigma _{micro} ^{2} } }
 
@@ -252,7 +253,7 @@ Newton-Raphson method. Once :math:`d` is known, one can determine the
 fraction of the area that is inundated as
 
 .. math::
-   :label: 7.67) 
+   :label: 7.67
 
    f_{h2osfc} =\frac{1}{2} \left(1+erf\left(\frac{d}{\sigma _{micro} \sqrt{2} } \right)\right)
 
@@ -260,7 +261,7 @@ No global datasets exist for microtopography, so the default
 parameterization is a simple function of slope
 
 .. math::
-   :label: 7.68) 
+   :label: 7.68
 
    \sigma _{micro} =\left(\beta +\beta _{0} \right)^{\eta }
 
@@ -277,7 +278,7 @@ percolation theory can be used to quantify the fraction of the inundated
 portion of the grid cell that is interconnected
 
 .. math::
-   :label: 7.69) 
+   :label: 7.69
 
    \begin{array}{lr} f_{connected} =\left(f_{h2osfc} -f_{c} \right)^{\mu } & \qquad f_{h2osfc} >f_{c}  \\ f_{connected} =0 &\qquad  f_{h2osfc} \le f_{c}  \end{array}
 
@@ -289,7 +290,7 @@ surpasses :math:`f_{c}` , the surface water store acts as a linear
 reservoir
 
 .. math::
-   :label: 7.70) 
+   :label: 7.70
 
    qout,h2osfc=kh2osfcf_{connected} (Wsfc-Wc)\frac{1}{\Delta t}
 
@@ -309,7 +310,7 @@ The surface moisture flux remaining after surface runoff has been
 removed,
 
 .. math::
-   :label: 7.71) 
+   :label: 7.71
 
    qin,surface=(1-f_{sat} )q_{liq,\, 0}
 
@@ -319,7 +320,7 @@ maximum soil infiltration capacity (kg m\ :sup:`-2`
 s\ :sup:`-1`),
 
 .. math::
-   :label: ZEqnNum569150 
+   :label: 7.72
 
    q_{infl,\, \max } =(1-fsat){\rm \Theta }iceksat
 
@@ -327,7 +328,7 @@ where :math:`{\rm \Theta }ice` is an ice impedance factor (section
 :numref:`Hydraulic Properties`), infiltration excess (Hortonian) runoff is generated
 
 .. math::
-   :label: 7.73) 
+   :label: 7.73
 
    q_{infl,\, excess} =\max \left(q_{in,soil} -\left(1-f_{h2osfc} \right)q_{\inf l,\max } ,0\right)
 
@@ -335,28 +336,28 @@ and transferred from :math:`q_{in,soil}`  to :math:`q_{in,h2osfc}` .
 After evaporative losses have been removed, these moisture fluxes are
 
 .. math::
-   :label: 7.74) 
+   :label: 7.74
 
    q_{in,\, h2osfc} =f_{h2osfc} q_{in,surface} +q_{infl,excess} -q_{evap,h2osfc}
 
 and
 
 .. math::
-   :label: 7.75) 
+   :label: 7.75
 
    qin,soil=(1-f_{h2osfc} )q_{in,surface} -q_{\inf l,excess} -(1-f_{sno} -f_{h2osfc} )qevap,soil.
 
 The balance of surface water is then calculated as
 
 .. math::
-   :label: 7.76) 
+   :label: 7.76
 
    \Delta W_{sfc} =\left(qin,h2osfc-qout,h2osfc-qdrain,h2osfc\right)\Delta t.
 
 Bottom drainage from the surface water store
 
 .. math::
-   :label: 7.77) 
+   :label: 7.77
 
    qdrain,h2osfc=\min \left(f_{h2osfc} q_{\inf l,\max } ,\frac{W_{sfc} }{\Delta t} \right)
 
@@ -364,7 +365,7 @@ is then added to :math:`q_{in,soil}`  giving the total infiltration
 into the surface soil layer
 
 .. math::
-   :label: 7.78) 
+   :label: 7.78
 
    q_{infl} =q_{in,soil} +q_{drain,h2osfc}
 
@@ -387,7 +388,7 @@ For one-dimensional vertical water flow in soils, the conservation of
 mass is stated as
 
 .. math::
-   :label: ZEqnNum790844 
+   :label: 7.79
 
    \frac{\partial \theta }{\partial t} =-\frac{\partial q}{\partial z} -Q
 
@@ -409,7 +410,7 @@ The soil water flux :math:`q` in equation can be described by Darcy’s
 law :ref:`(Dingman 2002) <Dingman2002>`
 
 .. math::
-   :label: 7.80) 
+   :label: 7.80
 
    q=-k\frac{\partial \psi _{h} }{\partial z}
 
@@ -418,7 +419,7 @@ and :math:`\psi _{h}`  is the hydraulic potential (mm). The hydraulic
 potential is
 
 .. math::
-   :label: 7.81) 
+   :label: 7.81
 
    \psi _{h} =\psi _{m} +\psi _{z}
 
@@ -431,22 +432,22 @@ If the reference elevation is the soil surface, then
 becomes
 
 .. math::
-   :label: ZEqnNum186573 
+   :label: 7.82
 
    q=-k\left[\frac{\partial \left(\psi +z\right)}{\partial z} \right].
 
-Equation :eq:`ZEqnNum186573` can be further manipulated to yield
+Equation :eq:`7.82` can be further manipulated to yield
 
 .. math::
-   :label: 7.83) 
+   :label: 7.83
 
    q=-k\left[\frac{\partial \left(\psi +z\right)}{\partial z} \right]=-k\left(\frac{\partial \psi }{\partial z} +1\right)=-k\left(\frac{\partial \theta }{\partial z} \frac{\partial \psi }{\partial \theta } +1\right).
 
-Substitution of this equation into equation :eq:`ZEqnNum790844`, with :math:`Q=0`, yields
+Substitution of this equation into equation :eq:`7.79`, with :math:`Q=0`, yields
 the Richards equation
 
 .. math::
-   :label: ZEqnNum670361 
+   :label: 7.84
 
    \frac{\partial \theta }{\partial t} =\frac{\partial }{\partial z} \left[k\left(\frac{\partial \theta }{\partial z} \frac{\partial \psi }{\partial \theta } +1\right)\right].
 
@@ -458,7 +459,8 @@ Hydraulic Properties
 The hydraulic conductivity :math:`k_{i}`  (mm s\ :sup:`-1`) and
 the soil matric potential :math:`\psi _{i}`  (mm) for layer :math:`i`
 vary with volumetric soil water :math:`\theta _{i}`  and soil texture.
-As with the soil thermal properties (section :numref:`Soil And Snow Thermal Properties`) the hydraulic
+As with the soil thermal properties (section 
+:numref:`Soil And Snow Thermal Properties`) the hydraulic
 properties of the soil are assumed to be a weighted combination of the
 mineral properties, which are determined according to sand and clay
 contents based on work by :ref:`Clapp and Hornberger (1978) 
@@ -475,7 +477,7 @@ moisture of the two layers :math:`\theta _{i}`  and
 :math:`\Theta _{ice}` 
 
 .. math::
-   :label: ZEqnNum398074 
+   :label: 7.85
 
    k\left[z_{h,\, i} \right] =
    \left\{\begin{array}{lr} 
@@ -497,7 +499,7 @@ computed as weighted averages of the properties of the mineral and
 organic components. The water content at saturation (i.e. porosity) is
 
 .. math::
-   :label: 7.90) 
+   :label: 7.90
 
    \theta _{sat,i} =(1-f_{om,i} )\theta _{sat,\min ,i} +f_{om,i} \theta _{sat,om}
 
@@ -508,21 +510,21 @@ porosity of organic matter and the porosity of the mineral soil
 :math:`\theta _{sat,\min ,i}`  is
 
 .. math::
-   :label: 7.91) 
+   :label: 7.91
 
    \theta _{sai,\min ,i} = 0.489 - 0.00126(\% sand)_{i} .
 
 The exponent :math:`B_{i}` is
 
 .. math::
-   :label: 7.92) 
+   :label: 7.92
 
    B_{i} =(1-f_{om,i} )B_{\min ,i} +f_{om,i} B_{om}
 
 where :math:`B_{om} = 2.7` \ (:ref:`Letts et al. 2000 <Lettsetal2000>`) and
 
 .. math::
-   :label: 7.93) 
+   :label: 7.93
 
    B_{\min ,i} =2.91+0.159(\% clay)_{i} .
 
@@ -530,14 +532,14 @@ The soil matric potential (mm) is defined at the node depth
 :math:`z_{i}`  of each layer :math:`i` (:numref:`Figure Water flux schematic`)
 
 .. math::
-   :label: ZEqnNum316201 
+   :label: 7.94
 
    \psi _{i} =\psi _{sat,\, i} \left(\frac{\theta _{\, i} }{\theta _{sat,\, i} } \right)^{-B_{i} } \ge -1\times 10^{8} \qquad 0.01\le \frac{\theta _{i} }{\theta _{sat,\, i} } \le 1
 
 where the saturated soil matric potential (mm) is
 
 .. math::
-   :label: 7.95) 
+   :label: 7.95
 
    \psi _{sat,i} =(1-f_{om,i} )\psi _{sat,\min ,i} +f_{om,i} \psi _{sat,om}
 
@@ -546,7 +548,7 @@ saturated organic matter matric potential and the saturated mineral soil
 matric potential :math:`\psi _{sat,\min ,i}` \ is
 
 .. math::
-   :label: 7.96) 
+   :label: 7.96
 
    \psi _{sat,\, \min ,\, i} =-10.0\times 10^{1.88-0.0131(\% sand)_{i} } .
 
@@ -570,7 +572,7 @@ pathways interacts only with organic material, and thus can be described
 by :math:`k_{sat,\, om}` . This fraction of the grid cell is given by
 
 .. math::
-   :label: 7.97) 
+   :label: 7.97
 
    \begin{array}{lr} 
    f_{perc} =\; N_{perc} \left(f_{om} {\rm \; }-f_{threshold} \right)^{\beta _{perc} } f_{om} {\rm \; } & \qquad f_{om} \ge f_{threshold}  \\ 
@@ -585,7 +587,7 @@ hydraulic conductivity is assumed to correspond to flow pathways that
 pass through the mineral and organic components in series
 
 .. math::
-   :label: 7.98) 
+   :label: 7.98
 
    k_{sat,\, uncon} =f_{uncon} \left(\frac{\left(1-f_{om} \right)}{k_{sat,\, \min } } +\frac{\left(f_{om} -f_{perc} \right)}{k_{sat,\, om} } \right)^{-1} .
 
@@ -593,7 +595,7 @@ where saturated hydraulic conductivity for mineral soil depends on soil
 texture (:ref:`Cosby et al. 1984 <Cosbyetal1984>`) as
 
 .. math::
-   :label: 7.99) 
+   :label: 7.99
 
    k_{sat,\, \min } \left[z_{h,\, i} \right]=0.0070556\times 10^{-0.884+0.0153\left(\% sand\right)_{i} } .
 
@@ -601,7 +603,7 @@ The bulk soil layer saturated hydraulic conductivity is then computed
 as
 
 .. math::
-   :label: 7.100) 
+   :label: 7.100
 
    k_{sat} \left[z_{h,\, i} \right]=f_{uncon,\, i} k_{sat,\, uncon} \left[z_{h,\, i} \right]+(1-f_{uncon,\, i} )k_{sat,\, om} \left[z_{h,\, i} \right].
 
@@ -610,11 +612,11 @@ as
 Numerical Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-With reference to :numref:`Figure Water flux schematic`, the equation for conservation of mass
-(equation :eq:`ZEqnNum790844`) can be integrated over each layer as
+With reference to :numref:`Figure Water flux schematic`, the equation for 
+conservation of mass :eq:`7.79` can be integrated over each layer as
 
 .. math::
-   :label: 7.101) 
+   :label: 7.101
 
    \int _{-z_{h,\, i} }^{-z_{h,\, i-1} }\frac{\partial \theta }{\partial t} \,  dz=-\int _{-z_{h,\, i} }^{-z_{h,\, i-1} }\frac{\partial q}{\partial z}  \, dz-\int _{-z_{h,\, i} }^{-z_{h,\, i-1} }Q\, dz .
 
@@ -623,7 +625,7 @@ as positive upward from the soil surface. This equation can be written
 as
 
 .. math::
-   :label: ZEqnNum225309 
+   :label: 7.102
 
    \Delta z_{i} \frac{\partial \theta _{liq,\, i} }{\partial t} =-q_{i-1} +q_{i} -e_{i}
 
@@ -635,7 +637,7 @@ the layer (mm s\ :sup:`-1`). Taking the finite difference with
 time and evaluating the fluxes implicitly at time :math:`n+1` yields
 
 .. math::
-   :label: ZEqnNum181361 
+   :label: 7.103
 
    \frac{\Delta z_{i} \Delta \theta _{liq,\, i} }{\Delta t} =-q_{i-1}^{n+1} +q_{i}^{n+1} -e_{i}
 
@@ -650,7 +652,7 @@ function of the total transpiration :math:`E_{v}^{t}`  (Chapter :numref:`rst_Mom
 the effective root fraction :math:`r_{e,\, i}` 
 
 .. math::
-   :label: ZEqnNum357392 
+   :label: 7.104
 
    e_{i} =r_{e,\, i} E_{v}^{t} .
 
@@ -676,7 +678,7 @@ soil column, the transpiration :math:`E_{v}^{t}`  is a weighted sum of
 transpiration from all PFTs whose weighting depends on PFT area as
 
 .. math::
-   :label: 7.105) 
+   :label: 7.105
 
    E_{v}^{t} =\sum _{j=1}^{npft}\left(E_{v}^{t} \right)_{j} \left(wt\right)_{j}
 
@@ -689,7 +691,7 @@ quantity that is a weighted sum over all PFTs. The weighting depends on
 the per unit area transpiration of each PFT and its relative area as
 
 .. math::
-   :label: 7.106) 
+   :label: 7.106
 
    r_{e,\, i} =\frac{\sum _{j=1}^{npft}\left(r_{e,\, i} \right)_{j} \left(E_{v}^{t} \right)_{j} \left(wt\right)_{j}  }{\sum _{j=1}^{npft}\left(E_{v}^{t} \right)_{j} \left(wt\right)_{j}  }
 
@@ -697,15 +699,20 @@ where :math:`\left(r_{e,\, i} \right)_{j}`  is the effective root
 fraction for the :math:`j^{th}`  PFT
 
 .. math::
-   :label: 7.107) 
+   :label: 7.107
 
-   \begin{array}{l} {\left(r_{e,\, i} \right)_{j} =\frac{\left(r_{i} \right)_{j} \left(w_{i} \right)_{j} }{\left(\beta _{t} \right)_{j} } \qquad \left(\beta _{t} \right)_{j} >0} \\ {\left(r_{e,\, i} \right)_{j} =0\qquad \left(\beta _{t} \right)_{j} =0} \end{array}
+   \begin{array}{lr} 
+   \left(r_{e,\, i} \right)_{j} =\frac{\left(r_{i} \right)_{j} \left(w_{i} \right)_{j} }{\left(\beta _{t} \right)_{j} } & \qquad \left(\beta _{t} \right)_{j} >0 \\ 
+   \left(r_{e,\, i} \right)_{j} =0 & \qquad \left(\beta _{t} \right)_{j} =0
+   \end{array}
 
 and :math:`\left(r_{i} \right)_{j}`  is the fraction of roots in layer
 :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), 
-:math:`\left(w_{i} \right)_{j}`  is a soil dryness or plant wilting factor 
-for layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), and :math:`\left(\beta _{t} \right)_{j}`  is a wetness factor for the total
-soil column for the :math:`j^{th}`  PFT (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
+:math:`\left(w_{i} \right)_{j}`  is a soil dryness or plant wilting factor for 
+layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), 
+and :math:`\left(\beta _{t} \right)_{j}`  is a wetness factor for the total
+soil column for the :math:`j^{th}` PFT (Chapter 
+:numref:`rst_Stomatal Resistance and Photosynthesis`).
 
 The soil water fluxes in equation , which are a function of
 :math:`\theta _{liq,\, i}`  and :math:`\theta _{liq,\, i+1}`  because of
@@ -714,12 +721,12 @@ can be linearized about :math:`\theta`  using a Taylor series expansion
 as
 
 .. math::
-   :label: 7.108) 
+   :label: 7.108
 
    q_{i}^{n+1} =q_{i}^{n} +\frac{\partial q_{i} }{\partial \theta _{liq,\, i} } \Delta \theta _{liq,\, i} +\frac{\partial q_{i} }{\partial \theta _{liq,\, i+1} } \Delta \theta _{liq,\, i+1}
 
 .. math::
-   :label: 7.109) 
+   :label: 7.109
 
    q_{i-1}^{n+1} =q_{i-1}^{n} +\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} } \Delta \theta _{liq,\, i-1} +\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } \Delta \theta _{liq,\, i} .
 
@@ -728,29 +735,29 @@ Substitution of these expressions for :math:`q_{i}^{n+1}`  and
 equation set of the form
 
 .. math::
-   :label: 7.110) 
+   :label: 7.110
 
    r_{i} =a_{i} \Delta \theta _{liq,\, i-1} +b_{i} \Delta \theta _{liq,\, i} +c_{i} \Delta \theta _{liq,\, i+1}
 
 where
 
 .. math::
-   :label: ZEqnNum557934 
+   :label: 7.111
 
    a_{i} =-\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} }
 
 .. math::
-   :label: 7.112) 
+   :label: 7.112
 
    b_{i} =\frac{\partial q_{i} }{\partial \theta _{liq,\, i} } -\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } -\frac{\Delta z_{i} }{\Delta t}
 
 .. math::
-   :label: 7.113) 
+   :label: 7.113
 
    c_{i} =\frac{\partial q_{i} }{\partial \theta _{liq,\, i+1} }
 
 .. math::
-   :label: ZEqnNum981892 
+   :label: 7.114
 
    r_{i} =q_{i-1}^{n} -q_{i}^{n} +e_{i} .
 
@@ -761,32 +768,32 @@ The finite-difference forms of the fluxes and partial derivatives in
 equations - can be obtained from equation as
 
 .. math::
-   :label: 7.115) 
+   :label: 7.115
 
    q_{i-1}^{n} =-k\left[z_{h,\, i-1} \right]\left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(\psi _{E,\, i} -\psi _{E,\, i-1} \right)}{z_{i} -z_{i-1} } \right]
 
 .. math::
-   :label: 7.116) 
+   :label: 7.116
 
    q_{i}^{n} =-k\left[z_{h,\, i} \right]\left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(\psi _{E,\, i+1} -\psi _{E,\, i} \right)}{z_{i+1} -z_{i} } \right]
 
 .. math::
-   :label: 7.117) 
+   :label: 7.117
 
    \frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} } =-\left[\frac{k\left[z_{h,\, i-1} \right]}{z_{i} -z_{i-1} } \frac{\partial \psi _{i-1} }{\partial \theta _{liq,\, i-1} } \right]-\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} } \left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(\psi _{E,\, i} -\psi _{E,\, i-1} \right)}{z_{i} -z_{i-1} } \right]
 
 .. math::
-   :label: 7.118) 
+   :label: 7.118
 
    \frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } =\left[\frac{k\left[z_{h,\, i-1} \right]}{z_{i} -z_{i-1} } \frac{\partial \psi _{i} }{\partial \theta _{liq,\, i} } \right]-\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } \left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(\psi _{E,\, i} -\psi _{E,\, i-1} \right)}{z_{i} -z_{i-1} } \right]
 
 .. math::
-   :label: 7.119) 
+   :label: 7.119
 
    \frac{\partial q_{i} }{\partial \theta _{liq,\, i} } =-\left[\frac{k\left[z_{h,\, i} \right]}{z_{i+1} -z_{i} } \frac{\partial \psi _{i} }{\partial \theta _{liq,\, i} } \right]-\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } \left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(\psi _{E,\, i+1} -\psi _{E,\, i} \right)}{z_{i+1} -z_{i} } \right]
 
 .. math::
-   :label: 7.120) 
+   :label: 7.120
 
    \frac{\partial q_{i} }{\partial \theta _{liq,\, i+1} } =\left[\frac{k\left[z_{h,\, i} \right]}{z_{i+1} -z_{i} } \frac{\partial \psi _{i+1} }{\partial \theta _{liq,\, i+1} } \right]-\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } \left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(\psi _{E,\, i+1} -\psi _{E,\, i} \right)}{z_{i+1} -z_{i} } \right].
 
@@ -794,17 +801,17 @@ The derivatives of the soil matric potential at the node depth are
 derived from equation
 
 .. math::
-   :label: 7.121) 
+   :label: 7.121
 
    \frac{\partial \psi _{i-1} }{\partial \theta _{liq,\, \, i-1} } =-B_{i-1} \frac{\psi _{i-1} }{\theta _{\, \, i-1} }
 
 .. math::
-   :label: 7.122) 
+   :label: 7.122
 
    \frac{\partial \psi _{i} }{\partial \theta _{\, liq,\, i} } =-B_{i} \frac{\psi _{i} }{\theta _{i} }
 
 .. math::
-   :label: 7.123) 
+   :label: 7.123
 
    \frac{\partial \psi _{i+1} }{\partial \theta _{liq,\, i+1} } =-B_{i+1} \frac{\psi _{i+1} }{\theta _{\, i+1} }
 
@@ -815,12 +822,12 @@ The derivatives of the hydraulic conductivity at the layer interface are
 derived from equation
 
 .. math::
-   :label: 7.124) 
+   :label: 7.124
 
    \begin{array}{l} {\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} } =\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } =\left(1-\frac{f_{frz,\, i-1} +f_{frz,\, i} }{2} \right)\left(2B_{i-1} +3\right)k_{sat} \left[z_{h,\, i-1} \right]\times } \\ {\qquad \left[\frac{0.5\left(\theta _{\, i-1} +\theta _{\, i} \right)}{0.5\left(\theta _{sat,\, i-1} +\theta _{sat,\, i} \right)} \right]^{2B_{i-1} +2} \left(\frac{0.5}{0.5\left(\theta _{sat,\, i-1} +\theta _{sat,\, i} \right)} \right)} \end{array}
 
 .. math::
-   :label: 7.125) 
+   :label: 7.125
 
    \begin{array}{l} {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } =\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } =\left(1-\frac{f_{frz,\, i} +f_{frz,\, i+1} }{2} \right)\left(2B_{i} +3\right)k_{sat} \left[z_{h,\, i} \right]\times } \\ {\qquad \left[\frac{0.5\left(\theta _{\, i} +\theta _{\, i+1} \right)}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right]^{2B_{i} +2} \left(\frac{0.5}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right)} \end{array}.
 
@@ -833,7 +840,7 @@ infiltration rate (section :numref:`Surface Runoff`),
 is
 
 .. math::
-   :label: 7.135) 
+   :label: 7.135
 
    \frac{\Delta z_{i} \Delta \theta _{liq,\, i} }{\Delta t} =q_{infl}^{n+1} +q_{i}^{n+1} -e_{i} .
 
@@ -841,22 +848,22 @@ After grouping like terms, the coefficients of the tridiagonal set of
 equations for :math:`i=1` are
 
 .. math::
-   :label: 7.136) 
+   :label: 7.136
 
    a_{i} =0
 
 .. math::
-   :label: 7.137) 
+   :label: 7.137
 
    b_{i} =\frac{\partial q_{i} }{\partial \theta _{liq,\, i} } -\frac{\Delta z_{i} }{\Delta t}
 
 .. math::
-   :label: 7.138) 
+   :label: 7.138
 
    c_{i} =\frac{\partial q_{i} }{\partial \theta _{liq,\, i+1} }
 
 .. math::
-   :label: 7.139) 
+   :label: 7.139
 
    r_{i} =q_{infl}^{n+1} -q_{i}^{n} +e_{i} .
 
@@ -867,22 +874,22 @@ The coefficients of the tridiagonal set of equations for
 :math:`i=2,\ldots ,N_{levsoi} -1` are
 
 .. math::
-   :label: 7.140) 
+   :label: 7.140
 
    a_{i} =-\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} }
 
 .. math::
-   :label: 7.141) 
+   :label: 7.141
 
    b_{i} =\frac{\partial q_{i} }{\partial \theta _{liq,\, i} } -\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } -\frac{\Delta z_{i} }{\Delta t}
 
 .. math::
-   :label: 7.142) 
+   :label: 7.142
 
    c_{i} =\frac{\partial q_{i} }{\partial \theta _{liq,\, i+1} }
 
 .. math::
-   :label: 7.143) 
+   :label: 7.143
 
    r_{i} =q_{i-1}^{n} -q_{i}^{n} +e_{i} .
 
@@ -895,22 +902,22 @@ and the coefficients of the tridiagonal set of equations for
 :math:`i=N_{levsoi}`  are
 
 .. math::
-   :label: 7.148) 
+   :label: 7.148
 
    a_{i} =-\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} }
 
 .. math::
-   :label: 7.149) 
+   :label: 7.149
 
    b_{i} =\frac{\partial q_{i} }{\partial \theta _{liq,\, i} } -\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } -\frac{\Delta z_{i} }{\Delta t}
 
 .. math::
-   :label: 7.150) 
+   :label: 7.150
 
    c_{i} =0
 
 .. math::
-   :label: 7.151) 
+   :label: 7.151
 
    r_{i} =q_{i-1}^{n} +e_{i} .
 
@@ -921,7 +928,7 @@ An initial solution is found by setting :math:`\Delta t` equal to the model time
 step.  An estimate of the error is calculated from
 
 .. math::
-   :label: 7.152) 
+   :label: 7.152
 
    \epsilon = max \left[ \frac{\Delta \theta_{liq,\, i} \Delta z_{i}}{\Delta t} - 
    \left( q_{i-1}^{n} - q_{i}^{n} + e_{i}\right) \right]
@@ -937,14 +944,14 @@ Upon solution of the tridiagonal equation set, the
 liquid water contents are updated as follows
 
 .. math::
-   :label: 7.164) 
+   :label: 7.164
 
    w_{liq,\, i}^{n+1} =w_{liq,\, i}^{n} +\Delta \theta _{liq,\, i} \Delta z_{i} \qquad i=1,\ldots ,N_{levsoi} .
 
 The volumetric water content is
 
 .. math::
-   :label: 7.165) 
+   :label: 7.165
 
    \theta _{i} =\frac{w_{liq,\, i} }{\Delta z_{i} \rho _{liq} } +\frac{w_{ice,\, i} }{\Delta z_{i} \rho _{ice} } .
 
@@ -954,7 +961,8 @@ Frozen Soils and Perched Water Table
 ----------------------------------------
 
 When soils freeze, the power-law form of the ice impedance factor
-(section :numref:`Hydraulic Properties`) can greatly decrease the hydraulic conductivity of the
+(section :numref:`Hydraulic Properties`) can greatly decrease the hydraulic 
+conductivity of the
 soil, leading to nearly impermeable soil layers. When unfrozen soil
 layers are present above relatively ice-rich frozen layers, the
 possibility exists for perched saturated zones. Lateral drainage from
@@ -962,7 +970,7 @@ perched saturated regions is parameterized as a function of the
 thickness of the saturated zone
 
 .. math::
-   :label: 7.166) 
+   :label: 7.166
 
    q_{drai,perch} =k_{drai,\, perch} \left(z_{frost} -z_{\nabla ,perch} \right)
 
@@ -970,7 +978,7 @@ where :math:`k_{drai,\, perch}`  depends on topographic slope and soil
 hydraulic conductivity,
 
 .. math::
-   :label: 7.167) 
+   :label: 7.167
 
    k_{drai,\, perch} =10^{-5} \sin (\beta )\left(\frac{\sum _{i=N_{perch} }^{i=N_{frost} }\Theta _{ice,i} k_{sat} \left[z_{i} \right]\Delta z_{i}  }{\sum _{i=N_{perch} }^{i=N_{frost} }\Delta z_{i}  } \right)
 
@@ -995,7 +1003,7 @@ Lateral sub-surface runoff occurs when saturated soil moisture conditions
 exist within the soil column.  Sub-surface runoff is 
 
 .. math::
-   :label: 7.168) 
+   :label: 7.168
 
    q_{subsurface} = \Theta_{ice} K_{baseflow} tan \left( \beta \right) 
    \Delta z_{sat}^{N_{baseflow}} \ ,
@@ -1007,13 +1015,14 @@ is the thickness of the saturated portion of the soil column.
 The saturated thickness is 
 
 .. math::
-   :label: 7.1681) 
+   :label: 7.1681
 
    \Delta z_{sat} = z_{bedrock} - z_{\nabla}, 
 
 where the water table :math:`z_{\nabla}` is determined by finding the 
-first soil layer above the bedrock depth (section ) in which the volumetric water 
-content drops below a specified threshold. The default threshold is set to 0.9. 
+first soil layer above the bedrock depth (section :numref:`Depth to Bedrock`) 
+in which the volumetric water content drops below a specified threshold. 
+The default threshold is set to 0.9. 
 
 The specific yield, :math:`S_{y}` , which depends on the soil
 properties and the water table location, is derived by taking the
@@ -1021,13 +1030,13 @@ difference between two equilibrium soil moisture profiles whose water
 tables differ by an infinitesimal amount
 
 .. math::
-   :label: 7.174) 
+   :label: 7.174
 
    S_{y} =\theta _{sat} \left(1-\left(1+\frac{z_{\nabla } }{\Psi _{sat} } \right)^{\frac{-1}{B} } \right)
 
 where B is the Clapp-Hornberger exponent. Because :math:`S_{y}`  is a
 function of the soil properties, it results in water table dynamics that
-are consistent with the soil water fluxes described in section 7.4.
+are consistent with the soil water fluxes described in section :numref:`Soil Water`.
 
 After the above calculations, two numerical adjustments are implemented
 to keep the liquid water content of each soil layer
@@ -1052,22 +1061,22 @@ those layers subject to the constraint
 found, then the water is removed from :math:`W_{t}`  and
 :math:`q_{drai}` .
 
-The soil surface layer liquid water and ice contents are then updated
-for dew :math:`q_{sdew}` , frost :math:`q_{frost}` , or sublimation
-:math:`q_{subl}`  (section 5.4) as
+The soil surface layer liquid water and ice contents are then updated for 
+dew :math:`q_{sdew}`, frost :math:`q_{frost}`, or sublimation :math:`q_{subl}` 
+(section :numref:`Update of Ground Sensible and Latent Heat Fluxes`) as
 
 .. math::
-   :label: 7.175) 
+   :label: 7.175
 
    w_{liq,\, 1}^{n+1} =w_{liq,\, 1}^{n} +q_{sdew} \Delta t
 
 .. math::
-   :label: 7.176) 
+   :label: 7.176
 
    w_{ice,\, 1}^{n+1} =w_{ice,\, 1}^{n} +q_{frost} \Delta t
 
 .. math::
-   :label: 7.177) 
+   :label: 7.177
 
    w_{ice,\, 1}^{n+1} =w_{ice,\, 1}^{n} -q_{subl} \Delta t.
 
@@ -1085,12 +1094,12 @@ and dew in solid or liquid form, is separated into solid
 :math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}`  runoff terms
 
 .. math::
-   :label: 7.178) 
+   :label: 7.178
 
    q_{snwcp,ice} =q_{grnd,ice} +q_{frost}
 
 .. math::
-   :label: 7.179) 
+   :label: 7.179
 
    q_{snwcp,liq} =q_{grnd,liq} +q_{dew}
 
@@ -1106,7 +1115,7 @@ For glacier surfaces the runoff term :math:`q_{rgwl}`  is calculated
 from the residual of the water balance
 
 .. math::
-   :label: 7.180) 
+   :label: 7.180
 
    q_{rgwl} =q_{grnd,ice} +q_{grnd,liq} -E_{g} -E_{v} -\frac{\left(W_{b}^{n+1} -W_{b}^{n} \right)}{\Delta t} -q_{snwcp,ice}
 
@@ -1114,7 +1123,7 @@ where :math:`W_{b}^{n}`  and :math:`W_{b}^{n+1}`  are the water balances
 at the beginning and ending of the time step defined as
 
 .. math::
-   :label: 7.181) 
+   :label: 7.181
 
    W_{b} =W_{can} +W_{sno} +\sum _{i=1}^{N}\left(w_{ice,i} +w_{liq,i} \right) .
 
@@ -1122,5 +1131,6 @@ Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`.
 The contribution of lake runoff to :math:`q_{rgwl}`  is described in
 section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff 
 term :math:`q_{rgwl}`  may be negative for glaciers and lakes, which reduces 
-the total amount of runoff available to the river routing model (Chapter :numref:`rst_River Transport Model (RTM)`).
+the total amount of runoff available to the river routing model 
+(Chapter :numref:`rst_River Transport Model (RTM)`).
 
