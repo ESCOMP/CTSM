@@ -1,4 +1,4 @@
-**NCAR/TN-503+STR**
+g**NCAR/TN-503+STR**
 
 **NCAR Technical Note**
 
@@ -138,7 +138,7 @@ Jinyun Tang, Zong-Liang Yang**
 
 - :numref:`three layer snow pack` Example of three layer snow pack (snl=-3). 
 
-- :numref:`Figure Schematic representation of the urban land unit` Schematic representation of the urban land unit.
+- :numref:`Figure Schematic representation of the urban landunit` Schematic representation of the urban land unit.
 
 - :numref:`Figure Schematic of urban and atmospheric model coupling` Schematic of urban and atmospheric model coupling.
 
