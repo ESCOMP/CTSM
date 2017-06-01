@@ -51,9 +51,12 @@ solar radiation supplied by the six-hourly forcing data is actually
 used. The solar radiation at model time step :math:`t_{M}`  is
 
 .. math::
-   :label: ZEqnNum160435 
+   :label: 31.1
 
-   \begin{array}{l} {S_{atm} \left(t_{M} \right)=\frac{\frac{\Delta t_{FD} }{\Delta t_{M} } S_{atm} \left(t_{FD} \right)\mu \left(t_{M} \right)}{\sum _{i=1}^{\frac{\Delta t_{FD} }{\Delta t_{M} } }\mu \left(t_{M_{i} } \right) } \qquad {\rm for\; }\mu \left(t_{M} \right)>0.001} \\ {S_{atm} \left(t_{M} \right)=0\qquad {\rm for\; }\mu \left(t_{M} \right)\le 0.001} \end{array}
+   \begin{array}{lr} 
+   S_{atm} \left(t_{M} \right)=\frac{\frac{\Delta t_{FD} }{\Delta t_{M} } S_{atm} \left(t_{FD} \right)\mu \left(t_{M} \right)}{\sum _{i=1}^{\frac{\Delta t_{FD} }{\Delta t_{M} } }\mu \left(t_{M_{i} } \right) } & \qquad {\rm for\; }\mu \left(t_{M} \right)>0.001 \\ 
+   S_{atm} \left(t_{M} \right)=0 & \qquad {\rm for\; }\mu \left(t_{M} \right)\le 0.001 
+   \end{array}
 
 where :math:`\Delta t_{FD}`  is the time step of the forcing data (6
 hours :math:`\times`  3600 seconds hour\ :sup:`-1` = 21600
@@ -73,22 +76,22 @@ derived from one year’s worth of hourly CAM output from CAM version
 cam3\_5\_55 as
 
 .. math::
-   :label: 31.2) 
+   :label: 31.2
 
    S_{atm} \, \downarrow _{vis}^{\mu } =R_{vis} \left(\alpha S_{atm} \right)
 
 .. math::
-   :label: 31.3) 
+   :label: 31.3
 
    S_{atm} \, \downarrow _{nir}^{\mu } =R_{nir} \left[\left(1-\alpha \right)S_{atm} \right]
 
 .. math::
-   :label: 31.4) 
+   :label: 31.4
 
    S_{atm} \, \downarrow _{vis} =\left(1-R_{vis} \right)\left(\alpha S_{atm} \right)
 
 .. math::
-   :label: 31.5) 
+   :label: 31.5
 
    S_{atm} \, \downarrow _{nir} =\left(1-R_{nir} \right)\left[\left(1-\alpha \right)S_{atm} \right].
 
@@ -96,7 +99,7 @@ where :math:`\alpha` , the ratio of visible to total incident solar
 radiation, is assumed to be
 
 .. math::
-   :label: 31.6) 
+   :label: 31.6
 
    \alpha =\frac{S_{atm} \, \downarrow _{vis}^{\mu } +S_{atm} \, \downarrow _{vis}^{} }{S_{atm} } =0.5.
 
@@ -104,14 +107,14 @@ The ratio of direct to total incident radiation in the visible
 :math:`R_{vis}`  is
 
 .. math::
-   :label: 31.7) 
+   :label: 31.7
 
    R_{vis} =a_{0} +a_{1} \times \alpha S_{atm} +a_{2} \times \left(\alpha S_{atm} \right)^{2} +a_{3} \times \left(\alpha S_{atm} \right)^{3} \qquad 0.01\le R_{vis} \le 0.99
 
 and in the near-infrared :math:`R_{nir}`  is
 
 .. math::
-   :label: 31.8) 
+   :label: 31.8
 
    R_{nir} =b_{0} +b_{1} \times \left(1-\alpha \right)S_{atm} +b_{2} \times \left[\left(1-\alpha \right)S_{atm} \right]^{2} +b_{3} \times \left[\left(1-\alpha \right)S_{atm} \right]^{3} \qquad 0.01\le R_{nir} \le 0.99
 
@@ -129,17 +132,17 @@ The potential temperature :math:`\overline{\theta _{atm} }` (K) is set
 to the atmospheric temperature :math:`T_{atm}` . The atmospheric
 longwave radiation :math:`L_{atm} \, \downarrow`  (W m\ :sup:`-2`)
 is derived from the atmospheric vapor pressure :math:`e_{atm}`  and
-temperature :math:`T_{atm}`  (Idso 1981) as
+temperature :math:`T_{atm}`  (:ref:`Idso 1981<Idso1981>`) as
 
 .. math::
-   :label: 31.9) 
+   :label: 31.9
 
    L_{atm} \, \downarrow =\left[0.70+5.95\times 10^{-5} \times 0.01e_{atm} \exp \left(\frac{1500}{T_{atm} } \right)\right]\sigma T_{atm}^{4}
 
 where
 
 .. math::
-   :label: 31.10) 
+   :label: 31.10
 
    e_{atm} =\frac{P_{atm} q_{atm} }{0.622+0.378q_{atm} }
 
@@ -149,19 +152,19 @@ precipitation :math:`P` (mm s\ :sup:`-1`) falling as rain and/or
 snow is
 
 .. math::
-   :label: ZEqnNum336485 
+   :label: 31.11
 
    q_{rain} =P\left(f_{P} \right),
 
 .. math::
-   :label: 31.12) 
+   :label: 31.12
 
    q_{snow} =P\left(1-f_{P} \right)
 
 where
 
 .. math::
-   :label: 31.13) 
+   :label: 31.13
 
    f_{P} =0<0.5\left(T_{atm} -T_{f} \right)<1.
 
@@ -177,7 +180,7 @@ user-supplied relative humidity :math:`RH` (%) and derive specific
 humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`) from
 
 .. math::
-   :label: 31.14) 
+   :label: 31.14
 
    q_{atm} =\frac{0.622e_{atm} }{P_{atm} -0.378e_{atm} }
 
@@ -193,7 +196,7 @@ temperature :math:`T_{dew}`  (K) and derive specific humidity
 :math:`q_{atm}`  from
 
 .. math::
-   :label: 31.15) 
+   :label: 31.15
 
    q_{atm} = \frac{0.622e_{sat}^{T_{dew} } }{P_{atm} -0.378e_{sat}^{T_{dew} } } .
 
@@ -211,3 +214,39 @@ the procedure described above and then each term equally apportioned
 into the visible and near-infrared wavebands (e.g.,
 :math:`S_{atm} \, \downarrow _{vis}^{\mu } =0.5S_{atm} \, \downarrow ^{\mu }` ,
 :math:`S_{atm} \, \downarrow _{nir}^{\mu } =0.5S_{atm} \, \downarrow ^{\mu }` ).
+
+.. _Anomaly Forcing:
+
+Anomaly Forcing
+-----------------------------
+
+The 'Anomaly Forcing' atmospheric forcing mode provides a means to drive 
+CLM with projections of future climate conditions without the need for 
+large, high-frequency datasets.  From an existing climate simulation 
+spanning both the historical and future time periods, a set of anomalies 
+are created by removing a climatological seasonal cycle based on the end 
+of the historical period from each year of the future time period of the 
+simulation.  These anomalies can then be applied to a repeating 
+high-frequency forcing dataset of finite duration (e.g. 10 years).  State 
+and flux forcing variables are adjusted using additive and multiplicative 
+anomalies, respectively:
+
+.. math::
+   :label: 31.16
+
+   \begin{array}{lr} 
+   S^{'} = S + k_{anomaly} & \quad {\rm state \ variable} \\ 
+   F^{'} = f * k_{anomaly} & \quad {\rm flux \ variable} 
+   \end{array}
+
+where :math:`S^{'}` is the adjusted atmospheric state variable, :math:`S` 
+is the state variable from the high-frequency reference atmospheric 
+forcing dataset, and :math:`k_{anomaly}` is an additive anomaly.  
+Similarly, math:`F^{'}` is the adjusted atmospheric flux variable, 
+:math:`F` is the flux variable from the high-frequency reference 
+atmospheric forcing dataset, and :math:`k_{anomaly}` is a 
+multiplicative anomaly.  State variables are temperature :math:`T_{atm}`, 
+pressure :math:`P_{atm}`, humidity :math:`q_{atm}`, and wind 
+:math:`W_{atm}`.  Flux variables are precipitation :math:`P`, atmospheric
+shortwave radiation :math:`S_{atm} \, \downarrow`, and atmospheric
+longwave radiation :math:`L_{atm} \, \downarrow`.
