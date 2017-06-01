@@ -5,9 +5,13 @@ Glaciers
 
 This chapter describes features of CLM that are specific to coupling to
 an ice sheet model (in the CESM context, this is the Glimmer-CISM model;
-Lipscomb and Sacks (2012) provide documentation and user’s guide for
-Glimmer-CISM). General information about glacier land units can be found
-elsewhere in this document (see Chapter 2 for an overview).
+:ref:`Lipscomb and Sacks (2012)<LipscombSacks2012>` provide documentation 
+and user’s guide for Glimmer-CISM). General information about glacier 
+land units can be found elsewhere in this document (see Chapter 
+:numref:`rst_Surface Characterization, Vertical Discretization, and 
+Model Input Requirements` for an overview).
+
+.. _Overview:
 
 Overview
 -------------
@@ -16,7 +20,8 @@ CLM is responsible for computing three quantities that are passed to the
 ice sheet model:
 
 #. Surface mass balance (SMB) – the net annual accumulation/ablation of
-   mass at the upper surface (section 10.3)
+   mass at the upper surface (section 
+   :numref:`Computation of the surface mass balance`)
 
 #. Ground surface temperature, which serves as an upper boundary
    condition for Glimmer-CISM’s temperature calculation
@@ -47,7 +52,8 @@ Glimmer-CISM:
    improvements to the CLM are applied to ice sheets automatically.
 
 #. The atmosphere model can respond during runtime to ice-sheet surface
-   changes. As shown by Pritchard et al. (2008), runtime albedo feedback
+   changes. As shown by :ref:`Pritchard et al. (2008)<Pritchardetal2008>`, 
+   runtime albedo feedback
    from the ice sheet is critical for simulating ice-sheet retreat on
    paleoclimate time scales. Without this feedback the atmosphere warms
    much less, and the retreat is delayed.
@@ -71,11 +77,14 @@ which ice-sheet elevation changes are modest. For longer runs with
 larger elevation changes, two-way coupling is highly desirable. A
 two-way coupling scheme is under development.
 
+.. _Multiple elevation class scheme:
+
 Multiple elevation class scheme
 ------------------------------------
 
 In the typical operation of CLM, the glacier land unit contains a single
-column (section 2.1.1). However, when running CESM with an active ice
+column (section :numref:`Surface Heterogeneity and Data Structure`). 
+However, when running CESM with an active ice
 sheet model, the glacier land unit is replaced by a glacier\_mec land
 unit, where “mec” denotes “multiple elevation classes”. In most ways,
 glacier\_mec land units behave the same as standard glacier land units.
@@ -118,6 +127,8 @@ elevation classes. Some columns may have zero area and are called
 “virtual” columns. These columns do not affect energy exchange between
 the land and the atmosphere, but are included for potential forcing of
 Glimmer-CISM.
+
+.. _Computation of the surface mass balance:
 
 Computation of the surface mass balance
 --------------------------------------------
