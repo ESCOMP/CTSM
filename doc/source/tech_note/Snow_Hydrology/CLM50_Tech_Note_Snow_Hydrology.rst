@@ -3,21 +3,20 @@
 Snow Hydrology
 ===============
 
-The parameterizations for snow are based primarily on :ref:`Anderson (1976) <Anderson1976>`,
-:ref:`Jordan (1991) <Jordan1991>`, and :ref:`Dai and Zeng (1997) <DaiZeng1997>`. The snowpack
+The parameterizations for snow are based primarily on 
+:ref:`Anderson (1976) <Anderson1976>`, :ref:`Jordan (1991) <Jordan1991>`, 
+and :ref:`Dai and Zeng (1997) <DaiZeng1997>`. The snowpack
 can have up to five layers. These layers are indexed in the Fortran code
 as :math:`i=-4,-3,-2,-1,0` where layer :math:`i=0` is the snow layer
 next to the top soil layer and layer :math:`i=-4` is the top layer of a
 five-layer snow pack. Since the number of snow layers varies according
 to the snow depth, we use the notation :math:`snl+1` to describe the top
 layer of snow for the variable layer snow pack, where :math:`snl` is the
-negative of the number of snow layers. Refer to Figure :numref:`three layer 
+negative of the number of snow layers. Refer to :numref:`Figure three layer 
 snow pack` for an example of the snow layer structure for a three layer 
 snow pack.
 
-.. Figure 8.2. Example of three layer snow pack (:math:`snl=-3`).
-
-.. _three layer snow pack:
+.. _Figure three layer snow pack:
 
 .. Figure:: image1.png
 
@@ -61,7 +60,7 @@ calculated separately for accumulation and depletion. When snowfall
 occurs, :math:`f_{sno}`  is updated as
 
 .. math::
-   :label: 8.14) 
+   :label: 8.14
 
    f^{n+1} _{sno} =1-\left(\left(1-\tanh (k_{accum} q_{sno} \Delta t)\right)\left(1-f^{n} _{sno} \right)\right)
 
@@ -74,7 +73,7 @@ When snow melt occurs, :math:`f_{sno}`  is calculated from the depletion
 curve
 
 .. math::
-   :label: 8.15) 
+   :label: 8.15
 
    f_{sno} =1-\left(\frac{\cos ^{-1} \left(2R_{sno} -1\right)}{\pi } \right)^{N_{melt} }
 
@@ -85,7 +84,7 @@ cell. Whenever :math:`W_{sno}`  reaches zero, :math:`W_{\max }`  is
 reset to zero. The depletion curve shape parameter is defined as
 
 .. math::
-   :label: 8.16) 
+   :label: 8.16
 
    N_{melt} =\frac{200}{\min \left(10,\sigma _{topo} \right)}
 
@@ -101,7 +100,7 @@ Ice Content
 The conservation equation for mass of ice in snow layers is
 
 .. math::
-   :label: 8.17) 
+   :label: 8.17
 
    \frac{\partial w_{ice,\, i} }{\partial t} =
    \left\{\begin{array}{lr} 
@@ -117,7 +116,7 @@ is the change in ice due to phase change (melting rate) (section :numref:`Phase 
 The term :math:`q_{ice,\, i-1}`  is computed in two steps as
 
 .. math::
-   :label: 8.18) 
+   :label: 8.18
 
    q_{ice,\, i-1} =q_{grnd,\, ice} +\left(q_{frost} -q_{subl} \right)
 
@@ -130,14 +129,14 @@ interception (section :numref:`Canopy Water`), a new snow depth :math:`z_{sno}` 
 calculated from
 
 .. math::
-   :label: 8.19) 
+   :label: 8.19
 
    z_{sno}^{n+1} =z_{sno}^{n} +\Delta z_{sno}
 
 where
 
 .. math::
-   :label: 8.20) 
+   :label: 8.20
 
    \Delta z_{sno} =\frac{q_{grnd,\, ice} \Delta t}{f_{sno} \rho _{sno} }
 
@@ -145,7 +144,7 @@ and :math:`\rho _{sno}`  is the bulk density of newly fallen snow (kg
 m\ :sup:`-3`) (:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
-   :label: 8.21) 
+   :label: 8.21
 
    \rho _{sno} = 
    \left\{\begin{array}{lr} 
@@ -159,26 +158,27 @@ where :math:`T_{atm}`  is the atmospheric temperature (K), and
 mass of snow :math:`W_{sno}`  is
 
 .. math::
-   :label: 8.22) 
+   :label: 8.22
 
    W_{sno}^{n+1} =W_{sno}^{n} +q_{grnd,\, ice} \Delta t.
 
 The ice content of the top layer and the layer thickness are updated as
 
 .. math::
-   :label: 8.23) 
+   :label: 8.23
 
    w_{ice,\, snl+1}^{n+1} =w_{ice,\, snl+1}^{n} +q_{grnd,\, ice} \Delta t
 
 .. math::
-   :label: 8.24) 
+   :label: 8.24
 
    \Delta z_{snl+1}^{n+1} =\Delta z_{snl+1}^{n} +\Delta z_{sno} .
 
 Since wetlands are modeled as columns of water (no soil), snow is not
 allowed to accumulate if the surface temperature is above freezing
 (:math:`T_{g} >T_{f}` ). In this case, the incoming solid precipitation
-is assigned to the runoff term :math:`q_{rgwl}`  (section :numref:`Runoff from glaciers and snow-capped surfaces`).
+is assigned to the runoff term :math:`q_{rgwl}`  (section 
+:numref:`Runoff from glaciers and snow-capped surfaces`).
 
 In the second step, after surface fluxes and snow/soil temperatures have
 been determined (Chapters :numref:`rst_Momentum, Sensible Heat, and Latent Heat 
@@ -186,7 +186,7 @@ Fluxes` and :numref:`rst_Soil and Snow Temperatures`),
 :math:`w_{ice,\, snl+1}`  is updated for frost or sublimation as
 
 .. math::
-   :label: ZEqnNum863244 
+   :label: 8.25
 
    w_{ice,\, snl+1}^{n+1} =w_{ice,\, snl+1}^{n} +f_{sno} \left(q_{frost} -q_{subl} \right)\Delta t.
 
@@ -209,7 +209,7 @@ Water Content
 The conservation equation for mass of water in snow layers is
 
 .. math::
-   :label: 8.26) 
+   :label: 8.26
 
    \frac{\partial w_{liq,\, i} }{\partial t} =\left(q_{liq,\, i-1} -q_{liq,\, i} \right)+\frac{\left(\Delta w_{liq,\, i} \right)_{p} }{\Delta t}
 
@@ -221,21 +221,22 @@ is the change in liquid water due to phase change (melting rate)
 (section :numref:`Phase Change`). For the top snow layer only,
 
 .. math::
-   :label: 8.27) 
+   :label: 8.27
 
    q_{liq,\, i-1} =f_{sno} \left(q_{grnd,\, liq} +\left(q_{sdew} -q_{seva} \right)\right)
 
 where :math:`q_{grnd,\, liq}`  is the rate of liquid precipitation
 reaching the snow (section :numref:`Canopy Water`), :math:`q_{seva}` is the 
 evaporation of liquid water and :math:`q_{sdew}`  is the liquid dew (section 
-5.4).  After surface fluxes and snow/soil temperatures have been determined 
+:numref:`Update of Ground Sensible and Latent Heat Fluxes`).  After surface 
+fluxes and snow/soil temperatures have been determined 
 (Chapters :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes` and 
 :numref:`rst_Soil and Snow Temperatures`), :math:`w_{liq,\, snl+1}`  is 
 updated for the liquid precipitation reaching the ground and dew or 
 evaporation as
 
 .. math::
-   :label: 8.28) 
+   :label: 8.28
 
    w_{liq,\, snl+1}^{n+1} =w_{liq,\, snl+1}^{n} +f_{sno} \left(q_{grnd,\, liq} +q_{sdew} -q_{seva} \right)\Delta t.
 
@@ -250,7 +251,7 @@ water content. Thus, water flow between layers, :math:`q_{liq,\, i}` ,
 for layers :math:`i=snl+1,\ldots ,0`, is initially calculated as
 
 .. math::
-   :label: ZEqnNum767577 
+   :label: 8.29
 
    q_{liq,\, i} =\frac{\rho _{liq} \left[\theta _{liq,\, i} -S_{r} \left(1-\theta _{ice,\, i} \right)\right]f_{sno} \Delta z_{i} }{\Delta t} \ge 0
 
@@ -258,12 +259,12 @@ where the volumetric liquid water :math:`\theta _{liq,\, i}`  and ice
 :math:`\theta _{ice,\, i}`  contents are
 
 .. math::
-   :label: 8.30) 
+   :label: 8.30
 
    \theta _{ice,\, i} =\frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} \rho _{ice} } \le 1
 
 .. math::
-   :label: 8.31) 
+   :label: 8.31
 
    \theta _{liq,\, i} =\frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} \rho _{liq} } \le 1-\theta _{ice,\, i} ,
 
@@ -275,14 +276,14 @@ calculated in equation , unless the underlying layer is the surface soil
 layer, as
 
 .. math::
-   :label: 8.32) 
+   :label: 8.32
 
    q_{liq,\, i} \le \frac{\rho _{liq} \left[1-\theta _{ice,\, i+1} -\theta _{liq,\, i+1} \right]\Delta z_{i+1} }{\Delta t} \qquad i=snl+1,\ldots ,-1.
 
 The liquid water content :math:`w_{liq,\, i}`  is updated as
 
 .. math::
-   :label: ZEqnNum265203 
+   :label: 8.33
 
    w_{liq,\, i}^{n+1} =w_{liq,\, i}^{n} +\left(q_{i-1} -q_{i} \right)\Delta t.
 
@@ -307,29 +308,30 @@ eight particle species within each snow layer: hydrophilic black carbon,
 hydrophobic black carbon, hydrophilic organic carbon, hydrophobic
 organic carbon, and four species of mineral dust with the following
 particle sizes: 0.1-1.0, 1.0-2.5, 2.5-5.0, and 5.0-10.0 :math:`\mu m`.
-Each of these species has unique optical properties (Table 3.5) and
-meltwater removal efficiencies (:numref:`Table Meltwater scavenging`).
+Each of these species has unique optical properties 
+(:numref:`Table Single-scatter albedo values used for snowpack impurities and ice`) 
+and meltwater removal efficiencies (:numref:`Table Meltwater scavenging`).
 
 The black carbon and organic carbon deposition rates described in Table
 2.3 are combined into four categories as follows
 
 .. math::
-   :label: 8.34) 
+   :label: 8.34
 
    D_{bc,\, hphil} =D_{bc,\, dryhphil} +D_{bc,\, wethphil}
 
 .. math::
-   :label: 8.35) 
+   :label: 8.35
 
    D_{bc,\, hphob} =D_{bc,\, dryhphob}
 
 .. math::
-   :label: 8.36) 
+   :label: 8.36
 
    D_{oc,\, hphil} =D_{oc,\, dryhphil} +D_{oc,\, wethphil}
 
 .. math::
-   :label: 8.37) 
+   :label: 8.37
 
    D_{oc,\, hphob} =D_{oc,\, dryhphob}
 
@@ -345,7 +347,7 @@ mass of each of the particle species :math:`\Delta m_{sp,\, i}`
 (kg m\ :sup:`-2`) is
 
 .. math::
-   :label: 8.38) 
+   :label: 8.38
 
    \Delta m_{sp,\, i} =\left[k_{sp} \left(q_{liq,\, i-1} c_{sp,\, i-1} -q_{liq,\, i} c_{i} \right)+D_{sp} \right]\Delta t
 
@@ -361,7 +363,7 @@ kg\ :sup:`-1`), :math:`D_{sp}`  is the atmospheric deposition rate
 is the model time step (s). The particle mass mixing ratio is
 
 .. math::
-   :label: 8.39) 
+   :label: 8.39
 
    c_{i} =\frac{m_{sp,\, i} }{w_{liq,\, i} +w_{ice,\, i} } .
 
@@ -408,9 +410,16 @@ If there are no existing snow layers (:math:`snl+1=1`) but
 follows
 
 .. math::
-   :label: 8.40) 
+   :label: 8.40
 
-   \begin{array}{l} {\Delta z_{0} =z_{sno} } \\ {z_{o} =-0.5\Delta z_{0} } \\ {z_{h,\, -1} =-\Delta z_{0} } \\ {T_{0} =\min \left(T_{f} ,T_{atm} \right)} \\ {w_{ice,\, 0} =W_{sno} } \\ {w_{liq,\, 0} =0} \end{array}.
+   \begin{array}{lcr} 
+   \Delta z_{0} & = & z_{sno}  \\ 
+   z_{o} & = & -0.5\Delta z_{0}  \\ 
+   z_{h,\, -1} & = & -\Delta z_{0}  \\ 
+   T_{0} & = & \min \left(T_{f} ,T_{atm} \right) \\ 
+   w_{ice,\, 0} & = & W_{sno}  \\ 
+   w_{liq,\, 0} & = & 0 
+   \end{array}.
 
 .. _Snow Compaction:
 
@@ -429,14 +438,14 @@ each snow layer :math:`C_{R,\, i}`  (s\ :sup:`-1`) is the sum of the
 three compaction processes
 
 .. math::
-   :label: 8.41) 
+   :label: 8.41
 
    C_{R,\, i} =\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} =C_{R1,\, i} +C_{R2,\, i} +C_{R3,\, i} .
 
 Compaction is not allowed if the layer is saturated
 
 .. math::
-   :label: 8.42) 
+   :label: 8.42
 
    1-\left(\frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} \rho _{ice} } +\frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} \rho _{liq} } \right)\le 0.001
 
@@ -446,19 +455,21 @@ or if the ice content is below a minimum value
 Compaction as a result of destructive metamorphism :math:`C_{R1,\; i}` (s\ :sub:`-1`) is temperature dependent (:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
-   :label: 8.43) 
+   :label: 8.43
 
    C_{R1,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{metamorphism} =-c_{3} c_{1} c_{2} \exp \left[-c_{4} \left(T_{f} -T_{i} \right)\right]
 
 where :math:`c_{3} =2.777\times 10^{-6}`  (s\ :sup:`-1`) is the fractional compaction rate for :math:`T_{i} =T_{f}`, :math:`c_{4} =0.04` K\ :sup:`-1`, and
 
 .. math::
-   :label: 8.44) 
+   :label: 8.44
 
-   c_{1} & = 1\qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } \le 100{\rm \; kg\; m}^{{\rm -3}}  \\ 
-   c_{1} & = \exp \left[-0.046\left(\frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } -100\right)\right]\qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } >100{\rm \; kg\; m}^{{\rm -3}}  \\
-   c_{2} & = 2\qquad \frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} } >0.01 \\ 
-   c_{2} & = 1\qquad \frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} } \le 0.01 
+   \begin{array}{lr} 
+   c_{1}  = 1 & \qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } \le 100{\rm \; kg\; m}^{{\rm -3}}  \\ 
+   c_{1}  = \exp \left[-0.046\left(\frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } -100\right)\right] & \qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } >100{\rm \; kg\; m}^{{\rm -3}}  \\
+   c_{2}  = 2 & \qquad \frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} } >0.01 \\ 
+   c_{2}  = 1 & \qquad \frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} } \le 0.01 
+   \end{array}
 
 where
 :math:`{w_{ice,\, i} \mathord{\left/ {\vphantom {w_{ice,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
@@ -469,14 +480,14 @@ are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 The compaction rate as a result of overburden :math:`C_{R2,\; i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,\, i}` (kg m\ :sup:`-2`) (:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
-   :label: 8.45) 
+   :label: 8.45
 
    C_{R2,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{overburden} =-\frac{P_{s,\, i} }{\eta }
 
 where :math:`\eta`  is a viscosity coefficient (kg s m\ :sup:`-2`) that varies with density and temperature as
 
 .. math::
-   :label: 8.46) 
+   :label: 8.46
 
    \eta =\eta _{0} \exp \left[c_{5} \left(T_{f} -T_{i} \right)+c_{6} \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } \right]
 
@@ -489,7 +500,7 @@ the ice :math:`w_{ice,\, i}`  and liquid water contents
 water contents of the layer being compacted
 
 .. math::
-   :label: 8.47) 
+   :label: 8.47
 
    P_{s,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{2} +\sum _{j=snl+1}^{j=i-1}\left(w_{ice,\, j} +w_{liq,\, j} \right) .
 
@@ -497,7 +508,7 @@ The compaction rate due to melting :math:`C_{R3,\; i}` (s\ :sup:`-1`) is taken t
 mass after the melting to the mass before melting
 
 .. math::
-   :label: 8.48) 
+   :label: 8.48
 
    C_{R3,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{melt} =-\frac{1}{\Delta t} \max \left(0,\frac{W_{sno,\, i}^{n} -W_{sno,\, i}^{n+1} }{W_{sno,\, i}^{n} } \right)
 
@@ -507,14 +518,14 @@ covered area, the snow depth must also be updated for changes in
 :math:`f_{sno}` .
 
 .. math::
-   :label: 8.49) 
+   :label: 8.49
 
    C_{R4,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{fsno} =-\frac{1}{\Delta t} \max \left(0,\frac{f_{sno,\, i}^{n} -f_{sno,\, i}^{n+1} }{f_{sno,\, i}^{n} } \right)
 
 The snow layer thickness after compaction is then
 
 .. math::
-   :label: 8.50) 
+   :label: 8.50
 
    \Delta z_{i}^{n+1} =\Delta z_{i}^{n} \left(1+C_{R,\, i} \Delta t\right).
 
@@ -559,12 +570,12 @@ liquid water and ice content of layer :math:`i` is combined with the
 underlying neighbor :math:`i+1` as
 
 .. math::
-   :label: 8.51) 
+   :label: 8.51
 
    w_{liq,\, i+1} =w_{liq,\, i+1} +w_{liq,\, i}
 
 .. math::
-   :label: 8.52) 
+   :label: 8.52
 
    w_{ice,\, i+1} =w_{ice,\, i+1} +w_{ice,\, i} .
 
@@ -582,12 +593,12 @@ depth :math:`z_{sno}`  are set to zero, otherwise, :math:`W_{sno}`  and
 :math:`z_{sno}`  are re-calculated as
 
 .. math::
-   :label: 8.53) 
+   :label: 8.53
 
    W_{sno} =\sum _{i=snl+1}^{i=0}\left(w_{ice,\, i} +w_{liq,\, i} \right)
 
 .. math::
-   :label: 8.54) 
+   :label: 8.54
 
    z_{sno} =\sum _{i=snl+1}^{i=0}\Delta z_{i}  .
 
@@ -603,26 +614,26 @@ When two snow layers are combined (denoted here as 1 and 2), their
 thickness combination (:math:`c`) is
 
 .. math::
-   :label: ZEqnNum956014 
+   :label: 8.55
 
    \Delta z_{c} =\Delta z_{1} +\Delta z_{2} ,
 
 their mass combination is
 
 .. math::
-   :label: 8.56) 
+   :label: 8.56
 
    w_{liq,\, c} =w_{liq,\, 1} +w_{liq,\, 2}
 
 .. math::
-   :label: 8.57) 
+   :label: 8.57
 
    w_{ice,\, c} =w_{ice,\, 1} +w_{ice,\, 2} ,
 
 and their temperatures are combined as
 
 .. math::
-   :label: ZEqnNum325173 
+   :label: 8.58
 
    T_{c} =T_{f} +\frac{h_{c} -L_{f} w_{liq,\, c} }{C_{ice} w_{ice,\, c} +C_{liq} w_{liq,\, c} }
 
@@ -630,23 +641,24 @@ where :math:`h_{c} =h_{1} +h_{2}`  is the combined enthalpy
 :math:`h_{i}`  of the two layers where
 
 .. math::
-   :label: 8.59) 
+   :label: 8.59
 
    h_{i} =\left(C_{ice} w_{ice,\, i} +C_{liq} w_{liq,\, i} \right)\left(T_{i} -T_{f} \right)+L_{f} w_{liq,\, i} .
 
-In these equations, :math:`L_{f}`  is the latent heat of fusion (J
-kg\ :sup:`-1`) and :math:`C_{liq}`  and :math:`C_{ice}`  are the
-specific heat capacities (J kg\ :sup:`-1` K\ :sup:`-1`) of
-liquid water and ice, respectively (Table 2.6). After layer combination,
-the node depths and layer interfaces (Figure 8.2) are recalculated from
+In these equations, :math:`L_{f}`  is the latent heat of fusion (J kg\ 
+:sup:`-1`) and :math:`C_{liq}`  and :math:`C_{ice}`  are the specific 
+heat capacities (J kg\ :sup:`-1` K\ :sup:`-1`) of liquid water and ice, 
+respectively (:numref:`Table Physical Constants`). After layer combination,
+the node depths and layer interfaces (:numref:`Figure three layer snow pack`) 
+are recalculated from
 
 .. math::
-   :label: ZEqnNum639853 
+   :label: 8.60
 
    z_{i} =z_{h,\, i} -0.5\Delta z_{i} \qquad i=0,\ldots ,snl+1
 
 .. math::
-   :label: ZEqnNum295008 
+   :label: 8.61
 
    z_{h,\, i-1} =z_{h,\, i} -\Delta z_{i} \qquad i=0,\ldots ,snl+1
 
@@ -703,16 +715,19 @@ constraining the new temperatures (:math:`T_{2}^{n+1}` ,
 lower layer is first evaluated from
 
 .. math::
-   :label: 8.62) 
+   :label: 8.62
 
    T'_{3} =T_{2}^{n} -\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1}^{n} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1}^{n} +\Delta z_{2}^{n} \right) 2}} \right. \kern-\nulldelimiterspace} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right),
 
 then adjusted as,
 
 .. math::
-   :label: 8.63) 
+   :label: 8.63
 
-   \begin{array}{l} {T_{3}^{n+1} =T_{2}^{n} \qquad T'_{3} \ge T_{f} } \\ {T_{2}^{n+1} =T_{2}^{n} +\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1} +\Delta z_{2}^{n} \right) 2}} \right. \kern-\nulldelimiterspace} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right)\qquad T'_{3} <T_{f} } \end{array}
+   \begin{array}{lr} 
+   T_{3}^{n+1} = T_{2}^{n} & \qquad T'_{3} \ge T_{f}  \\ 
+   T_{2}^{n+1} = T_{2}^{n} +\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1} +\Delta z_{2}^{n} \right) 2}} \right. \kern-\nulldelimiterspace} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right) & \qquad T'_{3} <T_{f} 
+   \end{array}
 
 where here the subscripts 1, 2, and 3 denote three layers numbered from
 top to bottom. After layer subdivision, the node depths and layer
