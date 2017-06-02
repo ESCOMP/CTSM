@@ -186,14 +186,14 @@ by the saturation excess mechanism (Dunne runoff)
 .. math::
    :label: 7.64
 
-   q_{over} =f_{sat} q_{liq,\, 0}
+   q_{over} =f_{sat} \ q_{liq,\, 0}
 
 The fractional saturated area is a function of soil moisture
 
 .. math::
    :label: 7.65
 
-   f_{sat} = f_{\max } \exp \left(-0.5 f_{over} z_{\nabla } \right)
+   f_{sat} = f_{\max } \ \exp \left(-0.5 f_{over} z_{\nabla } \right)
 
 where :math:`f_{\max }` is the potential or maximum value of 
 :math:`f_{sat}`, :math:`f_{over}` is a decay factor (m\ :sup:`-1`), and 
@@ -248,7 +248,7 @@ height (relative to the grid cell mean elevation) of the surface water,
    W_{sfc} =\frac{d}{2} \left(1+erf\left(\frac{d}{\sigma _{micro} \sqrt{2} } \right)\right)+\frac{\sigma _{micro} }{\sqrt{2\pi } } e^{\frac{-d^{2} }{2\sigma _{micro} ^{2} } }
 
 where :math:`erf` is the error function. For a given value of
-:math:`W_{sfc}` , equation can be solved for :math:`d` using the
+:math:`W_{sfc}`, :eq:`7.66` can be solved for :math:`d` using the
 Newton-Raphson method. Once :math:`d` is known, one can determine the
 fraction of the area that is inundated as
 
@@ -267,7 +267,7 @@ parameterization is a simple function of slope
 
 where :math:`\beta`  is the topographic slope,
 :math:`\beta _{0} =\left(\sigma _{\max } \right)^{\frac{1}{\eta } }` \ determines
-the maximum value of :math:`\sigma _{}` , and :math:`\eta`  is an
+the maximum value of :math:`\sigma _{micro}` , and :math:`\eta`  is an
 adjustable parameter. Default values in the model are
 :math:`\sigma _{\max } =0.4` and :math:`\eta =-3`.
 
@@ -292,12 +292,12 @@ reservoir
 .. math::
    :label: 7.70
 
-   qout,h2osfc=kh2osfcf_{connected} (Wsfc-Wc)\frac{1}{\Delta t}
+   q_{out,h2osfc}=k_{h2osfc} \ f_{connected} \ (Wsfc-Wc)\frac{1}{\Delta t}
 
-where :math:`qout,h2osfc` is the surface water runoff, :math:`kh2osfc`
+where :math:`q_{out,h2osfc}` is the surface water runoff, :math:`k_{h2osfc}`
 is a constant, :math:`Wc` is the amount of surface water present when
-:math:`f_{h2osfc} =f_{c}` , and :math:`\Delta t` is the model time step.
-The linear storage coefficent :math:`kh2osfc=\sin \left(\beta \right)`
+:math:`f_{h2osfc} = f_{c}` , and :math:`\Delta t` is the model time step.
+The linear storage coefficent :math:`k_{h2osfc} = \sin \left(\beta \right)`
 is a function of grid cell mean topographic slope where :math:`\beta` 
 is the slope in radians.
 
@@ -312,7 +312,7 @@ removed,
 .. math::
    :label: 7.71
 
-   qin,surface=(1-f_{sat} )q_{liq,\, 0}
+   q_{in,surface} = (1-f_{sat}) \ q_{liq,\, 0}
 
 is divided into inputs to surface water (:math:`q_{in,\, h2osfc}` ) and
 the soil :math:`q_{in,soil}` . If :math:`q_{in,soil}`  exceeds the
@@ -322,10 +322,11 @@ s\ :sup:`-1`),
 .. math::
    :label: 7.72
 
-   q_{infl,\, \max } =(1-fsat){\rm \Theta }iceksat
+   q_{infl,\, \max } =(1-f_{sat}) \ \Theta_{ice} k_{sat}
 
-where :math:`{\rm \Theta }ice` is an ice impedance factor (section
-:numref:`Hydraulic Properties`), infiltration excess (Hortonian) runoff is generated
+where :math:`\Theta_{ice}` is an ice impedance factor (section
+:numref:`Hydraulic Properties`), infiltration excess (Hortonian) runoff 
+is generated
 
 .. math::
    :label: 7.73
@@ -338,28 +339,28 @@ After evaporative losses have been removed, these moisture fluxes are
 .. math::
    :label: 7.74
 
-   q_{in,\, h2osfc} =f_{h2osfc} q_{in,surface} +q_{infl,excess} -q_{evap,h2osfc}
+   q_{in,\, h2osfc} =f_{h2osfc} q_{in,surface} + q_{infl,excess} - q_{evap,h2osfc}
 
 and
 
 .. math::
    :label: 7.75
 
-   qin,soil=(1-f_{h2osfc} )q_{in,surface} -q_{\inf l,excess} -(1-f_{sno} -f_{h2osfc} )qevap,soil.
+   q_{in,soil} = (1-f_{h2osfc}) q_{in,surface} - q_{\inf l,excess} - (1 - f_{sno} - f_{h2osfc} ) q_{evap,soil}.
 
 The balance of surface water is then calculated as
 
 .. math::
    :label: 7.76
 
-   \Delta W_{sfc} =\left(qin,h2osfc-qout,h2osfc-qdrain,h2osfc\right)\Delta t.
+   \Delta W_{sfc} =\left(q_{in,h2osfc} - q_{out,h2osfc} - q_{drain,h2osfc} \right) \ \Delta t.
 
 Bottom drainage from the surface water store
 
 .. math::
    :label: 7.77
 
-   qdrain,h2osfc=\min \left(f_{h2osfc} q_{\inf l,\max } ,\frac{W_{sfc} }{\Delta t} \right)
+   q_{drain,h2osfc} = \min \left(f_{h2osfc} q_{\inf l,\max } ,\frac{W_{sfc} }{\Delta t} \right)
 
 is then added to :math:`q_{in,soil}`  giving the total infiltration
 into the surface soil layer
@@ -367,7 +368,7 @@ into the surface soil layer
 .. math::
    :label: 7.78
 
-   q_{infl} =q_{in,soil} +q_{drain,h2osfc}
+   q_{infl} = q_{in,soil} + q_{drain,h2osfc}
 
 Infiltration :math:`q_{infl}`  and explicit surface runoff
 :math:`q_{over}`  are not allowed for glaciers.
@@ -469,27 +470,34 @@ and organic properties of the soil
 (:ref:`Lawrence and Slater 2008 <LawrenceSlater2008>`).
 
 The hydraulic conductivity is defined at the depth of the interface of
-two adjacent layers :math:`z_{h,\, i}`  (:numref:`Figure Water flux schematic`) and is a function
-of the saturated hydraulic conductivity
+two adjacent layers :math:`z_{h,\, i}`  (:numref:`Figure Water flux schematic`) 
+and is a function of the saturated hydraulic conductivity
 :math:`k_{sat} \left[z_{h,\, i} \right]`, the liquid volumetric soil
-moisture of the two layers :math:`\theta _{i}`  and
-:math:`\theta _{i+1}`  and an ice impedance factor
-:math:`\Theta _{ice}` 
+moisture of the two layers :math:`\theta_{i}`  and
+:math:`\theta_{i+1}`  and an ice impedance factor
+:math:`\Theta_{ice}` 
 
 .. math::
    :label: 7.85
 
    k\left[z_{h,\, i} \right] =
    \left\{\begin{array}{lr} 
-   \Theta _{ice} k_{sat} \left[z_{h,\, i} \right]\left[\frac{0.5\left(\theta _{\, i} +\theta _{\, i+1} \right)}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right]^{2B_{i} +3} & \qquad 1 \le i \le N_{levsoi} - 1 \\ 
-   \Theta _{ice} k_{sat} \left[z_{h,\, i} \right]\left(\frac{\theta _{\, i} }{\theta _{sat,\, i} } \right)^{2B_{i} +3} & \qquad i = N_{levsoi} 
+   \Theta_{ice} k_{sat} \left[z_{h,\, i} \right]\left[\frac{0.5\left(\theta_{\, i} +\theta_{\, i+1} \right)}{0.5\left(\theta_{sat,\, i} +\theta_{sat,\, i+1} \right)} \right]^{2B_{i} +3} & \qquad 1 \le i \le N_{levsoi} - 1 \\ 
+   \Theta_{ice} k_{sat} \left[z_{h,\, i} \right]\left(\frac{\theta_{\, i} }{\theta_{sat,\, i} } \right)^{2B_{i} +3} & \qquad i = N_{levsoi} 
    \end{array}\right\}.
 
 The ice impedance factor is a function of ice content, and is meant to
 quantify the increased tortuosity of the water flow when part of the
 pore space is filled with ice. :ref:`Swenson et al. (2012) <Swensonetal2012>` 
-used a power law form :math:`\Theta _{ice} = 10^{-\Omega F_{ice} }`  where
-:math:`\Omega = 6`\ and
+used a power law form 
+
+.. math::
+   :label: 7.86
+
+   \Theta _{ice} = 10^{-\Omega F_{ice}}
+
+where
+:math:`\Omega = 6` and 
 :math:`F_{ice} = \frac{\theta_{ice} }{\theta_{sat} }`  is the
 ice-filled fraction of the pore space.
 
@@ -512,7 +520,7 @@ porosity of organic matter and the porosity of the mineral soil
 .. math::
    :label: 7.91
 
-   \theta _{sai,\min ,i} = 0.489 - 0.00126(\% sand)_{i} .
+   \theta _{sat,\min ,i} = 0.489 - 0.00126(\% sand)_{i} .
 
 The exponent :math:`B_{i}` is
 
@@ -566,10 +574,10 @@ fractions using a result from percolation theory (:ref:`Stauffer and Aharony
 1994 <StaufferAharony1994>`, :ref:`Berkowitz and Balberg 1992 <BerkowitzBalberg1992>`). 
 Assuming that the organic and mineral fractions are randomly distributed throughout 
 a soil layer, percolation theory predicts that above a threshold value
-:math:`f_{om} =f_{threshold}` , connected flow pathways consisting of
+:math:`f_{om} =f_{threshold}`, connected flow pathways consisting of
 organic material only exist and span the soil space. Flow through these
 pathways interacts only with organic material, and thus can be described
-by :math:`k_{sat,\, om}` . This fraction of the grid cell is given by
+by :math:`k_{sat,\, om}`. This fraction of the grid cell is given by
 
 .. math::
    :label: 7.97
@@ -714,7 +722,7 @@ and :math:`\left(\beta _{t} \right)_{j}`  is a wetness factor for the total
 soil column for the :math:`j^{th}` PFT (Chapter 
 :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
-The soil water fluxes in equation , which are a function of
+The soil water fluxes in :eq:`7.103`, which are a function of
 :math:`\theta _{liq,\, i}`  and :math:`\theta _{liq,\, i+1}`  because of
 their dependence on hydraulic conductivity and soil matric potential,
 can be linearized about :math:`\theta`  using a Taylor series expansion
@@ -730,8 +738,8 @@ as
 
    q_{i-1}^{n+1} =q_{i-1}^{n} +\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} } \Delta \theta _{liq,\, i-1} +\frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } \Delta \theta _{liq,\, i} .
 
-Substitution of these expressions for :math:`q_{i}^{n+1}`  and
-:math:`q_{i-1}^{n+1}`  into equation results in a general tridiagonal
+Substitution of these expressions for :math:`q_{i}^{n+1}` and
+:math:`q_{i-1}^{n+1}` into equation :eq:`7.103` results in a general tridiagonal
 equation set of the form
 
 .. math::
@@ -765,40 +773,40 @@ The tridiagonal equation set is solved over
 :math:`i=1,\ldots ,N_{levsoi}`.
 
 The finite-difference forms of the fluxes and partial derivatives in
-equations - can be obtained from equation as
+equations :eq:`7.111` - :eq:`7.114` can be obtained from :eq:`7.80` as
 
 .. math::
    :label: 7.115
 
-   q_{i-1}^{n} =-k\left[z_{h,\, i-1} \right]\left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(\psi _{E,\, i} -\psi _{E,\, i-1} \right)}{z_{i} -z_{i-1} } \right]
+   q_{i-1}^{n} =-k\left[z_{h,\, i-1} \right]\left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(z_{i} - z_{i-1} \right)}{z_{i} -z_{i-1} } \right]
 
 .. math::
    :label: 7.116
 
-   q_{i}^{n} =-k\left[z_{h,\, i} \right]\left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(\psi _{E,\, i+1} -\psi _{E,\, i} \right)}{z_{i+1} -z_{i} } \right]
+   q_{i}^{n} =-k\left[z_{h,\, i} \right]\left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(z_{i+1} - z_{i} \right)}{z_{i+1} -z_{i} } \right]
 
 .. math::
    :label: 7.117
 
-   \frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} } =-\left[\frac{k\left[z_{h,\, i-1} \right]}{z_{i} -z_{i-1} } \frac{\partial \psi _{i-1} }{\partial \theta _{liq,\, i-1} } \right]-\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} } \left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(\psi _{E,\, i} -\psi _{E,\, i-1} \right)}{z_{i} -z_{i-1} } \right]
+   \frac{\partial q_{i-1} }{\partial \theta _{liq,\, i-1} } =-\left[\frac{k\left[z_{h,\, i-1} \right]}{z_{i} -z_{i-1} } \frac{\partial \psi _{i-1} }{\partial \theta _{liq,\, i-1} } \right]-\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} } \left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(z_{i} - z_{i-1} \right)}{z_{i} - z_{i-1} } \right]
 
 .. math::
    :label: 7.118
 
-   \frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } =\left[\frac{k\left[z_{h,\, i-1} \right]}{z_{i} -z_{i-1} } \frac{\partial \psi _{i} }{\partial \theta _{liq,\, i} } \right]-\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } \left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(\psi _{E,\, i} -\psi _{E,\, i-1} \right)}{z_{i} -z_{i-1} } \right]
+   \frac{\partial q_{i-1} }{\partial \theta _{liq,\, i} } =\left[\frac{k\left[z_{h,\, i-1} \right]}{z_{i} -z_{i-1} } \frac{\partial \psi _{i} }{\partial \theta _{liq,\, i} } \right]-\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } \left[\frac{\left(\psi _{i-1} -\psi _{i} \right)+\left(z_{i} - z_{i-1} \right)}{z_{i} - z_{i-1} } \right]
 
 .. math::
    :label: 7.119
 
-   \frac{\partial q_{i} }{\partial \theta _{liq,\, i} } =-\left[\frac{k\left[z_{h,\, i} \right]}{z_{i+1} -z_{i} } \frac{\partial \psi _{i} }{\partial \theta _{liq,\, i} } \right]-\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } \left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(\psi _{E,\, i+1} -\psi _{E,\, i} \right)}{z_{i+1} -z_{i} } \right]
+   \frac{\partial q_{i} }{\partial \theta _{liq,\, i} } =-\left[\frac{k\left[z_{h,\, i} \right]}{z_{i+1} -z_{i} } \frac{\partial \psi _{i} }{\partial \theta _{liq,\, i} } \right]-\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } \left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(z_{i+1} - z_{i} \right)}{z_{i+1} - z_{i} } \right]
 
 .. math::
    :label: 7.120
 
-   \frac{\partial q_{i} }{\partial \theta _{liq,\, i+1} } =\left[\frac{k\left[z_{h,\, i} \right]}{z_{i+1} -z_{i} } \frac{\partial \psi _{i+1} }{\partial \theta _{liq,\, i+1} } \right]-\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } \left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(\psi _{E,\, i+1} -\psi _{E,\, i} \right)}{z_{i+1} -z_{i} } \right].
+   \frac{\partial q_{i} }{\partial \theta _{liq,\, i+1} } =\left[\frac{k\left[z_{h,\, i} \right]}{z_{i+1} -z_{i} } \frac{\partial \psi _{i+1} }{\partial \theta _{liq,\, i+1} } \right]-\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } \left[\frac{\left(\psi _{i} -\psi _{i+1} \right)+\left(z_{i+1} - z_{i} \right)}{z_{i+1} - z_{i} } \right].
 
 The derivatives of the soil matric potential at the node depth are
-derived from equation
+derived from :eq:`7.94`
 
 .. math::
    :label: 7.121
@@ -819,17 +827,31 @@ with the constraint
 :math:`0.01\, \theta _{sat,\, i} \le \theta _{\, i} \le \theta _{sat,\, i}` .
 
 The derivatives of the hydraulic conductivity at the layer interface are
-derived from equation
+derived from :eq:`7.85`
+
+.. check eqn
 
 .. math::
    :label: 7.124
 
-   \begin{array}{l} {\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} } =\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } =\left(1-\frac{f_{frz,\, i-1} +f_{frz,\, i} }{2} \right)\left(2B_{i-1} +3\right)k_{sat} \left[z_{h,\, i-1} \right]\times } \\ {\qquad \left[\frac{0.5\left(\theta _{\, i-1} +\theta _{\, i} \right)}{0.5\left(\theta _{sat,\, i-1} +\theta _{sat,\, i} \right)} \right]^{2B_{i-1} +2} \left(\frac{0.5}{0.5\left(\theta _{sat,\, i-1} +\theta _{sat,\, i} \right)} \right)} \end{array}
+   \begin{array}{l} 
+   {\frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i-1} } 
+   = \frac{\partial k\left[z_{h,\, i-1} \right]}{\partial \theta _{liq,\, i} } 
+   = \left(2B_{i-1} +3\right) \ \overline{\Theta}_{ice} \ k_{sat} \left[z_{h,\, i-1} \right] \ \left[\frac{\overline{\theta}_{liq}}{\overline{\theta}_{sat}} \right]^{2B_{i-1} +2} \left(\frac{0.5}{\overline{\theta}_{sat}} \right)} \end{array}
+
+where :math:`\overline{\theta}_{liq} = 0.5\left(\theta _{\, i-1} +\theta _{\, i} \right)`, 
+:math:`\overline{\theta}_{sat} = 0.5\left(\theta _{sat,\, i-1} +\theta _{sat,\, i} \right)`, 
+and :math:`\overline{\Theta}_{ice} = \Theta_{ice}(\overline{\theta}_{ice})` :eq:`7.86` 
+
+and 
 
 .. math::
    :label: 7.125
 
-   \begin{array}{l} {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } =\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } =\left(1-\frac{f_{frz,\, i} +f_{frz,\, i+1} }{2} \right)\left(2B_{i} +3\right)k_{sat} \left[z_{h,\, i} \right]\times } \\ {\qquad \left[\frac{0.5\left(\theta _{\, i} +\theta _{\, i+1} \right)}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right]^{2B_{i} +2} \left(\frac{0.5}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right)} \end{array}.
+   \begin{array}{l} 
+   {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } 
+   = \frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } 
+   = \left(2B_{i} +3\right) \ \overline{\Theta}_{ice} \ k_{sat} \left[z_{h,\, i} \right] \ \left[\frac{\overline{\theta}_{liq}}{\overline{\theta}_{sat}} \right]^{2B_{i} +2} \left(\frac{0.5}{\overline{\theta}_{sat}} \right)} \end{array}.
 
 Equation set for layer :math:`i=1`
 ''''''''''''''''''''''''''''''''''''''''''
