@@ -101,8 +101,8 @@ described by Levis et al. (:ref:`2016 <Levisetal2016>`). A parameterization
 for winter cereals is developed but is not included in CLM5.0 due to the 
 inability to distinguish between winter and summer cereals in the LUMIP dataset (insert citation). 
 
-CLM’s default list of plant functional types (pfts) includes an
-unmanaged crop (Table 2.1) treated as a second C3 grass, as well as several 
+CLM’s default list of plant functional types (pfts) includes an unmanaged crop 
+(:numref:`Table Plant functional types`) treated as a second C3 grass, as well as several 
 additional crop types that do not have associated parameters. The unmanaged
 crop has grid cell coverage assigned from satellite data, as do all
 natural pfts when CLM’s crop model is not active. [include remapping text here].
@@ -133,7 +133,7 @@ Corn and temperate cereals must meet the following requirements between
 April 1\ :sup:`st` and June 14\ :sup:`th` for planting in the northern hemisphere (NH):
 
 .. math::
-   :label: ZEqnNum568682 
+   :label: 25.1
 
    \begin{array}{l} 
    {T_{10d} >T_{p} } \\ 
@@ -172,7 +172,7 @@ for the crop to reach vegetative and physiological maturity,
 :math:`{GDD}_{mat}`, according to the following AgroIBIS rules:
 
 .. math::
-   :label: 25.2) 
+   :label: 25.2
 
    \begin{array}{l} {GDD_{{\rm mat}}^{{\rm corn}} =0.85GDD_{{\rm 8}} {\rm \; \; \; and\; \; \; 950}<GDD_{{\rm mat}}^{{\rm corn}} <1850{}^\circ {\rm days}} \\ {GDD_{{\rm mat}}^{{\rm temp.\; cereals}} =GDD_{{\rm 0}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm temp.\; cereals}} <1700{}^\circ {\rm days}} \\ {GDD_{{\rm mat}}^{{\rm soy}} =GDD_{{\rm 10}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm soy}} <1700{}^\circ {\rm days}} \end{array}
 
@@ -183,7 +183,7 @@ degree-days tracked from April through September (NH) base
 :math:`{GDD}_{0}`, :math:`{GDD}_{8}`, and :math:`{GDD}_{10}`:
 
 .. math::
-   :label: ZEqnNum977351 
+   :label: 25.3
 
    \begin{array}{l} {GDD_{{\rm 0}} =GDD_{0} +T_{2{\rm m}} -T_{f} {\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} \le 26{}^\circ {\rm days}} \\ {GDD_{{\rm 8}} =GDD_{8} +T_{2{\rm m}} -T_{f} -8{\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} -8\le 30{}^\circ {\rm days}} \\ {GDD_{{\rm 10}} =GDD_{10} +T_{2{\rm m}} -T_{f} -10{\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} -10\le 30{}^\circ {\rm days}} \end{array}
 
@@ -228,8 +228,9 @@ Harvest
 
 Harvest is assumed to occur as soon as the crop reaches maturity. When
 :math:`GDD_{T_{{\rm 2m}} }`  reaches 100% of :math:`{GDD}_{mat}` or
-the number of days past planting reaches a crop-specific maximum (Table
-20.1), then the crop is harvested. Harvest occurs in one time step using
+the number of days past planting reaches a crop-specific maximum 
+(:numref:`Table Crop plant functional types`), then the crop is harvested. 
+Harvest occurs in one time step using
 CN’s leaf offset algorithm. New variables track the flow of grain C and
 N to food and of live stem C and N to litter. Currently, food C and N
 are routed directly to litter using the labile, cellulose, and lignin
@@ -258,15 +259,15 @@ During phase 2, the allocation coefficients (fraction of available C) to
 each C pool are defined as:
 
 .. math::
-   :label: 25.4) 
+   :label: 25.4
 
    \begin{array}{l} {a_{repr} =0} \\ {a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} )\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} } {\rm \; \; \; where\; \; \; }\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} } \le 1} \\ {a_{leaf} =(1-a_{froot} )\cdot \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{GDD_{T_{{\rm 2m}} } }{h} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\ {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 
 where :math:`a_{leaf}^{i}` , :math:`a_{froot}^{i}` , and
 :math:`a_{froot}^{f}`  are initial and final values of these
-coefficients (Table 20.2), and *h* is a heat unit threshold defined in
+coefficients (:numref:`Table Crop pfts`), and *h* is a heat unit threshold defined in
 section 20.2.3. At a crop-specific maximum leaf area index,
-:math:`{L}_{max}` (Table 20.2), carbon allocation is directed
+:math:`{L}_{max}` (:numref:`Table Crop pfts`), carbon allocation is directed
 exclusively to the fine roots.
 
 .. _Grain fill to harvest:
@@ -278,7 +279,7 @@ The calculation of :math:`a_{froot}`  remains the same from phase 2 to
 phase 3. Other allocation coefficients change to:
 
 .. math::
-   :label: ZEqnNum833921 
+   :label: 25.5
 
    \begin{array}{lr} 
    a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le a_{leaf}^{f} \quad {\rm else} \\ 
@@ -296,7 +297,7 @@ calculated in phase 2, :math:`d_{L}` , :math:`d_{alloc}^{leaf}`  and
 :math:`d_{alloc}^{stem}`  are leaf area index and leaf and stem
 allocation decline factors, and :math:`a_{leaf}^{f}`  and
 :math:`a_{livestem}^{f}`  are final values of these allocation
-coefficients (Table 20.2).
+coefficients (:numref:`Table Crop pfts`).
 
 .. _General comments:
 
@@ -322,7 +323,7 @@ Crop heights at the top and bottom of the canopy, :math:`{z}_{top}`
 and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
 
 .. math::
-   :label: 25.6) 
+   :label: 25.6
 
    \begin{array}{l} 
    {z_{top} =z_{top}^{\max } \left(\frac{L}{L_{\max } -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{L_{\max } -1} \le 1} \\ 
@@ -414,7 +415,7 @@ top-of-canopy height of a crop, *SLA* is specific leaf area, and leaf
 orientation index, :math:`\chi _{L}` , equals -1 for vertical, 0 for
 random, and 1 for horizontal leaf orientation.
 
-.. _Table Crop pfts in CLM4.5CNcrop and their parameters:
+.. _Table Crop pfts:
 
 .. table:: Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
 
@@ -469,7 +470,7 @@ threshold.
 The soil moisture deficit :math:`D_{irrig}` is 
 
 .. math::
-   :label: 25.61) 
+   :label: 25.61
 
    D_{irrig} = \left\{
    \begin{array}{lr}    
@@ -482,21 +483,21 @@ where :math:`w_{thresh}` is the irrigation moisture threshold (mm) and
 is
 
 .. math::
-   :label: 25.62) 
+   :label: 25.62
 
    w_{thresh} = f_{thresh} \left(w_{target} - w_{wilt}\right) + w_{wilt}
 
 where :math:`w_{target}` is the irrigation target soil moisture (mm) 
 
 .. math::
-   :label: 25.63) 
+   :label: 25.63
 
    w_{target} = \sum_{j=1}^{N_{irr}} \theta_{target} \Delta z_{j} \ ,
 
 :math:`w_{wilt}` is the wilting point soil moisture (mm) 
 
 .. math::
-   :label: 25.64) 
+   :label: 25.64
 
    w_{wilt} = \sum_{j=1}^{N_{irr}} \theta_{wilt} \Delta z_{j} \ ,
 
@@ -504,7 +505,7 @@ and :math:`f_{thresh}` is a tuning parameter.  The available moisture in
 the soil is 
 
 .. math::
-   :label: 25.65) 
+   :label: 25.65
 
    w_{avail} = \sum_{j=1}^{N_{irr}} \theta_{j} \Delta z_{j} \ ,
 
@@ -516,7 +517,7 @@ volumetric soil moisture in layer :math:`j` (section :numref:`Soil Water`).
 :math:`\theta_{target}` and 
 :math:`\theta_{wilt}` are the target and wilting point volumetric 
 soil moisture values, respectively, and are determined by inverting 
-:eq:`ZEqnNum316201` using soil matric 
+:eq:`7.94` using soil matric 
 potential parameters :math:`\Psi_{target}` and :math:`\Psi_{wilt}` 
 (:numref:`Table Irrigation parameters`). After the soil moisture deficit 
 :math:`D_{irrig}` is calculated, irrigation in an amount equal to 
@@ -657,7 +658,7 @@ unmet nitrogen demand; if soil nitrogen meets soybean demand, there will
 be no fixation during the time step. Soybean fixation is determined by
 
 .. math::
-   :label: 25.10) 
+   :label: 25.10
 
    N_{fix} \; =\; N_{plant\_ ndemand} \; *\; min\; \left(\; 1,\; fxw,\; fxn\; \right)*\; fxg
 
@@ -667,17 +668,17 @@ nitrogen pool, *fxw* is the soil water factor, *fxn* is the soil
 nitrogen factor, and *fxg* is the growth stage factor calculated by
 
 .. math::
-   :label: 25.11) 
+   :label: 25.11
 
    fxw=\frac{wf}{0.85}
 
 .. math::
-   :label: 25.12) 
+   :label: 25.12
 
    fxn=\; \left\{\begin{array}{l} {0\qquad \qquad \qquad \qquad {\rm for\; }sminn\le 10} \\ {1.5-0.005\left(sminn\times 10\right)\qquad {\rm for\; 10\; <\; }sminn{\rm \; }\ge 30} \\ {1\qquad \qquad \qquad \qquad {\rm for\; }sminn>30} \end{array}\right\}
 
 .. math::
-   :label: 25.13) 
+   :label: 25.13
 
    fxg=\left\{\begin{array}{l} {0\qquad \qquad \qquad \qquad \qquad {\rm for\; }GDD_{T_{2m} } \le 0.15} \\ {6.67\times GDD_{T_{2m} } -1\qquad \qquad \qquad {\rm for\; }0.15<GDD_{T_{2m} } \ge 0.30} \\ {1\qquad \qquad \qquad \qquad \qquad {\rm for\; }0.30<GDD_{T_{2m} } \ge 0.55} \\ {3.75-5\times GDD_{T_{2m} } \qquad \qquad \qquad {\rm for\; }0.55<GDD_{T_{2m} } \ge 0.75} \\ {0\qquad \qquad \qquad \qquad \qquad {\rm for\; }GDD_{T_{2m} } >0.75} \end{array}\right\}
 
@@ -734,17 +735,17 @@ mobilized depends on the C:N ratio of the plant tissue, and is
 calculated as
 
 .. math::
-   :label: 25.14) 
+   :label: 25.14
 
    leaf\_ to\_ retransn=\frac{c_{leaf} }{CN_{leaf} } -\frac{c_{leaf} }{CN_{leaf}^{f} }
 
 .. math::
-   :label: 25.15) 
+   :label: 25.15
 
    stemn\_ to\_ retransn=\frac{c_{stem} }{CN_{stem} } -\frac{c_{stem} }{CN_{stem}^{f} }
 
 .. math::
-   :label: 25.16) 
+   :label: 25.16
 
    frootn\_ to\_ retransn=\frac{c_{froot} }{CN_{froot} } -\frac{c_{froot} }{CN_{froot}^{f} }
 

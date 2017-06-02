@@ -136,7 +136,7 @@ Jinyun Tang, Zong-Liang Yang**
 
 - :numref:`Figure Water flux schematic` Schematic diagram of numerical scheme used to solve for soil water fluxes. 
 
-- :numref:`three layer snow pack` Example of three layer snow pack (snl=-3). 
+- :numref:`Figure three layer snow pack` Example of three layer snow pack (snl=-3). 
 
 - :numref:`Figure Schematic representation of the urban landunit` Schematic representation of the urban land unit.
 
