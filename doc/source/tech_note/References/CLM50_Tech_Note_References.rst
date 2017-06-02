@@ -1881,6 +1881,13 @@ van Veen, J.A., Ladd, J.N. and Frissel, M.J., 1984. Modelling C and N
 turnover through the microbial biomass in soil. Plant and Soil, 76:
 257-274.
 
+.. _vanKampenhoutetal2017:
+
+van Kampenhout, L., J.T.M. Lenaerts, W.H. Lipscomb, W.J. Sacks, D.M. 
+Lawrence, A.G. Slater, and M.R. van den Broeke, 2017. 
+Improving the representation of polar snow and firn in the 
+Community Earth System Model, submitted.
+
 .. _VanVuurenetal2006:
 
 Van Vuuren, D.P., Lucas, P.S., and Hilderink, H.B.M., 2006. Downscaling

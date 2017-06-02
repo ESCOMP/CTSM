@@ -141,21 +141,39 @@ where
    \Delta z_{sno} =\frac{q_{grnd,\, ice} \Delta t}{f_{sno} \rho _{sno} }
 
 and :math:`\rho _{sno}`  is the bulk density of newly fallen snow (kg
-m\ :sup:`-3`) (:ref:`Anderson (1976) <Anderson1976>`)
+m\ :sup:`-3`) (:ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`, 
+:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
    :label: 8.21
 
-   \rho _{sno} = 
+   \rho_{sno} = 
    \left\{\begin{array}{lr} 
    50 + 1.7 \left(17\right)^{1.5} & \qquad T_{atm} >T_{f} +2 \ \\ 
    50+1.7 \left(T_{atm} -T_{f} + 15\right)^{1.5} & \qquad T_{f} - 15 < T_{atm} \le T_{f} + 2 \ \\ 
-   50 &\qquad T_{atm} \le T_{f} - 15 
+   -3.833 \ \left( T_{atm} -T_{f} \right) - 0.0333 \ \left( T_{atm} -T_{f} \right)^{2} 
+   &\qquad T_{atm} \le T_{f} - 15 
    \end{array}\right\}
 
-where :math:`T_{atm}`  is the atmospheric temperature (K), and
-:math:`T_{f}`  is the freezing temperature of water (K) (Table 2.6). The
-mass of snow :math:`W_{sno}`  is
+.. bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
+
+where :math:`T_{atm}`  is the atmospheric temperature (K), and :math:`T_{f}` is 
+the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 
+wind speed :math:`W_{atm}` is greater than 0.1 m :sub:`-1`, snow density 
+increases due to wind-driven compaction according to 
+:ref:`(van Kampenhout et al. 2017) <vanKampenhoutetal2017>`
+
+.. math::
+   :label: 8.21b
+
+   \Delta \rho_{sno} = 266.861 \left(\frac{1 + tanh(\frac{W_{atm}}{5})}{2}\right)^{8.8}
+
+where :math:`\Delta \rho_{sno}` (kg m\ :sup:`-3`) is the increase in snow 
+density relative to :eq:`8.21`.
+
+.. bifall(c) = bifall(c) + (266.861_r8 * ((1._r8 + TANH(forc_wind(g)/5.0_r8))/2._r8)**8.8_r8)
+
+The mass of snow :math:`W_{sno}`  is
 
 .. math::
    :label: 8.22
