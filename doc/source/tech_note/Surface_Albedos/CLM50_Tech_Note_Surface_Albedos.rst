@@ -141,17 +141,17 @@ and
 The upscatter for diffuse radiation is
 
 .. math::
-   :label: ZEqnNum472968 
+   :label: 3.13
 
    \omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} =\frac{1}{2} \left[\alpha _{\Lambda } +\tau _{\Lambda } +\left(\alpha _{\Lambda } -\tau _{\Lambda } \right)\cos ^{2} \bar{\theta }\right]
 
 where :math:`\bar{\theta }` is the mean leaf inclination angle relative
 to the horizontal plane (i.e., the angle between leaf normal and local
-vertical) (Sellers 1985). Here, :math:`\cos \bar{\theta }` is
+vertical) (:ref:`Sellers (1985) <Sellers1985>`). Here, :math:`\cos \bar{\theta }` is
 approximated by
 
 .. math::
-   :label: ZEqnNum720349
+   :label: 3.14
 
    \cos \bar{\theta }=\frac{1+\chi _{L} }{2}
 

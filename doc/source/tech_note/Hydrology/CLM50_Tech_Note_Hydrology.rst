@@ -910,7 +910,13 @@ derived from equation
 .. math::
    :label: 7.125) 
 
-   \begin{array}{l} {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } =\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } =\left(1-\frac{f_{frz,\, i} +f_{frz,\, i+1} }{2} \right)\left(2B_{i} +3\right)k_{sat} \left[z_{h,\, i} \right]\times } \\ {\qquad \left[\frac{0.5\left(\theta _{\, i} +\theta _{\, i+1} \right)}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right]^{2B_{i} +2} \left(\frac{0.5}{0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)} \right)} \end{array}.
+   \begin{array}{l} 
+   {\frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i} } 
+   = \frac{\partial k\left[z_{h,\, i} \right]}{\partial \theta _{liq,\, i+1} } 
+   = \left(2B_{i} +3\right) \ \overline{\Theta}_{ice} \ k_{sat} \left[z_{h,\, i} \right] \ \left[\frac{\overline{\theta}_{liq}}{\overline{\theta}_{sat}} \right]^{2B_{i} +2} \left(\frac{0.5}{\overline{\theta}_{sat}} \right)} \end{array}
+
+where :math:`\overline{\theta}_{liq} = 0.5\left(\theta _{\, i} +\theta _{\, i+1} \right)`, 
+:math:`\overline{\theta}_{sat} = 0.5\left(\theta _{sat,\, i} +\theta _{sat,\, i+1} \right)`.
 
 Equation set for layer :math:`i=1`
 ''''''''''''''''''''''''''''''''''''''''''
