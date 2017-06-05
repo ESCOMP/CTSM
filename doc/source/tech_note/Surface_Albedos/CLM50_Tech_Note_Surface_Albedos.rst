@@ -72,29 +72,34 @@ where :math:`\mu '` is the direction of the scattered flux.
 
 The optical parameters :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`, 
 which vary with wavelength (:math:`\Lambda` ), are weighted combinations of values 
-for vegetation and snow. The model determines that snow is on the canopy if 
-:math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter 
-:numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and :math:`T_{f}` is the 
-freezing temperature of water (K) (:numref:`Table Physical Constants`). In this case, the optical parameters are
+for vegetation and snow, using the canopy snow-covered fraction :math:`f_{can,\, sno}` 
+(Chapter :numref:`rst_Hydrology`). The optical parameters are
+
+
+..
+   The model determines that snow is on the canopy if 
+   :math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter 
+   :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and :math:`T_{f}` is the 
+   freezing temperature of water (K) (:numref:`Table Physical Constants`). In this case, the optical parameters are
 
 .. math::
    :label: 3.5
 
-   \omega _{\Lambda } =\omega _{\Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} f_{wet}
+   \omega _{\Lambda } =\omega _{\Lambda }^{veg} \left(1-f_{can,\, sno} \right)+\omega _{\Lambda }^{sno} f_{can,\, sno}
 
 .. math::
    :label: 3.6
 
-   \omega _{\Lambda } \beta _{\Lambda } =\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} \beta _{\Lambda }^{sno} f_{wet}
+   \omega _{\Lambda } \beta _{\Lambda } =\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} \left(1-f_{can,\, sno} \right)+\omega _{\Lambda }^{sno} \beta _{\Lambda }^{sno} f_{can,\, sno}
 
 .. math::
    :label: 3.7
 
-   \omega _{\Lambda } \beta _{0,\, \Lambda } =\omega _{\Lambda }^{veg} \beta _{0,\, \Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} \beta _{0,\, \Lambda }^{sno} f_{wet}
+   \omega _{\Lambda } \beta _{0,\, \Lambda } =\omega _{\Lambda }^{veg} \beta _{0,\, \Lambda }^{veg} \left(1-f_{can,\, sno} \right)+\omega _{\Lambda }^{sno} \beta _{0,\, \Lambda }^{sno} f_{can,\, sno}
 
-where :math:`f_{wet}`  is the wetted fraction of the canopy (section :numref:`Canopy Water`). The snow and vegetation weights are applied to the products
+The snow and vegetation weights are applied to the products
 :math:`\omega _{\Lambda } \beta _{\Lambda }`  and :math:`\omega _{\Lambda } \beta _{0,\, \Lambda }`  because these
-products are used in the two-stream equations. If there is no snow on the canopy,
+products are used in the two-stream equations. If there is no snow on the canopy, this reduces to
 
 .. math::
    :label: 3.8
