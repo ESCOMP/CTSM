@@ -78,7 +78,7 @@ simulated biogeophysics and biogeochemistry. These advances may improve
 fully coupled simulations with the Community Earth System Model (CESM),
 while helping human societies answer questions about changing food,
 energy, and water resources in response to climate, environmental, land
-use, and land management change (e.g., :ref:`Kucharik and Brye 2003 <KucharikBrye2003>; Lobell et al. 2006 <Lobelletal2006>`).
+use, and land management change (e.g., :ref:`Kucharik and Brye 2003 <KucharikBrye2003>`; :ref:`Lobell et al. 2006 <Lobelletal2006>`).
 
 .. _Crop plant functional types:
 
@@ -144,7 +144,7 @@ Corn and temperate cereals must meet the following requirements between
 April 1\ :sup:`st` and June 14\ :sup:`th` for planting in the northern hemisphere (NH):
 
 .. math::
-   :label: ZEqnNum568682 
+   :label: 25.1
 
    \begin{array}{l} 
    {T_{10d} >T_{p} } \\ 
@@ -156,12 +156,12 @@ where :math:`{T}_{10d}` is the 10-day running mean of :math:`{T}_{2m}`, (the sim
 temperature at every model time step) and :math:`T_{10d}^{\min}`  is
 the 10-day running mean of :math:`T_{2m}^{\min }`  (the daily minimum of
 :math:`{T}_{2m}`. :math:`{T}_{p}` and :math:`T_{p}^{\min }`  are crop-specific coldest planting temperatures
-(Table 20.1), :math:`{GDD}_{8}` is the 20-year running mean growing
+(:numref:`Table Crop plant functional types`), :math:`{GDD}_{8}` is the 20-year running mean growing
 degree-days (units are degree-days or :sup:`o` days) tracked
 from April through September (NH) base 8\ :sup:`o` C with
 maximum daily increments of 30\ :sup:`o` days (see Eq.XXX ), and
 :math:`{GDD}_{min }`\ is the minimum growing degree day requirement
-(Table 20.1). Soy must meet the same requirements but between May
+(:numref:`Table Crop plant functional types`). Soy must meet the same requirements but between May
 1\ :sup:`st` and June 14\ :sup:`th` for planting. If the
 requirements in Eq. are not met by June 14\ :sup:`th`, then corn,
 soybean, and temperate cereals are still planted on June
@@ -183,7 +183,7 @@ for the crop to reach vegetative and physiological maturity,
 :math:`{GDD}_{mat}`, according to the following AgroIBIS rules:
 
 .. math::
-   :label: 25.2) 
+   :label: 25.2
 
    \begin{array}{l} {GDD_{{\rm mat}}^{{\rm corn}} =0.85GDD_{{\rm 8}} {\rm \; \; \; and\; \; \; 950}<GDD_{{\rm mat}}^{{\rm corn}} <1850{}^\circ {\rm days}} \\ {GDD_{{\rm mat}}^{{\rm temp.\; cereals}} =GDD_{{\rm 0}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm temp.\; cereals}} <1700{}^\circ {\rm days}} \\ {GDD_{{\rm mat}}^{{\rm soy}} =GDD_{{\rm 10}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm soy}} <1700{}^\circ {\rm days}} \end{array}
 
@@ -194,7 +194,7 @@ degree-days tracked from April through September (NH) base
 :math:`{GDD}_{0}`, :math:`{GDD}_{8}`, and :math:`{GDD}_{10}`:
 
 .. math::
-   :label: ZEqnNum977351 
+   :label: 25.3
 
    \begin{array}{l} {GDD_{{\rm 0}} =GDD_{0} +T_{2{\rm m}} -T_{f} {\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} \le 26{}^\circ {\rm days}} \\ {GDD_{{\rm 8}} =GDD_{8} +T_{2{\rm m}} -T_{f} -8{\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} -8\le 30{}^\circ {\rm days}} \\ {GDD_{{\rm 10}} =GDD_{10} +T_{2{\rm m}} -T_{f} -10{\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} -10\le 30{}^\circ {\rm days}} \end{array}
 
@@ -211,7 +211,7 @@ Leaf emergence
 According to AgroIBIS, leaves may emerge when the growing degree-days of
 soil temperature to 0.05 m depth tracked since planting
 (:math:`GDD_{T_{soi} }` ) reaches 3 to 5% of :math:`{GDD}_{mat}`
-(Table 20.1). :math:`GDD_{T_{soi} }` is base 8, 0, and
+(:numref:`Table Crop plant functional types`). :math:`GDD_{T_{soi} }` is base 8, 0, and
 10\ :math:`{}^\circ`\ C for corn, soybean, and temperate cereals. 
 Leaf onset, as defined in the CN part of the model, occurs in the first
 time step of phase 2, at which moment all seed C is transferred to leaf
@@ -226,7 +226,7 @@ Grain fill
 Phase 3 begins in a similar way to phase 2. A variable tracked since
 planting like :math:`GDD_{T_{soi} }`  but for 2-m air temperature,
 :math:`GDD_{T_{{\rm 2m}} }`, must reach a heat unit threshold, *h*,
-of 40 to 70% of  :math:`{GDD}_{mat}` (Table 20.1). For corn the
+of 40 to 70% of  :math:`{GDD}_{mat}` (:numref:`Table Crop plant functional types`). For corn the
 percentage itself is an empirical function of :math:`{GDD}_{mat}`
 (not shown). In phase 3, the leaf area index begins to decline in
 response to a background litterfall rate calculated as the inverse of
@@ -239,8 +239,9 @@ Harvest
 
 Harvest is assumed to occur as soon as the crop reaches maturity. When
 :math:`GDD_{T_{{\rm 2m}} }`  reaches 100% of :math:`{GDD}_{mat}` or
-the number of days past planting reaches a crop-specific maximum (Table
-20.1), then the crop is harvested. Harvest occurs in one time step using
+the number of days past planting reaches a crop-specific maximum 
+(:numref:`Table Crop plant functional types`), then the crop is harvested. 
+Harvest occurs in one time step using
 CN’s leaf offset algorithm. New variables track the flow of grain C and
 N to food and of live stem C and N to litter. Currently, food C and N
 are routed directly to litter using the labile, cellulose, and lignin
@@ -269,15 +270,15 @@ During phase 2, the allocation coefficients (fraction of available C) to
 each C pool are defined as:
 
 .. math::
-   :label: 25.4) 
+   :label: 25.4
 
    \begin{array}{l} {a_{repr} =0} \\ {a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} )\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} } {\rm \; \; \; where\; \; \; }\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} } \le 1} \\ {a_{leaf} =(1-a_{froot} )\cdot \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{GDD_{T_{{\rm 2m}} } }{h} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\ {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 
 where :math:`a_{leaf}^{i}` , :math:`a_{froot}^{i}` , and
 :math:`a_{froot}^{f}`  are initial and final values of these
-coefficients (Table 20.2), and *h* is a heat unit threshold defined in
+coefficients (:numref:`Table Crop pfts`), and *h* is a heat unit threshold defined in
 section 20.2.3. At a crop-specific maximum leaf area index,
-:math:`{L}_{max}` (Table 20.2), carbon allocation is directed
+:math:`{L}_{max}` (:numref:`Table Crop pfts`), carbon allocation is directed
 exclusively to the fine roots.
 
 .. _Grain fill to harvest:
@@ -289,16 +290,16 @@ The calculation of :math:`a_{froot}`  remains the same from phase 2 to
 phase 3. Other allocation coefficients change to:
 
 .. math::
-   :label: ZEqnNum833921 
+   :label: 25.5
 
-   \begin{array}{l} 
-   {a_{leaf} =a_{leaf}^{i,3} {\rm \; \; \; when\; \; \; }a_{leaf}^{i,3} \le a_{leaf}^{f} {\rm \; \; \; else...}} \\ 
-   {a_{leaf} =a_{leaf} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} {\rm \; \; \; where\; \; \; }\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1} \\ 
-   {} \\ 
-   {a_{livestem} =a_{livestem}^{i,3} {\rm \; \; \; when\; \; \; }a_{livestem}^{i,3} \le a_{livestem}^{f} {\rm \; \; \; else...}} \\ 
-   {a_{livestem} =a_{livestem} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} {\rm \; \; \; where\; \; \; }\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1} \\ 
-   {} \\ 
-   {a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf} } 
+   \begin{array}{lr} 
+   a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le a_{leaf}^{f} \quad {\rm else} \\ 
+   a_{leaf} =a_{leaf} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1 \\ 
+    \\ 
+   a_{livestem} =a_{livestem}^{i,3} & {\rm when} \quad a_{livestem}^{i,3} \le a_{livestem}^{f} \quad {\rm else} \\ 
+   a_{livestem} =a_{livestem} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1 \\ 
+    \\ 
+   a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf} 
    \end{array}
 
 where :math:`a_{leaf}^{i,3}`  and :math:`a_{livestem}^{i,3}`  (initial
@@ -307,7 +308,7 @@ calculated in phase 2, :math:`d_{L}` , :math:`d_{alloc}^{leaf}`  and
 :math:`d_{alloc}^{stem}`  are leaf area index and leaf and stem
 allocation decline factors, and :math:`a_{leaf}^{f}`  and
 :math:`a_{livestem}^{f}`  are final values of these allocation
-coefficients (Table 20.2).
+coefficients (:numref:`Table Crop pfts`).
 
 .. _General comments:
 
@@ -333,7 +334,7 @@ Crop heights at the top and bottom of the canopy, :math:`{z}_{top}`
 and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
 
 .. math::
-   :label: 25.6) 
+   :label: 25.6
 
    \begin{array}{l} 
    {z_{top} =z_{top}^{\max } \left(\frac{L}{L_{\max } -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{L_{\max } -1} \le 1} \\ 
@@ -374,81 +375,74 @@ crop and from each other:
 
 #. Slope, *m*, of conductance-to-photosynthesis relationship from 9 to 4 for C4 crops as in AgroIBIS.
 
-#. Specific leaf areas, *SLA*, to the AgroIBIS values (Table 20.1).
+#. Specific leaf areas, *SLA*, to the AgroIBIS values (:numref:`Table Crop plant functional types`).
 
-#. Leaf orientation, :math:`\chi _{L}`, to the AgroIBIS values (Table 20.1).
+#. Leaf orientation, :math:`\chi _{L}`, to the AgroIBIS values (:numref:`Table Crop plant functional types`).
 
 #. Soil moisture photosynthesis limitation factor,
    :math:`\beta _{t}`, for soybeans multiplied as in AgroIBIS by 1.25
    for increased drought tolerance.
 
-Table 20.1. Crop plant functional types (pfts) in CLM4.5CNcrop and their
-parameters relating to phenology and morphology. Numbers in the first
-column correspond to the list of pfts in Table 2.1.
+.. _Table Crop plant functional types:
 
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-|       | Phenological                                 | :math:`T_{p}`        | :math:`T_{p}^{\min }`        | :math:`{GDD}_{min}`       | :math:`{GDD}_{mat}`       | Phase 2                      | Phase 3                      | Harvest: days   | :math:`z_{top}^{\max }`      | *SLA*                                           | :math:`\chi _{L}`      |    |
-|       | Type                                         | K                    | K                            | ºdays                     | ºdays                     | %\ :math:`{GDD}_{mat}`       | %\ :math:`{GDD}_{mat}`       | past planting   | m                            | m\ :sup:`2`\ leaf g\ :sup:`-1`\ C               | index                  |    |
-+=======+==============================================+======================+==============================+===========================+===========================+==============================+==============================+=================+==============================+=================================================+========================+====+
-| 15.   | C\ :sub:`3` unmanaged rainfed crop           |                      |                              |                           |                           |                              |                              | 0.03            | -0.30                        |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 16.   | C\ :sub:`3` unmanaged irrigated crop         |                      |                              |                           |                           |                              |                              | 0.03            | -0.30                        |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 17.   | Rainfed Corn (also known as Maize)           |                      | 950-1850                     | 3                         | 55-65                     | :math:`\mathrm{\le}`\ 165    | 2.50                         | 0.05            | -0.50                        |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 18.   | Irrigated Corn (also known as Maize)         |                      | 950-1850                     | 3                         | 55-65                     | :math:`\mathrm{\le}`\ 165    | 2.50                         | 0.05            | -0.50                        |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 19.   | Rainfed Temperate Cereals                    |                      | :math:`\mathrm{\le}`\ 1700   | 5                         | 60                        | :math:`\mathrm{\le}`\ 150    | 1.20                         | 0.07            | 0.65                         |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 20.   | Irrigated Temperate Cereals                  |                      | :math:`\mathrm{\le}`\ 1700   | 5                         | 60                        | :math:`\mathrm{\le}`\ 150    | 1.20                         | 0.07            | 0.65                         |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 21.   | Rainfed Winter cereals (place holder)        |                      | 1900                         | 5                         | 40                        | :math:`\mathrm{\le}`\ 265    | 1.20                         | 0.07            | 0.65                         |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 22.   | Irrigated Winter cereals (place holder)      |                      | 1900                         | 5                         | 40                        | :math:`\mathrm{\le}`\ 265    | 1.20                         | 0.07            | 0.65                         |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 23.   | Rainfed Soybean                              |                      | :math:`\mathrm{\le}`\ 1700   | 3                         | 70                        | :math:`\mathrm{\le}`\ 150    | 0.75                         | 0.07            | -0.50                        |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
-| 24.   | Irrigated Soybean                            |                      | :math:`\mathrm{\le}`\ 1700   | 3                         | 70                        | :math:`\mathrm{\le}`\ 150    | 0.75                         | 0.07            | -0.50                        |                                                 |                        |    |
-+-------+----------------------------------------------+----------------------+------------------------------+---------------------------+---------------------------+------------------------------+------------------------------+-----------------+------------------------------+-------------------------------------------------+------------------------+----+
+.. table:: Crop plant functional types (pfts) in CLM5BGCCROP and their parameters relating to phenology and morphology. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
 
-Notes: :math:`T_{p}` and :math:`T_{p}^{\min }` are coldest
-planting temperatures but for winter cereals :math:`T_{p}^{\min }`
-is a warmest planting temperature. :math:`{GDD}_{min}` is the lowest
-(for planting) 20-year running mean growing degree-days base 0ºC (winter
-cereals) or 8 (other crops) tracked from April to September (NH).
+ ===  ===========================  =================  ===========================  =============================  ===========================  =============================  =============================  ===========================  ===========================  ===================================  =======================
+ IVT  Phenological Type            :math:`T_{p}` (K)  :math:`{GDD}_{min}` (ºdays)  base temperature for GDD (ºC)  :math:`{GDD}_{mat}` (ºdays)  Phase 2 % :math:`{GDD}_{mat}`  Phase 3 % :math:`{GDD}_{mat}`  Harvest: days past planting  :math:`z_{top}^{\max }` (m)  SLA (m :sup:`2` leaf g :sup:`-1` C)  :math:`\chi _{L}` index
+ ===  ===========================  =================  ===========================  =============================  ===========================  =============================  =============================  ===========================  ===========================  ===================================  =======================
+  17  rainfed temperate corn                  279.15                           50                              8  950-1850                                              0.03                           0.65  :math:`\mathrm{\le}`\ 165                           2.50                                 0.05                    -0.50
+  18  irrigated temperate corn                279.15                           50                              8  950-1850                                              0.03                           0.65  :math:`\mathrm{\le}`\ 165                           2.50                                 0.05                    -0.50
+  19  rainfed spring wheat                    272.15                           50                              0  :math:`\mathrm{\le}`\ 1700                            0.05                           0.60  :math:`\mathrm{\le}`\ 150                           1.20                                 0.04                     0.65
+  20  irrigated spring wheat                  272.15                           50                              0  :math:`\mathrm{\le}`\ 1700                            0.05                           0.60  :math:`\mathrm{\le}`\ 150                           1.20                                 0.04                     0.65
+  23  rainfed temperate soybean               279.15                           50                             10  :math:`\mathrm{\le}`\ 1900                            0.03                           0.50  :math:`\mathrm{\le}`\ 150                           0.75                                 0.04                    -0.50
+  24  irrigated temperate soybean             279.15                           50                             10  :math:`\mathrm{\le}`\ 1900                            0.03                           0.50  :math:`\mathrm{\le}`\ 150                           0.75                                 0.04                    -0.50
+  41  rainfed cotton                          283.15                           50                             10  :math:`\mathrm{\le}`\ 1700                            0.03                           0.50  :math:`\mathrm{\le}`\ 160                           1.50                                 0.04                    -0.50
+  42  irrigated cotton                        283.15                           50                             10  :math:`\mathrm{\le}`\ 1700                            0.03                           0.50  :math:`\mathrm{\le}`\ 160                           1.50                                 0.04                    -0.50
+  61  rainfed rice                            283.15                           50                             10  :math:`\mathrm{\le}`\ 2100                            0.01                           0.40  :math:`\mathrm{\le}`\ 150                           1.80                                 0.04                     0.65
+  62  irrigated rice                          283.15                           50                             10  :math:`\mathrm{\le}`\ 2100                            0.01                           0.40  :math:`\mathrm{\le}`\ 150                           1.80                                 0.04                     0.65
+  67  rainfed sugarcane                       283.15                           50                             10  950-1850                                              0.03                           0.65  :math:`\mathrm{\le}`\ 300                           4.00                                 0.05                    -0.50
+  68  irrigated sugarcane                     283.15                           50                             10  950-1850                                              0.03                           0.65  :math:`\mathrm{\le}`\ 300                           4.00                                 0.05                    -0.50
+  75  rainfed tropical corn                   283.15                           50                             10  :math:`\mathrm{\le}`\ 1800                            0.03                           0.50  :math:`\mathrm{\le}`\ 160                           2.50                                 0.05                    -0.50
+  76  irrigated tropical corn                 283.15                           50                             10  :math:`\mathrm{\le}`\ 1800                            0.03                           0.50  :math:`\mathrm{\le}`\ 160                           2.50                                 0.05                    -0.50
+  77  rainfed tropical soybean                283.15                           50                             10  :math:`\mathrm{\le}`\ 2100                            0.03                           0.50  :math:`\mathrm{\le}`\ 150                           1.00                                 0.04                    -0.50
+  78  irrigated tropical soybean              283.15                           50                             10  :math:`\mathrm{\le}`\ 2100                            0.03                           0.50  :math:`\mathrm{\le}`\ 150                           1.00                                 0.04                    -0.50
+ ===  ===========================  =================  ===========================  =============================  ===========================  =============================  =============================  ===========================  ===========================  ===================================  =======================
+
+Notes: :math:`T_{p}` is the minimum planting temperatures. :math:`{GDD}_{min}` is the lowest
+(for planting) 20-year running mean growing degree-days base on the base temperature in the 5\ :sup:`th` column, tracked from April to September (NH).
 :math:`{GDD}_{mat}` is a crop’s 20-year running mean growing
 degree-days needed for vegetative and physiological maturity. Harvest
 occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting
-reach the number in the 10\ :sup:`th` column. Crop growth phases
+reach the number in the 9\ :sup:`th` column. Crop growth phases
 are described in the text. :math:`z_{top}^{\max }`  is the maximum
-top-of-canopy height of a crop, *SLA* is specific leaf area, and leaf
-orientation index, :math:`\chi _{L}` , equals -1 for vertical, 0 for
+top-of-canopy height of a crop, *SLA* is specific leaf area. :math:`\chi _{L}` is the leaf
+orientation index, equals -1 for vertical, 0 for
 random, and 1 for horizontal leaf orientation.
 
-Table 20.2. Crop pfts in CLM4.5CNcrop and their parameters relating to
-allocation. Numbers in the first column correspond to the list of pfts in Table 2.1.
+.. _Table Crop pfts:
 
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-|       | :math:`a_{leaf}^{i}`                         | :math:`{L}_{max}`                        | :math:`a_{froot}^{i}`    | :math:`a_{froot}^{f}`    | :math:`a_{leaf}^{f}`    | :math:`a_{livestem}^{f}`    | :math:`d_{L}`        | :math:`d_{alloc}^{stem}`        | :math:`d_{alloc}^{leaf}`    |     |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-|       | fraction                                     | m\ :sup:`2`  m\ :sup:`-2`                |                          |                          |                         |                             |                      |                                 |                             |     |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 17.   | Rainfed Corn (also referred to as Maize)     | 0.800                                    | 5                        | 0.400                    | 0.050                   | 0.000                       | 0.000                | 1.05                            | 2                           | 5   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 18.   | Irrigated Corn (also referred to as Maize)   | 0.800                                    | 5                        | 0.400                    | 0.050                   | 0.000                       | 0.000                | 1.05                            | 2                           | 5   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 19.   | Rainfed Temperate Cereals                    | 0.750                                    | 7                        | 0.300                    | 0.000                   | 0.000                       | 0.050                | 1.05                            | 1                           | 3   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 20.   | Irrigated Temperate Cereals                  | 0.750                                    | 7                        | 0.300                    | 0.000                   | 0.000                       | 0.050                | 1.05                            | 1                           | 3   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 21.   | Rainfed Winter cereals (place holder)        | 0.425                                    | 7                        | 0.300                    | 0.000                   | 0.000                       | 0.050                | 1.05                            | 1                           | 3   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 22.   | Irrigated Winter cereals (place holder)      | 0.425                                    | 7                        | 0.300                    | 0.000                   | 0.000                       | 0.050                | 1.05                            | 1                           | 3   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 23.   | Rainfed Soybean                              | 0.850                                    | 6                        | 0.500                    | 0.200                   | 0.000                       | 0.300                | 1.05                            | 5                           | 2   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
-| 24.   | Irrigated Soybean                            | 0.850                                    | 6                        | 0.500                    | 0.200                   | 0.000                       | 0.300                | 1.05                            | 5                           | 2   |
-+-------+----------------------------------------------+------------------------------------------+--------------------------+--------------------------+-------------------------+-----------------------------+----------------------+---------------------------------+-----------------------------+-----+
+.. table:: Crop pfts in CLM5BGCCROP and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
+
+ ===  ===========================  ====================  ===========================================  =====================  =====================  ====================  ========================  =============  ========================  ========================
+ IVT  Phenological Type            :math:`a_{leaf}^{i}`  :math:`{L}_{max}` (m :sup:`2`  m :sup:`-2`)  :math:`a_{froot}^{i}`  :math:`a_{froot}^{f}`  :math:`a_{leaf}^{f}`  :math:`a_{livestem}^{f}`  :math:`d_{L}`  :math:`d_{alloc}^{stem}`  :math:`d_{alloc}^{leaf}`
+ ===  ===========================  ====================  ===========================================  =====================  =====================  ====================  ========================  =============  ========================  ========================
+  17  rainfed temperate corn                       0.80                                            5                    0.4                   0.05                     0                      0.00           1.05                         2                         5
+  18  irrigated temperate corn                     0.80                                            5                    0.4                   0.05                     0                      0.00           1.05                         2                         5
+  19  rainfed spring wheat                         0.90                                            7                    0.1                   0.00                     0                      0.05           1.05                         1                         3
+  20  irrigated spring wheat                       0.90                                            7                    0.1                   0.00                     0                      0.05           1.05                         1                         3
+  23  rainfed temperate soybean                    0.85                                            6                    0.2                   0.20                     0                      0.30           1.05                         5                         2
+  24  irrigated temperate soybean                  0.85                                            6                    0.2                   0.20                     0                      0.30           1.05                         5                         2
+  41  rainfed cotton                               0.85                                            6                    0.2                   0.20                     0                      0.30           1.05                         5                         2
+  42  irrigated cotton                             0.85                                            6                    0.2                   0.20                     0                      0.30           1.05                         5                         2
+  61  rainfed rice                                 0.75                                            7                    0.1                   0.00                     0                      0.05           1.05                         1                         3
+  62  irrigated rice                               0.75                                            7                    0.1                   0.00                     0                      0.05           1.05                         1                         3
+  67  rainfed sugarcane                            0.80                                            5                    0.4                   0.05                     0                      0.00           1.05                         2                         5
+  68  irrigated sugarcane                          0.80                                            5                    0.4                   0.05                     0                      0.00           1.05                         2                         5
+  75  rainfed tropical corn                        0.80                                            5                    0.4                   0.05                     0                      0.00           1.05                         2                         5
+  76  irrigated tropical corn                      0.80                                            5                    0.4                   0.05                     0                      0.00           1.05                         2                         5
+  77  rainfed tropical soybean                     0.85                                            6                    0.2                   0.20                     0                      0.30           1.05                         5                         2
+  78  irrigated tropical soybean                   0.85                                            6                    0.2                   0.20                     0                      0.30           1.05                         5                         2
+ ===  ===========================  ====================  ===========================================  =====================  =====================  ====================  ========================  =============  ========================  ========================
 
 Notes: Crop growth phases and corresponding variables are described in
 the text
@@ -479,7 +473,7 @@ threshold.
 The soil moisture deficit :math:`D_{irrig}` is 
 
 .. math::
-   :label: 25.61) 
+   :label: 25.61
 
    D_{irrig} = \left\{
    \begin{array}{lr}    
@@ -492,21 +486,21 @@ where :math:`w_{thresh}` is the irrigation moisture threshold (mm) and
 is
 
 .. math::
-   :label: 25.62) 
+   :label: 25.62
 
    w_{thresh} = f_{thresh} \left(w_{target} - w_{wilt}\right) + w_{wilt}
 
 where :math:`w_{target}` is the irrigation target soil moisture (mm) 
 
 .. math::
-   :label: 25.63) 
+   :label: 25.63
 
    w_{target} = \sum_{j=1}^{N_{irr}} \theta_{target} \Delta z_{j} \ ,
 
 :math:`w_{wilt}` is the wilting point soil moisture (mm) 
 
 .. math::
-   :label: 25.64) 
+   :label: 25.64
 
    w_{wilt} = \sum_{j=1}^{N_{irr}} \theta_{wilt} \Delta z_{j} \ ,
 
@@ -514,7 +508,7 @@ and :math:`f_{thresh}` is a tuning parameter.  The available moisture in
 the soil is 
 
 .. math::
-   :label: 25.65) 
+   :label: 25.65
 
    w_{avail} = \sum_{j=1}^{N_{irr}} \theta_{j} \Delta z_{j} \ ,
 
@@ -526,7 +520,7 @@ volumetric soil moisture in layer :math:`j` (section :numref:`Soil Water`).
 :math:`\theta_{target}` and 
 :math:`\theta_{wilt}` are the target and wilting point volumetric 
 soil moisture values, respectively, and are determined by inverting 
-:eq:`ZEqnNum316201` using soil matric 
+:eq:`7.94` using soil matric 
 potential parameters :math:`\Psi_{target}` and :math:`\Psi_{wilt}` 
 (:numref:`Table Irrigation parameters`). After the soil moisture deficit 
 :math:`D_{irrig}` is calculated, irrigation in an amount equal to 
@@ -667,7 +661,7 @@ unmet nitrogen demand; if soil nitrogen meets soybean demand, there will
 be no fixation during the time step. Soybean fixation is determined by
 
 .. math::
-   :label: 25.10) 
+   :label: 25.10
 
    N_{fix} \; =\; N_{plant\_ ndemand} \; *\; min\; \left(\; 1,\; fxw,\; fxn\; \right)*\; fxg
 
@@ -677,17 +671,17 @@ nitrogen pool, *fxw* is the soil water factor, *fxn* is the soil
 nitrogen factor, and *fxg* is the growth stage factor calculated by
 
 .. math::
-   :label: 25.11) 
+   :label: 25.11
 
    fxw=\frac{wf}{0.85}
 
 .. math::
-   :label: 25.12) 
+   :label: 25.12
 
    fxn=\; \left\{\begin{array}{l} {0\qquad \qquad \qquad \qquad {\rm for\; }sminn\le 10} \\ {1.5-0.005\left(sminn\times 10\right)\qquad {\rm for\; 10\; <\; }sminn{\rm \; }\ge 30} \\ {1\qquad \qquad \qquad \qquad {\rm for\; }sminn>30} \end{array}\right\}
 
 .. math::
-   :label: 25.13) 
+   :label: 25.13
 
    fxg=\left\{\begin{array}{l} {0\qquad \qquad \qquad \qquad \qquad {\rm for\; }GDD_{T_{2m} } \le 0.15} \\ {6.67\times GDD_{T_{2m} } -1\qquad \qquad \qquad {\rm for\; }0.15<GDD_{T_{2m} } \ge 0.30} \\ {1\qquad \qquad \qquad \qquad \qquad {\rm for\; }0.30<GDD_{T_{2m} } \ge 0.55} \\ {3.75-5\times GDD_{T_{2m} } \qquad \qquad \qquad {\rm for\; }0.55<GDD_{T_{2m} } \ge 0.75} \\ {0\qquad \qquad \qquad \qquad \qquad {\rm for\; }GDD_{T_{2m} } >0.75} \end{array}\right\}
 
@@ -744,17 +738,17 @@ mobilized depends on the C:N ratio of the plant tissue, and is
 calculated as
 
 .. math::
-   :label: 25.14) 
+   :label: 25.14
 
-   leaf\_ to\_ retransn=\frac{c_{leaf} }{CN_{leaf} } -\frac{c_{leaf} }{CN_{leaf}^{f} }
+   leaf\_ to\_ retransn=\frac{c_{leaf} }{CN_{leaf} }  -\frac{c_{leaf} }{CN_{leaf}^{f} }
 
 .. math::
-   :label: 25.15) 
+   :label: 25.15
 
    stemn\_ to\_ retransn=\frac{c_{stem} }{CN_{stem} } -\frac{c_{stem} }{CN_{stem}^{f} }
 
 .. math::
-   :label: 25.16) 
+   :label: 25.16
 
    frootn\_ to\_ retransn=\frac{c_{froot} }{CN_{froot} } -\frac{c_{froot} }{CN_{froot}^{f} }
 
@@ -762,7 +756,7 @@ where :math:`{C}_{leaf}`, :math:`{C}_{stem}`, and :math:`{C}_{froot}` is the car
 root, respectively, :math:`{CN}_{leaf}`, :math:`{CN}_{stem}`, and :math:`{CN}_{froot}` is the pre-grain fill C:N ratio of the
 leaf, stem, and fine root respectively, and :math:`CN^f_{leaf}`,
 :math:`CN^f_{stem}`, and :math:`CN^f_{froot}` is the post-grain fill C:N
-ratio of the leaf, stem, and fine root respectively (Table 20.3). Since
+ratio of the leaf, stem, and fine root respectively (:numref:`Table Pre- and post-grain fill CN ratios`). Since
 C:N measurements are taken from mature crops, pre-grain development C:N
 ratios for leaves, stems, and roots are optimized to allow maximum
 nitrogen accumulation for later use during organ development. Post-grain
@@ -774,28 +768,29 @@ retranslocated pool equal to the plant nitrogen demand. Once the
 retranslocation pool is depleted, soil mineral nitrogen pool is used to
 fulfill plant nitrogen demands.
 
-Table 20.3. Pre- and post-grain fill C:N ratios for crop leaf, stem,
-fine root, and reproductive pools.
+.. _Table Pre- and post-grain fill CN ratios:
 
-+----------------------------+--------+---------------------+-----------+
-| Pre-grain fill stage       | Corn   | Temperate Cereals   | Soybean   |
-+============================+========+=====================+===========+
-| :math:`{CN}_{leaf}`        | 10     | 15                  | 25        |
-+----------------------------+--------+---------------------+-----------+
-| :math:`{CN}_{stem}`        | 50     | 50                  | 50        |
-+----------------------------+--------+---------------------+-----------+
-| :math:`{CN}_{froot}`       | 42     | 30                  | 42        |
-+----------------------------+--------+---------------------+-----------+
-| Post-grain fill stage      |        |                     |           |
-+----------------------------+--------+---------------------+-----------+
-| :math:`CN_{leaf}^{f}`      | 65     | 65                  | 65        |
-+----------------------------+--------+---------------------+-----------+
-| :math:`CN_{stem}^{f}`      | 120    | 100                 | 130       |
-+----------------------------+--------+---------------------+-----------+
-| :math:`CN_{froot}^{f}`     | 42     | 40                  | 42        |
-+----------------------------+--------+---------------------+-----------+
-| :math:`CN_{repr}^{f}`      | 50     | 40                  | 60        |
-+----------------------------+--------+---------------------+-----------+
+.. table:: Pre- and post-grain fill C:N ratios for crop leaf, stem, fine root, and reproductive pools.
+
+ +----------------------------+--------+---------------------+-----------+
+ | Pre-grain fill stage       | Corn   | Temperate Cereals   | Soybean   |
+ +============================+========+=====================+===========+
+ | :math:`{CN}_{leaf}`        | 10     | 15                  | 25        |
+ +----------------------------+--------+---------------------+-----------+
+ | :math:`{CN}_{stem}`        | 50     | 50                  | 50        |
+ +----------------------------+--------+---------------------+-----------+
+ | :math:`{CN}_{froot}`       | 42     | 30                  | 42        |
+ +----------------------------+--------+---------------------+-----------+
+ | Post-grain fill stage      |        |                     |           |
+ +----------------------------+--------+---------------------+-----------+
+ | :math:`CN_{leaf}^{f}`      | 65     | 65                  | 65        |
+ +----------------------------+--------+---------------------+-----------+
+ | :math:`CN_{stem}^{f}`      | 120    | 100                 | 130       |
+ +----------------------------+--------+---------------------+-----------+
+ | :math:`CN_{froot}^{f}`     | 42     | 40                  | 42        |
+ +----------------------------+--------+---------------------+-----------+
+ | :math:`CN_{repr}^{f}`      | 50     | 40                  | 60        |
+ +----------------------------+--------+---------------------+-----------+
 
 .. _Separate reproductive pool:
 

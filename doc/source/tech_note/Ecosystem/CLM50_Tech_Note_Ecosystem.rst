@@ -906,7 +906,7 @@ of the components in the coupled modeling system, are presented in
    "Molecular weight of water vapor", :math:`MW_{wv}`, 18.016, kg kmol :sup:`-1`
    "Water vapor gas constant", :math:`R_{wv}`, :math:`{R_{gas} \mathord{\left/ {\vphantom {R_{gas}  MW_{wv} }} \right. \kern-\nulldelimiterspace} MW_{wv} }`, J K :sup:`-1` kg :sup:`-1`
    "Von Karman constant", :math:`k`, 0.4, "\-"
-   "Freezing temperature of fresh water", :math:`T_{f}`, 273.5, K
+   "Freezing temperature of fresh water", :math:`T_{f}`, 273.15, K
    "Density of liquid water", :math:`\rho _{liq}`, 1000, kg m :sup:`-3`
    "Density of ice", :math:`\rho _{ice}`, 917, kg m :sup:`-3`
    "Specific heat capacity of dry air", :math:`C_{p}`, 1.00464 :math:`\times 10^{3}`, J kg :sup:`-1` K :sup:`-1`

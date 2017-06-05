@@ -221,6 +221,12 @@ biomass across multiple biogeographical regions. Ecol. Appl. 10:95-114.
 Busing, R.T. 2005. Tree mortality, canopy turnover, and woody detritus
 in old cove forests of the southern Appalachians. Ecology 86:73-84.
 
+.. _Buzanetal2015:
+
+Buzan, J.R., Oleson, K., and Huber, M. 2015: Implementation and 
+comparison of a suite of heat stress metrics within the Community Land 
+Model version 4.5, Geosci. Model Dev., 8, 151-170, doi:10.5194/gmd-8-151-2015.
+
 .. _CampbellNorman1998:
 
 Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental
@@ -1225,6 +1231,8 @@ Niu, G.-Y., Yang, Z.-L., Dickinson, R.E., and Gulden, L.E. 2005. A
 simple TOPMODEL-based runoff parameterization (SIMTOP) for use in global
 climate models. J. Geophys. Res. 110:D21106. DOI:10.1029/2005JD006111.
 
+.. _NiuYang2006:
+
 Niu, G.-Y., and Yang, Z.-L. 2006. Effects of frozen soil on snowmelt
 runoff and soil water storage at a continental scale. J. Hydrometeor.
 7:937-952.
@@ -1408,6 +1416,12 @@ Pollmer, W.G., Eberhard, D., Klein, D., and Dhillon, B.S. 1979. Genetic
 control of nitrogen uptake and translocation in maize. Crop Sci.
 19:82-86.
 
+.. _Pomeroyetal1998:
+
+Pomeroy, J. W., D. M. Gray, K. R. Shook, B. Toth, R. L. H. Essery,
+A. Pietroniro, and N. Hedstrom. 1998. An evaluation of snow accumulation
+and ablation processes for land surface modelling. Hydrol. Process. 12:2339–2367.
+
 .. _Portmannetal2010:
 
 Portmann, F.T., Siebert, S., and Döll, P. 2010. MIRCA2000 - Global
@@ -1487,6 +1501,11 @@ Riley, W.J. et al. 2011b. CLM4Me, a Methane Biogeochemistry Model
 Integrated in CESM, Land and Biogeochemistry Model Working Group
 Meeting, Boulder, CO.
 
+.. _Roeschetal2001:
+
+Roesch, A., M. Wild, H. Gilgen, and A. Ohmura. 2001. A new snow cover
+fraction parametrization for the ECHAM4 GCM, Clim. Dyn., 17:933–946.
+
 .. _Ryan1991:
 
 Ryan, M. G. 1991. A simple method for estimating gross carbon budgets
@@ -1555,7 +1574,7 @@ Schnell, S. and King, G.M., 1996. Responses of methanotrophic activity
 in soils and cultures to water stress. Applied and Environmental
 Microbiology 62:3203-3209.
 
-.. _Segers, R., 1998. Methane production and methane consumption: a review
+.. _Segers1998:
 
 Segers, R., 1998. Methane production and methane consumption: a review
 of processes underlying wetland methane fluxes. Biogeochemistry
@@ -1621,6 +1640,12 @@ areas. Hydrol Earth Syst Sc 9:535–547
 Simpson, R.J., Lambers, H., and Dalling, M.J. 1983. Nitrogen
 redistribution during grain growth in wheat (Triticum avestivum L.).
 Plant Physiol. 71:7-14.
+
+.. _Sivak2013:
+
+Sivak, M. 2013. Air conditioning versus heating: climate control is more
+energy demanding in Minneapolis than in Miami. Environ. Res. Lett., 8, 
+doi:10.1088/1748-9326/8/1/014050.
 
 .. _Smithetal2005:
 
@@ -1876,6 +1901,13 @@ Phys. 10:11707-11735.
 van Veen, J.A., Ladd, J.N. and Frissel, M.J., 1984. Modelling C and N
 turnover through the microbial biomass in soil. Plant and Soil, 76:
 257-274.
+
+.. _vanKampenhoutetal2017:
+
+van Kampenhout, L., J.T.M. Lenaerts, W.H. Lipscomb, W.J. Sacks, D.M. 
+Lawrence, A.G. Slater, and M.R. van den Broeke, 2017. 
+Improving the representation of polar snow and firn in the 
+Community Earth System Model, submitted.
 
 .. _VanVuurenetal2006:
 

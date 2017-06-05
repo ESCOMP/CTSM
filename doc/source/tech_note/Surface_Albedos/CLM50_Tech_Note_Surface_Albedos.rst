@@ -41,7 +41,7 @@ equations are solved to calculate the fluxes, per unit incident flux,
 absorbed by the vegetation, reflected by the vegetation, and transmitted
 through the vegetation for direct and diffuse radiation and for visible
 (:math:`<` 0.7\ :math:`\mu {\rm m}`) and near-infrared
-(:math:`ge` 0.7\ :math:`\mu {\rm m}`) wavebands. The absorbed
+(:math:`\geq` 0.7\ :math:`\mu {\rm m}`) wavebands. The absorbed
 radiation is partitioned to sunlit and shaded fractions of the canopy.
 The optical parameters :math:`G\left(\mu \right)`, :math:`\bar{\mu }`,
 :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`  are calculated
@@ -72,29 +72,34 @@ where :math:`\mu '` is the direction of the scattered flux.
 
 The optical parameters :math:`\omega`, :math:`\beta`, and :math:`\beta _{0}`, 
 which vary with wavelength (:math:`\Lambda` ), are weighted combinations of values 
-for vegetation and snow. The model determines that snow is on the canopy if 
-:math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter 
-:numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and :math:`T_{f}` is the 
-freezing temperature of water (K) (:numref:`Table Physical Constants`). In this case, the optical parameters are
+for vegetation and snow, using the canopy snow-covered fraction :math:`f_{can,\, sno}` 
+(Chapter :numref:`rst_Hydrology`). The optical parameters are
+
+
+..
+   The model determines that snow is on the canopy if 
+   :math:`T_{v} \le T_{f}` , where :math:`T_{v}` is the vegetation temperature (K) (Chapter 
+   :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and :math:`T_{f}` is the 
+   freezing temperature of water (K) (:numref:`Table Physical Constants`). In this case, the optical parameters are
 
 .. math::
    :label: 3.5
 
-   \omega _{\Lambda } =\omega _{\Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} f_{wet}
+   \omega _{\Lambda } =\omega _{\Lambda }^{veg} \left(1-f_{can,\, sno} \right)+\omega _{\Lambda }^{sno} f_{can,\, sno}
 
 .. math::
    :label: 3.6
 
-   \omega _{\Lambda } \beta _{\Lambda } =\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} \beta _{\Lambda }^{sno} f_{wet}
+   \omega _{\Lambda } \beta _{\Lambda } =\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} \left(1-f_{can,\, sno} \right)+\omega _{\Lambda }^{sno} \beta _{\Lambda }^{sno} f_{can,\, sno}
 
 .. math::
    :label: 3.7
 
-   \omega _{\Lambda } \beta _{0,\, \Lambda } =\omega _{\Lambda }^{veg} \beta _{0,\, \Lambda }^{veg} \left(1-f_{wet} \right)+\omega _{\Lambda }^{sno} \beta _{0,\, \Lambda }^{sno} f_{wet}
+   \omega _{\Lambda } \beta _{0,\, \Lambda } =\omega _{\Lambda }^{veg} \beta _{0,\, \Lambda }^{veg} \left(1-f_{can,\, sno} \right)+\omega _{\Lambda }^{sno} \beta _{0,\, \Lambda }^{sno} f_{can,\, sno}
 
-where :math:`f_{wet}`  is the wetted fraction of the canopy (section :numref:`Canopy Water`). The snow and vegetation weights are applied to the products
+The snow and vegetation weights are applied to the products
 :math:`\omega _{\Lambda } \beta _{\Lambda }`  and :math:`\omega _{\Lambda } \beta _{0,\, \Lambda }`  because these
-products are used in the two-stream equations. If there is no snow on the canopy,
+products are used in the two-stream equations. If there is no snow on the canopy, this reduces to
 
 .. math::
    :label: 3.8
@@ -136,17 +141,17 @@ and
 The upscatter for diffuse radiation is
 
 .. math::
-   :label: ZEqnNum472968 
+   :label: 3.13
 
    \omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} =\frac{1}{2} \left[\alpha _{\Lambda } +\tau _{\Lambda } +\left(\alpha _{\Lambda } -\tau _{\Lambda } \right)\cos ^{2} \bar{\theta }\right]
 
 where :math:`\bar{\theta }` is the mean leaf inclination angle relative
 to the horizontal plane (i.e., the angle between leaf normal and local
-vertical) (Sellers 1985). Here, :math:`\cos \bar{\theta }` is
+vertical) (:ref:`Sellers (1985) <Sellers1985>`). Here, :math:`\cos \bar{\theta }` is
 approximated by
 
 .. math::
-   :label: ZEqnNum720349
+   :label: 3.14
 
    \cos \bar{\theta }=\frac{1+\chi _{L} }{2}
 
@@ -156,15 +161,15 @@ Using this approximation, for vertical leaves (:math:`\chi _{L} =-1`,
 and for horizontal leaves (:math:`\chi _{L} =1`,
 :math:`\bar{\theta }=0^{{\rm o}}` ) ,
 :math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} =\alpha _{\Lambda }` ,
-which agree with both Dickinson (1983) and Sellers (1985). For random
+which agree with both :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>`. For random
 (spherically distributed) leaves (:math:`\chi _{L} =0`,
 :math:`\bar{\theta }=60^{{\rm o}}` ), the approximation yields
 :math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={5\mathord{\left/ {\vphantom {5 8}} \right. \kern-\nulldelimiterspace} 8} \alpha _{\Lambda } +{3\mathord{\left/ {\vphantom {3 8}} \right. \kern-\nulldelimiterspace} 8} \tau _{\Lambda }` 
-whereas the approximate solution of Dickinson (1983) is
+whereas the approximate solution of :ref:`Dickinson (1983) <Dickinson1983>` is
 :math:`\omega _{\Lambda }^{veg} \beta _{\Lambda }^{veg} ={2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} \alpha _{\Lambda } +{1\mathord{\left/ {\vphantom {1 3}} \right. \kern-\nulldelimiterspace} 3} \tau _{\Lambda }` .
 This discrepancy arises from the fact that a spherical leaf angle
 distribution has a true mean leaf inclination
-:math:`\bar{\theta }\approx 57` (Campbell and Norman 1998) in equation ,
+:math:`\bar{\theta }\approx 57` :ref:`(Campbell and Norman 1998) <CampbellNorman1998>` in equation ,
 while :math:`\bar{\theta }=60` in equation . The upscatter for direct
 beam radiation is
 
@@ -178,7 +183,11 @@ where the single scattering albedo is
 .. math::
    :label: 3.16
 
-   \begin{array}{rcl} {a_{s} \left(\mu \right)_{\Lambda } } & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \int _{0}^{1}\frac{\mu 'G\left(\mu \right)}{\mu G\left(\mu '\right)+\mu 'G\left(\mu \right)}  d\mu '} \\ {} & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \frac{G\left(\mu \right)}{\mu \phi _{2} +G\left(\mu \right)} \left[1-\frac{\mu \phi _{1} }{\mu \phi _{2} +G\left(\mu \right)} \ln \left(\frac{\mu \phi _{1} +\mu \phi _{2} +G\left(\mu \right)}{\mu \phi _{1} } \right)\right].} \end{array}
+   \begin{array}{rcl} {a_{s} \left(\mu \right)_{\Lambda } } & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \int _{0}^{1}\frac{\mu 'G\left(\mu \right)}{\mu G\left(\mu '\right)+\mu 'G\left(\mu \right)}  d\mu '} \\ {} & {=} & {\frac{\omega _{\Lambda }^{veg} }{2} \frac{G\left(\mu \right)}{\min (\mu \phi _{2} +G\left(\mu \right),1e-6)} \left[1-\frac{\mu \phi _{1} }{\min (\mu \phi _{2} +G\left(\mu \right),1e-6)} \ln \left(\frac{\mu \phi _{1} +\min (\mu \phi _{2} +G\left(\mu \right),1e-6)}{\mu \phi _{1} } \right)\right].} \end{array}
+
+Note here the restriction on :math:`\mu \phi _{2} +G\left(\mu \right)`.  We have seen cases where small values
+can cause unrealistic single scattering albedo associated with the log calculation, 
+thereby eventually causing a negative soil albedo.
 
 The upward diffuse fluxes per unit incident direct beam and diffuse flux
 (i.e., the surface albedos) are
@@ -206,7 +215,7 @@ radiation, respectively, are
 
    I\, \downarrow _{\Lambda } =h_{9} s_{1} +\frac{h_{10} }{s_{1} } .
 
-With reference to Figure 4.1, the direct beam flux transmitted through
+With reference to :numref:`Figure Radiation Schematic`, the direct beam flux transmitted through
 the canopy, per unit incident flux, is :math:`e^{-K\left(L+S\right)}` ,
 and the direct beam and diffuse fluxes absorbed by the vegetation, per
 unit incident flux, are
@@ -223,7 +232,7 @@ unit incident flux, are
 
 These fluxes are partitioned to the sunlit and shaded canopy using an
 analytical solution to the two-stream approximation for sunlit and
-shaded leaves (Dai et al. 2004), as described by Bonan et al. (2011).
+shaded leaves :ref:`(Dai et al. 2004) <Daietal2004>`, as described by :ref:`Bonan et al. (2011) <Bonanetal2011>`.
 The absorption of direct beam radiation by sunlit leaves is
 
 .. math::
@@ -277,8 +286,8 @@ with
    a_{2} =h_{9} \left[\frac{1-s_{2} s_{1} }{K+h} \right]+h_{10} \left[\frac{1-{s_{2} \mathord{\left/ {\vphantom {s_{2}  s_{1} }} \right. \kern-\nulldelimiterspace} s_{1} } }{K-h} \right].
 
 The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
-:math:`h`, :math:`s_{1}` , and :math:`s_{2}`  are from Sellers (1985)
-[note the error in :math:`h_{4}`  in Sellers (1985)]:
+:math:`h`, :math:`s_{1}` , and :math:`s_{2}`  are from :ref:`Sellers (1985) <Sellers1985>`
+[note the error in :math:`h_{4}`  in :ref:`Sellers (1985) <Sellers1985>`]:
 
 .. math::
    :label: 3.31
@@ -417,11 +426,11 @@ The parameters :math:`h_{1}` –:math:`h_{10}` , :math:`\sigma` ,
 
 Plant functional type optical properties (:numref:`Table Plant functional type optical properties`) 
 for trees and shrubs are from :ref:`Dorman and Sellers (1989) <DormanSellers1989>`. Leaf and stem optical
-properties (placeVIS and NIR reflectance and transmittance) were derived
+properties (VIS and NIR reflectance and transmittance) were derived
 for grasslands and crops from full optical range spectra of measured
 optical properties (:ref:`Asner et al. 1998 <Asneretal1998>`). Optical properties for
-intercepted snow (:numref:`Table Intercepted snow optical properties`) are 
-:ref:`from Sellers et al. (1986) <Sellersetal1986>`.
+intercepted snow (:numref:`Table Intercepted snow optical properties`) are from
+:ref:`Sellers et al. (1986) <Sellersetal1986>`.
 
 .. _Table Plant functional type optical properties:
 
@@ -458,25 +467,23 @@ intercepted snow (:numref:`Table Intercepted snow optical properties`) are
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
  | C\ :sub:`4` grass                | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Crop R                           | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | C\ :sub:`3` Crop                 | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Crop I                           | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Temp Corn                        | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Corn R                           | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Spring Wheat                     | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Corn I                           | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Temp Soybean                     | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Temp Cereal R                    | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Cotton                           | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Temp Cereal I                    | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Rice                             | 0.65                 | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Winter Cereal R                  | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Sugarcane                        | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Winter Cereal I                  | 0.65                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Tropical Corn                    | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Soybean R                        | -0.5                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
- +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Soybean I                        | -0.5                 | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Tropical Soybean                 | -0.50                | 0.11                            | 0.58                            | 0.31                            | 0.53                            | 0.07                          | 0.25                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
 
 .. _Table Intercepted snow optical properties:
@@ -574,6 +581,8 @@ included the effects of the minimum permanent snow cover.
 
 .. table:: Dry and saturated soil albedos
 
+ +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
+ |               |       Dry       |    Saturated    |               |       Dry       |    Saturated    |
  +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
  | Color Class   | vis    | nir    | vis    | nir    | Color Class   | vis    | nir    | vis    | nir    |
  +---------------+--------+--------+--------+--------+---------------+--------+--------+--------+--------+
@@ -706,7 +715,7 @@ are applied in the two-stream solution
  +---------------------------------------------------------+----------------------+------------------+
  | Spectral band                                           | Direct-beam weight   | Diffuse weight   |
  +=========================================================+======================+==================+
- | Band 1: 0.3-0.7\ :math:`\mu`\ m (visible)               |                      |                  |
+ | Band 1: 0.3-0.7\ :math:`\mu`\ m (visible)               | (1.0)                | (1.0)            |
  +---------------------------------------------------------+----------------------+------------------+
  | Band 2: 0.7-1.0\ :math:`\mu`\ m (near-IR)               | 0.494                | 0.586            |
  +---------------------------------------------------------+----------------------+------------------+
@@ -737,15 +746,18 @@ boundary condition, SNICAR simulates solar absorption in all snow layers
 as well as the underlying soil or ground. With a thin snowpack,
 penetrating solar radiation to the underlying soil can be quite large
 and heat cannot be released from the soil to the atmosphere in this
-situation. Thus, solar radiation penetration is limited to snowpacks
-with total snow depth greater than or equal to 0.1 m
-(:math:`z_{sno} \ge 0.1`) to prevent unrealistic soil warming within a
-single timestep.
+situation. Thus, if the snowpack has total snow depth less than 0.1 m
+(:math:`z_{sno} < 0.1`) and there are no explicit snow layers, the solar
+radiation is absorbed by the top soil layer.  If there is a single snow layer,
+the solar radiation is absorbed in that layer.  If there is more than a single
+snow layer, 75% of the solar radiation is absorbed in the top snow layer,
+and 25% is absorbed in the next lowest snow layer. This prevents unrealistic
+soil warming within a single timestep.
 
 The radiative transfer calculation is performed twice for each column
 containing a mass of snow greater than
 :math:`1 \times 10^{-30}` kg\ m\ :sup:`-2` (excluding lake and urban columns); once each for
-direct-beam and diffuse incident flux. Absorption in each layer
+direct-beam and diffuse incident flux. Absorption in each layer 
 :math:`i` of pure snow is initially recorded as absorbed flux per unit
 incident flux on the ground (:math:`S_{sno,\, i}` ), as albedos must be
 calculated for the next timestep with unknown incident flux. The snow
@@ -773,7 +785,7 @@ Snowpack Optical Properties
 
 Ice optical properties for the five spectral bands are derived offline
 and stored in a namelist-defined lookup table for online retrieval (see
-CLM4.5 User’s Guide). Mie properties are first computed at fine spectral
+CLM5.0 User’s Guide). Mie properties are first computed at fine spectral
 resolution (470 bands), and are then weighted into the five bands
 applied by CLM according to incident solar flux,
 :math:`I^{\downarrow } (\lambda )`. For example, the broadband
@@ -844,7 +856,7 @@ only with incident solar flux, as in equation .
 
 .. _Table Mass extinction values:
 
-.. table:: Mass extinction values (m\ :sup:`2` kg\ :sub:`-1`) used for snowpack impurities and ice
+.. table:: Mass extinction values (m\ :sup:`2` kg\ :sup:`-1`) used for snowpack impurities and ice
 
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
  | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
@@ -943,7 +955,7 @@ each time step *t* as
    r_{e} \left(t\right)=\left[r_{e} \left(t-1\right)+dr_{e,\, dry} +dr_{e,\, wet} \right]f_{old} +r_{e,\, 0} f_{new} +r_{e,\, rfz} f_{rfrz}
 
 Here, the effective radius of freshly-fallen snow
-(:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sub:`-1`), and the effective
+(:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sup:`-1`), and the effective
 radius of refrozen liquid water (:math:`r_{e,rfz}`) is set to 1000\ :math:`\mu` m.
 
 Dry snow aging is based on a microphysical model described by :ref:`Flanner
@@ -1034,7 +1046,7 @@ The solar hour angle :math:`h` (radians) is
 
 where :math:`d` is calendar day (:math:`d=0.0` at 0Z on January 1), and
 :math:`\theta`  is longitude (radians) (positive east of the
-CityplaceGreenwich meridian).
+Greenwich meridian).
 
 The solar declination angle :math:`\delta`  is calculated as in :ref:`Berger
 (1978a,b) <Berger1978a>` and is valid for one million years past or hence, relative to

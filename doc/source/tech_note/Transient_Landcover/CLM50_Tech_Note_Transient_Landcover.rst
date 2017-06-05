@@ -345,12 +345,14 @@ discussions new amended wood harvest targets were generated with
 regional targets through GLM for the RCP 6.0 and RCP 8.5 time series as
 described in Lawrence et al. (2012).
 
-Figure 21.1. Schematic of land cover change impacts on CLM carbon pools
-and fluxes.
+.. _Figure Schematic of land cover change:
 
-.. image:: image1.png
+.. figure:: image1.png
 
-Figure 21.2. Schematic of translation of annual UNH land units to CLM4
-plant functional types.
+ Schematic of land cover change impacts on CLM carbon pools and fluxes.
 
-.. image:: image2.png
+.. _Figure Schematic of translation of annual UNH land units:
+
+.. figure:: image2.png
+
+ Schematic of translation of annual UNH land units to CLM4 plant functional types.
