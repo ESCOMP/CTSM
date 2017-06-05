@@ -88,25 +88,34 @@ vegetated land unit is separated into a naturally vegetated land unit and
 a managed crop land unit. Unlike the plant functional types (pfts) in the
 naturally vegetated land unit, the managed crop pfts in the managed crop 
 land unit do not share soil columns and thus permit for differences in the 
-land management between crops. Crop grid cell coverage is assigned from 
+land management between crops. Each crop type has a rainfed and an irrigated 
+pft that are on independent soil columns. Crop grid cell coverage is assigned from 
 satellite data (similar to all natural pfts), and the managed crop type
 proportions within the crop area is based on the dataset created by
 (:ref:`Portmann et al. 2010 <Portmannetal2010>`) for present day and
-extrapolated through time using the LUMIP data (insert citation). Each 
-actively managed crop type has a rainfed and an irrigated pft that are on
-independent soil columns. Actively managed crop types (Table XX) are chosen 
+extrapolated through time using the dataset provided by Land Use Model 
+Intercomparison Project (LUMIP), which is part of CMIP6 Land use timeseries 
+(:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). For more details about how
+crop distributions are determined, see chapter 26 on :ref:`rst_Transient Landcover Change`. 
+
+CLM5 includes eight actively managed crop types
+(temperate soybean, tropical soybean, temperate corn, tropical 
+corn, spring wheat, cotton, rice, and sugarcane) that are chosen 
 based on the availability of corresponding algorithms in AgroIBIS and as 
 developed by Badger and Dirmeyer (:ref:`2015 <BadgerandDirmeyer2015>`) and
-described by Levis et al. (:ref:`2016 <Levisetal2016>`). A parameterization 
-for winter cereals is developed but is not included in CLM5.0 due to the 
-inability to distinguish between winter and summer cereals in the LUMIP dataset (insert citation). 
-
-CLM’s default list of plant functional types (pfts) includes an unmanaged crop 
-(:numref:`Table Plant functional types`) treated as a second C3 grass, as well as several 
-additional crop types that do not have associated parameters. The unmanaged
-crop has grid cell coverage assigned from satellite data, as do all
-natural pfts when CLM’s crop model is not active. [include remapping text here].
-
+described by Levis et al. (:ref:`2016 <Levisetal2016>`). In addition, 
+CLM’s default list of plant functional types (pfts) includes an
+irrigated and unirrigated unmanaged C3 crop (Table 2.1)[update table reference] treated as a second C3 grass.
+The unmanaged C3 crop is only used when the crop model is not active and 
+has grid cell coverage assigned from satellite data. [info here about irrigation for unmanaged C3 crop] 
+The default list of pfts also includes twenty-three inactive crop pfts 
+that do not yet have associated parameters required for active management. So that all crop area is actively managed,
+each of the inactive crop types is simulated using the parameters of the 
+spatially closest associated crop type that is most similar to the functional type (e.g., C3 or C4), 
+which is required to maintain similar phenological parameters.
+The information detailing which parameters are used for each crop type is 
+included in Table XX. It should be noted that analysis with pft-level history output will 
+need to remap the crop types, as pft-level data will only include actively managed crop types.
 
 .. _Phenology:
 
