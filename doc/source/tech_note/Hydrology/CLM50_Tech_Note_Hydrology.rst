@@ -436,7 +436,7 @@ and
 .. math::
    :label: 7.75
 
-   qin,soil=(1-f_{h2osfc} )q_{in,surface} - q_{\inf l,excess} - (1-f_{sno} -f_{h2osfc} ) \ qevap,soil.
+   q_{in,soil} = (1-f_{h2osfc} ) \ q_{in,surface} - q_{\inf l,excess} - (1 - f_{sno} - f_{h2osfc} ) \ q_{evap,soil}.
 
 The balance of surface water is then calculated as
 
