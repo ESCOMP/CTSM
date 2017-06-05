@@ -232,7 +232,7 @@ Jinyun Tang, Zong-Liang Yang**
 
 - :numref:`Table Crop plant functional types` Crop plant functional types (pfts) in CLM4.5CNcrop and their parameters relating to phenology and morphology. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`. 
 
-- :numref:`Table Crop pfts in CLM4.5CNcrop and their parameters` Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
+- :numref:`Table Crop pfts` Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
 
 - :numref:`Table Pre- and post-grain fill CN ratios` Pre- and post-grain fill C:N ratios for crop leaf, stem, fine root, and reproductive pools. 
 
