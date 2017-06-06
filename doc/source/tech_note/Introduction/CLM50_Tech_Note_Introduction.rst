@@ -418,10 +418,12 @@ added stability corrections to the diagnostic 2-m air temperature
 calculation which reduced biases in this temperature. Competition
 between PFTs for water, in which PFTs share a single soil column, is the
 default mode of operation in this model version. CLM3 was released to
-the community in June 2004.:ref:`Dickinson et al. (2006)<Dickinsonetal2006>` describe the climate
-statistics of CLM3 when coupled to CCSM3.0. :ref:`Hack et al. (2006)<Hacketal2006>` provide
-an analysis of selected features of the land hydrological cycle.
-:ref:`Lawrence et al. (2007)<Lawrenceetal2007>` examine the impact of changes in CLM3
+the community in June 2004. :ref:`Dickinson et al. (2006)<Dickinsonetal2006>` 
+describe the climate statistics of CLM3 when coupled to CCSM3.0. 
+:ref:`Hack et al. (2006)<Hacketal2006>` provide an analysis of selected 
+features of the land hydrological cycle.
+:ref:`Lawrence et al. (2007)<Lawrenceetal2007>` examine the impact of 
+changes in CLM3
 hydrological parameterizations on partitioning of evapotranspiration
 (ET) and its effect on the timescales of ET response to precipitation
 events, interseasonal soil moisture storage, soil moisture memory, and
@@ -596,11 +598,12 @@ remains long.
 
 Finally, the predominantly low resolution input data for provided with
 CLM4 to create CLM4 surface datasets is replaced with newer and higher
-resolution input datasets where possible (see section 2.2.3 for
-details). The default meteorological forcing dataset provided with CLM4
-(:ref:`Qian et al. 2006)<Qianetal2006>` is replaced with the 1901-2010 CRUNCEP forcing
-dataset (see Chapter 26) for CLM4.5, though users can also still use the
-:ref:`Qian et al. (2006)<Qianetal2006>` dataset or other alternative forcing datasets.
+resolution input datasets where possible (see section :numref:`Surface Data` 
+for details). The default meteorological forcing dataset provided with CLM4
+(:ref:`Qian et al. 2006)<Qianetal2006>` is replaced with the 1901-2010 
+CRUNCEP forcing dataset (see Chapter :numref:`rst_Offline Mode`) for CLM4.5, 
+though users can also still use the :ref:`Qian et al. (2006)<Qianetal2006>` 
+dataset or other alternative forcing datasets.
 
 CLM4.5 was released to the community in June 2013 along with the
 Community Earth System Model version 1.2 (CESM1.2).
