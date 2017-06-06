@@ -105,17 +105,21 @@ based on the availability of corresponding algorithms in AgroIBIS and as
 developed by Badger and Dirmeyer (:ref:`2015 <BadgerandDirmeyer2015>`) and
 described by Levis et al. (:ref:`2016 <Levisetal2016>`). In addition, 
 CLM’s default list of plant functional types (pfts) includes an
-irrigated and unirrigated unmanaged C3 crop (Table 2.1)[update table reference] treated as a second C3 grass.
+irrigated and unirrigated unmanaged C3 crop (Table 25.1) treated as a second C3 grass,
 The unmanaged C3 crop is only used when the crop model is not active and 
-has grid cell coverage assigned from satellite data. [info here about irrigation for unmanaged C3 crop] 
+has grid cell coverage assigned from satellite data, and 
+the unmanaged C3 irrigated crop type is currently not used 
+since irrigation requires the crop model to be active.
 The default list of pfts also includes twenty-three inactive crop pfts 
-that do not yet have associated parameters required for active management. So that all crop area is actively managed,
-each of the inactive crop types is simulated using the parameters of the 
+that do not yet have associated parameters required for active management. 
+Each of the inactive crop types is simulated using the parameters of the 
 spatially closest associated crop type that is most similar to the functional type (e.g., C3 or C4), 
-which is required to maintain similar phenological parameters.
-The information detailing which parameters are used for each crop type is 
-included in Table XX. It should be noted that analysis with pft-level history output will 
-need to remap the crop types, as pft-level data will only include actively managed crop types.
+which is required to maintain similar phenological parameters based on temperature thresholds.
+Information detailing which parameters are used for each crop type is 
+included in Table 25.1. It should be noted that analysis with pft-level history output merges
+all crop types into the actively managed crop type, so analysis 
+of crop-specific output will require use of the land surface dataset to 
+remap the yields of each actively and inactively managed crop type.
 
 .. _Phenology:
 
@@ -208,7 +212,7 @@ Leaf emergence
 
 According to AgroIBIS, leaves may emerge when the growing degree-days of
 soil temperature to 0.05 m depth tracked since planting
-(:math:`GDD_{T_{soi} }` ) reaches 3 to 5% of :math:`{GDD}_{mat}`
+(:math:`GDD_{T_{soi} }` ) reaches 1 to 5% of :math:`{GDD}_{mat}`
 (:numref:`Table Crop plant functional types`). :math:`GDD_{T_{soi} }` is base 8, 0, and
 10\ :math:`{}^\circ`\ C for corn, soybean, and temperate cereals. 
 Leaf onset, as defined in the CN part of the model, occurs in the first
@@ -221,12 +225,13 @@ a maximum value during phase 2.
 Grain fill
 '''''''''''''''''''
 
-Phase 3 begins in a similar way to phase 2. A variable tracked since
+Phase 3 begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since
 planting like :math:`GDD_{T_{soi} }`  but for 2-m air temperature,
 :math:`GDD_{T_{{\rm 2m}} }`, must reach a heat unit threshold, *h*,
-of 40 to 70% of  :math:`{GDD}_{mat}` (:numref:`Table Crop plant functional types`). For corn the
-percentage itself is an empirical function of :math:`{GDD}_{mat}`
-(not shown). In phase 3, the leaf area index begins to decline in
+of 40 to 65% of  :math:`{GDD}_{mat}` (:numref:`Table Crop plant functional types`). 
+The second potential trigger for phase 3 is based on leaf area index. 
+When the maximum value of leaf area index is reached in phase 2, phase 3 begins. 
+In phase 3, the leaf area index begins to decline in
 response to a background litterfall rate calculated as the inverse of
 leaf longevity for the pft as done in the CN part of the model.
 
@@ -238,12 +243,12 @@ Harvest
 Harvest is assumed to occur as soon as the crop reaches maturity. When
 :math:`GDD_{T_{{\rm 2m}} }`  reaches 100% of :math:`{GDD}_{mat}` or
 the number of days past planting reaches a crop-specific maximum 
-(:numref:`Table Crop plant functional types`), then the crop is harvested. 
+(:numref:`Table Crop plant functional types`)[update table reference], then the crop is harvested. 
 Harvest occurs in one time step using
 CN’s leaf offset algorithm. New variables track the flow of grain C and
 N to food and of live stem C and N to litter. Currently, food C and N
 are routed directly to litter using the labile, cellulose, and lignin
-fractions for leaves. The same fractions for leaves are used for the
+fractions for leaves. [update to product pool] The same fractions for leaves are used for the
 flow of live stem C and N to litter for corn, soybean, and temperate
 cereals. This is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N to dead stems first, rather than to litter.
