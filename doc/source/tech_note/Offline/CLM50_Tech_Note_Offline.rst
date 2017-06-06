@@ -5,26 +5,29 @@ Offline Mode
 
 In offline mode (uncoupled to an atmospheric model), the atmospheric
 forcing required by CLM (:numref:`Table Atmospheric input to land model`) 
-is supplied by observed datasets.  The standard forcing provided with the 
-model is a 110-year (1901-2010) dataset (CRUNCEP; :ref:`Viovy 2011 <Viovy2011>`) 
-that is a combination of two existing datasets; the CRU TS3.2 0.5\ 
-:math:`{}^\circ` X 0.5\ :math:`{}^\circ` monthly data covering the period 
+is supplied by observed datasets.  The standard forcing provided with the
+model is a 110-year (1901-2010) dataset provided by the Global Soil Wetness
+Project (GSWP3; NEED A REFERENCE). The GSWP3 dataset has a spatial resolution of
+0.5\ :math:`{}^o` X 0.5\ :math:`{}^o` and a temporal resolution of three
+hours.
+
+An alternative forcing dataset is also available, CRUNCEP, a 110-year (1901-2010) dataset 
+(CRUNCEP; :ref:`Viovy 2011 <Viovy2011>`) that is a combination of two existing datasets;
+the CRU TS3.2 0.5\ :math:`{}^o` X 0.5\ :math:`{}^o` monthly data covering the period 
 1901 to 2002 (:ref:`Mitchell and Jones 2005 <MitchellJones2005>`)
-and the NCEP reanalysis 2.5\ :math:`{}^\circ` X 2.5\ :math:`{}^\circ`
+and the NCEP reanalysis 2.5\ :math:`{}^o` X 2.5\ :math:`{}^o`
 6-hourly data covering the period 1948 to 2010. The CRUNCEP dataset has
 been used to force CLM for studies of vegetation growth,
 evapotranspiration, and gross primary production (:ref:`Mao et al. 2012 <Maoetal2012>`, 
 :ref:`Mao et al. 2013 <Maoetal2013>`, :ref:`Shi et al. 2013 <Shietal2013>`) 
 and for the TRENDY (trends in net land-atmosphere carbon exchange over the period 
-1980-2010) project (:ref:`Piao et al. 2012 <Piaoetal2012>`). Version 4 is used 
-here (:ref:`Viovy 2011 <Viovy2011>`). Alternative forcing datasets can also be used 
-(e.g., the :ref:`Qian et al. (2006) <Qianetal2006>` dataset used for
-previous versions of CLM is still available).
+1980-2010) project (:ref:`Piao et al. 2012 <Piaoetal2012>`). Version 7 is available
+here (:ref:`Viovy 2011 <Viovy2011>`).
 
-Here, the CRUNCEP dataset, which does not include data over oceans,
+Here, the GSWP3 dataset, which does not include data for particular fields over oceans,
 lakes, and Antarctica is modified. This missing data is filled with 
 :ref:`Qian et al. (2006) <Qianetal2006>` data from 1948 that is interpolated by the data atmosphere
-model to the 0.5\ :math:`{}^\circ` CRUNCEP grid. This allows the model
+model to the 0.5\ :math:`{}^o` GSWP3 grid. This allows the model
 to be run over Antarctica and ensures data is available along coastlines
 regardless of model resolution.
 
@@ -35,19 +38,19 @@ fields [atmospheric pressure :math:`P_{atm}`  (Pa), atmospheric specific
 humidity :math:`q_{atm}`  (kg kg\ :sup:`-1`), atmospheric
 temperature :math:`T_{atm}`  (K), and atmospheric wind :math:`W_{atm}` 
 (m s\ :sup:`-1`)]. These are separate streams because they are
-handled differently according to the type of field. In the CRUNCEP
-dataset, the precipitation stream is provided at six hour intervals and
+handled differently according to the type of field. In the GSWP3
+dataset, the precipitation stream is provided at three hour intervals and
 the data atmosphere model prescribes the same precipitation rate for
-each model time step within the six hour period. The four fields that
+each model time step within the three hour period. The four fields that
 are grouped together in another stream (pressure, humidity, temperature,
-and wind) are provided at six hour intervals and the data atmosphere
+and wind) are provided at three hour intervals and the data atmosphere
 model linearly interpolates these fields to the time step of the model.
 
-The total solar radiation is also provided at six hour intervals. The
+The total solar radiation is also provided at three hour intervals. The
 data is fit to the model time step using a diurnal function that depends
 on the cosine of the solar zenith angle :math:`\mu`  to provide a
 smoother diurnal cycle of solar radiation and to ensure that all of the
-solar radiation supplied by the six-hourly forcing data is actually
+solar radiation supplied by the three-hourly forcing data is actually
 used. The solar radiation at model time step :math:`t_{M}`  is
 
 .. math::
@@ -58,15 +61,15 @@ used. The solar radiation at model time step :math:`t_{M}`  is
    S_{atm} \left(t_{M} \right)=0 & \qquad {\rm for\; }\mu \left(t_{M} \right)\le 0.001 
    \end{array}
 
-where :math:`\Delta t_{FD}`  is the time step of the forcing data (6
-hours :math:`\times`  3600 seconds hour\ :sup:`-1` = 21600
+where :math:`\Delta t_{FD}`  is the time step of the forcing data (3
+hours :math:`\times`  3600 seconds hour\ :sup:`-1` = 10800
 seconds), :math:`\Delta t_{M}`  is the model time step (seconds),
-:math:`S_{atm} \left(t_{FD} \right)` is the six-hourly solar radiation
+:math:`S_{atm} \left(t_{FD} \right)` is the three-hourly solar radiation
 from the forcing data (W m\ :sup:`-2`), and
 :math:`\mu \left(t_{M} \right)` is the cosine of the solar zenith angle
-at model time step :math:`t_{M}`  (section 3.3). The term in the
-denominator of equation is the sum of the cosine of the solar zenith
-angle for each model time step falling within the six hour period. For
+at model time step :math:`t_{M}`  (section :numref:`Solar Zenith Angle`). The term in the
+denominator of equation (1) is the sum of the cosine of the solar zenith
+angle for each model time step falling within the three hour period. For
 numerical purposes, :math:`\mu \left(t_{M_{i} } \right)\ge 0.001`.
 
 The total incident solar radiation :math:`S_{atm}`  at the model time
@@ -122,7 +125,7 @@ where
 :math:`a_{0} =0.17639,\, a_{1} =0.00380,\, a_{2} =-9.0039\times 10^{-6} ,\, a_{3} =8.1351\times 10^{-9}` 
 and
 :math:`b_{0} =0.29548,b_{1} =0.00504,b_{2} =-1.4957\times 10^{-5} ,b_{3} =1.4881\times 10^{-8}` 
-are coefficients from polynomial fits to the placeCAM data.
+are coefficients from polynomial fits to the CAM data.
 
 The additional atmospheric forcing variables required by :numref:`Table Atmospheric input to land model` are
 derived as follows. The atmospheric reference height :math:`z'_{atm}` 
@@ -146,8 +149,8 @@ where
 
    e_{atm} =\frac{P_{atm} q_{atm} }{0.622+0.378q_{atm} }
 
-and :math:`\sigma`  is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ 
-:math:`{}^{-4}`) (:numref:`Table Physical constants`). The fraction of
+and :math:`\sigma`  is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`)
+(:numref:`Table Physical constants`). The fraction of
 precipitation :math:`P` (mm s\ :sup:`-1`) falling as rain and/or
 snow is
 
