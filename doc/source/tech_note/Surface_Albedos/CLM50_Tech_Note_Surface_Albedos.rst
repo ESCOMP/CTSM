@@ -1159,7 +1159,14 @@ series expansions for the eccentricity :math:`e`\ as follows:
 .. math::
    :label: 3.87
 
-   \Pi =\left\{\begin{array}{l} {0\qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } =0} \\ {1.5\pi \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } <0} \\ {0.5\pi \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } >0} \\ {\tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+\pi \qquad {\rm for\; }e^{\cos } <{\rm -1}\times {\rm 10}^{{\rm -8}} } \\ {\tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+2\pi \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } <0} \\ {\tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]\qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } \ge 0} \end{array}\right\}.
+   \Pi =\left\{\begin{array}{lr} 
+   0 & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } = 0 \\ 
+   1.5\pi & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } < 0 \\ 
+   0.5\pi & \qquad {\rm for\; -1}\times {\rm 10}^{{\rm -8}} \le e^{\cos } \le 1\times 10^{-8} {\rm \; and\; }e^{\sin } > 0 \\ 
+   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+\pi & \qquad {\rm for\; }e^{\cos } <{\rm -1}\times {\rm 10}^{{\rm -8}}  \\ 
+   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right]+2\pi & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } <0 \\ 
+   \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right] & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } \ge 0 
+   \end{array}\right\}.
 
 The numerical solution for the longitude of the perihelion
 :math:`\tilde{\omega }` is constrained to be between 0 and 360 degrees
