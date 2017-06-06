@@ -900,6 +900,12 @@ Law, B.E., Sun, O.J., Campbell, J., Van Tuyl, S. and Thornton, P.E.
 2003. Changes in carbon storage and fluxes in a chronosequence of
 ponderosa pine. Global Change Biology, 9: 510-514.
 
+.. _Lawrenceetal2016:
+
+Lawrence, D.M., et al. 2016. The Land Use Model Intercomparison Project 
+(LUMIP) contribution to CMIP6: rationale and experimental design. Geo. Sci.
+Dev. 9:2973-2998.
+
 .. _Lawrenceetal2007:
 
 Lawrence, D.M., Thornton, P.E., Oleson, K.W., and Bonan, G.B. 2007. The
