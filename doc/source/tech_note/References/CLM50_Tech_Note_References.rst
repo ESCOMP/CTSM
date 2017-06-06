@@ -933,6 +933,15 @@ and A.G. Slater, 2011. Parameterization improvements and functional and
 structural advances in version 4 of the Community Land Model. J. Adv.
 Model. Earth Sys. 3. DOI:10.1029/2011MS000045.
 
+.. _Lawrenceetal2016:
+
+Lawrence, D. M., Hurtt, G. C., Arneth, A., Brovkin, V., Calvin, K. V., 
+Jones, A. D., Jones, C. D., Lawrence, P. J., de Noblet-Ducoudré, N., Pongratz,
+J., Seneviratne, S. I., and Shevliakova, E, 2016. The Land Use Model 
+Intercomparison Project (LUMIP) contribution to CMIP6: rationale
+and experimental design, Geosci. Model Dev., 9, 2973-2998,
+doi:10.5194/gmd-9-2973-2016. 
+
 .. _LawrenceChase2007:
 
 Lawrence, P.J., and Chase, T.N. 2007. Representing a MODIS consistent

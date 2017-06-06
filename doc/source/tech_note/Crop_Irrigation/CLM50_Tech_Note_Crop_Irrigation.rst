@@ -617,13 +617,18 @@ Interactive fertilization
 CLM adds nitrogen directly to the soil mineral nitrogen pool to meet
 crop nitrogen demands. CLM’s separate crop land unit ensures that
 natural vegetation will not access the fertilizer applied to crops.
-Fertilizer amounts are obtained from the Agro-IBIS model (Kucharik and
-Brye 2003), but can be modified in CLM’s pft-physiology input dataset.
-Fertilizer is reported in g N/m\ :sup:`2` by plant functional
-type. Total nitrogen fertilizer amounts are 150 g N/m\ :sup:`2`
-for maize, 80 g N/m\ :sup:`2` for temperate cereals, and 25 g
-N/m\ :sup:`2` for soybean, representative of central U.S. annual
-fertilizer application amounts. Since CLM’s denitrification rate is high
+Fertilizer in CLM5BGCCROP is prescribed by crop function types spatially
+for each year based on the LUMIP land use and land cover change
+time series (LUH2 for historical and SSPs for future) (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`).
+There are two fields that are used to prescribe industrial fertilizer.
+On the surface data set the field CONST_FERTNITRO_CFT specifies the 
+annual fertilizer application for a non-transient simulations in g N/m\ :sup:`2`/yr.
+In the case of a transient simulation this is replaced by the landuse.timeseries
+file with the field FERTNITRO_CFT which is also in g N/m\ :sup:`2`/yr.
+The values for both of these fields come from the LUMIP time series for each year.
+In addition to the industrial fertilizer there is a background manure fertilizer
+on the clm parameters file with the field manunitro. For the current CLM5BGCCROP,
+this is set to 0.002 kg N/m\ :sup:`2`/yr. Since CLM’s denitrification rate is high
 and results in a 50% loss of the unused available nitrogen each day,
 fertilizer is applied slowly to minimize the loss and maximize plant
 uptake. Fertilizer application begins during the emergence phase of crop
@@ -634,18 +639,18 @@ limit fertilizer application to the emergence stage. A fertilizer
 counter in seconds, *f*, is set as soon as the onset growth for crops
 initiates:
 
-*f* = *n* \* 86400 [20.9)]
+.. math::
+   :label: 25.18
+
+    f = n \times 86400 
 
 where *n* is set to 20 fertilizer application days. When the crop enters
 phase 2 (leaf emergence to the beginning of grain fill) of its growth
 cycle, fertilizer application begins by initializing fertilizer amount
-to the total fertilizer divided by the initialized *f*. Fertilizer is
-applied and *f* is decremented each time step until a zero balance on
+to the total fertilizer at each grid cell divided by the initialized *f*.
+Fertilizer is applied and *f* is decremented each time step until a zero balance on
 the counter is reached.
 
-The crop fertilization scheme was developed in versions of the CLM prior
-to CLM4.5. In CLM4.5, crops with fertilization may be simulated over
-productive.
 
 .. _Biological nitrogen fixation for soybeans:
 
@@ -807,3 +812,26 @@ the CLM4.0, allocation of carbon to the reproductive pool was calculated
 but merged with the stem pool. In the model, as allocation declines
 during the grain fill stage of growth, increasing amounts of carbon and
 nitrogen are available for grain development.
+
+.. _Latitude vary base tempereature for growing degree days:
+
+Latitude vary base tempereature for growing degree days
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For both rainfed and irrigated spring wheat and sugarcane, 
+a latitude vary base temperature in calculating :math:`GDD_{T_{{\rm 2m}} }` 
+(growing degree days since planting) was introduced.  
+
+.. math::
+   :label: 25.17
+
+   latitude\ vary\ baset = \left\{
+   \begin{array}{lr}    
+   baset +12 - 0.4 \times latitude &\qquad 0 \le latitude \le 30 \\
+   baset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0    
+   \end{array} \right\}
+
+where :math:`baset` is the 5\ :sup:`th` column in :numref:`Table Crop plant functional types`.
+Such latitude vary baset could increase the base temperature, slow down :math:`GDD_{T_{{\rm 2m}} }` 
+accumulation, and extend the growing season for -30º to 30º regions for spring wheat 
+and sugarcane. 
