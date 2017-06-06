@@ -900,12 +900,6 @@ Law, B.E., Sun, O.J., Campbell, J., Van Tuyl, S. and Thornton, P.E.
 2003. Changes in carbon storage and fluxes in a chronosequence of
 ponderosa pine. Global Change Biology, 9: 510-514.
 
-.. _Lawrenceetal2016:
-
-Lawrence, D.M., et al. 2016. The Land Use Model Intercomparison Project 
-(LUMIP) contribution to CMIP6: rationale and experimental design. Geo. Sci.
-Dev. 9:2973-2998.
-
 .. _Lawrenceetal2007:
 
 Lawrence, D.M., Thornton, P.E., Oleson, K.W., and Bonan, G.B. 2007. The
@@ -935,12 +929,12 @@ Model. Earth Sys. 3. DOI:10.1029/2011MS000045.
 
 .. _Lawrenceetal2016:
 
-Lawrence, D. M., Hurtt, G. C., Arneth, A., Brovkin, V., Calvin, K. V., 
-Jones, A. D., Jones, C. D., Lawrence, P. J., de Noblet-Ducoudré, N., Pongratz,
-J., Seneviratne, S. I., and Shevliakova, E, 2016. The Land Use Model 
+Lawrence, D.M., Hurtt, G.C., Arneth, A., Brovkin, V., Calvin, K.V., 
+Jones, A.D., Jones, C.D., Lawrence, P.J., de Noblet-Ducoudré, N., Pongratz,
+J., Seneviratne, S.I., and Shevliakova, E. 2016. The Land Use Model 
 Intercomparison Project (LUMIP) contribution to CMIP6: rationale
-and experimental design, Geosci. Model Dev., 9, 2973-2998,
-doi:10.5194/gmd-9-2973-2016. 
+and experimental design. Geosci. Model Dev. 9:2973-2998.
+DOI:10.5194/gmd-9-2973-2016. 
 
 .. _LawrenceChase2007:
 
