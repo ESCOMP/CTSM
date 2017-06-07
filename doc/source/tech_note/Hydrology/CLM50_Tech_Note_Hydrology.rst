@@ -56,12 +56,12 @@ Interception by vegetation is divided between liquid and solid phases
 .. math::
    :label: 7.2
 
-   q_{intr,\,liq} =\alpha_{liq} \left(q_{rain} +q_{sno} \right)\left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}
+   q_{intr,\,liq} =\alpha_{liq} q_{rain} \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}
 
 .. math::
    :label: 7.3
 
-   q_{intr,\,ice} =\alpha_{sno} \left(q_{rain} +q_{sno} \right)\left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}
+   q_{intr,\,ice} =\alpha_{sno} q_{sno} \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}
 
    
 where :math:`L` and :math:`S` are the exposed leaf and stem area index,
@@ -100,14 +100,14 @@ where
 .. math::
    :label: 7.8
 
-   W_{can,liq}^{intr} =W_{can,liq}^{n} +q_{intr} \Delta t\ge 0
+   W_{can,liq}^{intr} =W_{can,liq}^{n} +q_{intr,\, liq} \Delta t\ge 0
 
 and
 
 .. math::
    :label: 7.9
 
-   W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr} \Delta t\ge 0
+   W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr,\, ice} \Delta t\ge 0
 
 	   
 are the the canopy liquid water and snow water equivalent after accounting for interception,
