@@ -8,14 +8,14 @@ forcing required by CLM (:numref:`Table Atmospheric input to land model`)
 is supplied by observed datasets.  The standard forcing provided with the
 model is a 110-year (1901-2010) dataset provided by the Global Soil Wetness
 Project (GSWP3; NEED A REFERENCE). The GSWP3 dataset has a spatial resolution of
-0.5\ :math:`{}^o` X 0.5\ :math:`{}^o` and a temporal resolution of three
+0.5\ :sup:`o` X 0.5\ :sup:`o` and a temporal resolution of three
 hours.
 
 An alternative forcing dataset is also available, CRUNCEP, a 110-year (1901-2010) dataset 
 (CRUNCEP; :ref:`Viovy 2011 <Viovy2011>`) that is a combination of two existing datasets;
-the CRU TS3.2 0.5\ :math:`{}^o` X 0.5\ :math:`{}^o` monthly data covering the period 
+the CRU TS3.2 0.5\ :sup:`o` X 0.5\ :sup:`o` monthly data covering the period 
 1901 to 2002 (:ref:`Mitchell and Jones 2005 <MitchellJones2005>`)
-and the NCEP reanalysis 2.5\ :math:`{}^o` X 2.5\ :math:`{}^o`
+and the NCEP reanalysis 2.5\ :sup:`o` X 2.5\ :sup:`o`
 6-hourly data covering the period 1948 to 2010. The CRUNCEP dataset has
 been used to force CLM for studies of vegetation growth,
 evapotranspiration, and gross primary production (:ref:`Mao et al. 2012 <Maoetal2012>`, 
@@ -27,7 +27,7 @@ here (:ref:`Viovy 2011 <Viovy2011>`).
 Here, the GSWP3 dataset, which does not include data for particular fields over oceans,
 lakes, and Antarctica is modified. This missing data is filled with 
 :ref:`Qian et al. (2006) <Qianetal2006>` data from 1948 that is interpolated by the data atmosphere
-model to the 0.5\ :math:`{}^o` GSWP3 grid. This allows the model
+model to the 0.5\ :sup:`o` GSWP3 grid. This allows the model
 to be run over Antarctica and ensures data is available along coastlines
 regardless of model resolution.
 
@@ -239,13 +239,13 @@ anomalies, respectively:
 
    \begin{array}{lr} 
    S^{'} = S + k_{anomaly} & \quad {\rm state \ variable} \\ 
-   F^{'} = f * k_{anomaly} & \quad {\rm flux \ variable} 
+   F^{'} = f \times k_{anomaly} & \quad {\rm flux \ variable} 
    \end{array}
 
 where :math:`S^{'}` is the adjusted atmospheric state variable, :math:`S` 
 is the state variable from the high-frequency reference atmospheric 
 forcing dataset, and :math:`k_{anomaly}` is an additive anomaly.  
-Similarly, math:`F^{'}` is the adjusted atmospheric flux variable, 
+Similarly, :math:`F^{'}` is the adjusted atmospheric flux variable, 
 :math:`F` is the flux variable from the high-frequency reference 
 atmospheric forcing dataset, and :math:`k_{anomaly}` is a 
 multiplicative anomaly.  State variables are temperature :math:`T_{atm}`, 
