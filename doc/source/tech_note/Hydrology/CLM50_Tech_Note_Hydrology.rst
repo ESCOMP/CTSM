@@ -473,8 +473,6 @@ Soil water is predicted from a multi-layer model, in which the vertical
 soil moisture transport is governed by infiltration, surface and
 sub-surface runoff, gradient diffusion, gravity, and canopy transpiration
 through root extraction (:numref:`Figure Hydrologic processes`).
-The following derivation generally follows that of :ref:`Z.-L. Yang (1998,
-unpublished manuscript) <Yang1998>`.
 
 For one-dimensional vertical water flow in soils, the conservation of
 mass is stated as
@@ -482,14 +480,14 @@ mass is stated as
 .. math::
    :label: 7.79
 
-   \frac{\partial \theta }{\partial t} =-\frac{\partial q}{\partial z} -Q
+   \frac{\partial \theta }{\partial t} =-\frac{\partial q}{\partial z} - e
 
 where :math:`\theta`  is the volumetric soil water content
 (mm\ :sup:`3` of water / mm\ :sup:`-3` of soil), :math:`t` is
 time (s), :math:`z` is height above some datum in the soil column (mm)
 (positive upwards), :math:`q` is soil water flux (kg m\ :sup:`-2`
 s\ :sup:`-1` or mm s\ :sup:`-1`) (positive upwards), and
-:math:`Q` is a soil moisture sink term (mm of water mm\ :sup:`-1`
+:math:`e` is a soil moisture sink term (mm of water mm\ :sup:`-1`
 of soil s\ :sup:`-1`) (ET loss). This equation is solved
 numerically by dividing the soil column into multiple layers in the
 vertical and integrating downward over each layer with an upper boundary
@@ -533,15 +531,22 @@ Equation :eq:`7.82` can be further manipulated to yield
 .. math::
    :label: 7.83
 
-   q=-k\left[\frac{\partial \left(\psi +z\right)}{\partial z} \right]=-k\left(\frac{\partial \psi }{\partial z} +1\right)=-k\left(\frac{\partial \theta }{\partial z} \frac{\partial \psi }{\partial \theta } +1\right).
+   q = -k \left[\frac{\partial \left(\psi +z\right)}{\partial z} \right]
+   = -k \left(\frac{\partial \psi }{\partial z} + 1 \right) \ .
 
-Substitution of this equation into equation :eq:`7.79`, with :math:`Q=0`, yields
-the Richards equation
+Substitution of this equation into equation :eq:`7.79`, with :math:`e = 0`, yields
+the Richards equation :ref:`(Dingman 2002) <Dingman2002>`
 
 .. math::
    :label: 7.84
 
-   \frac{\partial \theta }{\partial t} =\frac{\partial }{\partial z} \left[k\left(\frac{\partial \theta }{\partial z} \frac{\partial \psi }{\partial \theta } +1\right)\right].
+   \frac{\partial \theta }{\partial t} = 
+   \frac{\partial }{\partial z} \left[k\left(\frac{\partial \psi }{\partial z} + 1 
+   \right)\right].
+
+In practice (Section :numref:`Numerical Solution Hydrology`), changes in soil 
+water content are predicted from :eq:`7.79` using finite-difference approximations 
+for :eq:`7.83`.
 
 .. _Hydraulic Properties:
 
@@ -714,7 +719,7 @@ conservation of mass (equation :eq:`7.79`) can be integrated over each layer as
 .. math::
    :label: 7.101
 
-   \int _{-z_{h,\, i} }^{-z_{h,\, i-1} }\frac{\partial \theta }{\partial t} \,  dz=-\int _{-z_{h,\, i} }^{-z_{h,\, i-1} }\frac{\partial q}{\partial z}  \, dz-\int _{-z_{h,\, i} }^{-z_{h,\, i-1} }Q\, dz .
+   \int _{-z_{h,\, i} }^{-z_{h,\, i-1} }\frac{\partial \theta }{\partial t} \,  dz=-\int _{-z_{h,\, i} }^{-z_{h,\, i-1} }\frac{\partial q}{\partial z}  \, dz-\int _{-z_{h,\, i} }^{-z_{h,\, i-1} } e\, dz .
 
 Note that the integration limits are negative since :math:`z` is defined
 as positive upward from the soil surface. This equation can be written
@@ -1035,25 +1040,47 @@ and the coefficients of the tridiagonal set of equations for
 
 Adaptive Time Stepping
 '''''''''''''''''''''''''''''
-The tridiagonal equation set is solved using an adaptive time-stepping procedure.  
-An initial solution is found by setting :math:`\Delta t` equal to the model time 
-step.  An estimate of the error is calculated from
+
+To improve the accuracy and stability of  the numerical solutions, the 
+length of the time step is adjusted.  The difference between two numerical 
+approximations is used to  estimate the temporal truncation error, and then 
+the step size is adjusted to meet a user-prescribed error tolerance 
+:ref:`[Kavetski et al., 2002]<Kavetskietal2002>`.  The temporal truncation 
+error is estimated by comparing the flux obtained from the first-order 
+Taylor series expansion (:math:`q_{i-1}^{n+1}` and :math:`q_{i}^{n+1}`, 
+equations :eq:`7.108` and :eq:`7.109`) against the flux at the start of the 
+time step (:math:`q_{i-1}^{n}` and :math:`q_{i}^{n}`). Since the tridiagonal 
+solution already provides an estimate of :math:`\Delta \theta_{liq,i}`, it is 
+convenient to compute the error for each of the :math:`i` layers from equation 
+:eq:`7.103` as 
 
 .. math::
    :label: 7.152
 
-   \epsilon = max \left[ \frac{\Delta \theta_{liq,\, i} \Delta z_{i}}{\Delta t} - 
-   \left( q_{i-1}^{n} - q_{i}^{n} + e_{i}\right) \right]
+   \epsilon_{i} = \left[ \frac{\Delta \theta_{liq,\, i} \Delta z_{i}}{\Delta t} - 
+   \left( q_{i-1}^{n} - q_{i}^{n} + e_{i}\right) \right] \ \frac{\Delta t_{sub}}{2}
 
-If :math:`\epsilon` is greater than a specified error tolerance, the solution is 
-rejected, :math:`\Delta t` is halved and a new solution is determined.  If the solution 
-is accepted, the procedure repeats until the adaptive sub-stepping spans the full 
-model time step.  During the solution, the sub-steps may be halved until a 
-specified minimum time step length is reached, and the sub-steps may be doubled 
-when :math:`\epsilon` is less than a specified error tolerance.  
+and the maximum absolute error across all layers as
 
-Upon solution of the tridiagonal equation set, the
-liquid water contents are updated as follows
+.. math::
+   :label: 7.153
+
+   \begin{array}{lr}
+   \epsilon_{crit} = {\rm max} \left( \left| \epsilon_{i} \right| \right) & \qquad 1 \le i \le nlevsoi
+   \end{array} \ .
+
+The adaptive step size selection is based on specified upper and lower error 
+tolerances, :math:`\tau_{U}` and :math:`\tau_{L}`. The solution is accepted if 
+:math:`\epsilon_{crit} \le \tau_{U}` and the procedure repeats until the adaptive 
+sub-stepping  spans the full model time step (the sub-steps are doubled if 
+:math:`\epsilon_{crit} \le \tau_{L}`, i.e., if the solution is very  accurate).  
+Conversely, the solution is rejected if :math:`\epsilon_{crit} > \tau_{U}`.  In 
+this case the length of the sub-steps is halved and a new solution is obtained. 
+The halving of substeps continues until either :math:`\epsilon_{crit} \le \tau_{U}` 
+or the specified minimum time step length is reached.  
+
+Upon solution of the tridiagonal equation set, the liquid water contents are updated 
+as follows
 
 .. math::
    :label: 7.164
