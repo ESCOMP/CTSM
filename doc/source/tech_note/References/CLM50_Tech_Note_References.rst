@@ -1048,6 +1048,12 @@ Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire
 in the Earth system – Part 1: Improved global fire modeling in the
 Community Earth System Model (CESM1). Biogeosciences 10:2293-2314.
 
+.. _LiLawrence2017:
+
+Li, F., and Lawrence, D. 2017. Role of fire in the global land water 
+budget during the 20th century through changing ecosystems. 
+J. Clim. 30: 1894-1908.
+
 .. _Lietal2013b:
 
 Li, H.-Y., Huang, M., Tesfa, T., Ke, Y., Sun, Y., Liu, Y., and Leung, L.

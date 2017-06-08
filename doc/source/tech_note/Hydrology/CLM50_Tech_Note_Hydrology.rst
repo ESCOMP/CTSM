@@ -38,7 +38,7 @@ al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
 
 .. _Figure Hydrologic processes:
 
-.. Figure:: image1.png
+.. Figure:: hydrologic.processes.png
 
  Hydrologic processes represented in CLM.
 
