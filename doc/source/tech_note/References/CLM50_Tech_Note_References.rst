@@ -792,6 +792,12 @@ photosynthetic capacity and its relationship to leaf nitrogen content
 for global–scale terrestrial biosphere models. Global Change Biol.
 15:976–991.
 
+.. _Kavetskietal2002:
+
+Kavetski, D., Binning, P. and Sloan, S.W., 2002. Noniterative time 
+stepping schemes with  adaptive truncation error control for the 
+solution of Richards equation. Water Resources  Research, 38(10).
+
 .. _Kelleretal2004:
 
 Keller, M., Palace, M., Asner, G.P., Pereira, R., Jr. and Silva, J.N.M.,
