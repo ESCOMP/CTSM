@@ -546,7 +546,7 @@ the Richards equation :ref:`(Dingman 2002) <Dingman2002>`
 
 In practice (Section :numref:`Numerical Solution Hydrology`), changes in soil 
 water content are predicted from :eq:`7.79` using finite-difference approximations 
-for :eq:`7.83`.
+for :eq:`7.84`.
 
 .. _Hydraulic Properties:
 
@@ -1041,10 +1041,10 @@ and the coefficients of the tridiagonal set of equations for
 Adaptive Time Stepping
 '''''''''''''''''''''''''''''
 
-To improve the accuracy and stability of  the numerical solutions, the 
-length of the time step is adjusted.  The difference between two numerical 
+The length of the time step is adjusted in order to improve the accuracy 
+and stability of the numerical solutions.  The difference between two numerical 
 approximations is used to  estimate the temporal truncation error, and then 
-the step size is adjusted to meet a user-prescribed error tolerance 
+the step size :math:`\Delta t_{sub}` is adjusted to meet a user-prescribed error tolerance 
 :ref:`[Kavetski et al., 2002]<Kavetskietal2002>`.  The temporal truncation 
 error is estimated by comparing the flux obtained from the first-order 
 Taylor series expansion (:math:`q_{i-1}^{n+1}` and :math:`q_{i}^{n+1}`, 
@@ -1057,7 +1057,7 @@ convenient to compute the error for each of the :math:`i` layers from equation
 .. math::
    :label: 7.152
 
-   \epsilon_{i} = \left[ \frac{\Delta \theta_{liq,\, i} \Delta z_{i}}{\Delta t} - 
+   \epsilon_{i} = \left[ \frac{\Delta \theta_{liq,\, i} \Delta z_{i}}{\Delta t_{sub}} - 
    \left( q_{i-1}^{n} - q_{i}^{n} + e_{i}\right) \right] \ \frac{\Delta t_{sub}}{2}
 
 and the maximum absolute error across all layers as
