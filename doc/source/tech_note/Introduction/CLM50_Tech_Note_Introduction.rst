@@ -224,7 +224,7 @@ Jinyun Tang, Zong-Liang Yang**
 
 - :numref:`Table Respiration fractions for Century-based structure` Respiration fractions for litter and SOM pools for Century-based structure 
 
-- :numref:`Table PFT-specific combustion completeness and fire mortality` PFT-specific combustion completeness and fire mortality factors. 
+- :numref:`Table PFT-specific combustion completeness and fire mortality factors` PFT-specific combustion completeness and fire mortality factors. 
 
 - :numref:`Table Methane Parameter descriptions`  Parameter descriptions and sensitivity analysis ranges applied in the methane model. 
 

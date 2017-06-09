@@ -717,35 +717,3 @@ The outermost level of iteration works towards convergence of leaf temperature, 
 .. figure:: flow.png
 
  Flow diagram of leaf flux calculations
-
-
-.. _PHS Refs:
-
-References
------------------------------
-
-Local references. Will copy over
-
-.. _Bonanetal2014:
-
-Bonan, G.B., Williams, M., Fisher, R.A., and Oleson, K.W. 2014. Modeling stomatal conductance in the earth system: linking leaf water-use efficiency and water transport along the soil–plant–atmosphere continuum, Geosci. Model Dev., 7, 2193-2222, doi:10.5194/gmd-7-2193-2014.
-
-.. _Chuangetal2006:
-
-Chuang Y.L., Oren R., Bertozzi A.L, Phillips N., Katul G.G. 2006. The porous media model for the hydraulic system of a conifer tree: Linking sap flux data to transpiration rate, Ecological Modelling, 191, 447-468, doi:10.1016/j.ecolmodel.2005.03.027.
-
-.. _Medlynetal2011:
-
-Medlyn, B.E., Duursma, R.A., Eamus, D., Ellsworth, D.S., Prentice, I.C., Barton, C.V.M., Crous, K.Y., De Angelis, P., Freeman, M., and Wingate, L. (2011), Reconciling the optimal and empirical approaches to modelling stomatal conductance. Global Change Biology, 17: 2134–2144. doi:10.1111/j.1365-2486.2010.02375.x
-
-.. _Sperryetal1998:
-
-Sperry, J.S., Adler, F.R., Campbell, G.S. and Comstock, J.P. (1998), Limitation of plant water use by rhizosphere and xylem conductance: results from a model. Plant, Cell & Environment, 21: 347–359. doi:10.1046/j.1365-3040.1998.00287.x
-
-.. _SperryandLove2015:
-
-Sperry, J.S. and Love, D.M. 2015. What plant hydraulics can tell us about responses to climate-change droughts. New Phytol, 207: 14–27. doi:10.1111/nph.13354
-
-.. _Williamsetal1996:
-
-Williams, M., Rastetter, E.B., Fernandes, D.N., Goulden, M.L., Wofsy, S.C., Shaver, G.R., Melillo, J.M., Munger, J.W., Fan, S.M. and Nadelhoffer, K.J. 1996. Modelling the soil-plant-atmosphere continuum in a Quercus–Acer stand at Harvard Forest: the regulation of stomatal conductance by light, nitrogen and soil/plant hydraulic properties. Plant, Cell & Environment, 19: 911–927. doi:10.1111/j.1365-3040.1996.tb00456.x
