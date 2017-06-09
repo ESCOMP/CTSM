@@ -197,14 +197,12 @@ M. 2012. Reconciling leaf physiological traits and canopy flux data: Use
 of the TRY and FLUXNET databases in the Community Land Model version 4,
 J. Geophys. Res., 117, G02026. DOI:10.1029/2011JG001913.
 
-Branstetter, M.L., and Famiglietti, J.S. 1999. Testing the sensitivity
-of GCM-simulated runoff to climate model resolution using a parallel
-river transport algorithm. Preprints, 14\ :math:`{}^{th}` Conference on
-Hydrology, Dallas, TX, Amer. Meteor. Soc., 391-392.
+.. _Bonanetal2014:
 
-Branstetter, M.L. 2001. Development of a parallel river transport
-algorithm and applications to climate studies. Ph.D. dissertation,
-University of Texas at Austin.
+Bonan, G.B., Williams, M., Fisher, R.A., and Oleson, K.W. 2014. Modeling 
+stomatal conductance in the earth system: linking leaf water-use 
+efficiency and water transport along the soil–plant–atmosphere continuum, 
+Geosci. Model Dev., 7, 2193-2222, doi:10.5194/gmd-7-2193-2014.
 
 .. _Brun1989:
 
@@ -244,6 +242,13 @@ Climate 25:3702–3714.
 Cao, M., Marshall, S. and Gregson, K., 1996. Global carbon exchange and
 methane emissions from natural wetlands: Application of a process-based
 model. J. Geophys. Res. 101(D9):14,399-14,414.
+
+.. _Chuangetal2006:
+
+Chuang Y.L., Oren R., Bertozzi A.L, Phillips N., Katul G.G. 2006. The 
+porous media model for the hydraulic system of a conifer tree: Linking 
+sap flux data to transpiration rate, Ecological Modelling, 191, 447-468, 
+doi:10.1016/j.ecolmodel.2005.03.027.
 
 .. _Churkinaetal2003:
 
@@ -1179,6 +1184,14 @@ carbon and nitrogen dynamics in estimating net primary productivity for
 potential vegetation in North America. Global Biogeochem. Cycles
 6:101-124.
 
+.. _Medlynetal2011:
+
+Medlyn, B.E., Duursma, R.A., Eamus, D., Ellsworth, D.S., Prentice, I.C., 
+Barton, C.V.M., Crous, K.Y., De Angelis, P., Freeman, M., and 
+Wingate, L. (2011), Reconciling the optimal and empirical approaches to 
+modelling stomatal conductance. Global Change Biology, 17: 2134–2144. 
+doi:10.1111/j.1365-2486.2010.02375.x
+
 .. _MelzerOLeary1987:
 
 Melzer, E., and O’Leary, M.H. 1987. Anapleurotic CO2 Fixation by
@@ -1688,6 +1701,19 @@ Sørensen, L.H., 1981. Carbon-nitrogen relationships during the
 humification of cellulose in soils containing different amounts of clay.
 Soil Biology and Biochemistry, 13: 313-321.
 
+.. _Sperryetal1998:
+
+Sperry, J.S., Adler, F.R., Campbell, G.S. and Comstock, J.P. 1998. 
+Limitation of plant water use by rhizosphere and xylem conductance: 
+results from a model. Plant, Cell & Environment, 21: 347–359. 
+doi:10.1046/j.1365-3040.1998.00287.x
+
+.. _SperryandLove2015:
+
+Sperry, J.S. and Love, D.M. 2015. What plant hydraulics can tell us 
+about responses to climate-change droughts. New Phytol, 207: 14–27. 
+doi:10.1111/nph.13354
+
 .. _Sprugeletal1995:
 
 Sprugel, D.G., Ryan, M.G., Brooks, J.R., Vogt, K.A., and Martin, T.A.
@@ -1996,6 +2022,16 @@ White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000.
 Parameterization and sensitivity analysis of the Biome-BGC terrestrial
 ecosystem model: net primary production controls. Earth Interactions
 4:1-85.
+
+.. _Williamsetal1996:
+
+Williams, M., Rastetter, E.B., Fernandes, D.N., Goulden, M.L., 
+Wofsy, S.C., Shaver, G.R., Melillo, J.M., Munger, J.W., Fan, S.M. 
+and Nadelhoffer, K.J. 1996. Modelling the soil-plant-atmosphere 
+continuum in a Quercus–Acer stand at Harvard Forest: the regulation 
+of stomatal conductance by light, nitrogen and soil/plant hydraulic 
+properties. Plant, Cell & Environment, 19: 911–927. 
+doi:10.1111/j.1365-3040.1996.tb00456.x
 
 .. _WiscombeWarren1980:
 
