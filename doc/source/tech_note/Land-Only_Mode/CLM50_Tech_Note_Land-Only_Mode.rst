@@ -1,9 +1,9 @@
-.. _rst_Offline Mode:
+.. _rst_Land-only Mode:
 
-Offline Mode
+Land-Only Mode
 ================
 
-In offline mode (uncoupled to an atmospheric model), the atmospheric
+In land-only mode (uncoupled to an atmospheric model), the atmospheric
 forcing required by CLM (:numref:`Table Atmospheric input to land model`) 
 is supplied by observed datasets.  The standard forcing provided with the
 model is a 110-year (1901-2010) dataset provided by the Global Soil Wetness
