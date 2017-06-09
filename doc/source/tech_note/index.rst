@@ -23,7 +23,7 @@ CLM Technical Note
    Snow_Hydrology/CLM50_Tech_Note_Snow_Hydrology.rst
    Photosynthesis/CLM50_Tech_Note_Photosynthesis.rst
    Photosynthetic_Capacity/CLM50_Tech_Note_Photosynthetic_Capacity.rst
-   Plant_Hydraulic_Stress/CLM50_Tech_Note_Plant_Hydraulic_Stress.rst
+   Plant_Hydraulics/CLM50_Tech_Note_Plant_Hydraulics.rst
    Lake/CLM50_Tech_Note_Lake.rst
    Glacier/CLM50_Tech_Note_Glacier.rst
    RTM/CLM50_Tech_Note_RTM.rst
@@ -43,6 +43,6 @@ CLM Technical Note
    BVOCs/CLM50_Tech_Note_BVOCs.rst
    Dust/CLM50_Tech_Note_Dust.rst
    Isotopes/CLM50_Tech_Note_Isotopes.rst
-   Offline/CLM50_Tech_Note_Offline.rst
+   Land-Only_Mode/CLM50_Tech_Note_Land-Only_Mode.rst
    References/CLM50_Tech_Note_References.rst
    

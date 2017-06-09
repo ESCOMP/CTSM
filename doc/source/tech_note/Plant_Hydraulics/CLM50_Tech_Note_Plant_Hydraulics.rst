@@ -1,18 +1,34 @@
-.. _rst_Plant Hydraulic Stress:
+.. _rst_Plant Hydraulics:
 
-Plant Hydraulic Stress
+Plant Hydraulics
 ======================
 
-The Plant Hydraulic Stress (PHS) routine explicitly models water transport through the vegetation according to a simple hydraulic framework following Darcy's Law for porous media flow equations influenced by 
+.. _Rooting Profiles:
+
+Rooting Profiles
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _Plant Hydraulic Stress:
+
+Plant Hydraulic Stress
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Plant Hydraulic Stress (PHS) routine explicitly models water transport 
+through the vegetation according to a simple hydraulic framework following 
+Darcy's Law for porous media flow equations influenced by 
 :ref:`Bonan et al. (2014) <Bonanetal2014>`,
 :ref:`Chuang et al. (2006) <Chuangetal2006>`,
 :ref:`Sperry et al. (1998) <Sperryetal1998>`,
 :ref:`Sperry and Love (2015) <SperryandLove2015>`,
 :ref:`Williams et al (1996) <Williamsetal1996>`.
 
-PHS solves for the vegetation water potential that matches water supply with transpiration demand. Water supply is modeled according to the circuit analog in :numref:`Figure Soil Temperature Schematic`. Transpiration demand is modeled relative to maximum transpiration by a transpiration loss function dependent on leaf water potential.
+PHS solves for the vegetation water potential that matches water supply with 
+transpiration demand. Water supply is modeled according to the circuit analog 
+in :numref:`Figure Plant hydraulic circuit`. Transpiration demand is modeled 
+relative to maximum transpiration by a transpiration loss function dependent 
+on leaf water potential.
 
-.. _Figure Soil Temperature Schematic:
+.. _Figure Plant hydraulic circuit:
 
 .. figure:: circuit.jpg
 
@@ -23,29 +39,41 @@ PHS solves for the vegetation water potential that matches water supply with tra
 Plant Water Supply
 -----------------------
 
-The supply equations are used to solve for vegetation water potential forced by transpiration demand and the set of layer-by-layer soil water potentials.
-The water supply is discretized into segments: soil-to-root, root-to-stem, and stem-to-leaf. There are typically several (1-49) soil-to-root flows operating in parallel, one per soil layer. There are two stem-to-leaf flows operating in parallel, corresponding to the sunlit and shaded "leaves".
+The supply equations are used to solve for vegetation water potential forced 
+by transpiration demand and the set of layer-by-layer soil water potentials.
+The water supply is discretized into segments: soil-to-root, root-to-stem, and 
+stem-to-leaf. There are typically several (1-49) soil-to-root flows operating 
+in parallel, one per soil layer. There are two stem-to-leaf flows operating in 
+parallel, corresponding to the sunlit and shaded "leaves".
 
-In general the water fluxes (e.g. soil-to-root, root-to-stem, etc.) are modeled according to Darcy's Law for porous media flow as:
+In general the water fluxes (e.g. soil-to-root, root-to-stem, etc.) are 
+modeled according to Darcy's Law for porous media flow as:
 
 .. math::
-   :label: 11.101) 
+   :label: 11.101
 
    q = kA\left( \psi_1 - \psi_2 \right)
 
-:math:`q` is the flux of water (mmH\ :sub:`2`\ O) spanning the segment between :math:`\psi_1` and :math:`\psi_2`
+:math:`q` is the flux of water (mmH\ :sub:`2`\ O) spanning the segment 
+between :math:`\psi_1` and :math:`\psi_2`
 
 :math:`k` is the hydraulic conductance (s\ :sup:`-1`\ )
 
-:math:`A` is the area basis (m\ :sup:`2`\ /m\ :sup:`2`\ ) relating the conducting area basis to ground area
+:math:`A` is the area basis (m\ :sup:`2`\ /m\ :sup:`2`\ ) relating the 
+conducting area basis to ground area
 
-:math:`\psi_1 - \psi_2` is the gradient in water potential (mmH\ :sub:`2`\ O) across the segment
+:math:`\psi_1 - \psi_2` is the gradient in water potential (mmH\ :sub:`2`\ O) 
+across the segment
 
-The segments in :numref:`Figure Soil Temperature Schematic` have variable resistance, as the water potentials become lower, hydraulic conductance decreases.
-This is captured by multiplying the maximum segment conductance by a sigmoidal function capturing the percent loss of conductivity. The function uses two parameters to fit experimental vulnerability curves: the water potential at 50% loss of conductivity (:math:`p50`) and a shape fitting parameter (:math:`c_k`).
+The segments in :numref:`Figure Plant hydraulic circuit` have variable resistance, 
+as the water potentials become lower, hydraulic conductance decreases.  This is 
+captured by multiplying the maximum segment conductance by a sigmoidal function 
+capturing the percent loss of conductivity. The function uses two parameters to 
+fit experimental vulnerability curves: the water potential at 50% loss of 
+conductivity (:math:`p50`) and a shape fitting parameter (:math:`c_k`).
 
 .. math::
-   :label: 11.102)
+   :label: 11.102
   
    k=k_{max}\cdot 2^{-\left(\dfrac{\psi_1}{p50}\right)^{c_k}}
 
@@ -66,29 +94,29 @@ The maximum conductance is a PFT parameter representing the maximum conductance 
 This parameter can be defined separately for sunlit and shaded segments and should already include the appropriate length scaling (in other words this is a conductance, not conductivity). The water potential gradient is the difference between leaf water potential and stem water potential. There is no gravity term, assuming a negligible difference in height across the segment. The area basis is the leaf area index (either sunlit or shaded).
 
 .. math:: 
-   :label: 11.103)
+   :label: 11.103
 
    q_{1a}=k_{1a}\cdot\mbox{LAI}_{sun}\cdot\left(\psi_{stem}-\psi_{sunleaf} \right) 
 
 .. math:: 
-   :label: 11.104)
+   :label: 11.104
 
    q_{1b}=k_{1b}\cdot\mbox{LAI}_{shade}\cdot\left(\psi_{stem}-\psi_{shadeleaf} \right) 
 
 .. math:: 
-   :label: 11.105)
+   :label: 11.105
 
    k_{1a}=k_{1a,max}\cdot 2^{-\left(\dfrac{\psi_{stem}}{p50_1}\right)^{c_k}} 
 
 .. math::
-   :label: 11.106)
+   :label: 11.106
   
    k_{1b}=k_{1b,max}\cdot 2^{-\left(\dfrac{\psi_{stem}}{p50_1}\right)^{c_k}}
 
 Variables:
 
 :math:`q_{1a}` = flux of water (mmH2O/s) from stem to sunlit leaf
-12
+
 :math:`q_{1b}` = flux of water (mmH2O/s) from stem to shaded leaf
 
 :math:`LAI_{sun}` = sunlit leaf area index (m2/m2)
@@ -119,12 +147,12 @@ Root-to-stem
 There is one root-to-stem flux. This represents a flux from the root collar to the upper branch reaches. The water flux from root-to-stem is the product of the segment conductance, the conducting area basis, and the water potential gradient from root to stem. Root-to-stem conductance is defined as the maximum conductance multiplied by the percent of maximum conductance, as calculated by the sigmoidal vulnerability curve (two parameters). The maximum conductance is defined as the maximum root-to-stem conductivity per unit stem area (PFT parameter) divided by the length of the conducting path, which is taken to be the vegetation height. The area basis is the stem area index. The gradient in water potential is the difference between the root water potential and the stem water potential less the difference in gravitational potential.
 
 .. math::
-   :label: 11.107)
+   :label: 11.107
   
    q_2=k_2 \cdot SAI \cdot \left( \psi_{root} - \psi_{stem} - \Delta \psi_z  \right)
 
 .. math::
-   :label: 11.108)
+   :label: 11.108
 
    k_2=\dfrac{k_{2,max}}{z_2} \cdot 2^{-\left(\dfrac{\psi_{root}}{p50_2}\right)^{c_k}}
 
@@ -162,37 +190,37 @@ Soil-to-root conductance is the result of two resistances in series, first acros
 The soil-root interface conductance is defined as the soil conductivity divided by the conducting length from soil to root. The soil conductivity varies by soil layer and is calculated based on soil potential and soil properties, via the Brooks-Corey theory. The conducting length is computed by calculating the characteristic root spacing following Bonan-2014. The root spacing depends on total root biomass and PFT parameters defining root structure (see section zqz).
 
 .. math::
-   :label: 11.109)
+   :label: 11.109
 
-   q_{3,i}=k_{3,i}*RAI*\left(\psi_{soil,i}-\psi_{root} + \Delta\psi_{z,i} \right)
-
-.. math::
-   :label: 11.110)
-
-   RAI=\left(LAI+SAI \right)\cdot r_i \cdot f_{root-leaf}
+   q_{3,i}=k_{3,i} \cdot RAI \cdot \left(\psi_{soil,i}-\psi_{root} + \Delta\psi_{z,i} \right)
 
 .. math::
-   :label: 11.111)
+   :label: 11.110
 
-   k_{3,i}=\dfrac{k_{r,i}*k_{s,i}}{k_{r,i}+k_{s,i}} 
-
-.. math::
-   :label: 11.112)
-
-   k_{r,i}=\dfrac{k_{3,max}}{z_{3,i}}*2^{-\left(\dfrac{\psi_{soil,i}}{p50_3}\right)^{c_k}}
+   RAI=\left(LAI+SAI \right) \cdot r_i \cdot f_{root-leaf}
 
 .. math::
-   :label: 11.113)
+   :label: 11.111
+
+   k_{3,i}=\dfrac{k_{r,i} \cdot k_{s,i}}{k_{r,i}+k_{s,i}} 
+
+.. math::
+   :label: 11.112
+
+   k_{r,i}=\dfrac{k_{3,max}}{z_{3,i}} \cdot 2^{-\left(\dfrac{\psi_{soil,i}}{p50_3}\right)^{c_k}}
+
+.. math::
+   :label: 11.113
 
    k_{s,i} = \dfrac{k_{soil,i}}{dx_{root,i}} 
 
 .. math::
-   :label: 11.114)
+   :label: 11.114
 
    dx_{root,i} = \left(\pi*\mbox{root-length-density}_i\right)^{-0.5}    
 
 .. math::
-   :label: 11.115)
+   :label: 11.115
 
    \mbox{root-length-density} = \dfrac{\mbox{total root length}}{\mbox{soil volume}} 
 
@@ -240,22 +268,22 @@ Water stress is calculated with distinct values for sunlit and shaded leaves.
 Vegetation water stress is calculated based on leaf water potential and is used to attenuate photosynthesis (see section :numref:`Photosynthesis`)
 
 .. math::
-   :label: 11.201)
+   :label: 11.201
 
    E_{sun} = E_{sun,max} \cdot 2^{-\left(\dfrac{\psi_{sunleaf}}{p50_e}\right)^{c_k}} 
 
 .. math::
-   :label: 11.202)
+   :label: 11.202
 
    E_{shade} = E_{shade,max} \cdot 2^{-\left(\dfrac{\psi_{shadeleaf}}{p50_e}\right)^{c_k}} 
 
 .. math::
-   :label: 11.203)
+   :label: 11.203
 
    \beta_{t,sun} = \dfrac{g_{s,sun}}{g_{s,sun,\beta_t=1}} 
 
 .. math::
-   :label: 11.204)
+   :label: 11.204
 
    \beta_{t,shade} = \dfrac{g_{s,shade}}{g_{s,shade,\beta_t=1}} 
 
@@ -288,15 +316,15 @@ Vegetation water stress is calculated based on leaf water potential and is used 
 Vegetation Water Potential
 -----------------------------
 
-Both plant water supply and demand are functions of vegetation water potential. PHS explicitly models root, stem, shaded leaf, and sunlit leaf water potential at each timestep. PHS iterates to find the vegetation water potential :math:`\psi` (vector) that satisfies continuity between the non-linear vegetation water supply and demand (equations :eq:`11.103)`, :eq:`11.104)`, :eq:`11.107)`, :eq:`11.109)`, :eq:`11.201)`, :eq:`11.202)`). 
+Both plant water supply and demand are functions of vegetation water potential. PHS explicitly models root, stem, shaded leaf, and sunlit leaf water potential at each timestep. PHS iterates to find the vegetation water potential :math:`\psi` (vector) that satisfies continuity between the non-linear vegetation water supply and demand (equations :eq:`11.103`, :eq:`11.104`, :eq:`11.107`, :eq:`11.109`, :eq:`11.201`, :eq:`11.202`). 
 
 .. math::
-   :label: 11.301)
+   :label: 11.301
 
    \psi=\left[\psi_{sunleaf},\psi_{shadeleaf},\psi_{stem},\psi_{root}\right]
 
 .. math::
-   :label: 11.302)
+   :label: 11.302
 
    \begin{aligned}
    E_{sun}&=q_{1a}\\
@@ -306,7 +334,7 @@ Both plant water supply and demand are functions of vegetation water potential. 
    &=\sum_{i=1}^{nlevsoi}{q_{3,i}}
    \end{aligned}
 
-PHS finds the water potentials that match supply and demand. In the plant water transport equations :eq:`11.302)`, the demand terms (left-hand side) are decreasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, water stress increases, causing a decrease in transpiration demand. The supply terms (right-hand side) are increasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, the gradients in water potential increase, causing an increase in vegetation water supply. PHS takes a Newton's method approach to iteratively solve for the vegetation water potentials that satisfy continuity :eq:`11.302)`.
+PHS finds the water potentials that match supply and demand. In the plant water transport equations :eq:`11.302`, the demand terms (left-hand side) are decreasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, water stress increases, causing a decrease in transpiration demand. The supply terms (right-hand side) are increasing functions of absolute leaf water potential. As absolute leaf water potential becomes larger, the gradients in water potential increase, causing an increase in vegetation water supply. PHS takes a Newton's method approach to iteratively solve for the vegetation water potentials that satisfy continuity :eq:`11.302`.
 
 
 
@@ -326,7 +354,7 @@ Using the attenuated transpiration, we solve for :math:`g_{s,stressed}` and outp
 The continuity of water flow through the system yields four equations
 
 .. math::
-   :label: 11.401)
+   :label: 11.401
 
    \begin{aligned}
    E_{sun}&=q_{1a}\\
@@ -339,7 +367,7 @@ The continuity of water flow through the system yields four equations
 We seek the set of vegetation water potential values, 
 
 .. math::
-   :label: 11.402)
+   :label: 11.402
 
    \psi=\left[ \begin {array}{c} 
    \psi_{sunleaf}\cr\psi_{shadeleaf}\cr\psi_{stem}\cr\psi_{root}
@@ -349,7 +377,7 @@ that satisfies these equations, as forced by the soil moisture and atmospheric s
 Each flux on the schematic can be represented in terms of the relevant water potentials. Defining the transpiration fluxes:
 
 .. math::
-   :label: 11.403)
+   :label: 11.403
 
    \begin{aligned}
    E_{sun} &= E_{sun,max} \cdot 2^{-\left(\dfrac{\psi_{sunleaf}}{p50_e}\right)^{c_k}} \\
@@ -359,7 +387,7 @@ Each flux on the schematic can be represented in terms of the relevant water pot
 Defining the water supply fluxes:
 
 .. math::
-   :label: 11.404)
+   :label: 11.404
 
    \begin{aligned}
    q_{1a}&=k_{1a,max}\cdot 2^{-\left(\dfrac{\psi_{stem}}{p50_1}\right)^{c_k}} \cdot\mbox{LAI}_{sun}\cdot\left(\psi_{stem}-\psi_{sunleaf} \right) \\
@@ -375,7 +403,7 @@ The initial guess is the solution for :math:`\psi` (vector) from the previous ti
 The general framework, from iteration `m` to `m+1` is:
 
 .. math::
-   :label: 11.405)
+   :label: 11.405
 
    q^{m+1}=q^m+\dfrac{\delta q}{\delta\psi}\Delta\psi \\
    \psi^{m+1}=\psi^{m}+\Delta\psi
@@ -383,28 +411,28 @@ The general framework, from iteration `m` to `m+1` is:
 So for our first flux balance equation, at iteration `m+1`, we have:
 
 .. math::
-   :label: 11.406)
+   :label: 11.406
 
    E_{sun}^{m+1}=q_{1a}^{m+1}
 
 Which can be linearized to:
 
 .. math::
-   :label: 11.407)
+   :label: 11.407
 
    E_{sun}^{m}+\dfrac{\delta E_{sun}}{\delta\psi}\Delta\psi=q_{1a}^{m}+\dfrac{\delta q_{1a}}{\delta\psi}\Delta\psi
 
 And rearranged to be:
 
 .. math::
-   :label: 11.408)
+   :label: 11.408
 
    \dfrac{\delta q_{1a}}{\delta\psi}\Delta\psi-\dfrac{\delta E_{sun}}{\delta\psi}\Delta\psi=E_{sun}^{m}-q_{1a}^{m}
 
 And for the other 3 flux balance equations:
 
 .. math::
-   :label: 11.409)
+   :label: 11.409
 
    \begin{aligned}
    \dfrac{\delta q_{1b}}{\delta\psi}\Delta\psi-\dfrac{\delta E_{sha}}{\delta\psi}\Delta\psi&=E_{sha}^{m}-q_{1b}^{m} \\
@@ -415,7 +443,7 @@ And for the other 3 flux balance equations:
 Putting all four together in matrix form:
 
 .. math::
-   :label: 11.410)
+   :label: 11.410
 
    \left[ \begin {array}{c}
    \dfrac{\delta q_{1a}}{\delta\psi}-\dfrac{\delta E_{sun}}{\delta\psi} \cr
@@ -437,7 +465,7 @@ Introducing the notation:
 :math:`A\Delta\psi=b`
 
 .. math::
-   :label: 11.411)
+   :label: 11.411
 
    \Delta\psi=\left[ \begin {array}{c}
    \Delta\psi_{sunleaf} \cr
@@ -447,7 +475,7 @@ Introducing the notation:
    \end {array} \right] 
 
 .. math::
-   :label: 11.412)
+   :label: 11.412
    
    A=
    \left[ \begin {array}{cccc}
@@ -461,7 +489,7 @@ Introducing the notation:
    \end {array} \right]
 
 .. math::
-   :label: 11.413)
+   :label: 11.413
 
    b=
    \left[ \begin {array}{c}
@@ -474,12 +502,12 @@ Introducing the notation:
 Now we compute all the entries for :math:`A` and :math:`b` based on the soil moisture and maximum transpiration forcings and can solve to find:
 
 .. math::
-   :label: 11.414)
+   :label: 11.414
 
    \Delta\psi=A^{-1}b
 
 .. math::
-   :label: 11.415)
+   :label: 11.415
 
    \psi_{m+1}=\psi_m+\Delta\psi
 
@@ -489,12 +517,12 @@ The magnitude of the water flux is driven by soil matric potential and unstresse
 We use the transpiration solution (corresponding to the final solution for :math:`\psi`) to compute stomatal conductance. The stomatal conductance is then used to compute :math:`\beta_t`. 
 
 .. math::
-   :label: 11.416)
+   :label: 11.416
 
    \beta_{t,sun} = \dfrac{g_{s,sun}}{g_{s,sun,\beta_t=1}} 
 
 .. math::
-   :label: 11.417)
+   :label: 11.417
 
    \beta_{t,shade} = \dfrac{g_{s,shade}}{g_{s,shade,\beta_t=1}} 
 
