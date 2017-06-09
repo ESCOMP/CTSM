@@ -77,6 +77,9 @@ fully coupled simulations with the Community Earth System Model (CESM),
 while helping human societies answer questions about changing food,
 energy, and water resources in response to climate, environmental, land
 use, and land management change (e.g., :ref:`Kucharik and Brye 2003 <KucharikBrye2003>`; :ref:`Lobell et al. 2006 <Lobelletal2006>`).
+As implemented here, the crop model uses the same physiology as the
+natural vegetation, though uses different crop-specific parameter values,
+phenology, and allocation, as well as fertilizer and irrigation management.
 
 .. _Crop plant functional types:
 
@@ -92,7 +95,7 @@ land management between crops. Each crop type has a rainfed and an irrigated
 pft that are on independent soil columns. Crop grid cell coverage is assigned from 
 satellite data (similar to all natural pfts), and the managed crop type
 proportions within the crop area is based on the dataset created by
-(:ref:`Portmann et al. 2010 <Portmannetal2010>`) for present day and
+(:ref:`Portmann et al. 2010 <Portmannetal2010>`) for present day. New in CLM5, crop area is
 extrapolated through time using the dataset provided by Land Use Model 
 Intercomparison Project (LUMIP), which is part of CMIP6 Land use timeseries 
 (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). For more details about how
@@ -103,8 +106,15 @@ CLM5 includes eight actively managed crop types
 corn, spring wheat, cotton, rice, and sugarcane) that are chosen 
 based on the availability of corresponding algorithms in AgroIBIS and as 
 developed by Badger and Dirmeyer (:ref:`2015 <BadgerandDirmeyer2015>`) and
-described by Levis et al. (:ref:`2016 <Levisetal2016>`). In addition, 
-CLM’s default list of plant functional types (pfts) includes an
+described by Levis et al. (:ref:`2016 <Levisetal2016>`). The representations of
+sugarcane, rice, cotton, tropical corn, and tropical soy are new in CLM5.
+Sugarcane and tropical corn are both C4 plants and are therefore represented
+using the temperate corn functional form. Tropical soybean uses the temperate
+soybean functional form, while rice and cotton use the wheat functional form.
+In tropical regions, parameter values were developed for the Amazon Basin, and planting
+date window is shifted by six months relative to the Northern Hemisphere. 
+
+In addition, CLM’s default list of plant functional types (pfts) includes an
 irrigated and unirrigated unmanaged C3 crop (Table 25.1) treated as a second C3 grass,
 The unmanaged C3 crop is only used when the crop model is not active and 
 has grid cell coverage assigned from satellite data, and 
@@ -229,6 +239,8 @@ Phase 3 begins in one of two ways. The first potential trigger is based on tempe
 planting like :math:`GDD_{T_{soi} }`  but for 2-m air temperature,
 :math:`GDD_{T_{{\rm 2m}} }`, must reach a heat unit threshold, *h*,
 of 40 to 65% of  :math:`{GDD}_{mat}` (:numref:`Table Crop plant functional types`). 
+For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane),
+the :math:`{GDD}_{mat}` is based on an empirical function and ranges between 950 and 1850.
 The second potential trigger for phase 3 is based on leaf area index. 
 When the maximum value of leaf area index is reached in phase 2, phase 3 begins. 
 In phase 3, the leaf area index begins to decline in
@@ -241,17 +253,17 @@ Harvest
 ''''''''''''''''
 
 Harvest is assumed to occur as soon as the crop reaches maturity. When
-:math:`GDD_{T_{{\rm 2m}} }`  reaches 100% of :math:`{GDD}_{mat}` or
+:math:`GDD_{T_{{\rm 2m}} }` reaches 100% of :math:`{GDD}_{mat}` or
 the number of days past planting reaches a crop-specific maximum 
 (:numref:`Table Crop plant functional types`)[update table reference], then the crop is harvested. 
 Harvest occurs in one time step using
-CN’s leaf offset algorithm. New variables track the flow of grain C and
-N to food and of live stem C and N to litter. Currently, food C and N
-are routed directly to litter using the labile, cellulose, and lignin
-fractions for leaves. [update to product pool] The same fractions for leaves are used for the
-flow of live stem C and N to litter for corn, soybean, and temperate
-cereals. This is in contrast to the approach for unmanaged PFTs which
-puts live stem C and N to dead stems first, rather than to litter.
+CN’s leaf offset algorithm. Variables track the flow of grain C and
+N to food and of live stem C and N to litter. Putting live
+stem C and N into the litter pool is in contrast to the approach for unmanaged PFTs which
+puts live stem C and N into dead stem pools first. Leaf and root C and N pools
+are routed to the litter pools in the same manner as natural vegetation. In CLM5, food C and N
+are routed to a grain product pool where the C and N decay to the atmosphere over one year,
+similar in structure to the wood product pools. 
 
 .. _Allocation:
 
@@ -312,6 +324,12 @@ calculated in phase 2, :math:`d_{L}` , :math:`d_{alloc}^{leaf}`  and
 allocation decline factors, and :math:`a_{leaf}^{f}`  and
 :math:`a_{livestem}^{f}`  are final values of these allocation
 coefficients (:numref:`Table Crop pfts`).
+
+Harvest to seed
+''''''''''''''''''''''''''''''
+
+In CLM5, the C and N required for crop seeding is removed from the grain
+product pool during harvest and used to seed crops in the subsequent year.  
 
 .. _General comments:
 
@@ -662,54 +680,24 @@ the counter is reached.
 Biological nitrogen fixation for soybeans
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Nitrogen fixation by soybeans is similar to that in the SWAT model
-(Neitsch et al. 2005) and depends on soil moisture, nitrogen
-availability, and growth stage. Soybean fixation is calculated only for
-unmet nitrogen demand; if soil nitrogen meets soybean demand, there will
-be no fixation during the time step. Soybean fixation is determined by
-
-.. math::
-   :label: 25.10
-
-   N_{fix} \; =\; N_{plant\_ ndemand} \; *\; min\; \left(\; 1,\; fxw,\; fxn\; \right)*\; fxg
-
-where :math:`{N}_{plant\_demand}` is the balance of nitrogen needed
-to reach potential growth that cannot be supplied from the soil mineral
-nitrogen pool, *fxw* is the soil water factor, *fxn* is the soil
-nitrogen factor, and *fxg* is the growth stage factor calculated by
-
-.. math::
-   :label: 25.11
-
-   fxw=\frac{wf}{0.85}
-
-.. math::
-   :label: 25.12
-
-   fxn=\; \left\{\begin{array}{l} {0\qquad \qquad \qquad \qquad {\rm for\; }sminn\le 10} \\ {1.5-0.005\left(sminn\times 10\right)\qquad {\rm for\; 10\; <\; }sminn{\rm \; }\ge 30} \\ {1\qquad \qquad \qquad \qquad {\rm for\; }sminn>30} \end{array}\right\}
-
-.. math::
-   :label: 25.13
-
-   fxg=\left\{\begin{array}{l} {0\qquad \qquad \qquad \qquad \qquad {\rm for\; }GDD_{T_{2m} } \le 0.15} \\ {6.67\times GDD_{T_{2m} } -1\qquad \qquad \qquad {\rm for\; }0.15<GDD_{T_{2m} } \ge 0.30} \\ {1\qquad \qquad \qquad \qquad \qquad {\rm for\; }0.30<GDD_{T_{2m} } \ge 0.55} \\ {3.75-5\times GDD_{T_{2m} } \qquad \qquad \qquad {\rm for\; }0.55<GDD_{T_{2m} } \ge 0.75} \\ {0\qquad \qquad \qquad \qquad \qquad {\rm for\; }GDD_{T_{2m} } >0.75} \end{array}\right\}
-
-where *wf* is the soil water content as a fraction of the water holding
-capacity for the top 0.05 m, *sminn* is the total nitrogen in the soil
-pool (g/m:sup:`2`), and :math:`{GDD}_{T_{2m}}` is the fraction of
-growing degree-days accumulated during the growing season.
-:math:`N\mathrm{fix}` is added directly to the soil mineral nitrogen
-pool for use that time step. Nitrogen fixation occurs after the plant
-has accumulated 15%\ :math:`{GDD}_{mat}` and before
-75%\  :math:`{GDD}_{mat}`, so before grain fill begins.
+Biological N fixation for soybeans is calculated by the fixation and 
+uptake of nitrogen module [add reference to chapter 18]. Unlike natural 
+vegetation, where a fraction of the vegetation are N fixers, all soybeans 
+are treated as N fixers.   
 
 .. _Modified C\:N ratios for crops:
 
 Modified C:N ratios for crops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Typically, C:N ratios in plant tissue vary throughout the growing season
-and tend to be lower during early growth stages and higher in later
-growth stages. In order to account for this change, two sets of C:N
+Carbon to nitrogen ratios (C:N) for crops are calculated by the flexible C:N
+module that is new to CLM5. 
+
+In CLM5, the flexible C:N module allows leaf C:N to vary based
+on residual N allocated to the leaf pool after the demands of other plant organs
+are met. Grain C/N is similarly xxx...
+ 
+In order to account for this change, two sets of C:N
 ratios are established in CLM for the leaf, stem, and fine root of
 crops. This modified C:N ratio approach accounts for the nitrogen
 retranslocation that occurs during phase 3 of crop growth. Leaf and stem
@@ -738,9 +726,9 @@ soil mineral nitrogen pool, and depends on C:N ratios for leaves, stems,
 roots, and organs. Nitrogen demand during organ development is fulfilled
 through retranslocation from leaves, stems, and roots. Nitrogen
 retranslocation is initiated at the beginning of the grain fill stage
-for corn and temperate cereals, but not until after LAI decline in
-soybean. Nitrogen stored in the leaf and stem is moved into a storage
-retranslocation pool. For temperate cereals, nitrogen in roots is also
+for all crops except soybean, for which retranslocation is after LAI decline. 
+Nitrogen stored in the leaf and stem is moved into a storage
+retranslocation pool. For wheat and rice, nitrogen in roots is also
 released into the retranslocation storage pool. The quantity of nitrogen
 mobilized depends on the C:N ratio of the plant tissue, and is
 calculated as
@@ -748,21 +736,21 @@ calculated as
 .. math::
    :label: 25.14
 
-   leaf\_ to\_ retransn=\frac{c_{leaf} }{CN_{leaf} }  -\frac{c_{leaf} }{CN_{leaf}^{f} }
+   leaf\_ to\_ retransn=n_{leaf} -\frac{c_{leaf} }{CN_{leaf}^{f} }
 
 .. math::
    :label: 25.15
 
-   stemn\_ to\_ retransn=\frac{c_{stem} }{CN_{stem} } -\frac{c_{stem} }{CN_{stem}^{f} }
+   stemn\_ to\_ retransn=n_{stem} -\frac{c_{stem} }{CN_{stem}^{f} }
 
 .. math::
    :label: 25.16
 
-   frootn\_ to\_ retransn=\frac{c_{froot} }{CN_{froot} } -\frac{c_{froot} }{CN_{froot}^{f} }
+   frootn\_ to\_ retransn=n_{froot} -\frac{c_{froot} }{CN_{froot}^{f} }
 
 where :math:`{C}_{leaf}`, :math:`{C}_{stem}`, and :math:`{C}_{froot}` is the carbon in the plant leaf, stem, and fine
-root, respectively, :math:`{CN}_{leaf}`, :math:`{CN}_{stem}`, and :math:`{CN}_{froot}` is the pre-grain fill C:N ratio of the
-leaf, stem, and fine root respectively, and :math:`CN^f_{leaf}`,
+root, respectively, :math:`{N}_{leaf}`, :math:`{N}_{stem}`, and :math:`{N}_{froot}` 
+is the nitrogen in the plant leaf, stem, and fine root, respectively, and :math:`CN^f_{leaf}`,
 :math:`CN^f_{stem}`, and :math:`CN^f_{froot}` is the post-grain fill C:N
 ratio of the leaf, stem, and fine root respectively (:numref:`Table Pre- and post-grain fill CN ratios`). Since
 C:N measurements are taken from mature crops, pre-grain development C:N
