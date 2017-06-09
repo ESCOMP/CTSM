@@ -485,11 +485,11 @@ canyon model to contrast rural and urban energy balance and climate
 Other modifications of note include refinement of the global PFT,
 wetland, and lake distributions, more realistic optical properties for
 grasslands and croplands, and an improved diurnal cycle and spectral
-distribution of incoming solar radiation to force the model in offline
+distribution of incoming solar radiation to force the model in land-only
 mode.
 
 Many of the ideas incorporated into the carbon and nitrogen cycle
-component of CLM4 derive from the earlier development of the offline
+component of CLM4 derive from the earlier development of the land-only
 ecosystem process model Biome-BGC (Biome BioGeochemical Cycles),
 originating at the Numerical Terradynamic Simulation Group (NTSG) at the
 University of Montana, under the guidance of Prof. Steven Running.
@@ -601,7 +601,7 @@ CLM4 to create CLM4 surface datasets is replaced with newer and higher
 resolution input datasets where possible (see section :numref:`Surface Data` 
 for details). The default meteorological forcing dataset provided with CLM4
 (:ref:`Qian et al. 2006)<Qianetal2006>` is replaced with the 1901-2010 
-CRUNCEP forcing dataset (see Chapter :numref:`rst_Offline Mode`) for CLM4.5, 
+CRUNCEP forcing dataset (see Chapter :numref:`rst_Land-Only Mode`) for CLM4.5, 
 though users can also still use the :ref:`Qian et al. (2006)<Qianetal2006>` 
 dataset or other alternative forcing datasets.
 
