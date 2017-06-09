@@ -526,6 +526,11 @@ Major, D.A., Reginato, R.J., and Hubbard, K.G. 1988. Interception and
 use efficiency of light in winter wheat under different nitrogen
 regimes. Agric. For. Meteor. 44:175-186.
 
+.. _Gardner1960:
+
+Gardner, W. R. 1960. Dynamic aspects of water availability to plants, 
+Soil Sci., 89, 63–73.
+
 .. _Gashetal1996:
 
 Gash, J.H.C., Nobre, C.A., Roberts, J.M., and Victoria, R.L. 1996. An

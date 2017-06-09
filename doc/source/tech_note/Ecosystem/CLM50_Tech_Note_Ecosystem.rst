@@ -404,8 +404,8 @@ Atmospheric Coupling
 The current state of the atmosphere (:numref:`Table Atmospheric input to land model`) 
 at a given time step is
 used to force the land model. This atmospheric state is provided by an
-atmospheric model in coupled mode or from an observed dataset in offline
-mode (Chapter :numref:`rst_Offline Mode`). The land model then initiates a full set of
+atmospheric model in coupled mode or from an observed dataset in land-only
+mode (Chapter :numref:`rst_Land-Only Mode`). The land model then initiates a full set of
 calculations for surface energy, constituent, momentum, and radiative
 fluxes. The land model calculations are implemented in two steps. The
 land model proceeds with the calculation of surface energy, constituent,

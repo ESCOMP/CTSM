@@ -3,10 +3,139 @@
 Plant Hydraulics
 ======================
 
-.. _Rooting Profiles:
+.. _Roots:
 
-Rooting Profiles
+Roots
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _Vertical Root Distribution:
+
+Vertical Root Distribution
+---------------------------
+
+The root fraction :math:`r_{i}`  in each soil layer depends on the plant
+functional type
+
+.. math::
+   :label: 11.1
+
+   r_{i} = 
+   \begin{array}{lr} 
+   \left(\beta^{z_{h,\, i-1} \cdot 100} - \beta^{z_{h,\, i} \cdot 100} \right) & \qquad {\rm for\; }1 \le i \le N_{levsoi} 
+   \end{array}
+
+where :math:`z_{h,\, i}` (m) is the depth from the soil surface to the
+interface between layers :math:`i` and :math:`i+1` (:math:`z_{h,\, 0}` ,
+the soil surface) (section :numref:`Vertical Discretization`), the factor of 100 
+converts from m to cm, and :math:`\beta` is a plant-dependent root 
+distribution parameter adopted from :ref:`Jackson et al. (1996)<Jacksonetal1996>`
+(:numref:`Table Plant functional type root distribution parameters`).
+
+.. rootfr(p,lev) = ( &
+                  beta ** (col%zi(c,lev-1)*m_to_cm) - &
+                  beta ** (col%zi(c,lev)*m_to_cm) )
+
+.. 0, 0.976, 0.943, 0.943, 0.993, 0.966, 0.993, 0.966, 0.943, 0.964, 0.964, 
+    0.914, 0.914, 0.943, 0.943, 0.943, 0.943, 0.943, 0.943, 0.943, 0.943, 
+
+.. _Table Plant functional type root distribution parameters:
+
+.. table:: Plant functional type root distribution parameters
+
+ +----------------------------------+------------------+
+ | Plant Functional Type            | :math:`\beta`    |
+ +==================================+==================+
+ | NET Temperate                    | 0.976            |
+ +----------------------------------+------------------+
+ | NET Boreal                       | 0.943            |
+ +----------------------------------+------------------+
+ | NDT Boreal                       | 0.943            |
+ +----------------------------------+------------------+
+ | BET Tropical                     | 0.993            |
+ +----------------------------------+------------------+
+ | BET temperate                    | 0.966            |
+ +----------------------------------+------------------+
+ | BDT tropical                     | 0.993            |
+ +----------------------------------+------------------+
+ | BDT temperate                    | 0.966            |
+ +----------------------------------+------------------+
+ | BDT boreal                       | 0.943            |
+ +----------------------------------+------------------+
+ | BES temperate                    | 0.964            |
+ +----------------------------------+------------------+
+ | BDS temperate                    | 0.964            |
+ +----------------------------------+------------------+
+ | BDS boreal                       | 0.914            |
+ +----------------------------------+------------------+
+ | C\ :sub:`3` grass arctic         | 0.914            |
+ +----------------------------------+------------------+
+ | C\ :sub:`3` grass                | 0.943            |
+ +----------------------------------+------------------+
+ | C\ :sub:`4` grass                | 0.943            |
+ +----------------------------------+------------------+
+ | Crop R                           | 0.943            |
+ +----------------------------------+------------------+
+ | Crop I                           | 0.943            |
+ +----------------------------------+------------------+
+ | Corn R                           | 0.943            |
+ +----------------------------------+------------------+
+ | Corn I                           | 0.943            |
+ +----------------------------------+------------------+
+ | Temp Cereal R                    | 0.943            |
+ +----------------------------------+------------------+
+ | Temp Cereal I                    | 0.943            |
+ +----------------------------------+------------------+
+ | Winter Cereal R                  | 0.943            |
+ +----------------------------------+------------------+
+ | Winter Cereal I                  | 0.943            |
+ +----------------------------------+------------------+
+ | Soybean R                        | 0.943            |
+ +----------------------------------+------------------+
+ | Soybean I                        | 0.943            |
+ +----------------------------------+------------------+
+ 
+.. _Root Spacing:
+
+Root Spacing
+-----------------------------
+
+To determine the conductance along the soil to root pathway (section 
+:numref:`Soil-to-root`) an estimate of the spacing between the roots within 
+a soil layer is required.  The distance between roots :math:`dx_{root,i}` (m)
+is calculated by assuming that roots are distributed uniformly throughout 
+the soil (:ref:`Gardner 1960<Gardner1960>`)
+
+.. math::
+   :label: 11.12
+
+   dx_{root,i} = \left(\pi \cdot L_i\right)^{\frac{1}{2}}
+
+where :math:`L_{i}` is the root length density (m m :sup:`-3`) 
+
+.. math::
+   :label: 11.13
+
+   L_{i} = \frac{B_{root,i}}{\rho_{root} {CA}_{root}} \ ,
+
+:math:`B_{root,i}` is the root biomass density (kg m :sup:`-3`)
+
+.. math::
+   :label: 11.14
+
+   B_{root,i} = \frac{c\_to\_b \cdot C_{fineroot} \cdot r_{i}}{dz_{i}}
+
+where :math:`c\_to\_b = 2` (kg biomass kg carbon :sup:`-1`) and 
+:math:`C_{fineroot}` is the amount of fine root carbon (kg m :sup:`-2`).   
+
+:math:`\rho_{root}` is the root density  (kg m :sup:`-3`), and 
+:math:`{CA}_{root}` is the fine root cross sectional area (m :sup:`2`)
+
+.. math::
+   :label: 11.15
+
+   CA_{root} = \pi r_{root}^{2}
+
+where :math:`r_{root}` is the root radius (m).
 
 .. _Plant Hydraulic Stress:
 
@@ -88,10 +217,21 @@ conductivity (:math:`p50`) and a shape fitting parameter (:math:`c_k`).
 Stem-to-leaf
 ''''''''''''''''''''''''
 
-The area basis and conductance parameterization varies by segment. There are two stem-to-leaf fluxes in parallel, from stem to sunlit leaf and from stem to shaded leaf (:math:`q_{1a}` and :math:`q_{1a}`).
-The water flux from stem-to-leaf is the product of the segment conductance, the conducting area basis, and the water potential gradient from stem to leaf. Stem-to-leaf conductance is defined as the maximum conductance multiplied by the percent of maximum conductance, as calculated by the sigmoidal vulnerability curve.
-The maximum conductance is a PFT parameter representing the maximum conductance of water from stem to leaf per unit leaf area.
-This parameter can be defined separately for sunlit and shaded segments and should already include the appropriate length scaling (in other words this is a conductance, not conductivity). The water potential gradient is the difference between leaf water potential and stem water potential. There is no gravity term, assuming a negligible difference in height across the segment. The area basis is the leaf area index (either sunlit or shaded).
+The area basis and conductance parameterization varies by segment. There 
+are two stem-to-leaf fluxes in parallel, from stem to sunlit leaf and from 
+stem to shaded leaf (:math:`q_{1a}` and :math:`q_{1a}`).  The water flux from 
+stem-to-leaf is the product of the segment conductance, the conducting area 
+basis, and the water potential gradient from stem to leaf. Stem-to-leaf 
+conductance is defined as the maximum conductance multiplied by the percent 
+of maximum conductance, as calculated by the sigmoidal vulnerability curve.
+The maximum conductance is a PFT parameter representing the maximum 
+conductance of water from stem to leaf per unit leaf area.  This parameter 
+can be defined separately for sunlit and shaded segments and should already 
+include the appropriate length scaling (in other words this is a conductance, 
+not conductivity). The water potential gradient is the difference between 
+leaf water potential and stem water potential. There is no gravity term, 
+assuming a negligible difference in height across the segment. The area 
+basis is the leaf area index (either sunlit or shaded).
 
 .. math:: 
    :label: 11.103
@@ -144,7 +284,18 @@ Parameters:
 Root-to-stem
 ''''''''''''''''''''''''
 
-There is one root-to-stem flux. This represents a flux from the root collar to the upper branch reaches. The water flux from root-to-stem is the product of the segment conductance, the conducting area basis, and the water potential gradient from root to stem. Root-to-stem conductance is defined as the maximum conductance multiplied by the percent of maximum conductance, as calculated by the sigmoidal vulnerability curve (two parameters). The maximum conductance is defined as the maximum root-to-stem conductivity per unit stem area (PFT parameter) divided by the length of the conducting path, which is taken to be the vegetation height. The area basis is the stem area index. The gradient in water potential is the difference between the root water potential and the stem water potential less the difference in gravitational potential.
+There is one root-to-stem flux. This represents a flux from the root collar 
+to the upper branch reaches. The water flux from root-to-stem is the product 
+of the segment conductance, the conducting area basis, and the water 
+potential gradient from root to stem. Root-to-stem conductance is defined 
+as the maximum conductance multiplied by the percent of maximum conductance, 
+as calculated by the sigmoidal vulnerability curve (two parameters). The 
+maximum conductance is defined as the maximum root-to-stem conductivity per 
+unit stem area (PFT parameter) divided by the length of the conducting path, 
+which is taken to be the vegetation height. The area basis is the stem area 
+index. The gradient in water potential is the difference between the root 
+water potential and the stem water potential less the difference in 
+gravitational potential.
 
 .. math::
    :label: 11.107
@@ -181,13 +332,38 @@ Parameters:
 Soil-to-root
 ''''''''''''''''''''''''
 
-There are several soil-to-root fluxes operating in parallel (one for each root-containing soil layer). Each represents a flux from the given soil layer to the root collar. The water flux from soil-to-root is the product of the segment conductance, the conducting area basis, and the water potential gradient from soil to root. The area basis is a proxy for root area index, defined as the summed leaf and stem area index multiplied by the root-to-shoot ratio (PFT parameter) multiplied by the layer root fraction. The root fraction comes from an empirical root profile (see section zqz). 
+There are several soil-to-root fluxes operating in parallel (one for each 
+root-containing soil layer). Each represents a flux from the given soil 
+layer to the root collar. The water flux from soil-to-root is the product 
+of the segment conductance, the conducting area basis, and the water 
+potential gradient from soil to root. The area basis is a proxy for root 
+area index, defined as the summed leaf and stem area index multiplied by 
+the root-to-shoot ratio (PFT parameter) multiplied by the layer root 
+fraction. The root fraction comes from an empirical root profile (section 
+:numref:`Vertical Root Distribution`). 
 
-The gradient in water potential is the difference between the soil water potential and the root water potential less the difference in gravitational potential. There is only one root water potential to which all soil layers are connected in parallel. A soil-to-root flux can be either positive (vegetation water uptake) or negative (water deposition), depending on the relative values of the root and soil water potentials. This allows for the occurrence of hydraulic redistribution where water moves through vegetation tissue from one soil layer to another.
+The gradient in water potential is the difference between the soil water 
+potential and the root water potential less the difference in gravitational 
+potential. There is only one root water potential to which all soil layers 
+are connected in parallel. A soil-to-root flux can be either positive 
+(vegetation water uptake) or negative (water deposition), depending on the 
+relative values of the root and soil water potentials. This allows for the 
+occurrence of hydraulic redistribution where water moves through vegetation 
+tissue from one soil layer to another.
 
-Soil-to-root conductance is the result of two resistances in series, first across the soil-root interface and then through the root tissue. The root tissue conductance is defined as the maximum conductance multiplied by the percent of maximum conductance, as calculated by the sigmoidal vulnerability curve. The maximum conductance is defined as the maximum root-tissue conductivity (PFT parameter) divided by the length of the conducting path, which is taken to be the soil layer depth plus lateral root length.
+Soil-to-root conductance is the result of two resistances in series, first 
+across the soil-root interface and then through the root tissue. The root 
+tissue conductance is defined as the maximum conductance multiplied by the 
+percent of maximum conductance, as calculated by the sigmoidal vulnerability 
+curve. The maximum conductance is defined as the maximum root-tissue 
+conductivity (PFT parameter) divided by the length of the conducting path, 
+which is taken to be the soil layer depth plus lateral root length.
 
-The soil-root interface conductance is defined as the soil conductivity divided by the conducting length from soil to root. The soil conductivity varies by soil layer and is calculated based on soil potential and soil properties, via the Brooks-Corey theory. The conducting length is computed by calculating the characteristic root spacing following Bonan-2014. The root spacing depends on total root biomass and PFT parameters defining root structure (see section zqz).
+The soil-root interface conductance is defined as the soil conductivity 
+divided by the conducting length from soil to root. The soil conductivity 
+varies by soil layer and is calculated based on soil potential and soil 
+properties, via the Brooks-Corey theory. The conducting length is determined 
+from the characteristic root spacing (section :numref:`Root Spacing`).
 
 .. math::
    :label: 11.109
@@ -213,16 +389,6 @@ The soil-root interface conductance is defined as the soil conductivity divided 
    :label: 11.113
 
    k_{s,i} = \dfrac{k_{soil,i}}{dx_{root,i}} 
-
-.. math::
-   :label: 11.114
-
-   dx_{root,i} = \left(\pi*\mbox{root-length-density}_i\right)^{-0.5}    
-
-.. math::
-   :label: 11.115
-
-   \mbox{root-length-density} = \dfrac{\mbox{total root length}}{\mbox{soil volume}} 
 
 Variables:
 
