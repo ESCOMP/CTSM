@@ -43,6 +43,7 @@ module mkgridmapMod
   public :: gridmap_mapread     ! Read in gridmap
   public :: gridmap_check       ! Check validity of a gridmap
   public :: gridmap_areaave     ! do area average
+  public :: gridmap_areaave_scs ! area average, but multiply by ratio of source over destination weight
   public :: gridmap_areastddev  ! do area-weighted standard deviation
   public :: gridmap_clean       ! Clean and deallocate a gridmap structure
 !
@@ -425,6 +426,72 @@ contains
     deallocate(sum_weights)
 
   end subroutine gridmap_areaave_default
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gridmap_areaave_scs
+!
+! !INTERFACE:
+  subroutine gridmap_areaave_scs (gridmap, src_array, dst_array, nodata, src_wt, dst_wt)
+!
+! !DESCRIPTION:
+! This subroutine does a simple area average, but multiplies by the ratio of the source over
+! the destination weight. Sets to zero if destination weight is zero.
+!
+! !ARGUMENTS:
+    implicit none
+    type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
+    real(r8), intent(in) :: src_array(:)
+    real(r8), intent(out):: dst_array(:)
+    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
+    real(r8), intent(in) :: src_wt(:)            ! Source weights
+    real(r8), intent(in) :: dst_wt(:)            ! Destination weights
+
+!
+! !REVISION HISTORY:
+!   Created by Mariana Vertenstein, moditied by Sean Swenson
+!
+! !LOCAL VARIABLES:
+    integer :: n,ns,ni,no
+    real(r8):: wt,frac,swt,dwt
+    real(r8), allocatable :: sum_weights(:)      ! sum of weights on the output grid
+    character(*),parameter :: subName = '(gridmap_areaave_scs) '
+!EOP
+!------------------------------------------------------------------------------
+    call gridmap_checkifset( gridmap, subname )
+    allocate(sum_weights(size(dst_array)))
+    sum_weights = 0._r8
+    dst_array = 0._r8
+
+    do n = 1,gridmap%ns
+       ni = gridmap%src_indx(n)
+       no = gridmap%dst_indx(n)
+       wt = gridmap%wovr(n)
+       frac = gridmap%frac_dst(no)
+       swt = src_wt(ni)
+       dwt = dst_wt(no)
+       wt = wt * swt
+       if(dwt > 0._r8) then 
+          wt = wt / dwt
+       else
+          wt = 0._r8
+       endif
+       if (frac > 0.) then  
+          dst_array(no) = dst_array(no) + wt * src_array(ni)/frac
+          sum_weights(no) = sum_weights(no) + wt
+       end if
+    end do
+
+    where (sum_weights == 0._r8)
+       dst_array = nodata
+    end where
+
+    deallocate(sum_weights)
+
+  end subroutine gridmap_areaave_scs
+
+!==========================================================================
 
 !==========================================================================
 

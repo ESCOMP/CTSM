@@ -1,4 +1,232 @@
 ===============================================================
+Tag name:  clm4_5_16_r244
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jun  9 14:26:07 MDT 2017
+One-line Summary: Update cime and cism externals, changes answers for IG compsets, test g17 grids, fix a few issues, update mksurfdata_map
+
+Purpose of changes
+------------------
+
+Update the cime version which includes some important updates.  Remove lt_archive, new script query_config 
+to query compsets and grids etcetera. Force user to always use case.submit rather than allow them to submit 
+to batch queue on their own. Some updates to handling of namelist items in user_nl_clm. All grids now contain 
+a mask variable. Also fixes a couple glitches from the previous version, see bugs fixed below.
+
+Update cism which changes answers (for cases running with CISM) as 4km grid was changed.
+
+Fix some small issues with CLM. Fix interpolation issue with GSSUN and GSSHA, use shr_mpi needed for unit-testing, and
+fix an issue with a use of MCT routines for clm40.
+
+Several updates to mksurfdata_map, fixing problems, starting to get it working on cheyenne, and upgrading to latest
+CMIP6 PFT datasets from Peter Lawrence.
+
+-Update cime and cism.
+-Unit tests moved to cime/scripts/fortran_unit_testing/.
+-Include Jim Edward's configcompsetupdate changes here.
+-Convert mosart half-degree file from NetCDF-4 to NetCDF-3.
+-Change grids in test lists so that mask is added to grids that need it (i.e. f45_f45 becomes f45_f45_mg37).
+-Add note about supported compset IGM1850GSWCLM50BGCCROP for f09_g17, f19_g17.
+-Use grids back to g16 as g17 domain files aren't there.
+-Get LII tests working.
+-Rerun the list of tests that failed, see if works again because of a system issue.
+-use old g16 mask for CLM40 tests.
+-Add CMIP5/CMIP6 names to surfdata file creation.
+-Bring in mksrfunreplu branch.
+-New rawdata PFT datasets from Peter.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): [If none, remove this line]
+   2468 GSSUN/GSSHA interp issue
+   2440 change to orderedPoints for clm40 as well
+   2425  mksurfdata_map changes from Sean didn't get incorporated
+   2419 Irrigated areas are low in mksurfdata_map
+   2399 Problem with urban points with latest mksurfdata_map
+CIME Issues fixed (include issue #): [If none, remove this line]
+  #1215 -- (in this version of cime) TestStatus sometimes needs to have write permission added
+  #1155 -- manage_case doesn't work (renamed to query_config)
+  #848 -- ./xmlquery --list-all doesn't work (refactored)
+
+Known bugs introduced in this tag (include bugzilla ID):
+  2471 PTCLM doesn't work
+  2470 CLM is getting the mask from the clm namelist_defaults rather than from top level scripts
+  2469 Cleanup restartvar_{DIMS}d_{TYPE} to ONLY be valid for a 1d interface
+  2467 Case on non-year boundary dies with error about ignoring ic_date for a crop case, even though for a branch or hybrid case
+  2465 ICLM45VIC compset doesn't actually turn VIC on
+  2464 allowlakeprod are outputing standard variables instead of the "lake" specific versions...
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+  cime update brought in quite a few changes
+- Add skip-preview-namelist to case.submit and case_run.
+  - Renamed manage_case to query_config.
+    - manage_case -> query_config
+      --compset -> --compsets
+      --machine -> --machines
+      added 'all' option for --compsets
+      added 'current' and to --machines
+    - Remove all references to lt_archive which will not be supported in
+      CESM2.0.
+    - Add Support for '+=' in Namelists.
+    - Add --component Option to preview_namelist.
+    - Add Support of true and false in Namelist.
+  - Force user to always go through case.submit.
+    - Adds support for namelist entries of the form foo(3) = 'a'
+    - esmf_logging (and therefore drv_in) are now optional
+    - New run time XML variable: ESMF_LOGFILE_KIND
+    - New --answer flag to create_newcase
+  -Update so that all relevent grids contain a mask variable.
+ - Add preview_run to case.run
+
+Changes made to namelist defaults (e.g., changed parameter values): Added mapping files for 0.25x0.25_MODIS
+
+Changes to the datasets (e.g., parameter, surface or initial files): Just to datasets to create surface datasets
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    - Use ESMF7 on yellowstone and cheyenne.
+    - Big cs.status upgrade.
+    - Add --input-dir argument to create_test
+
+Changes to tests or testing:
+   Change most gx1v6 masks to gx1v7
+   Keep clm40 tests at gx1v6
+
+Code reviewed by: self, jedwards (config), mvertens, sacks (unit-tests)
+
+Did you follow the steps in .CLMTrunkChecklist: Yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - FAIL
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    cheyenne_intel - OK
+    hobart_nag --- OK
+    hobart_pgi --- PASS
+    hobart_intel - PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r243
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for IG compsets with active glacier model
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Any with CISM2
+    - what platforms/compilers: All
+    - nature of change:  minor
+Changes answers for cases with CISM2 at 4km (the default resolution for CISM2 cases)
+- Even changes answers for standard one-way coupled cases (CISM2%NOEVOLVE)
+- Fields on the CISM grid will have DIMSIZEDIFF
+- Fields sent to CLM have roundoff-level differences
+- time variable changes for all cases with CISM
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime, cism, mosart
+   cime   to cime5.3.0-alpha.21
+   cism   to cism2_1_33
+   mosart to mosart1_0_24
+
+List all files eliminated:
+
+   D  components/clm/tools/SVN_EXTERNAL_DIRECTORIES
+
+List all files added and what they do:
+
+   M  components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/README --- Add description of this testmods
+               and how to update the finidat file for it
+   A  components/clm/test/tools/tests_pretag_cheyenne_nompi ---- Add test list for cheyenne
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/test/tools/TCBCFGtools.sh - Source $INITMODULES
+   M  components/clm/test/tools/test_driver.sh - Add cheyenne, set INITMODULES
+   M  components/clm/test/tools/TSMCFGtools.sh - Handle CSMDATA
+   M  components/clm/test/tools/nl_files/gen_domain.ne30.runoptions - Use CSMDATA for path to mapping file
+   M  components/clm/test/tools/nl_files/gen_domain.T31.runoptions -- Use CSMDATA for path to mapping file
+
+   M  components/clm/tools/mkmapdata/regridbatch.sh ---------------- Set PBS for cheyenne, increase regrid_num_proc to 36
+   M  components/clm/tools/mkmapdata/mkmapdata.sh ------------------ Increase REGRID_PROC to 36, show defaults in --help, 
+               change so -b means run with mpi, also create 0.25x0.25_MODIS maps, add cheyenne, rm hopper
+   M  components/clm/tools/mksurfdata_map/Makefile.data ------------ Add global-present-T42
+   M  components/clm/tools/mksurfdata_map/src/mkharvestMod.F90 ----- Change harvest_fieldnames and string_undef
+   M  components/clm/tools/mksurfdata_map/src/mkgridmapMod.F90 ----- Add gridmap_areaave_scs interface which
+               multiplys weight by ratio of source over destination weight (set to zero if destination weight is zero)
+   M  components/clm/tools/mksurfdata_map/src/mkpftMod.F90 --------- Use gridmap_areaave_scs interface rather than default
+               one, passing down source weight of pctnatveg_i and desitination weight of pctnatveg_o (both mulitipled by 0.01)
+               if zeroing out also set pctnatveg_o, pctcrop_o, pct_nat_pft_o, pct_cft_o to zero, and first entry of pct_nat_pft_o
+               and pct_cft_o to 100
+   M  components/clm/tools/mksurfdata_map/mksurfdata_map.namelist -- Update with new files
+   M  components/clm/tools/mksurfdata_map/mksurfdata.pl ------------ Add cmip_series to output filenames, use vegtyp to get harvest files,
+               
+   M  components/clm/tools/mksurfdata_map/landuse_timeseries_hist_78pfts_simyr1850-2015.txt - Update with new datafiles. Note, each
+               year is repeated once to point to same data (to be used for harvesting). This allows harvest files to be seperate.
+
+   M  components/clm/bld/unit_testers/build-namelist_test.pl --------------- Don't test 0.25x0.25 grid
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Add 0.25x0.25 MODIS mapping file, harvest, PFT, LAI, and soil-color
+               are 0.25x0.25_MODIS, harvest files are: mksrf_fvegtyp, Update: LAI, soil-color, and PFT files, remove harvest files
+   M  components/clm/bld/namelist_files/namelist_definition_clm4_5.xml ----- Add 0.25x0.25 to hgrid and res, add 2015 to sim_year, and
+               1980-2015 to sim_year_range,
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ------- Add 0.x25x0.25_MODIS mapping files
+
+   M  components/clm/cime_config/config_compsets.xml ------- Changes from Jim Edwards to update to version 2.0 which will do xmllint checking
+               on the file, add <science_support> for f09, f19 IGM1850GSWCLM50BGCCROP compsets
+
+   M  components/clm/cime_config/testdefs/testlist_clm.xml - Add SMS _Ln1 tests to correspond to each LII test (to make updating finidat files
+               for LII tests easier, update grids to include mask when needed, and update most g16 mask tests to g17 (except clm40 tests which
+               need to remain at g16)
+   M  components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/user_nl_clm ------- Update finidat file, set use_init_interp to True
+               and add notes on how to update it
+   M  components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm - Update finidat file, set use_init_interp to True
+               and add notes on how to update it
+   M  components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/README ------ Add notes on how to update the finidat file
+
+   M  components/clm/SVN_EXTERNAL_DIRECTORIES - Point to PTCLM here
+
+   M  components/clm/src_clm40/main/GetGlobalValuesMod.F90 - Change mct_gsmap_OP to mct_gsmap_orderedPoints (bug 2440)
+   M  components/clm/src_clm40/main/ncdio_pio.F90.in ------- Change mct_gsmap_OP to mct_gsmap_orderedPoints (bug 2440)
+   M  components/clm/src/biogeochem/CNSharedParamsMod.F90 -- Use shr_mpi_bcast rather than straight MPI (important for new unit tests)
+   M  components/clm/src/README.unit_testing --------------- Updated notes on how to do it from Bill Sacks
+   M  components/clm/src/biogeophys/PhotosynthesisMod.F90 -- Set switchdim=T for GSSUN/GSSHA (bug 2468)
+   M  components/clm/src/CMakeLists.txt -------------------- Add include(CIME_initial_setup)
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r243
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Tue May 23 16:27:42 MDT 2017

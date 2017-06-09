@@ -25,6 +25,66 @@ cur_time=`date '+%H:%M:%S'`
 hostname=`hostname`
 case $hostname in
 
+    ##cheyenne
+     cheyenne*)
+    submit_script="test_driver_cheyenne${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+interactive="YES"
+input_file="tests_pretag_cheyenne_nompi"
+c_threads=36
+
+
+export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
+. \$INITMODULES
+
+module purge
+module load ncarenv/1.0
+module load intel/17.0.1
+module load mkl
+module load ncarcompilers/0.3.5
+module load netcdf/4.4.1.1
+
+module load nco
+module load python
+module load ncl
+
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=\$c_threads
+fi
+
+# Stop on first failed test
+if [ -z "\$CLM_SOFF" ]; then   #CLM_SOFF NOT set
+   export CLM_SOFF=FALSE
+fi
+
+export CESM_MACH="cheyenne"
+export CESM_COMP="intel"
+
+export NETCDF_DIR=\$NETCDF
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
+export MAKE_CMD="gmake -j "
+export CFG_STRING=""
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CPPDEFS=-DLINUX"
+export MACH_WORKSPACE="/glade/scratch"
+export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
+dataroot="$CESMDATAROOT"
+export TOOLSLIBS=""
+export TOOLS_CONF_STRING=""
+
+
+echo_arg=""
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
     ##yellowstone
      ys* | caldera* | geyser* | pronghorn*)
     submit_script="test_driver_yellowstone${cur_time}.sh"
@@ -38,7 +98,8 @@ interactive="YES"
 input_file="tests_pretag_yellowstone_nompi"
 c_threads=16
 
-source /glade/apps/opt/lmod/lmod/init/sh
+export INITMODULES="/glade/apps/opt/lmod/lmod/init/sh"
+. \$INITMODULES
 
 module purge
 module load ncarenv/1.0
@@ -143,13 +204,15 @@ export CESM_MACH="hobart"
 limit stacksize unlimited
 limit coredumpsize unlimited
 
-module purge
-module load compiler/intel/15.0.2.164
-
 export CESM_COMP="intel"
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
-export TOOLS_CONF_STRING=""
+export TOOLS_CONF_STRING=" -mpilib mpi-serial"
 export CFG_STRING=""
+export INITMODULES="/usr/share/Modules/init/sh"
+
+. \$INITMODULES
+module purge
+module load compiler/intel/15.0.2.164
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -221,7 +284,7 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
     * )
-    echo "Only setup to work on: yellowstone, hobart, and yong"
+    echo "Only setup to work on: cheyenne, yellowstone, hobart, and yong"
     exit
  
 

@@ -117,6 +117,7 @@ contains
     use shr_log_mod , only : errMsg => shr_log_errMsg
     use clm_varctl  , only : iulog
     use abortutils  , only : endrun
+    use shr_mpi_mod , only : shr_mpi_bcast
     
     !
     implicit none
@@ -168,8 +169,8 @@ contains
     end if ! masterproc
 
     ! Broadcast the parameters from master
-    call mpi_bcast ( decomp_depth_efolding, 1 , MPI_REAL8, 0, mpicom, ierr )
-    call mpi_bcast ( constrain_stress_deciduous_onset, 1 , MPI_LOGICAL, 0, mpicom, ierr )
+    call shr_mpi_bcast ( decomp_depth_efolding, mpicom )
+    call shr_mpi_bcast ( constrain_stress_deciduous_onset, mpicom )
 
     ! Save the parameter to the instance
     CNParamsShareInst%decomp_depth_efolding = decomp_depth_efolding

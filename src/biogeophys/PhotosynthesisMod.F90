@@ -749,12 +749,12 @@ contains
     endif
 
     call restartvar(ncid=ncid, flag=flag, varname='GSSUN', xtype=ncd_double,  &
-         dim1name='pft', dim2name='levcan', &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='sunlit leaf stomatal conductance', units='umol H20/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sun_patch)
     
     call restartvar(ncid=ncid, flag=flag, varname='GSSHA', xtype=ncd_double,  &
-         dim1name='pft', dim2name='levcan', &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='shaded leaf stomatal conductance', units='umol H20/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_patch)
     

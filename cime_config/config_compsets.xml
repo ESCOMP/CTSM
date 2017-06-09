@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<compsets>
+<compsets version="2.0">
 
   <help>
     =========================================
@@ -31,9 +31,7 @@
     Each compset node is associated with the following elements
     - lname
     - alias
-    - support  (optional description of the support level for this compset)
-    Each compset node can also have the following attributes
-    - grid  (optional regular expression match for grid to work with the compset)
+    - science_support  (if this compset is supported scientifically with control simulations)
   </help>
 
   <!-- I single point forcing -->
@@ -112,7 +110,6 @@
   <compset>
     <alias>I1850CLM45FATES</alias>
     <lname>1850_DATM%QIA_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <support_level>"Experimental, under development"</support_level>
   </compset>
   <compset>
     <alias>I1850CLM45CNF</alias>
@@ -268,12 +265,10 @@
   <compset>
     <alias>ICLM50FATES</alias>
     <lname>2000_DATM%QIA_CLM50%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <support_level>Experimental, under development</support_level>
   </compset>
   <compset>
     <alias>ICLM45FATES</alias>
     <lname>2000_DATM%QIA_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <support_level>Experimental, under development</support_level>
   </compset>
   <compset>
     <alias>I1850CLM45BGC</alias>
@@ -317,142 +312,144 @@
 
   <!---IG compsets -->
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IG1850</alias>
     <lname>1850_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IG1850CLM45</alias>
     <lname>1850_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IG</alias>
     <lname>2000_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGCLM45</alias>
     <lname>2000_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGHIST</alias>
     <lname>HIST_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGHISTCLM45</alias>
     <lname>HIST_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGHISTCLM50</alias>
     <lname>HIST_DATM%CRU_CLM50%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGHISTCLM45CN</alias>
     <lname>HIST_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGHISTCN</alias>
     <lname>HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IG1850CN</alias>
     <lname>1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IG1850CLM50</alias>
     <lname>1850_DATM%QIA_CLM50%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGCN</alias>
     <lname>2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGCLM45BGC</alias>
     <lname>2000_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IG1850CRUCLM50BGC</alias>
     <lname>1850_DATM%CRU_CLM50%BGC_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IG1850CRUCLM50BGCCROP</alias>
     <lname>1850_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGM1850CRUCLM50BGCCROP</alias>
     <lname>1850_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGM1850GSWCLM50BGCCROP</alias>
     <lname>1850_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGMHISTCRUCLM50BGCCROP</alias>
     <lname>HIST_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGMHISTGSWCLM50BGCCROP</alias>
     <lname>HIST_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGM1850CRUCLM50BGC</alias>
     <lname>1850_DATM%CRU_CLM50%BGC_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGMCRUCLM50SP</alias>
     <lname>2000_DATM%CRU_CLM50%SP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGMCRUCLM50BGCROP</alias>
     <lname>2000_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGRCP85CN</alias>
     <lname>RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGRCP60CN</alias>
     <lname>RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGRCP45CN</alias>
     <lname>RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGRCP26CN</alias>
     <lname>RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGRCP85CLM45CN</alias>
     <lname>RCP8_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
+  <compset>
     <alias>IGRCP45CLM45CN</alias>
     <lname>RCP4_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
@@ -602,4 +599,3 @@
   </entries>
 
 </compsets>
-

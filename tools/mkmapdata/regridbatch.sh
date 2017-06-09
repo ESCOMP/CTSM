@@ -23,11 +23,12 @@
 #BSUB -W 24:00
 #BSUB -q geyser          # queue
 
-# hopper/edison specific batch commands:
+# cheyenne specific batch commands:
+#PBS -A P93300606
 #PBS -N regrid
 #PBS -q regular
-#PBS -l mppwidth=8
-#PBS -l walltime=24:00:00
+#PBS -l select=1:mpiprocs=36:mem=110GB
+#PBS -l walltime=12:00:00
 #PBS -j oe
 #PBS -V
 #PBS -S /bin/bash
@@ -77,7 +78,7 @@ for res in $resols; do
        regrid_num_proc=1
    else
        echo "global"
-       regrid_num_proc=8
+       regrid_num_proc=36
        if [ ! -z "$LSFUSER" ]; then
            echo "batch"
 	   cmdargs="$cmdargs -b"

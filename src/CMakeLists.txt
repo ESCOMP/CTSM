@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
-project(clm45_tests Fortran C)
 
 list(APPEND CMAKE_MODULE_PATH ${CIME_CMAKE_MODULE_DIRECTORY})
+include(CIME_initial_setup)
+
+project(clm45_tests Fortran C)
+
 include(CIME_utils)
 
 set(CLM_ROOT "..")

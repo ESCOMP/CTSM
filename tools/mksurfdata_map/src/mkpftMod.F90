@@ -475,8 +475,14 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 
   if ( zero_out ) then
 
-     pctpft_o(:,:) = 0._r8
-     pctlnd_o(:)   = 100._r8
+     pctpft_o(:,:)  = 0._r8
+     pctlnd_o(:)    = 100._r8
+     pctnatveg_o(:) = 0._r8
+     pctcrop_o(:)   = 0._r8
+     pct_nat_pft_o(:,:) =   0._r8
+     pct_nat_pft_o(:,0) = 100._r8
+     pct_cft_o(:,:)     =   0._r8
+     pct_cft_o(:,1)     = 100._r8
 
   else if ( use_input_pft ) then
 
@@ -516,8 +522,9 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
      if ( .not. oldformat ) then
         call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8)
         call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8)
+
         do m = 0, num_natpft
-           call gridmap_areaave(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), nodata=0._r8)
+           call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), nodata=0._r8,src_wt=pctnatveg_i*0.01_r8,dst_wt=pctnatveg_o*0.01_r8)
            do no = 1,ns_o
               if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
                  if (m == 0) then
@@ -529,7 +536,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
            enddo
         end do
         do m = 1, num_cft
-           call gridmap_areaave(tgridmap, pct_cft_i(:,m),     pct_cft_o(:,m),     nodata=0._r8)
+           call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), nodata=0._r8,src_wt=pctcrop_i*0.01_r8,dst_wt=pctcrop_o*0.01_r8)
            do no = 1,ns_o
               if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
                  if (m == 1) then

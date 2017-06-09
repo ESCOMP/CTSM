@@ -259,7 +259,7 @@ sub write_transient_timeseries_file {
         my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $vegtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
-        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fhrvtyp -namelist clmexp`;
+        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $hrvtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $hrvtypyr, $yr;
         if ( $yr % 100 == 0 ) {
@@ -507,6 +507,9 @@ EOF
          }
       }
    }
+
+   # CMIP series input data is corresponding to
+   my $cmip_series = "CMIP6";
    # Check if soil set
    if ( defined($opts{'soil_cly'}) || 
         defined($opts{'soil_snd'}) ) {
@@ -695,7 +698,7 @@ EOF
             if ( $vegtyp eq "" ) {
                die "** trouble getting vegtyp file with: $cmd\n";
             }
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fhrvtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
             my $hrvtyp = `$cmd`;
             chomp( $hrvtyp );
             if ( $hrvtyp eq "" ) {
@@ -707,11 +710,11 @@ EOF
                $options = "-options $mkcrop";
             }
             if ( $rcp != -999.9 ) {
-               $desc         = sprintf( "%s%2.1f_%ssimyr%4.4d-%4.4d", "rcp", $rcp, $crpdes, $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "%s%2.1f_%ssimyr%4.4d",       "rcp", $rcp, $crpdes, $sim_yr_surfdat  );
+               $desc         = sprintf( "%s%2.1f_%s_%ssimyr%4.4d-%4.4d", "rcp", $rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%s%2.1f_%s_%ssimyr%4.4d",       "rcp", $rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
             } else {
-               $desc         = sprintf( "hist_%ssimyr%4.4d-%4.4d", $crpdes, $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "%ssimyr%4.4d",            $crpdes, $sim_yr_surfdat  );
+               $desc         = sprintf( "hist_%s_%s_simyr%4.4d-%4.4d", $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%s_%s_simyr%4.4d",            $crpdes, $cmip_series, $sim_yr_surfdat  );
             }
 
             my $fsurdat_fname_base = "";

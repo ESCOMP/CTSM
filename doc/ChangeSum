@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r244     erik 06/09/2017 Update cime and cism externals, changes answers for IG compsets, test g17 grids, fix a few 
+                                     issues, update mksurfdata_map
   clm4_5_16_r243    andre 05/23/2017 History output cleanup from Dave Lawrence
   clm4_5_16_r242     erik 05/21/2017 Use finundated streams for CLM50, and use ndep if it comes from cpl
   clm4_5_16_r241    sacks 05/16/2017 Fix ch4 subtle dependence on processor count
@@ -7,7 +9,8 @@ Tag                   Who      Date  Summary
   clm4_5_16_r239    sacks 05/13/2017 Avoid division by zero in snow WindDriftCompaction
   clm4_5_16_r238    andre 05/13/2017 ED is now an external library 'fates'
   clm4_5_16_r237     erik 05/09/2017 Latest parameter file and some changes for CLM50, CLM45-transient changes answers also
-  clm4_5_15_r236     erik 05/01/2017 New surface datasets, and landuse.timeseries files, as well as interpolating initial conditions for almost all cases
+  clm4_5_15_r236     erik 05/01/2017 New surface datasets, and landuse.timeseries files, as well as interpolating initial conditions for 
+                                     almost all cases
   clm4_5_15_r235    sacks 04/27/2017 Zero dynbal fluxes if namelist variable is set
   clm4_5_15_r234    andre 04/14/2017 Update rtm and mosart externals
   clm4_5_15_r233     erik 04/11/2017 Pull out some constants and options to namelist
@@ -28,7 +31,8 @@ Tag                   Who      Date  Summary
   clm4_5_14_r218    sacks 01/13/2017 For newly initiating columns: do not copy snow state
   clm4_5_14_r217    sacks 01/13/2017 Bug fix for snow radiation absorption
   clm4_5_14_r216     erik 01/12/2017 Fix previous broken tag
-  clm4_5_14_r215     erik 01/12/2017 Update mksurfdata_map to work with new updated datasets from Peter, and use hand-edited surfdata/landuse.timeseries datasets for f09/f19
+  clm4_5_14_r215     erik 01/12/2017 Update mksurfdata_map to work with new updated datasets from Peter, and use hand-edited 
+                                     surfdata/landuse.timeseries datasets for f09/f19
   clm4_5_14_r214    sacks 01/03/2017 Update column states based on dwt terms between dyn_cnbal_patch and dyn_cnbal_col, and minor fixes
   clm4_5_14_r213    sacks 12/30/2016 Convert buildnml to python
   clm4_5_14_r212    sacks 12/22/2016 Bump science version number due to changes in clm4_5_13_r211
