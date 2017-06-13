@@ -99,7 +99,7 @@ proportions within the crop area is based on the dataset created by
 extrapolated through time using the dataset provided by Land Use Model 
 Intercomparison Project (LUMIP), which is part of CMIP6 Land use timeseries 
 (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). For more details about how
-crop distributions are determined, see chapter 26 on :ref:`rst_Transient Landcover Change`. 
+crop distributions are determined, see Chapter :numref: `rst_Transient Landcover Change`. 
 
 CLM5 includes eight actively managed crop types
 (temperate soybean, tropical soybean, temperate corn, tropical 
@@ -115,7 +115,7 @@ In tropical regions, parameter values were developed for the Amazon Basin, and p
 date window is shifted by six months relative to the Northern Hemisphere. 
 
 In addition, CLM’s default list of plant functional types (pfts) includes an
-irrigated and unirrigated unmanaged C3 crop (Table 25.1) treated as a second C3 grass,
+irrigated and unirrigated unmanaged C3 crop (Table 25.1) treated as a second C3 grass.
 The unmanaged C3 crop is only used when the crop model is not active and 
 has grid cell coverage assigned from satellite data, and 
 the unmanaged C3 irrigated crop type is currently not used 
@@ -126,7 +126,7 @@ Each of the inactive crop types is simulated using the parameters of the
 spatially closest associated crop type that is most similar to the functional type (e.g., C3 or C4), 
 which is required to maintain similar phenological parameters based on temperature thresholds.
 Information detailing which parameters are used for each crop type is 
-included in Table 25.1. It should be noted that analysis with pft-level history output merges
+included in Table 25.1. It should be noted that pft-level history output merges
 all crop types into the actively managed crop type, so analysis 
 of crop-specific output will require use of the land surface dataset to 
 remap the yields of each actively and inactively managed crop type.
@@ -586,52 +586,6 @@ river water storage is maintained above a specified threshold.
 The details about what is new in CLM4.5
 --------------------------------------------
 
-.. _Interactive irrigation for corn, temperate cereals, and soybean:
-
-Interactive irrigation for corn, temperate cereals, and soybean
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-CLM4.0 included interactive irrigation only for the generic C3 crops,
-i.e. plant functional types (pfts) 15 (rainfed) and 16 (irrigated) in
-the CLM list of pfts and not for the additional crops of the interactive
-crop management model (CROP). Irrigation and CROP were mutually
-exclusive in CLM4.0.
-
-In CLM4.5 we have reversed this situation. Now the irrigation model can
-be used only while running with CROP. To accomplish this we downloaded
-data of percent irrigated and percent rainfed corn, soybean, and
-temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`),
-available online from
-
-*ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*
-
-We embedded this data in CLM’s high-resolution pft data for use with the
-tool mksurfdat to generate surface datasets at any desired resolution.
-Now this data includes percent cover for 24 pfts:
-
-1-16 as in the standard list of pfts, plus six more:
-
-17 corn
-
-18 irrigated\_corn
-
-19 spring\_temperate\_cereal
-
-20 irrigated\_spring\_temperate\_cereal
-
-21 winter\_temperate\_cereal
-
-22 irrigated\_winter\_temperate\_cereal
-
-23 soybean
-
-24 irrigated\_soybean
-
-We intend surface datasets with 24 pfts only for CROP simulations with
-or without irrigation. In simulations without irrigation, the rainfed
-and irrigated crops merge into just rainfed crops at run time. Surface
-datasets with 16 pfts can be used for all other CLM simulations.
-
 .. _Interactive fertilization:
 
 Interactive fertilization
@@ -680,30 +634,27 @@ the counter is reached.
 Biological nitrogen fixation for soybeans
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Biological N fixation for soybeans is calculated by the fixation and 
-uptake of nitrogen module [add reference to chapter 18]. Unlike natural 
+Biological N fixation for soybeans is calculated by the fixation and uptake of 
+nitrogen module (Chapter :numref:`rst_FUN`). Unlike natural 
 vegetation, where a fraction of the vegetation are N fixers, all soybeans 
 are treated as N fixers.   
 
 .. _Modified C\:N ratios for crops:
 
-Modified C:N ratios for crops
+C:N ratios for crops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Carbon to nitrogen ratios (C:N) for crops are calculated by the flexible C:N
-module that is new to CLM5. 
-
-In CLM5, the flexible C:N module allows leaf C:N to vary based
-on residual N allocated to the leaf pool after the demands of other plant organs
-are met. Grain C/N is similarly xxx...
- 
-In order to account for this change, two sets of C:N
+Typically, C:N ratios in plant tissue vary throughout the growing season and
+tend to be lower during early growth stages and higher in later growth stages. 
+In order to account for this seasonal change, two sets of C:N
 ratios are established in CLM for the leaf, stem, and fine root of
 crops. This modified C:N ratio approach accounts for the nitrogen
-retranslocation that occurs during phase 3 of crop growth. Leaf and stem
-(and root for temperate cereals) C:N ratios for phases 1 and 2 are lower
-than measurements (Table 20.3) to allow excess nitrogen storage in plant
-tissue. During grain fill (phase 3) of the crop growth cycle, the
+retranslocation that occurs during phase 3 of crop growth. Leaf, stem, and root
+C:N ratios for phases 1 and 2 are calculated
+using the new CLM5 carbon and nitrogen allocation scheme 
+(Chapter :numref:`rst_CN Allocation`), which provides a target C:N value
+and allows C:N to vary through time. 
+During grain fill (phase 3) of the crop growth cycle, a portion of the
 nitrogen in the plant tissues is moved to a storage pool to fulfill
 nitrogen demands of organ (reproductive pool) development, such that the
 resulting C:N ratio of the plant tissue is reflective of measurements at
@@ -718,9 +669,10 @@ Nitrogen retranslocation for crops
 
 Nitrogen retranslocation in crops occurs when nitrogen that was used for
 tissue growth of leaves, stems, and fine roots during the early growth
-season is remobilized and used for grain development (Pollmer et al.
-1979; Crawford et al. 1982; Simpson et al. 1983; Ta and Weiland 1992;
-Barbottin et al. 2005; Gallais et al. 2006, 2007). Nitrogen allocation
+season is remobilized and used for grain development (:ref:`Pollmer et al. 1979 
+<Pollmeretal1979>`, :ref:`Crawford et al. 1982 <Crawfordetal1982>`, :ref:`Simpson et al. 1983 
+<Simpsonetal1983>`, :ref:`Ta and Weiland 1992 <TaWeiland1992>`, :ref:`Barbottin et al. 2005 <Barbottinetal2005>`, 
+:ref:`Gallais et al. 2006 <Gallaisetal2006>`, :ref:`Gallais et al. 2007 <Gallaisetal2007>`). Nitrogen allocation
 for crops follows that of natural vegetation, is supplied in CLM by the
 soil mineral nitrogen pool, and depends on C:N ratios for leaves, stems,
 roots, and organs. Nitrogen demand during organ development is fulfilled
@@ -796,13 +748,12 @@ Separate reproductive pool
 One notable difference between natural vegetation and crops is the
 presence of a reproductive carbon pool (and nitrogen pool). Accounting
 for the reproductive pool helps determine whether crops are performing
-reasonably, through yield calculations, seasonal GPP and NEE changes,
-etc. The reproductive pool is maintained similarly to the leaf, stem,
+reasonably through yield calculations.
+The reproductive pool is maintained similarly to the leaf, stem,
 and fine root pools, but allocation of carbon and nitrogen does not
-begin until the grain fill stage of crop development. Eq. shows the
-carbon and nitrogen allocation coefficients to the reproductive pool. In
-the CLM4.0, allocation of carbon to the reproductive pool was calculated
-but merged with the stem pool. In the model, as allocation declines
+begin until the grain fill stage of crop development. Eq. :eq:`(5)` shows the
+carbon and nitrogen allocation coefficients to the reproductive pool. 
+In CLM, as allocation declines
 during the grain fill stage of growth, increasing amounts of carbon and
 nitrogen are available for grain development.
 
