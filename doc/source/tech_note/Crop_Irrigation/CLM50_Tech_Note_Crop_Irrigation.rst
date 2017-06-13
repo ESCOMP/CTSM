@@ -67,8 +67,9 @@ management parameterizations from AgroIBIS (March 2003 version) were
 coupled as a proof-of-concept to the Community Land Model version 3
 [CLM3.0, :ref:`Oleson et al. (2004) <Olesonetal2004>`] (not published), then coupled to the
 CLM3.5 (:ref:`Levis et al. 2009 <Levisetal2009>`) and later released to the community with
-CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), with additional updates 
-available by request after the release of CLM4.5 (:ref:`Levis et al. 2016 <Levisetal2016>`).
+CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), and CLM4.5. Additional updates after the
+release of CLM4.5 were available by request (:ref:`Levis et al. 2016 <Levisetal2016>`), 
+and those are now incorporated into CLM5.
 
 With interactive crop management and, therefore, a more accurate
 representation of agricultural landscapes, we hope to improve the CLM’s
@@ -99,7 +100,7 @@ proportions within the crop area is based on the dataset created by
 extrapolated through time using the dataset provided by Land Use Model 
 Intercomparison Project (LUMIP), which is part of CMIP6 Land use timeseries 
 (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). For more details about how
-crop distributions are determined, see Chapter :numref: `rst_Transient Landcover Change`. 
+crop distributions are determined, see Chapter :numref:`rst_Transient Landcover Change`. 
 
 CLM5 includes eight actively managed crop types
 (temperate soybean, tropical soybean, temperate corn, tropical 
@@ -136,10 +137,10 @@ remap the yields of each actively and inactively managed crop type.
 Phenology
 ^^^^^^^^^^^^^^^^
 
-CLM4.5CN includes evergreen, seasonally deciduous (responding to changes
+CLM5-BGC includes evergreen, seasonally deciduous (responding to changes
 in day length), and stress deciduous (responding to changes in
-temperature and/or soil moisture) phenology algorithms (Chapter 14). In
-CLM4.5CNcrop we have added the AgroIBIS crop phenology algorithm,
+temperature and/or soil moisture) phenology algorithms (Chapter :numref:`rst_Vegetation Phenology and Turnover`). 
+CLM5-BGC-crop uses the AgroIBIS crop phenology algorithm,
 consisting of three distinct phases.
 
 Phase 1 starts at planting and ends with leaf emergence, phase 2
@@ -245,7 +246,7 @@ The second potential trigger for phase 3 is based on leaf area index.
 When the maximum value of leaf area index is reached in phase 2, phase 3 begins. 
 In phase 3, the leaf area index begins to decline in
 response to a background litterfall rate calculated as the inverse of
-leaf longevity for the pft as done in the CN part of the model.
+leaf longevity for the pft as done in the BGC part of the model.
 
 .. _Harvest:
 
@@ -255,14 +256,15 @@ Harvest
 Harvest is assumed to occur as soon as the crop reaches maturity. When
 :math:`GDD_{T_{{\rm 2m}} }` reaches 100% of :math:`{GDD}_{mat}` or
 the number of days past planting reaches a crop-specific maximum 
-(:numref:`Table Crop plant functional types`)[update table reference], then the crop is harvested. 
+(:numref:`Table Crop plant functional types`), then the crop is harvested. 
 Harvest occurs in one time step using
-CN’s leaf offset algorithm. Variables track the flow of grain C and
+the BGC leaf offset algorithm. Variables track the flow of grain C and
 N to food and of live stem C and N to litter. Putting live
 stem C and N into the litter pool is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N into dead stem pools first. Leaf and root C and N pools
-are routed to the litter pools in the same manner as natural vegetation. In CLM5, food C and N
-are routed to a grain product pool where the C and N decay to the atmosphere over one year,
+are routed to the litter pools in the same manner as natural vegetation. Whereas food C and N
+formerly was transferred to the litter pool, CLM5 routes food C and N
+to a grain product pool where the C and N decay to the atmosphere over one year,
 similar in structure to the wood product pools. 
 
 .. _Allocation:
@@ -270,11 +272,39 @@ similar in structure to the wood product pools.
 Allocation
 ^^^^^^^^^^^^^^^^^
 
-Allocation responds to the same phases as phenology (section 20.2.3).
+Allocation responds to the same phases as phenology (section :numref: `_Phenology`).
 Simulated C assimilation begins every year upon leaf emergence in phase
 2 and ends with harvest at the end of phase 3; therefore, so does the
 allocation of such C to the crop’s leaf, live stem, fine root, and
 reproductive pools.
+
+Typically, C:N ratios in plant tissue vary throughout the growing season and
+tend to be lower during early growth stages and higher in later growth stages.
+In order to account for this seasonal change, two sets of C:N
+ratios are established in CLM for the leaf, stem, and fine root of
+crops. This modified C:N ratio approach accounts for the nitrogen
+retranslocation that occurs during phase 3 of crop growth. Leaf, stem, and root
+C:N ratios for phases 1 and 2 are calculated
+using the new CLM5 carbon and nitrogen allocation scheme
+(Chapter :numref:`rst_CN Allocation`), which provides a target C:N value
+and allows C:N to vary through time.
+During grain fill (phase 3) of the crop growth cycle, a portion of the
+nitrogen in the plant tissues is moved to a storage pool to fulfill
+nitrogen demands of organ (reproductive pool) development, such that the
+resulting C:N ratio of the plant tissue is reflective of measurements at
+harvest. All C:N ratios were determined by calibration process, through
+comparisons of model output versus observations of plant carbon
+throughout the growth season.
+
+The BGC part of the model keeps track of a term representing excess
+maintenance respiration that for perennial pfts or pfts with C storage
+may be extracted from later gross primary production. Later extraction
+cannot continue to happen after harvest for annual crops, so at harvest
+we turn the excess respiration pool into a flux that extracts
+CO\ :sub:`2` directly from the atmosphere. This way we eliminate
+any excess maintenance respiration remaining at harvest as if such
+respiration had not taken place.
+
 
 .. _Leaf emergence to grain fill:
 
@@ -325,27 +355,72 @@ allocation decline factors, and :math:`a_{leaf}^{f}`  and
 :math:`a_{livestem}^{f}`  are final values of these allocation
 coefficients (:numref:`Table Crop pfts`).
 
-Harvest to seed
+Nitrogen retranslocation for crops
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Nitrogen retranslocation in crops occurs when nitrogen that was used for
+tissue growth of leaves, stems, and fine roots during the early growth
+season is remobilized and used for grain development (:ref:`Pollmer et al. 1979 
+<Pollmeretal1979>`, :ref:`Crawford et al. 1982 <Crawfordetal1982>`, :ref:`Simpson et al. 1983 
+<Simpsonetal1983>`, :ref:`Ta and Weiland 1992 <TaWeiland1992>`, :ref:`Barbottin et al. 2005 <Barbottinetal2005>`,
+:ref:`Gallais et al. 2006 <Gallaisetal2006>`, :ref:`Gallais et al. 2007 <Gallaisetal2007>`). Nitrogen allocation
+for crops follows that of natural vegetation, is supplied in CLM by the
+soil mineral nitrogen pool, and depends on C:N ratios for leaves, stems,
+roots, and organs. Nitrogen demand during organ development is fulfilled
+through retranslocation from leaves, stems, and roots. Nitrogen
+retranslocation is initiated at the beginning of the grain fill stage
+for all crops except soybean, for which retranslocation is after LAI decline.
+Nitrogen stored in the leaf and stem is moved into a storage
+retranslocation pool. For wheat and rice, nitrogen in roots is also
+released into the retranslocation storage pool. The quantity of nitrogen
+mobilized depends on the C:N ratio of the plant tissue, and is
+calculated as
+
+.. math::
+      :label: 25.14
+
+   leaf\_ to\_ retransn=n_{leaf} -\frac{c_{leaf} }{CN_{leaf}^{f} }
+
+.. math::
+      :label: 25.15
+
+   stemn\_ to\_ retransn=n_{stem} -\frac{c_{stem} }{CN_{stem}^{f} }
+
+.. math::
+      :label: 25.16
+
+   frootn\_ to\_ retransn=n_{froot} -\frac{c_{froot} }{CN_{froot}^{f} }
+
+where :math:`{C}_{leaf}`, :math:`{C}_{stem}`, and :math:`{C}_{froot}` is the carbon in the plant leaf, stem, and fine
+root, respectively, :math:`{N}_{leaf}`, :math:`{N}_{stem}`, and :math:`{N}_{froot}`
+is the nitrogen in the plant leaf, stem, and fine root, respectively, and :math:`CN^f_{leaf}`,
+:math:`CN^f_{stem}`, and :math:`CN^f_{froot}` is the post-grain fill C:N
+ratio of the leaf, stem, and fine root respectively (:numref:`Table Pre- and post-grain fill CN ratios`). Since
+C:N measurements are taken from mature crops, pre-grain development C:N
+ratios for leaves, stems, and roots are optimized to allow maximum
+nitrogen accumulation for later use during organ development. Post-grain
+fill C:N ratios are assigned the same as crop residue. Once excess
+nitrogen is moved into the retranslocated pool, during the remainder of
+the growing season the retranslocated pool is used first to meet plant
+nitrogen demand by assigning the available nitrogen from the
+retranslocated pool equal to the plant nitrogen demand. Once the
+retranslocation pool is depleted, soil mineral nitrogen pool is used to
+fulfill plant nitrogen demands.
+
+Harvest to food and seed
 ''''''''''''''''''''''''''''''
 
 In CLM5, the C and N required for crop seeding is removed from the grain
-product pool during harvest and used to seed crops in the subsequent year.  
+product pool during harvest and used to seed crops in the subsequent year. 
+Caluating the crop yields requires... 
 
 .. _General comments:
 
-General comments
+Other Features
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-C and N accounting now includes new pools and fluxes pertaining to live
-stems and reproductive tissues. For example, the calculations of growth
-respiration, above ground net primary production, litter fall, and
-displayed vegetation all now account for reproductive C.
-
-We track allocation to reproductive C separately from CN’s allocation to
-other C pools but within the CN framework. CN uses
-:math:`{\textstyle\frac{a_{root} }{a_{leaf} }}`  and :math:`{\textstyle\frac{a_{livestem} }{a_{leaf} }}`  to calculate C and
-N allometry and plant N demand.
-
+Physical Crop Characteristics
+''''''''''''''''''''''''''''''
 Stem area index (*S*) is equal to 0.1\ *L* for corn and 0.2\ *L* for
 other crops, as in AgroIBIS, where *L* is the leaf area index. All live
 C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to
@@ -362,47 +437,92 @@ and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
    {z_{bot} =0.02{\rm m}} 
    \end{array}
 
-The CN part of the model keeps track of a term representing excess
-maintenance respiration that for perennial pfts or pfts with C storage
-may be extracted from later gross primary production. Later extraction
-cannot continue to happen after harvest for annual crops, so at harvest
-we turn the excess respiration pool into a flux that extracts
-CO\ :sub:`2` directly from the atmosphere. This way we eliminate
-any excess maintenance respiration remaining at harvest as if such
-respiration had not taken place.
+.. _Interactive fertilization:
 
-In the list of plant physiological and other parameters used by the CLM,
-we started the managed crops with the existing values assigned to the
-unmanaged C3 crop. Then we changed the following parameters to
-distinguish corn, soybean, and temperate cereals from the unmanaged C3
-crop and from each other:
+Interactive Fertilization 
+''''''''''''''''''''''''''''''
+CLM adds nitrogen directly to the soil mineral nitrogen pool to meet
+crop nitrogen demands. CLM’s separate crop land unit ensures that
+natural vegetation will not access the fertilizer applied to crops.
+Fertilizer in CLM5BGCCROP is prescribed by crop function types spatially
+for each year based on the LUMIP land use and land cover change
+time series (LUH2 for historical and SSPs for future) (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`).
+There are two fields that are used to prescribe industrial fertilizer.
+On the surface data set the field CONST_FERTNITRO_CFT specifies the
+annual fertilizer application for a non-transient simulations in g N/m\ :sup:`2`/yr.
+In the case of a transient simulation this is replaced by the landuse.timeseries
+file with the field FERTNITRO_CFT which is also in g N/m\ :sup:`2`/yr.
+The values for both of these fields come from the LUMIP time series for each year.
+In addition to the industrial fertilizer there is a background manure fertilizer
+on the clm parameters file with the field manunitro. For the current CLM5BGCCROP,
+this is set to 0.002 kg N/m\ :sup:`2`/yr. Since CLM’s denitrification rate is high
+and results in a 50% loss of the unused available nitrogen each day,
+fertilizer is applied slowly to minimize the loss and maximize plant
+uptake. Fertilizer application begins during the emergence phase of crop
+development and continues for 20 days, which helps reduce large losses
+of nitrogen from leaching and denitrification during the early stage of
+crop development. The 20-day period is chosen as an optimization to
+limit fertilizer application to the emergence stage. A fertilizer
+counter in seconds, *f*, is set as soon as the onset growth for crops
+initiates:
 
-#. Growth respiration coefficient from 0.30 to the AgroIBIS value of
-   0.25.
+.. math::
+      :label: 25.18
 
-#. Fraction of leaf N in the Rubisco enzyme from 0.1 to 0.2 g N Rubisco
-   g\ :sup:`-1` N leaf for temperate cereals to increase
-   productivity (not chosen based on AgroIBIS).
+    f = n \times 86400 
 
-#. Fraction of current photosynthesis displayed as growth changed from
-   0.5 to 1 (not chosen based on AgroIBIS).
+where *n* is set to 20 fertilizer application days. When the crop enters
+phase 2 (leaf emergence to the beginning of grain fill) of its growth
+cycle, fertilizer application begins by initializing fertilizer amount
+to the total fertilizer at each grid cell divided by the initialized *f*.
+Fertilizer is applied and *f* is decremented each time step until a zero balance on
+the counter is reached.
 
-#. CLM4.5CN curve for the effect of temperature on photosynthesis
-   instead of crop-specific curves from AgroIBIS.
 
-#. Quantum efficiency at 25\ :sup:`o`\ C,
-   :math:`\alpha` , from 0.06 to 0.04 *µ*\ mol CO\ :sub:`2`  *µ*\ mol\ :sup:`-1` photon for C4 crops (corn and unmanaged C4
-   crop), using CLM4.5CN’s C4 grass value.
+.. _Biological nitrogen fixation for soybeans:
 
-#. Slope, *m*, of conductance-to-photosynthesis relationship from 9 to 4 for C4 crops as in AgroIBIS.
+Biological nitrogen fixation for soybeans
+''''''''''''''''''''''''''''''
+Biological N fixation for soybeans is calculated by the fixation and uptake of
+nitrogen module (Chapter :numref:`rst_FUN`). Unlike natural
+vegetation, where a fraction of the vegetation are N fixers, all soybeans
+are treated as N fixers.
 
-#. Specific leaf areas, *SLA*, to the AgroIBIS values (:numref:`Table Crop plant functional types`).
+.. _Latitude vary base tempereature for growing degree days:
 
-#. Leaf orientation, :math:`\chi _{L}`, to the AgroIBIS values (:numref:`Table Crop plant functional types`).
+Latitude vary base tempereature for growing degree days
+''''''''''''''''''''''''''''''
+For both rainfed and irrigated spring wheat and sugarcane,
+a latitude vary base temperature in calculating :math:`GDD_{T_{{\rm 2m}} }`
+(growing degree days since planting) was introduced.
 
-#. Soil moisture photosynthesis limitation factor,
-   :math:`\beta _{t}`, for soybeans multiplied as in AgroIBIS by 1.25
-   for increased drought tolerance.
+.. math::
+      :label: 25.17
+
+   latitude\ vary\ baset = \left\{
+   \begin{array}{lr}    
+   baset +12 - 0.4 \times latitude &\qquad 0 \le latitude \le 30 \\
+   baset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0    
+   \end{array} \right\}
+
+where :math:`baset` is the 5\ :sup:`th` column in :numref:`Table Crop plant functional types`.
+Such latitude vary baset could increase the base temperature, slow down :math:`GDD_{T_{{\rm 2m}} }`
+accumulation, and extend the growing season for -30º to 30º regions for spring wheat
+and sugarcane.
+
+Separate reproductive pool
+''''''''''''''''''''''''''''''
+One notable difference between natural vegetation and crops is the
+presence of a reproductive carbon pool (and nitrogen pool). Accounting
+for the reproductive pool helps determine whether crops are performing
+reasonably through yield calculations.
+The reproductive pool is maintained similarly to the leaf, stem,
+and fine root pools, but allocation of carbon and nitrogen does not
+begin until the grain fill stage of crop development. Eq. :eq:`(5)` shows the
+carbon and nitrogen allocation coefficients to the reproductive pool.
+In CLM, as allocation declines
+during the grain fill stage of growth, increasing amounts of carbon and
+nitrogen are available for grain development.
 
 .. _Table Crop plant functional types:
 
@@ -579,203 +699,3 @@ river water storage is maintained above a specified threshold.
   available online from
   *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*
 
-
-
-.. _The details about what is new in CLM4.5:
-
-The details about what is new in CLM4.5
---------------------------------------------
-
-.. _Interactive fertilization:
-
-Interactive fertilization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-CLM adds nitrogen directly to the soil mineral nitrogen pool to meet
-crop nitrogen demands. CLM’s separate crop land unit ensures that
-natural vegetation will not access the fertilizer applied to crops.
-Fertilizer in CLM5BGCCROP is prescribed by crop function types spatially
-for each year based on the LUMIP land use and land cover change
-time series (LUH2 for historical and SSPs for future) (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`).
-There are two fields that are used to prescribe industrial fertilizer.
-On the surface data set the field CONST_FERTNITRO_CFT specifies the 
-annual fertilizer application for a non-transient simulations in g N/m\ :sup:`2`/yr.
-In the case of a transient simulation this is replaced by the landuse.timeseries
-file with the field FERTNITRO_CFT which is also in g N/m\ :sup:`2`/yr.
-The values for both of these fields come from the LUMIP time series for each year.
-In addition to the industrial fertilizer there is a background manure fertilizer
-on the clm parameters file with the field manunitro. For the current CLM5BGCCROP,
-this is set to 0.002 kg N/m\ :sup:`2`/yr. Since CLM’s denitrification rate is high
-and results in a 50% loss of the unused available nitrogen each day,
-fertilizer is applied slowly to minimize the loss and maximize plant
-uptake. Fertilizer application begins during the emergence phase of crop
-development and continues for 20 days, which helps reduce large losses
-of nitrogen from leaching and denitrification during the early stage of
-crop development. The 20-day period is chosen as an optimization to
-limit fertilizer application to the emergence stage. A fertilizer
-counter in seconds, *f*, is set as soon as the onset growth for crops
-initiates:
-
-.. math::
-   :label: 25.18
-
-    f = n \times 86400 
-
-where *n* is set to 20 fertilizer application days. When the crop enters
-phase 2 (leaf emergence to the beginning of grain fill) of its growth
-cycle, fertilizer application begins by initializing fertilizer amount
-to the total fertilizer at each grid cell divided by the initialized *f*.
-Fertilizer is applied and *f* is decremented each time step until a zero balance on
-the counter is reached.
-
-
-.. _Biological nitrogen fixation for soybeans:
-
-Biological nitrogen fixation for soybeans
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Biological N fixation for soybeans is calculated by the fixation and uptake of 
-nitrogen module (Chapter :numref:`rst_FUN`). Unlike natural 
-vegetation, where a fraction of the vegetation are N fixers, all soybeans 
-are treated as N fixers.   
-
-.. _Modified C\:N ratios for crops:
-
-C:N ratios for crops
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Typically, C:N ratios in plant tissue vary throughout the growing season and
-tend to be lower during early growth stages and higher in later growth stages. 
-In order to account for this seasonal change, two sets of C:N
-ratios are established in CLM for the leaf, stem, and fine root of
-crops. This modified C:N ratio approach accounts for the nitrogen
-retranslocation that occurs during phase 3 of crop growth. Leaf, stem, and root
-C:N ratios for phases 1 and 2 are calculated
-using the new CLM5 carbon and nitrogen allocation scheme 
-(Chapter :numref:`rst_CN Allocation`), which provides a target C:N value
-and allows C:N to vary through time. 
-During grain fill (phase 3) of the crop growth cycle, a portion of the
-nitrogen in the plant tissues is moved to a storage pool to fulfill
-nitrogen demands of organ (reproductive pool) development, such that the
-resulting C:N ratio of the plant tissue is reflective of measurements at
-harvest. All C:N ratios were determined by calibration process, through
-comparisons of model output versus observations of plant carbon
-throughout the growth season.
-
-.. _Nitrogen retranslocation for crops:
-
-Nitrogen retranslocation for crops
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Nitrogen retranslocation in crops occurs when nitrogen that was used for
-tissue growth of leaves, stems, and fine roots during the early growth
-season is remobilized and used for grain development (:ref:`Pollmer et al. 1979 
-<Pollmeretal1979>`, :ref:`Crawford et al. 1982 <Crawfordetal1982>`, :ref:`Simpson et al. 1983 
-<Simpsonetal1983>`, :ref:`Ta and Weiland 1992 <TaWeiland1992>`, :ref:`Barbottin et al. 2005 <Barbottinetal2005>`, 
-:ref:`Gallais et al. 2006 <Gallaisetal2006>`, :ref:`Gallais et al. 2007 <Gallaisetal2007>`). Nitrogen allocation
-for crops follows that of natural vegetation, is supplied in CLM by the
-soil mineral nitrogen pool, and depends on C:N ratios for leaves, stems,
-roots, and organs. Nitrogen demand during organ development is fulfilled
-through retranslocation from leaves, stems, and roots. Nitrogen
-retranslocation is initiated at the beginning of the grain fill stage
-for all crops except soybean, for which retranslocation is after LAI decline. 
-Nitrogen stored in the leaf and stem is moved into a storage
-retranslocation pool. For wheat and rice, nitrogen in roots is also
-released into the retranslocation storage pool. The quantity of nitrogen
-mobilized depends on the C:N ratio of the plant tissue, and is
-calculated as
-
-.. math::
-   :label: 25.14
-
-   leaf\_ to\_ retransn=n_{leaf} -\frac{c_{leaf} }{CN_{leaf}^{f} }
-
-.. math::
-   :label: 25.15
-
-   stemn\_ to\_ retransn=n_{stem} -\frac{c_{stem} }{CN_{stem}^{f} }
-
-.. math::
-   :label: 25.16
-
-   frootn\_ to\_ retransn=n_{froot} -\frac{c_{froot} }{CN_{froot}^{f} }
-
-where :math:`{C}_{leaf}`, :math:`{C}_{stem}`, and :math:`{C}_{froot}` is the carbon in the plant leaf, stem, and fine
-root, respectively, :math:`{N}_{leaf}`, :math:`{N}_{stem}`, and :math:`{N}_{froot}` 
-is the nitrogen in the plant leaf, stem, and fine root, respectively, and :math:`CN^f_{leaf}`,
-:math:`CN^f_{stem}`, and :math:`CN^f_{froot}` is the post-grain fill C:N
-ratio of the leaf, stem, and fine root respectively (:numref:`Table Pre- and post-grain fill CN ratios`). Since
-C:N measurements are taken from mature crops, pre-grain development C:N
-ratios for leaves, stems, and roots are optimized to allow maximum
-nitrogen accumulation for later use during organ development. Post-grain
-fill C:N ratios are assigned the same as crop residue. Once excess
-nitrogen is moved into the retranslocated pool, during the remainder of
-the growing season the retranslocated pool is used first to meet plant
-nitrogen demand by assigning the available nitrogen from the
-retranslocated pool equal to the plant nitrogen demand. Once the
-retranslocation pool is depleted, soil mineral nitrogen pool is used to
-fulfill plant nitrogen demands.
-
-.. _Table Pre- and post-grain fill CN ratios:
-
-.. table:: Pre- and post-grain fill C:N ratios for crop leaf, stem, fine root, and reproductive pools.
-
- +----------------------------+--------+---------------------+-----------+
- | Pre-grain fill stage       | Corn   | Temperate Cereals   | Soybean   |
- +============================+========+=====================+===========+
- | :math:`{CN}_{leaf}`        | 10     | 15                  | 25        |
- +----------------------------+--------+---------------------+-----------+
- | :math:`{CN}_{stem}`        | 50     | 50                  | 50        |
- +----------------------------+--------+---------------------+-----------+
- | :math:`{CN}_{froot}`       | 42     | 30                  | 42        |
- +----------------------------+--------+---------------------+-----------+
- | Post-grain fill stage      |        |                     |           |
- +----------------------------+--------+---------------------+-----------+
- | :math:`CN_{leaf}^{f}`      | 65     | 65                  | 65        |
- +----------------------------+--------+---------------------+-----------+
- | :math:`CN_{stem}^{f}`      | 120    | 100                 | 130       |
- +----------------------------+--------+---------------------+-----------+
- | :math:`CN_{froot}^{f}`     | 42     | 40                  | 42        |
- +----------------------------+--------+---------------------+-----------+
- | :math:`CN_{repr}^{f}`      | 50     | 40                  | 60        |
- +----------------------------+--------+---------------------+-----------+
-
-.. _Separate reproductive pool:
-
-Separate reproductive pool
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-One notable difference between natural vegetation and crops is the
-presence of a reproductive carbon pool (and nitrogen pool). Accounting
-for the reproductive pool helps determine whether crops are performing
-reasonably through yield calculations.
-The reproductive pool is maintained similarly to the leaf, stem,
-and fine root pools, but allocation of carbon and nitrogen does not
-begin until the grain fill stage of crop development. Eq. :eq:`(5)` shows the
-carbon and nitrogen allocation coefficients to the reproductive pool. 
-In CLM, as allocation declines
-during the grain fill stage of growth, increasing amounts of carbon and
-nitrogen are available for grain development.
-
-.. _Latitude vary base tempereature for growing degree days:
-
-Latitude vary base tempereature for growing degree days
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For both rainfed and irrigated spring wheat and sugarcane, 
-a latitude vary base temperature in calculating :math:`GDD_{T_{{\rm 2m}} }` 
-(growing degree days since planting) was introduced.  
-
-.. math::
-   :label: 25.17
-
-   latitude\ vary\ baset = \left\{
-   \begin{array}{lr}    
-   baset +12 - 0.4 \times latitude &\qquad 0 \le latitude \le 30 \\
-   baset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0    
-   \end{array} \right\}
-
-where :math:`baset` is the 5\ :sup:`th` column in :numref:`Table Crop plant functional types`.
-Such latitude vary baset could increase the base temperature, slow down :math:`GDD_{T_{{\rm 2m}} }` 
-accumulation, and extend the growing season for -30º to 30º regions for spring wheat 
-and sugarcane. 
