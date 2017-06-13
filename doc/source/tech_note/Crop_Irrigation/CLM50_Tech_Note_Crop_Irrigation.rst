@@ -358,7 +358,7 @@ allocation decline factors, and :math:`a_{leaf}^{f}`  and
 coefficients (:numref:`Table Crop pfts`).
 
 Nitrogen retranslocation for crops
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 Nitrogen retranslocation in crops occurs when nitrogen that was used for
 tissue growth of leaves, stems, and fine roots during the early growth
@@ -484,7 +484,7 @@ the counter is reached.
 .. _Biological nitrogen fixation for soybeans:
 
 Biological nitrogen fixation for soybeans
-''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''''
 Biological N fixation for soybeans is calculated by the fixation and uptake of
 nitrogen module (Chapter :numref:`rst_FUN`). Unlike natural
 vegetation, where a fraction of the vegetation are N fixers, all soybeans
@@ -493,7 +493,7 @@ are treated as N fixers.
 .. _Latitude vary base tempereature for growing degree days:
 
 Latitude vary base tempereature for growing degree days
-''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 For both rainfed and irrigated spring wheat and sugarcane,
 a latitude vary base temperature in calculating :math:`GDD_{T_{{\rm 2m}} }`
 (growing degree days since planting) was introduced.
