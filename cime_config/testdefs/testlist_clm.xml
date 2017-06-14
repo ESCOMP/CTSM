@@ -72,6 +72,11 @@
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
+    <grid name="n60_g16">
+      <test name="SBN">
+        <machine compiler="null" testtype="null">null</machine>
+      </test>
+    </grid>
     <grid name="ne120_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -83,11 +88,6 @@
       </test>
     </grid>
     <grid name="ne30_g16">
-      <test name="SBN">
-        <machine compiler="null" testtype="null">null</machine>
-      </test>
-    </grid>
-    <grid name="n60_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
@@ -440,11 +440,11 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cn_conly">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
       </test>
-      <test name="SMS_D_Ln1">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/defaultf09IC" comment="Do a short SMS test of the same LII test below, so that if the finidat file needs to be updated, you can copy it from this test case that is already done (also see the specific testmods directory for how to do this)">yellowstone</machine>
-      </test>
       <test name="LII_D_Ld3">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/defaultf09IC" comment="Include a LII test with a year-2000 restart file, so that the restart file has non-zero product pools, so that we exercise the gridcell-level code in init_interp. This test is largely redundant with LII_D.f10_f10_musgs.ICLM45BGCCROP.yellowstone_gnu.clm-crop, but currently the initial conditions file for that test has 0 product pools and O2_DECOMP_DEPTH_UNSAT = 0 everywhere. That failed to catch a problem that appears when there are non-zero values in O2_DECOMP_DEPTH_UNSAT. Once the initial conditions file for the crop LII test has non-zero values for O2_DECOMP_DEPTH_UNSAT and product pools, this non-crop LII test can be removed.">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ln1">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/defaultf09IC" comment="Do a short SMS test of the same LII test below, so that if the finidat file needs to be updated, you can copy it from this test case that is already done (also see the specific testmods directory for how to do this)">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10_musgs">
@@ -574,9 +574,6 @@
         <machine compiler="intel" testtype="prebeta" testmods="clm/irrigOn_reduceOutput">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">yellowstone</machine>
       </test>
-      <test name="SMS_D_Ln1">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropf10IC" comment="Do a short SMS test of the same LII test below, so that if the finidat file needs to be updated, you can copy it from this test case that is already done (also see the specific testmods directory for how to do this)">yellowstone</machine>
-      </test>
       <test name="LII_D">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropf10IC" comment="include one interpolation test involving crop (for now we also want one without glc_mec, although we could drop the requirement of having a non-glc_mec LII test if/when we switch to always using glc_mec)">yellowstone</machine>
       </test>
@@ -589,6 +586,9 @@
       </test>
       <test name="SMS_D_Ld3">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/interp_f19_noncrop" comment="test interpolation of non-crop to crop (also change resolution, but that is not an essential part of this test)">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ln1">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropf10IC" comment="Do a short SMS test of the same LII test below, so that if the finidat file needs to be updated, you can copy it from this test case that is already done (also see the specific testmods directory for how to do this)">yellowstone</machine>
       </test>
       <test name="SMS_Lm1_D">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">cheyenne</machine>
@@ -1101,14 +1101,14 @@
     </grid>
     <grid name="f19_g17_gl4">
       <test name="ERP">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" >cheyenne</machine>
-      </test>
-      <test name="SMS_D_Ln1">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="Do a short SMS test of the same LII test below, so that if the finidat file needs to be updated, you can copy it from this test case that is already done (also see the specific testmods directory for how to do this)">cheyenne</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way">cheyenne</machine>
       </test>
       <test name="LII_D_Ld3">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ln1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="Do a short SMS test of the same LII test below, so that if the finidat file needs to be updated, you can copy it from this test case that is already done (also see the specific testmods directory for how to do this)">cheyenne</machine>
       </test>
     </grid>
   </compset>
@@ -1152,6 +1152,11 @@
       <test name="ERS_D_Ld3">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f10_f10">
+      <test name="LVG_Ld5_D">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/no_vector_output" comment="Include one LVG debug test (exact configuration is not very important). Note that the LVG test will fail if there is any 1-d output, or output separated by glacier elevation classes (e.g., the various *_FORC fields), so this includes a testmod that turns off any 1-d output.">cheyenne</machine>
       </test>
     </grid>
     <grid name="f19_g17_gl4">
@@ -1323,12 +1328,12 @@
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="ne30_g16">
+    <grid name="n60_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="n60_g16">
+    <grid name="ne30_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>

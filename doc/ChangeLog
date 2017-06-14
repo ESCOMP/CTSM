@@ -1,4 +1,148 @@
 ===============================================================
+Tag name:  clm4_5_16_r246
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Jun 14 12:40:31 MDT 2017
+One-line Summary: Update to latest cime
+
+Purpose of changes
+------------------
+
+Main change is to update to the latest version of cime.
+
+One of the changes in this cime version is that component-specific system tests
+(e.g., LII, SSP) can now be defined in the component rather than in cime. So
+this tag defines LII and SSP in CLM. In addition, this adds an LVG test (Land
+Virtual Glaciers), which verifies that adding virtual glacier columns doesn't
+change answers.
+
+Another significant change in this cime version is that the lnd -> glc
+downscaling (i.e., remapping) method has been changed to be bilinear with a
+later conservation correction, rather than area-conservative. This leads to
+smooth fields on the CISM grid.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New drv_in namelist variable 'glc_renormalize_smb' - controls whether to apply
+  global corrections to the downscaled lnd -> glc smb for conservation
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Moves LII and SSP test definitions into CLM
+- Adds new test type, LVG
+- Adds an LVG test
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    cheyenne_intel - ok
+    hobart_nag --- pass
+    hobart_pgi --- ok
+    hobart_intel - pass
+
+    ok means tests pass, some answers change as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_16_r245
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: see below
+    - what platforms/compilers: see below
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): see below
+
+    (1) Changes answers for cases with CISM, due to new downscaling
+        method. These changes show up only for long tests with CISM, and are
+        potentially climate-changing:
+
+        FAIL SMS_Lm37.T31_g37_gl4.IG1850CLM50.cheyenne_intel.clm-glcMEC_long BASELINE clm4_5_16_r245
+        FAIL SMS_Lm37.T31_g37_gl4.IG1850CLM50.yellowstone_intel.clm-glcMEC_long BASELINE clm4_5_16_r245
+
+    (2) Changes answers for hobart-pgi tests, due to new version of the pgi
+        compiler on hobart. Magnitude of the change not investigated.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+- cime: cime5.3.0-alpha.21 -> cime5.3.0-alpha.27
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= CLM-specific system tests are now defined here rather than in
+          cime. Also, added an LVG test type: Land Virtual Glacier.
+A       components/clm/cime_config/config_tests.xml
+A       components/clm/cime_config/SystemTests
+A       components/clm/cime_config/SystemTests/lii.py
+A       components/clm/cime_config/SystemTests/ssp.py
+A       components/clm/cime_config/SystemTests/lvg.py
+
+List all existing files that have been modified, and describe the changes:
+
+========= Ran through -cleanxml, and added an LVG test
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r245
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Jun 14 12:13:54 MDT 2017
