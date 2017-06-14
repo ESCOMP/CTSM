@@ -12,7 +12,7 @@ module test_topo
   use filterColMod
   use clm_instur, only : topo_glc_mec
   use clm_varpar, only : maxpatch_glcmec
-  use clm_varctl, only : create_glacier_mec_landunit
+  use clm_varctl, only : create_glacier_mec_landunit, glc_do_dynglacier
   use landunit_varcon, only : istice_mec
   use glc2lndMod, only : glc2lnd_type
   use glcBehaviorMod, only : glc_behavior_type
@@ -52,6 +52,7 @@ contains
     class(TestTopo), intent(inout) :: this
 
     create_glacier_mec_landunit = .true.
+    glc_do_dynglacier = .true.
     call this%setup_glc_mec()
   end subroutine setUp
 

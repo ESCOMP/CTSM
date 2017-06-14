@@ -20,7 +20,7 @@ module glc2lndMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : maxpatch_glcmec
-  use clm_varctl     , only : iulog
+  use clm_varctl     , only : iulog, glc_do_dynglacier
   use clm_varcon     , only : nameg, spval, ispval
   use abortutils     , only : endrun
   use GridcellType   , only : grc 
@@ -256,9 +256,6 @@ contains
     ! create_glacier_mec_landunit is true, or some similar condition; this should be
     ! controlled in a conditional around the call to this routine); fracs are updated if
     ! glc_do_dynglacier is true
-    !
-    ! !USES:
-    use clm_varctl , only : glc_do_dynglacier
     !
     ! !ARGUMENTS:
     class(glc2lnd_type)     , intent(inout) :: this
@@ -559,6 +556,9 @@ contains
     ! anywhere where topo_col is updated, because these points will need downscaling.
     ! (Leaves other array elements in needs_downscaling_col untouched.)
     !
+    ! If glc_do_dynglacier is false, then both topographic heights and
+    ! needs_downscaling_col are left unchanged.
+    !
     ! This should only be called when create_glacier_mec_landunit is true, or some
     ! similar condition (this should be controlled in a conditional around the call to
     ! this routine).
@@ -583,32 +583,34 @@ contains
     SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
-       g = col%gridcell(c)
+    if (glc_do_dynglacier) then
+       do c = bounds%begc, bounds%endc
+          l = col%landunit(c)
+          g = col%gridcell(c)
 
-       ! Values from GLC are only valid within the icemask, so we only update CLM's topo values there
-       if (this%icemask_grc(g) > 0._r8) then
-          if (lun%itype(l) == istice_mec) then
-             icemec_class = col_itype_to_icemec_class(col%itype(c))
-          else
-             ! If not on a glaciated column, assign topography to the bare-land value determined by GLC.
-             icemec_class = 0
-          end if
+          ! Values from GLC are only valid within the icemask, so we only update CLM's topo values there
+          if (this%icemask_grc(g) > 0._r8) then
+             if (lun%itype(l) == istice_mec) then
+                icemec_class = col_itype_to_icemec_class(col%itype(c))
+             else
+                ! If not on a glaciated column, assign topography to the bare-land value determined by GLC.
+                icemec_class = 0
+             end if
 
-          ! Note that we do downscaling over all column types. This is for consistency:
-          ! interpretation of results would be difficult if some non-glacier column types
-          ! were downscaled but others were not.
-          !
-          ! BUG(wjs, 2016-11-15, bugz 2377) Actually, do not downscale over urban points:
-          ! this currently isn't allowed because the urban code references some
-          ! non-downscaled, gridcell-level atmospheric forcings
-          if (.not. lun%urbpoi(l)) then
-             topo_col(c) = this%topo_grc(g, icemec_class)
-             needs_downscaling_col(c) = .true.
+             ! Note that we do downscaling over all column types. This is for consistency:
+             ! interpretation of results would be difficult if some non-glacier column types
+             ! were downscaled but others were not.
+             !
+             ! BUG(wjs, 2016-11-15, bugz 2377) Actually, do not downscale over urban points:
+             ! this currently isn't allowed because the urban code references some
+             ! non-downscaled, gridcell-level atmospheric forcings
+             if (.not. lun%urbpoi(l)) then
+                topo_col(c) = this%topo_grc(g, icemec_class)
+                needs_downscaling_col(c) = .true.
+             end if
           end if
-       end if
-    end do
+       end do
+    end if
 
   end subroutine update_glc2lnd_topo
 

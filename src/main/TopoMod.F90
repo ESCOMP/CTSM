@@ -229,6 +229,8 @@ contains
          this%needs_downscaling_col(begc:endc))
 
     if (create_glacier_mec_landunit) then
+       ! In addition to updating topo_col, this also sets some additional elements of
+       ! needs_downscaling_col to .true. (but leaves the already-.true. values as is.)
        call glc2lnd_inst%update_glc2lnd_topo(bounds, &
             this%topo_col(begc:endc), &
             this%needs_downscaling_col(begc:endc))

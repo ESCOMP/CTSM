@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r245    sacks 06/14/2017 Only adjust glc_mec topographic heights if glc_do_dynglacier is true
   clm4_5_16_r244     erik 06/09/2017 Update cime and cism externals, changes answers for IG compsets, test g17 grids, fix a few 
                                      issues, update mksurfdata_map
   clm4_5_16_r243    andre 05/23/2017 History output cleanup from Dave Lawrence

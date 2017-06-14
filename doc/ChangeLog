@@ -1,4 +1,181 @@
 ===============================================================
+Tag name:  clm4_5_16_r245
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Jun 14 12:13:54 MDT 2017
+One-line Summary: Only adjust glc_mec topographic heights if glc_do_dynglacier is true
+
+Purpose of changes
+------------------
+
+Two changes in this tag:
+
+(1) Only adjust glc_mec topographic heights if glc_do_dynglacier is true (this
+    namelist variable is controlled by the GLC_TWO_WAY_COUPLING xml
+    variable). Previously, CLM updated its glacier topographic heights even if
+    this variable was false (so we were not updating areas from CISM). Bill
+    Lipscomb and Jeremy Fyke agreed a while ago that we should change this. None
+    of us could remember why we initially set it up to always update topographic
+    heights, but we felt that it's more intuitive to avoid updating topographic
+    heights if we're not updating glacier areas.
+
+    Note that setting GLC_TWO_WAY_COUPLING=FALSE is *not* a common thing to do,
+    so this change does not affect most cases. (The typical way of doing one-way
+    coupling with CISM is to use CISM2%NOEVOLVE, which turns off ice evolution
+    but keeps GLC_TWO_WAY_COUPLING=TRUE in order to update CLM's glacier areas
+    and topographic heights at initialization.)
+
+(2) Adds some user mods and testmods (currently unexercised) for cmip6
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: New test mods directories, currently not exercised (I'll add tests soon)
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    cheyenne_intel - ok
+    hobart_nag --- ok
+    hobart_pgi --- ok
+    hobart_intel - ok
+
+    ok means tests pass, a few expected baseline comparison failures
+
+CLM tag used for the baseline comparisons: clm4_5_16_r244
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Cases with GLC_TWO_WAY_COUPLING=FALSE
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      new climate
+
+  This affects tests with glcMEC_changeFlags and glcMEC_spunup_1way testmods
+
+  Also, NLCOMP failures for a few tests, I think explainable by the process Erik
+  used to update some testmods to get LII tests passing:
+    FAIL SMS_D_Ln1.f09_g17.ICLM45BGC.yellowstone_gnu.clm-defaultf09IC NLCOMP
+    FAIL ERP.f19_g17_gl4.IG1850CLM45.cheyenne_intel.clm-glcMEC_spunup_1way NLCOMP
+    FAIL SMS_D_Ln1.f19_g17_gl4.IG1850CLM45.cheyenne_intel.clm-glcMEC_spunup_1way NLCOMP
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+========= Renamed
+D       components/clm/cime_config/usermods_dirs/clm/clm5_OutputCrop/user_nl_clm
+D       components/clm/cime_config/usermods_dirs/clm/clm5_OutputCrop/shell_commands
+D       components/clm/cime_config/usermods_dirs/clm/clm5_OutputCrop
+D       components/clm/cime_config/usermods_dirs/clm
+
+List all files added and what they do:
+
+========= Top-level cmip6 usermods directory, which will include other usermods
+          directories needed for the cmip6 runs
+A       components/clm/cime_config/usermods_dirs/cmip6/include_user_mods
+A       components/clm/cime_config/usermods_dirs/cmip6
+
+========= Renamed from clm5_OutputCrop; also added some glacier output fields
+          needed for cmip6 runs
+A       components/clm/cime_config/usermods_dirs/cmip6_output/user_nl_clm
+A       components/clm/cime_config/usermods_dirs/cmip6_output/shell_commands
+A       components/clm/cime_config/usermods_dirs/cmip6_output/README
+A       components/clm/cime_config/usermods_dirs/cmip6_output
+
+========= Turns on virtual glacier columns over Antarctica. This is desired by
+          the LIWG for cmip6 runs, so that we can have the Antarctica output
+          that would be needed to later run an ice sheet model over
+          Antarctica. However, it comes with a 10% performance cost.
+A       components/clm/cime_config/usermods_dirs/cmip6_glaciers/user_nl_clm
+A       components/clm/cime_config/usermods_dirs/cmip6_glaciers
+
+========= Test mod that allows testing the cmip6 usermods (currently not
+          exercised with any tests)
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cmip6/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cmip6
+
+========= Test mod that allows running the new LVG (virtual glaciers) test
+          (currently unexercised)
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/no_vector_output/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/no_vector_output/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/no_vector_output/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/no_vector_output
+
+List all existing files that have been modified, and describe the changes:
+
+========= Only adjust topographic heights if glc_do_dynglacier is true
+M       components/clm/src/main/TopoMod.F90
+M       components/clm/src/main/test/topo_test/test_topo.pf
+M       components/clm/src/main/glc2lndMod.F90
+
+========= Add _musgs to f10_f10 grid
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r244
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Jun  9 14:26:07 MDT 2017

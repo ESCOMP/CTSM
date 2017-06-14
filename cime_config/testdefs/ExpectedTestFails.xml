@@ -1,8 +1,8 @@
 <?xml version= "1.0"?>
 
 <expectedFails>
-   <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
-   <entry bugz="2461">FAIL NCK_Ld1.f10_f10.ICRUCLM45.cheyenne_intel.clm-default COMPARE_base_multiinst</entry>
-   <entry bugz="2461">FAIL NCK_Ld1.f10_f10.ICRUCLM45.yellowstone_intel.clm-default COMPARE_base_multiinst</entry>
+   <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10_musgs.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
+   <entry bugz="2461">FAIL NCK_Ld1.f10_f10_musgs.ICRUCLM45.cheyenne_intel.clm-default COMPARE_base_multiinst</entry>
+   <entry bugz="2461">FAIL NCK_Ld1.f10_f10_musgs.ICRUCLM45.yellowstone_intel.clm-default COMPARE_base_multiinst</entry>
    <entry bugz="2461">FAIL ERI_N2_Ld9.f19_g16.ICRUCLM45BGCCROP.cheyenne_intel.clm-default RUN</entry>
 </expectedFails> 

@@ -1,0 +1,2 @@
+This testmod is similar to the default test mod, but it empties out the 2nd
+history tape, which is the vector-output tape.
