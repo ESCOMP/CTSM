@@ -7,12 +7,11 @@ Summary of CLM5.0 updates relative to the CLM4.5
 -----------------------------------------------------
 
 We describe here the complete crop and irrigation parameterizations that
-appear in CLM5.0. Corresponding information for CLM4.5 appeared on the
-CLM4.5 web site in a pdf document independent of the CLM4.5 Technical
-Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`). 
+appear in CLM5.0. Corresponding information for CLM4.5 appeared in the
+CLM4.5 Technical Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`). 
 
-CLM5.0 includes the following updates to the CROP option, where CROP
-refers to the interactive crop management model and is included by default with the BGC configuration:
+CLM5.0 includes the following new updates to the CROP option, where CROP
+refers to the interactive crop management model and is included as an option with the BGC configuration:
 
 - New crop functional types
 
@@ -35,7 +34,6 @@ refers to the interactive crop management model and is included by default with 
 - C for annual crop seeding comes from the grain C pool
 
 - Initial seed C for planting is increased from 1 to 3 g C/m^2 
-
 
 These updates appear in detail in the sections below. Many also appear in
 Levis et al. (:ref:`2016 <Levisetal2016>`).
@@ -67,7 +65,7 @@ management parameterizations from AgroIBIS (March 2003 version) were
 coupled as a proof-of-concept to the Community Land Model version 3
 [CLM3.0, :ref:`Oleson et al. (2004) <Olesonetal2004>`] (not published), then coupled to the
 CLM3.5 (:ref:`Levis et al. 2009 <Levisetal2009>`) and later released to the community with
-CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), and CLM4.5. Additional updates after the
+CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), and CLM4.5BGC. Additional updates after the
 release of CLM4.5 were available by request (:ref:`Levis et al. 2016 <Levisetal2016>`), 
 and those are now incorporated into CLM5.
 
@@ -576,8 +574,9 @@ Other Features
 
 Physical Crop Characteristics
 ''''''''''''''''''''''''''''''
+Leaf area index (*L*) is calculated as a function of XXX [update].
 Stem area index (*S*) is equal to 0.1\ *L* for corn and 0.2\ *L* for
-other crops, as in AgroIBIS, where *L* is the leaf area index. All live
+other crops, as in AgroIBIS. All live
 C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to
 simulate a post-harvest “stubble” on the ground.
 
@@ -597,24 +596,26 @@ and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
 
 Interactive Fertilization 
 ''''''''''''''''''''''''''''''
-CLM adds nitrogen directly to the soil mineral nitrogen pool to meet
-crop nitrogen demands. CLM’s separate crop land unit ensures that
+CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet
+crop nitrogen demands using both industrial fertilizer and manure application. CLM’s separate crop land unit ensures that
 natural vegetation will not access the fertilizer applied to crops.
-Fertilizer in CLM5BGCCROP is prescribed by crop function types spatially
+Fertilizer in CLM5BGCCROP is prescribed by crop functional types and varies spatially
 for each year based on the LUMIP land use and land cover change
 time series (LUH2 for historical and SSPs for future) (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`).
-There are two fields that are used to prescribe industrial fertilizer.
-On the surface data set the field CONST_FERTNITRO_CFT specifies the
-annual fertilizer application for a non-transient simulations in g N/m\ :sup:`2`/yr.
-In the case of a transient simulation this is replaced by the landuse.timeseries
-file with the field FERTNITRO_CFT which is also in g N/m\ :sup:`2`/yr.
+One of two fields is used to prescribe industrial fertilizer based on the type of simulation.
+For non-transient simulations, annual fertilizer application in g N/m\ :sup:`2`/yr 
+is specified on the land surface data set by the field CONST_FERTNITRO_CFT. 
+In transient simulations, annual fertilizer application is specified on the land use time series
+file by the field FERTNITRO_CFT, which is also in g N/m\ :sup:`2`/yr.
 The values for both of these fields come from the LUMIP time series for each year.
-In addition to the industrial fertilizer there is a background manure fertilizer
-on the clm parameters file with the field manunitro. For the current CLM5BGCCROP,
-this is set to 0.002 kg N/m\ :sup:`2`/yr. Since CLM’s denitrification rate is high
-and results in a 50% loss of the unused available nitrogen each day,
-fertilizer is applied slowly to minimize the loss and maximize plant
-uptake. Fertilizer application begins during the emergence phase of crop
+In addition to the industrial fertilizer, background manure fertilizer is specified
+on the parameter file by the field 'manunitro'. For the current CLM5BGCCROP,
+manure N is applied at a rate of 0.002 kg N/m\ :sup:`2`/yr. Because previous versions 
+of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly
+to minimize N loss (primarily through denitrification) and maximize plant uptake. 
+The current implementation of CLM5 inherits this legacy, although denitrification rates
+are slower in the current version of the model (:ref:`Koven et al. 2013 <Kovenetal2013>`). As such,
+fertilizer application begins during the emergence phase of crop
 development and continues for 20 days, which helps reduce large losses
 of nitrogen from leaching and denitrification during the early stage of
 crop development. The 20-day period is chosen as an optimization to
@@ -646,24 +647,25 @@ are treated as N fixers.
 
 .. _Latitude vary base tempereature for growing degree days:
 
-Latitude vary base tempereature for growing degree days
+Latitudinal variation in base growth tempereature 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-For both rainfed and irrigated spring wheat and sugarcane,
-a latitude vary base temperature in calculating :math:`GDD_{T_{{\rm 2m}} }`
-(growing degree days since planting) was introduced.
+For most crops, :math:`GDD_{T_{{\rm 2m}} }` (growing degree days since planting) 
+is the same in all locations. However,
+the for both rainfed and irrigated spring wheat and sugarcane, the calculation of 
+:math:`GDD_{T_{{\rm 2m}} }` allows for latitudinal variation:
 
 .. math::
    :label: 25.11
 
-   latitude\ vary\ baset = \left\{
+   latitudinal\ variation\ in\ base\ T = \left\{
    \begin{array}{lr}    
    baset +12 - 0.4 \times latitude &\qquad 0 \le latitude \le 30 \\
    baset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0    
    \end{array} \right\}
 
-where :math:`baset` is the 5\ :sup:`th` row in :numref:`Table Crop phenology parameters`.
-Such latitude vary baset could increase the base temperature, slow down :math:`GDD_{T_{{\rm 2m}} }`
-accumulation, and extend the growing season for -30º to 30º regions for spring wheat
+where :math:`baset` is the *base temperature for GDD* (7\ :sup:`th` row) in :numref:`Table Crop phenology parameters`.
+Such latitudinal variation in base growth temperature could increase the base temperature, slow down :math:`GDD_{T_{{\rm 2m}} }`
+accumulation, and extend the growing season for regions within 30ºS to 30ºN for spring wheat
 and sugarcane.
 
 .. _Separate reproductive pool:
@@ -676,9 +678,9 @@ for the reproductive pool helps determine whether crops are performing
 reasonably through yield calculations.
 The reproductive pool is maintained similarly to the leaf, stem,
 and fine root pools, but allocation of carbon and nitrogen does not
-begin until the grain fill stage of crop development. Eq. :eq:`(5)` shows the
+begin until the grain fill stage of crop development. Equation :eq:`25.5` describes the
 carbon and nitrogen allocation coefficients to the reproductive pool.
-In CLM, as allocation declines
+In CLM5BGCCROP, as allocation declines
 during the grain fill stage of growth, increasing amounts of carbon and
 nitrogen are available for grain development.
 
