@@ -108,7 +108,7 @@ the soil (:ref:`Gardner 1960<Gardner1960>`)
 .. math::
    :label: 11.12
 
-   dx_{root,i} = \left(\pi \cdot L_i\right)^{\frac{1}{2}}
+   dx_{root,i} = \left(\pi \cdot L_i\right)^{- \frac{1}{2}}
 
 where :math:`L_{i}` is the root length density (m m :sup:`-3`) 
 

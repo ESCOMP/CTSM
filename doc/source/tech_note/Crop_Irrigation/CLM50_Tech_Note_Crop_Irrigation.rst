@@ -36,7 +36,7 @@ refers to the interactive crop management model and is included as an option wit
 - Initial seed C for planting is increased from 1 to 3 g C/m^2 
 
 These updates appear in detail in the sections below. Many also appear in
-Levis et al. (:ref:`2016 <Levisetal2016>`).
+:ref:`Levis et al. (2016) <Levisetal2016>`.
 
 .. _The crop model:
 
@@ -63,7 +63,7 @@ simulate dynamic vegetation (:ref:`Kucharik et al. 2000 <Kuchariketal2000>`) and
 crop management (:ref:`Kucharik and Brye 2003 <KucharikBrye2003>`). The interactive crop
 management parameterizations from AgroIBIS (March 2003 version) were
 coupled as a proof-of-concept to the Community Land Model version 3
-[CLM3.0, :ref:`Oleson et al. (2004) <Olesonetal2004>`] (not published), then coupled to the
+[CLM3.0, :ref:`Oleson et al. (2004) <Olesonetal2004>` ] (not published), then coupled to the
 CLM3.5 (:ref:`Levis et al. 2009 <Levisetal2009>`) and later released to the community with
 CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), and CLM4.5BGC. Additional updates after the
 release of CLM4.5 were available by request (:ref:`Levis et al. 2016 <Levisetal2016>`), 
@@ -104,8 +104,8 @@ CLM5 includes eight actively managed crop types
 (temperate soybean, tropical soybean, temperate corn, tropical 
 corn, spring wheat, cotton, rice, and sugarcane) that are chosen 
 based on the availability of corresponding algorithms in AgroIBIS and as 
-developed by Badger and Dirmeyer (:ref:`2015 <BadgerandDirmeyer2015>`) and
-described by Levis et al. (:ref:`2016 <Levisetal2016>`). The representations of
+developed by :ref:`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and
+described by :ref:`Levis et al. (2016)<Levisetal2016>`. The representations of
 sugarcane, rice, cotton, tropical corn, and tropical soy are new in CLM5.
 Sugarcane and tropical corn are both C4 plants and are therefore represented
 using the temperate corn functional form. Tropical soybean uses the temperate
@@ -232,7 +232,7 @@ planting date (for the northern hemisphere) in :numref:`Table Crop phenology par
 .. math::
    :label: 25.1
 
-   \begin{array}{l} 
+   \begin{array}{c} 
    {T_{10d} >T_{p} } \\ 
    {T_{10d}^{\min } >T_{p}^{\min } }  \\ 
    {GDD_{8} \ge GDD_{\min } } 
@@ -265,7 +265,13 @@ for the crop to reach vegetative and physiological maturity,
 .. math::
    :label: 25.2
 
-   \begin{array}{l} {GDD_{{\rm mat}}^{{\rm corn,sugarcane}} =0.85GDD_{{\rm 8}} {\rm \; \; \; and\; \; \; 950}<GDD_{{\rm mat}}^{{\rm corn,sugarcane}} <1850{}^\circ {\rm days}} \\ {GDD_{{\rm mat}}^{{\rm spring\ wheat,cotton}} =GDD_{{\rm 0}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm spring\ wheat,cotton}} <1700{}^\circ {\rm days}} \\ {GDD_{{\rm mat}}^{{\rm temp.soy}} =GDD_{{\rm 10}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm temp.soy}} <1900{}^\circ {\rm days}}\\ {GDD_{{\rm mat}}^{{\rm rice}} =GDD_{{\rm 0}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm rice}} <2100{}^\circ {\rm days}} \\ {GDD_{{\rm mat}}^{{\rm trop.soy}} =GDD_{{\rm 10}} {\rm \; \; \; and\; \; \; }GDD_{{\rm mat}}^{{\rm trop.soy}} <2100{}^\circ {\rm days}} \end{array}
+   \begin{array}{lll} 
+   GDD_{{\rm mat}}^{{\rm corn,sugarcane}} =0.85 GDD_{{\rm 8}} & {\rm \; \; \; and\; \; \; }& 950 <GDD_{{\rm mat}}^{{\rm corn,sugarcane}} <1850{}^\circ {\rm days} \\ 
+   GDD_{{\rm mat}}^{{\rm spring\ wheat,cotton}} =GDD_{{\rm 0}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm spring\ wheat,cotton}} <1700{}^\circ {\rm days} \\ 
+   GDD_{{\rm mat}}^{{\rm temp.soy}} =GDD_{{\rm 10}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm temp.soy}} <1900{}^\circ {\rm days} \\ 
+   GDD_{{\rm mat}}^{{\rm rice}} =GDD_{{\rm 0}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm rice}} <2100{}^\circ {\rm days} \\ 
+   GDD_{{\rm mat}}^{{\rm trop.soy}} =GDD_{{\rm 10}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm trop.soy}} <2100{}^\circ {\rm days}
+   \end{array}
 
 where :math:`{GDD}_{10}` is the 20-year running mean growing
 degree-days tracked from April through September (NH) base
@@ -276,7 +282,11 @@ degree-days tracked from April through September (NH) base
 .. math::
    :label: 25.3
 
-   \begin{array}{l} {GDD_{{\rm 0}} =GDD_{0} +T_{2{\rm m}} -T_{f} {\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} \le 26{}^\circ {\rm days}} \\ {GDD_{{\rm 8}} =GDD_{8} +T_{2{\rm m}} -T_{f} -8{\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} -8\le 30{}^\circ {\rm days}} \\ {GDD_{{\rm 10}} =GDD_{10} +T_{2{\rm m}} -T_{f} -10{\rm \; \; \; where\; \; \; 0}\le T_{2{\rm m}} -T_{f} -10\le 30{}^\circ {\rm days}} \end{array}
+   \begin{array}{lll} 
+   GDD_{{\rm 0}} =GDD_{0} +T_{2{\rm m}} -T_{f} & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} \le 26{}^\circ {\rm days} \\ 
+   GDD_{{\rm 8}} =GDD_{8} +T_{2{\rm m}} -T_{f} -8 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -8\le 30{}^\circ {\rm days} \\ 
+   GDD_{{\rm 10}} =GDD_{10} +T_{2{\rm m}} -T_{f} -10 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -10\le 30{}^\circ {\rm days} 
+   \end{array}
 
 where, if :math:`{T}_{2m}` -  :math:`{T}_{f}` takes on values
 outside the above ranges, then it equals the minimum or maximum value in
@@ -451,7 +461,7 @@ phase 3. Other allocation coefficients change to:
 .. math::
    :label: 25.5
 
-   \begin{array}{lr} 
+   \begin{array}{ll} 
    a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le a_{leaf}^{f} \quad {\rm else} \\ 
    a_{leaf} =a_{leaf} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{GDD_{T_{{\rm 2m}} } -h}{GDD_{{\rm mat}} d_{L} -h} \le 1 \\ 
     \\ 

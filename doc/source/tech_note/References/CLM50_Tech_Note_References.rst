@@ -543,6 +543,12 @@ overview of ABRACOS. pp. 1-14. In: J.H.C. Gash, C.A. Nobre, J.M.
 Roberts, and R.L. Victoria (editors) Amazonian Deforestation and
 Climate. John Wiley and Sons, Chichester, England.
 
+.. _Getiranaetal2012:
+
+Getirana, A. C. V., A. Boone, D. Yamazaki, B. Decharme, F. Papa, and
+N. Mognard. 2012. The hydrological modeling and analysis platform
+(HyMAP): Evaluation in the Amazon basin, J. Hydrometeorol., 13, 1641–1665.
+
 .. _Gholzetal1985:
 
 Gholz, H.L., Perry, C.S., Cropper, W.P., Jr. and Hendry, L.C., 1985.
@@ -976,6 +982,11 @@ Climate 25:3071-3095. DOI:10.1175/JCLI-D-11-00256.1.
 Lehner, B. and Döll, P., 2004. Development and validation of a global
 database of lakes, reservoirs and wetlands, J. Hydrol., 296, 1–22.
 
+.. _Lehneretal2008:
+
+Lehner, B., Verdin, K. and Jarvis, A., 2008. New global hydrograhy
+derived from spaceborne elevation data. Eos Trans., AGU, 89, 93 – 94.
+
 .. _LePageetal2010:
 
 Le Page, Y., van der Werf, G.R., Morton, D.C., and Pereira, J.M.C. 2010.
@@ -1078,6 +1089,20 @@ Wang, A., and Ricciuto, D.M. 2011. Evaluating runoff simulations from
 the Community Land Model 4.0 using observations from flux towers and a
 mountainous watershed. J. Geophys. Res. 116:D24120.
 DOI:10.1029/2011JD016276.
+
+.. _Lietal2015a:
+
+Li, H., L. Leung, A. Getirana, M. Huang, H. Wu, Y. Xu, J. Guo and 
+N. Voisin. 2015a. Evaluating global streamflow simulations by a 
+physically-based routing model coupled with the Community Land Model, 
+J. of Hydromet., 16(2):948-971, doi: 10.1175/JHM-D-14-0079.1
+
+.. _Lietal2015b:
+
+Li, H., L. Leung, T. Tesfa, N. Voisin, M. Hejazi, L. Liu, Y. Liu,
+J. Rice, H. Wu, and X. Yang. 2015. Modeling stream temperature in the
+Anthropocene: An earth system modeling approach, J. Adv. Model.
+Earth Syst., 7, doi:10.1002/2015MS000471.
 
 .. _Liangetal1994:
 
@@ -2049,6 +2074,18 @@ DOI:10.1029/91JD01786.
 
 World Bank, 2004. World development indicators 2004, Oxford University
 Press, New York, 416 pp.
+
+.. _Wuetal2011:
+
+Wu, H., J. S. Kimball, N. Mantua, and J. Stanford, 2011: Automated
+upscaling of river networks for macroscale hydrological modeling.
+Water Resour. Res., 47, W03517, doi:10.1029/2009WR008871.
+
+.. _Wuetal2012:
+
+Wu, H., J. S. Kimball, H. Li, M. Huang, L. R. Leung, and R. F. Adler
+(2012), A New Global River Network Database for Macroscale Hydrologic
+modeling, Water Resour. Res., 48, W09701, doi:10.1029/2012WR012313.
 
 .. _Yang1998:
 

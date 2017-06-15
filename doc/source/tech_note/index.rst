@@ -26,7 +26,7 @@ CLM Technical Note
    Plant_Hydraulics/CLM50_Tech_Note_Plant_Hydraulics.rst
    Lake/CLM50_Tech_Note_Lake.rst
    Glacier/CLM50_Tech_Note_Glacier.rst
-   RTM/CLM50_Tech_Note_RTM.rst
+   MOSART/CLM50_Tech_Note_MOSART.rst
    Urban/CLM50_Tech_Note_Urban.rst
    CN_Pools/CLM50_Tech_Note_CN_Pools.rst
    Plant_Respiration/CLM50_Tech_Note_Plant_Respiration.rst
