@@ -227,7 +227,7 @@ Planting
 '''''''''''''''''
 
 All crops must meet the following requirements between the minimum planting date and the maximum
-planting date (for northern hemisphere) in :numref:`Table Crop phenology parameters`:
+planting date (for the northern hemisphere) in :numref:`Table Crop phenology parameters`:
 
 .. math::
    :label: 25.1
@@ -250,15 +250,14 @@ maximum daily increments of 30\ :sup:`o` days (see equation :eq:`25.3`), and
 (:numref:`Table Crop phenology parameters`). :math:`{GDD}_{8}` does not change as quickly as :math:`{T}_{10d}` and :math:`T_{10d}^{\min }`, so
 it determines whether the crop can be planted in a grid cell, while the
 two faster-changing variables determine when the crop may be planted.
-
 If the requirements in equation :eq:`25.1` are not met by the maximum planting date, 
 crops are still planted on the maximum planting date as long as  :math:`{GDD}_{8} > 0`. In
 the southern hemisphere (SH) the NH requirements apply 6 months later.
 
-At planting, each crop is assigned 3 g leaf C m\ :sup:`-2` pft
-column area to be transferred to the leaves upon leaf emergence. An
+At planting, each crop seed pool is assigned 3 gC m\ :sup:`-2` from its 
+grain product pool. The seed carbon transferred to the leaves upon leaf emergence. An
 equivalent amount of seed leaf N is assigned given the pft’s C to N
-ratio for leaves (:math:`{CN}_{leaf}` in :numref:`Table Crop allocation parameters`,this differs from AgroIBIS,
+ratio for leaves (:math:`{CN}_{leaf}` in :numref:`Table Crop allocation parameters`, this differs from AgroIBIS,
 which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary
 for the crop to reach vegetative and physiological maturity,
 :math:`{GDD}_{mat}`, according to the following AgroIBIS rules:
@@ -270,8 +269,8 @@ for the crop to reach vegetative and physiological maturity,
 
 where :math:`{GDD}_{10}` is the 20-year running mean growing
 degree-days tracked from April through September (NH) base
-10\ :math:`{}^\circ`\ C with maximum daily increments of
-30\ :math:`{}^\circ`\ days. Equation :eq:`25.3` shows how we calculate
+10\ :sup:`o`\C with maximum daily increments of
+30\ :sup:`o`\days. Equation :eq:`25.3` shows how we calculate
 :math:`{GDD}_{0}`, :math:`{GDD}_{8}`, and :math:`{GDD}_{10}`:
 
 .. math::
@@ -292,12 +291,13 @@ Leaf emergence
 According to AgroIBIS, leaves may emerge when the growing degree-days of
 soil temperature to 0.05 m depth tracked since planting
 (:math:`GDD_{T_{soi} }` ) reaches 1 to 5% of :math:`{GDD}_{mat}`
-(:numref:`Table Crop phenology parameters`). :math:`GDD_{T_{soi} }` is base 8, 0, and
-10\ :math:`{}^\circ`\ C for corn, soybean, and temperate cereals. 
-Leaf onset, as defined in the CN part of the model, occurs in the first
+(:numref:`Table Crop phenology parameters`). The base temperature for :math:`GDD_{T_{soi} }` 
+are listed in :numref:`Table Crop phenology parameters`. 
+Leaf onset occurs in the first
 time step of phase 2, at which moment all seed C is transferred to leaf
 C. Subsequently, the leaf area index generally increases and reaches
-a maximum value during phase 2.
+a maximum value during phase 2. Stem and root C are also increasing, based on
+the carbon allocation algorithem in section :numref:`Leaf emergence to grain fill`.
 
 .. _Grain fill:
 
@@ -366,13 +366,13 @@ similar in structure to the wood product pools.
 Notes: :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are
 the minimum and maximum planting date in the Northern Hemisphere, the corresponding dates
 in the Southern Hemisphere apply 6 months later.
-:math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific temperatures threshold for planting.
+:math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific coldest planting temperatures.
 :math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days base 
-on the base temperature in the 5\ :sup:`th` row, tracked from April to September (NH).
+on the base temperature in the 7\ :sup:`th` row, tracked from April to September (NH).
 :math:`{GDD}_{mat}` is a crop’s 20-year running mean growing
 degree-days needed for vegetative and physiological maturity. Harvest
 occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting
-reach the number in the 9\ :sup:`th` row. Crop growth phases
+reach the number in the 11\ :sup:`th` row. Crop growth phases
 are described in the text. :math:`z_{top}^{\max }`  is the maximum
 top-of-canopy height of a crop, *SLA* is specific leaf area. :math:`\chi _{L}` is the leaf
 orientation index, equals -1 for vertical, 0 for
