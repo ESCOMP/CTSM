@@ -530,7 +530,12 @@ Harvest to food and seed
 
 In CLM5, the C and N required for crop seeding is removed from the grain
 product pool during harvest and used to seed crops in the subsequent year. 
-Caluating the crop yields requires... 
+Caluating the crop yields requires that you sum the GRAINC_TO_FOOD variable
+for each year. Additionally, harvest is not typically 100% efficient, so
+analysis needs to assume that harvest efficiency is less. We assume a harvest 
+efficiency of 85%, and a grain C of 45% of the grain dry weight.
+
+equation (g/m^2) = (sum(GRAINC_TO_FOOD)/0.45)*.85
 
 
 
@@ -574,8 +579,9 @@ Other Features
 
 Physical Crop Characteristics
 ''''''''''''''''''''''''''''''
-Leaf area index (*L*) is calculated as a function of XXX [update].
-Stem area index (*S*) is equal to 0.1\ *L* for corn and 0.2\ *L* for
+Leaf area index (*L*) is calculated as a function of specific leaf area  
+(SLA) and leaf C (:ref:`Crop phenology parameters`). 
+Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn and sugarcane and 0.2\ *L* for
 other crops, as in AgroIBIS. All live
 C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to
 simulate a post-harvest “stubble” on the ground.
