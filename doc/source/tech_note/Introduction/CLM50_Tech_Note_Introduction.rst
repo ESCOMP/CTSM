@@ -1,74 +1,24 @@
-g**NCAR/TN-503+STR**
 
-**NCAR Technical Note**
 
-**July 2013**
+**July 2017**
 
 **Technical Description of version 5.0 of the Community Land Model
 (CLM)**
 
 ***Coordinating Lead Authors***
 
-**Keith W. Oleson, David M. Lawrence**
+**David M. Lawrence, Rosie Fisher, Charles D. Koven, Keith W. Oleson, Sean Swenson**
 
 ***Lead Authors***
 
-**Gordon B. Bonan, Beth Drewniak, Maoyi Huang, Charles D. Koven, Samuel
-Levis, Fang Li, William J. Riley, Zachary M. Subin, Sean C. Swenson,
-Peter E. Thornton**
+**Bardan Ghimire, Leo van Kampenhout, Daniel Kennedy, Erik Kluzek, Peter J. Lawrence, Fang Li, Hongyi Li, Danica Lombardozzi, Yaqiong Lu, Justin Perket, William J. Riley, William Sacks, Mingjie Shi, Will Wieder, Chonggang Xu
+**
 
 ***Contributing Authors***
 
-**Anil Bozbiyik, Rosie Fisher, Colette L. Heald, Erik Kluzek,
-Jean-Francois Lamarque, Peter J. Lawrence, L. Ruby Leung, William
-Lipscomb, Stefan Muszala, Daniel M. Ricciuto, William Sacks, Ying Sun,
-Jinyun Tang, Zong-Liang Yang**
+**Ben Andre, Ali Ashehad, Gautam Bisht, Gordon Bonan, Patrick Broxton, Michael Brunke, Jonathon Buzan, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Jan Lenaerts, Sam Levis, 
+L. Ruby Leung, William Lipscomb, Daniel M. Ricciuto, Ben Sanderson, Andrew Slater, Zachary M. Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Mariana Vertenstein, Francis Vitt, Xubin Zeng**
 
-**NCAR Earth System Laboratory**
-
-**Climate and Global Dynamics Division**
-
-**NATIONAL CENTER FOR ATMOSPHERIC RESEARCH**
-
-**P. O. Box 3000**
-
-**BOULDER, COLORADO 80307-3000**
-
-**ISSN Print Edition 2153-2397**
-
-**ISSN Electronic Edition 2153-2400**
-
-**NCAR TECHNICAL NOTES**
-
-http://library.ucar.edu/research/publish-technote 
-
-The Technical Notes series provides an outlet for a variety of NCAR
-Manuscripts that contribute in specialized ways to the body of
-scientific knowledge but that are not yet at a point of a formal
-journal, monograph or book publication. Reports in this series are
-issued by the NCAR scientific divisions, serviced by OpenSky and
-operated through the NCAR Library. Designation symbols for the series
-include:
-
-**EDD – Engineering, Design, or Development Reports**
-
-Equipment descriptions, test results, instrumentation, and operating and maintenance manuals.
-
-**IA – Instructional Aids**
-
-Instruction manuals, bibliographies, film supplements, and other research or instructional aids. 
-
-**PPR – Program Progress Reports**
-
-Field program reports, interim and working reports, survey reports, and plans for experiments. 
-
-**PROC – Proceedings**
-
-Documentation or symposia, colloquia, conferences, workshops, and lectures. (Distribution maybe limited to attendees).
-
-**STR – Scientific and Technical Reports**
-
-Data compilations, theoretical and numerical investigations, and experimental results.
 
 The National Center for Atmospheric Research (NCAR) is operated by the
 nonprofit University Corporation for Atmospheric Research (UCAR) under
@@ -80,43 +30,7 @@ the National Science Foundation.
 National Center for Atmospheric Research
 P. O. Box 3000, Boulder, Colorado 80307-300
 
-**NCAR/TN-503+STR**
 
-**NCAR Technical Note**
-
-**July 2013**
-
-**Technical Description of version 4.5 of the Community Land Model (CLM)**
-
-**Coordinating Lead Authors**
-
-**Keith W. Oleson, David M. Lawrence**
-
-**Lead Authors**
-
-**Gordon B. Bonan, Beth Drewniak, Maoyi Huang, Charles D. Koven, Samuel
-Levis, Fang Li, William J. Riley, Zachary M. Subin, Sean C. Swenson, Peter E. Thornton**
-
-**Contributing Authors**
-
-**Anil Bozbiyik, Rosie Fisher, Colette L. Heald, Erik Kluzek,
-Jean-Francois Lamarque, Peter J. Lawrence, L. Ruby Leung, William
-Lipscomb, Stefan Muszala, Daniel M. Ricciuto, William Sacks, Ying Sun,
-Jinyun Tang, Zong-Liang Yang**
-
-**NCAR Earth System Laboratory**
-
-**Climate and Global Dynamics Division**
-
-**NATIONAL CENTER FOR ATMOSPHERIC RESEARCH**
-
-**P. O. Box 3000**
-
-**BOULDER, COLORADO 80307-3000**
-
-**ISSN Print Edition 2153-2397**
-
-**ISSN Electronic Edition 2153-2400**
 
 **LIST OF FIGURES**
 
@@ -255,19 +169,16 @@ Fung, David Gochis, Alex Guenther, Tim Hoar, Forrest Hoffman, Paul
 Houser, Trish Jackson, Brian Kauffman, Silvia Kloster, Natalie Mahowald,
 Jiafu Mao, Lei Meng, Sheri Michelson, Guo-Yue Niu, Adam Phillips, Taotao
 Qian, Jon Radakovich, James Randerson, Nan Rosenbloom, Steve Running,
-Koichi Sakaguchi, Adam Schlosser, Andrew Slater, Reto Stöckli, Quinn
-Thomas, Mariana Vertenstein, Nicholas Viovy, Aihui Wang, Guiling Wang,
+Koichi Sakaguchi, Adam Schlosser, Andrew Slater, Reto Stöckli, Ying Sun, Quinn
+Thomas, Peter Thornton, Mariana Vertenstein, Nicholas Viovy, Aihui Wang, Guiling Wang,
 Charlie Zender, Xiaodong Zeng, and Xubin Zeng.
 
-The authors also thank the following people for their review of this
-document: Jonathan Buzan, Kyla Dahlin, Sanjiv Kumar, Hanna Lee, Danica
-Lombardozzi, Quinn Thomas, and Will Wieder.
+
 
 Current affiliations for the authors are as follows:
 
-K.W. Oleson, D.M. Lawrence, G.B. Bonan, S. Levis, S.C. Swenson, R.
-Fisher, E. Kluzek, J.-F. Lamarque, P.J. Lawrence, S. Muszala, and W.
-Sacks (National Center for Atmospheric Research); B. Drewniak (Argonne
+K.W. Oleson, D.M. Lawrence, G.B. Bonan, S.C. Swenson, R.
+Fisher, E. Kluzek, P.J. Lawrence, W. Sacks and M. Vertenstein (National Center for Atmospheric Research); B. Drewniak (Argonne
 National Laboratory); M. Huang, L.R. Leung (Pacific Northwest National
 Laboratory); C.D. Koven, W.J. Riley, and J. Tang (Lawrence Berkeley
 National Laboratory); F. Li (Chinese Academy of Sciences); Z.M. Subin
@@ -282,11 +193,11 @@ Austin)
 Introduction
 =================
 
-The purpose of this technical note is to describe the biogeophysical and
+The purpose of this document is to fully describe the biogeophysical and
 biogeochemical parameterizations and numerical implementation of version
-4.5 of the Community Land Model (CLM4.5). Scientific justification and
+5.0 of the Community Land Model (CLM5.0). Scientific justification and
 evaluation of these parameterizations can be found in the referenced
-scientific papers (:ref:`rst_References`). This technical note and the CLM4.5
+scientific papers (:ref:`rst_References`). This document and the CLM5.0
 User’s Guide together provide the user with the scientific description
 and operating instructions for CLM.
 
@@ -523,8 +434,7 @@ model option for coupled simulations in CESM1.2.
 CLM4.5
 ^^^^^^^^^^^^
 
-The motivations for the development of CLM4.5 (the model version
-described in this Technical Description) were similar to those for CLM4:
+The motivations for the development of CLM4.5 were similar to those for CLM4:
 incorporate several recent scientific advances in the understanding and
 representation of land surface processes, expand model capabilities, and
 improve surface and atmospheric forcing datasets.
@@ -541,13 +451,9 @@ problems or biases.
 The main modifications include updates to canopy processes including a
 revised canopy radiation scheme and canopy scaling of leaf processes,
 co-limitations on photosynthesis, revisions to photosynthetic parameters
-(:ref:`Bonan et al. 2011<Bonanetal2011>`), 
-
-.. todo:: had three stars here - need to resolve this
-
-temperature acclimation of photosynthesis, and
+(:ref:`Bonan et al. 2011<Bonanetal2011>`), temperature acclimation of photosynthesis, and
 improved stability of the iterative solution in the photosynthesis and
-stomatal conductance model (:ref:`Sun et al. 2012<Sunetal2012>`). Hydrology updates include
+stomatal conductance model (:ref:`Sun et al. 2012<Sunetal2012>`). Hydrology updates included
 modifications such that hydraulic properties of frozen soils are
 determined by liquid water content only rather than total water content
 and the introduction of an ice impedance function, and other corrections
@@ -556,10 +462,10 @@ position and allow for a perched water table above icy permafrost ground
 (:ref:`Swenson et al. 2012<Swensonetal2012>`). A new snow cover fraction parameterization is
 incorporated that reflects the hysteresis in fractional snow cover for a
 given snow depth between accumulation and melt phases (:ref:`Swenson and
-Lawrence, 2012<SwensonLawrence2012>`). The lake model in CLM4 is replaced with a completely
+Lawrence, 2012<SwensonLawrence2012>`). The lake model in CLM4 was replaced with a completely
 revised and more realistic lake model (:ref:`Subin et al. 2012a<Subinetal2012a>`). A surface
-water store is introduced, replacing the wetland land unit and
-permitting prognostic wetland distribution modeling, and the surface
+water store was introduced, replacing the wetland land unit and
+permitting prognostic wetland distribution modeling. The surface
 energy fluxes are calculated separately (:ref:`Swenson and Lawrence, 2012<SwensonLawrence2012>`) for
 snow-covered, water-covered, and snow/water-free portions of vegetated
 and crop land units, and snow-covered and snow-free portions of glacier
@@ -570,9 +476,9 @@ decomposition rates modified by soil temperature, water, and oxygen
 limitations and also including vertical mixing of soil carbon and
 nitrogen due to bioturbation, cryoturbation, and diffusion (:ref:`Koven et al.
 2013<Kovenetal2013>`). The litter and soil carbon and nitrogen pool structure as well as
-nitrification and denitrification are modified based on the Century
-model and biological fixation is revised to distribute fixation more
-realistically over the year (:ref:`Koven et al. 2013<Kovenetal2013>`). The fire model is
+nitrification and denitrification that were modified based on the Century
+model. Biological fixation was revised to distribute fixation more
+realistically over the year (:ref:`Koven et al. 2013<Kovenetal2013>`). The fire model was
 replaced with a model that includes representations of natural and
 anthropogenic triggers and suppression as well as agricultural,
 deforestation, and peat fires (:ref:`Li et al. 2012a,b<Lietal2012a>`; :ref:`Li et al. 2013a<Lietal2013a>`). The
@@ -607,6 +513,21 @@ dataset or other alternative forcing datasets.
 
 CLM4.5 was released to the community in June 2013 along with the
 Community Earth System Model version 1.2 (CESM1.2).
+
+CLM5.0
+^^^^^^^^^^^^
+
+Developments for CLM5.0 build on the progress made in CLM4.5.  Much of the focus of development centered on a 
+push towards more mechanistic treatment of several key processes, in addition to more comprehensive and explicit representation
+of land use and land-cover change.  In particular, 
+
+To represent … Stomatal conductance is a function of prognostic (predicted) leaf water potential.  LWP is the result of atmosphericdemand and supply from soil via resistance network.
+
+Dynamic land units.
+
+Included within the codebase of the release of CLM5.0 is a functionally supported version of the Functionally-Assembled Terrestrial Ecosystem Simulator (FATES, 
+reference Fisher???).  This version of CLM5-FATES that is supported in this release is described here??? Short blurb on what FATES can do???
+
 
 Biogeophysical and Biogeochemical Processes
 -----------------------------------------------
@@ -644,6 +565,10 @@ processes simulated include (:numref:`Figure Land processes`):
 
 #. Stomatal physiology and photosynthesis (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`)
 
+#. Prognostic photosynthetic capacity (Chapter :number:`rst_Photosynthetic Capacity`)
+
+#. Plant hydraulics (Chapter :number: `rst_Plant Hydraulics`)
+
 #. Lake temperatures and fluxes (Chapter :numref:`rst_Lake Model`)
 
 #. Glacier processes (Chapter :numref:`rst_Glaciers`)
@@ -652,19 +577,22 @@ processes simulated include (:numref:`Figure Land processes`):
 
 #. Urban energy balance and climate (Chapter :numref:`rst_Urban Model (CLMU)`)
 
-#. Vegetation carbon and nitrogen allocation and respiration (Chapter
-   :numref:`rst_CN Allocation`)
+#. Vegetation carbon and nitrogen allocation (Chapter :numref:`rst_CN Allocation`)
 
 #. Vegetation phenology (Chapter :numref:`rst_Vegetation Phenology and Turnover`)
 
+#. Plant respiration (Chapter :number:`rst_Plant Respiration`)
+
 #. Soil and litter carbon decomposition (Chapter :numref:`rst_Decomposition`)
 
-#. Nitrogen cycling including deposition, biological fixation,
+#. Fixation and uptake of nitrogen (Chapter :number:`rst_FUN`)
+
+#. External nitrogen cycling including deposition,
    denitrification, leaching, and losses due to fire (Chapter :numref:`rst_External Nitrogen Cycle`)
 
 #. Plant mortality (Chapter :numref:`rst_Plant Mortality`)
 
-#. Fire ignition and suppression, including natural, deforestation, and
+#. Fire ignition, suppression, spread, and emissions, including natural, deforestation, and
    agricultural fire (Chapter :numref:`rst_Fire`)
 
 #. Methane production, oxidation, and emissions (Chapter :numref:`rst_Methane Model`)
