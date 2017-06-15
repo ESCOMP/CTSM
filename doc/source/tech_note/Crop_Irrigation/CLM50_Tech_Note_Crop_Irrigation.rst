@@ -369,7 +369,6 @@ similar in structure to the wood product pools.
  :math:`\chi _{L}` index              -0.5                       0.65                        -0.5                        -0.5                        0.65                        -0.5                       -0.5                       -0.5                      
  grperc                               0.11                       0.11                        0.11                        0.11                        0.11                        0.11                       0.11                       0.11                      
  flnr                                 0.293                      0.41                        0.41                        0.41                        0.41                        0.293                      0.293                      0.41                      
- mbbopt                               4                          9                           9                           9                           9                           4                          4                          9                         
  fcur                                 1                          1                           1                           1                           1                           1                          1                          1                         
  ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================
 
@@ -388,8 +387,7 @@ top-of-canopy height of a crop, *SLA* is specific leaf area. :math:`\chi _{L}` i
 orientation index, equals -1 for vertical, 0 for
 random, and 1 for horizontal leaf orientation.
 grperc is the growth respiration factor. flnr is the fraction of leaf N in Rubisco enzyme.
-mbbopt is the Ball-Berry slope of conductance-photosynthesis relationship. 
-fcur is the fraction of allocation that goes to currently displayed growth
+fcur is the fraction of allocation that goes to currently displayed growth.
 
 .. _Allocation:
 
@@ -545,9 +543,10 @@ for each year. Additionally, harvest is not typically 100% efficient, so
 analysis needs to assume that harvest efficiency is less. We assume a harvest 
 efficiency of 85%, and a grain C of 45% of the grain dry weight.
 
-equation (g/m^2) = (sum(GRAINC_TO_FOOD)/0.45)*.85
+.. math::
+   :label: 25.9
 
-
+     Grain\ yield(g.m^{-2})=\frac{\sum(GRAINC\_ TO\_ FOOD)*0.85}{0.45}
 
 
 .. _Table Crop allocation parameters:
@@ -590,7 +589,7 @@ Other Features
 Physical Crop Characteristics
 ''''''''''''''''''''''''''''''
 Leaf area index (*L*) is calculated as a function of specific leaf area  
-(SLA) and leaf C (:ref:`Crop phenology parameters`). 
+(SLA, :numref:`Table Crop phenology parameters`) and leaf C. 
 Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn and sugarcane and 0.2\ *L* for
 other crops, as in AgroIBIS. All live
 C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to
@@ -601,7 +600,7 @@ and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
 
 
 .. math::
-   :label: 25.9
+   :label: 25.10
 
    \begin{array}{l} 
    {z_{top} =z_{top}^{\max } \left(\frac{L}{L_{\max } -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{L_{\max } -1} \le 1} \\ 
@@ -640,7 +639,7 @@ counter in seconds, *f*, is set as soon as the onset growth for crops
 initiates:
 
 .. math::
-   :label: 25.10
+   :label: 25.11
 
     f = n \times 86400 
 
@@ -671,7 +670,7 @@ the for both rainfed and irrigated spring wheat and sugarcane, the calculation o
 :math:`GDD_{T_{{\rm 2m}} }` allows for latitudinal variation:
 
 .. math::
-   :label: 25.11
+   :label: 25.12
 
    latitudinal\ variation\ in\ base\ T = \left\{
    \begin{array}{lr}    
