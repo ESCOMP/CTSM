@@ -3,21 +3,43 @@
 Stomatal Resistance and Photosynthesis
 =========================================
 
+Summary of CLM5.0 updates relative to the CLM4.5
+-----------------------------------------------------
+
+We describe here the complete photosynthesis and stomatal conductance parameterizations that
+appear in CLM5.0. Corresponding information for CLM4.5 appeared in the
+CLM4.5 Technical Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`).
+
+CLM5 includes the following new changes to photosynthesis and stomatal conductance:
+
+- Default stomatal conductance calculation uses the Medlyn conductance model
+
+- :math:`V_{cmax}` is predicted by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
+
+- Water stress is applied by the hydraulic conductance model (Chapter :numref:`rst_Plant Hydraulics`) 
+
+
+Introduction
+-----------------------
+
 Leaf stomatal resistance, which is needed for the water vapor flux
-(Chapter 5), is coupled to leaf photosynthesis similar to Collatz et al.
-(1991, 1992). These equations are solved separately for sunlit and
+(Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), 
+is coupled to leaf photosynthesis similar to Collatz et al.
+(:ref:`1991 <Collatzetal1991>`, :ref:`1992 <Collatzetal1992>`). These equations are solved separately for sunlit and
 shaded leaves using average absorbed photosynthetically active radiation
 for sunlit and shaded leaves
 [:math:`\phi ^{sun}` ,\ :math:`\phi ^{sha}`  W m\ :sup:`-2`
-(section 4.1)] to give sunlit and shaded stomatal resistance
+(section :numref:`Solar Fluxes`)] to give sunlit and shaded stomatal resistance
 (:math:`r_{s}^{sun}` ,\ :math:`r_{s}^{sha}` s m\ :sup:`-1`) and
 photosynthesis (:math:`A^{sun}` ,\ :math:`A^{sha}`  µmol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`). Canopy
 photosynthesis is :math:`A^{sun} L^{sun} +A^{sha} L^{sha}` , where
 :math:`L^{sun}`  and :math:`L^{sha}`  are the sunlit and shaded leaf
-area indices (section 4.1). Canopy conductance is
+area indices (section :numref:`Solar Fluxes`). Canopy conductance is
 :math:`\frac{1}{r_{b} +r_{s}^{sun} } L^{sun} +\frac{1}{r_{b} +r_{s}^{sha} } L^{sha}` ,
 where :math:`r_{b}`  is the leaf boundary layer resistance (section
-5.3). The equation set is described by Bonan et al. (2011).
+:numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
+The implementation is described by Bonan et al. (:ref:`2011 <Bonanetal2011>`), though different 
+methods of calculating stomatal conductance and :math:`V_{cmax}` are used in CLM5.
 
 .. _Stomatal resistance:
 
