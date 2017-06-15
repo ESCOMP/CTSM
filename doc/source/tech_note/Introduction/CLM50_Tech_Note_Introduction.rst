@@ -11,8 +11,7 @@
 
 ***Lead Authors***
 
-**Bardan Ghimire, Leo van Kampenhout, Daniel Kennedy, Erik Kluzek, Peter J. Lawrence, Fang Li, Hongyi Li, Danica Lombardozzi, Yaqiong Lu, Justin Perket, William J. Riley, William Sacks, Mingjie Shi, Will Wieder, Chonggang Xu
-**
+**Bardan Ghimire, Leo van Kampenhout, Daniel Kennedy, Erik Kluzek, Peter J. Lawrence, Fang Li, Hongyi Li, Danica Lombardozzi, Yaqiong Lu, Justin Perket, William J. Riley, William Sacks, Mingjie Shi, Will Wieder, Chonggang Xu**
 
 ***Contributing Authors***
 
@@ -127,6 +126,8 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 - :numref:`Table Temperature dependence parameters for C3 photosynthesis` Temperature dependence parameters for C3 photosynthesis. 
 
 - :numref:`Table Plant functional type root distribution parameters` Plant functional type root distribution parameters. 
+
+- :numref:`Table MOSART Parameters` List of parameters in the global hydrography dataset.
 
 - :numref:`Table Allocation and CN ratio parameters` Allocation and carbon:nitrogen ratio parameters 
 
@@ -565,9 +566,9 @@ processes simulated include (:numref:`Figure Land processes`):
 
 #. Stomatal physiology and photosynthesis (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`)
 
-#. Prognostic photosynthetic capacity (Chapter :number:`rst_Photosynthetic Capacity`)
+#. Prognostic photosynthetic capacity (Chapter :numref:`rst_Photosynthetic Capacity`)
 
-#. Plant hydraulics (Chapter :number: `rst_Plant Hydraulics`)
+#. Plant hydraulics (Chapter :numref: `rst_Plant Hydraulics`)
 
 #. Lake temperatures and fluxes (Chapter :numref:`rst_Lake Model`)
 
@@ -581,11 +582,11 @@ processes simulated include (:numref:`Figure Land processes`):
 
 #. Vegetation phenology (Chapter :numref:`rst_Vegetation Phenology and Turnover`)
 
-#. Plant respiration (Chapter :number:`rst_Plant Respiration`)
+#. Plant respiration (Chapter :numref:`rst_Plant Respiration`)
 
 #. Soil and litter carbon decomposition (Chapter :numref:`rst_Decomposition`)
 
-#. Fixation and uptake of nitrogen (Chapter :number:`rst_FUN`)
+#. Fixation and uptake of nitrogen (Chapter :numref:`rst_FUN`)
 
 #. External nitrogen cycling including deposition,
    denitrification, leaching, and losses due to fire (Chapter :numref:`rst_External Nitrogen Cycle`)
