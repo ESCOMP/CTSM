@@ -3,7 +3,7 @@
 Model for Scale Adaptive River Transport (MOSART)
 =================================================
 
-.. _Overview:
+.. _Overview MOSART:
 
 Overview
 ---------
