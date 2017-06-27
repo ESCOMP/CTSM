@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm4_5_16_r247
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Jun 26 19:52:20 MDT 2017
+One-line Summary: New GLACIER_REGION field with CISM domain split in two
+
+Purpose of changes
+------------------
+
+In an upcoming tag, we'll need a separate GLACIER_REGION for the purpose of
+determining where ice runoff should be melted: we do not want this melt to
+happen over Greenland itself, but we do want it to happen in peripheral parts of
+the CISM domain (and in particular, we want it to happen over the Canadian
+archipelago, which is within the CISM domain, and thus was within the
+"Greenland" GLACIER_REGION). (We still need a GLACIER_REGION that encompasses
+areas outside Greenland itself in case ice extent grows a bit beyond the current
+boundaries. So we truly need two separate GLACIER_REGIONs for (a) Greenland
+itself, and (b) peripheral areas of the CISM domain.) This tag updates the
+surface datasets and related fields to have this extra GLACIER_REGION.
+
+In addition to updating the GLACIER_REGION raw data file, this also introduces a
+new regridding method that is applied to GLACIER_REGION: this takes the maximum
+value from any source point (NOT the dominant value). This is important for the
+new GLACIER_REGION, where we want a destination (CLM) cell to be considered in
+region 2 (Greenland itself) if ANY overlapping source points are in region
+2. This means that the ordering of regions in the GLACIER_REGION raw data file
+is important: preference will be given to higher-numbered regions.
+
+Note that I just changed surface datasets that had time stamp 170428 or
+later. This excluded some older single point datasets, for which the new glacier
+region doesn't matter anyway:
+- surfdata_0.125x0.125_simyr2000_c150114.nc
+- surfdata_0.125x0.125_mp24_simyr2000_c150114.nc
+- surfdata_1x1_smallvilleIA_78pfts_simyr2000_c160127.nc
+- surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc
+- surfdata_1x1_tropicAtl_16pfts_simyr1850_c160127.nc (used in tropicAtl_subset testmod)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- There are some additional subtleties now for setting up a run with different
+  glacier domains (e.g., a paleoclimate run)
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- New surface datasets - just differ in GLACIER_REGION
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- There are some additional subtleties now for setting up a run with different
+  glacier domains (e.g., a paleoclimate run)
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - ok
+
+    PASSed except expected failures:
+    - baseline comparisons failed for mksurfdata_map tests
+    - PTCLM tests failed as expected
+
+    Also ran mksurfdata_map unit tests:
+    - new-style (cmake / pfunit-based): pass
+    - old-style: same failures as on trunk
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    cheyenne_intel - pass
+    hobart_nag --- pass
+    hobart_pgi --- pass
+    hobart_intel - pass
+
+Ran tests on glacier_region_canada_n03_clm4_5_16_r246
+- After that, modified the default mksurfdata_map namelist used for testing:
+  pointed to updated file
+
+
+
+CLM tag used for the baseline comparisons: clm4_5_16_r246
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - bit-for-bit
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+List all files added and what they do:
+
+========= Get mkindexmapMod under some pfunit-based unit tests - required
+          stubbing out a bunch of netcdf stuff
+A       components/clm/tools/mksurfdata_map/src/unit_test_stubs
+A       components/clm/tools/mksurfdata_map/src/unit_test_stubs/mkncdio.F90
+A       components/clm/tools/mksurfdata_map/src/test/mkindexmap_test
+A       components/clm/tools/mksurfdata_map/src/test/mkindexmap_test/test_mkindexmap.pf
+A       components/clm/tools/mksurfdata_map/src/test/mkindexmap_test/CMakeLists.txt
+
+========= Add get_max_indices and associated unit tests
+A       components/clm/tools/mksurfdata_map/src/test/mkgridmap_test
+A       components/clm/tools/mksurfdata_map/src/test/mkgridmap_test/CMakeLists.txt
+A       components/clm/tools/mksurfdata_map/src/test/mkgridmap_test/test_mkgridmap.pf
+
+List all existing files that have been modified, and describe the changes:
+
+========= New raw dataset for glacier region
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+M       components/clm/tools/mksurfdata_map/mksurfdata_map.namelist
+
+========= Get mksurfdata_map pfunit-based unit tests passing with new cime
+M       components/clm/tools/mksurfdata_map/src/README.unit_testing
+M       components/clm/tools/mksurfdata_map/src/CMakeLists.txt
+
+========= Add get_max_indices and associated unit tests; use get_max_indices to
+          regrid glacier region
+M       components/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
+M       components/clm/tools/mksurfdata_map/src/mkindexmapMod.F90
+M       components/clm/tools/mksurfdata_map/src/mkglacierregionMod.F90
+M       components/clm/tools/mksurfdata_map/src/test/CMakeLists.txt
+
+========= Allow building mkindexmapMod for unit tests - required stubbing out a
+          bunch of netcdf stuff
+M       components/clm/tools/mksurfdata_map/src/mkncdio.F90
+
+========= Point to new surface datasets
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Extended namelist array for new region
+M       components/clm/cime_config/SystemTests/lvg.py
+
+========= Removed duplicate makefile rules
+M       components/clm/tools/mksurfdata_map/Makefile.data
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r246
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Jun 14 12:40:31 MDT 2017

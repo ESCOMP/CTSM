@@ -60,11 +60,9 @@ CROP = \
 	crop-global-present-ne120np4 \
 	crop-numa-present \
 	crop-smallville \
-	crop-smallville-1850 \
-	crop-global-1850 \
-	crop-global-1850-f45 \
-	crop-global-1850-ne120np4 \
+	crop-smallville-historical \
 	crop-global-historical \
+	crop-global-historical-f45 \
 	crop-global-historical-ne120np4 \
 	crop-global-transient-f45 \
 	crop-global-transient \
@@ -168,8 +166,18 @@ crop-global-present-ne16np4 : FORCE
 crop-global-present-ne120np4 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 2000 -res ne120np4 $(BACKGROUND)
 
+# Note that the smallville 1850 dataset is entirely natural vegetation. This
+# facilitates testing a transient case that starts with no crop, and then later
+# adds crop (to make sure that it works properly to add crop in a grid cell
+# where there used to be no crop).
+crop-smallville-historical : FORCE
+	$(MKSURFDATA) -glc_nec 0 -y 1850 -r 1x1_smallvilleIA -pft_idx 13 -pft_frc 100 $(BACKGROUND)
+
 crop-global-historical : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -res $(STANDARD_RES) $(BACKGROUND)
+
+crop-global-historical-f45 : FORCE
+	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 4x5 $(BACKGROUND)
 
 crop-global-historical-ne120np4 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -res ne120np4 $(BACKGROUND)
@@ -182,22 +190,6 @@ crop-global-transient-ne120np4 : FORCE
 
 crop-global-transient-f45 : FORCE
 	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res 4x5 $(BACKGROUND)
-
-# Note that the smallville 1850 dataset is entirely natural vegetation. This
-# facilitates testing a transient case that starts with no crop, and then later
-# adds crop (to make sure that it works properly to add crop in a grid cell
-# where there used to be no crop).
-crop-smallville-1850 : FORCE
-	$(MKSURFDATA) -glc_nec 0 -y 1850 -r 1x1_smallvilleIA -pft_idx 13 -pft_frc 100 $(BACKGROUND)
-
-crop-global-1850 : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -r $(STANDARD_RES) $(BACKGROUND)
-
-crop-global-1850-f45 : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 4x5 $(BACKGROUND)
-
-crop-global-1850-ne120np4 : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -r ne120np4 $(BACKGROUND)
 #
 # urban
 #

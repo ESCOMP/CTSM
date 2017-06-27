@@ -33,13 +33,14 @@ contains
     ! !DESCRIPTION:
     ! Make glacier region ID
     !
-    ! Regridding is done using dominant index, giving preference to non-zero values.
+    ! Regridding is done by finding the max index that overlaps each destination cell,
+    ! without regard to the weight of overlap or dominance of each overlapping index.
     !
     ! !USES:
     use mkdomainMod, only : domain_type, domain_clean, domain_read, domain_checksame
     use mkgridmapMod
     use mkncdio
-    use mkindexmapMod, only : get_dominant_indices
+    use mkindexmapMod, only : get_max_indices
     use mkdiagnosticsMod, only : output_diagnostics_index
     use mkchecksMod, only : min_bad
     !
@@ -95,20 +96,13 @@ contains
        stop
     end if
 
-    ! The raw data go from 0 to max_region. However, 0 is just the "fill" value,
-    ! indicating that a point is not in any particular glacier region of interest. So, if
-    ! an output point has any non-zero input points, we want to use that non-zero value,
-    ! even if it is mostly made up of zero points. We accomplish this by setting minval
-    ! to 1 rather than 0, and using 0 for the nodata value.
-    max_region = maxval(glacier_region_i)
-    call get_dominant_indices( &
+    call get_max_indices( &
          gridmap = tgridmap, &
          src_array = glacier_region_i, &
          dst_array = glacier_region_o, &
-         minval = 1, &
-         maxval = max_region, &
          nodata = 0)
 
+    max_region = maxval(glacier_region_i)
     call output_diagnostics_index(glacier_region_i, glacier_region_o, tgridmap, &
          'Glacier Region ID', 0, max_region, ndiag)
 

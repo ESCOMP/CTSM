@@ -22,6 +22,7 @@ module mkindexmapMod
 ! !USES:
    use shr_kind_mod, only : r8 => shr_kind_r8
    use mkncdio, only : nf_max_name
+   use mkgridmapMod, only : gridmap_type
 
    implicit none
    private
@@ -38,6 +39,7 @@ module mkindexmapMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
    public :: get_dominant_indices  ! make output map based on dominant type in each grid cell
+   public :: get_max_indices       ! make output map based on maximum type in each grid cell
    public :: filter_same           ! build a filter of overlaps where src_val == dst_val
    public :: lookup_2d             ! create map based on a 2-d lookup table
    public :: lookup_2d_netcdf      ! wrapper to lookup_2d; first read table from netcdf file
@@ -74,9 +76,6 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
 ! .true. everywhere.
 ! 
 ! Output grid cells with no contributing valid source points are given the nodata value
-!
-! !USES:
-   use mkgridmapMod, only : gridmap_type
 !
 ! !ARGUMENTS:
    implicit none
@@ -180,7 +179,76 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
 
 end subroutine get_dominant_indices
 !------------------------------------------------------------------------------
-   
+
+!-----------------------------------------------------------------------
+subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
+  !
+  ! !DESCRIPTION:
+  ! Fills an output array on the destination grid (dst_array) whose values are equal to
+  ! the maximum value in the source grid cells overlapping a given destination grid cell.
+  !
+  ! The frequency of occurrence of the source values is irrelevant. For example, if the
+  ! value 1 appears in 99% of source cells overlapping a given destination cell and the
+  ! value 2 appears in just 1%, we'll put 2 in the destination cell because it is the
+  ! maximum value.
+  !
+  ! Output grid cells with no contributing valid source points are given the nodata value
+  !
+  ! !ARGUMENTS:
+  type(gridmap_type) , intent(in)  :: gridmap      ! provides mapping from src -> dst
+  integer            , intent(in)  :: src_array(:) ! input values; length gridmap%na
+  integer            , intent(out) :: dst_array(:) ! output values; length gridmap%nb
+  integer            , intent(in)  :: nodata       ! value to assign to dst_array where there are no valid source points
+  !
+  ! !LOCAL VARIABLES:
+  logical, allocatable  :: hasdata(:)    ! true if an output cell has any valid data;
+  integer :: n, ni, no
+  real(r8) :: wt
+  integer :: src_val
+
+  character(len=*), parameter :: subname = 'get_max_indices'
+  !-----------------------------------------------------------------------
+
+  ! Error-check inputs
+
+   if (size(src_array) /= gridmap%na .or. &
+        size(dst_array) /= gridmap%nb) then
+      write(6,*) subname//' ERROR: incorrect sizes of src_array or dst_array'
+      write(6,*) 'size(src_array) = ', size(src_array)
+      write(6,*) 'gridmap%na      = ', gridmap%na
+      write(6,*) 'size(dst_array) = ', size(dst_array)
+      write(6,*) 'gridmap%nb      = ', gridmap%nb
+      call abort()
+   end if
+
+   ! Initialize local variables
+   allocate(hasdata(gridmap%nb))
+   hasdata(:) = .false.
+
+   do n = 1, gridmap%ns
+      wt = gridmap%wovr(n)
+      if (wt > 0._r8) then
+         ni = gridmap%src_indx(n)
+         no = gridmap%dst_indx(n)
+         src_val = src_array(ni)
+         if (.not. hasdata(no)) then
+            hasdata(no) = .true.
+            dst_array(no) = src_val
+         else if (src_val > dst_array(no)) then
+            dst_array(no) = src_val
+         end if
+      end if
+   end do
+
+   do no = 1, gridmap%nb
+      if (.not. hasdata(no)) then
+         dst_array(no) = nodata
+      end if
+   end do
+
+end subroutine get_max_indices
+
+
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -203,9 +271,6 @@ subroutine filter_same(gridmap, filter, src_array, dst_array, nodata)
 ! (3) for any overlap where the value in the given src_array differs from the value
 !     in the given dst_array, filter will be .false.
 ! (4) anywhere else, filter will be .true.
-!
-! !USES:
-   use mkgridmapMod, only : gridmap_type
 !
 ! !ARGUMENTS:
    implicit none
