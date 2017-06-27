@@ -609,6 +609,7 @@ lnd/clm2/surfdata_map/surfdata_48x96_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63"  sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_0.47x0.63_78pfts_CMIP6_simyr1850_c170919.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" use_crop=".true." >
+<<<<<<< HEAD
 lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
@@ -616,6 +617,15 @@ lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc</fsurda
 lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_4x5_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
+=======
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+<fsurdat hgrid="10x15"     sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_10x15_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+<fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_4x5_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+>>>>>>> 79672a7... clm4_5_16_r247
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_CMIP6_simyr1850_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="1850" use_crop=".true." >
@@ -625,9 +635,15 @@ lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_CMIP6_simyr1850_c170917.nc</fsu
 lnd/clm2/surfdata_map/surfdata_1x1_brazil_78pfts_CMIP6_simyr1850_c171214.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".true." >
+<<<<<<< HEAD
 lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
+=======
+lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+<fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+>>>>>>> 79672a7... clm4_5_16_r247
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 

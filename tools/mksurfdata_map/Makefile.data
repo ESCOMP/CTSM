@@ -198,6 +198,7 @@ crop-global-present-ne120np4 : FORCE
 # where there used to be no crop).
 crop-smallville-historical : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 1x1_smallvilleIA -pft_idx 13 -pft_frc 100 $(BACKGROUND)
+	$(MKSURFDATA) -glc_nec 0 -y 1850 -r 1x1_smallvilleIA -pft_idx 13 -pft_frc 100 $(BACKGROUND)
 
 crop-global-historical : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -res $(STANDARD_RES) $(BACKGROUND)
