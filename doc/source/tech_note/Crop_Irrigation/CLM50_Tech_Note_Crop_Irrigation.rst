@@ -94,7 +94,7 @@ land management between crops. Each crop type has a rainfed and an irrigated
 pft that are on independent soil columns. Crop grid cell coverage is assigned from 
 satellite data (similar to all natural pfts), and the managed crop type
 proportions within the crop area is based on the dataset created by
-(:ref:`Portmann et al. 2010 <Portmannetal2010>`) for present day. New in CLM5, crop area is
+:ref:`Portmann et al. (2010)<Portmannetal2010>` for present day. New in CLM5, crop area is
 extrapolated through time using the dataset provided by Land Use Model 
 Intercomparison Project (LUMIP), which is part of CMIP6 Land use timeseries 
 (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). For more details about how
@@ -128,11 +128,13 @@ Information detailing which parameters are used for each crop type is
 included in :numref:`Table Crop plant functional types`. It should be noted that pft-level history output merges
 all crop types into the actively managed crop type, so analysis 
 of crop-specific output will require use of the land surface dataset to 
-remap the yields of each actively and inactively managed crop type.
+remap the yields of each actively and inactively managed crop type. Otherwise, the 
+actively managed crop type will include yields for that crop type and all inactively
+managed crop types that are using the same parameter set.
 
 .. _Table Crop plant functional types:
 
-.. table:: Crop plant functional types (pfts) in CLM5BGCCROP.
+.. table:: Crop plant functional types (pfts) included in CLM5BGCCROP.
 
  ===  ===========================  ================  ===========================
  ITV  Plant function types (PFTs)  Management Class  Crop Parameters Used       
@@ -239,25 +241,25 @@ planting date (for the northern hemisphere) in :numref:`Table Crop phenology par
    \end{array}
 
 where :math:`{T}_{10d}` is the 10-day running mean of :math:`{T}_{2m}`, (the simulated 2-m air
-temperature at every model time step) and :math:`T_{10d}^{\min}`  is
+temperature during each model time step) and :math:`T_{10d}^{\min}`  is
 the 10-day running mean of :math:`T_{2m}^{\min }`  (the daily minimum of
-:math:`{T}_{2m}`. :math:`{T}_{p}` and :math:`T_{p}^{\min }`  are crop-specific coldest planting temperatures
+:math:`{T}_{2m}`). :math:`{T}_{p}` and :math:`T_{p}^{\min }`  are crop-specific coldest planting temperatures
 (:numref:`Table Crop phenology parameters`), :math:`{GDD}_{8}` is the 20-year running mean growing
 degree-days (units are degree-days or :sup:`o` days) tracked
-from April through September (NH) base 8\ :sup:`o` C with
+from April through September (NH) above 8\ :sup:`o` C with
 maximum daily increments of 30\ :sup:`o` days (see equation :eq:`25.3`), and
 :math:`{GDD}_{min }`\ is the minimum growing degree day requirement
 (:numref:`Table Crop phenology parameters`). :math:`{GDD}_{8}` does not change as quickly as :math:`{T}_{10d}` and :math:`T_{10d}^{\min }`, so
-it determines whether the crop can be planted in a grid cell, while the
-two faster-changing variables determine when the crop may be planted.
+it determines whether it is warm enough for the crop to be planted in a grid cell, while the
+2-m air temperature variables determine the day when the crop may be planted if the :math:`{GDD}_{8}` threshold is met.
 If the requirements in equation :eq:`25.1` are not met by the maximum planting date, 
 crops are still planted on the maximum planting date as long as  :math:`{GDD}_{8} > 0`. In
 the southern hemisphere (SH) the NH requirements apply 6 months later.
 
 At planting, each crop seed pool is assigned 3 gC m\ :sup:`-2` from its 
-grain product pool. The seed carbon transferred to the leaves upon leaf emergence. An
+grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An
 equivalent amount of seed leaf N is assigned given the pft’s C to N
-ratio for leaves (:math:`{CN}_{leaf}` in :numref:`Table Crop allocation parameters`, this differs from AgroIBIS,
+ratio for leaves (:math:`{CN}_{leaf}` in :numref:`Table Crop allocation parameters`; this differs from AgroIBIS,
 which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary
 for the crop to reach vegetative and physiological maturity,
 :math:`{GDD}_{mat}`, according to the following AgroIBIS rules:
@@ -273,11 +275,11 @@ for the crop to reach vegetative and physiological maturity,
    GDD_{{\rm mat}}^{{\rm trop.soy}} =GDD_{{\rm 10}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm trop.soy}} <2100{}^\circ {\rm days}
    \end{array}
 
-where :math:`{GDD}_{10}` is the 20-year running mean growing
-degree-days tracked from April through September (NH) base
-10\ :sup:`o`\C with maximum daily increments of
-30\ :sup:`o`\days. Equation :eq:`25.3` shows how we calculate
-:math:`{GDD}_{0}`, :math:`{GDD}_{8}`, and :math:`{GDD}_{10}`:
+where :math:`{GDD}_{0}`, :math:`{GDD}_{8}`, and :math:`{GDD}_{10}` are the 20-year running mean growing
+degree-days tracked from April through September (NH) over 0\ :sup:`o`\C, 8\ :sup:`o`\C, and
+10\ :sup:`o`\C, respectively, with maximum daily increments of
+26\ :sup:`o`\days (for :math:`{GDD}_{0}`) or 30\ :sup:`o`\days (for :math:`{GDD}_{8}` and :math:`{GDD}_{10}`). Equation :eq:`25.3` shows how we calculate
+:math:`{GDD}_{0}`, :math:`{GDD}_{8}`, and :math:`{GDD}_{10}` for each model timestep:
 
 .. math::
    :label: 25.3
@@ -289,9 +291,9 @@ degree-days tracked from April through September (NH) base
    \end{array}
 
 where, if :math:`{T}_{2m}` -  :math:`{T}_{f}` takes on values
-outside the above ranges, then it equals the minimum or maximum value in
-the range. Also  :math:`{T}_{f}` equals 273.15 K,
-:math:`{T}_{2m}` has units of K, and *GDD* has units of ºdays.
+outside the above ranges within a day, then it equals the minimum or maximum value in
+the range for that day. :math:`{T}_{f}` is the freezing temperature of water and equals 273.15 K,
+:math:`{T}_{2m}` is the 2-m air temperature in units of K, and *GDD* is in units of ºdays.
 
 .. _Leaf emergence:
 
@@ -299,25 +301,25 @@ Leaf emergence
 '''''''''''''''''''''''
 
 According to AgroIBIS, leaves may emerge when the growing degree-days of
-soil temperature to 0.05 m depth tracked since planting
-(:math:`GDD_{T_{soi} }` ) reaches 1 to 5% of :math:`{GDD}_{mat}`
-(:numref:`Table Crop phenology parameters`). The base temperature for :math:`GDD_{T_{soi} }` 
-are listed in :numref:`Table Crop phenology parameters`. 
-Leaf onset occurs in the first
+soil temperature to 0.05 m depth (:math:`GDD_{T_{soi} }` ), which is tracked since planting,
+reaches 1 to 5% of :math:`{GDD}_{mat}`
+(see Phase 2 % :math:`{GDD}_{mat}` in :numref:`Table Crop phenology parameters`). The base temperature threshold for :math:`GDD_{T_{soi} }` 
+are listed in :numref:`Table Crop phenology parameters`, and leaf emergence (crop phenology phase 2) 
+starts when this threshold is met. Leaf onset occurs in the first
 time step of phase 2, at which moment all seed C is transferred to leaf
-C. Subsequently, the leaf area index generally increases and reaches
-a maximum value during phase 2. Stem and root C are also increasing, based on
-the carbon allocation algorithem in section :numref:`Leaf emergence to grain fill`.
+C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches
+a predetermined maximum value. Stem and root C also increase throughout phase 2 based on
+the carbon allocation algorithm in section :numref:`Leaf emergence to grain fill`.
 
 .. _Grain fill:
 
 Grain fill
 '''''''''''''''''''
 
-Phase 3 begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since
-planting like :math:`GDD_{T_{soi} }`  but for 2-m air temperature,
-:math:`GDD_{T_{{\rm 2m}} }`, must reach a heat unit threshold, *h*,
-of 40 to 65% of  :math:`{GDD}_{mat}` (:numref:`Table Crop phenology parameters`). 
+The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since
+planting, similar to :math:`GDD_{T_{soi} }`  but for 2-m air temperature,
+:math:`GDD_{T_{{\rm 2m}} }`, must reach a threshold
+of 40 to 65% of  :math:`{GDD}_{mat}` (see Phase 3 % :math:`{GDD}_{mat}` in :numref:`Table Crop phenology parameters`). 
 For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane),
 the :math:`{GDD}_{mat}` is based on an empirical function and ranges between 950 and 1850.
 The second potential trigger for phase 3 is based on leaf area index. 
@@ -337,11 +339,11 @@ the number of days past planting reaches a crop-specific maximum
 (:numref:`Table Crop phenology parameters`), then the crop is harvested. 
 Harvest occurs in one time step using
 the BGC leaf offset algorithm. Variables track the flow of grain C and
-N to food and of live stem C and N to litter. Putting live
+N to food and of all other plant pools, including live stem C and N, to litter. Putting live
 stem C and N into the litter pool is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N into dead stem pools first. Leaf and root C and N pools
 are routed to the litter pools in the same manner as natural vegetation. Whereas food C and N
-formerly was transferred to the litter pool, CLM5 routes food C and N
+was formerly transferred to the litter pool, CLM5 routes food C and N
 to a grain product pool where the C and N decay to the atmosphere over one year,
 similar in structure to the wood product pools. 
 
@@ -376,8 +378,8 @@ Notes: :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are
 the minimum and maximum planting date in the Northern Hemisphere, the corresponding dates
 in the Southern Hemisphere apply 6 months later.
 :math:`T_{p}` and :math:`T_{p}^{ min }` are crop-specific coldest planting temperatures.
-:math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days base 
-on the base temperature in the 7\ :sup:`th` row, tracked from April to September (NH).
+:math:`{GDD}_{min}` is the lowest (for planting) 20-year running mean growing degree-days based 
+on the base temperature threshold in the 7\ :sup:`th` row, tracked from April to September (NH).
 :math:`{GDD}_{mat}` is a crop’s 20-year running mean growing
 degree-days needed for vegetative and physiological maturity. Harvest
 occurs at 100%\ :math:`{GDD}_{mat}` or when the days past planting
@@ -386,7 +388,7 @@ are described in the text. :math:`z_{top}^{\max }`  is the maximum
 top-of-canopy height of a crop, *SLA* is specific leaf area. :math:`\chi _{L}` is the leaf
 orientation index, equals -1 for vertical, 0 for
 random, and 1 for horizontal leaf orientation.
-grperc is the growth respiration factor. flnr is the fraction of leaf N in Rubisco enzyme.
+grperc is the growth respiration factor. flnr is the fraction of leaf N in the Rubisco enzyme.
 fcur is the fraction of allocation that goes to currently displayed growth.
 
 .. _Allocation:
