@@ -172,6 +172,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <precip_repartition_glc_all_snow_t phys="clm5_0">-2.</precip_repartition_glc_all_snow_t>
 <precip_repartition_glc_all_rain_t phys="clm5_0">0.</precip_repartition_glc_all_rain_t>
 
+<!-- lnd2atm defaults -->
+<melt_non_icesheet_ice_runoff phys="clm4_5">.false.</melt_non_icesheet_ice_runoff>
+<melt_non_icesheet_ice_runoff phys="clm5_0">.true.</melt_non_icesheet_ice_runoff>
+
 <!-- CN Fire model method defaults -->
 <fire_method phys="clm5_0">li2016crufrc</fire_method>
 <fire_method phys="clm4_5">li2014qianfrc</fire_method>
@@ -298,6 +302,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Greenland itself: replaced_by_ice
      Antarctica: replaced_by_ice -->
 <glacier_region_melt_behavior>'remains_in_place','replaced_by_ice','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
+
+<!-- Default glacier ice runoff behavior is:
+     Mountain glaciers: melted
+     Greenland periphery: melted
+     Greenland itself: remains_ice
+     Antarctica: remains_ice -->
+<glacier_region_ice_runoff_behavior>'melted','melted','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>
 
 <!-- This parameter is tied (in a scientific sense) to h2osno_max: For large
      values of h2osno_max, glc_snow_persistence_max_days should be 0; for small

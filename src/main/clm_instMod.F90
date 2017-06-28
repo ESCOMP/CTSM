@@ -251,7 +251,7 @@ contains
     ! Initialize clm->drv and drv->clm data structures
 
     call atm2lnd_inst%Init( bounds, NLFilename )
-    call lnd2atm_inst%Init( bounds )
+    call lnd2atm_inst%Init( bounds, NLFilename )
 
     ! Initialize glc2lnd and lnd2glc even if running without create_glacier_mec_landunit,
     ! because at least some variables (such as the icemask) are referred to in code that

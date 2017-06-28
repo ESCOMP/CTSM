@@ -295,7 +295,8 @@ contains
 
     this%qflx_qrgwl_col(begc:endc) = spval
     call hist_addfld1d (fname='QRGWL',  units='mm/s',  &
-         avgflag='A', long_name='surface runoff at glaciers (liquid only), wetlands, lakes', &
+         avgflag='A', &
+         long_name='surface runoff at glaciers (liquid only), wetlands, lakes; also includes melted ice runoff from QSNWCPICE', &
          ptr_col=this%qflx_qrgwl_col, c2l_scale_type='urbanf')
 
     this%qflx_drain_col(begc:endc) = spval
@@ -316,11 +317,11 @@ contains
     this%qflx_runoff_col(begc:endc) = spval
     call hist_addfld1d (fname='QRUNOFF',  units='mm/s',  &
          avgflag='A', &
-         long_name='total liquid runoff (does not include QSNWCPICE) not including correction for land use change', &
+         long_name='total liquid runoff not including correction for land use change', &
          ptr_col=this%qflx_runoff_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QRUNOFF_ICE', units='mm/s', avgflag='A', &
-         long_name='total liquid runoff (does not include QSNWCPICE) not incl corret for LULCC (ice landunits only)', &
+         long_name='total liquid runoff not incl corret for LULCC (ice landunits only)', &
          ptr_col=this%qflx_runoff_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
     this%qflx_runoff_u_col(begc:endc) = spval

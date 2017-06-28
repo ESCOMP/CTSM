@@ -1591,6 +1591,11 @@ sub process_namelist_inline_logic {
   setup_logic_atm_forcing($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #########################################
+  # namelist group: lnd2atm_inparm
+  #########################################
+  setup_logic_lnd2atm($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #########################################
   # namelist group: clm_humanindex_inparm #
   #########################################
   setup_logic_humanindex($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -2047,6 +2052,7 @@ sub setup_logic_glacier {
      # (And since we'll eventually move to always having glc_mec, it's not worth adding some complex logic to determine when they're really needed.)
      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior');
      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_melt_behavior');
+     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_ice_runoff_behavior');
   }
 }
 
@@ -3659,6 +3665,19 @@ sub setup_logic_atm_forcing {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_lnd2atm {
+   #
+   # Options related to fields sent to atmosphere
+   #
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'melt_non_icesheet_ice_runoff');
+   }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_fates {
     #
     # Set some default options related to Ecosystem Demography
@@ -3699,7 +3718,7 @@ sub write_output_files {
   } else {
 
     @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
-                 lai_streams atm2lnd_inparm clm_canopyhydrology_inparm cnphenology
+                 lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                  clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                  finidat_consistency_checks dynpft_consistency_checks 
                  clm_initinterp_inparm century_soilbgcdecompcascade

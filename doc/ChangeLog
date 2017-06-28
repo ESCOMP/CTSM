@@ -1,4 +1,180 @@
 ===============================================================
+Tag name:  clm4_5_16_r248
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Jun 28 15:50:13 MDT 2017
+One-line Summary: Melt most ice runoff
+
+Purpose of changes
+------------------
+
+Up until now, excess snow in CLM (accumulated beyond the snow capping limit) has
+been sent to the ocean as an ice runoff flux. However, this caused problems in
+some regions, in that it cooled an already-cold ocean, leading to excessive sea
+ice growth. Keith Lindsay, Marika Holland and others suggested changing CLM so
+that it sends this flux as liquid rather than ice runoff - having the atmosphere
+melt the ice rather than having the ocean do so. These changes are implemented
+here.
+
+This has now been tested in many fully-coupled simulations, and it indeed solves
+the problem of excessive sea ice growth, without having any noticeable
+detrimental effects on other aspects of the simulation.
+
+Specifically, this affects ice runoff from (a) glacier_mec columns outside of
+Greenland and Antarctica, and (b) all other column types (vegetated, etc.). We
+still send ice runoff from Greenland and Antarctica to simulate the ice calving
+flux that occurs in those regions. In addition, we still send an ice runoff flux
+generated from dynamic landunit adjustments.
+
+This new behavior is used by default in CLM50, but not in CLM45.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable: melt_non_icesheet_ice_runoff
+- New namelist variable: glacier_region_ice_runoff_behavior
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok
+
+    tests pass, namelists change as expected
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    cheyenne_intel - ok
+    hobart_nag --- ok
+    hobart_pgi --- ok
+    hobart_intel - ok
+
+    ok means tests pass, answers change as expected
+
+    Ran most testing on melt_ice_runoff_n05_clm4_5_16_r247; ran hobart on latest
+    (which included a commit to split long lines)
+
+CLM tag used for the baseline comparisons: clm4_5_16_r247
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM50 cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      new climate
+
+      This changes runoff terms (liquid and ice) and the sensible heat flux sent
+      to the atmosphere. In addition, there are limited changes in some
+      methane-related terms; this is presumably due to the dependence of
+      finundated on TWS, and the fact that TWS changes due to the changes in
+      these runoff terms.
+
+      There are also diffs in x2r_Flrl_irrig for this test (and the similar
+      yellowstone test):
+      ERS_D_Ld10.T31_g37_gl4.IGHISTCLM50.cheyenne_intel.clm-glcMEC_decrease. It
+      makes sense that there would be x2r irrig diffs due to diffs in volr, but
+      I was surprised that this test had any irrigation. It turns out this is
+      due to bug #2479.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: b.e20.B1850.f09_g17.pi_control.all.149
+
+   URL for LMWG diagnostics output used to validate new climate: ???
+
+   Note that the climate tests were done on an earlier, kludgey
+   implementation. I have verified that the latest implementation is bit-for-bit
+   with that earlier implementation via a 5-year run of compset
+   1850_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV at
+   resolution f09_g16, producing annual-average cpl history files. (For the
+   original, used
+   https://svn-ccsm-models.cgd.ucar.edu/clm2/branch_tags/melt_ice_runoff_orig_tags/melt_ice_runoff_orig_n01_clm4_5_16_r246.)
+   There were differences in a few CLM diagnostic fields, as expected (because I
+   have tweaked some diagnostic fields in the latest version), but the cpl
+   avghist files were bit-for-bit.
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes as described above
+M       components/clm/src/main/lnd2atmMod.F90
+M       components/clm/src/main/lnd2atmType.F90
+
+========= Changed long name in some runoff terms: removed statements that they
+          do not include QSNWCPICE, because now they *do* include the *melted*
+          portion of QSNWCPICE
+M       components/clm/src/biogeophys/WaterfluxType.F90
+
+========= New glacier region-specific behavior
+M       components/clm/src/main/glcBehaviorMod.F90
+M       components/clm/src/main/test/glcBehavior_test/test_glcBehavior.pf
+M       components/clm/src/main/clm_driver.F90
+
+========= New namelist flags controlling the behavior
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/src/main/clm_instMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r247
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Jun 26 19:52:20 MDT 2017
