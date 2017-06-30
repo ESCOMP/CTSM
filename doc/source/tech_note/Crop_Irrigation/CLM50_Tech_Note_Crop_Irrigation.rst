@@ -303,8 +303,9 @@ Leaf emergence
 According to AgroIBIS, leaves may emerge when the growing degree-days of
 soil temperature to 0.05 m depth (:math:`GDD_{T_{soi} }` ), which is tracked since planting,
 reaches 1 to 5% of :math:`{GDD}_{mat}`
-(see Phase 2 % :math:`{GDD}_{mat}` in :numref:`Table Crop phenology parameters`). The base temperature threshold for :math:`GDD_{T_{soi} }` 
-are listed in :numref:`Table Crop phenology parameters`, and leaf emergence (crop phenology phase 2) 
+(see Phase 2 % :math:`{GDD}_{mat}` in :numref:`Table Crop phenology parameters`). The base temperature threshold values for :math:`GDD_{T_{soi} }` 
+are listed in :numref:`Table Crop phenology parameters` (the same base temperature threshold values are also used for 
+:math:`GDD_{T_{{\rm 2m}} }` in section :numref:`Grain Fill`), and leaf emergence (crop phenology phase 2) 
 starts when this threshold is met. Leaf onset occurs in the first
 time step of phase 2, at which moment all seed C is transferred to leaf
 C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches
