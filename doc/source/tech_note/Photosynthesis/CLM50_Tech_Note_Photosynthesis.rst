@@ -14,7 +14,10 @@ CLM5 includes the following new changes to photosynthesis and stomatal conductan
 
 - Default stomatal conductance calculation uses the Medlyn conductance model
 
-- :math:`V_{cmax}` is predicted by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
+- :math:`J_{max}` is predicted by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
+
+- Leaf N concentration and the fraction of leaf N in Rubisco used to calculate 
+:math:`V_{cmax}` are determined by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
 - Water stress is applied by the hydraulic conductance model (Chapter :numref:`rst_Plant Hydraulics`) 
 
@@ -39,7 +42,8 @@ area indices (section :numref:`Solar Fluxes`). Canopy conductance is
 where :math:`r_{b}`  is the leaf boundary layer resistance (section
 :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
 The implementation is described by Bonan et al. (:ref:`2011 <Bonanetal2011>`), though different 
-methods of calculating stomatal conductance and :math:`V_{cmax}` are used in CLM5.
+methods of calculating stomatal conductance, :math:`J_{max}`, and the nitrogen variables
+used to calculate :math:`V_{cmax}` are used in CLM5.
 
 .. _Stomatal resistance:
 
@@ -55,7 +59,7 @@ the CO\ :sub:`1` concentration at the leaf surface. Leaf stomatal
 resistance is
 
 .. math::
-   :label: ZEqnNum230514 
+   :label: 9.1 
 
    \frac{1}{r_{s} } =g_{s} =m\frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } h_{s} +b\, \beta _{t}
 
@@ -162,7 +166,7 @@ describe the implementation, modified here. In its simplest form, leaf
 net photosynthesis after accounting for respiration (:math:`R_{d}` ) is
 
 .. math::
-   :label: 9.2) 
+   :label: 9.2
 
    A_{n} =\min \left(A_{c} ,A_{j} ,A_{p} \right)-R_{d} .
 
@@ -171,9 +175,8 @@ The RuBP carboxylase (Rubisco) limited rate of carboxylation
 s\ :sup:`-1`) is
 
 .. math::
-   :label: ZEqnNum141081 
+   :label: 9.3
 
-   \label{ZEqnNum141081} 
    A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{\*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right. \kern-\nulldelimiterspace} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
 The maximum rate of carboxylation allowed by the capacity to regenerate
@@ -181,7 +184,7 @@ RuBP (i.e., the light-limited rate) :math:`A_{j}`  (:math:`\mu` \ mol
 CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.4) 
+   :label: 9.4
 
    A_{j} =\left\{\begin{array}{l} {\frac{J\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
@@ -191,7 +194,7 @@ C\ :sub:`4` plants :math:`A_{p}`  (:math:`\mu` \ mol
 CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: ZEqnNum104028 
+   :label: 9.5 
 
    A_{p} =\left\{\begin{array}{l} {3T_{p\qquad } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {k_{p} \frac{c_{i} }{P_{atm} } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}.
 
@@ -221,7 +224,7 @@ photosynthetically active radiation absorbed by the leaf. A common
 expression is the smaller of the two roots of the equation
 
 .. math::
-   :label: 9.6) 
+   :label: 9.6
 
    \Theta _{PSII} J^{2} -\left(I_{PSII} +J_{\max } \right)J+I_{PSII} J_{\max } =0
 
@@ -236,7 +239,7 @@ with 4.6 :math:`\mu`\ mol J\ :sup:`-1`, the light utilized in
 electron transport is
 
 .. math::
-   :label: 9.7) 
+   :label: 9.7
 
    I_{PSII} =0.5\Phi _{PSII} (4.6\phi )
 
@@ -253,7 +256,7 @@ The model uses co-limitation as described by Collatz et al. (1991,
 smaller root of the equations
 
 .. math::
-   :label: 9.8) 
+   :label: 9.8
 
    \begin{array}{rcl} {\Theta _{cj} A_{i}^{2} -\left(A_{c} +A_{j} \right)A_{i} +A_{c} A_{j} } & {=} & {0} \\ {\Theta _{ip} A^{2} -\left(A_{i} +A_{p} \right)A+A_{i} A_{p} } & {=} & {0} \end{array} .
 
@@ -287,21 +290,21 @@ respiration rate. The parameters :math:`V_{c\max 25}` ,
 :math:`T_{v}`  (K) as:
 
 .. math::
-   :label: 9.9) 
+   :label: 9.9
 
    \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma _{*} } & {=} & {\Gamma _{*25} \; f\left(T_{v} \right)} \end{array}
 
 with
 
 .. math::
-   :label: 9.10) 
+   :label: 9.10
 
    f\left(T_{v} \right)=\; \exp \left[\frac{\Delta H_{a} }{298.15\times 0.001R_{gas} } \left(1-\frac{298.15}{T_{v} } \right)\right]
 
 and
 
 .. math::
-   :label: 9.11) 
+   :label: 9.11
 
    f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}  .
 
@@ -312,7 +315,7 @@ Because :math:`T_{p}`  as implemented here varies with
 :math:`T_{p}` . For C\ :sub:`4` plants,
 
 .. math::
-   :label: 9.12) 
+   :label: 9.12
 
    \begin{array}{l} {V_{c\max } =V_{c\max 25} \left[\frac{Q_{10} ^{(T_{v} -298.15)/10} }{f_{H} \left(T_{v} \right)f_{L} \left(T_{v} \right)} \right]} \\ {f_{H} \left(T_{v} \right)=1+\exp \left[s_{1} \left(T_{v} -s_{2} \right)\right]} \\ {f_{L} \left(T_{v} \right)=1+\exp \left[s_{3} \left(s_{4} -T_{v} \right)\right]} \end{array}
 
@@ -323,7 +326,7 @@ with :math:`Q_{10} =2`,
 Additionally,
 
 .. math::
-   :label: 9.13) 
+   :label: 9.13
 
    R_{d} =R_{d25} \left\{\frac{Q_{10} ^{(T_{v} -298.15)/10} }{1+\exp \left[s_{5} \left(T_{v} -s_{6} \right)\right]} \right\}
 
@@ -331,7 +334,7 @@ with :math:`Q_{10} =2`, :math:`s_{5} =1.3`
 K\ :sup:`-1` and :math:`s_{6} =328.15`\ K, and
 
 .. math::
-   :label: 9.14) 
+   :label: 9.14
 
    k_{p} =k_{p25} \, Q_{10} ^{(T_{v} -298.15)/10}
 
@@ -367,7 +370,7 @@ achieved by allowing :math:`\Delta S`\ to vary with growth temperature
 according to
 
 .. math::
-   :label: 9.15) 
+   :label: 9.15
 
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
@@ -379,7 +382,7 @@ parameterization, :math:`\Delta H_{d}` \ = 200000,
 ratio :math:`J_{\max 25} /V_{c\max 25}`  at 25 :sup:`o`\ C decreases with growth temperature as
 
 .. math::
-   :label: 9.16) 
+   :label: 9.16
 
    J_{\max 25} /V_{c\max 25} =2.59-0.035(T_{10} -T_{f} ).
 
@@ -388,83 +391,49 @@ temperature (K) and :math:`T_{f}`  is the freezing point of water (K).
 For lack of data, :math:`T_{p}`  acclimates similar to V :sub:`cmax` . Acclimation is restricted over the temperature
 range :math:`T_{10} -T_{f} \ge 11`\ :sup:`o`\ C and :math:`T_{10} -T_{f} \le 35`\ :sup:`o`\ C.
 
-.. _V\ :sub:`cmax25` and Canopy scaling:
+.. Canopy scaling:
 
-V\ :sub:`cmax25` and Canopy scaling
+Canopy scaling
 --------------------------------------------
-
-The maximum rate of carboxylation at 25 :sup:`o`\ C varies with
-foliage nitrogen concentration and specific leaf area and is calculated
-as in Thornton and Zimmermann (2007). At 25ºC,
-
-.. math::
-   :label: ZEqnNum217783 
-
-   V_{c\max 25} =N_{a} F_{LNR} F_{NR} a_{R25}
-
-where :math:`N_{a}`  is the area-based leaf nitrogen concentration (g N
-m\ :sup:`-2` leaf area), :math:`F_{LNR}`  is the fraction of leaf
-nitrogen in Rubisco (g N in Rubisco g\ :sup:`-1` N),
-:math:`F_{NR} =7.16` is the mass ratio of total Rubisco molecular mass
-to nitrogen in Rubisco (g Rubisco g\ :sup:`-1` N in Rubisco), and
-:math:`a_{R25} =60` is the specific activity of Rubisco (µmol
-CO\ :sub:`2` g\ :sup:`-1` Rubisco s\ :sup:`-1`).
-:math:`N_{a}`  is calculated from mass-based leaf N concentration and
-specific leaf area
-
-.. math::
-   :label: ZEqnNum561340 
-
-   N_{a} =\frac{1}{CN_{L} \; SLA_{0} }
-
-where :math:`CN_{L}`  is the leaf carbon-to-nitrogen ratio (g C
-g\ :sup:`-1` N) and :math:`SLA_{0}`  is specific leaf area at the
-canopy top ( m\ :sup:`2` leaf area g\ :sup:`-1` C ). Table 8.1
-lists values of :math:`F_{LNR}` , :math:`CN_{L}` , and :math:`SLA_{0}` 
-for each plant functional type. :math:`F_{LNR}`  was chosen to give
-:math:`V_{c\max 25}`  consistent with Kattge et al. (2009), as discussed
-by Bonan et al. (2011, 2012). Table 8.1 lists derived values for
-:math:`V_{c\max 25}`  at the top of the canopy using :math:`SLA_{0}` .
-Tropical broadleaf evergreen trees are an exception, and a higher
-:math:`V_{c\max 25}`  is used to alleviate model biases (Bonan et al.
-2012).
 
 :math:`V_{c\max 25}`  is calculated separately for sunlit and shaded
 leaves using an exponential profile to area-based leaf nitrogen
-(:math:`N_{a}` ), as in Bonan et al. (2011). :math:`V_{c\max 25}`  at
+(:math:`LNC_{a}`, see Chapter :numref:`rst_Photosynthetic Capacity` ), 
+as in :ref:`Bonan et al. (2011)<Bonanetal2011>`. :math:`V_{c\max 25}`  at
 cumulative leaf area index :math:`x` from the canopy top scales directly
-with :math:`N_{a}` , which decreases exponentially with greater
+with :math:`LNC_{a}` , which decreases exponentially with greater
 cumulative leaf area, so that
 
 .. math::
-   :label: ZEqnNum745439 
+   :label: 9.17 
 
    V_{c\; \max 25}^{} \left(x\right)=V_{c\; \max 25}^{} \left(0\right)e^{-K_{n} x}
 
 where :math:`V_{c\; \max 25}^{} \left(0\right)` is defined at the top of
-the canopy using :math:`SLA_{0}` , and :math:`K_{n}`  is the decay
+the canopy using :math:`SLA_{0}`, whic is the specific leaf area at
+the canopy top and :math:`K_{n}`  is the decay
 coefficient for nitrogen. The canopy integrated value for sunlit and
 shaded leaves is
 
 .. math::
-   :label: 9.20) 
+   :label: 9.20
 
    \begin{array}{rcl} {V_{c\; \max 25}^{sun} } & {=} & {\int _{0}^{L}V_{c\; \max 25}^{} \left(x\right)f_{sun} \left(x\right)\,  dx} \\ {} & {=} & {V_{c\; \max 25}^{} \left(0\right)\left[1-e^{-\left(K_{n} +K\right)L} \right]\frac{1}{K_{n} +K} } \end{array}
 
 .. math::
-   :label: 9.21) 
+   :label: 9.21
 
    \begin{array}{rcl} {V_{c\; \max 25}^{sha} } & {=} & {\int _{0}^{L}V_{c\; \max 25}^{} \left(x\right)\left[1-f_{sun} \left(x\right)\right] \, dx} \\ {} & {=} & {V_{c\; \max 25}^{} \left(0\right)\left\{\left[1-e^{-K_{n} L} \right]\frac{1}{K_{n} } -\left[1-e^{-\left(K_{n} +K\right)L} \right]\frac{1}{K_{n} +K} \right\}} \end{array}
 
 and the average value for the sunlit and shaded leaves is
 
 .. math::
-   :label: 9.22) 
+   :label: 9.22
 
    \bar{V}_{c\; \max 25}^{sun} ={V_{c\; \max 25}^{sun} \mathord{\left/ {\vphantom {V_{c\; \max 25}^{sun}  L^{sun} }} \right. \kern-\nulldelimiterspace} L^{sun} }
 
 .. math::
-   :label: 9.23) 
+   :label: 9.23
 
    \bar{V}_{c\; \max 25}^{sha} ={V_{c\; \max 25}^{sha} \mathord{\left/ {\vphantom {V_{c\; \max 25}^{sha}  L^{sha} }} \right. \kern-\nulldelimiterspace} L^{sha} } .
 
@@ -474,39 +443,16 @@ extinction coefficient (equation 4.9). Photosynthetic parameters
 :math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}` , and
 :math:`R_{d25}`  scale similarly.
 
-The value :math:`K_{n} = 0.11` chosen by Bonan et al. (2011) is
+The value :math:`K_{n} = 0.11` chosen by :ref:`Bonan et al. (2011)<Bonanetal2011>` is
 consistent with observationally-derived estimates for forests, mostly
 tropical, and provides a gradient in V\ :sub:`cmax` similar to
-the original CLM4 specific leaf area scaling. However, Bonan et al.
-(2012) showed that the sunlit/shaded canopy parameterization does not
+the original CLM4 specific leaf area scaling. However, 
+:ref:`Bonan et al. (2012)<Bonanetal2012>` showed that the sunlit/shaded canopy parameterization does not
 match an explicit multi-layer canopy parameterization. The discrepancy
 arises from absorption of scattered radiation by shaded leaves and can
 be tuned out with higher :math:`K_{n}` . The model uses
 :math:`K_{n} =0.30` to match an explicit multi-layer canopy.
 
-:math:`V_{c\max 25}`  additionally varies with daylength (:math:`DYL`)
-using the function :math:`f(DYL)`, which introduces seasonal variation
-to :math:`V_{c\max }` 
-
-.. math::
-   :label: 9.24) 
-
-   f\left(DYL\right)=\frac{\left(DYL\right)^{2} }{\left(DYL_{\max } \right)^{2} }
-
-with :math:`0.01\le f\left(DYL\right)\le 1`. Daylength (seconds) is
-given by
-
-.. math::
-   :label: 9.25) 
-
-   DYL=2\times 13750.9871\cos ^{-1} \left[\frac{-\sin \left(lat\right)\sin \left(decl\right)}{\cos \left(lat\right)\cos \left(decl\right)} \right]
-
-where :math:`lat` (latitude) and :math:`decl` (declination angle) are
-from section 3.3. Maximum daylength (:math:`DYL_{\max }` ) is calculated
-similarly but using the maximum declination angle for present-day
-orbital geometry (:math:`\pm`\ 23.4667º [:math:`\pm`\ 0.409571 radians],
-positive for Northern Hemisphere latitudes and negative for Southern
-Hemisphere).
 
 .. _Numerical implementation photosynthesis:
 
@@ -516,29 +462,29 @@ Numerical implementation
 The CO\ :sub:`2` partial pressure at the leaf surface
 :math:`c_{s}`  (Pa) and the vapor pressure at the leaf surface
 :math:`e_{s}`  (Pa), needed for the stomatal resistance model in
-equation , and the internal leaf CO\ :sub:`2` partial pressure
-:math:`c_{i}`  (Pa), needed for the photosynthesis model in equations -,
+equation :eq:`9.1`, and the internal leaf CO\ :sub:`2` partial pressure
+:math:`c_{i}`  (Pa), needed for the photosynthesis model in equations :eq:`9.3`-:eq:`9.5`,
 are calculated assuming there is negligible capacity to store
 CO\ :sub:`2` and water vapor at the leaf surface so that
 
 .. math::
-   :label: ZEqnNum581596 
+   :label: 9.31 
 
    A_{n} =\frac{c_{a} -c_{i} }{\left(1.4r_{b} +1.6r_{s} \right)P_{atm} } =\frac{c_{a} -c_{s} }{1.4r_{b} P_{atm} } =\frac{c_{s} -c_{i} }{1.6r_{s} P_{atm} }
 
 and the transpiration fluxes are related as
 
 .. math::
-   :label: ZEqnNum323660 
+   :label: 9.32 
 
    \frac{e_{a} -e_{i} }{r_{b} +r_{s} } =\frac{e_{a} -e_{s} }{r_{b} } =\frac{e_{s} -e_{i} }{r_{s} }
 
 where :math:`r_{b}`  is leaf boundary layer resistance (s
-m\ :sup:`2` :math:`\mu` \ mol\ :sup:`-1`) (section 5.3), the
+m\ :sup:`2` :math:`\mu` \ mol\ :sup:`-1`) (section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`), the
 terms 1.4 and 1.6 are the ratios of diffusivity of CO\ :sub:`2` to
 H\ :sub:`2`\ O for the leaf boundary layer resistance and stomatal
 resistance,
-:math:`c_{a} ={\rm CO}_{{\rm 2}} \left({\rm mol\; mol}^{{\rm -1}} \right)P_{atm}` 
+:math:`c_{a} ={\rm CO}_{{\rm 2}} \left({\rm mol\; mol}^{{\rm -1}} \right)`, :math:`P_{atm}` 
 is the atmospheric CO\ :sub:`2` partial pressure (Pa) calculated
 from CO\ :sub:`2` concentration (ppmv), :math:`e_{i}`  is the
 saturation vapor pressure (Pa) evaluated at the leaf temperature
@@ -547,31 +493,32 @@ The vapor pressure of air in the plant canopy :math:`e_{a}`  (Pa) is
 determined from
 
 .. math::
-   :label: 9.33) 
+   :label: 9.33
 
    e_{a} =\frac{P_{atm} q_{s} }{0.622}
 
 where :math:`q_{s}`  is the specific humidity of canopy air (kg
-kg\ :sup:`-1`) (section 5.3). Equations and are solved for
+kg\ :sup:`-1`) (section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
+Equations and are solved for
 :math:`c_{s}`  and :math:`e_{s}` 
 
 .. math::
-   :label: 9.34) 
+   :label: 9.34
 
    c_{s} =c_{a} -1.4r_{b} P_{atm} A_{n}
 
 .. math::
-   :label: ZEqnNum123611 
+   :label: 9.35
 
    e_{s} =\frac{e_{a} r_{s} +e_{i} r_{b} }{r_{b} +r_{s} }
 
-Substitution of equation into equation gives an expression for stomatal
+Substitution of equation :eq:`9.35` into equation :eq:`9.1` gives an expression for stomatal
 resistance (:math:`r_{s}` ) as a function of photosynthesis
 (:math:`A_{n}` ), given here in terms of conductance with
 :math:`g_{s} =1/r_{s}`  and :math:`g_{b} =1/r_{b}` 
 
 .. math::
-   :label: 9.36) 
+   :label: 9.36
 
    c_{s} g_{s}^{2} +\left[c_{s} \left(g_{b} -b\right)-m{\it A}_{n} P_{atm} \right]g_{s} -g_{b} \left[c_{s} b+mA_{n} P_{atm} {e_{a} \mathord{\left/ {\vphantom {e_{a}  e_{\*} \left(T_{v} \right)}} \right. \kern-\nulldelimiterspace} e_{\*} \left(T_{v} \right)} \right]=0.
 
@@ -579,13 +526,13 @@ Stomatal conductance is the larger of the two roots that satisfy the
 quadratic equation. Values for :math:`c_{i}`  are given by
 
 .. math::
-   :label: 9.37) 
+   :label: 9.37
 
    c_{i} =c_{a} -\left(1.4r_{b} +1.6r_{s} \right)P_{atm} A{}_{n}
 
 The equations for :math:`c_{i}` , :math:`c_{s}` , :math:`r_{s}` , and
 :math:`A_{n}`  are solved iteratively until :math:`c_{i}`  converges.
-Sun et al. (2012) pointed out that the CLM4 numerical approach does not
+:ref:`Sun et al. (2012)<Sunetal2012>` pointed out that the CLM4 numerical approach does not
 always converge. Therefore, the model uses a hybrid algorithm that
 combines the secant method and Brent’s method to solve for
 :math:`c_{i}` . The equation set is solved separately for sunlit
@@ -593,19 +540,19 @@ combines the secant method and Brent’s method to solve for
 (:math:`A_{n}^{sha}` , :math:`r_{s}^{sha}` ) leaves.
 
 The model has an optional (though not supported) multi-layer canopy, as
-described by Bonan et al. (2012). The multi-layer model is only intended
+described by :ref:`Bonan et al. (2012)<Bonanetal2012>`. The multi-layer model is only intended
 to address the non-linearity of light profiles, photosynthesis, and
 stomatal conductance in the plant canopy. In the multi-layer canopy,
 sunlit (:math:`A_{n}^{sun}` , :math:`r_{s}^{sun}` ) and shaded
 (:math:`A_{n}^{sha}` , :math:`r_{s}^{sha}` ) leaves are explicitly
-resolved at depths in the canopy using a light profile (Chapter 4). In
+resolved at depths in the canopy using a light profile (Chapter :numref:`rst_Radiative Fluxes`). In
 this case, :math:`V_{c\max 25}`  is not integrated over the canopy, but
 is instead given explicitly for each canopy layer using equation . This
-also uses the Lloyd et al. (2010) relationship whereby
+also uses the :ref:`Lloyd et al. (2010)<Lloydetal2010>` relationship whereby
 K\ :sub:`n` scales with V\ :sub:`cmax` as
 
 .. math::
-   :label: 9.38) 
+   :label: 9.38
 
    K_{n} =\exp \left(0.00963V_{c\max } -2.43\right)
 

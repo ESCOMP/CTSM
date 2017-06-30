@@ -48,6 +48,9 @@ we do not differentiate the photosynthetic capacity difference for sun-lit or sh
 Model structure
 ----------------------------------------------------------
 
+Plant Nitrogen
+''''''''''''''''''''''''''
+
 The structure of the LUNA model is adapted from Xu et al.(2012), where the plant nitrogen at the leaf level ( :math:`\text{LNC}_{a}`;  gN/ m :sup:`2` leaf) is divided into
 four pools: structural nitrogen( :math:`N_{\text{str}}`;  gN/m :sup:`2` leaf), 
 photosynthetic nitrogen ( :math:`N_{\text{psn}}`; gN/ m:sup:`2` leaf),
@@ -99,6 +102,9 @@ where  :math:`\text{FNC}_{a}` is the functional nitrogen content defined as the 
 The gross photosynthesis, :math:`A`, was calculated with a coupled leaf gas  exchange model based on the Farquhar et al. (1980) model of
 photosynthesis and Ball--Berry-type stomatal conductance model (Ball et al., 1987). The maintenance respiration for photosynthetic enzymes, :math:`R_{\text{psn}}`, is
 calculated by the multiplication of total photosynthetic nitrogen ( :math:`N_{\text{psn}}` ) and the maintenance respiration cost for photosynthetic enzymes.
+
+Maximum electron transport rate
+''''''''''''''''''''''
 
 In the LUNA model, the maximum electron transport rate
 ( :math:`J_{\text{max}}`; :math:`{\mu} mol`  electron / m :sup:`-2`/s)
@@ -182,6 +188,52 @@ empirical expression of  leaf (1937),
 where :math:`\text{PAR}_{\text{{max}}}` ( :math:`\mu mol`/m :sup:`2`/s) is the
 maximum photosynthetically active radiation during the day.
 
+Maximum rate of carboxylation
+'''''''''''''''''
+
+The maximum rate of carboxylation at 25 :sup:`o`\ C varies with
+foliage nitrogen concentration and specific leaf area and is calculated
+as in Thornton and Zimmermann (2007). At 25ºC,
+
+.. math::
+  :label: 10.11)
+
+   V_{c\max 25} =N_{str} N_{cb} F_{NR} a_{R25}
+
+where :math:`N_{str}` is the area-based leaf nitrogen concentration (g N
+m\ :sup:`-2` leaf area), :math:`N_{cb}`  is the fraction of leaf
+nitrogen in Rubisco (g N in Rubisco g\ :sup:`-1` N),
+:math:`F_{NR} =7.16` is the mass ratio of total Rubisco molecular mass
+to nitrogen in Rubisco (g Rubisco g\ :sup:`-1` N in Rubisco), and
+:math:`a_{R25} =60` is the specific activity of Rubisco (µmol
+CO\ :sub:`2` g\ :sup:`-1` Rubisco s\ :sup:`-1`).
+
+:math:`V_{c\max 25}`  additionally varies with daylength (:math:`DYL`)
+using the function :math:`f(DYL)`, which introduces seasonal variation
+to :math:`V_{c\max }` 
+
+.. math::
+  :label: 10.12) 
+
+   f\left(DYL\right)=\frac{\left(DYL\right)^{2} }{\left(DYL_{\max } \right)^{2} }
+
+with :math:`0.01\le f\left(DYL\right)\le 1`. Daylength (seconds) is
+given by
+
+.. math::
+  :label: 10.13) 
+
+   DYL=2\times 13750.9871\cos ^{-1} \left[\frac{-\sin \left(lat\right)\sin \left(decl\right)}{\cos \left(lat\right)\cos \left(decl\right)} \right]
+
+where :math:`lat` (latitude) and :math:`decl` (declination angle) are
+from section :numref:`Solar Zenith Angle`. Maximum daylength (:math:`DYL_{\max }` ) is calculated
+similarly but using the maximum declination angle for present-day
+orbital geometry (:math:`\pm`\ 23.4667º [:math:`\pm`\ 0.409571 radians],
+positive for Northern Hemisphere latitudes and negative for Southern
+Hemisphere).
+
+Implementation of Photosynthetic Capacity
+'''''''''''''''''
 
 Based on Farquhar et al. (1980) and Wullschleger (1993), we can calculate the
 electron-limited photosynthetic rate under daily maximum radiation ( :math:`W_{jx}`)
@@ -189,12 +241,12 @@ and the Rubisco-limited photosynthetic rate ( :math:`W_{\mathrm{c}}`) as follows
 
 
 .. math::
-  :label: 10.11)
+  :label: 10.14)
 
   W_{J_{x}} = K_{j}J_{x} , 
 
 .. math::
-  :label: 10.12)
+  :label: 10.15)
 
   W_{\mathrm{c}} = K_{\mathrm{c}} V_{{\mathrm{c}, \text{max}}},
 
@@ -207,7 +259,7 @@ assume that :math:`W_{\mathrm{c}}` is proportional to
 :math:`W_{J_{x}}`. Specifically, we have
 
 .. math::
-  :label: 10.13)
+  :label: 10.16)
 
   W_{\mathrm{c}}=t_{\alpha}t_{\mathrm{c}, j0}W_{J_{x}}
 
@@ -218,11 +270,14 @@ nitrogen use efficiency of carboxylation and electron transport (Ainsworth and R
 therefore the LUNA model has the modification factor, :math:`t_{\alpha}`, to adjust baseline
 the ratio depending on the nitrogen use efficiency for electron vs carboxylation (Ali et al 2016). 
 
+Total Respiration
+'''''''''''''''
+
 Following Collatz et al.(1991a), the total respiration ( :math:`R_{\mathrm{t}}`) is
 calculated in proportion to :math:`V_{\text{c,max}}`,
 
 .. math::
-  :label: 10.14)
+  :label: 10.17)
 
   R_{\mathrm{t}} = 0.015 V_{\text{c,max}}.
 
@@ -231,7 +286,7 @@ Accounting for the daytime and nighttime temperature, the daily respirations is 
 
 
 .. math::
-  :label: 10.15)
+  :label: 10.18)
 
 
    R_{\text{td}}={R}_{\mathrm{t}} [D_{\text{day}} + D_{\text{night}} f_{\mathrm{r}}{(T_{\text{night}})/f_{\mathrm{r}}{(T_{\text{day}})}}],
