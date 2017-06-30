@@ -318,12 +318,12 @@ Grain fill
 
 The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since
 planting, similar to :math:`GDD_{T_{soi} }`  but for 2-m air temperature,
-:math:`GDD_{T_{{\rm 2m}} }`, must reach a threshold
+:math:`GDD_{T_{{\rm 2m}} }`, must reach a heat unit threshold, *h*, of
 of 40 to 65% of  :math:`{GDD}_{mat}` (see Phase 3 % :math:`{GDD}_{mat}` in :numref:`Table Crop phenology parameters`). 
 For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane),
 the :math:`{GDD}_{mat}` is based on an empirical function and ranges between 950 and 1850.
 The second potential trigger for phase 3 is based on leaf area index. 
-When the maximum value of leaf area index is reached in phase 2, phase 3 begins. 
+When the maximum value of leaf area index is reached in phase 2 (:numref:`Table Crop allocation parameters`), phase 3 begins. 
 In phase 3, the leaf area index begins to decline in
 response to a background litterfall rate calculated as the inverse of
 leaf longevity for the pft as done in the BGC part of the model.
@@ -337,15 +337,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When
 :math:`GDD_{T_{{\rm 2m}} }` reaches 100% of :math:`{GDD}_{mat}` or
 the number of days past planting reaches a crop-specific maximum 
 (:numref:`Table Crop phenology parameters`), then the crop is harvested. 
-Harvest occurs in one time step using
-the BGC leaf offset algorithm. Variables track the flow of grain C and
-N to food and of all other plant pools, including live stem C and N, to litter. Putting live
-stem C and N into the litter pool is in contrast to the approach for unmanaged PFTs which
-puts live stem C and N into dead stem pools first. Leaf and root C and N pools
-are routed to the litter pools in the same manner as natural vegetation. Whereas food C and N
-was formerly transferred to the litter pool, CLM5 routes food C and N
-to a grain product pool where the C and N decay to the atmosphere over one year,
-similar in structure to the wood product pools. 
+Harvest occurs in one time step using the BGC leaf offset algorithm. 
 
 
 .. _Table Crop phenology parameters:
@@ -396,7 +388,7 @@ fcur is the fraction of allocation that goes to currently displayed growth.
 Allocation
 ^^^^^^^^^^^^^^^^^
 
-Allocation responds to the same phases as phenology (section :numref:`Phenology`).
+Allocation changes based on the crop phenology phases phenology (section :numref:`Phenology`).
 Simulated C assimilation begins every year upon leaf emergence in phase
 2 and ends with harvest at the end of phase 3; therefore, so does the
 allocation of such C to the crop’s leaf, live stem, fine root, and
@@ -406,33 +398,35 @@ Typically, C:N ratios in plant tissue vary throughout the growing season and
 tend to be lower during early growth stages and higher in later growth stages.
 In order to account for this seasonal change, two sets of C:N
 ratios are established in CLM for the leaf, stem, and fine root of
-crops. This modified C:N ratio approach accounts for the nitrogen
-retranslocation that occurs during phase 3 of crop growth. Leaf, stem, and root
-C:N ratios for phases 1 and 2 are calculated
+crops: one during the leaf emergence phase (phenology phase 2), and a second during 
+grain fill phase (phenology phase 3). This modified C:N ratio approach accounts for the nitrogen
+retranslocation that occurs during the grain fill phase (phase 3) of crop growth. Leaf, stem, and root
+C:N ratios for phase 2 are calculated
 using the new CLM5 carbon and nitrogen allocation scheme
 (Chapter :numref:`rst_CN Allocation`), which provides a target C:N value
-and allows C:N to vary through time.
+(:numref:`Table Crop allocation parameters`) and allows C:N to vary through time.
 During grain fill (phase 3) of the crop growth cycle, a portion of the
 nitrogen in the plant tissues is moved to a storage pool to fulfill
 nitrogen demands of organ (reproductive pool) development, such that the
 resulting C:N ratio of the plant tissue is reflective of measurements at
 harvest. All C:N ratios were determined by calibration process, through
 comparisons of model output versus observations of plant carbon
-throughout the growth season.
+throughout the growing season.
 
 The BGC part of the model keeps track of a term representing excess
-maintenance respiration that for perennial pfts or pfts with C storage
-may be extracted from later gross primary production. Later extraction
+maintenance respiration, which supplies the carbon required for maintenance respiration during periods of
+low photosynthesis (Chapter :numref:`rst_Plant Respiration`).
+Carbon supply for excess maintenance respiration 
 cannot continue to happen after harvest for annual crops, so at harvest
-we turn the excess respiration pool into a flux that extracts
-CO\ :sub:`2` directly from the atmosphere. This way we eliminate
-any excess maintenance respiration remaining at harvest as if such
+the excess respiration pool is turned into a flux that extracts
+CO\ :sub:`2` directly from the atmosphere. This way 
+any excess maintenance respiration remaining at harvest is eliminated as if such
 respiration had not taken place.
 
 
 .. _Leaf emergence to grain fill:
 
-Leaf emergence to grain fill
+Leaf emergence 
 '''''''''''''''''''''''''''''''''''''
 
 During phase 2, the allocation coefficients (fraction of available C) to
@@ -452,11 +446,11 @@ exclusively to the fine roots.
 
 .. _Grain fill to harvest:
 
-Grain fill to harvest
+Grain fill 
 ''''''''''''''''''''''''''''''
 
 The calculation of :math:`a_{froot}`  remains the same from phase 2 to
-phase 3. Other allocation coefficients change to:
+phase 3. During grain fill (phase 3), other allocation coefficients change to:
 
 .. math::
    :label: 25.5
@@ -497,7 +491,7 @@ through retranslocation from leaves, stems, and roots. Nitrogen
 retranslocation is initiated at the beginning of the grain fill stage
 for all crops except soybean, for which retranslocation is after LAI decline.
 Nitrogen stored in the leaf and stem is moved into a storage
-retranslocation pool. For wheat and rice, nitrogen in roots is also
+retranslocation pool for all crops, and for wheat and rice, nitrogen in roots is also
 released into the retranslocation storage pool. The quantity of nitrogen
 mobilized depends on the C:N ratio of the plant tissue, and is
 calculated as
@@ -522,28 +516,37 @@ root, respectively, :math:`{N}_{leaf}`, :math:`{N}_{stem}`, and :math:`{N}_{froo
 is the nitrogen in the plant leaf, stem, and fine root, respectively, and :math:`CN^f_{leaf}`,
 :math:`CN^f_{stem}`, and :math:`CN^f_{froot}` is the post-grain fill C:N
 ratio of the leaf, stem, and fine root respectively (:numref:`Table Crop allocation parameters`). Since
-C:N measurements are taken from mature crops, pre-grain development C:N
-ratios for leaves, stems, and roots are optimized to allow maximum
-nitrogen accumulation for later use during organ development. Post-grain
-fill C:N ratios are assigned the same as crop residue. Once excess
-nitrogen is moved into the retranslocated pool, during the remainder of
-the growing season the retranslocated pool is used first to meet plant
+C:N measurements are often taken from mature crops, pre-grain development C:N
+ratios for leaves, stems, and roots in the model are optimized to allow maximum
+nitrogen accumulation for later use during organ development, and post-grain
+fill C:N ratios are assigned the same as crop residue. After 
+nitrogen is moved into the retranslocated pool, 
+the nitrogen in this pool is used to meet plant
 nitrogen demand by assigning the available nitrogen from the
-retranslocated pool equal to the plant nitrogen demand. Once the
+retranslocated pool equal to the plant nitrogen demand for each organ (:math:`{CN_{[organ]}^{f} }` in :numref:`Table Crop allocation parameters`). Once the
 retranslocation pool is depleted, soil mineral nitrogen pool is used to
 fulfill plant nitrogen demands.
 
 .. _Harvest to food and seed:
 
-Harvest to food and seed
+Harvest
 ''''''''''''''''''''''''''''''
 
-In CLM5, the C and N required for crop seeding is removed from the grain
-product pool during harvest and used to seed crops in the subsequent year. 
-Caluating the crop yields requires that you sum the GRAINC_TO_FOOD variable
-for each year. Additionally, harvest is not typically 100% efficient, so
+Variables track the flow of grain C and
+N to food and of all other plant pools, including live stem C and N, to litter. Putting live
+stem C and N into the litter pool is in contrast to the approach for unmanaged PFTs which
+puts live stem C and N into dead stem pools first. Leaf and root C and N pools
+are routed to the litter pools in the same manner as natural vegetation. Whereas food C and N
+was formerly transferred to the litter pool, CLM5 routes food C and N
+to a grain product pool where the C and N decay to the atmosphere over one year,
+similar in structure to the wood product pools. 
+Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain
+product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year. 
+Calcuating the crop yields (Equation :eq:`25.9`) requires that you sum the GRAINC_TO_FOOD variable 
+for each year, and must account for the proportion of C in the dry crop weight. 
+Here, we assume that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so
 analysis needs to assume that harvest efficiency is less. We assume a harvest 
-efficiency of 85%, and a grain C of 45% of the grain dry weight.
+efficiency of 85%.
 
 .. math::
    :label: 25.9
@@ -577,8 +580,9 @@ efficiency of 85%, and a grain C of 45% of the grain dry weight.
  :math:`{CN}_{grain}`                         50              50            50                  50      50      50         50             50              
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================
 
-Notes: Crop growth phases and corresponding variables are described in
-the text
+Notes: Crop growth phases and corresponding variables are described throughout
+the text. :math:`{CN}_{leaf}`, :math:`{CN}_{stem}`, and :math:`{CN}_{froot}` are
+the target C:N ratios used during the leaf emergence phase (phase 2).
 
 
 .. _Other Features:
@@ -609,6 +613,9 @@ and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
    {z_{bot} =0.02{\rm m}} 
    \end{array}
 
+where :math:`z_{top}^{\max }` is the maximum top-of-canopy height of the crop (:numref:`Table Crop phenology parameters`)
+and :math:`L_{\max }` is the maximum leaf area index (:numref:`Table Crop allocation parameters`).
+
 .. _Interactive fertilization:
 
 Interactive Fertilization 
@@ -632,12 +639,12 @@ of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowl
 to minimize N loss (primarily through denitrification) and maximize plant uptake. 
 The current implementation of CLM5 inherits this legacy, although denitrification rates
 are slower in the current version of the model (:ref:`Koven et al. 2013 <Kovenetal2013>`). As such,
-fertilizer application begins during the emergence phase of crop
-development and continues for 20 days, which helps reduce large losses
+fertilizer application begins during the leaf emergence phase of crop
+development (phase 2) and continues for 20 days, which helps reduce large losses
 of nitrogen from leaching and denitrification during the early stage of
 crop development. The 20-day period is chosen as an optimization to
 limit fertilizer application to the emergence stage. A fertilizer
-counter in seconds, *f*, is set as soon as the onset growth for crops
+counter in seconds, *f*, is set as soon as the leaf emergence phase for crops
 initiates:
 
 .. math::
@@ -645,10 +652,10 @@ initiates:
 
     f = n \times 86400 
 
-where *n* is set to 20 fertilizer application days. When the crop enters
-phase 2 (leaf emergence to the beginning of grain fill) of its growth
+where *n* is set to 20 fertilizer application days and 86400 is the number of seconds per day. When the crop enters
+phase 2 (leaf emergence) of its growth
 cycle, fertilizer application begins by initializing fertilizer amount
-to the total fertilizer at each grid cell divided by the initialized *f*.
+to the total fertilizer at each column within the grid cell divided by the initialized *f*.
 Fertilizer is applied and *f* is decremented each time step until a zero balance on
 the counter is reached.
 
@@ -658,8 +665,8 @@ the counter is reached.
 Biological nitrogen fixation for soybeans
 ''''''''''''''''''''''''''''''''''''''''''
 Biological N fixation for soybeans is calculated by the fixation and uptake of
-nitrogen module (Chapter :numref:`rst_FUN`). Unlike natural
-vegetation, where a fraction of the vegetation are N fixers, all soybeans
+nitrogen module (Chapter :numref:`rst_FUN`) and is the same as N fixation in natural vegetation. Unlike natural
+vegetation, where a fraction of each pft are N fixers, all soybeans
 are treated as N fixers.
 
 .. _Latitude vary base tempereature for growing degree days:
@@ -690,14 +697,14 @@ and sugarcane.
 Separate reproductive pool
 ''''''''''''''''''''''''''''''
 One notable difference between natural vegetation and crops is the
-presence of a reproductive carbon pool (and nitrogen pool). Accounting
-for the reproductive pool helps determine whether crops are performing
+presence of reproductive carbon and nitrogen pools. Accounting
+for the reproductive pools helps determine whether crops are performing
 reasonably through yield calculations.
 The reproductive pool is maintained similarly to the leaf, stem,
 and fine root pools, but allocation of carbon and nitrogen does not
 begin until the grain fill stage of crop development. Equation :eq:`25.5` describes the
 carbon and nitrogen allocation coefficients to the reproductive pool.
-In CLM5BGCCROP, as allocation declines
+In CLM5BGCCROP, as allocation declines in stem, leaf, and root pools (see section :numref:`Grain fill to harvest`)
 during the grain fill stage of growth, increasing amounts of carbon and
 nitrogen are available for grain development.
 
@@ -769,7 +776,7 @@ the soil is
 
 :math:`N_{irr}` is the index of the soil layer corresponding to a specified 
 depth :math:`z_{irrig}` (:numref:`Table Irrigation parameters`) and 
-:math:`\Delta z` is the thickness of the soil layer (section 
+:math:`\Delta z_{j}` is the thickness of the soil layer in layer :math:`j` (section 
 :numref:`Vertical Discretization`).  :math:`\theta_{j}` is the 
 volumetric soil moisture in layer :math:`j` (section :numref:`Soil Water`).
 :math:`\theta_{target}` and 
@@ -784,7 +791,7 @@ the irrigation period :math:`T_{irrig}` (s).  Irrigation water is applied
 directly to the ground surface, bypassing canopy interception (i.e.,
 added to  :math:`{q}_{grnd,liq}`: section :numref:`Canopy Water`). 
 
-To conserve mass, irrigation is removed from river water storage (Chapter 11).  
+To conserve mass, irrigation is removed from river water storage (Chapter :numref:`rst_River Transport Model (RTM)`).  
 When river water storage is inadequate to meet irrigation demand, 
 there are two options: 1) the additional water can be removed from the 
 ocean model, or 2) the irrigation demand can be reduced such that 
