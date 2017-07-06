@@ -1,4 +1,280 @@
 ===============================================================
+Tag name:  clm4_5_16_r249
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Jul  6 14:32:40 MDT 2017
+One-line Summary: All new compsets, reworked test lists, and related fixes
+
+Purpose of changes
+------------------
+
+The changes here were a joint effort between Dave Lawrence, Ben Andre, Erik
+Kluzek, Mariana Vertenstein and Bill Sacks
+
+(1) All new compset aliases, with the following changes:
+
+    (a) Most compset aliases are now for CLM5, with fewer CLM45 compsets and
+        even fewer CLM40 compsets.
+
+    (b) Compset aliases now use capitalization of only the first letter of each
+        piece, to avoid the alphabet soup problem. For example,
+        IHistClm50BgcCrop
+
+    (c) Some other tweaks have been made to compset aliases, such as always
+        listing the time period and Sp (satellite phenology) explicitly
+
+    (d) Compsets use GSWP3 forcing unless the alias specifies otherwise
+
+    (e) Compsets use CISM2%NOEVOLVE - and so use glc_mec in CLM - unless the
+        alias has Gs (for GLC - stub)
+
+    (f) An evolving ice sheet (CISM2%EVOLVE) is now denoted by having a final
+        'G' in the compset alias
+        
+(2) Completely reworked test lists:
+
+    (a) Use new aliases
+
+    (b) Changed most tests to CLM5
+
+    (c) Merged the aux_clm45 and aux_clm40 test categories into aux_clm
+
+    (d) Removed the 'null' test category, which was used for SBN tests
+
+    (e) Some minor additional tweaks to the aux_clm test list to ensure
+        appropriate coverage and remove some redundant tests
+
+    (f) For a few testmods directories, removed some settings that had nothing
+        to do with those testmods (use_dynroot, use_hydrstress)
+
+(3) Fixed VIC:
+
+    (a) Previously, VIC compsets were not actually turning VIC on; now they are
+
+    (b) Fixed namelist defaults for VIC with CLM50
+
+(4) Updated RTM and MOSART externals: changed their test lists and fixed a
+    MOSART bug
+
+(5) Updated CISM external; this changes answers for CISM when ice evolution is
+    turned off, due to changing the lnd -> glc mapping in this case
+
+(6) Point to a CIME branch that fixes some bugs
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2473: Change order of tests run with the LII test
+- 2474: CLM50 CN compsets seem to be set up wrong
+- 2480: vichydro option doesn't work with CLM50 as it needs bedrock off and
+        lower_boundary_condition=3 (with aquifer layer)
+
+CIME Issues fixed (include issue #): I think some issues are fixed here, but I'm
+not sure which ones
+
+Known bugs introduced in this tag (include bugzilla ID):
+- 2485: CLM's 'ed' testlist still has old-style compsets
+- 2486: Failure in camdenNJ test in prebeta test list
+- 2488: Floating overflow in SoilBiogeochemNitrifDenitrifMod.F90
+        (newly-discovered, but presumably existed in previous tags)
+- 2489: Clm45BgcCrop case dies due to negative leafn
+        (newly-discovered, but presumably existed in previous tags)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- All new compset aliases
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- All new compset aliases
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- Changed some defaults when running with VIC
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- All new aliases means baseline comparisons all BFAIL
+
+Changes to tests or testing:
+- Massive overhaul - see notes elsewhere in this ChangeLog entry
+
+Code reviewed by: This was a joint effort by Dave Lawrence, Ben Andre, Erik
+Kluzek, Mariana Vertenstein and Bill Sacks. Various pieces were reviewed by
+different people in this list.
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok
+
+    pass except for 'compare file.*DNE', presumably due to new tests added
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu - ok
+    cheyenne_intel - ok
+    hobart_nag - ok
+    hobart_pgi - ok
+    hobart_intel - ok
+
+    Most tests pass; baseline comparisons BFAIL. Bugs opened (and Expected Fails
+    list updated) for remaining failures.
+
+    Ran most testing on r85975; just ran relevant tests on latest revision with
+    changed compset (changed IHistClm50BgcGs to IHistClm50BgcQianGs)
+
+CLM tag used for the baseline comparisons: N/A
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All tests BFAIL due to new compset
+  aliases. Because of this, I'm not completely sure of the answer changes, but I
+  think they are:
+        - Tests with CISM2%NOEVOLVE change answers in fields on the glc grid due
+          to new CISM external
+        - CLM50 tests with Vic change answers because now they're actually using VIC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      New climate for tests that change answers
+    
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+- cime
+- rtm
+- mosart
+- cism
+
+List all files eliminated:
+
+========= No longer need these testmods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/user_nl_datm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12
+
+List all files added and what they do:
+
+========= Replaces af_bias_v5
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7/user_nl_datm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7
+
+List all existing files that have been modified, and describe the changes:
+
+========= Reworked set of compsets and aliases
+M       components/clm/cime_config/config_compsets.xml
+
+========= Reworked test list as described above
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Stop setting glc_snow_persistence_max_days in glcMEC testmods. It made
+          sense to set this for testing when most of our tests used CLM45,
+          because the default snow persistence was 20 years. But for CLM50 the
+          default snow persistence is 0, so it no longer makes sense to set this
+          value specially for testing.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_long/user_nl_clm
+
+========= Apply CN and VIC for CLM50
+M       components/clm/cime_config/config_component.xml
+
+========= Use compatible settings for VIC
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/unit_testers/build-namelist_test.pl
+
+========= Fix for new glacier region
+M       components/clm/cime_config/usermods_dirs/cmip6_glaciers/user_nl_clm
+
+========= Make SSP work with mosart instead of rtm
+M       components/clm/cime_config/SystemTests/ssp.py
+
+========= Change order of LII test to support re-creating initial conditions
+          files (rather than requiring a separate SMS_Ln1 test)
+M       components/clm/cime_config/SystemTests/lii.py
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/README
+
+========= New, compatible initial conditions
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/user_nl_clm
+
+========= No longer set use_dynroot = .true., use_hydrstress = .false.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonthOutput/user_nl_clm
+
+========= No longer set use_hydrstress = .false.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm
+
+========= Update ExpectedTestFails list for new tests; new failures are:
+          SMS_Ld5_D_P24x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart
+          ERP_D_P24x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart
+          ERP_D.f10_f10_musgs.IHistClm50Bgc.yellowstone_gnu.clm-decStart
+          ERS_Ly5_P72x1.f10_f10_musgs.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+========= Update documentation of system testing
+M       .ChangeLog_template
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r248
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Jun 28 15:50:13 MDT 2017

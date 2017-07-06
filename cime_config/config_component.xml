@@ -154,9 +154,14 @@
       <value compset="_CLM50%[^_]*BGC"		 >-bgc bgc</value>
       <value compset="_CLM50%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
       <value compset="_CLM50%[^_]*BGC-CROP"	 >-bgc bgc -crop</value>
+      <value compset="_CLM50%[^_]*CN"		 >-bgc cn</value>
+      <value compset="_CLM50%[^_]*CN-CROP"	 >-bgc cn -crop</value>
+      <value compset="_CLM50%[^_]*CNDV"		 >-bgc cn -dynamic_vegetation</value>
+      <value compset="_CLM50%[^_]*CNDV-CROP"	 >-bgc cn -dynamic_vegetation -crop</value>
       <value compset="HIST.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
       <value compset="2000.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
       <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
+      <value compset="_CLM50%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
       <value compset="_CLM50%[^_]*FATES"         >-bgc fates -no-megan</value>
     </values>
     <group>run_component_clm</group>

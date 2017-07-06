@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 748;
+my $ntests = 840;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 468;
+   $ntests += 534;
 }
 plan( tests=>$ntests );
 
@@ -537,6 +537,26 @@ my %failtest = (
                                    },
      "use_cn=false bgc=cn"       =>{ options=>"-bgc cn -envxml_dir .",
                                      namelst=>"use_cn=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "lower=aqu-45 with/o Zeng"  =>{ options=>"-envxml_dir .",
+                                     namelst=>"lower_boundary_condition=4,soilwater_movement_method=1,use_bedrock=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "Zeng w lower=flux"         =>{ options=>"-envxml_dir .",
+                                     namelst=>"lower_boundary_condition=1,soilwater_movement_method=0,use_bedrock=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "Zeng w lower=zeroflux"     =>{ options=>"-envxml_dir .",
+                                     namelst=>"lower_boundary_condition=2,soilwater_movement_method=0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "Zeng w lower=table"        =>{ options=>"-envxml_dir .",
+                                     namelst=>"lower_boundary_condition=3,soilwater_movement_method=0,use_bedrock=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
@@ -1153,10 +1173,32 @@ print "==================================================\n";
 foreach my $phys ( "clm4_5", 'clm5_0' ) {
   my $mode = "-phys $phys";
   system( "../configure -s $mode" );
-  my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", 
+  my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
+                     "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation", "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "ne16np4", "ne120np4", "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720cru" );
+     my @clmres = ( "ne120np4", "10x15", "0.9x1.25", "1.9x2.5" );
+     foreach my $res ( @clmres ) {
+        $options = "-res $res -envxml_dir . ";
+        &make_env_run( );
+        eval{ system( "$bldnml $options $clmopts > $tempfile 2>&1 " ); };
+        is( $@, '', "$options $clmopts" );
+        $cfiles->checkfilesexist( "$options $clmopts", $mode );
+        $cfiles->shownmldiff( "default", "standard" );
+        if ( defined($opts{'compare'}) ) {
+           $cfiles->doNOTdodiffonfile( "$tempfile", "$options $clmopts", $mode );
+           $cfiles->comparefiles( "$options $clmopts", $mode, $opts{'compare'} );
+        }
+        if ( defined($opts{'generate'}) ) {
+           $cfiles->copyfiles( "$options $clmopts", $mode );
+        }
+        &cleanup();
+     }
+  }
+  my @clmoptions = ( "-bgc bgc -envxml_dir .", 
+                     "-bgc sp -envxml_dir .", );
+  foreach my $clmopts ( @clmoptions ) {
+     my @clmres = ( "ne16np4", "360x720cru" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
         &make_env_run( );

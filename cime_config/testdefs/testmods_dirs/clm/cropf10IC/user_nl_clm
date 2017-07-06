@@ -1,3 +1,0 @@
-! Initial condition file at the desired configuration to run, so can verify that interpolating from it gives the same result
-finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.Irrig.levis.10x15_USGS_simyr2000_c170509.nc'
-use_init_interp = .false.

@@ -1,9 +1,0 @@
-! See more notes in the README file in this directory and in the comments in the test list.
-!
-! Initial condition file at the desired configuration to run, so can verify that interpolating from it gives the same result
-finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v7_simyr2000_c170608.nc'
-! Set interpolation to true here so that an SMS test of this test mods directory can be used to regen the above initial conditions
-! copy the finidat_interp_dest.nc from the SMS case into the above filename with an updated creation date.
-use_init_interp = .true.
-! Note the LII test will override this setting of use_init_interp as part of what it does, but we want to explicitly
-! set it here so that an SMS test will give us the initial conditions we need.

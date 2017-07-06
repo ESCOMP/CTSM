@@ -1349,7 +1349,7 @@ sub setup_cmdl_vichydro {
     }
   } else {
     if ($nl_flags->{'vichydro'} eq 1) {
-      message("Using VIC hydrology for runoff calculations.");
+      verbose_message("Using VIC hydrology for runoff calculations.");
     }
 
     $var = "use_vichydro";
@@ -2207,7 +2207,7 @@ sub setup_logic_soilstate {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct' );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
-                'use_fates'=>$nl_flags->{'use_fates'} );
+                'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
   }
 }
 
@@ -2821,6 +2821,9 @@ sub setup_logic_hydrology_switches {
      my $soilmtd = $nl->get_value( 'soilwater_movement_method' );
      if ( defined($soilmtd) && defined($lower) && $soilmtd == 0 && $lower != 4 ) {
          fatal_error( "If soil water movement method is zeng-decker -- lower_boundary_condition can only be aquifer" );
+     }
+     if ( defined($soilmtd) && defined($lower) && $soilmtd == 1 && $lower == 4 ) {
+         fatal_error( "If soil water movement method is adaptive -- lower_boundary_condition can NOT be aquifer" );
      }
      if ( defined($use_bed) && defined($lower) && (value_is_true($use_bed)) && $lower != 2 ) {
         fatal_error( "If use_bedrock is on -- lower_boundary_condition can only be flux" );
@@ -3491,7 +3494,13 @@ sub setup_logic_soilwater_movement {
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilwater_movement_method' );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'upper_boundary_condition' );
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lower_boundary_condition' );
+
+    my $soilmtd = $nl->get_value("soilwater_movement_method");
+    my $use_bed = $nl->get_value('use_bedrock'              );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 
+  'lower_boundary_condition', 'vichydro'=>$nl_flags->{'vichydro'},
+  'soilwater_movement_method'=>$soilmtd, 'use_bedrock'=>$use_bed
+ );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtmin' );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'verySmall' );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'xTolerUpper' );

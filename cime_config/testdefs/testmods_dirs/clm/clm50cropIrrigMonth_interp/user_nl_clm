@@ -1,4 +1,3 @@
 use_init_interp = .true.
-use_hydrstress = .false.
 
 hist_fincl1 += 'QIRRIG_DEMAND'

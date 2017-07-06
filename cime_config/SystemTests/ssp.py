@@ -52,7 +52,7 @@ class SSP(SystemTestsCommon):
         logger.info("  short term archiving is on ")
 
         clone.set_value("CLM_ACCELERATED_SPINUP", "on")
-        clone.set_value("RTM_MODE", "NULL")
+        clone.set_value("MOSART_MODE", "NULL")
         clone.set_value("STOP_N",stop_n1)
         clone.flush()
 
@@ -84,7 +84,7 @@ class SSP(SystemTestsCommon):
         self._case.set_value("RUN_TYPE", "hybrid")
         self._case.set_value("GET_REFCASE", False)
         self._case.set_value("RUN_REFCASE", "{}.ref1".format(orig_casevar))
-        self._case.set_value("RTM_MODE", "NULL")
+        self._case.set_value("MOSART_MODE", "NULL")
 
         self._case.set_value("RUN_REFDATE", refdate)
         self._case.set_value("STOP_N", stop_n2)
