@@ -505,103 +505,103 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="360x720cru"   sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_0.125x0.125_simyr2000_c150114.nc</fsurdat>
 <fsurdat hgrid="48x96"     sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_48x96_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_48x96_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_4x5_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_4x5_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_10x15_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 
 <fsurdat hgrid="ne120np4"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="ne30np4"     sim_year="2000" >
-lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="ne16np4"     sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne16np4_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne16np4_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 
 <!-- Needed for SCAM (Single Column Atmosphere Model) -->
 <fsurdat hgrid="64x128"      sim_year="2000" use_crop=".false." 
->lnd/clm2/surfdata_map/surfdata_64x128_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+>lnd/clm2/surfdata_map/surfdata_64x128_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 
 <!-- Crop surface datasets -->
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_0.125x0.125_mp24_simyr2000_c150114.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_10x15_78pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr2000_c160127.nc</fsurdat>
 
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_5x5_amazon_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_5x5_amazon_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_tropicAtl" sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_camdenNJ_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_camdenNJ_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_vancouverCAN_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_vancouverCAN_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_16pfts__CMIP6_simyr2000_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_16pfts_CMIP6_simyr2000_c170706.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
 <fsurdat hgrid="360x720cru"   sim_year="1850" use_crop=".false."                           >
-lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_48x96_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_48x96_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 
 <fsurdat hgrid="0.9x1.25"     sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"      sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_10x15_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 
 <fsurdat hgrid="1x1_tropicAtl" sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 
 
 <fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 
 <!-- pre-industrial with crop -->
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_10x15_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_4x5_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_4x5_78pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 <fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts__CMIP6_simyr1850_c170616.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170706.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
@@ -2124,7 +2124,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts__CMIP6_simyr1850_c170616.nc</fsur
 <finundation_res finundation_method="TWS_inversion">1.9x2.5</finundation_res>
 
 <stream_fldfilename_ch4finundated finundation_method="TWS_inversion" hgrid="1.9x2.5"
->lnd/clm2/paramdata/finundated_inversiondata_1.9x2.5_c170507.nc</stream_fldfilename_ch4finundated>
+>lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
 
 <!-- =========================================  -->
 <!-- Defaults for different BGC modes           -->

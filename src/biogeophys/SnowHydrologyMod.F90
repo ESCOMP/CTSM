@@ -1841,7 +1841,7 @@ contains
   end function OverburdenCompactionAnderson1976
 
   !-----------------------------------------------------------------------
-  pure function OverburdenCompactionVionnet2012(h2osoi_liq, dz, burden, wx, td, bi) &
+  function OverburdenCompactionVionnet2012(h2osoi_liq, dz, burden, wx, td, bi) &
        result(compaction_rate)
     !
     ! !DESCRIPTION:

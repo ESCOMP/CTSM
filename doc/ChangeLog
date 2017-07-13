@@ -1,4 +1,117 @@
 ===============================================================
+Tag name:  clm4_5_16_r250
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Jul 13 13:54:13 MDT 2017
+One-line Summary: Update finundation dataset, new fsurdat files with updated soil color 
+                  and soil depth, update mosart areas, fix cheyenne_gnu
+
+Purpose of changes
+------------------
+
+Update all fsurdat datasets with updated soil color and soil depth. Soil color as modified by Peter Lawrence.
+Soil depth was modified to use a mask for soil depth>0 which makes the minimum soil depth 3cm (model still has
+a minimum of 40cm). Also updated area's for the mosart routing file (the previous areas were off by up to about 1%).
+the update to the area's will influence fluxes. Also fix a problem so that cheyenne_gnu will work (remove pure
+attribute from two functions).
+
+Also bring in the updated finundation inversion from Sean Swenson. This will change the methane output
+significantly for CLM50BGC cases. The previous inversion file was incorrect and shouldn't be used! The new file is also
+at a higher resolution 1-degree rather than 2-degree.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+  2493 (gnu6.3.0 compiler doesn't like "pure" functions that use outside modules, especially public ones)
+
+Known bugs introduced in this tag (include bugzilla ID):
+  2491 (Error in Banddiagonal in latest CESM simulation) (found in Cecile's coupled simulation)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): Just datasets see below
+
+Changes to the datasets (e.g., parameter, surface or initial files): Update all fsurdat and the
+   stream_fldfilename_ch4finundated file
+
+   fsurdat files have soil color and soil depth updated. The finundated file is now at f09 resolution
+   rather than f19, and the previous file was incorrect.
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu - OK
+    cheyenne_intel - OK
+    cheyenne_gnu - OK
+    hobart_nag - OK
+    hobart_pgi - OK
+    hobart_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 or with MOSART
+    - what platforms/compilers: all
+    - nature of change: similar climate, methane outputs are substantially changed
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): mosart
+   mosart update to mosart1_0_26
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+  M components/clm/src/biogeophys/SnowHydrologyMod.F90 -- Remove pure attribute from OverburdenCompactionVionnet2012
+  M components/clm/src/biogeophys/IrrigationMod.F90 ----- Remove purse attribute from PointNeedsCheckForIrrig
+
+  M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- Update all fsurdat files and stream_fldfilename_ch4finundated
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r249
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Jul  6 14:32:40 MDT 2017
