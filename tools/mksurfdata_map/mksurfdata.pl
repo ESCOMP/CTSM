@@ -705,7 +705,7 @@ EOF
                die "** trouble getting hrvtyp file with: $cmd\n";
             }
             my $options = "";
-            my $crpdes  = sprintf("%2.2dpfts_", $numpft);
+            my $crpdes  = sprintf("%2.2dpfts", $numpft);
             if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
             }

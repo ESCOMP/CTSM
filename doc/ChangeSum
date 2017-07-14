@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r251     erik 07/14/2017 Update mksurfdata_map for soil depth/color, add new mapping files
   clm4_5_16_r250     erik 07/13/2017 Update finundation dataset, new fsurdat files with updated soil color and soil depth, 
                                      update mosart areas, fix cheyenne_gnu
   clm4_5_16_r249    sacks 07/06/2017 All new compsets, reworked test lists, and related fixes

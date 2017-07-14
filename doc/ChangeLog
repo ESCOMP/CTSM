@@ -1,4 +1,99 @@
 ===============================================================
+Tag name:  clm4_5_16_r251
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jul 14 01:38:38 MDT 2017
+One-line Summary: Update mksurfdata_map for soil depth/color, add new mapping files
+
+Purpose of changes
+------------------
+
+Bring in new soil color (from Peter Lawrence) dataset for mksurfdata_map. Also bring
+in a new soil depth dataset that uses a mask for when soil depth > 0. Bring in a version
+of PTCLM that's working with this cime.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values):
+    New mapping files for soil depth for mksurfdata_map
+    New soil color data for mksurfdata_map
+    New soil depth dataset on the map defined by when soil depth > 0
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - OK
+
+CLM tag used for the baseline comparisons:  none
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, bit-for-bit (CLM code wasn't changed)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): PTCLM
+
+    PTCLM to PTCLM2_170706
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M   components/clm/tools/mkmapdata/regridbatch.sh -- go back to using 8 processors
+   M   components/clm/tools/mkmapdata/mkmapdata.sh ---- add mapping for 5x5min_ORNL-Soil,
+           change check for $MPIEXEC, so ignores arguments
+   M   components/clm/tools/mksurfdata_map/mksurfdata.pl -- Remove extra "_" in "__CMIP6_"
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- New
+           5x5min-ORNL-Soil mapping files
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - SCRIP
+           grid file for 5x5min-ORNL-Soil, change soildepth mask to ORNL-Soil
+           update soil color and soil depth datasets
+   M   components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Add
+           ORNL-Soil mask
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r250
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Jul 13 13:54:13 MDT 2017

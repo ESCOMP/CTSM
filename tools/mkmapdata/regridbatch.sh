@@ -27,7 +27,7 @@
 #PBS -A P93300606
 #PBS -N regrid
 #PBS -q regular
-#PBS -l select=1:mpiprocs=36:mem=110GB
+#PBS -l select=1:mpiprocs=8:mem=110GB
 #PBS -l walltime=12:00:00
 #PBS -j oe
 #PBS -V
@@ -78,7 +78,7 @@ for res in $resols; do
        regrid_num_proc=1
    else
        echo "global"
-       regrid_num_proc=36
+       regrid_num_proc=8
        if [ ! -z "$LSFUSER" ]; then
            echo "batch"
 	   cmdargs="$cmdargs -b"

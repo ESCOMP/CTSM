@@ -66,6 +66,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_IGBP-GSDP_c110228.nc</scripgriddata>
 <scripgriddata hgrid="5x5min"   lmask="ISRIC-WISE"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_ISRIC-WISE_c111114.nc</scripgriddata>
+<scripgriddata hgrid="5x5min"   lmask="ORNL-Soil"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_ORNL-Soil_c170630.nc</scripgriddata>
 <scripgriddata hgrid="10x10min" lmask="nomask"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_nomask_c110228.nc</scripgriddata>
 <scripgriddata hgrid="10x10min" lmask="IGBPmergeICESatGIS"    
@@ -143,7 +145,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="tex"              >IGBP-GSDP</lmask>
 <lmask type="gdp"              >AVHRR</lmask>
 <lmask type="peat"             >AVHRR</lmask>
-<lmask type="soildepth"        >ISRIC-WISE</lmask>
+<lmask type="soildepth"        >ORNL-Soil</lmask>
 <lmask type="abm"              >AVHRR</lmask>
 <lmask type="topostats"        >HYDRO1K-merge-nomask</lmask>
 <lmask type="vic"              >GRDC</lmask>
@@ -214,7 +216,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc</mksrf_fsoitex>
 
 <mksrf_fsoicol  hgrid="0.25x0.25"  lmask="MODIS"
->lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_simyr2005.c170413.nc</mksrf_fsoicol>
+>lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170606.nc</mksrf_fsoicol>
 
 <mksrf_forganic hgrid="5x5min"  lmask="ISRIC-WISE"
 >lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</mksrf_forganic>
@@ -270,8 +272,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fpeat hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fpeat>
 
-<mksrf_fsoildepth hgrid="5x5min" lmask="ISRIC-WISE"
->lnd/clm2/rawdata/mksf_soilthk_5x5min_ORNL_SOILS_simyr1900-2015_c150701.nc</mksrf_fsoildepth>
+<mksrf_fsoildepth hgrid="5x5min" lmask="ORNL-Soil"
+>lnd/clm2/rawdata/mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc</mksrf_fsoildepth>
 
 <mksrf_fabm hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc</mksrf_fabm>
