@@ -49,8 +49,10 @@ Module SoilHydrologyType
      real(r8), pointer :: moist_col         (:,:)   ! col VIC soil moisture (kg/m2) for VIC soil layers 
      real(r8), pointer :: moist_vol_col     (:,:)   ! col VIC volumetric soil moisture for VIC soil layers 
      real(r8), pointer :: max_moist_col     (:,:)   ! col VIC max layer moist + ice (mm) 
-     real(r8), pointer :: max_infil_col     (:)     ! col VIC maximum infiltration rate calculated in VIC
-     real(r8), pointer :: i_0_col           (:)     ! col VIC average saturation in top soil layers 
+     real(r8), pointer :: top_moist_col     (:)     ! col VIC soil moisture in top layers
+     real(r8), pointer :: top_max_moist_col (:)     ! col VIC maximum soil moisture in top layers
+     real(r8), pointer :: top_ice_col       (:)     ! col VIC ice len in top layers
+     real(r8), pointer :: top_moist_limited_col(:)  ! col VIC soil moisture in top layers, limited to no greater than top_max_moist_col
      real(r8), pointer :: ice_col           (:,:)   ! col VIC soil ice (kg/m2) for VIC soil layers
 
    contains
@@ -139,8 +141,10 @@ contains
     allocate(this%moist_col         (begc:endc,nlayert))         ; this%moist_col         (:,:)   = nan
     allocate(this%moist_vol_col     (begc:endc,nlayert))         ; this%moist_vol_col     (:,:)   = nan
     allocate(this%max_moist_col     (begc:endc,nlayer))          ; this%max_moist_col     (:,:)   = nan
-    allocate(this%max_infil_col     (begc:endc))                 ; this%max_infil_col     (:)     = nan
-    allocate(this%i_0_col           (begc:endc))                 ; this%i_0_col           (:)     = nan
+    allocate(this%top_moist_col     (begc:endc))                 ; this%top_moist_col     (:)     = nan
+    allocate(this%top_max_moist_col (begc:endc))                 ; this%top_max_moist_col (:)     = nan
+    allocate(this%top_ice_col       (begc:endc))                 ; this%top_ice_col       (:)     = nan
+    allocate(this%top_moist_limited_col(begc:endc))              ; this%top_moist_limited_col(:)  = nan
     allocate(this%ice_col           (begc:endc,nlayert))         ; this%ice_col           (:,:)   = nan
 
   end subroutine InitAllocate

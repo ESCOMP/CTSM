@@ -48,16 +48,6 @@ contains
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
     ! hydrology
-    ! Calling sequence is:
-    !    -> SnowWater:             change of snow mass and snow water onto soil
-    !    -> SurfaceRunoff:         surface runoff
-    !    -> Infiltration:          infiltration into surface soil layer
-    !    -> SoilWater:             soil water movement between layers
-    !          -> Tridiagonal      tridiagonal matrix solution
-    !    -> Drainage:              subsurface runoff
-    !    -> SnowCompaction:        compaction of snow layers
-    !    -> CombineSnowLayers:     combine snow layers that are thinner than minimum
-    !    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
     !
     ! !USES:
     use clm_varcon           , only : denh2o, denice, hfus, grav, tfrz
@@ -69,7 +59,8 @@ contains
     use clm_time_manager     , only : get_step_size, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
-    use SoilHydrologyMod     , only : CLMVICMap, SurfaceRunoff, Infiltration, WaterTable, PerchedWaterTable
+    use SoilHydrologyMod     , only : CLMVICMap, SetFracIce, SurfaceRunoff
+    use SoilHydrologyMod     , only : SetQflxTopSoil, Infiltration, WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
     use SoilWaterMovementMod , only : SoilWater 
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
@@ -182,8 +173,13 @@ contains
               soilhydrology_inst, waterstate_inst)
       end if
 
+      call SetFracIce(bounds, num_hydrologyc, filter_hydrologyc, &
+           soilhydrology_inst, soilstate_inst, waterstate_inst)
+
       call SurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst)
+
+      call SetQflxTopSoil(bounds, num_hydrologyc, filter_hydrologyc, waterflux_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
            energyflux_inst, soilhydrology_inst, soilstate_inst, temperature_inst, &
