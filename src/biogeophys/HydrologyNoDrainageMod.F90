@@ -60,7 +60,7 @@ contains
     use clm_time_manager     , only : get_step_size, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
-    use SoilHydrologyMod     , only : CLMVICMap, SetFracIce
+    use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions
     use SoilHydrologyMod     , only : SetQflxTopSoil, Infiltration, TotalSurfaceRunoff
     use SoilHydrologyMod     , only : UpdateUrbanPonding
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
@@ -177,7 +177,7 @@ contains
               soilhydrology_inst, waterstate_inst)
       end if
 
-      call SetFracIce(bounds, num_hydrologyc, filter_hydrologyc, &
+      call SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
            soilhydrology_inst, soilstate_inst, waterstate_inst)
 
       call surf_runoff_sat_inst%SaturatedSurfaceRunoff(&
