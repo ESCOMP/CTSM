@@ -132,6 +132,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: j, fc, c
     real(r8) :: vol_ice(bounds%begc:bounds%endc,1:nlevsoi) !partial volume of ice lens in layer
+    real(r8) :: icefrac_orig ! original formulation for icefrac
 
     character(len=*), parameter :: subname = 'SetFracIce'
     !-----------------------------------------------------------------------
@@ -157,13 +158,12 @@ contains
           ! fractional impermeability
 
           vol_ice(c,j) = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
-          if (origflag == 1) then
-             icefrac(c,j) = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
-          else
-             icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
-          endif
+          icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
 
-          fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac(c,j)))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
+          ! fracice is only used in code with origflag == 1. For this calculation, we use
+          ! the version of icefrac that was used in this original hydrology code.
+          icefrac_orig = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
+          fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac_orig))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
        end do
     end do
 
