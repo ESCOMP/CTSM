@@ -14,8 +14,9 @@ Module HydrologyNoDrainageMod
   use AerosolMod        , only : aerosol_type
   use EnergyFluxType    , only : energyflux_type
   use TemperatureType   , only : temperature_type
-  use SoilHydrologyType , only : soilhydrology_type  
+  use SoilHydrologyType , only : soilhydrology_type
   use SoilStateType     , only : soilstate_type
+  use SurfRunoffSatMod  , only : surf_runoff_sat_type
   use WaterfluxType     , only : waterflux_type
   use WaterstateType    , only : waterstate_type
   use CanopyStateType   , only : canopystate_type
@@ -42,7 +43,7 @@ contains
        clm_fates, &
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
-       soilhydrology_inst, aerosol_inst, &
+       soilhydrology_inst, surf_runoff_sat_inst, aerosol_inst, &
        canopystate_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
@@ -59,8 +60,9 @@ contains
     use clm_time_manager     , only : get_step_size, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
-    use SoilHydrologyMod     , only : CLMVICMap, SetFracIce, SurfaceRunoff
+    use SoilHydrologyMod     , only : CLMVICMap, SetFracIce
     use SoilHydrologyMod     , only : SetQflxTopSoil, Infiltration, TotalSurfaceRunoff
+    use SoilHydrologyMod     , only : UpdateUrbanPonding
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
     use SoilWaterMovementMod , only : SoilWater 
@@ -90,6 +92,7 @@ contains
     type(waterstate_type)    , intent(inout) :: waterstate_inst
     type(aerosol_type)       , intent(inout) :: aerosol_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
+    type(surf_runoff_sat_type), intent(inout) :: surf_runoff_sat_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
@@ -177,17 +180,22 @@ contains
       call SetFracIce(bounds, num_hydrologyc, filter_hydrologyc, &
            soilhydrology_inst, soilstate_inst, waterstate_inst)
 
-      call SurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-           soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst)
+      call surf_runoff_sat_inst%SaturatedSurfaceRunoff(&
+           bounds, num_hydrologyc, filter_hydrologyc, col, &
+           soilhydrology_inst, soilstate_inst, waterflux_inst)
 
       call SetQflxTopSoil(bounds, num_hydrologyc, filter_hydrologyc, waterflux_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
-           energyflux_inst, soilhydrology_inst, soilstate_inst, temperature_inst, &
-           waterflux_inst, waterstate_inst)
+           energyflux_inst, soilhydrology_inst, soilstate_inst, surf_runoff_sat_inst, &
+           temperature_inst, waterflux_inst, waterstate_inst)
 
       call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
-           waterflux_inst)
+           num_urbanc, filter_urbanc, &
+           waterflux_inst, soilhydrology_inst, surf_runoff_sat_inst, waterstate_inst)
+
+      call UpdateUrbanPonding(bounds, num_urbanc, filter_urbanc, &
+           waterstate_inst, soilhydrology_inst, waterflux_inst)
 
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterflux_inst, energyflux_inst)

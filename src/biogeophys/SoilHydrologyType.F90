@@ -29,9 +29,8 @@ Module SoilHydrologyType
      real(r8), pointer :: qcharge_col       (:)     ! col aquifer recharge rate (mm/s) 
      real(r8), pointer :: fracice_col       (:,:)   ! col fractional impermeability (-)
      real(r8), pointer :: icefrac_col       (:,:)   ! col fraction of ice       
-     real(r8), pointer :: fcov_col          (:)     ! col fractional impermeable area
-     real(r8), pointer :: fsat_col          (:)     ! col fractional area with water table at surface
      real(r8), pointer :: h2osfc_thresh_col (:)     ! col level at which h2osfc "percolates"   (time constant)
+     real(r8), pointer :: xs_urban_col      (:)     ! col excess soil water above urban ponding limit
 
      ! VIC 
      real(r8), pointer :: hkdepth_col       (:)     ! col VIC decay factor (m) (time constant)                    
@@ -122,9 +121,8 @@ contains
     allocate(this%qcharge_col       (begc:endc))                 ; this%qcharge_col       (:)     = nan
     allocate(this%fracice_col       (begc:endc,nlevgrnd))        ; this%fracice_col       (:,:)   = nan
     allocate(this%icefrac_col       (begc:endc,nlevgrnd))        ; this%icefrac_col       (:,:)   = nan
-    allocate(this%fcov_col          (begc:endc))                 ; this%fcov_col          (:)     = nan   
-    allocate(this%fsat_col          (begc:endc))                 ; this%fsat_col          (:)     = nan
     allocate(this%h2osfc_thresh_col (begc:endc))                 ; this%h2osfc_thresh_col (:)     = nan
+    allocate(this%xs_urban_col      (begc:endc))                 ; this%xs_urban_col      (:)     = nan
 
     allocate(this%hkdepth_col       (begc:endc))                 ; this%hkdepth_col       (:)     = nan
     allocate(this%b_infil_col       (begc:endc))                 ; this%b_infil_col       (:)     = nan
@@ -176,16 +174,6 @@ contains
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
          avgflag='A', long_name='aquifer recharge rate (vegetated landunits only)', &
          ptr_col=this%qcharge_col, l2g_scale_type='veg')
-
-    this%fcov_col(begc:endc) = spval
-    call hist_addfld1d (fname='FCOV',  units='unitless',  &
-         avgflag='A', long_name='fractional impermeable area', &
-         ptr_col=this%fcov_col, l2g_scale_type='veg')
-
-    this%fsat_col(begc:endc) = spval
-    call hist_addfld1d (fname='FSAT',  units='unitless',  &
-         avgflag='A', long_name='fractional area with water table at surface', &
-         ptr_col=this%fsat_col, l2g_scale_type='veg')
 
     this%num_substeps_col(begc:endc) = spval
     call hist_addfld1d (fname='NSUBSTEPS',  units='unitless',  &

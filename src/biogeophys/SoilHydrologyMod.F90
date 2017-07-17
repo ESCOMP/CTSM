@@ -10,10 +10,15 @@ module SoilHydrologyMod
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
   use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
+  use clm_varcon        , only : pondmx_urban
   use clm_varpar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
+  use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
+  use column_varcon     , only : icol_road_imperv
+  use clm_time_manager  , only : get_step_size
   use EnergyFluxType    , only : energyflux_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
+  use SurfRunoffSatMod  , only : surf_runoff_sat_type
   use WaterfluxType     , only : waterflux_type
   use WaterstateType    , only : waterstate_type
   use TemperatureType   , only : temperature_type
@@ -28,10 +33,10 @@ module SoilHydrologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SoilHydReadNML       ! Read in the Soil hydrology namelist
   public :: SetFracIce           ! Set diagnostic variables related to the fraction of ice in each layer
-  public :: SurfaceRunoff        ! Calculate surface runoff
   public :: SetQflxTopSoil       ! Set the flux of water into the soil from the top
   public :: Infiltration         ! Calculate infiltration into surface soil layer
   public :: TotalSurfaceRunoff   ! Calculate total surface runoff
+  public :: UpdateUrbanPonding   ! Update the state variable representing ponding on urban surfaces
   public :: WaterTable           ! Calculate water table before imposing drainage
   public :: Drainage             ! Calculate subsurface drainage
   public :: CLMVICMap
@@ -166,175 +171,6 @@ contains
 
   end subroutine SetFracIce
 
-  !-----------------------------------------------------------------------
-  subroutine SurfaceRunoff (bounds, num_hydrologyc, filter_hydrologyc, &
-       num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, waterflux_inst, &
-       waterstate_inst)
-    !
-    ! !DESCRIPTION:
-    ! Calculate surface runoff
-    !
-    ! !USES:
-    use clm_varcon      , only : pondmx_urban
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon   , only : icol_road_imperv
-    use clm_time_manager, only : get_step_size
-    !
-    ! !ARGUMENTS:
-    type(bounds_type)        , intent(in)    :: bounds               
-    integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
-    integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
-    integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
-    integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
-    type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
-    type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(waterflux_type)     , intent(inout) :: waterflux_inst
-    type(waterstate_type)    , intent(inout) :: waterstate_inst
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: c,fc,g,l,i                                 !indices
-    real(r8) :: dtime                                      !land model time step (sec)
-    real(r8) :: xs(bounds%begc:bounds%endc)                !excess soil water above urban ponding limit
-    real(r8) :: fff                                        !decay factor (m-1)
-    real(r8) :: s1                                         !variable to calculate qinmax
-    real(r8) :: su                                         !variable to calculate qinmax
-    real(r8) :: v                                          !variable to calculate qinmax
-    real(r8) :: qinmax                                     !maximum infiltration capacity (mm/s)
-    real(r8) :: ex(bounds%begc:bounds%endc)                !temporary variable (exponent)
-    character(len=32) :: subname = 'SurfaceRunoff'         !subroutine name
-    !-----------------------------------------------------------------------
-
-    associate(                                                        & 
-         snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
-
-         wtfact           =>    soilstate_inst%wtfact_col           , & ! Input:  [real(r8) (:)   ]  maximum saturated fraction for a gridcell         
-
-         h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
-
-         qflx_floodc      =>    waterflux_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
-         qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col   , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
-         qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
-         qflx_sat_surf    =>    waterflux_inst%qflx_sat_surf_col    , & ! Output: [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)                        
-         qflx_surf        =>    waterflux_inst%qflx_surf_col        , & ! Output: [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
-
-         zwt              =>    soilhydrology_inst%zwt_col          , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
-         frost_table      =>    soilhydrology_inst%frost_table_col  , & ! Input:  [real(r8) (:)   ]  frost table depth (m)                             
-         zwt_perched      =>    soilhydrology_inst%zwt_perched_col  , & ! Input:  [real(r8) (:)   ]  perched water table depth (m)                     
-         b_infil          =>    soilhydrology_inst%b_infil_col      , & ! Input:  [real(r8) (:)   ]  VIC b infiltration parameter                       
-         origflag         =>    soilhydrology_inst%origflag         , & ! Input:  logical
-         fcov             =>    soilhydrology_inst%fcov_col         , & ! Output: [real(r8) (:)   ]  fractional impermeable area                       
-         fsat             =>    soilhydrology_inst%fsat_col         , & ! Output: [real(r8) (:)   ]  fractional area with water table at surface       
-         fracice          =>    soilhydrology_inst%fracice_col      , & ! Input:  [real(r8) (:,:) ]  fractional impermeability (-)                    
-         top_max_moist    =>    soilhydrology_inst%top_max_moist_col, & ! Input:  [real(r8) (:)   ]  maximum soil moisture in top VIC layers
-         top_moist_limited =>   soilhydrology_inst%top_moist_limited_col & ! Input:  [real(r8) (:) ]  soil moisture in top layers, limited to no greater than top_max_moist
-         )
-
-      ! Get time step
-
-      dtime = get_step_size()
-
-      ! Saturated fraction
-
-      do fc = 1, num_hydrologyc
-         c = filter_hydrologyc(fc)
-         if (use_vichydro) then 
-            ex(c)          = b_infil(c) / (1._r8 + b_infil(c))
-            ! fsat is equivalent to A in VIC papers
-            fsat(c)        = 1._r8 - (1._r8 - top_moist_limited(c) / top_max_moist(c))**ex(c)
-         else
-            fff = 0.5_r8
-            if (frost_table(c) > zwt_perched(c) .and. frost_table(c) <= zwt(c)) then
-               ! use perched water table to determine fsat (if present)
-               fsat(c) = wtfact(c) * exp(-0.5_r8*fff*zwt_perched(c))
-            else
-               fsat(c) = wtfact(c) * exp(-0.5_r8*fff*zwt(c))
-            end if
-         end if
-
-         if (origflag == 1) then
-            if (use_vichydro) then
-               call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(sourcefile, __LINE__))
-            else
-               fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
-            end if
-         else
-            fcov(c) = fsat(c)
-         endif
-      end do
-
-      do fc = 1, num_hydrologyc
-         c = filter_hydrologyc(fc)
-
-         ! assume qinmax large relative to qflx_rain_plus_snomelt in control
-         if (origflag == 1) then
-            qflx_sat_surf(c) =  fcov(c) * qflx_rain_plus_snomelt(c)
-         else
-            ! FIXME(wjs, 2017-07-09) If origflag /= 1, then fcov = fsat. So let's remove
-            ! this origflag conditional and just use fcov. (First, though, make sure
-            ! origflag /= 1 is covered by at least one test.)
-            ! only send fast runoff directly to streams
-            qflx_sat_surf(c) =   fsat(c) * qflx_rain_plus_snomelt(c)
-         endif
-
-         if (col%urbpoi(c)) then
-            ! send flood water flux to runoff for all urban columns
-            qflx_sat_surf(c) = qflx_sat_surf(c) + qflx_floodc(c)
-         end if
-      end do
-
-      ! Determine water in excess of ponding limit for urban roof and impervious road.
-      ! Excess goes to surface runoff. No surface runoff for sunwall and shadewall.
-
-      ! FIXME(wjs, 2017-07-11) Put this in TotalSurfaceRunoff.
-      !
-      ! FIXME(wjs, 2017-07-07) Remove the state updates from that routine, putting them
-      ! in their own routine? For now, call it immediately afterwards in order to
-      ! maintain bfb. To do that extraction, I think I'll need to save xs.
-      !
-      ! FIXME(wjs, 2017-07-07) So the new urban routine will set:
-      ! - qflx_surf for urban points
-      ! - xs_urban_roof_and_impervroad
-      !
-      ! FIXME(wjs, 2017-07-07) Then we'll have an additional routine that updates
-      ! h2osoi_liq for urban roof and impervroad, if snl(c) == 0.
-      do fc = 1, num_urbanc
-         c = filter_urbanc(fc)
-         if (.not. col%hydrologically_active(c)) then
-            ! Hydrologically-active urban columns (i.e., pervious roads) have qflx_surf
-            ! set elsewhere
-
-            if (col%itype(c) == icol_roof .or. col%itype(c) == icol_road_imperv) then
-
-               ! If there are snow layers then all qflx_rain_plus_snomelt goes to surface runoff
-               if (snl(c) < 0) then
-                  qflx_surf(c) = max(0._r8,qflx_rain_plus_snomelt(c))
-               else
-                  ! NOTE(wjs, 2017-07-11) It looks to me like this use of xs and
-                  ! h2osoi_liq(c,1) are roughly analogous to h2osfc in hydrologically-active
-                  ! columns. Why not use h2osfc for urban columns, too?
-                  xs(c) = max(0._r8, &
-                       h2osoi_liq(c,1)/dtime + qflx_rain_plus_snomelt(c) - qflx_evap_grnd(c) - &
-                       pondmx_urban/dtime)
-                  if (xs(c) > 0.) then
-                     h2osoi_liq(c,1) = pondmx_urban
-                  else
-                     h2osoi_liq(c,1) = max(0._r8,h2osoi_liq(c,1)+ &
-                          (qflx_rain_plus_snomelt(c)-qflx_evap_grnd(c))*dtime)
-                  end if
-                  qflx_surf(c) = xs(c)
-               end if
-            else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
-               qflx_surf(c) = 0._r8
-            end if
-            ! send flood water flux to runoff for all urban columns
-            qflx_surf(c) = qflx_surf(c)  + qflx_floodc(c)
-         end if
-      end do
-
-    end associate
-
-   end subroutine SurfaceRunoff
-
    !-----------------------------------------------------------------------
    subroutine SetQflxTopSoil(bounds, num_hydrologyc, filter_hydrologyc, &
         waterflux_inst)
@@ -373,8 +209,8 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-        energyflux_inst, soilhydrology_inst, soilstate_inst, temperature_inst, &
-        waterflux_inst, waterstate_inst)
+        energyflux_inst, soilhydrology_inst, soilstate_inst, surf_runoff_sat_inst, &
+        temperature_inst, waterflux_inst, waterstate_inst)
      !
      ! !DESCRIPTION:
      ! Calculate infiltration into surface soil layer (minus the evaporation)
@@ -384,7 +220,6 @@ contains
      use clm_varcon       , only : denh2o, denice, roverg, wimp, pc, mu, tfrz
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
      use landunit_varcon  , only : istsoil, istcrop
-     use clm_time_manager , only : get_step_size
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds               
@@ -395,6 +230,7 @@ contains
      type(energyflux_type)    , intent(in)    :: energyflux_inst 
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(soilstate_type)     , intent(inout) :: soilstate_inst
+     type(surf_runoff_sat_type), intent(in)   :: surf_runoff_sat_inst
      type(temperature_type)   , intent(in)    :: temperature_inst
      type(waterstate_type)    , intent(inout) :: waterstate_inst
      type(waterflux_type)     , intent(inout) :: waterflux_inst
@@ -450,7 +286,6 @@ contains
           qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col   , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
           qflx_top_soil    =>    waterflux_inst%qflx_top_soil_col    , & ! Input:  [real(r8) (:)   ]  net water input into soil from top (mm/s)         
           qflx_ev_h2osfc   =>    waterflux_inst%qflx_ev_h2osfc_col   , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]                      
-          qflx_sat_surf    =>    waterflux_inst%qflx_sat_surf_col    , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)                        
           qflx_infl_excess_surf => waterflux_inst%qflx_infl_excess_surf_col, & ! Output:  [real(r8) (:)   ]  surface runoff due to infiltration excess (mm H2O /s)
           qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)                       
           qflx_infl        =>    waterflux_inst%qflx_infl_col        , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)                           
@@ -462,12 +297,14 @@ contains
           hksat            =>    soilstate_inst%hksat_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
           eff_porosity     =>    soilstate_inst%eff_porosity_col     , & ! Output: [real(r8) (:,:) ]  effective porosity = porosity - vol_ice         
 
+          qflx_sat_surf    =>  surf_runoff_sat_inst%qflx_sat_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)                        
+          fsat             =>    surf_runoff_sat_inst%fsat_col       , & ! Input:  [real(r8) (:)   ]  fractional area with water table at surface       
+
           h2osfc_thresh    =>    soilhydrology_inst%h2osfc_thresh_col, & ! Input:  [real(r8) (:)   ]  level at which h2osfc "percolates"                
           zwt              =>    soilhydrology_inst%zwt_col          , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
           zwt_perched      =>    soilhydrology_inst%zwt_perched_col  , & ! Input:  [real(r8) (:)   ]  perched water table depth (m)                     
           b_infil          =>    soilhydrology_inst%b_infil_col      , & ! Input:  [real(r8) (:)   ]  VIC b infiltration parameter                       
           frost_table      =>    soilhydrology_inst%frost_table_col  , & ! Input:  [real(r8) (:)   ]  frost table depth (m)                             
-          fsat             =>    soilhydrology_inst%fsat_col         , & ! Input:  [real(r8) (:)   ]  fractional area with water table at surface       
           top_moist        =>    soilhydrology_inst%top_moist_col    , & ! Input:  [real(r8) (:)   ]  soil moisture in top VIC layers
           top_max_moist    =>    soilhydrology_inst%top_max_moist_col, & ! Input:  [real(r8) (:)   ]  maximum soil moisture in top VIC layers
           top_ice          =>    soilhydrology_inst%top_ice_col      , & ! Input:  [real(r8) (:)   ]  ice len in top VIC layers
@@ -619,7 +456,8 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
-        waterflux_inst)
+        num_urbanc, filter_urbanc, &
+        waterflux_inst, soilhydrology_inst, surf_runoff_sat_inst, waterstate_inst)
      !
      ! !DESCRIPTION:
      ! Calculate total surface runoff
@@ -633,21 +471,39 @@ contains
      type(bounds_type)    , intent(in)    :: bounds
      integer              , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
      integer              , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+     integer              , intent(in)    :: num_urbanc           ! number of column urban points in column filter
+     integer              , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
      type(waterflux_type) , intent(inout) :: waterflux_inst
+     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
+     type(surf_runoff_sat_type), intent(in) :: surf_runoff_sat_inst
+     type(waterstate_type), intent(in)    :: waterstate_inst
      !
      ! !LOCAL VARIABLES:
-     integer :: fc, c
+     integer  :: fc, c
+     real(r8) :: dtime ! land model time step (sec)
 
      character(len=*), parameter :: subname = 'TotalSurfaceRunoff'
      !-----------------------------------------------------------------------
 
      associate( &
+          snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
+
           qflx_surf        =>    waterflux_inst%qflx_surf_col        , & ! Output: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
           qflx_surf_for_bgc =>   waterflux_inst%qflx_surf_for_bgc_col      , & ! Input:  [real(r8) (:)   ]  surface runoff for input into BGC code (mm H2O /s)                        
-          qflx_sat_surf    =>    waterflux_inst%qflx_sat_surf_col    , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
           qflx_infl_excess_surf => waterflux_inst%qflx_infl_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to infiltration excess (mm H2O /s)
-          qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col   & ! Input:  [real(r8) (:)   ]  surface water runoff (mm H2O /s)
+          qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col,  & ! Input:  [real(r8) (:)   ]  surface water runoff (mm H2O /s)
+          qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
+          qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col   , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
+          qflx_floodc      =>    waterflux_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
+
+          xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Output: [real(r8) (:)   ]  excess soil water above urban ponding limit
+
+          qflx_sat_surf    => surf_runoff_sat_inst%qflx_sat_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+
+          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
           )
+
+     dtime = get_step_size()
 
      ! ------------------------------------------------------------------------
      ! Set qflx_surf for hydrologically-active columns
@@ -672,12 +528,90 @@ contains
 
      ! ------------------------------------------------------------------------
      ! Set qflx_surf for non-hydrologically-active urban columns
+     !
+     ! Determine water in excess of ponding limit for urban roof and impervious road.
+     ! Excess goes to surface runoff. No surface runoff for sunwall and shadewall.
      ! ------------------------------------------------------------------------
+
+     do fc = 1, num_urbanc
+        c = filter_urbanc(fc)
+        if (col%itype(c) == icol_roof .or. col%itype(c) == icol_road_imperv) then
+           ! If there are snow layers then all qflx_rain_plus_snomelt goes to surface runoff
+           if (snl(c) < 0) then
+              qflx_surf(c) = max(0._r8,qflx_rain_plus_snomelt(c))
+           else
+              ! NOTE(wjs, 2017-07-11) It looks to me like this use of xs_urban and
+              ! h2osoi_liq(c,1) are roughly analogous to h2osfc in hydrologically-active
+              ! columns. Why not use h2osfc for urban columns, too?
+              xs_urban(c) = max(0._r8, &
+                   h2osoi_liq(c,1)/dtime + qflx_rain_plus_snomelt(c) - qflx_evap_grnd(c) - &
+                   pondmx_urban/dtime)
+              qflx_surf(c) = xs_urban(c)
+           end if
+           ! send flood water flux to runoff for all urban columns
+           qflx_surf(c) = qflx_surf(c)  + qflx_floodc(c)
+        else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
+           qflx_surf(c) = 0._r8
+        end if
+     end do
 
      end associate
 
    end subroutine TotalSurfaceRunoff
 
+   !-----------------------------------------------------------------------
+   subroutine UpdateUrbanPonding(bounds, num_urbanc, filter_urbanc, &
+        waterstate_inst, soilhydrology_inst, waterflux_inst)
+     !
+     ! !DESCRIPTION:
+     ! Update the state variable representing ponding on urban surfaces
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)        , intent(in)    :: bounds
+     integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
+     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
+     type(waterstate_type)    , intent(inout) :: waterstate_inst
+     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+     type(waterflux_type)     , intent(in)    :: waterflux_inst
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: fc, c
+     real(r8) :: dtime ! land model time step (sec)
+
+     character(len=*), parameter :: subname = 'UpdateUrbanPonding'
+     !-----------------------------------------------------------------------
+
+     associate( &
+         snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
+
+         h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
+
+         xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Input:  [real(r8) (:)   ]  excess soil water above urban ponding limit
+
+         qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
+         qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col     & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
+         )
+
+     dtime = get_step_size()
+
+     do fc = 1, num_urbanc
+        c = filter_urbanc(fc)
+        
+        if (col%itype(c) == icol_roof .or. col%itype(c) == icol_road_imperv) then
+           if (snl(c) >= 0) then
+              if (xs_urban(c) > 0.) then
+                 h2osoi_liq(c,1) = pondmx_urban
+              else
+                 h2osoi_liq(c,1) = max(0._r8,h2osoi_liq(c,1)+ &
+                      (qflx_rain_plus_snomelt(c)-qflx_evap_grnd(c))*dtime)
+              end if
+           end if
+        end if
+     end do
+
+     end associate
+
+   end subroutine UpdateUrbanPonding
 
    !-----------------------------------------------------------------------
    subroutine WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
@@ -687,7 +621,6 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
      use clm_varcon       , only : pondmx, tfrz, watmin,denice,denh2o
      use column_varcon    , only : icol_roof, icol_road_imperv
      !
@@ -994,7 +927,6 @@ contains
      ! Calculate subsurface drainage
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
      use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
      !
@@ -1797,7 +1729,6 @@ contains
      ! Calculate subsurface drainage from perched saturated zone
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
      use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
 
@@ -2055,7 +1986,6 @@ contains
      ! Calculate subsurface drainage
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
      use clm_varcon       , only : pondmx, watmin,rpi, secspday, nlvic
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
      use GridcellType     , only : grc                
@@ -2383,7 +2313,6 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
      use column_varcon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:

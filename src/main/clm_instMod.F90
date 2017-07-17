@@ -49,7 +49,8 @@ module clm_instMod
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
-  use SoilHydrologyType               , only : soilhydrology_type  
+  use SoilHydrologyType               , only : soilhydrology_type
+  use SurfRunoffSatMod                , only : surf_runoff_sat_type
   use SoilStateType                   , only : soilstate_type
   use SolarAbsorbedType               , only : solarabs_type
   use SurfaceRadiationMod             , only : surfrad_type
@@ -100,6 +101,7 @@ module clm_instMod
   type(photosyns_type)                    :: photosyns_inst
   type(soilstate_type)                    :: soilstate_inst
   type(soilhydrology_type)                :: soilhydrology_inst
+  type(surf_runoff_sat_type)              :: surf_runoff_sat_inst
   type(solarabs_type)                     :: solarabs_inst
   type(surfalb_type)                      :: surfalb_inst
   type(surfrad_type)                      :: surfrad_inst
@@ -307,6 +309,8 @@ contains
 
     call soilhydrology_inst%Init(bounds, nlfilename)
     call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst) ! sets time constant properties
+
+    call surf_runoff_sat_inst%Init(bounds)
 
     call solarabs_inst%Init(bounds)
 
