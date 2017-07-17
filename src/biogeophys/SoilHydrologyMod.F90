@@ -239,8 +239,10 @@ contains
                fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
             end if
          else
-            if ( frost_table(c) > zwt_perched(c)) then 
-               fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt_perched(c))!*( frost_table(c) - zwt_perched(c))/4.0
+            if ( frost_table(c) > zwt_perched(c)) then
+               if (.not. use_vichydro) then
+                  fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt_perched(c))!*( frost_table(c) - zwt_perched(c))/4.0
+               end if
             endif
          endif
          if (origflag == 1) then

@@ -1,0 +1,142 @@
+===============================================================
+Tag name: ctsm_n01_clm4_5_16_r249
+Originator(s): sacks
+Date: July 7, 2017
+One-line Summary: If using VIC, don't use the TOPModel formulation for SurfaceRunoff ever
+
+Purpose of changes
+------------------
+
+The code was using the TOPModel-based formulation for SurfaceRunoff if
+frost_table > zwt_perched. Sean Swenson felt this shouldn't be done, and
+refactoring will be easier if VIC always uses the vic-looking formulation, so
+I'm stopping applying this formulation when using VIC.
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - just ran vic tests
+    yellowstone_pgi - just ran vic tests
+    yellowstone_gnu - not run
+    cheyenne_intel - just ran vic tests
+    hobart_nag - not run
+    hobart_pgi - not run
+    hobart_intel - not run
+
+  Just ran the following vic tests (all of the vic tests in the test list):
+
+      ERP_D_Ld5.f09_g17.I2000Clm50Vic.yellowstone_intel.clm-vrtlay
+      ERP_Ld5.f09_g17.I2000Clm50Vic.yellowstone_pgi.clm-vrtlay
+      ERP_D_Ld5.f10_f10_musgs.I2000Clm50Vic.yellowstone_intel.clm-vrtlay
+      ERP_Ld5.f10_f10_musgs.I2000Clm50Vic.yellowstone_pgi.clm-decStart
+      SMS_Ld1.f19_g17.I2000Clm50Vic.yellowstone_intel.clm-default
+      ERP_D_Ld5.f09_g17.I2000Clm50Vic.cheyenne_intel.clm-vrtlay
+      ERP_D_Ld5.f10_f10_musgs.I2000Clm50Vic.cheyenne_intel.clm-vrtlay
+      SMS_Ld1.f19_g17.I2000Clm50Vic.cheyenne_intel.clm-default
+
+CLM tag used for the baseline comparisons: clm4_5_16_r249
+
+    For baseline comparisons, just spot-checked one test:
+    ERP_D_Ld5.f09_g17.I2000Clm50Vic.cheyenne_intel.clm-vrtlay
+
+    This test changed answers
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Vic configurations
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; not investigated closely
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Track changes for this branch
+A       ChangeLog_branch_template
+A       ChangeLog_branch
+
+List all existing files that have been modified, and describe the changes:
+
+========= Changes as described above
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+
+===============================================================
+===============================================================
+Tag name: ctsm_n00_clm4_5_16_r249
+Originator(s): sacks
+Date: July 7, 2017
+One-line Summary: Baseline tag corresponding to clm4_5_16_r249
+
+Purpose of changes
+------------------
+
+N/A
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing: No additional testing beyond trunk tag
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes: none
+
+===============================================================
