@@ -340,9 +340,7 @@ contains
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  
        ! I.e. water sent from land to rof is positive
 
-       !  surface runoff is the sum of qflx_over, qflx_h2osfc_surf
-       l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) &
-            + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
+       l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g)
 
        !  subsurface runoff is the sum of qflx_drain and qflx_perched_drain
        l2x(index_l2x_Flrl_rofsub,i) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) &

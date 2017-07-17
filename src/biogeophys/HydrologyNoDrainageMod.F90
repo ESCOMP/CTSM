@@ -60,7 +60,8 @@ contains
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SetFracIce, SurfaceRunoff
-    use SoilHydrologyMod     , only : SetQflxTopSoil, Infiltration, WaterTable, PerchedWaterTable
+    use SoilHydrologyMod     , only : SetQflxTopSoil, Infiltration, TotalSurfaceRunoff
+    use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
     use SoilWaterMovementMod , only : SoilWater 
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
@@ -184,6 +185,9 @@ contains
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
            energyflux_inst, soilhydrology_inst, soilstate_inst, temperature_inst, &
            waterflux_inst, waterstate_inst)
+
+      call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
+           waterflux_inst)
 
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterflux_inst, energyflux_inst)
