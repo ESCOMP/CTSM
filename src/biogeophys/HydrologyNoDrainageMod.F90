@@ -61,7 +61,7 @@ contains
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions
-    use SoilHydrologyMod     , only : SetQflxTopSoil, Infiltration, TotalSurfaceRunoff
+    use SoilHydrologyMod     , only : SetQflxInputs, Infiltration, TotalSurfaceRunoff
     use SoilHydrologyMod     , only : UpdateUrbanPonding
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
@@ -184,7 +184,8 @@ contains
            bounds, num_hydrologyc, filter_hydrologyc, col, &
            soilhydrology_inst, soilstate_inst, waterflux_inst)
 
-      call SetQflxTopSoil(bounds, num_hydrologyc, filter_hydrologyc, waterflux_inst)
+      call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
+           waterflux_inst, surf_runoff_sat_inst, waterstate_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
            energyflux_inst, soilhydrology_inst, soilstate_inst, surf_runoff_sat_inst, &
