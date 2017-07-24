@@ -61,19 +61,19 @@ CLM testing:
 
   build-namelist tests:
 
-    yellowstone - 
+    cheyenne - 
 
   unit-tests (components/clm/src):
 
-    yellowstone - 
+    cheyenne - 
 
   tools-tests (components/clm/test/tools):
 
-    yellowstone - 
+    cheyenne - 
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     yellowstone - 
+     cheyenne - 
 
   regular tests (aux_clm):
 

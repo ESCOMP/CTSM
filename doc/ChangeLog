@@ -1,4 +1,127 @@
 ===============================================================
+Tag name:  clm4_5_16_r252
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Jul 24 16:57:42 MDT 2017
+One-line Summary: Update parameter file for some crop albedo issues, and fix a bug in urban albedo for nightime
+
+Purpose of changes
+------------------
+
+Bring in a new CLM50 parameter file that updates a few fields for prognostic crop with affect on crop albedo
+(rholnir,taulnir,taulvis,xl). Bring in changes to fix urban albedo for nighttime from Keith Oleson. Rather than set 
+albedo's for the urban canyon all to 1.0, set them to the viewfactors, as that will result in combined albedo of
+one, whereas the previous way ended up with albedo's greater than one.
+
+Here's a description from Keith about the change in urban albedo. " For diffuse radiation, which is 
+independent of solar zenith angle, the road albedos appear to be exactly equal to the road-sky view 
+factor.  And the wall albedos are equal to the wall-sky view factor. So the albedos are the albedo 
+of the surface (1.0) times the appropriate view factor.  This makes sense.  All incident radiation
+entering the canyon should be reflected to the sky and the contribution of each surface is according 
+to the view factor of each surface to the sky as determined by the height to width ratio.  The view 
+factors of the two walls and the road to the sky sums to 1.0.  So setting the diffuse albedos to 
+these values when the sun is below the horizon results in a scaled diffuse albedo of 1.0.  For direct 
+radiation, it's more complicated because the solar zenith angle is involved when running the 
+radiation model.  However, it seems reasonable to assume the same albedos for direct as for diffuse."
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+ 2492 -- Urban scalings can lead to albedo values greater than 1
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files):New params file for CLM50
+   Updates rholnir,taulnir,taulvis,xl for prognostic crop fields
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,oleson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne ---- PASS (60 clm50 tests are different as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne ---- PASS
+
+  regular tests (aux_clm): (31 Clm45 tests are different than baseline in cpl hist files for: 
+                           l2x_Sl_avsdr ("dr" and "df" and "av" and "an") as expected)
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  Tests: ERS_Ld5_Mmpi-serial.1x1_vancouverCAN.I1PtClm45SpGs.cheyenne_intel.clm-default,
+         ERS_Ld5_Mmpi-serial.1x1_vancouverCAN.I1PtClm45SpGs.yellowstone_intel.clm-default
+        show: FSR, FSRND, and FSRVD different
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r251
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for CLM50, and for CLM45 when coupled to CAM
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50 (CLM45 when coupled to CAM and albedos passed to coupler for any case)
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+       oleson/b.e20.B1850.f09_g17.pi_control.all.186.alb
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://webext.cgd.ucar.edu/B1850/b.e20.B1850.f09_g17.pi_control.all.186.alb/lnd/b.e20.B1850.f09_g17.pi_control.all.186.alb.17_36-b.e20.B1850.f09_g17.pi_control.all.186.17_36/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - Updated params file for CLM50
+   M  components/clm/src/biogeophys/UrbanAlbedoMod.F90 --------------- Fix bug 2492. Set albedo's of
+        urban surfaces to view factors, by default and for solar zenith angles below horizon.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r251
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Jul 14 01:38:38 MDT 2017

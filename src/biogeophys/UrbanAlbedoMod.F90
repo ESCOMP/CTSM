@@ -156,6 +156,8 @@ contains
          albi               => surfalb_inst%albi_patch              , & ! Output: [real(r8) (:,:) ]  urban pft surface albedo (diffuse)                        
          
          begl               => bounds%begl                          , &
+         vf_sr              => urbanparams_inst%vf_sr               , & ! Input:  [real(r8) (:) ]  view factor of sky for road
+         vf_sw              => urbanparams_inst%vf_sw               , & ! Input:  [real(r8) (:) ]  view factor of sky for one wall
          endl               => bounds%endl                            &
          )
 
@@ -183,8 +185,22 @@ contains
          do fp = 1,num_urbanp  
             p = filter_urbanp(fp)
             l = patch%landunit(p)
-            albd(p,ib)     = 1._r8
-            albi(p,ib)     = 1._r8
+            ! Setting albedos to wall and road view factors ensures that urban
+            ! albedo will scale up to 1.0
+            c = patch%column(p)
+            if (col%itype(c) == icol_sunwall) then
+               albd(p,ib) = vf_sw(l)
+               albi(p,ib) = vf_sw(l)
+            else if (col%itype(c) == icol_shadewall) then
+               albd(p,ib) = vf_sw(l)
+               albi(p,ib) = vf_sw(l)
+            else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+               albd(p,ib) = vf_sr(l)
+               albi(p,ib) = vf_sr(l)
+            else if (col%itype(c) == icol_roof) then
+               albd(p,ib) = 1._r8
+               albi(p,ib) = 1._r8
+            endif
             fabd(p,ib)     = 0._r8
             fabd_sun(p,ib) = 0._r8
             fabd_sha(p,ib) = 0._r8
@@ -230,14 +246,16 @@ contains
             sabs_perroad_dif(l,ib)   = 0._r8
             sref_roof_dir(l,ib)      = 1._r8
             sref_roof_dif(l,ib)      = 1._r8
-            sref_sunwall_dir(l,ib)   = 1._r8
-            sref_sunwall_dif(l,ib)   = 1._r8
-            sref_shadewall_dir(l,ib) = 1._r8
-            sref_shadewall_dif(l,ib) = 1._r8
-            sref_improad_dir(l,ib)   = 1._r8
-            sref_improad_dif(l,ib)   = 1._r8
-            sref_perroad_dir(l,ib)   = 1._r8
-            sref_perroad_dif(l,ib)   = 1._r8
+            ! Setting sref to wall and road view factors ensures that urban
+            ! albedo will scale up to 1.0
+            sref_sunwall_dir(l,ib)   = vf_sw(l)
+            sref_sunwall_dif(l,ib)   = vf_sw(l)
+            sref_shadewall_dir(l,ib) = vf_sw(l)
+            sref_shadewall_dif(l,ib) = vf_sw(l)
+            sref_improad_dir(l,ib)   = vf_sr(l)
+            sref_improad_dif(l,ib)   = vf_sr(l)
+            sref_perroad_dir(l,ib)   = vf_sr(l)
+            sref_perroad_dif(l,ib)   = vf_sr(l)
          end do
       end do
 
