@@ -104,7 +104,7 @@ photosynthesis and Ball--Berry-type stomatal conductance model (Ball et al., 198
 calculated by the multiplication of total photosynthetic nitrogen ( :math:`N_{\text{psn}}` ) and the maintenance respiration cost for photosynthetic enzymes.
 
 Maximum electron transport rate
-''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''
 
 In the LUNA model, the maximum electron transport rate
 ( :math:`J_{\text{max}}`; :math:`{\mu} mol`  electron / m :sup:`-2`/s)
@@ -189,7 +189,7 @@ where :math:`\text{PAR}_{\text{{max}}}` ( :math:`\mu mol`/m :sup:`2`/s) is the
 maximum photosynthetically active radiation during the day.
 
 Maximum rate of carboxylation
-'''''''''''''''''
+''''''''''''''''''''''''''''''
 
 The maximum rate of carboxylation at 25 :sup:`o`\ C varies with
 foliage nitrogen concentration and specific leaf area and is calculated
@@ -233,7 +233,7 @@ positive for Northern Hemisphere latitudes and negative for Southern
 Hemisphere).
 
 Implementation of Photosynthetic Capacity
-'''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''''
 
 Based on Farquhar et al. (1980) and Wullschleger (1993), we can calculate the
 electron-limited photosynthetic rate under daily maximum radiation ( :math:`W_{jx}`)
@@ -271,7 +271,7 @@ therefore the LUNA model has the modification factor, :math:`t_{\alpha}`, to adj
 the ratio depending on the nitrogen use efficiency for electron vs carboxylation (Ali et al 2016). 
 
 Total Respiration
-'''''''''''''''
+'''''''''''''''''''
 
 Following Collatz et al.(1991a), the total respiration ( :math:`R_{\mathrm{t}}`) is
 calculated in proportion to :math:`V_{\text{c,max}}`,
