@@ -16,8 +16,7 @@ CLM5 includes the following new changes to photosynthesis and stomatal conductan
 
 - :math:`J_{max}` is predicted by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
-- Leaf N concentration and the fraction of leaf N in Rubisco used to calculate 
-:math:`V_{cmax}` are determined by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
+- Leaf N concentration and the fraction of leaf N in Rubisco used to calculate :math:`V_{cmax25}` are determined by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
 - Water stress is applied by the hydraulic conductance model (Chapter :numref:`rst_Plant Hydraulics`) 
 
@@ -43,54 +42,54 @@ where :math:`r_{b}`  is the leaf boundary layer resistance (section
 :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
 The implementation is described by Bonan et al. (:ref:`2011 <Bonanetal2011>`), though different 
 methods of calculating stomatal conductance, :math:`J_{max}`, and the nitrogen variables
-used to calculate :math:`V_{cmax}` are used in CLM5.
+used to calculate :math:`V_{cmax25}` are used in CLM5.
 
 .. _Stomatal resistance:
 
 Stomatal resistance
 -----------------------
 
-Leaf stomatal resistance is calculated from the Ball-Berry conductance
-model as described by Collatz et al. (1991) and implemented in global
-climate models (Sellers et al. 1996). The model relates stomatal
-conductance (i.e., the inverse of resistance) to net leaf
-photosynthesis, scaled by the relative humidity at the leaf surface and
-the CO\ :sub:`1` concentration at the leaf surface. Leaf stomatal
-resistance is
+CLM5 calculates stomatal conductance using the Medlyn stomatal conductance model (:ref:`Medlyn et al. 2011<Medlynetal2011>`).
+Previous versions of CLM calculated leaf stomatal resistance is using the Ball-Berry conductance
+model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in global
+climate models (:ref:`Sellers et al. 1996<Sellersetal1996>`). The Medlyn model 
+calculates stomatal conductance (i.e., the inverse of resistance) based on net leaf
+photosynthesis, the vapor pressure deficit, and the CO\ :sub:`2` concentration at the leaf surface. 
+Leaf stomatal resistance is:
 
 .. math::
    :label: 9.1 
 
-   \frac{1}{r_{s} } =g_{s} =m\frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } h_{s} +b\, \beta _{t}
+   \frac{1}{r_{s} } =g_{s} = g_{o} + (1 + \frac{g_{1} }{\sqrt{D}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } 
 
 where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
-:math:`\mu`\ mol\ :sup:`-1`), :math:`m` is a plant functional
-type dependent parameter (Table 8.1), :math:`A_{n}` is leaf net
+:math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance
+(:math:`\mu` mol m :sup:`-2` s\ :sup:`-1`), :math:`A_{n}` is leaf net
 photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2`
 s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial
 pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric
-pressure (Pa), :math:`h_{s} =e_{s} /e_{i}` is the leaf surface humidity
-with :math:`e_{s}` the vapor pressure at the leaf surface (Pa) and
-:math:`e_{i}` the saturation vapor pressure (Pa) inside the leaf at the
-vegetation temperature\ :math:`T_{v}`, and :math:`b` is the minimum
-stomatal conductance (:math:`\mu` mol m :sup:`-2`
-s\ :sup:`-1`). Parameter values are :math:`m=9` for
-C\ :sub:`3` plants and :math:`m=4` for C\ :sub:`4` plants
-(Collatz et al. 1991, 1992, Sellers et al. 1996). Sellers et al. (1996)
-used :math:`b=10000` for C\ :sub:`3` plants and
-:math:`b=40000` for C\ :sub:`4` plants, also used here.
+pressure (Pa), and :math:`D` is the vapor pressure deficit at the leaf surface (Pa).
+:math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) photosynthetic parameters`)
+and can be calculated as
+
+.. math::
+   :label: 9.2
+
+   g_{1} = {\sqrt{\frac{3\Gamma*\lambda}{1.6}}}
+ 
+Parameter values are :math:`g_{o}=X` for
+C\ :sub:`3` plants and :math:`g_{o}=4` for C\ :sub:`4` plants
 Photosynthesis is calculated for sunlit (:math:`A^{sun}`) and shaded
 (:math:`A^{sha}`) leaves to give :math:`r_{s}^{sun}` and
 :math:`r_{s}^{sha}`. Additionally, soil water influences stomatal
-resistance directly by multiplying the minimum conductance by a soil
-water stress function :math:`\beta _{t}` (which ranges from 0 to 1) and
-also indirectly through :math:`A_{n}`, as in (Sellers et al. 1996).
+resistance through plant hydraulic stress, detailed in
+the :ref:`rst_Plant Hydraulics` chapter.
 
 Resistance is converted from units of 
 s m\ :sup:`2` :math:`\mu` mol\ :sub:`-1` to  s m\ :sup:`-1` as: 
-1 s m\ sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }`
+1 s m\ :sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }`
 :math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1`
-kmol\ :sup:`-1`) (Table 2.6) and :math:`\theta _{atm}` is the
+kmol\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\theta _{atm}` is the
 atmospheric potential temperature (K).
 
 .. _Table Plant functional type (PFT) photosynthetic parameters:
@@ -160,13 +159,13 @@ Photosynthesis
 ------------------
 
 Photosynthesis in C\ :sub:`3` plants is based on the model of
-Farquhar et al. (1980). Photosynthesis in C\ :sub:`4` plants is
-based on the model of Collatz et al. (1992). Bonan et al. (2011)
+:ref:`Farquhar et al. (1980)<Farquharetal1980>`. Photosynthesis in C\ :sub:`4` plants is
+based on the model of :ref:`Collatz et al. (1992)<Collatzetal1992>`. :ref:`Bonan et al. (2011)<Bonanetal2011>`
 describe the implementation, modified here. In its simplest form, leaf
 net photosynthesis after accounting for respiration (:math:`R_{d}` ) is
 
 .. math::
-   :label: 9.2
+   :label: 9.3
 
    A_{n} =\min \left(A_{c} ,A_{j} ,A_{p} \right)-R_{d} .
 
@@ -175,7 +174,7 @@ The RuBP carboxylase (Rubisco) limited rate of carboxylation
 s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.3
+   :label: 9.4
 
    A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{\*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right. \kern-\nulldelimiterspace} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
@@ -184,7 +183,7 @@ RuBP (i.e., the light-limited rate) :math:`A_{j}`  (:math:`\mu` \ mol
 CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.4
+   :label: 9.5
 
    A_{j} =\left\{\begin{array}{l} {\frac{J\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
@@ -194,7 +193,7 @@ C\ :sub:`4` plants :math:`A_{p}`  (:math:`\mu` \ mol
 CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.5 
+   :label: 9.6 
 
    A_{p} =\left\{\begin{array}{l} {3T_{p\qquad } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {k_{p} \frac{c_{i} }{P_{atm} } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}.
 
@@ -210,12 +209,12 @@ m\ :sup:`-2` s\ :sup:`-1`). :math:`T_{p}`  is the triose
 phosphate utilization rate (µmol m\ :sup:`-2` s\ :sup:`-1`),
 taken as :math:`T_{p} =0.167V_{c\max }`  so that
 :math:`A_{p} =0.5V_{c\max }`  for C\ :sub:`3` plants (as in
-Collatz et al. 1991). For C\ :sub:`4` plants, the light-limited
+:ref:`Collatz et al. 1992 <Collatzetal1992>`). For C\ :sub:`4` plants, the light-limited
 rate :math:`A_{j}`  varies with :math:`\phi`  in relation to the quantum
 efficiency (:math:`\alpha =0.05` mol CO\ :sub:`2`
 mol\ :sup:`-1` photon). :math:`\phi`  is the absorbed
-photosynthetically active radiation (W m\ :sup:`-2`) (section
-4.1), which is converted to photosynthetic photon flux assuming 4.6
+photosynthetically active radiation (W m\ :sup:`-2`) (section :numref:`Solar Fluxes`)
+, which is converted to photosynthetic photon flux assuming 4.6
 :math:`\mu` \ mol photons per joule. :math:`k_{p}`  is the initial slope
 of C\ :sub:`4` CO\ :sub:`2` response curve.
 
@@ -224,7 +223,7 @@ photosynthetically active radiation absorbed by the leaf. A common
 expression is the smaller of the two roots of the equation
 
 .. math::
-   :label: 9.6
+   :label: 9.7
 
    \Theta _{PSII} J^{2} -\left(I_{PSII} +J_{\max } \right)J+I_{PSII} J_{\max } =0
 
@@ -239,7 +238,7 @@ with 4.6 :math:`\mu`\ mol J\ :sup:`-1`, the light utilized in
 electron transport is
 
 .. math::
-   :label: 9.7
+   :label: 9.8
 
    I_{PSII} =0.5\Phi _{PSII} (4.6\phi )
 
@@ -251,12 +250,12 @@ calculating :math:`A_{j}`  (for both C\ :sub:`3` and
 C\ :sub:`4` plants), :math:`\phi =\phi ^{sun}`  for sunlit leaves
 and :math:`\phi =\phi ^{sha}`  for shaded leaves.
 
-The model uses co-limitation as described by Collatz et al. (1991,
-1992). The actual gross photosynthesis rate, :math:`A`, is given by the
+The model uses co-limitation as described by :ref:`Collatz et al. (1991, 1992)
+<Collatzetal1991>`. The actual gross photosynthesis rate, :math:`A`, is given by the
 smaller root of the equations
 
 .. math::
-   :label: 9.8
+   :label: 9.9
 
    \begin{array}{rcl} {\Theta _{cj} A_{i}^{2} -\left(A_{c} +A_{j} \right)A_{i} +A_{c} A_{j} } & {=} & {0} \\ {\Theta _{ip} A^{2} -\left(A_{i} +A_{p} \right)A+A_{i} A_{p} } & {=} & {0} \end{array} .
 
@@ -265,57 +264,61 @@ C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and
 :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants.
 :math:`A_{n} =A-R_{d}` .
 
-The parameters :math:`K_{c}`, :math:`K_{o}` , and :math:`\Gamma _{*}` 
+The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma _{*}` 
 depend on temperature. Values at 25 :sup:`o` \ C are
-:math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}` ,
-:math:`K_{o25} =278.4\times 10^{-3} P_{atm}` , and
-:math:`\Gamma _{*25} {\rm =42}.75\times 10^{-6} P_{atm}` .
-:math:`V_{c\max }` , :math:`J_{\max }` , :math:`T_{p}` , :math:`k_{p}` ,
-and :math:`R_{d}`  also vary with temperature. Parameter values at 25
+:math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`,
+:math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and
+:math:`\Gamma _{*25} {\rm =42}.75\times 10^{-6} P_{atm}`.
+:math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`,
+and :math:`R_{d}` also vary with temperature. Parameter values at 25
 :math:`\circ`\ C are calculated from :math:`V_{c\max }` \ at 25
-:math:`\circ`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}` ,
-:math:`T_{p25} =0.167V_{c\max 25}` , and
-:math:`R_{d25} =0.015V_{c\max 25}`  (C\ :sub:`3`) and
-:math:`R_{d25} =0.025V_{c\max 25}`  (C\ :sub:`4`). For
-C\ :sub:`4` plants, :math:`k_{p25} =20000\; V_{c\max 25}` .
+:math:`\circ`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}`,
+:math:`T_{p25} =0.167V_{c\max 25}`, and
+:math:`R_{d25} =0.015V_{c\max 25}` (C\ :sub:`3`) and
+:math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`). For
+C\ :sub:`4` plants, :math:`k_{p25} =20000\; V_{c\max 25}`.
 However, when the biogeochemistry is active, :math:`R_{d25}`  is
-calculated from leaf nitrogen as :math:`R_{d25} =0.2577N_{a}` , where
-:math:`N_{a}`  is the area-based leaf nitrogen concentration (g N
-m\ :sup:`-2` leaf area, equation ) and 0.2577 :math:`\mu`\ mol
-CO\ :sub:`2` g\ :sup:`-1` N s\ :sup:`-1` the base
-respiration rate. The parameters :math:`V_{c\max 25}` ,
-:math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}` , and
-:math:`R_{d25}`  are scaled over the canopy for sunlit and shaded leaves
-(section 8.3). In C3 plants, these are adjusted for leaf temperature
-:math:`T_{v}`  (K) as:
+calculated from leaf nitrogen as :math:`R_{d25} = 0.2577LNC_{a}`,
+where :math:`LNC_{a}` is the area-based leaf nitrogen concentration
+(g N m\ :sup:`-2` leaf area, Chapter :numref:`rst_Photosynthetic Capacity`), 
+and 0.2577 :math:`\mu`\ mol CO\ :sub:`2` g\ :sup:`-1` N s\ :sup:`-1` is the base respiration rate.
+The parameters :math:`V_{c\max 25}`,
+:math:`J_{\max 25}`, :math:`T_{p25}`, :math:`k_{p25}`, and
+:math:`R_{d25}` are scaled over the canopy for sunlit and shaded leaves
+(section :numref:`Canopy scaling`). In C\ :sub:`3` plants, these are adjusted for leaf temperature,
+:math:`T_{v}` (K), as:
 
 .. math::
-   :label: 9.9
+   :label: 9.10
 
    \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma _{*} } & {=} & {\Gamma _{*25} \; f\left(T_{v} \right)} \end{array}
 
 with
 
 .. math::
-   :label: 9.10
+   :label: 9.11
 
    f\left(T_{v} \right)=\; \exp \left[\frac{\Delta H_{a} }{298.15\times 0.001R_{gas} } \left(1-\frac{298.15}{T_{v} } \right)\right]
 
 and
 
 .. math::
-   :label: 9.11
+   :label: 9.12
 
    f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}  .
 
-Table 8.2 list parameter values for :math:`\Delta H_{a}` ,
-:math:`\Delta H_{d}` , and :math:`\Delta S`, from Bonan et al. (2011).
+:numref:`Table Temperature dependence parameters for C3 photosynthesis`
+lists parameter values for :math:`\Delta H_{a}` ,
+:math:`\Delta H_{d}` , and :math:`\Delta S`, from :ref:`Bonan et al. (2011)<Bonanetal2011>`.
+[Note: should we remove :math:`\Delta S` from the table below since we no longer use these?
+Also, we should consider updating :math:`\Delta H_{a}` ,
+:math:`\Delta H_{d}` in this table]
 Because :math:`T_{p}`  as implemented here varies with
-:math:`V_{c\max }` , the same temperature parameters are used for
-:math:`T_{p}` . For C\ :sub:`4` plants,
+:math:`V_{c\max }` , :math:`T_{p}` uses the same temperature parameters as 
+:math:`V_{c\max}` . For C\ :sub:`4` plants,
 
 .. math::
-   :label: 9.12
+   :label: 9.13
 
    \begin{array}{l} {V_{c\max } =V_{c\max 25} \left[\frac{Q_{10} ^{(T_{v} -298.15)/10} }{f_{H} \left(T_{v} \right)f_{L} \left(T_{v} \right)} \right]} \\ {f_{H} \left(T_{v} \right)=1+\exp \left[s_{1} \left(T_{v} -s_{2} \right)\right]} \\ {f_{L} \left(T_{v} \right)=1+\exp \left[s_{3} \left(s_{4} -T_{v} \right)\right]} \end{array}
 
@@ -326,7 +329,7 @@ with :math:`Q_{10} =2`,
 Additionally,
 
 .. math::
-   :label: 9.13
+   :label: 9.14
 
    R_{d} =R_{d25} \left\{\frac{Q_{10} ^{(T_{v} -298.15)/10} }{1+\exp \left[s_{5} \left(T_{v} -s_{6} \right)\right]} \right\}
 
@@ -334,7 +337,7 @@ with :math:`Q_{10} =2`, :math:`s_{5} =1.3`
 K\ :sup:`-1` and :math:`s_{6} =328.15`\ K, and
 
 .. math::
-   :label: 9.14
+   :label: 9.15
 
    k_{p} =k_{p25} \, Q_{10} ^{(T_{v} -298.15)/10}
 
@@ -362,36 +365,36 @@ with :math:`Q_{10} =2`.
  | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               | –                                                                                            |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
 
-The parameters in numref:`Table Temperature dependence parameters for C3 photosynthesis` 
+The parameters in :numref:`Table Temperature dependence parameters for C3 photosynthesis` 
 do not allow for temperature acclimation of photosynthesis. In the model, acclimation is 
 implemented as in :ref:`Kattge and Knorr (2007) <KattgeKnorr2007>`. In this parameterization, 
 :math:`V_{c\max }` and :math:`J_{\max }`  vary with the plant growth temperature. This is
-achieved by allowing :math:`\Delta S`\ to vary with growth temperature
+achieved by allowing :math:`\Delta S`\  to vary with growth temperature
 according to
 
 .. math::
-   :label: 9.15
+   :label: 9.16
 
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
 The effect is to cause the temperature optimum of :math:`V_{c\max }` 
-and :math:`J_{\max }`  to increase with warmer temperature. In this
+and :math:`J_{\max }`  to increase with warmer temperatures. In this
 parameterization, :math:`\Delta H_{d}` \ = 200000,
 :math:`\Delta H_{a}` \ = 72000 for :math:`V_{c\max }` , and
 :math:`\Delta H_{a}` \ = 50000 for :math:`J_{\max }` . Additionally, the
 ratio :math:`J_{\max 25} /V_{c\max 25}`  at 25 :sup:`o`\ C decreases with growth temperature as
 
 .. math::
-   :label: 9.16
+   :label: 9.17
 
    J_{\max 25} /V_{c\max 25} =2.59-0.035(T_{10} -T_{f} ).
 
 In these acclimation functions, :math:`T_{10}`  is the 10-day mean air
 temperature (K) and :math:`T_{f}`  is the freezing point of water (K).
-For lack of data, :math:`T_{p}`  acclimates similar to V :sub:`cmax` . Acclimation is restricted over the temperature
+For lack of data, :math:`T_{p}`  acclimates similar to :math:`V_{c\max }`. Acclimation is restricted over the temperature
 range :math:`T_{10} -T_{f} \ge 11`\ :sup:`o`\ C and :math:`T_{10} -T_{f} \le 35`\ :sup:`o`\ C.
 
-.. Canopy scaling:
+.. _Canopy scaling:
 
 Canopy scaling
 --------------------------------------------
@@ -405,7 +408,7 @@ with :math:`LNC_{a}` , which decreases exponentially with greater
 cumulative leaf area, so that
 
 .. math::
-   :label: 9.17 
+   :label: 9.18 
 
    V_{c\; \max 25}^{} \left(x\right)=V_{c\; \max 25}^{} \left(0\right)e^{-K_{n} x}
 
@@ -547,7 +550,7 @@ sunlit (:math:`A_{n}^{sun}` , :math:`r_{s}^{sun}` ) and shaded
 (:math:`A_{n}^{sha}` , :math:`r_{s}^{sha}` ) leaves are explicitly
 resolved at depths in the canopy using a light profile (Chapter :numref:`rst_Radiative Fluxes`). In
 this case, :math:`V_{c\max 25}`  is not integrated over the canopy, but
-is instead given explicitly for each canopy layer using equation . This
+is instead given explicitly for each canopy layer using equation :eq:`9.18`. This
 also uses the :ref:`Lloyd et al. (2010)<Lloydetal2010>` relationship whereby
 K\ :sub:`n` scales with V\ :sub:`cmax` as
 
