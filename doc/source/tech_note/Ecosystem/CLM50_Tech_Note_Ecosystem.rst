@@ -114,7 +114,7 @@ distribution parameters that control the uptake of water from the soil
 (:numref:`Table Plant functional type root distribution parameters`), aerodynamic parameters that determine resistance to heat,
 moisture, and momentum transfer (:numref:`Table Plant functional type aerodynamic parameters`), and photosynthetic
 parameters that determine stomatal resistance, photosynthesis, and
-transpiration (:numref:`Table Plant functional type (PFT) photosynthetic parameters`, 
+transpiration (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`, 
 :numref:`Table Temperature dependence parameters for C3 photosynthesis`). The composition and abundance of PFTs
 within a grid cell can either be prescribed as time-invariant fields
 (e.g., using the present day dataset described in section 21.3.3) or can
