@@ -92,7 +92,7 @@ the :ref:`rst_Plant Hydraulics` chapter.
 Resistance is converted from units of 
 s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` to  s m\ :sup:`-1` as: 
 1 s m\ :sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }`
-:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, [check units are correct here] 
+:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, [same as 4.5, but seems off. check that units are correct] 
 where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1`
 kmol\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\theta _{atm}` is the
 atmospheric potential temperature (K).
@@ -181,7 +181,7 @@ CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 .. math::
    :label: 9.5
 
-   A_{j} =\left\{\begin{array}{l} {\frac{J\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
+   A_{j} =\left\{\begin{array}{l} {\frac{J_{x}\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
 The product-limited rate of carboxylation for C\ :sub:`3` plants
 and the PEP carboxylase-limited rate of carboxylation for
@@ -200,7 +200,8 @@ is the O\ :sub:`2` partial pressure (Pa). :math:`K_{c}`  and
 CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{\*}`  (Pa) is
 the CO\ :sub:`2` compensation point. :math:`V_{c\max }`  is the
 maximum rate of carboxylation (µmol m\ :sup:`-2`
-s\ :sup:`-1`) and :math:`J` is the electron transport rate (µmol
+s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`) 
+and :math:`J_{x}` is the electron transport rate (µmol
 m\ :sup:`-2` s\ :sup:`-1`). :math:`T_{p}`  is the triose
 phosphate utilization rate (µmol m\ :sup:`-2` s\ :sup:`-1`),
 taken as :math:`T_{p} =0.167V_{c\max }`  so that
@@ -221,14 +222,14 @@ expression is the smaller of the two roots of the equation
 .. math::
    :label: 9.7
 
-   \Theta _{PSII} J^{2} -\left(I_{PSII} +J_{\max } \right)J+I_{PSII} J_{\max } =0
+   \Theta _{PSII} J_{x}^{2} -\left(I_{PSII} +J_{\max } \right)J_{x}+I_{PSII} J_{\max } =0
 
 where :math:`J_{\max }`  is the maximum potential rate of electron
-transport (:math:`\mu`\ mol m\ :sup:`-2` s\ :sup:`-1`),
+transport (:math:`\mu`\ mol m\ :sup:`-2` s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`),
 :math:`I_{PSII}`  is the light utilized in electron transport by
 photosystem II (µmol m\ :sup:`-2` s\ :sup:`-1`), and
 :math:`\Theta _{PSII}`  is a curvature parameter. For a given amount of
-photosynthetically active radiation absorbed by a leaf :math:`\phi`  (W
+photosynthetically active radiation absorbed by a leaf (:math:`\phi`,  W
 m\ :sup:`-2`), converted to photosynthetic photon flux density
 with 4.6 :math:`\mu`\ mol J\ :sup:`-1`, the light utilized in
 electron transport is
@@ -258,17 +259,18 @@ smaller root of the equations
 Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for
 C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and
 :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants.
+:math:`A_{i}` is the intermediate co-limited photosynthesis. 
 :math:`A_{n} =A-R_{d}` .
 
-The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma _{*}` 
+The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` 
 depend on temperature. Values at 25 :sup:`o` \ C are
 :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`,
 :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and
-:math:`\Gamma _{*25} {\rm =42}.75\times 10^{-6} P_{atm}`.
+:math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`,
 and :math:`R_{d}` also vary with temperature. Parameter values at 25
-:math:`\circ`\ C are calculated from :math:`V_{c\max }` \ at 25
-:math:`\circ`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}`,
+:sup:`o`\ C are calculated from :math:`V_{c\max }` \ at 25
+:sup:`\o`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}`,
 :math:`T_{p25} =0.167V_{c\max 25}`, and
 :math:`R_{d25} =0.015V_{c\max 25}` (C\ :sub:`3`) and
 :math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`). For
@@ -278,6 +280,7 @@ calculated from leaf nitrogen as :math:`R_{d25} = 0.2577LNC_{a}`,
 where :math:`LNC_{a}` is the area-based leaf nitrogen concentration
 (g N m\ :sup:`-2` leaf area, Chapter :numref:`rst_Photosynthetic Capacity`), 
 and 0.2577 :math:`\mu`\ mol CO\ :sub:`2` g\ :sup:`-1` N s\ :sup:`-1` is the base respiration rate.
+[this doesn't look correct based on the code, which lists two options; verify with Rosie] 
 The parameters :math:`V_{c\max 25}`,
 :math:`J_{\max 25}`, :math:`T_{p25}`, :math:`k_{p25}`, and
 :math:`R_{d25}` are scaled over the canopy for sunlit and shaded leaves
@@ -287,7 +290,7 @@ The parameters :math:`V_{c\max 25}`,
 .. math::
    :label: 9.10
 
-   \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma _{*} } & {=} & {\Gamma _{*25} \; f\left(T_{v} \right)} \end{array}
+   \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma } & {=} & {\Gamma _{25} \; f\left(T_{v} \right)} \end{array}
 
 with
 
@@ -306,9 +309,6 @@ and
 :numref:`Table Temperature dependence parameters for C3 photosynthesis`
 lists parameter values for :math:`\Delta H_{a}` ,
 :math:`\Delta H_{d}` , and :math:`\Delta S`, from :ref:`Bonan et al. (2011)<Bonanetal2011>`.
-[Note: should we remove :math:`\Delta S` from the table below since we no longer use these?
-Also, we should consider updating :math:`\Delta H_{a}` ,
-:math:`\Delta H_{d}` in this table]
 Because :math:`T_{p}`  as implemented here varies with
 :math:`V_{c\max }` , :math:`T_{p}` uses the same temperature parameters as 
 :math:`V_{c\max}` . For C\ :sub:`4` plants,
@@ -346,11 +346,11 @@ with :math:`Q_{10} =2`.
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
  | Parameter              | :math:`\Delta H_{a}`  (J mol\ :sup:`-1`)                        | :math:`\Delta H_{d}`  (J mol\ :sup:`-1`)                        | :math:`\Delta S` (J mol\ :sup:`-1` K\ :sup:`-1`)                                             |
  +========================+=================================================================+=================================================================+==============================================================================================+
- | :math:`V_{c\max }`     | 65330                                                           | 149250                                                          | 485                                                                                          |
+ | :math:`V_{c\max }`     | 72000                                                           | 200000                                                          | 485                                                                                          |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`J_{\max }`      | 43540                                                           | 152040                                                          | 495                                                                                          |
+ | :math:`J_{\max }`      | 50000                                                           | 152040                                                          | 495                                                                                          |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`T_{p}`          | 65330                                                           | 149250                                                          | 485                                                                                          |
+ | :math:`T_{p}`          | 72000                                                           | 149250                                                          | 485                                                                                          |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
  | :math:`R_{d}`          | 46390                                                           | 150650                                                          | 490                                                                                          |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
@@ -361,6 +361,8 @@ with :math:`Q_{10} =2`.
  | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               | –                                                                                            |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
 
+[Note: updated the Vcmax :math:`\Delta H_{a}` and :math:`\Delta H_{d}` 
+and the Jmax :math:`\Delta H_{a}` based on acclimation values. All other values are the same as previous] 
 The parameters in :numref:`Table Temperature dependence parameters for C3 photosynthesis` 
 do not allow for temperature acclimation of photosynthesis. In the model, acclimation is 
 implemented as in :ref:`Kattge and Knorr (2007) <KattgeKnorr2007>`. In this parameterization, 
@@ -374,10 +376,8 @@ according to
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
 The effect is to cause the temperature optimum of :math:`V_{c\max }` 
-and :math:`J_{\max }`  to increase with warmer temperatures. In this
-parameterization, :math:`\Delta H_{d}` \ = 200000,
-:math:`\Delta H_{a}` \ = 72000 for :math:`V_{c\max }` , and
-:math:`\Delta H_{a}` \ = 50000 for :math:`J_{\max }` . Additionally, the
+and :math:`J_{\max }`  to increase with warmer temperatures. 
+Additionally, the
 ratio :math:`J_{\max 25} /V_{c\max 25}`  at 25 :sup:`o`\ C decreases with growth temperature as
 
 .. math::
