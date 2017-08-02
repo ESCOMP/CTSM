@@ -78,7 +78,8 @@ and can be calculated as
    g_{1} = {\sqrt{\frac{3\Gamma\lambda}{1.6}}}
  
 where :math:`\Gamma` (mol mol\ :sup:`-1`) is the CO\ :sub:`2` compensation point
-for photosynthesis without dark respiration and :math:`\lambda`
+for photosynthesis without dark respiration,
+1.6 is the ratio of diffusivity of CO\ :sub:`2` to H\ :sub:`2` O  and :math:`\lambda`
 (mol H\ :sub:`2` O mol\ :sup:`-1`) is a parameter
 describing the marginal water cost of carbon gain.
 The value for :math:`g_{o}=100` :math:`\mu` mol m :sup:`-2` s\ :sup:`-1` for
@@ -92,7 +93,7 @@ the :ref:`rst_Plant Hydraulics` chapter.
 Resistance is converted from units of 
 s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` to  s m\ :sup:`-1` as: 
 1 s m\ :sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }`
-:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, [same as 4.5, but seems off. check that units are correct] 
+:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, [same as 4.5, but units seem off. check that units are correct] 
 where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1`
 kmol\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\theta _{atm}` is the
 atmospheric potential temperature (K).
@@ -307,8 +308,12 @@ and
    f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}  .
 
 :numref:`Table Temperature dependence parameters for C3 photosynthesis`
-lists parameter values for :math:`\Delta H_{a}` ,
-:math:`\Delta H_{d}` , and :math:`\Delta S`, from :ref:`Bonan et al. (2011)<Bonanetal2011>`.
+lists parameter values for :math:`\Delta H_{a}`  and
+:math:`\Delta H_{d}` . :math:`\Delta S` is calculated 
+separately for :math:`V_{c\max }` and :math:`J_{max }`
+to allow for temperature acclimation of photosynthesis (see equation :eq:`9.16`), 
+and :math:`\Delta S` is 490 J mol :sup:`-1` K :sup:`-1` for :math:`R_d`
+(:ref:`Bonan et al. 2011<Bonanetal2011>`, :ref:`Lombardozzi et al. 2015<Lombardozzietal2015>`).
 Because :math:`T_{p}`  as implemented here varies with
 :math:`V_{c\max }` , :math:`T_{p}` uses the same temperature parameters as 
 :math:`V_{c\max}` . For C\ :sub:`4` plants,
@@ -343,28 +348,25 @@ with :math:`Q_{10} =2`.
 
 .. table:: Temperature dependence parameters for C3 photosynthesis.
 
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | Parameter              | :math:`\Delta H_{a}`  (J mol\ :sup:`-1`)                        | :math:`\Delta H_{d}`  (J mol\ :sup:`-1`)                        | :math:`\Delta S` (J mol\ :sup:`-1` K\ :sup:`-1`)                                             |
- +========================+=================================================================+=================================================================+==============================================================================================+
- | :math:`V_{c\max }`     | 72000                                                           | 200000                                                          | 485                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`J_{\max }`      | 50000                                                           | 152040                                                          | 495                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`T_{p}`          | 72000                                                           | 149250                                                          | 485                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`R_{d}`          | 46390                                                           | 150650                                                          | 490                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`K_{c}`          | 79430                                                           | –                                                               | –                                                                                            |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`K_{o}`          | 36380                                                           | –                                                               | –                                                                                            |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               | –                                                                                            |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | Parameter              | :math:`\Delta H_{a}`  (J mol\ :sup:`-1`)                        | :math:`\Delta H_{d}`  (J mol\ :sup:`-1`)                        |
+ +========================+=================================================================+=================================================================+
+ | :math:`V_{c\max }`     | 72000                                                           | 200000                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`J_{\max }`      | 50000                                                           | 200000                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`T_{p}`          | 72000                                                           | 200000                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`R_{d}`          | 46390                                                           | 150650                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`K_{c}`          | 79430                                                           | –                                                               |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`K_{o}`          | 36380                                                           | –                                                               |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
 
-[Note: updated the Vcmax :math:`\Delta H_{a}` and :math:`\Delta H_{d}` 
-and the Jmax :math:`\Delta H_{a}` based on acclimation values. All other values are the same as previous] 
-The parameters in :numref:`Table Temperature dependence parameters for C3 photosynthesis` 
-do not allow for temperature acclimation of photosynthesis. In the model, acclimation is 
+In the model, acclimation is 
 implemented as in :ref:`Kattge and Knorr (2007) <KattgeKnorr2007>`. In this parameterization, 
 :math:`V_{c\max }` and :math:`J_{\max }`  vary with the plant growth temperature. This is
 achieved by allowing :math:`\Delta S`\  to vary with growth temperature
@@ -401,7 +403,7 @@ leaves using an exponential profile to area-based leaf nitrogen
 as in :ref:`Bonan et al. (2011)<Bonanetal2011>`. :math:`V_{c\max 25}`  at
 cumulative leaf area index :math:`x` from the canopy top scales directly
 with :math:`LNC_{a}` , which decreases exponentially with greater
-cumulative leaf area, so that
+cumulative leaf area, so that [Verify with Rosie- different based on Vcmax option 0, 3, & 4]
 
 .. math::
    :label: 9.18 
@@ -409,7 +411,7 @@ cumulative leaf area, so that
    V_{c\; \max 25}^{} \left(x\right)=V_{c\; \max 25}^{} \left(0\right)e^{-K_{n} x}
 
 where :math:`V_{c\; \max 25}^{} \left(0\right)` is defined at the top of
-the canopy using :math:`SLA_{0}`, whic is the specific leaf area at
+the canopy using :math:`SLA_{0}`, which is the specific leaf area at
 the canopy top and :math:`K_{n}`  is the decay
 coefficient for nitrogen. The canopy integrated value for sunlit and
 shaded leaves is
@@ -438,10 +440,12 @@ and the average value for the sunlit and shaded leaves is
 
 This integration is over all leaf area (:math:`L`) with
 :math:`f_{sun} (x)=\exp \left(-Kx\right)` and :math:`K` the direct beam
-extinction coefficient (equation 4.9). Photosynthetic parameters
-:math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}` , and
+extinction coefficient (equation :eq:`4.8` in chapter :numref:`rst_Radiative Fluxes`). Photosynthetic parameters
+:math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}`, and
 :math:`R_{d25}`  scale similarly.
 
+The model uses :math:`K_{n} =0.30` to match an explicit multi-layer canopy, as in
+:ref:`Bonan et al. (2012)<Bonanetal2012>`.
 The value :math:`K_{n} = 0.11` chosen by :ref:`Bonan et al. (2011)<Bonanetal2011>` is
 consistent with observationally-derived estimates for forests, mostly
 tropical, and provides a gradient in V\ :sub:`cmax` similar to
@@ -449,8 +453,7 @@ the original CLM4 specific leaf area scaling. However,
 :ref:`Bonan et al. (2012)<Bonanetal2012>` showed that the sunlit/shaded canopy parameterization does not
 match an explicit multi-layer canopy parameterization. The discrepancy
 arises from absorption of scattered radiation by shaded leaves and can
-be tuned out with higher :math:`K_{n}` . The model uses
-:math:`K_{n} =0.30` to match an explicit multi-layer canopy.
+be tuned out with higher :math:`K_{n}`.
 
 
 .. _Numerical implementation photosynthesis:
@@ -458,8 +461,8 @@ be tuned out with higher :math:`K_{n}` . The model uses
 Numerical implementation
 ----------------------------
 
-The CO\ :sub:`2` partial pressure at the leaf surface
-:math:`c_{s}`  (Pa) and the vapor pressure at the leaf surface
+The CO\ :sub:`2` partial pressure at the leaf surface,
+:math:`c_{s}`  (Pa), and the vapor pressure at the leaf surface,
 :math:`e_{s}`  (Pa), needed for the stomatal resistance model in
 equation :eq:`9.1`, and the internal leaf CO\ :sub:`2` partial pressure
 :math:`c_{i}`  (Pa), needed for the photosynthesis model in equations :eq:`9.3`-:eq:`9.5`,
@@ -497,7 +500,7 @@ determined from
    e_{a} =\frac{P_{atm} q_{s} }{0.622}
 
 where :math:`q_{s}`  is the specific humidity of canopy air (kg
-kg\ :sup:`-1`) (section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
+kg\ :sup:`-1`, section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
 Equations and are solved for
 :math:`c_{s}`  and :math:`e_{s}` 
 
