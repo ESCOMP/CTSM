@@ -1133,6 +1133,12 @@ Lobell, D.B., Bala, G., and Duffy, P.B. 2006. Biogeophysical impacts of
 cropland management changes on climate. Geophys. Res. Lett. 33:L06708.
 DOI:10.1029/2005GL025492.
 
+.. _Lombardozzietal2015:
+
+Lombardozzi, D.L., Bonan, G.B., Smith, N.G., Dukes, J.S. 2015. Temperature
+acclimation of photosynthesis and respiration: A key uncertainty in the 
+carbon cycle-climate feedback. Geophys. Res. Lett. 42:8624-8631.
+
 .. _Lovelandetal2000:
 
 Loveland, T.R., Reed, B.C., Brown, J.F., Ohlen, D.O., Zhu, Z., Yang, L.,
