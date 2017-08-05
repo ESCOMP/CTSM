@@ -190,7 +190,7 @@ contains
             err_found = .true.
             err_index = c
          end if
-          if (abs(col_errcb(c)) > 1e-9_r8) then
+          if (abs(col_errcb(c)) > 1e-8_r8) then
             write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
          end if
 
@@ -325,7 +325,7 @@ contains
             err_index = c
          end if
          
-         if (abs(col_errnb(c)) > 1e-8_r8) then
+         if (abs(col_errnb(c)) > 1e-7_r8) then
             write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
             write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt

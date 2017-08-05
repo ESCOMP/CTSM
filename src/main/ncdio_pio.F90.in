@@ -1604,7 +1604,6 @@ contains
              deallocate( idata )
 #else
              call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-             write(iulog,*) 'read: ', trim(varname)
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
 #endif
              if ( status /= PIO_NOERR ) then

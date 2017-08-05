@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r253     erik 08/04/2017 Check on reasonable import/export from CLM, check ndep units from input file
   clm4_5_16_r252     erik 07/24/2017 Update parameter file for some crop albedo issues, and fix a bug in urban albedo for nightime
   clm4_5_16_r251     erik 07/14/2017 Update mksurfdata_map for soil depth/color, add new mapping files
   clm4_5_16_r250     erik 07/13/2017 Update finundation dataset, new fsurdat files with updated soil color and soil depth, 

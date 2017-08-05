@@ -37,7 +37,7 @@ sub GetNameNDir {
    } else {
        $scrdir = $cwd;
    }
-   return( $ProgName );
+   return( $ProgName, $scrdir );
 }
 
 
@@ -53,6 +53,7 @@ REQUIRED OPTIONS
                                     At least one file needs to be given, but you can also
                                     give a list of space seperated files.
 OPTIONS
+     -die_on_duplicate              Die if find a duplicate testname
      -summarize [or -s]             Summarize results into lists of tests in categories (pend, pass, fail etc.)
      -sum_results_perline           Summarize results categories of each test into one line
      -help [or -h]                  Print usage to STDOUT.
@@ -73,6 +74,7 @@ sub process_cmdline {
                  csstatusfiles_ref => undef, 
                  sumintocats      => 0,
                  sumperline       => 0,
+                 dieondup         => 0,
                  help             => 0, 
                  verbose          => 0,
               );
@@ -80,6 +82,7 @@ sub process_cmdline {
    GetOptions(
        "h|help"              => \$opts{'help'},
        "s|summarize"         => \$opts{'sumintocats'},
+       "die_on_duplicate"    => \$opts{'dieondup'},
        "sum_results_perline" => \$opts{'sumperline'},
        "v|verbose"           => \$opts{'verbose'},
    )  or usage($ProgName);
@@ -178,7 +181,7 @@ sub absolute_path {
 
 sub run_csstatus {
    # run a cs.status file and parse it's output
-   my ( $csstatusfilename, $verbose, $csstatus_ref ) = @_;
+   my ( $csstatusfilename, $verbose, $csstatus_ref, $dieondup ) = @_;
 
    if ( ! -x $csstatusfilename ) {
       die "ERROR: cs.status file does NOT exist or can not execute: $csstatusfilename\n";
@@ -247,7 +250,12 @@ sub run_csstatus {
                $over     = "DIFF";
             }
          }
-         if ( exists($$csstatus_ref{$test}) ) { next; }
+         if ( exists($$csstatus_ref{$test}) ) { 
+           if ( $dieondup ) {
+             die "ERROR: Already had a test that matches this one: $test\n";
+           }
+           next; 
+         }
          $$csstatus_ref{$test}{'over'} = $over;
          $$csstatus_ref{$test}{'FAIL'} = $fails;
          $$csstatus_ref{$test}{'PASS'} = $passes;
@@ -299,8 +307,10 @@ sub print_sumperline {
 sub print_categories {
    # Seperate tests into categories
 
+   my $scrdir   = shift(@_);
    my %csstatus = @_;
 
+   my $expectedfailfile = "$scrdir/components/clm/cime_config/testdefs/ExpectedTestFails.xml";
    my @passes;
    my @fails;
    my @pendings;
@@ -345,7 +355,10 @@ sub print_categories {
       print( "These tests passed\n" );
       print( "================================================================================\n" );
       foreach my $key ( @passes ) {
-         print( "$key\n" );
+         my $expect = ""; 
+         `grep $key $expectedfailfile > /dev/null`;
+         if ( $? == 0 ) { $expect = "FAILED PREVIOUSLY"; }
+         print( "$key\t\t\t$expect\n" );
       }
    }
    if ( $#compares_diff >= 0 ) {
@@ -361,7 +374,10 @@ sub print_categories {
       print( "These tests failed\n" );
       print( "================================================================================\n" );
       foreach my $key ( @fails ) {
-         print( "$key\n" );
+         my $expect = ""; 
+         `grep $key $expectedfailfile > /dev/null`;
+         if ( $? == 0 ) { $expect = "EXPECTED"; }
+         print( "$key\t\t$expect\n" );
       }
    }
 }
@@ -370,20 +386,20 @@ sub print_categories {
 
 sub main {
 # main subroutine
-   my ($ProgName ) = &GetNameNDir( );
+   my ($ProgName, $scrdir) = &GetNameNDir( );
    my $pwd = `pwd`;
    chomp( $pwd );
    my %opts = &process_cmdline( $ProgName );
    my %csstatus;
    my $files_ref = $opts{'csstatusfiles_ref'};
    foreach my $file ( @$files_ref ) {
-      &run_csstatus( "$pwd/$file", $opts{'verbose'}, \%csstatus );
+      &run_csstatus( "$pwd/$file", $opts{'verbose'}, \%csstatus, $opts{'dieondup'} );
    }
    if ( $opts{'verbose'} ) {
       print "Print summary of testing:\n";
    }
    if (      $opts{'sumintocats'} ) {
-      &print_categories( %csstatus );
+      &print_categories( $scrdir, %csstatus );
    } elsif ( $opts{'sumperline'} ) {
       &print_sumperline( %csstatus );
    } else {

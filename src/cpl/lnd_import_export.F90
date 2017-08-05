@@ -22,11 +22,14 @@ contains
     ! Convert the input data from the coupler to the land model 
     !
     ! !USES:
+    use seq_flds_mod    , only: seq_flds_x2l_fields
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13, create_glacier_mec_landunit
     use clm_varctl      , only: ndep_from_cpl 
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
+    use shr_string_mod  , only: shr_string_listGetName
     use domainMod       , only: ldomain
+    use shr_infnan_mod  , only : isnan => shr_infnan_isnan
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds   ! bounds
@@ -35,7 +38,7 @@ contains
     type(glc2lnd_type) , intent(inout) :: glc2lnd_inst      ! clm internal input data type
     !
     ! !LOCAL VARIABLES:
-    integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
+    integer  :: g,i,k,nstep,ier      ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
     real(r8) :: e                    ! vapor pressure (Pa)
     real(r8) :: qsat                 ! saturation specific humidity (kg/kg)
@@ -55,7 +58,8 @@ contains
     real(r8) :: b0,b1,b2,b3,b4,b5,b6 ! coefficients for esat over ice
     real(r8) :: tdc, t               ! Kelvins to Celcius function and its input
     integer  :: num                  ! counter
-    character(len=32), parameter :: sub = 'lnd_import_mct'
+    character(len=32) :: fname       ! name of field that is NaN
+    character(len=32), parameter :: sub = 'lnd_import'
 
     ! Constants to compute vapor pressure
     parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
@@ -189,7 +193,7 @@ contains
        end if
        qsat           = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
 
-!modify specific humidity if precip occurs
+       !modify specific humidity if precip occurs
        if(1==2) then
           if((forc_rainc+forc_rainl) > 0._r8) then
              forc_q = 0.95_r8*qsat
@@ -200,6 +204,33 @@ contains
 
        atm2lnd_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
 
+       ! Check that solar, specific-humidity and LW downward aren't negative
+       if ( atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) <= 0.0_r8 )then
+          call endrun( sub//' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
+       end if
+       if ( (atm2lnd_inst%forc_solad_grc(g,1) < 0.0_r8) .or.  (atm2lnd_inst%forc_solad_grc(g,2) < 0.0_r8) &
+       .or. (atm2lnd_inst%forc_solai_grc(g,1) < 0.0_r8) .or.  (atm2lnd_inst%forc_solai_grc(g,2) < 0.0_r8) ) then
+          call endrun( sub//' ERROR: One of the solar fields (indirect/diffuse, vis or near-IR)'// &
+                       ' from the atmosphere model is negative or zero' )
+       end if
+       if ( atm2lnd_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
+          call endrun( sub//' ERROR: Bottom layer specific humidty sent from the atmosphere model is less than zero' )
+       end if
+
+       ! Check if any input from the coupler is NaN
+       if ( any(isnan(x2l(:,i))) )then
+          write(iulog,*) '# of NaNs = ', count(isnan(x2l(:,i)))
+          write(iulog,*) 'Which are NaNs = ', isnan(x2l(:,i))
+          do k = 1, size(x2l(:,i))
+             if ( isnan(x2l(k,i)) )then
+                call shr_string_listGetName( seq_flds_x2l_fields, k, fname )
+                write(iulog,*) trim(fname)
+             end if
+          end do
+          write(iulog,*) 'gridcell index = ', g
+          call endrun( sub//' ERROR: One or more of the input from the atmosphere model are NaN '// &
+                       '(Not a Number from a bad floating point calculation)' )
+       end if
 
        ! Make sure relative humidity is properly bounded
        ! atm2lnd_inst%forc_rh_grc(g) = min( 100.0_r8, atm2lnd_inst%forc_rh_grc(g) )
@@ -253,12 +284,15 @@ contains
     ! 
     ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
+    use seq_flds_mod       , only : seq_flds_l2x_fields
     use clm_varctl         , only : iulog, create_glacier_mec_landunit
     use clm_time_manager   , only : get_nstep, get_step_size  
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
-    use domainMod          , only: ldomain
+    use domainMod          , only : ldomain
+    use shr_string_mod     , only : shr_string_listGetName
+    use shr_infnan_mod     , only : isnan => shr_infnan_isnan
     !
     ! !ARGUMENTS:
     implicit none
@@ -268,11 +302,13 @@ contains
     real(r8)          , intent(out)   :: l2x(:,:)! land to coupler export state on land grid
     !
     ! !LOCAL VARIABLES:
-    integer  :: g,i   ! indices
+    integer  :: g,i,k ! indices
     integer  :: ier   ! error status
     integer  :: nstep ! time step index
     integer  :: dtime ! time step   
     integer  :: num   ! counter
+    character(len=32) :: fname       ! name of field that is NaN
+    character(len=32), parameter :: sub = 'lnd_export'
     !---------------------------------------------------------------------------
 
     ! cesm sign convention is that fluxes are positive downward
@@ -365,6 +401,20 @@ contains
              l2x(index_l2x_Sl_topo(num),i)   = lnd2glc_inst%topo_grc(g,num)
              l2x(index_l2x_Flgl_qice(num),i) = lnd2glc_inst%qice_grc(g,num)
           end do
+       end if
+
+       ! Check if any output sent to the coupler is NaN
+       if ( any(isnan(l2x(:,i))) )then
+          write(iulog,*) '# of NaNs = ', count(isnan(l2x(:,i)))
+          write(iulog,*) 'Which are NaNs = ', isnan(l2x(:,i))
+          do k = 1, size(l2x(:,i))
+             if ( isnan(l2x(k,i)) )then
+                call shr_string_listGetName( seq_flds_l2x_fields, k, fname )
+                write(iulog,*) trim(fname)
+             end if
+          end do
+          write(iulog,*) 'gridcell index = ', g
+          call endrun( sub//' ERROR: One or more of the output from CLM to the coupler are NaN ' )
        end if
 
     end do

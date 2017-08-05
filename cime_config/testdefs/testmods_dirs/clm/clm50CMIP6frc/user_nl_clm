@@ -1,0 +1,3 @@
+ndep_varlist = 'NDEP_month'
+ndep_taxmode = 'cycle'
+stream_fldfilename_ndep = '$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_simyr1850_0.9x1.25_CMIP6alpha01_c170330.nc'

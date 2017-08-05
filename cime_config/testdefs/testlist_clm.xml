@@ -32,6 +32,9 @@
       <test name="ERP_P36x2_D_Ld5">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/crop" comment="include a debug test of I1850Clm45BgcCrop">cheyenne</machine>
       </test>
+      <test name="ERS_D_Ld6">
+        <machine compiler="gnu" testtype="aux_clm" testmods="clm/clm50CMIP6frc" >cheyenne</machine>
+      </test>
       <test name="SMS_D_Ld5">
         <machine compiler="nag" testtype="aux_clm" testmods="clm/crop" comment="include a nag debug test of Clm45BgcCrop">hobart</machine>
       </test>
