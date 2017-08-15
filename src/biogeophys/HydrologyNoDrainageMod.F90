@@ -17,6 +17,7 @@ Module HydrologyNoDrainageMod
   use SoilHydrologyType , only : soilhydrology_type
   use SoilStateType     , only : soilstate_type
   use SurfRunoffSatMod  , only : surf_runoff_sat_type
+  use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use WaterfluxType     , only : waterflux_type
   use WaterstateType    , only : waterstate_type
   use CanopyStateType   , only : canopystate_type
@@ -43,8 +44,8 @@ contains
        clm_fates, &
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
-       soilhydrology_inst, surf_runoff_sat_inst, aerosol_inst, &
-       canopystate_inst, soil_water_retention_curve)
+       soilhydrology_inst, surf_runoff_sat_inst, infiltration_excess_runoff_inst, &
+       aerosol_inst, canopystate_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -93,6 +94,7 @@ contains
     type(aerosol_type)       , intent(inout) :: aerosol_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(surf_runoff_sat_type), intent(inout) :: surf_runoff_sat_inst
+    type(infiltration_excess_runoff_type), intent(inout) :: infiltration_excess_runoff_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
@@ -187,9 +189,15 @@ contains
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
            waterflux_inst, surf_runoff_sat_inst, waterstate_inst)
 
+      call infiltration_excess_runoff_inst%InfiltrationExcessRunoff( &
+           bounds, num_hydrologyc, filter_hydrologyc, &
+           soilhydrology_inst, soilstate_inst, surf_runoff_sat_inst, waterflux_inst, &
+           waterstate_inst)
+
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
-           energyflux_inst, soilhydrology_inst, soilstate_inst, surf_runoff_sat_inst, &
-           temperature_inst, waterflux_inst, waterstate_inst)
+           infiltration_excess_runoff_inst, &
+           energyflux_inst, soilhydrology_inst, surf_runoff_sat_inst, &
+           waterflux_inst, waterstate_inst)
 
       call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
            num_urbanc, filter_urbanc, &
