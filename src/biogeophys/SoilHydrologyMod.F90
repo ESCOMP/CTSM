@@ -244,6 +244,10 @@ contains
            qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap(c)
            qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
 
+        else
+           ! FIXME(wjs, 2017-08-15) Rather than this kludge, instead set qflx_in_soil and
+           ! qflx_top_soil_to_h2osfc to reasonable values for other landunits
+           qflx_in_soil(c) = 0._r8
         end if
      end do
 
