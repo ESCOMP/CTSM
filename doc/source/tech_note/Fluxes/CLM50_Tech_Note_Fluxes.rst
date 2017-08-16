@@ -1052,7 +1052,7 @@ where
 .. math::
    :label: 5.103 
 
-   E_{soil} = -\rho _{atm} \frac{\beta _{soi} \left(q_{s} -q_{soil} \right)}{r_{aw} ^{{'} } +r_{soil} }
+   E_{soil} = -\rho _{atm} \frac{\left(q_{s} -q_{soil} \right)}{r_{aw} ^{{'} } +r_{soil} }
 
 .. math::
    :label: 5.104 
@@ -1072,9 +1072,7 @@ at the vegetation temperature (section :numref:`Saturation Vapor Pressure`), :ma
 of the soil, snow, and surface water (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`),
 :math:`r_{aw} ^{{'} }`  is the aerodynamic resistance (s
 m\ :sup:`-1`) to water vapor transfer between the ground at height
-:math:`z_{0w} ^{{'} }`  and the canopy air at height :math:`z_{0w} +d`,
-:math:`\beta _{soi}`  is an empirical function of soil water (section
-:numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`), 
+:math:`z_{0w} ^{{'} }`  and the canopy air at height :math:`z_{0w} +d`, 
 and :math:`r_{soil}`  (:eq:`5.76`) is a resistance to diffusion through the soil 
 (s m\ :sup:`-1`). :math:`r_{total}`  is the total resistance to
 water vapor transfer from the canopy to the canopy air and includes

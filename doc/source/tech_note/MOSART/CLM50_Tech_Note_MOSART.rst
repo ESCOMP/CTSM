@@ -53,8 +53,8 @@ and discharges the water to its downstream spatial unit or the ocean.
 MOSART only route positive runoff, although negative runoff could be generated
 occasionally by the land model (e.g., :math:`q_{gwl}`). Negative runoff in any
 runoff component including  :math:`q_{sur}`,  :math:`q_{sub}`,  :math:`q_{gwl}` 
-is mapped directly from the spatial unit where it is generated at any time step to
-the basin outlet of the corresponding spatial unit.  
+is not routed through MOSART, but instead is mapped directly from the spatial unit 
+where it is generated at any time step to the coupler.  
  
 In MOSART, the travel velocities of water across hillslopes, sub-network and main
 channel are all estimated using the Manning’s equation with different levels of
