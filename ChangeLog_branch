@@ -1,4 +1,279 @@
 ===============================================================
+Tag name: ctsm_n04_clm4_5_16_r249
+Originator(s): sacks
+Date: July 14, 2017
+One-line Summary: Extract SurfaceRunoff to its own module and related modularization
+
+Up-to-date with branch tag: modularize_surface_runoff_n02_ctsm_n02_clm4_5_16_r249
+
+Purpose of changes
+------------------
+
+Major change is extracting SurfaceRunoff to its own module, SurfRunoffSatMod.F90
+
+Also, some related modularization:
+- Move urban surface runoff code into different routines
+- Extract a subroutine for each fsat method
+- Other minor refactoring
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu - pass
+    cheyenne_intel - pass
+    hobart_nag - pass
+    hobart_pgi - pass
+    hobart_intel - pass
+
+CLM tag used for the baseline comparisons: ctsm_n03_clm4_5_16_r249
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - bfb
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= New class containing what used to be the core of subroutine
+          SurfaceRunoff
+A       components/clm/src/biogeophys/SurfRunoffSatMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyType.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeochem/CNDriverMod.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+M       components/clm/src/biogeochem/CNFireBaseMod.F90
+M       components/clm/src/biogeochem/CNFireMethodMod.F90
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90
+M       components/clm/src/biogeochem/CNFireNoFireMod.F90
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/main/clm_driver.F90
+
+===============================================================
+===============================================================
+Tag name: ctsm_n03_clm4_5_16_r249
+Originator(s): sacks
+Date: July 13, 2017
+One-line Summary: Separate qflx_surf updates into two steps
+
+Up-to-date with branch tag: modularize_surface_runoff_n01_ctsm_n02_clm4_5_16_r249
+
+Purpose of changes
+------------------
+
+Separate qflx_surf updates into two steps
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu - ok
+    cheyenne_intel - ok
+    hobart_nag - ok
+    hobart_pgi - ok
+    hobart_intel - ok
+
+    ok means tests pass, answers change as expected
+
+CLM tag used for the baseline comparisons: ctsm_n02_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+      There are greater than roundoff-level changes in the diagnostic field
+      QOVER, because this field now includes QH2OSFC. Other than that, there are
+      just roundoff-level differences in runoff. Sometimes, these roundoff-level
+      runoff changes can feed back to create greater-than-roundoff level changes
+      over time. This happens for ch4-related fields, and for many fields in
+      this test with flooding:
+          ERP_P180x2_D.f19_g17.I2000Clm50SpRtmFl.yellowstone_pgi.clm-default
+
+      Note that the oldhyd test is bit-for-bit:
+          SMS_D_Ld1_P24x1.f10_f10_musgs.I2000Clm45BgcCrop.hobart_nag.clm-oldhyd
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeochem/ch4Mod.F90
+M       components/clm/src/main/ColumnType.F90
+M       components/clm/src/main/lnd2atmType.F90
+M       components/clm/src/main/initSubgridMod.F90
+M       components/clm/src/main/lnd2atmMod.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNLeachingMod.F90
+M       components/clm/src/cpl/lnd_import_export.F90
+
+===============================================================
+===============================================================
+Tag name: ctsm_n02_clm4_5_16_r249
+Originator(s): sacks
+Date: July 11, 2017
+One-line Summary: BFB refactorings towards modularization of SurfaceRunoff
+
+Purpose of changes
+------------------
+
+BFB refactorings towards modularization of SurfaceRunoff
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu - pass
+    cheyenne_intel - pass
+    hobart_nag - pass
+    hobart_pgi - pass
+    hobart_intel - pass
+
+CLM tag used for the baseline comparisons: ctsm_n01_clm4_5_16_r249 for VIC
+tests, clm4_5_16_r249 for non-VIC tests
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - bfb
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyType.F90
+M       components/clm/src/biogeophys/SoilHydrologyInitTimeConstMod.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+
+===============================================================
+===============================================================
 Tag name: ctsm_n01_clm4_5_16_r249
 Originator(s): sacks
 Date: July 7, 2017
