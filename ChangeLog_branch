@@ -1,4 +1,103 @@
 ===============================================================
+Tag name: ctsm_n05_clm4_5_16_r249
+Originator(s): sacks
+Date: Aug 17, 2017
+One-line Summary: Re-parenthesize a VIC equation
+
+Purpose of changes
+------------------
+
+With an upcoming refactoring, answers change for VIC. The minor change here
+forces the answer change to happen with this simple re-parenthesization, which I
+think will allow us to avoid the answer changes in the upcoming refactoring.
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - just ran vic tests
+    yellowstone_pgi - just ran vic tests
+    yellowstone_gnu - not run
+    cheyenne_intel - just ran vic tests
+    hobart_nag - not run
+    hobart_pgi - not run
+    hobart_intel - not run
+
+  Just ran the following vic tests (all of the vic tests in the test list):
+
+     ERP_D_Ld5.f09_g17.I2000Clm50Vic.yellowstone_intel.clm-vrtlay
+     ERP_Ld5.f09_g17.I2000Clm50Vic.yellowstone_pgi.clm-vrtlay
+     ERP_D_Ld5.f10_f10_musgs.I2000Clm50Vic.yellowstone_intel.clm-vrtlay
+     ERP_Ld5.f10_f10_musgs.I2000Clm50Vic.yellowstone_pgi.clm-decStart
+     SMS_Ld1.f19_g17.I2000Clm50Vic.yellowstone_intel.clm-default
+     ERP_D_Ld5.f09_g17.I2000Clm50Vic.cheyenne_intel.clm-vrtlay
+     ERP_D_Ld5.f10_f10_musgs.I2000Clm50Vic.cheyenne_intel.clm-vrtlay
+     SMS_Ld1.f19_g17.I2000Clm50Vic.cheyenne_intel.clm-default
+
+CLM tag used for the baseline comparisons: ctsm_n04_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Vic configurations
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      not investigated closely, but should just be roundoff-level
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+
+===============================================================
+===============================================================
 Tag name: ctsm_n04_clm4_5_16_r249
 Originator(s): sacks
 Date: July 14, 2017
