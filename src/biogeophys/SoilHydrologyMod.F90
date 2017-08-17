@@ -341,12 +341,12 @@ contains
              endif
 
              !1. partition surface inputs between soil and h2osfc
-             qflx_in_soil(c) = (1._r8 - frac_h2osfc(c)) * (qflx_top_soil(c)  - qflx_sat_surf(c))
-             qflx_in_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_surf(c))          
+             qflx_in_soil(c)   = qflx_top_soil(c)  - qflx_sat_surf(c)
+             qflx_in_h2osfc(c) = qflx_top_soil(c)  - qflx_sat_surf(c)          
 
              !2. remove evaporation (snow treated in SnowHydrology)
              qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap(c)
-             qflx_in_h2osfc(c) =  qflx_in_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
+             qflx_in_h2osfc(c) =  qflx_in_h2osfc(c) - qflx_ev_h2osfc(c)
 
              !3. determine maximum infiltration rate
              if (use_vichydro) then
@@ -369,10 +369,10 @@ contains
              else
                 qinmax=(1._r8 - fsat(c)) * minval(10._r8**(-e_ice*(icefrac(c,1:3)))*hksat(c,1:3))
              end if
-             qflx_infl_excess(c) = max(0._r8,qflx_in_soil(c) -  (1.0_r8 - frac_h2osfc(c))*qinmax)
+             qflx_infl_excess(c) = max(0._r8, qflx_in_soil(c) - qinmax) * (1.0_r8 - frac_h2osfc(c)) ! qflx_infl_excess only over the soil
 
              !4. soil infiltration and h2osfc "run-on"
-             qflx_infl(c) = qflx_in_soil(c) - qflx_infl_excess(c)
+             qflx_infl(c) = ( qflx_in_soil(c) - qflx_infl_excess(c) ) * (1.0_r8 - frac_h2osfc(c))  ! component over soil (move down?)
              if (h2osfcflag /= 0) then
                 qflx_in_h2osfc(c) =  qflx_in_h2osfc(c) + qflx_infl_excess(c)
                 qflx_infl_excess_surf(c) = 0._r8
@@ -412,11 +412,11 @@ contains
 
              !--  if all water evaporates, there will be no bottom drainage
              if (h2osfc(c) < 0.0) then
-                qflx_infl(c) = qflx_infl(c) + h2osfc(c)/dtime
+                qflx_infl(c) = qflx_infl(c) + frac_h2osfc(c)*h2osfc(c)/dtime
                 h2osfc(c) = 0.0
                 qflx_h2osfc_drain(c)= 0._r8
              else
-                qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax,h2osfc(c)/dtime)
+                qflx_h2osfc_drain(c)=min(qinmax, h2osfc(c)/dtime)
              endif
 
              if(h2osfcflag==0) then 
@@ -425,7 +425,7 @@ contains
 
              !7. remove drainage from h2osfc and add to qflx_infl
              h2osfc(c) = h2osfc(c) - qflx_h2osfc_drain(c) * dtime
-             qflx_infl(c) = qflx_infl(c) + qflx_h2osfc_drain(c)
+             qflx_infl(c) = qflx_infl(c) + frac_h2osfc(c)*qflx_h2osfc_drain(c)
           else
              ! non-vegetated landunits (i.e. urban) use original CLM4 code
              if (snl(c) >= 0) then
