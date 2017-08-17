@@ -365,7 +365,7 @@ contains
                         + top_max_moist(c) * basis**(1._r8 + b_infil(c)))/dtime
                 end if
                 rsurf_vic = min(qflx_in_soil(c), rsurf_vic)
-                qinmax = (1._r8 - fsat(c)) * 10._r8**(-e_ice*top_icefrac)*(qflx_in_soil(c) - rsurf_vic)
+                qinmax = (1._r8 - fsat(c)) * (10._r8**(-e_ice*top_icefrac)*(qflx_in_soil(c) - rsurf_vic))
              else
                 qinmax=(1._r8 - fsat(c)) * minval(10._r8**(-e_ice*(icefrac(c,1:3)))*hksat(c,1:3))
              end if
