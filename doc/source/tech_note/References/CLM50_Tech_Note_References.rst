@@ -17,6 +17,10 @@ Martin, M.E., Hallett, R.A., and Stoddard, J.L. 2003. Is nitrogen
 deposition altering the nitrogen status of northeastern forests?
 BioScience 53:375-389.
 
+.. _Alietal2016:
+
+Ali, A. A., C. Xu, A. Rogers, R. A. Fisher, S. D. Wullschleger, E. Massoud, J. A. Vrugt, J. D. Muss, N. McDowell, and J. Fisher, 2016: A global scale mechanistic model of photosynthetic capacity (LUNA V1. 0). Geosci. Mod. Dev., 9:587-606.
+
 .. _Allenetal2005:
 
 Allen, C.B., Will, R.E., and Jacobson, M.A. 2005. Production efficiency
@@ -209,6 +213,10 @@ Geosci. Model Dev., 7, 2193-2222, doi:10.5194/gmd-7-2193-2014.
 Brun, E. 1989. Investigation of wet-snow metamorphism in respect of
 liquid water content. Ann. Glaciol. 13:22-26.
 
+.. _Brunkeetal2016:
+
+Brunke, M. A., P. Broxton, J. Pelletier, D. Gochis, P. Hazenberg, D. M. Lawrence, L. R. Leung, G.-Y. Niu, P. A. Troch, and X. Zeng, 2016: Implementing and Evaluating Variable Soil Thickness in the Community Land Model, Version 4.5 (CLM4.5). J. Clim. 29:3441-3461.
+
 .. _BugmannSolomon2000:
 
 Bugmann, H., and Solomon, A.M. 2000. Explaining forest composition and
@@ -318,6 +326,10 @@ characteristics to the physical properties of soils. Water Resour. Res.
 Crawford, T. W., Rendig, V. V., and Broadent, F. E. 1982. Sources,
 fluxes, and sinks of nitrogen during early reproductive growth of maize
 (Zea mays L.). Plant Physiol. 70:1645-1660.
+
+.. _Dahlinetal2015:
+
+Dahlin, K., R. Fisher, and P. Lawrence, 2015: Environmental drivers of drought deciduous phenology in the Community Land Model. Biogeosciences, 12:5061-5074.
 
 .. _DaiZeng1997:
 
@@ -471,6 +483,10 @@ Firestone, M.K. and Davidson, E.A. 1989. Exchange of Trace Gases between
 Terrestrial Ecosystems and the Atmosphere. In: M.O. Andreae and D.S.
 Schimel (Editors). John Wiley and Sons, pp. 7-21.
 
+.. _Fisheretal2015:
+
+Fisher, R. A., S. Muszala, M. Verteinstein, P. Lawrence, C. Xu, N. G. McDowell, R. G. Knox, C. Koven, J. Holm, B. M. Rogers, A. Spessa, D. Lawrence, and G. Bonan, 2015: Taking off the training wheels: the properties of a dynamic vegetation model without climate envelopes, CLM4.5(ED). Geosci. Model Dev., 8: 3593-3619, doi:10.5194/gmd-8-3593-2015.
+
 .. _FlannerZender2005:
 
 Flanner, M.G., and Zender. C.S. 2005. Snowpack radiative heating:
@@ -547,7 +563,11 @@ Climate. John Wiley and Sons, Chichester, England.
 
 Getirana, A. C. V., A. Boone, D. Yamazaki, B. Decharme, F. Papa, and
 N. Mognard. 2012. The hydrological modeling and analysis platform
-(HyMAP): Evaluation in the Amazon basin, J. Hydrometeorol., 13, 1641–1665.
+(HyMAP): Evaluation in the Amazon basin, J. Hydrometeorol., 13, 1641-1665.
+
+.. _Ghimireetal2016:
+
+Ghimire, B., W. J. Riley, C. D. Koven, M. Mu, and J. T. Randerson, 2016: Representing leaf and root physiological traits in CLM improves global carbon and nitrogen cycling predictions. J. Adv. Mod. Earth Sys. 8: 598-613.
 
 .. _Gholzetal1985:
 
@@ -1450,6 +1470,10 @@ from soils. J. Geophys. Res. 106(D15):17403-17419.
 Paterson, W.S.B., 1994. The Physics of Glaciers. Elsevier Science Inc.,
 New York, 480 pp.
 
+.. _Pelletieretal2016:
+
+Pelletier, J. D., P. D. Broxton, P. Hazenberg, X. Zeng, P. A. Troch, G. Y. Niu, Z. Williams, M. A. Brunke, and D. Gochis, 2016: A gridded global data set of soil, intact regolith, and sedimentary deposit thicknesses for regional and global land surface modeling. J. Adv. Mod. Earth Sys. 8:41-65.
+
 .. _Petrescuetal2010:
 
 Petrescu, A.M.R. et al. 2010. Modeling regional to global CH4 emissions
@@ -1565,6 +1589,10 @@ Meeting, Boulder, CO.
 
 Roesch, A., M. Wild, H. Gilgen, and A. Ohmura. 2001. A new snow cover
 fraction parametrization for the ECHAM4 GCM, Clim. Dyn., 17:933–946.
+
+.. _Rogersetal2017:
+
+Rogers, A., B. E. Medlyn, J. S. Dukes, G. Bonan, S. Caemmerer, M. C. Dietze, J. Kattge, A. D. Leakey, L. M. Mercado, and U. Niinemets, 2017: A roadmap for improving the representation of photosynthesis in Earth system models. New Phytologist, 213:22-42.
 
 .. _Ryan1991:
 
@@ -1683,6 +1711,10 @@ Shi, X., Mao, J., Thornton, P.E., and Huang, M. 2013. Spatiotemporal
 patterns of evapotranspiration in response to multiple environmental
 factors simulated by the Community Land Model. Environ. Res. Lett.
 8:024012.
+
+.. _Shietal2016:
+
+Shi, M., J. B. Fisher, E. R. Brzostek, and R. P. Phillips, 2016: Carbon cost of plant nitrogen acquisition: global carbon cycle impact from an improved plant nitrogen cycle in the Community Land Model. Glob. Change Biol., 22:1299-1314.
 
 .. _Shiklomanov2000:
 
@@ -2092,6 +2124,10 @@ Water Resour. Res., 47, W03517, doi:10.1029/2009WR008871.
 Wu, H., J. S. Kimball, H. Li, M. Huang, L. R. Leung, and R. F. Adler
 (2012), A New Global River Network Database for Macroscale Hydrologic
 modeling, Water Resour. Res., 48, W09701, doi:10.1029/2012WR012313.
+
+.. _Xuetal2012:
+
+Xu, C., R. Fisher, S. D. Wullschleger, C. J. Wilson, M. Cai, and N. G. McDowell, 2012: Toward a mechanistic modeling of nitrogen limitation on vegetation dynamics. PloS one, 7:e37914.
 
 .. _Yang1998:
 
