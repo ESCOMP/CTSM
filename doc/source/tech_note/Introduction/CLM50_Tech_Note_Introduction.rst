@@ -123,7 +123,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table snow layer thickness` Minimum and maximum thickness of snow layers (m) 
 
-- :numref:`Table Plant functional type (PFT) photosynthetic parameters` Plant functional type (PFT) photosynthetic parameters. 
+- :numref:`Table Plant functional type (PFT) stomatal conductance parameters` Plant functional type (PFT) stomatal conductance parameters. 
 
 - :numref:`Table Temperature dependence parameters for C3 photosynthesis` Temperature dependence parameters for C3 photosynthesis. 
 

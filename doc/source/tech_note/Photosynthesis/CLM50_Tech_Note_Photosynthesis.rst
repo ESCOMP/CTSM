@@ -69,16 +69,21 @@ photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2`
 s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial
 pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric
 pressure (Pa), and :math:`D` is the vapor pressure deficit at the leaf surface (Pa).
-:math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) photosynthetic parameters`)
+:math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`)
 and can be calculated as
 
 .. math::
    :label: 9.2
 
-   g_{1} = {\sqrt{\frac{3\Gamma*\lambda}{1.6}}}
+   g_{1} = {\sqrt{\frac{3\Gamma\lambda}{1.6}}}
  
-Parameter values are :math:`g_{o}=X` for
-C\ :sub:`3` plants and :math:`g_{o}=4` for C\ :sub:`4` plants
+where :math:`\Gamma` (mol mol\ :sup:`-1`) is the CO\ :sub:`2` compensation point
+for photosynthesis without dark respiration,
+1.6 is the ratio of diffusivity of CO\ :sub:`2` to H\ :sub:`2` O  and :math:`\lambda`
+(mol H\ :sub:`2` O mol\ :sup:`-1`) is a parameter
+describing the marginal water cost of carbon gain.
+The value for :math:`g_{o}=100` :math:`\mu` mol m :sup:`-2` s\ :sup:`-1` for
+C\ :sub:`3` and C\ :sub:`4` plants.
 Photosynthesis is calculated for sunlit (:math:`A^{sun}`) and shaded
 (:math:`A^{sha}`) leaves to give :math:`r_{s}^{sun}` and
 :math:`r_{s}^{sha}`. Additionally, soil water influences stomatal
@@ -86,72 +91,64 @@ resistance through plant hydraulic stress, detailed in
 the :ref:`rst_Plant Hydraulics` chapter.
 
 Resistance is converted from units of 
-s m\ :sup:`2` :math:`\mu` mol\ :sub:`-1` to  s m\ :sup:`-1` as: 
+s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` to  s m\ :sup:`-1` as: 
 1 s m\ :sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }`
-:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1`
+:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, [same as 4.5, but units seem off. check that units are correct] 
+where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1`
 kmol\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\theta _{atm}` is the
 atmospheric potential temperature (K).
 
-.. _Table Plant functional type (PFT) photosynthetic parameters:
+.. _Table Plant functional type (PFT) stomatal conductance parameters:
 
-.. table:: Plant functional type (PFT) photosynthetic parameters.
+.. table:: Plant functional type (PFT) stomatal conductance parameters.
 
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | PFT                              | m   | :math:`\alpha`     | :math:`CN_{L}`    | :math:`F_{LNR}`    | :math:`SLA_{0}`    | :math:`\psi _{o}`    | :math:`\psi _{c}`    | :math:`{V}_{cmax25}`      |
- +==================================+=====+====================+===================+====================+====================+======================+======================+===========================+
- | NET Temperate                    | 9   | –                  | 35                | 0.0509             | 0.010              | -66000               | -255000              | 62.5                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | NET Boreal                       | 9   | –                  | 40                | 0.0466             | 0.008              | -66000               | -255000              | 62.6                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | NDT Boreal                       | 9   | –                  | 25                | 0.0546             | 0.024              | -66000               | -255000              | 39.1                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BET Tropical                     | 9   | –                  | 30                | 0.0461             | 0.012              | -66000               | -255000              | 55.0                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BET temperate                    | 9   | –                  | 30                | 0.0515             | 0.012              | -66000               | -255000              | 61.5                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BDT tropical                     | 9   | –                  | 25                | 0.0716             | 0.030              | -35000               | -224000              | 41.0                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BDT temperate                    | 9   | –                  | 25                | 0.1007             | 0.030              | -35000               | -224000              | 57.7                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BDT boreal                       | 9   | –                  | 25                | 0.1007             | 0.030              | -35000               | -224000              | 57.7                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BES temperate                    | 9   | –                  | 30                | 0.0517             | 0.012              | -83000               | -428000              | 61.7                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BDS temperate                    | 9   | –                  | 25                | 0.0943             | 0.030              | -83000               | -428000              | 54.0                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | BDS boreal                       | 9   | –                  | 25                | 0.0943             | 0.030              | -83000               | -428000              | 54.0                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | C\ :sub:`3` arctic grass         | 9   | –                  | 25                | 0.1365             | 0.030              | -74000               | -275000              | 78.2                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | C\ :sub:`3` grass                | 9   | –                  | 25                | 0.1365             | 0.030              | -74000               | -275000              | 78.2                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | C\ :sub:`4` grass                | 4   | 0.05               | 25                | 0.0900             | 0.030              | -74000               | -275000              | 51.6                      |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Crop R                           | 9   | –                  | 25                | 0.1758             | 0.030              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Crop I                           | 9   | –                  | 25                | 0.1758             | 0.030              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Corn R                           | 4   | 0.05               | 25                | 0.2930             | 0.050              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Corn I                           | 4   | 0.05               | 25                | 0.2930             | 0.050              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Temp Cereal R                    | 9   | –                  | 25                | 0.4102             | 0.070              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Temp Cereal I                    | 9   | –                  | 25                | 0.4102             | 0.070              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Winter Cereal R                  | 9   | –                  | 25                | 0.4102             | 0.070              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Winter Cereal I                  | 9   | –                  | 25                | 0.4102             | 0.070              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Soybean R                        | 9   | –                  | 25                | 0.4102             | 0.070              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
- | Soybean I                        | 9   | –                  | 25                | 0.4102             | 0.070              | -74000               | -275000              | 100.7                     |
- +----------------------------------+-----+--------------------+-------------------+--------------------+--------------------+----------------------+----------------------+---------------------------+
-
-:math:`\alpha` (mol CO\ :sub:`2` mol\ :sup:`-1` photon);
-:math:`CN_{L}`  (g C g\ :sup:`-1` N); :math:`F_{LNR}`  (g N Rubisco g\ :sup:`-1` N); :math:`SLA_{0}`  (m\ :sup:`2` g\ :sup:`-1` C);
-:math:`\psi _{o}`  and :math:`\psi _{c}`  (mm); 
-V\ :sub:`cmax25` (:math:`\mu`\ mol m\ :sup:`-2` s\ :sup:`-1`, calculated from equation for canopy top).
+ +----------------------------------+-------------------+
+ | PFT                              |  g\ :sub:`1` (Pa) |
+ +==================================+===================+
+ | NET Temperate                    |        2.35       |
+ +----------------------------------+-------------------+
+ | NET Boreal                       |        2.35       |
+ +----------------------------------+-------------------+
+ | NDT Boreal                       |        2.35       |
+ +----------------------------------+-------------------+
+ | BET Tropical                     |        4.12       |
+ +----------------------------------+-------------------+
+ | BET temperate                    |        4.12       |
+ +----------------------------------+-------------------+
+ | BDT tropical                     |        4.45       |
+ +----------------------------------+-------------------+
+ | BDT temperate                    |        4.45       |
+ +----------------------------------+-------------------+
+ | BDT boreal                       |        4.45       |
+ +----------------------------------+-------------------+
+ | BES temperate                    |        4.70       |
+ +----------------------------------+-------------------+
+ | BDS temperate                    |        4.70       |
+ +----------------------------------+-------------------+
+ | BDS boreal                       |        4.70       |
+ +----------------------------------+-------------------+
+ | C\ :sub:`3` arctic grass         |        2.22       |
+ +----------------------------------+-------------------+
+ | C\ :sub:`3` grass                |        5.25       |
+ +----------------------------------+-------------------+
+ | C\ :sub:`4` grass                |        1.62       |
+ +----------------------------------+-------------------+
+ | Temperate Corn                   |        1.79       |
+ +----------------------------------+-------------------+
+ | Spring Wheat                     |        5.79       |
+ +----------------------------------+-------------------+
+ | Temperate Soybean                |        5.79       |
+ +----------------------------------+-------------------+
+ | Cotton                           |        5.79       |
+ +----------------------------------+-------------------+
+ | Rice                             |        5.79       |
+ +----------------------------------+-------------------+
+ | Sugarcane                        |        1.79       |
+ +----------------------------------+-------------------+
+ | Tropical Corn                    |        1.79       |
+ +----------------------------------+-------------------+
+ | Tropical Soybean                 |        5.79       |
+ +----------------------------------+-------------------+
 
 .. _Photosynthesis:
 
@@ -185,7 +182,7 @@ CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 .. math::
    :label: 9.5
 
-   A_{j} =\left\{\begin{array}{l} {\frac{J\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
+   A_{j} =\left\{\begin{array}{l} {\frac{J_{x}\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
 The product-limited rate of carboxylation for C\ :sub:`3` plants
 and the PEP carboxylase-limited rate of carboxylation for
@@ -204,7 +201,8 @@ is the O\ :sub:`2` partial pressure (Pa). :math:`K_{c}`  and
 CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{\*}`  (Pa) is
 the CO\ :sub:`2` compensation point. :math:`V_{c\max }`  is the
 maximum rate of carboxylation (µmol m\ :sup:`-2`
-s\ :sup:`-1`) and :math:`J` is the electron transport rate (µmol
+s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`) 
+and :math:`J_{x}` is the electron transport rate (µmol
 m\ :sup:`-2` s\ :sup:`-1`). :math:`T_{p}`  is the triose
 phosphate utilization rate (µmol m\ :sup:`-2` s\ :sup:`-1`),
 taken as :math:`T_{p} =0.167V_{c\max }`  so that
@@ -225,14 +223,14 @@ expression is the smaller of the two roots of the equation
 .. math::
    :label: 9.7
 
-   \Theta _{PSII} J^{2} -\left(I_{PSII} +J_{\max } \right)J+I_{PSII} J_{\max } =0
+   \Theta _{PSII} J_{x}^{2} -\left(I_{PSII} +J_{\max } \right)J_{x}+I_{PSII} J_{\max } =0
 
 where :math:`J_{\max }`  is the maximum potential rate of electron
-transport (:math:`\mu`\ mol m\ :sup:`-2` s\ :sup:`-1`),
+transport (:math:`\mu`\ mol m\ :sup:`-2` s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`),
 :math:`I_{PSII}`  is the light utilized in electron transport by
 photosystem II (µmol m\ :sup:`-2` s\ :sup:`-1`), and
 :math:`\Theta _{PSII}`  is a curvature parameter. For a given amount of
-photosynthetically active radiation absorbed by a leaf :math:`\phi`  (W
+photosynthetically active radiation absorbed by a leaf (:math:`\phi`,  W
 m\ :sup:`-2`), converted to photosynthetic photon flux density
 with 4.6 :math:`\mu`\ mol J\ :sup:`-1`, the light utilized in
 electron transport is
@@ -262,17 +260,18 @@ smaller root of the equations
 Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for
 C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and
 :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants.
+:math:`A_{i}` is the intermediate co-limited photosynthesis. 
 :math:`A_{n} =A-R_{d}` .
 
-The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma _{*}` 
+The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` 
 depend on temperature. Values at 25 :sup:`o` \ C are
 :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`,
 :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and
-:math:`\Gamma _{*25} {\rm =42}.75\times 10^{-6} P_{atm}`.
+:math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`,
 and :math:`R_{d}` also vary with temperature. Parameter values at 25
-:math:`\circ`\ C are calculated from :math:`V_{c\max }` \ at 25
-:math:`\circ`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}`,
+:sup:`o`\ C are calculated from :math:`V_{c\max }` \ at 25
+:sup:`\o`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}`,
 :math:`T_{p25} =0.167V_{c\max 25}`, and
 :math:`R_{d25} =0.015V_{c\max 25}` (C\ :sub:`3`) and
 :math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`). For
@@ -282,6 +281,7 @@ calculated from leaf nitrogen as :math:`R_{d25} = 0.2577LNC_{a}`,
 where :math:`LNC_{a}` is the area-based leaf nitrogen concentration
 (g N m\ :sup:`-2` leaf area, Chapter :numref:`rst_Photosynthetic Capacity`), 
 and 0.2577 :math:`\mu`\ mol CO\ :sub:`2` g\ :sup:`-1` N s\ :sup:`-1` is the base respiration rate.
+[this doesn't look correct based on the code, which lists two options; verify with Rosie] 
 The parameters :math:`V_{c\max 25}`,
 :math:`J_{\max 25}`, :math:`T_{p25}`, :math:`k_{p25}`, and
 :math:`R_{d25}` are scaled over the canopy for sunlit and shaded leaves
@@ -291,7 +291,7 @@ The parameters :math:`V_{c\max 25}`,
 .. math::
    :label: 9.10
 
-   \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma _{*} } & {=} & {\Gamma _{*25} \; f\left(T_{v} \right)} \end{array}
+   \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma } & {=} & {\Gamma _{25} \; f\left(T_{v} \right)} \end{array}
 
 with
 
@@ -308,11 +308,12 @@ and
    f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}  .
 
 :numref:`Table Temperature dependence parameters for C3 photosynthesis`
-lists parameter values for :math:`\Delta H_{a}` ,
-:math:`\Delta H_{d}` , and :math:`\Delta S`, from :ref:`Bonan et al. (2011)<Bonanetal2011>`.
-[Note: should we remove :math:`\Delta S` from the table below since we no longer use these?
-Also, we should consider updating :math:`\Delta H_{a}` ,
-:math:`\Delta H_{d}` in this table]
+lists parameter values for :math:`\Delta H_{a}`  and
+:math:`\Delta H_{d}` . :math:`\Delta S` is calculated 
+separately for :math:`V_{c\max }` and :math:`J_{max }`
+to allow for temperature acclimation of photosynthesis (see equation :eq:`9.16`), 
+and :math:`\Delta S` is 490 J mol :sup:`-1` K :sup:`-1` for :math:`R_d`
+(:ref:`Bonan et al. 2011<Bonanetal2011>`, :ref:`Lombardozzi et al. 2015<Lombardozzietal2015>`).
 Because :math:`T_{p}`  as implemented here varies with
 :math:`V_{c\max }` , :math:`T_{p}` uses the same temperature parameters as 
 :math:`V_{c\max}` . For C\ :sub:`4` plants,
@@ -347,26 +348,25 @@ with :math:`Q_{10} =2`.
 
 .. table:: Temperature dependence parameters for C3 photosynthesis.
 
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | Parameter              | :math:`\Delta H_{a}`  (J mol\ :sup:`-1`)                        | :math:`\Delta H_{d}`  (J mol\ :sup:`-1`)                        | :math:`\Delta S` (J mol\ :sup:`-1` K\ :sup:`-1`)                                             |
- +========================+=================================================================+=================================================================+==============================================================================================+
- | :math:`V_{c\max }`     | 65330                                                           | 149250                                                          | 485                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`J_{\max }`      | 43540                                                           | 152040                                                          | 495                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`T_{p}`          | 65330                                                           | 149250                                                          | 485                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`R_{d}`          | 46390                                                           | 150650                                                          | 490                                                                                          |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`K_{c}`          | 79430                                                           | –                                                               | –                                                                                            |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`K_{o}`          | 36380                                                           | –                                                               | –                                                                                            |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
- | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               | –                                                                                            |
- +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | Parameter              | :math:`\Delta H_{a}`  (J mol\ :sup:`-1`)                        | :math:`\Delta H_{d}`  (J mol\ :sup:`-1`)                        |
+ +========================+=================================================================+=================================================================+
+ | :math:`V_{c\max }`     | 72000                                                           | 200000                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`J_{\max }`      | 50000                                                           | 200000                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`T_{p}`          | 72000                                                           | 200000                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`R_{d}`          | 46390                                                           | 150650                                                          |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`K_{c}`          | 79430                                                           | –                                                               |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`K_{o}`          | 36380                                                           | –                                                               |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
+ | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               |
+ +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
 
-The parameters in :numref:`Table Temperature dependence parameters for C3 photosynthesis` 
-do not allow for temperature acclimation of photosynthesis. In the model, acclimation is 
+In the model, acclimation is 
 implemented as in :ref:`Kattge and Knorr (2007) <KattgeKnorr2007>`. In this parameterization, 
 :math:`V_{c\max }` and :math:`J_{\max }`  vary with the plant growth temperature. This is
 achieved by allowing :math:`\Delta S`\  to vary with growth temperature
@@ -378,10 +378,8 @@ according to
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
 The effect is to cause the temperature optimum of :math:`V_{c\max }` 
-and :math:`J_{\max }`  to increase with warmer temperatures. In this
-parameterization, :math:`\Delta H_{d}` \ = 200000,
-:math:`\Delta H_{a}` \ = 72000 for :math:`V_{c\max }` , and
-:math:`\Delta H_{a}` \ = 50000 for :math:`J_{\max }` . Additionally, the
+and :math:`J_{\max }`  to increase with warmer temperatures. 
+Additionally, the
 ratio :math:`J_{\max 25} /V_{c\max 25}`  at 25 :sup:`o`\ C decreases with growth temperature as
 
 .. math::
@@ -405,7 +403,7 @@ leaves using an exponential profile to area-based leaf nitrogen
 as in :ref:`Bonan et al. (2011)<Bonanetal2011>`. :math:`V_{c\max 25}`  at
 cumulative leaf area index :math:`x` from the canopy top scales directly
 with :math:`LNC_{a}` , which decreases exponentially with greater
-cumulative leaf area, so that
+cumulative leaf area, so that [Verify with Rosie- different based on Vcmax option 0, 3, & 4]
 
 .. math::
    :label: 9.18 
@@ -413,7 +411,7 @@ cumulative leaf area, so that
    V_{c\; \max 25}^{} \left(x\right)=V_{c\; \max 25}^{} \left(0\right)e^{-K_{n} x}
 
 where :math:`V_{c\; \max 25}^{} \left(0\right)` is defined at the top of
-the canopy using :math:`SLA_{0}`, whic is the specific leaf area at
+the canopy using :math:`SLA_{0}`, which is the specific leaf area at
 the canopy top and :math:`K_{n}`  is the decay
 coefficient for nitrogen. The canopy integrated value for sunlit and
 shaded leaves is
@@ -442,10 +440,12 @@ and the average value for the sunlit and shaded leaves is
 
 This integration is over all leaf area (:math:`L`) with
 :math:`f_{sun} (x)=\exp \left(-Kx\right)` and :math:`K` the direct beam
-extinction coefficient (equation 4.9). Photosynthetic parameters
-:math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}` , and
+extinction coefficient (equation :eq:`4.8` in chapter :numref:`rst_Radiative Fluxes`). Photosynthetic parameters
+:math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}`, and
 :math:`R_{d25}`  scale similarly.
 
+The model uses :math:`K_{n} =0.30` to match an explicit multi-layer canopy, as in
+:ref:`Bonan et al. (2012)<Bonanetal2012>`.
 The value :math:`K_{n} = 0.11` chosen by :ref:`Bonan et al. (2011)<Bonanetal2011>` is
 consistent with observationally-derived estimates for forests, mostly
 tropical, and provides a gradient in V\ :sub:`cmax` similar to
@@ -453,8 +453,7 @@ the original CLM4 specific leaf area scaling. However,
 :ref:`Bonan et al. (2012)<Bonanetal2012>` showed that the sunlit/shaded canopy parameterization does not
 match an explicit multi-layer canopy parameterization. The discrepancy
 arises from absorption of scattered radiation by shaded leaves and can
-be tuned out with higher :math:`K_{n}` . The model uses
-:math:`K_{n} =0.30` to match an explicit multi-layer canopy.
+be tuned out with higher :math:`K_{n}`.
 
 
 .. _Numerical implementation photosynthesis:
@@ -462,8 +461,8 @@ be tuned out with higher :math:`K_{n}` . The model uses
 Numerical implementation
 ----------------------------
 
-The CO\ :sub:`2` partial pressure at the leaf surface
-:math:`c_{s}`  (Pa) and the vapor pressure at the leaf surface
+The CO\ :sub:`2` partial pressure at the leaf surface,
+:math:`c_{s}`  (Pa), and the vapor pressure at the leaf surface,
 :math:`e_{s}`  (Pa), needed for the stomatal resistance model in
 equation :eq:`9.1`, and the internal leaf CO\ :sub:`2` partial pressure
 :math:`c_{i}`  (Pa), needed for the photosynthesis model in equations :eq:`9.3`-:eq:`9.5`,
@@ -501,7 +500,7 @@ determined from
    e_{a} =\frac{P_{atm} q_{s} }{0.622}
 
 where :math:`q_{s}`  is the specific humidity of canopy air (kg
-kg\ :sup:`-1`) (section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
+kg\ :sup:`-1`, section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
 Equations and are solved for
 :math:`c_{s}`  and :math:`e_{s}` 
 
