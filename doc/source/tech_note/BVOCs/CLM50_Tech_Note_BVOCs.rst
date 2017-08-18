@@ -7,7 +7,7 @@ This chapter briefly describes the biogenic volatile organic compound
 (BVOC) emissions model implemented in CLM. The CLM3 version (Levis et
 al. 2003; Oleson et al. 2004) was based on Guenther et al. (1995). Heald
 et al. (2008) updated this scheme in CLM4 based on Guenther et al.
-(2006). The current version in CLM4.5 is based on MEGAN2.1 discussed in
+(2006). The current version was implemented in CLM4.5 and is based on MEGAN2.1 discussed in
 detail in Guenther et al. (2012). This update of MEGAN incorporates four
 main features: expansion to 147 chemical compounds the treatment of the
 light-dependent fraction (LDF) for each compound inclusion of the
@@ -58,6 +58,6 @@ where the LDF activity factor (:math:`\gamma _{P\_ LDF}` ) is specified
 as a function of PAR as in previous versions of MEGAN.
 
 The values for each emission factor :math:`\epsilon _{i,\, j}`  are
-now available for each of the 15 plant functional types in the CLM and
+now available for each of the plant functional types in the CLM and
 each chemical compound. This information is distributed through an
 external file, allowing for more frequent and easier updates.
