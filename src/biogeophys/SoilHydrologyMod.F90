@@ -215,7 +215,7 @@ contains
           qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
           qflx_ev_h2osfc          =>    waterflux_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]
 
-          qflx_sat_surf           =>  surf_runoff_sat_inst%qflx_sat_surf_col      , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+          qflx_sat_excess_surf    => surf_runoff_sat_inst%qflx_sat_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
           frac_sno                =>    waterstate_inst%frac_sno_eff_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
           frac_h2osfc             =>    waterstate_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
@@ -242,8 +242,8 @@ contains
               qflx_evap(c)=qflx_ev_soil(c)
            endif
 
-           qflx_in_soil(c) = (1._r8 - frac_h2osfc(c)) * (qflx_top_soil(c)  - qflx_sat_surf(c))
-           qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_surf(c))
+           qflx_in_soil(c) = (1._r8 - frac_h2osfc(c)) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
+           qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
 
            ! remove evaporation (snow treated in SnowHydrology)
            qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap(c)
@@ -317,7 +317,7 @@ contains
           qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)                       
           qflx_infl        =>    waterflux_inst%qflx_infl_col        , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)                           
 
-          qflx_sat_surf    =>  surf_runoff_sat_inst%qflx_sat_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)                        
+          qflx_sat_excess_surf => surf_runoff_sat_inst%qflx_sat_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)                        
 
           h2osfc_thresh    =>    soilhydrology_inst%h2osfc_thresh_col, & ! Input:  [real(r8) (:)   ]  level at which h2osfc "percolates"                
           h2osfcflag       =>    soilhydrology_inst%h2osfcflag         & ! Input:  logical
@@ -391,9 +391,9 @@ contains
              ! non-vegetated landunits (i.e. urban) use original CLM4 code
              if (snl(c) >= 0) then
                 ! when no snow present, sublimation is removed in Drainage
-                qflx_infl(c) = qflx_top_soil(c) - qflx_sat_surf(c) - qflx_evap_grnd(c)
+                qflx_infl(c) = qflx_top_soil(c) - qflx_sat_excess_surf(c) - qflx_evap_grnd(c)
              else
-                qflx_infl(c) = qflx_top_soil(c) - qflx_sat_surf(c) &
+                qflx_infl(c) = qflx_top_soil(c) - qflx_sat_excess_surf(c) &
                      - (1.0_r8 - frac_sno(c)) * qflx_ev_soil(c)
              end if
              qflx_h2osfc_surf(c) = 0._r8
@@ -459,7 +459,7 @@ contains
 
           xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Output: [real(r8) (:)   ]  excess soil water above urban ponding limit
 
-          qflx_sat_surf    => surf_runoff_sat_inst%qflx_sat_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+          qflx_sat_excess_surf => surf_runoff_sat_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
           h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
           )
@@ -474,7 +474,7 @@ contains
         c = filter_hydrologyc(fc)
         ! Depending on whether h2osfcflag is 0 or 1, one of qflx_infl_excess or
         ! qflx_h2osfc_surf will always be 0. But it's safe to just add them both.
-        qflx_surf(c) = qflx_sat_surf(c) + qflx_infl_excess_surf(c) + qflx_h2osfc_surf(c)
+        qflx_surf(c) = qflx_sat_excess_surf(c) + qflx_infl_excess_surf(c) + qflx_h2osfc_surf(c)
 
         ! TODO(wjs, 2017-07-11) I'm distinguishing between qflx_surf and qflx_surf_for_bgc
         ! simply to maintain answers as they were before. But I have a feeling that the
@@ -483,8 +483,8 @@ contains
         ! code to use qflx_surf and remove this qflx_surf_for_bgc variable.
         ! Alternatively, if we deem the current implementation correct, we should
         ! consider renaming this something better than qflx_surf_for_bgc, or simply
-        ! making the BGC code depend on qflx_sat_surf, if that's what's intended.
-        qflx_surf_for_bgc(c) = qflx_sat_surf(c) + qflx_infl_excess_surf(c)
+        ! making the BGC code depend on qflx_sat_excess_surf, if that's what's intended.
+        qflx_surf_for_bgc(c) = qflx_sat_excess_surf(c) + qflx_infl_excess_surf(c)
      end do
 
      ! ------------------------------------------------------------------------

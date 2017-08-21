@@ -29,7 +29,7 @@ module SurfRunoffSatMod
      private
      ! Public data members
      ! Note: these should be treated as read-only by other modules
-     real(r8), pointer, public :: qflx_sat_surf_col(:) ! surface runoff due to saturated surface (mm H2O /s)
+     real(r8), pointer, public :: qflx_sat_excess_surf_col(:) ! surface runoff due to saturated surface (mm H2O /s)
      real(r8), pointer, public :: fsat_col(:) ! fractional area with water table at surface
 
      ! Private data members
@@ -106,9 +106,9 @@ contains
 
     begc = bounds%begc; endc= bounds%endc
 
-    allocate(this%qflx_sat_surf_col(begc:endc)); this%qflx_sat_surf_col(:) = nan
-    allocate(this%fsat_col         (begc:endc)); this%fsat_col         (:) = nan
-    allocate(this%fcov_col         (begc:endc)); this%fcov_col         (:) = nan   
+    allocate(this%qflx_sat_excess_surf_col(begc:endc)) ; this%qflx_sat_excess_surf_col(:) = nan
+    allocate(this%fsat_col(begc:endc))                 ; this%fsat_col(:)                 = nan
+    allocate(this%fcov_col(begc:endc))                 ; this%fcov_col(:)                 = nan   
 
   end subroutine InitAllocate
 
@@ -197,17 +197,17 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                        & 
-         fcov             =>    this%fcov_col                       , & ! Output: [real(r8) (:)   ]  fractional impermeable area
-         fsat             =>    this%fsat_col                       , & ! Output: [real(r8) (:)   ]  fractional area with water table at surface
-         qflx_sat_surf    =>    this%qflx_sat_surf_col              , & ! Output: [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+         fcov                   =>    this%fcov_col                          , & ! Output: [real(r8) (:)   ]  fractional impermeable area
+         fsat                   =>    this%fsat_col                          , & ! Output: [real(r8) (:)   ]  fractional area with water table at surface
+         qflx_sat_excess_surf   =>    this%qflx_sat_excess_surf_col          , & ! Output: [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
-         snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers
+         snl                    =>    col%snl                                , & ! Input:  [integer  (:)   ]  minus number of snow layers
 
-         qflx_floodc      =>    waterflux_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM
+         qflx_floodc            =>    waterflux_inst%qflx_floodc_col         , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM
          qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
 
-         origflag         =>    soilhydrology_inst%origflag         , & ! Input:  logical
-         fracice          =>    soilhydrology_inst%fracice_col        & ! Input:  [real(r8) (:,:) ]  fractional impermeability (-)
+         origflag               =>    soilhydrology_inst%origflag            , & ! Input:  logical
+         fracice                =>    soilhydrology_inst%fracice_col           & ! Input:  [real(r8) (:,:) ]  fractional impermeability (-)
          )
 
     ! ------------------------------------------------------------------------
@@ -229,7 +229,7 @@ contains
     end select
 
     ! ------------------------------------------------------------------------
-    ! Compute qflx_sat_surf
+    ! Compute qflx_sat_excess_surf
     !
     ! assume qinmax (maximum infiltration capacity) is large relative to
     ! qflx_rain_plus_snomelt in control
@@ -246,13 +246,13 @@ contains
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
-          qflx_sat_surf(c) =  fcov(c) * qflx_rain_plus_snomelt(c)
+          qflx_sat_excess_surf(c) = fcov(c) * qflx_rain_plus_snomelt(c)
        end do
     else
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           ! only send fast runoff directly to streams
-          qflx_sat_surf(c) = fsat(c) * qflx_rain_plus_snomelt(c)
+          qflx_sat_excess_surf(c) = fsat(c) * qflx_rain_plus_snomelt(c)
 
           ! Set fcov just to have it on the history file
           fcov(c) = fsat(c)
@@ -267,7 +267,7 @@ contains
        c = filter_hydrologyc(fc)
        if (col%urbpoi(c)) then
           ! send flood water flux to runoff for all urban columns
-          qflx_sat_surf(c) = qflx_sat_surf(c) + qflx_floodc(c)
+          qflx_sat_excess_surf(c) = qflx_sat_excess_surf(c) + qflx_floodc(c)
        end if
     end do
 
