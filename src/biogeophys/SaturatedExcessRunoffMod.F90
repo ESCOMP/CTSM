@@ -1,4 +1,4 @@
-module SurfRunoffSatMod
+module SaturatedExcessRunoffMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -25,7 +25,7 @@ module SurfRunoffSatMod
 
   ! !PUBLIC TYPES:
 
-  type, public :: surf_runoff_sat_type
+  type, public :: saturated_excess_runoff_type
      private
      ! Public data members
      ! Note: these should be treated as read-only by other modules
@@ -39,7 +39,7 @@ module SurfRunoffSatMod
      ! Public routines
      procedure, public :: Init
 
-     procedure, public :: SaturatedSurfaceRunoff ! Calculate surface runoff due to saturated surface
+     procedure, public :: SaturatedExcessRunoff ! Calculate surface runoff due to saturated surface
 
      ! Private routines
      procedure, private :: InitAllocate
@@ -48,7 +48,7 @@ module SurfRunoffSatMod
 
      procedure, private, nopass :: ComputeFsatTopmodel
      procedure, private, nopass :: ComputeFsatVic
-  end type surf_runoff_sat_type
+  end type saturated_excess_runoff_type
 
   ! !PRIVATE DATA MEMBERS:
 
@@ -68,10 +68,10 @@ contains
   subroutine Init(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize this surf_runoff_sat_type object
+    ! Initialize this saturated_excess_runoff_type object
     !
     ! !ARGUMENTS:
-    class(surf_runoff_sat_type), intent(inout) :: this
+    class(saturated_excess_runoff_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -89,13 +89,13 @@ contains
   subroutine InitAllocate(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Allocate memory for this surf_runoff_sat_type object
+    ! Allocate memory for this saturated_excess_runoff_type object
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(surf_runoff_sat_type), intent(inout) :: this
+    class(saturated_excess_runoff_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -116,13 +116,13 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize surf_runoff_sat_type history variables
+    ! Initialize saturated_excess_runoff_type history variables
     !
     ! !USES:
     use histFileMod , only : hist_addfld1d
     !
     ! !ARGUMENTS:
-    class(surf_runoff_sat_type), intent(inout) :: this
+    class(saturated_excess_runoff_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -149,10 +149,10 @@ contains
   subroutine InitCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Perform cold-start initialization for surf_runoff_sat_type
+    ! Perform cold-start initialization for saturated_excess_runoff_type
     !
     ! !ARGUMENTS:
-    class(surf_runoff_sat_type), intent(inout) :: this
+    class(saturated_excess_runoff_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -174,14 +174,14 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine SaturatedSurfaceRunoff (this, bounds, num_hydrologyc, filter_hydrologyc, &
+  subroutine SaturatedExcessRunoff (this, bounds, num_hydrologyc, filter_hydrologyc, &
        col, soilhydrology_inst, soilstate_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
     ! Calculate surface runoff due to saturated surface
     !
     ! !ARGUMENTS:
-    class(surf_runoff_sat_type), intent(inout) :: this
+    class(saturated_excess_runoff_type), intent(inout) :: this
     type(bounds_type)        , intent(in)    :: bounds               
     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
@@ -193,7 +193,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: fc, c
 
-    character(len=*), parameter :: subname = 'SaturatedSurfaceRunoff'
+    character(len=*), parameter :: subname = 'SaturatedExcessRunoff'
     !-----------------------------------------------------------------------
 
     associate(                                                        & 
@@ -273,7 +273,7 @@ contains
 
     end associate
 
-  end subroutine SaturatedSurfaceRunoff
+  end subroutine SaturatedExcessRunoff
 
   !-----------------------------------------------------------------------
   subroutine ComputeFsatTopmodel(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -368,5 +368,4 @@ contains
   end subroutine ComputeFsatVic
 
 
-
-end module SurfRunoffSatMod
+end module SaturatedExcessRunoffMod

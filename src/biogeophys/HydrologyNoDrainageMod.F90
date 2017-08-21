@@ -16,7 +16,7 @@ Module HydrologyNoDrainageMod
   use TemperatureType   , only : temperature_type
   use SoilHydrologyType , only : soilhydrology_type
   use SoilStateType     , only : soilstate_type
-  use SurfRunoffSatMod  , only : surf_runoff_sat_type
+  use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use WaterfluxType     , only : waterflux_type
   use WaterstateType    , only : waterstate_type
@@ -44,7 +44,7 @@ contains
        clm_fates, &
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
-       soilhydrology_inst, surf_runoff_sat_inst, infiltration_excess_runoff_inst, &
+       soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
        aerosol_inst, canopystate_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
@@ -93,7 +93,7 @@ contains
     type(waterstate_type)    , intent(inout) :: waterstate_inst
     type(aerosol_type)       , intent(inout) :: aerosol_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
-    type(surf_runoff_sat_type), intent(inout) :: surf_runoff_sat_inst
+    type(saturated_excess_runoff_type), intent(inout) :: saturated_excess_runoff_inst
     type(infiltration_excess_runoff_type), intent(inout) :: infiltration_excess_runoff_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
@@ -182,26 +182,26 @@ contains
       call SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
            soilhydrology_inst, soilstate_inst, waterstate_inst)
 
-      call surf_runoff_sat_inst%SaturatedSurfaceRunoff(&
+      call saturated_excess_runoff_inst%SaturatedExcessRunoff(&
            bounds, num_hydrologyc, filter_hydrologyc, col, &
            soilhydrology_inst, soilstate_inst, waterflux_inst)
 
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
-           waterflux_inst, surf_runoff_sat_inst, waterstate_inst)
+           waterflux_inst, saturated_excess_runoff_inst, waterstate_inst)
 
       call infiltration_excess_runoff_inst%InfiltrationExcessRunoff( &
            bounds, num_hydrologyc, filter_hydrologyc, &
-           soilhydrology_inst, soilstate_inst, surf_runoff_sat_inst, waterflux_inst, &
+           soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterflux_inst, &
            waterstate_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
            infiltration_excess_runoff_inst, &
-           energyflux_inst, soilhydrology_inst, surf_runoff_sat_inst, &
+           energyflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, &
            waterflux_inst, waterstate_inst)
 
       call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
            num_urbanc, filter_urbanc, &
-           waterflux_inst, soilhydrology_inst, surf_runoff_sat_inst, waterstate_inst)
+           waterflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, waterstate_inst)
 
       call UpdateUrbanPonding(bounds, num_urbanc, filter_urbanc, &
            waterstate_inst, soilhydrology_inst, waterflux_inst)
