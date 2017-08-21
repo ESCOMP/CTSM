@@ -165,7 +165,12 @@ contains
 
           ! fracice is only used in code with origflag == 1. For this calculation, we use
           ! the version of icefrac that was used in this original hydrology code.
-          icefrac_orig = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
+          if (h2osoi_ice(c,j) == 0._r8) then
+             ! Avoid possible divide by zero (in case h2osoi_liq(c,j) is also 0)
+             icefrac_orig = 0._r8
+          else
+             icefrac_orig = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
+          end if
           fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac_orig))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
        end do
     end do
