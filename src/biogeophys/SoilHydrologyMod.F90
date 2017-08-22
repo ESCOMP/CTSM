@@ -360,65 +360,52 @@ contains
 
        dtime = get_step_size()
 
-       ! Infiltration into surface soil layer (minus the evaporation)
-
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-          ! FIXME(wjs, 2017-08-22) Remove this conditional
-          if (lun%itype(col%landunit(c)) == istsoil .or. lun%itype(col%landunit(c))==istcrop) then
 
-             !5. surface runoff from h2osfc
-             if (h2osfcflag==1) then
-                ! calculate runoff from h2osfc  -------------------------------------
-                if (frac_h2osfc_nosnow(c) <= pc) then 
-                   frac_infclust=0.0_r8
-                else
-                   frac_infclust=(frac_h2osfc_nosnow(c)-pc)**mu
-                endif
-             endif
-
-             ! limit runoff to value of storage above S(pc)
-
-             ! FIXME(wjs, 2017-08-22) Change >= to >: in the equals case,
-             ! qflx_h2osfc_surf will end up being 0 anyway. (This will avoid doing these
-             ! calculations for points with h2osfc = h2osfc_thresh = 0.)
-             if(h2osfc(c) >= h2osfc_thresh(c) .and. h2osfcflag/=0) then
-                ! spatially variable k_wet
-                k_wet=1.0e-4_r8 * sin((rpi/180.) * col%topo_slope(c))
-                qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
-
-                qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
+          !5. surface runoff from h2osfc
+          if (h2osfcflag==1) then
+             ! calculate runoff from h2osfc  -------------------------------------
+             if (frac_h2osfc_nosnow(c) <= pc) then
+                frac_infclust=0.0_r8
              else
-                qflx_h2osfc_surf(c)= 0._r8
+                frac_infclust=(frac_h2osfc_nosnow(c)-pc)**mu
              endif
-
-             ! cutoff lower limit
-             if ( qflx_h2osfc_surf(c) < 1.0e-8) qflx_h2osfc_surf(c) = 0._r8 
-
-             !6. update h2osfc prior to calculating bottom drainage from h2osfc
-             h2osfc(c) = h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime
-
-             !--  if all water evaporates, there will be no bottom drainage
-             if (h2osfc(c) < 0.0) then
-                qflx_infl(c) = qflx_infl(c) + h2osfc(c)/dtime
-                h2osfc(c) = 0.0
-                qflx_h2osfc_drain(c)= 0._r8
-             else
-                qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),h2osfc(c)/dtime)
-             endif
-
-             if(h2osfcflag==0) then 
-                qflx_h2osfc_drain(c)= max(0._r8,h2osfc(c)/dtime) !ensure no h2osfc
-             endif
-
-             !7. remove drainage from h2osfc and add to qflx_infl
-             h2osfc(c) = h2osfc(c) - qflx_h2osfc_drain(c) * dtime
-             qflx_infl(c) = qflx_infl(c) + qflx_h2osfc_drain(c)
-          else
-             ! non-vegetated landunits (i.e. urban) use original CLM4 code
-             ! FIXME(wjs, 2017-08-22) Remove this
-             qflx_h2osfc_surf(c) = 0._r8
           endif
+
+          ! limit runoff to value of storage above S(pc)
+          if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
+             ! spatially variable k_wet
+             k_wet=1.0e-4_r8 * sin((rpi/180.) * col%topo_slope(c))
+             qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
+
+             qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
+          else
+             qflx_h2osfc_surf(c)= 0._r8
+          endif
+
+          ! cutoff lower limit
+          if ( qflx_h2osfc_surf(c) < 1.0e-8) qflx_h2osfc_surf(c) = 0._r8
+
+          !6. update h2osfc prior to calculating bottom drainage from h2osfc
+          h2osfc(c) = h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime
+
+          !--  if all water evaporates, there will be no bottom drainage
+          if (h2osfc(c) < 0.0) then
+             qflx_infl(c) = qflx_infl(c) + h2osfc(c)/dtime
+             h2osfc(c) = 0.0
+             qflx_h2osfc_drain(c)= 0._r8
+          else
+             qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),h2osfc(c)/dtime)
+          endif
+
+          if(h2osfcflag==0) then
+             qflx_h2osfc_drain(c)= max(0._r8,h2osfc(c)/dtime) !ensure no h2osfc
+          endif
+
+          !7. remove drainage from h2osfc and add to qflx_infl
+          h2osfc(c) = h2osfc(c) - qflx_h2osfc_drain(c) * dtime
+          qflx_infl(c) = qflx_infl(c) + qflx_h2osfc_drain(c)
 
        enddo
 
