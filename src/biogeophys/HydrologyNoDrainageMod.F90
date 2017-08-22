@@ -196,7 +196,7 @@ contains
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
            infiltration_excess_runoff_inst, &
-           energyflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, &
+           energyflux_inst, soilhydrology_inst, &
            waterflux_inst, waterstate_inst)
 
       call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
