@@ -197,7 +197,7 @@ contains
       call RouteInfiltrationExcess(bounds, num_hydrologyc, filter_hydrologyc, &
            waterflux_inst, infiltration_excess_runoff_inst, soilhydrology_inst)
 
-      call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
+      call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
            infiltration_excess_runoff_inst, &
            energyflux_inst, soilhydrology_inst, &
            waterflux_inst, waterstate_inst)

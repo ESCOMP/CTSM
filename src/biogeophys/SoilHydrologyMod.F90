@@ -312,7 +312,7 @@ contains
    end subroutine RouteInfiltrationExcess
 
    !-----------------------------------------------------------------------
-   subroutine Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
+   subroutine Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
         infiltration_excess_runoff_inst, &
         energyflux_inst, soilhydrology_inst, &
         waterflux_inst, waterstate_inst)
@@ -329,8 +329,6 @@ contains
      type(bounds_type)        , intent(in)    :: bounds               
      integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
-     integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
-     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
      type(infiltration_excess_runoff_type), intent(in) :: infiltration_excess_runoff_inst
      type(energyflux_type)    , intent(in)    :: energyflux_inst
      type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
@@ -424,16 +422,6 @@ contains
 
        enddo
 
-       ! No infiltration for impervious urban surfaces
-       ! FIXME(wjs, 2017-08-22) Move the following to initialization?
-
-       do fc = 1, num_urbanc
-          c = filter_urbanc(fc)
-          if (col%itype(c) /= icol_road_perv) then
-             qflx_infl(c) = 0._r8
-          end if
-       end do
-    
     end associate
 
    end subroutine Infiltration
