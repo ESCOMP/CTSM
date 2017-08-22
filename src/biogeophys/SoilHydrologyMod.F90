@@ -196,8 +196,8 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
-     real(r8) :: qflx_evap(bounds%begc:bounds%endc)         ! local evaporation array
-     real(r8) :: fsno                                       ! copy of frac_sno
+     real(r8) :: qflx_evap ! evaporation for this column
+     real(r8) :: fsno      ! copy of frac_sno
 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------
@@ -233,17 +233,17 @@ contains
         if (snl(c) >= 0) then
            fsno=0._r8
            ! if no snow layers, sublimation is removed from h2osoi_ice in drainage
-           qflx_evap(c)=qflx_evap_grnd(c)
+           qflx_evap=qflx_evap_grnd(c)
         else
            fsno=frac_sno(c)
-           qflx_evap(c)=qflx_ev_soil(c)
+           qflx_evap=qflx_ev_soil(c)
         endif
 
         qflx_in_soil(c) = (1._r8 - frac_h2osfc(c)) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
         qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
 
         ! remove evaporation (snow treated in SnowHydrology)
-        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap(c)
+        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap
         qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
 
      end do
@@ -336,6 +336,10 @@ contains
              endif
 
              ! limit runoff to value of storage above S(pc)
+
+             ! FIXME(wjs, 2017-08-22) Change >= to >: in the equals case,
+             ! qflx_h2osfc_surf will end up being 0 anyway. (This will avoid doing these
+             ! calculations for points with h2osfc = h2osfc_thresh = 0.)
              if(h2osfc(c) >= h2osfc_thresh(c) .and. h2osfcflag/=0) then
                 ! spatially variable k_wet
                 k_wet=1.0e-4_r8 * sin((rpi/180.) * col%topo_slope(c))
@@ -380,6 +384,7 @@ contains
        enddo
 
        ! No infiltration for impervious urban surfaces
+       ! FIXME(wjs, 2017-08-22) Move the following to initialization?
 
        do fc = 1, num_urbanc
           c = filter_urbanc(fc)
