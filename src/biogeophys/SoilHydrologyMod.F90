@@ -36,7 +36,7 @@ module SoilHydrologyMod
   public :: SoilHydReadNML       ! Read in the Soil hydrology namelist
   public :: SetSoilWaterFractions ! Set diagnostic variables related to the fraction of water and ice in each layer
   public :: SetQflxInputs        ! Set the flux of water into the soil from the top
-  public :: Infiltration         ! Calculate infiltration into surface soil layer
+  public :: UpdateH2osfc         ! Calculate fluxes out of h2osfc and update the h2osfc state
   public :: TotalSurfaceRunoff   ! Calculate total surface runoff
   public :: UpdateUrbanPonding   ! Update the state variable representing ponding on urban surfaces
   public :: WaterTable           ! Calculate water table before imposing drainage
@@ -312,13 +312,13 @@ contains
    end subroutine RouteInfiltrationExcess
 
    !-----------------------------------------------------------------------
-   subroutine Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
+   subroutine UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
         infiltration_excess_runoff_inst, &
         energyflux_inst, soilhydrology_inst, &
         waterflux_inst, waterstate_inst)
      !
      ! !DESCRIPTION:
-     ! Calculate infiltration into surface soil layer (minus the evaporation)
+     ! Calculate fluxes out of h2osfc and update the h2osfc state
      !
      ! !USES:
      use shr_const_mod    , only : shr_const_pi
@@ -411,7 +411,7 @@ contains
 
     end associate
 
-   end subroutine Infiltration
+   end subroutine UpdateH2osfc
 
    !-----------------------------------------------------------------------
    subroutine TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
