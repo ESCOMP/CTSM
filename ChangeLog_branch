@@ -1,4 +1,100 @@
 ===============================================================
+Tag name: ctsm_n07_clm4_5_16_r249
+Originator(s): sacks
+Date: Aug 22, 2017
+One-line Summary: Rename things related to saturated surface runoff
+
+Purpose of changes
+------------------
+
+Renames the module, derived type, variables and methods related to saturated
+surface runoff. The rename qflx_sat_surf -> qflx_sat_excess_surf was suggested
+at a ctsm meeting. The other renames are to be consistent with that and
+consistent with InfiltrationExcessRunoffMod.
+
+Also, remove a long yellowstone test, change PE count for cheyenne: Removing
+this long test that sometimes exceeds the 2-hour limit I give it (other times it
+takes just slightly less than 2 hours):
+ERS_Ly5_P60x1.f10_f10_musgs.IHistClm50BgcCrop.yellowstone_intel.clm-cropMonthOutput. We
+still have an identical test on cheyenne. Also, increase the PE count on
+cheyenne to use two full nodes, rather than a partial node.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu - pass
+    cheyenne_intel - pass
+    hobart_nag - pass
+    hobart_pgi - pass
+    hobart_intel - pass
+
+CLM tag used for the baseline comparisons: ctsm_n06_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+========= Renamed
+D       components/clm/src/biogeophys/SurfRunoffSatMod.F90
+
+List all files added and what they do:
+
+========= Renamed
+A       components/clm/src/biogeophys/SaturatedExcessRunoffMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Renames
+M       components/clm/src/biogeochem/CNDriverMod.F90
+M       components/clm/src/biogeochem/CNFireBaseMod.F90
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+M       components/clm/src/biogeochem/CNFireMethodMod.F90
+M       components/clm/src/biogeochem/CNFireNoFireMod.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/InfiltrationExcessRunoffMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/clm_instMod.F90
+
+========= Remove a yellowstone test, tweak a cheyenne test, as described above
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
 Tag name: ctsm_n06_clm4_5_16_r249
 Originator(s): sacks
 Date: Aug 21, 2017
