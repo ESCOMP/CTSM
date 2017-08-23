@@ -297,14 +297,12 @@ calculated with Henry’s law as described in equation .
 
 Based on the ranges reported in :ref:`Colmer (2003)<Colmer2003>`, we have chosen 
 baseline aerenchyma porosity values of 0.3 for grass and crop PFTs and 0.1 for
-tree and shrub PFTs. The aerenchyma area varies over the course of the
-growing season; we parameterize this dependency using the simulated leaf
-area index *L* (m:sup:`2` m\ :sup:`-2`), as in :ref:`Wania et al. 2010<Waniaetal2010>`:
+tree and shrub PFTs:
 
 .. math::
    :label: 24.9
 
-   T=\frac{f_{N} N_{a} L}{0.22} \pi R^{2} .
+   T=\frac{4 f_{N} N_{a}}{0.22} \pi R^{2} .
 
 Here :math:`N_{a}`  is annual net primary production (NPP, mol
 m\ :sup:`-2` s\ :sup:`-1`); *R* is the aerenchyma radius
@@ -600,8 +598,8 @@ and the soil element below the interface:
 Inundated Fraction Prediction
 ----------------------------------
 
-We developed a simplified dynamic representation of spatial inundation
-based on recent work by :ref:`Prigent et al. (2007)<Prigentetal2007>`, who described a
+A simplified dynamic representation of spatial inundation
+based on recent work by :ref:`Prigent et al. (2007)<Prigentetal2007>` is used.  Prigent et al. (2007) described a
 multi-satellite approach to estimate the global monthly inundated
 fraction (:math:`{F}_{i}`) over an equal area grid
 (0.25 :math:`\circ`  \ :math:`\times`\ 0.25\ :math:`\circ` at the equator)
@@ -610,20 +608,20 @@ could be used as a measure of sensitivity of their detection approach at
 low inundation. We therefore used the sum of their satellite-derived
 :math:`{F}_{i}` and the constant IGBP estimate when it was less than
 10% to perform a simple inversion for the inundated fraction for methane
-production (:math:`{f}_{s}`). The method optimized three parameters
-(:math:`{p}_{1}`, *p*\ :sub:`2`, :math:`{p}_{3}`) for each
-grid cell in a simple model based on simulated water table depth
-(:math:`{z}_{w}`) and surface runoff (:math:`{Q}_{r}` (mm s\ :sup:`-1`)):
+production (:math:`{f}_{s}`). The method optimized two parameters
+(:math:`{fws}_{slope}` and :math:`{fws}_{intercept}`) for each
+grid cell in a simple model based on simulated total water storage
+(:math:`{TWS}`):
 
 .. math::
    :label: 24.20
 
-   f_{s} =P_{1} e^{{\raise0.7ex\hbox{$ -z_{w}  $}\!\mathord{\left/ {\vphantom {-z_{w}  p_{2} }} \right. \kern-\nulldelimiterspace}\!\lower0.7ex\hbox{$ p_{2}  $}} } +p_{3} Q_{r} .
+   f_{s} =fws_{slope} TWS  + fws_{intercept} .
 
 These parameters were evaluated at the
 0.5\ :sup:`o` resolution, and aggregated for
-coarser simulations. We expect that ongoing work in the hydrology
-submodel of CLM will alleviate the need for this crude simplification of
+coarser simulations. Ongoing work in the hydrology
+submodel of CLM may alleviate the need for this crude simplification of
 inundated fraction in future model versions.
 
 .. _Seasonal Inundation:
@@ -631,7 +629,7 @@ inundated fraction in future model versions.
 Seasonal Inundation
 ------------------------
 
-We have developed a simplified scaling factor to mimic the impact of
+A simple scaling factor is used to mimic the impact of
 seasonal inundation on CH\ :sub:`4` production (see appendix B in
 :ref:`Riley et al. (2011a)<Rileyetal2011a>` for a discussion of this 
 simplified expression):
