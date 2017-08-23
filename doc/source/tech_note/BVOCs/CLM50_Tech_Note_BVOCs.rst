@@ -9,17 +9,17 @@ al. 2003; Oleson et al. 2004) was based on Guenther et al. (1995). Heald
 et al. (2008) updated this scheme in CLM4 based on Guenther et al.
 (2006). The current version was implemented in CLM4.5 and is based on MEGAN2.1 discussed in
 detail in Guenther et al. (2012). This update of MEGAN incorporates four
-main features: expansion to 147 chemical compounds the treatment of the
-light-dependent fraction (LDF) for each compound inclusion of the
+main features: 1) expansion to 147 chemical compounds, 2) the treatment of the
+light-dependent fraction (LDF) for each compound, 3) inclusion of the
 inhibition of isoprene emission by atmospheric CO\ :sub:`2` and
-emission factors mapped to the specific PFTs of the CLM.
+4) emission factors mapped to the specific PFTs of the CLM.
 
 MEGAN2.1 now describes the emissions of speciated monoterpenes,
-sesquiterpenes, oxygenated VOC as well as isoprene. A flexible scheme
+sesquiterpenes, oxygenated VOCs as well as isoprene. A flexible scheme
 has been implemented in the CLM to specify a subset of emissions. This
 allows for additional flexibility in grouping chemical compounds to form
 the lumped species frequently used in atmospheric chemistry. The mapping
-or grouping are therefore defined through a namelist parameter in
+or grouping is therefore defined through a namelist parameter in
 drv\_flds\_in, e.g. megan\_specifier = ’ISOP = isoprene’, ’BIGALK =
 pentane + hexane + heptane + tricyclene’.
 
