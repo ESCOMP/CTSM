@@ -294,9 +294,9 @@ contains
     integer  :: fc, c
     real(r8) :: dtime       ! land model time step (sec)
     real(r8) :: top_icefrac ! ice fraction in top VIC layers
-    real(r8) :: max_infil   ! max infiltration capacity in VIC (mm)
+    real(r8) :: max_infil   ! max infiltration capacity using the VIC parameterization (mm)
     real(r8) :: i_0         ! average soil moisture in top VIC layers (mm)
-    real(r8) :: rsurf_vic   ! VIC surface runoff
+    real(r8) :: rsurf_vic   ! surface runoff based on the VIC parameterization
     real(r8) :: basis       ! variable soil moisture holding capacity in top VIC layers for runoff calculation
 
     character(len=*), parameter :: subname = 'ComputeQinmaxVic'
