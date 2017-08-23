@@ -351,7 +351,7 @@ contains
      !-----------------------------------------------------------------------
 
      associate(                                                        & 
-          qinmax           =>    infiltration_excess_runoff_inst%qinmax_col , & ! Input:  [real(r8) (:)] maximum infiltration capacity (mm H2O /s)
+          qinmax           =>    infiltration_excess_runoff_inst%qinmax_col , & ! Input:  [real(r8) (:)] maximum infiltration rate (mm H2O /s)
 
           frac_h2osfc      =>    waterstate_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           frac_h2osfc_nosnow  => waterstate_inst%frac_h2osfc_nosnow_col,    & ! Input: [real(r8) (:)   ] col fractional area with surface water greater than zero (if no snow present)
@@ -517,7 +517,7 @@ contains
      integer           , intent(in)    :: h2osfcflag                         ! true => surface water is active
      real(r8)          , intent(in)    :: h2osfc( bounds%begc: )             ! surface water (mm)
      real(r8)          , intent(in)    :: frac_h2osfc( bounds%begc: )        ! fraction of ground covered by surface water (0 to 1)
-     real(r8)          , intent(in)    :: qinmax( bounds%begc: )             ! maximum infiltration capacity (mm H2O /s)
+     real(r8)          , intent(in)    :: qinmax( bounds%begc: )             ! maximum infiltration rate (mm H2O /s)
      real(r8)          , intent(inout) :: qflx_h2osfc_drain( bounds%begc: )  ! bottom drainage from h2osfc (mm H2O /s)
      logical           , intent(inout) :: truncate_h2osfc_to_zero( bounds%begc: ) ! whether h2osfc should be truncated to 0 to correct for roundoff errors, in order to maintain bit-for-bit the same answers as the old code
      !
