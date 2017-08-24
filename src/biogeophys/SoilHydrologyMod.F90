@@ -38,6 +38,7 @@ module SoilHydrologyMod
   public :: SetSoilWaterFractions ! Set diagnostic variables related to the fraction of water and ice in each layer
   public :: SetQflxInputs        ! Set the flux of water into the soil from the top
   public :: UpdateH2osfc         ! Calculate fluxes out of h2osfc and update the h2osfc state
+  public :: Infiltration         ! Calculate total infiltration
   public :: TotalSurfaceRunoff   ! Calculate total surface runoff
   public :: UpdateUrbanPonding   ! Update the state variable representing ponding on urban surfaces
   public :: WaterTable           ! Calculate water table before imposing drainage
@@ -281,7 +282,7 @@ contains
      !-----------------------------------------------------------------------
 
      associate( &
-          qflx_infl               => waterflux_inst%qflx_infl_col                         , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)                           
+          qflx_in_soil_limited    => waterflux_inst%qflx_in_soil_limited_col              , & ! Output: [real(r8) (:)   ] surface input to soil, limited by max infiltration rate (mm H2O /s)
           qflx_in_h2osfc          => waterflux_inst%qflx_in_h2osfc_col                    , & ! Output: [real(r8) (:)   ] total surface input to h2osfc
           qflx_infl_excess_surf   => waterflux_inst%qflx_infl_excess_surf_col             , & ! Output: [real(r8) (:)   ] surface runoff due to infiltration excess (mm H2O /s)
           qflx_in_soil            => waterflux_inst%qflx_in_soil_col                      , & ! Input:  [real(r8) (:)   ] surface input to soil (mm/s)
@@ -295,7 +296,7 @@ contains
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
         if (lun%itype(col%landunit(c)) == istsoil .or. lun%itype(col%landunit(c))==istcrop) then
-           qflx_infl(c) = qflx_in_soil(c) - qflx_infl_excess(c)
+           qflx_in_soil_limited(c) = qflx_in_soil(c) - qflx_infl_excess(c)
            if (h2osfcflag /= 0) then
               qflx_in_h2osfc(c) =  qflx_top_soil_to_h2osfc(c) + qflx_infl_excess(c)
               qflx_infl_excess_surf(c) = 0._r8
@@ -306,7 +307,7 @@ contains
            end if
         else
            ! non-vegetated landunits (i.e. urban) use original CLM4 code
-           qflx_infl(c) = qflx_in_soil(c)
+           qflx_in_soil_limited(c) = qflx_in_soil(c)
            qflx_in_h2osfc(c) = 0._r8
            qflx_infl_excess_surf(c) = 0._r8
         end if
@@ -344,9 +345,6 @@ contains
      integer  :: c,l,fc                                     ! indices
      real(r8) :: dtime                                      ! land model time step (sec)
      real(r8) :: h2osfc_partial(bounds%begc:bounds%endc)    ! partially-updated h2osfc
-     ! FIXME(wjs, 2017-08-22) put qflx_h2osfc_drain in waterflux_type (this will be
-     ! needed when we move the update of qflx_infl to a separate routine)
-     real(r8) :: qflx_h2osfc_drain(bounds%begc:bounds%endc) ! bottom drainage from h2osfc
      logical  :: truncate_h2osfc_to_zero(bounds%begc:bounds%endc)
      !-----------------------------------------------------------------------
 
@@ -359,7 +357,7 @@ contains
 
           qflx_in_h2osfc   => waterflux_inst%qflx_in_h2osfc_col      , & ! Input:  [real(r8) (:)   ] total surface input to h2osfc
           qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)                       
-          qflx_infl        =>    waterflux_inst%qflx_infl_col        , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)                           
+          qflx_h2osfc_drain => waterflux_inst%qflx_h2osfc_drain_col  , & ! Output: [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
 
           h2osfc_thresh    =>    soilhydrology_inst%h2osfc_thresh_col, & ! Input:  [real(r8) (:)   ]  level at which h2osfc "percolates"                
           h2osfcflag       =>    soilhydrology_inst%h2osfcflag         & ! Input:  integer
@@ -415,16 +413,43 @@ contains
 
      end do
 
-     ! FIXME(wjs, 2017-08-22) Move this update to a separate routine that calculations
-     ! qflx_infl from its components.
-     do fc = 1, num_hydrologyc
-        c = filter_hydrologyc(fc)
-        qflx_infl(c) = qflx_infl(c) + qflx_h2osfc_drain(c)
-     end do
-
     end associate
 
    end subroutine UpdateH2osfc
+
+   !-----------------------------------------------------------------------
+   subroutine Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
+        waterflux_inst)
+     !
+     ! !DESCRIPTION:
+     ! Calculate total infiltration
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)        , intent(in)    :: bounds
+     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
+     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fc, c
+
+     character(len=*), parameter :: subname = 'Infiltration'
+     !-----------------------------------------------------------------------
+
+     associate( &
+          qflx_infl            => waterflux_inst%qflx_infl_col            , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)
+          qflx_in_soil_limited => waterflux_inst%qflx_in_soil_limited_col , & ! Input:  [real(r8) (:)   ] surface input to soil, limited by max infiltration rate (mm H2O /s)
+          qflx_h2osfc_drain    => waterflux_inst%qflx_h2osfc_drain_col      & ! Input:  [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
+          )
+
+     do fc = 1, num_hydrologyc
+        c = filter_hydrologyc(fc)
+        qflx_infl(c) = qflx_in_soil_limited(c) + qflx_h2osfc_drain(c)
+     end do
+
+     end associate
+
+   end subroutine Infiltration
 
    !-----------------------------------------------------------------------
    subroutine QflxH2osfcSurf(bounds, num_hydrologyc, filter_hydrologyc, &
