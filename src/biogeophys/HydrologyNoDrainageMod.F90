@@ -62,7 +62,8 @@ contains
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions
-    use SoilHydrologyMod     , only : SetQflxInputs, Infiltration, TotalSurfaceRunoff
+    use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess, UpdateH2osfc
+    use SoilHydrologyMod     , only : Infiltration, TotalSurfaceRunoff
     use SoilHydrologyMod     , only : UpdateUrbanPonding
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
@@ -194,10 +195,16 @@ contains
            soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterflux_inst, &
            waterstate_inst)
 
-      call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
+      call RouteInfiltrationExcess(bounds, num_hydrologyc, filter_hydrologyc, &
+           waterflux_inst, infiltration_excess_runoff_inst, soilhydrology_inst)
+
+      call UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
            infiltration_excess_runoff_inst, &
-           energyflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, &
+           energyflux_inst, soilhydrology_inst, &
            waterflux_inst, waterstate_inst)
+
+      call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
+           waterflux_inst)
 
       call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
            num_urbanc, filter_urbanc, &

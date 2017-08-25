@@ -1,4 +1,84 @@
 ===============================================================
+Tag name: ctsm_n08_clm4_5_16_r249
+Originator(s): sacks
+Date: Aug 24, 2017
+One-line Summary: Finish Infiltration modularization - mainly h2osfc updates
+
+Purpose of changes
+------------------
+
+Finish the modularization of subroutine Infiltration. The main focus here is
+modularizing the calculation of fluxes out of h2osfc and the updates of the
+h2osfc state variable. Flux calculations and state updates are now done
+separately. Where a flux calculation depends on a partially-updated version of
+h2osfc, this is now made explicit in a way that could facilitate removing this
+partial update later.
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu - pass
+    cheyenne_intel - pass
+    hobart_nag - pass
+    hobart_pgi - pass
+    hobart_intel - pass
+
+CLM tag used for the baseline comparisons: ctsm_n07_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+
+========= Tweak some comments based on feedback on
+          https://github.com/NCAR/clm-ctsm/pull/2
+M       components/clm/src/biogeophys/InfiltrationExcessRunoffMod.F90
+M       components/clm/src/biogeophys/SaturatedExcessRunoffMod.F90
+
+===============================================================
+===============================================================
 Tag name: ctsm_n07_clm4_5_16_r249
 Originator(s): sacks
 Date: Aug 22, 2017

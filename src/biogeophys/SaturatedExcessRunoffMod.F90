@@ -231,7 +231,7 @@ contains
     ! ------------------------------------------------------------------------
     ! Compute qflx_sat_excess_surf
     !
-    ! assume qinmax (maximum infiltration capacity) is large relative to
+    ! assume qinmax (maximum infiltration rate) is large relative to
     ! qflx_rain_plus_snomelt in control
     ! ------------------------------------------------------------------------
     

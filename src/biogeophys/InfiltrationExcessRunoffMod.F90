@@ -36,7 +36,7 @@ module InfiltrationExcessRunoffMod
      ! Both of these give averages over the entire column. However, qinmax is implicitly
      ! 0 over the fraction of the column given by fsat, and qflx_infl_excess is
      ! implicitly 0 over both fsat and frac_h2osfc.
-     real(r8), pointer, public :: qinmax_col(:)  ! maximum infiltration capacity (mm H2O /s)
+     real(r8), pointer, public :: qinmax_col(:)  ! maximum infiltration rate (mm H2O /s)
      real(r8), pointer, public :: qflx_infl_excess_col(:)  ! infiltration excess runoff (mm H2O /s)
 
      ! Private data members
@@ -186,13 +186,13 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
-    real(r8) :: qinmax_on_unsaturated_area(bounds%begc:bounds%endc) ! maximum infiltration capacity on the unsaturated fraction of the column (mm H2O /s)
+    real(r8) :: qinmax_on_unsaturated_area(bounds%begc:bounds%endc) ! maximum infiltration rate on the unsaturated fraction of the column (mm H2O /s)
 
     character(len=*), parameter :: subname = 'InfiltrationExcessRunoff'
     !-----------------------------------------------------------------------
 
     associate( &
-         qinmax           =>    this%qinmax_col                     , & ! Output: [real(r8) (:)   ]  maximum infiltration capacity (mm H2O /s)
+         qinmax           =>    this%qinmax_col                     , & ! Output: [real(r8) (:)   ]  maximum infiltration rate (mm H2O /s)
          qflx_infl_excess =>    this%qflx_infl_excess_col           , & ! Output: [real(r8) (:)   ]  infiltration excess runoff (mm H2O /s)
 
          fsat             =>   saturated_excess_runoff_inst%fsat_col, & ! Input:  [real(r8) (:)   ]  fractional area with water table at surface       
@@ -245,7 +245,7 @@ contains
     integer, intent(in) :: filter_hydrologyc(:) ! column filter for soil points
     type(soilhydrology_type) , intent(in) :: soilhydrology_inst
     type(soilstate_type), intent(in) :: soilstate_inst
-    real(r8), intent(inout) :: qinmax_on_unsaturated_area( bounds%begc: ) ! maximum infiltration capacity on the unsaturated fraction of the column (mm H2O /s)
+    real(r8), intent(inout) :: qinmax_on_unsaturated_area( bounds%begc: ) ! maximum infiltration rate on the unsaturated fraction of the column (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -288,15 +288,15 @@ contains
     type(soilhydrology_type) , intent(in) :: soilhydrology_inst
     real(r8) , intent(in)    :: fsat( bounds%begc: )                       ! fractional area with water table at surface
     real(r8) , intent(in)    :: qflx_in_soil( bounds%begc: )               ! surface input to soil (mm/s)
-    real(r8) , intent(inout) :: qinmax_on_unsaturated_area( bounds%begc: ) ! maximum infiltration capacity on the unsaturated fraction of the column (mm H2O /s)
+    real(r8) , intent(inout) :: qinmax_on_unsaturated_area( bounds%begc: ) ! maximum infiltration rate on the unsaturated fraction of the column (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
     real(r8) :: dtime       ! land model time step (sec)
     real(r8) :: top_icefrac ! ice fraction in top VIC layers
-    real(r8) :: max_infil   ! max infiltration capacity in VIC (mm)
+    real(r8) :: max_infil   ! max infiltration capacity using the VIC parameterization (mm)
     real(r8) :: i_0         ! average soil moisture in top VIC layers (mm)
-    real(r8) :: rsurf_vic   ! VIC surface runoff
+    real(r8) :: rsurf_vic   ! surface runoff based on the VIC parameterization
     real(r8) :: basis       ! variable soil moisture holding capacity in top VIC layers for runoff calculation
 
     character(len=*), parameter :: subname = 'ComputeQinmaxVic'
