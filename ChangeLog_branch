@@ -1,4 +1,102 @@
 ===============================================================
+Tag name: ctsm_n06_clm4_5_16_r249
+Originator(s): sacks
+Date: Aug 21, 2017
+One-line Summary: Modularization of Infiltration - first stage
+
+Purpose of changes
+------------------
+
+Separate out the first 3 steps of subroutine Infiltration into more modular
+homes. The biggest piece of this is to introduce a new
+InfiltrationExcessRunoffMod.F90; this will be where alternative
+parameterizations of infiltration excess runoff can be put.
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu - pass
+    cheyenne_intel - pass
+    hobart_nag - pass
+    hobart_pgi - pass
+    hobart_intel - pass
+
+    NOTE: Most tests were run on 24913d0. On the final commit (afdbcf7), I ran
+    only the following tests:
+
+    These test failed without the fix in afdbcf7, so I reran them with that fix:
+
+      ERP_D_Ld5.f10_f10_musgs.I2000Clm50BgcCrop.yellowstone_intel.clm-allActive
+      ERP_D_P15x2_Ld3.f10_f10_musgs.I2000Clm50BgcCrop.yellowstone_intel.clm-cropColdStart
+      ERP_P180x2_D_Ld5.f19_g17.I2000Clm50BgcDvCrop.yellowstone_pgi.clm-crop
+      ERP_D_Ld5.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-allActive
+      ERP_D_P15x2_Ld3.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-cropColdStart
+
+    This is the only oldhyd test, and so is the only test that should be
+    affected by this change:
+
+      SMS_D_Ld1_P24x1.f10_f10_musgs.I2000Clm45BgcCrop.hobart_nag.clm-oldhyd
+
+CLM tag used for the baseline comparisons: ctsm_n05_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Holds the portion of subroutine Infiltration that actually computes
+          the infiltration excess runoff flux. New parameterizations of
+          infiltration excess runoff should be put here.
+A       components/clm/src/biogeophys/InfiltrationExcessRunoffMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/clm_instMod.F90
+
+========= Just add a comment
+M       components/clm/src/biogeophys/SurfRunoffSatMod.F90
+
+===============================================================
+===============================================================
 Tag name: ctsm_n05_clm4_5_16_r249
 Originator(s): sacks
 Date: Aug 17, 2017

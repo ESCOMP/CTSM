@@ -44,6 +44,7 @@ module clm_instMod
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
+  use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
   use OzoneBaseMod                    , only : ozone_base_type
@@ -95,6 +96,7 @@ module clm_instMod
   type(energyflux_type)                   :: energyflux_inst
   type(frictionvel_type)                  :: frictionvel_inst
   type(glacier_smb_type)                  :: glacier_smb_inst
+  type(infiltration_excess_runoff_type)   :: infiltration_excess_runoff_inst
   type(irrigation_type)                   :: irrigation_inst
   type(lakestate_type)                    :: lakestate_inst
   class(ozone_base_type), allocatable     :: ozone_inst
@@ -311,6 +313,7 @@ contains
     call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst) ! sets time constant properties
 
     call surf_runoff_sat_inst%Init(bounds)
+    call infiltration_excess_runoff_inst%Init(bounds)
 
     call solarabs_inst%Init(bounds)
 
