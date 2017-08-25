@@ -214,12 +214,12 @@ contains
           qflx_top_soil           =>    waterflux_inst%qflx_top_soil_col          , & ! Output: [real(r8) (:)]  net water input into soil from top (mm/s)
           qflx_in_soil            =>    waterflux_inst%qflx_in_soil_col           , & ! Output: [real(r8) (:)]  surface input to soil (mm/s)
           qflx_top_soil_to_h2osfc =>   waterflux_inst%qflx_top_soil_to_h2osfc_col , & ! Output: [real(r8) (:)]  portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
-          qflx_rain_plus_snomelt  => waterflux_inst%qflx_rain_plus_snomelt_col    , & ! Input:  [real(r8) (:)]  rain plus snow melt falling on the soil (mm/s)
+          qflx_rain_plus_snomelt  =>    waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input:  [real(r8) (:)]  rain plus snow melt falling on the soil (mm/s)
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col       , & ! Input:  [real(r8) (:)]  snow falling on surface water (mm/s)
           qflx_floodc             =>    waterflux_inst%qflx_floodc_col            , & ! Input:  [real(r8) (:)]  column flux of flood water from RTM
-          qflx_ev_soil            =>    waterflux_inst%qflx_ev_soil_col           , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
-          qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
-          qflx_ev_h2osfc          =>    waterflux_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]
+          qflx_ev_soil            =>    waterflux_inst%qflx_ev_soil_col           , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
+          qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]
+          qflx_ev_h2osfc          =>    waterflux_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
 
           qflx_sat_excess_surf    => saturated_excess_runoff_inst%qflx_sat_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
