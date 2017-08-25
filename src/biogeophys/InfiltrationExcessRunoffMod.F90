@@ -16,7 +16,7 @@ module InfiltrationExcessRunoffMod
   use clm_time_manager , only : get_step_size
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
-  use SurfRunoffSatMod , only : surf_runoff_sat_type
+  use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use WaterfluxType    , only : waterflux_type
   use WaterstateType   , only : waterstate_type
 
@@ -168,7 +168,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InfiltrationExcessRunoff(this, bounds, num_hydrologyc, filter_hydrologyc, &
-       soilhydrology_inst, soilstate_inst, surf_runoff_sat_inst, waterflux_inst, waterstate_inst)
+       soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterflux_inst, waterstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate surface runoff due to infiltration excess
@@ -180,7 +180,7 @@ contains
     integer                                , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
     type(soilhydrology_type)               , intent(in)    :: soilhydrology_inst
     type(soilstate_type)                   , intent(in)    :: soilstate_inst
-    type(surf_runoff_sat_type)             , intent(in)    :: surf_runoff_sat_inst
+    type(saturated_excess_runoff_type)     , intent(in)    :: saturated_excess_runoff_inst
     type(waterflux_type)                   , intent(in)    :: waterflux_inst
     type(waterstate_type)                  , intent(in)    :: waterstate_inst
     !
@@ -195,7 +195,7 @@ contains
          qinmax           =>    this%qinmax_col                     , & ! Output: [real(r8) (:)   ]  maximum infiltration capacity (mm H2O /s)
          qflx_infl_excess =>    this%qflx_infl_excess_col           , & ! Output: [real(r8) (:)   ]  infiltration excess runoff (mm H2O /s)
 
-         fsat             =>    surf_runoff_sat_inst%fsat_col       , & ! Input:  [real(r8) (:)   ]  fractional area with water table at surface       
+         fsat             =>   saturated_excess_runoff_inst%fsat_col, & ! Input:  [real(r8) (:)   ]  fractional area with water table at surface       
 
          qflx_in_soil     =>    waterflux_inst%qflx_in_soil_col     , & ! Input:  [real(r8) (:)   ]  surface input to soil (mm/s)
 

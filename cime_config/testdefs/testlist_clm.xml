@@ -1088,9 +1088,8 @@
       <test name="ERP_Ly3_P72x2">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/cropMonthOutput" comment="Multi-year global test of transient crops together with transient glaciers. Use no-evolve glaciers with ERP test">cheyenne</machine>
       </test>
-      <test name="ERS_Ly5_P60x1">
+      <test name="ERS_Ly5_P72x1">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">cheyenne</machine>
-        <machine compiler="intel" testtype="aux_clm" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">yellowstone</machine>
       </test>
     </grid>
   </compset>
