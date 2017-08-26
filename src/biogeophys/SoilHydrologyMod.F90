@@ -11,7 +11,7 @@ module SoilHydrologyMod
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
   use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
-  use clm_varcon        , only : pondmx_urban
+  use clm_varcon        , only : pondmx_urban, rel_epsilon
   use clm_varpar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon     , only : icol_road_imperv
@@ -345,6 +345,9 @@ contains
      integer  :: c,l,fc                                     ! indices
      real(r8) :: dtime                                      ! land model time step (sec)
      real(r8) :: h2osfc_partial(bounds%begc:bounds%endc)    ! partially-updated h2osfc
+     real(r8) :: h2osfc_orig                                ! h2osfc before any updates in this time step
+     ! FIXME(wjs, 2017-08-26) remove this variable
+     real(r8) :: h2osfc_old
      logical  :: truncate_h2osfc_to_zero(bounds%begc:bounds%endc)
      !-----------------------------------------------------------------------
 
@@ -391,23 +394,46 @@ contains
           qflx_h2osfc_drain = qflx_h2osfc_drain(bounds%begc:bounds%endc), &
           truncate_h2osfc_to_zero = truncate_h2osfc_to_zero(bounds%begc:bounds%endc))
 
+     ! Update h2osfc based on fluxes
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
 
-        ! The parenthesization of this expression is just needed to maintain bfb answers
+        h2osfc_orig = h2osfc(c)
+
+        ! The parenthesization of this expression was just needed to maintain bfb answers
         ! in the major refactor. Note that the first parenthesized expression is
         ! h2osfc_partial(c), but I'm writing it out explicitly to facilitate a possible
         ! future removal of h2osfc_partial.
         h2osfc(c) = (h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime) &
              - qflx_h2osfc_drain(c) * dtime
 
-        ! TODO(wjs, 2017-08-22) This is here to maintain bit-for-bit answers with the old
-        ! code. If we're okay changing answers, we could remove it. Or maybe we want to
-        ! put a more general truncation in here, like:
-        !   if (abs(h2osfc(c)) < 1.e-14_r8 * abs(h2osfc_orig)) h2osfc(c) = 0._r8
-        ! But I'm not sure what the general philosophy is regarding whether and when we
-        ! want to do truncations like this.
+        ! FIXME(wjs, 2017-08-26) Remove the following block of code
+        h2osfc_old = h2osfc(c)
         if (truncate_h2osfc_to_zero(c)) then
+           if (abs(h2osfc(c)) >= rel_epsilon * abs(h2osfc_orig)) then
+              write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large relative value'
+              write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
+              call endrun('ERROR: truncate_h2osfc_to_zero true despite large relative value')
+           end if
+           if (abs(h2osfc(c)) > 1.e-9_r8) then
+              write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large absolute value'
+              write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
+              call endrun('ERROR: truncate_h2osfc_to_zero true despite large absolute value')
+           end if
+           h2osfc_old = 0._r8
+        end if
+
+        ! Due to rounding errors, fluxes that should have brought h2osfc to exactly 0 may
+        ! have instead left it slightly less than or slightly greater than 0. Correct for
+        ! that here.
+        if (abs(h2osfc(c)) < rel_epsilon * abs(h2osfc_orig)) then
+           ! FIXME(wjs, 2017-08-26) remove this absolute check
+           if (abs(h2osfc(c)) > 1.e-9_r8) then
+              write(iulog,*) 'ERROR: new truncation triggered despite large absolute value'
+              write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
+              call endrun('ERROR: new truncation triggered despite large absolute value')
+           end if
+
            h2osfc(c) = 0._r8
         end if
 
@@ -544,6 +570,7 @@ contains
      real(r8)          , intent(in)    :: frac_h2osfc( bounds%begc: )        ! fraction of ground covered by surface water (0 to 1)
      real(r8)          , intent(in)    :: qinmax( bounds%begc: )             ! maximum infiltration rate (mm H2O /s)
      real(r8)          , intent(inout) :: qflx_h2osfc_drain( bounds%begc: )  ! bottom drainage from h2osfc (mm H2O /s)
+     ! FIXME(wjs, 2017-08-26) remove truncate_h2osfc_to_zero
      logical           , intent(inout) :: truncate_h2osfc_to_zero( bounds%begc: ) ! whether h2osfc should be truncated to 0 to correct for roundoff errors, in order to maintain bit-for-bit the same answers as the old code
      !
      ! !LOCAL VARIABLES:
