@@ -410,7 +410,7 @@ contains
         ! FIXME(wjs, 2017-08-26) Remove the following block of code
         h2osfc_old = h2osfc(c)
         if (truncate_h2osfc_to_zero(c)) then
-           if (abs(h2osfc(c)) >= rel_epsilon * abs(h2osfc_orig)) then
+           if (abs(h2osfc(c)) > rel_epsilon * abs(h2osfc_orig)) then
               write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large relative value'
               write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
               call endrun('ERROR: truncate_h2osfc_to_zero true despite large relative value')
