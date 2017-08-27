@@ -345,7 +345,6 @@ contains
      integer  :: c,l,fc                                     ! indices
      real(r8) :: dtime                                      ! land model time step (sec)
      real(r8) :: h2osfc_partial(bounds%begc:bounds%endc)    ! partially-updated h2osfc
-     real(r8) :: h2osfc_orig                                ! h2osfc before any updates in this time step
      ! FIXME(wjs, 2017-08-26) remove this variable
      real(r8) :: h2osfc_old
      logical  :: truncate_h2osfc_to_zero(bounds%begc:bounds%endc)
@@ -384,6 +383,22 @@ contains
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
         h2osfc_partial(c) = h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime
+        if (abs(h2osfc_partial(c)) < rel_epsilon * abs(h2osfc(c))) then
+           ! FIXME(wjs, 2017-08-27) Remove this absolute check
+           if (abs(h2osfc_partial(c)) > 1.e-9_r8) then
+              write(iulog,*) 'ERROR: h2osfc_partial truncation triggered despite large absolute value'
+              write(iulog,*) 'h2osfc, qflx_in_h2osfc, qflx_h2osfc_surf, h2osfc_partial = ', &
+                   h2osfc(c), qflx_in_h2osfc(c), qflx_h2osfc_surf(c), h2osfc_partial(c)
+              call endrun('ERROR: h2osfc_partial truncation triggered despite large absolute value')
+           end if
+
+           ! FIXME(wjs, 2017-08-27) Remove this diagnostic print
+           write(iulog,*) 'WJS: truncating h2osfc_partial'
+           write(iulog,*) 'h2osfc, qflx_in_h2osfc, qflx_h2osfc_surf, h2osfc_partial = ', &
+                h2osfc(c), qflx_in_h2osfc(c), qflx_h2osfc_surf(c), h2osfc_partial(c)
+
+           h2osfc_partial(c) = 0._r8
+        end if
      end do
 
      call QflxH2osfcDrain(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -398,8 +413,6 @@ contains
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
 
-        h2osfc_orig = h2osfc(c)
-
         ! The parenthesization of this expression was just needed to maintain bfb answers
         ! in the major refactor. Note that the first parenthesized expression is
         ! h2osfc_partial(c), but I'm writing it out explicitly to facilitate a possible
@@ -410,16 +423,16 @@ contains
         ! FIXME(wjs, 2017-08-26) Remove the following block of code
         h2osfc_old = h2osfc(c)
         if (truncate_h2osfc_to_zero(c)) then
-           if (abs(h2osfc(c)) > rel_epsilon * abs(h2osfc_orig)) then
+           if (abs(h2osfc(c)) > rel_epsilon * abs(h2osfc_partial(c))) then
               write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large relative value'
-              write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
-              write(iulog,*) 'qflx_in_h2osfc, qflx_h2osfc_surf, qflx_h2osfc_drain, h2osfc_partial, dtime = ', &
-                   qflx_in_h2osfc(c), qflx_h2osfc_surf(c), qflx_h2osfc_drain(c), h2osfc_partial(c), dtime
+              write(iulog,*) 'h2osfc, h2osfc_partial = ', h2osfc(c), h2osfc_partial(c)
+              write(iulog,*) 'qflx_in_h2osfc, qflx_h2osfc_surf, qflx_h2osfc_drain, dtime = ', &
+                   qflx_in_h2osfc(c), qflx_h2osfc_surf(c), qflx_h2osfc_drain(c), dtime
               call endrun('ERROR: truncate_h2osfc_to_zero true despite large relative value')
            end if
            if (abs(h2osfc(c)) > 1.e-9_r8) then
               write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large absolute value'
-              write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
+              write(iulog,*) 'h2osfc, h2osfc_partial = ', h2osfc(c), h2osfc_partial(c)
               call endrun('ERROR: truncate_h2osfc_to_zero true despite large absolute value')
            end if
            h2osfc_old = 0._r8
@@ -428,11 +441,11 @@ contains
         ! Due to rounding errors, fluxes that should have brought h2osfc to exactly 0 may
         ! have instead left it slightly less than or slightly greater than 0. Correct for
         ! that here.
-        if (abs(h2osfc(c)) < rel_epsilon * abs(h2osfc_orig)) then
+        if (abs(h2osfc(c)) < rel_epsilon * abs(h2osfc_partial(c))) then
            ! FIXME(wjs, 2017-08-26) remove this absolute check
            if (abs(h2osfc(c)) > 1.e-9_r8) then
               write(iulog,*) 'ERROR: new truncation triggered despite large absolute value'
-              write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
+              write(iulog,*) 'h2osfc, h2osfc_partial = ', h2osfc(c), h2osfc_partial(c)
               call endrun('ERROR: new truncation triggered despite large absolute value')
            end if
 
