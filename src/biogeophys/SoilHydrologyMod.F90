@@ -413,6 +413,8 @@ contains
            if (abs(h2osfc(c)) > rel_epsilon * abs(h2osfc_orig)) then
               write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large relative value'
               write(iulog,*) 'h2osfc, h2osfc_orig = ', h2osfc(c), h2osfc_orig
+              write(iulog,*) 'qflx_in_h2osfc, qflx_h2osfc_surf, qflx_h2osfc_drain, h2osfc_partial, dtime = ', &
+                   qflx_in_h2osfc(c), qflx_h2osfc_surf(c), qflx_h2osfc_drain(c), h2osfc_partial(c), dtime
               call endrun('ERROR: truncate_h2osfc_to_zero true despite large relative value')
            end if
            if (abs(h2osfc(c)) > 1.e-9_r8) then
