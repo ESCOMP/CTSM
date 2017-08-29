@@ -1,20 +1,32 @@
 .. _rst_FUN:
 
-Fixation and uptake of nitrogen
+Fixation and Uptake of Nitrogen (FUN)
 ===============================
 
 Introduction
 -----------------
 
 
-The Fixation and Uptake of Nitrogen model is based on work by Fisher (J.) et al., (2008), Brzostek et al. (2015) and Shi et al. (2016).  The concept of FUN is that in most cases, Nitrogen uptake requires the expenditure of energy in the form of carbon, and further, that there are numerous potential sources of Nitrogen in the environment which a plant may exchange for carbon. The ratio of carbon expended to Nitrogen acquired is referred to here as the cost, or exchange rate,  of N acquisition (:math:`E_{nacq}`, gC/gN)). There are four pathways for N uptake:
+The Fixation and Uptake of Nitrogen model is based on work by Fisher (J.) et al., (2008), Brzostek et al. (2015) and Shi et al. (2016).  The concept of FUN is that in most cases, Nitrogen uptake requires the expenditure of energy in the form of carbon, and further, that there are numerous potential sources of Nitrogen in the environment which a plant may exchange for carbon. The ratio of carbon expended to Nitrogen acquired is referred to here as the cost, or exchange rate,  of N acquisition (:math:`E_{nacq}`, gC/gN)). There are eight pathways for N uptake:
 
-1. Fixation by symbiotic bacteria in root nodules (for N fixing plants) (:math:`fix`)
-2. Retranslocation of N from senescing tissues (:math:`ret`)
-3. Active uptake of Nitrogen by plant roots as nitrate (:math:`NO`:sub:`3`)  (:math:`act_{no3}`)
-4. Active uptake of Nitrogen by plant roots as ammonia (:math:`NH`:sub:`4`) (:math:`act_{nh4}`)  
+1. Fixation by symbiotic bacteria in root nodules (for N fixing plants) (:math:`_{fix}`)
+2. Retranslocation of N from senescing tissues (:math:`_{ret}`)
+3. Active uptake of NH4 by arbuscular mycorrhizal plants (:math:`_{active,nh4}`)
+4. Active uptake of NH4 by ectomycorrhizal plants (:math:`_{active,nh4}`)
+5. Active uptake of NO3 by arbuscular mycorrhizal plants (:math:`_{active,no3}`)
+6. Active uptake of NO3 by ectomycorrhizal plants (:math:`_{active,no3}`)
+7. Nonmycorrhizal uptake of NH4 (:math:`_{nonmyc,no3}`)
+8. Nonmycorrhizal uptake of NO3 (:math:`_{nonmyc,nh4}`)
 
-The notation suffix for each pathway is given in parentheses here. At each timestep, each of these pathways is associated with a cost term (:math:`cost_x`), a payment in carbon (:math:`C_{nuptake,x}`), and an influx of Nitrogen (:math:`N_{uptake,x}`), any of which may be zero, and where :math:`x` is one of the four uptake streams listed above (:math:`fix`, :math:`ret`, :math:`act_{no3}` or :math:`act_{nh4}`).
+
+The notation suffix for each pathway is given in parentheses here. At each timestep, each of these pathways is associated with a cost term (:math:`N_{cost,x}`), a payment in carbon (:math:`C_{nuptake,x}`), and an influx of Nitrogen (:math:`N_{uptake,x}`) where :math:`x` is one of the eight uptake streams listed above. 
+
+
+For each PFT, we define a fraction of the total C acquisition that can be used for N fixation (:math:`f_{fixers}`), which is broadly equivalent to the fraction of a given PFT that is capable of fixing Nitrogen, and thus represents an upper limit on the amount to which fixation can be increased in low n conditions.  For each PFT, the cost calculation is conducted twice. Once where fixation is possible and once where it is not. (:math:`f_{fixers}`)
+
+
+For all of the active uptake pathways, whose cost depends on varying concentrations of N through the soil profile, the costs and fluxes are also determined by soil layer :math:`j`.  
+
 
 
 Boundary conditions of FUN 
@@ -35,11 +47,45 @@ Available Soil Nitrogen
 
 Cost of Nitrogen Fixation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The cost of fixation is derived from Houlton et al. (2008). 
+ .. math::
+
+   N_{cost,fix} = -s_{fix}/(1.25 e^{a_{fix} + b_{fix} . t_{soil}  (1 - 0.5 t_{soil}/ c_{fix}) })
+   
+Herein, :math:`a_{fix}`, :math:`b_{fix}` and :math:`c_{fix}` are all parameters of the temperature response function of fixation reported by Houlton et al. (2008) (:math:`exp[a+bT_s(1-0.5T_s/c)`).   t_{soil} is the soil temperature in C. The values of these parameters are fitted to empirical data as a=-3.62 :math:`\pm` 0.52, b=0.27:math:`\pm` 0.04 and c=25.15 :math:`\pm` 0.66. 1.25 converts from the temperature response function to a 0-1 limitation factor (as specifically employed by Houlton et al.).  This function is a 'rate' of uptake for a given temperature. Here we assimilated the rate of fixation into the cost term by assuming that the rate is analagous to a conductance for N, and inverting the term to produce a cost/resistance analagoue. We then multiply this temperature term by the minimum cost at optimal temperature (:math:`s_{fix}`) to give a temperature limited cost in terms of C to N ratios. 
+
+
 
 Cost of Active Uptake
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The cost of N uptake from soil, for each layer :math:`j`, is controlled by two uptake parameters that pertain respectively to the relationship between soil N content and N uptake, and root C density and N uptake. 
 
+For non-mycorrhizal uptake:
+
+ .. math::
+
+   N_{cost,nonmyc,j} = \frac{k_{n,nonmyc}}{N_{smin,j}} + \frac{k_{c,nonmyc}}{c_{root,j}}
+
+and for active uptake:
+
+ .. math::
+
+   N_{cost,active,j} = \frac{k_{n,active}}{N_{smin,j}} + \frac{k_{c,active}}{c_{root,j}}
+
+where :math:`k_{n,active}` varies according to whether we are considering ecto or arbuscular mycorrhizal uptake.
+
+
+ .. math::
+   :label: 18.2
+
+   k_{n,active}  =  
+   \left\{\begin{array}{lr} 
+   k_{n,Eactive}&  e = 1\\
+   k_{n,Aactive}&  e = 0
+   \end{array}\right\}
+
+where m=1 pertains to the fraction of the PFT that is ecotmycorrhizal, as opposed to arbuscular mycorrhizal.
 
 Resolving N cost across simultaneous uptake streams
 --------------------------------------------------------
@@ -47,20 +93,21 @@ The total cost of N uptake is calculated based on the assumption that carbon is 
 
  .. math::
 
-   N_{conductance}=  \sum{(1/cost_{x})} 
+   N_{conductance,f}=  \sum{(1/N_{cost,x})} 
+
 
 From this, we then calculate the fraction of the carbon allocated to each pathway as 
 
  .. math::
 
-   C_{frac,x} = \frac{1/cost_{x}}{N_{conductance}}
+   C_{frac,x} = \frac{1/N_{cost,x}}{N_{conductance}}
 
 
 These fractions are used later, to calculate the carbon expended on different uptake pathways.  Next, the N acquired from each uptake stream per unit C spent (:math:`N_{exch,x}`, gN/gC)  is determined as 
 
  .. math::
 
-   N_{exch,x} = \frac{C_{frac,x}}{cost_{x}}
+   N_{exch,x} = \frac{C_{frac,x}}{N_{cost,x}}
 
 We then determine the total amount of N uptake per unit C spent (:math:`N_{exch,tot}`, gN/gC) as the sum of all the uptake streams.   
 
@@ -72,7 +119,7 @@ and thus the subsequent overall N cost is
  .. math::
    N_{cost,tot} = 1/{N_{exch,tot}}
 
-Throughout these calculations, :math:`x` is the sum of the fixation and active uptake pathways. Retranslocation is determined via a different set of mechanisms, once the :math:`N_{cost,tot}` is known. 
+ Retranslocation is determined via a different set of mechanisms, once the :math:`N_{cost,tot}` is known. 
 
 Nitrogen Retranslocation
 --------------------------------------------------------
@@ -88,7 +135,7 @@ The carbon available at the beginning of the iterative retranslocation calculati
 
  .. math::
 
- C_{avail_retrans,0} = C_{avail}
+  C_{avail,retrans,0} = C_{avail}
 
 
 Free Retranslocation
@@ -261,28 +308,109 @@ and
    \delta_{CN} = CN_{plant} - target_{CN}
 
 
-We then modify :math:`\gamma_{FUN}` to  account for situations where (even if N is expensive) plant C:N ratios have increased too far from the target. For situations where  :math:`\delta_{CN}` is positive and :math:`\gamma_{FUN}` is <1:
+We then increase :math:`\gamma_{FUN}` to  account for situations where (even if N is expensive) plant C:N ratios have increased too far from the target.  Where  :math:`\delta_{CN}` is negative, we reduce C spent on N uptake and retain more C for growth
+ 
+ .. math::
+   :label: 7.23
 
- .. math::                         
-   \gamma_{FUN} = \gamma_{FUN}+(1-\gamma_{FUN}).min(1,\delta_{CN}/c_{flexcn})
+   \gamma_{FUN}  =  
+   \left\{\begin{array}{lr} 
+   \gamma_{FUN}+ 0.5.(delta_{CN}/c_{flexcn})& delta_{CN} > 0\\
+   \gamma_{FUN}+(1-\gamma_{FUN}).min(1,\delta_{CN}/c_{flexcn}) &  delta_{CN} < 0
+   \end{array}\right\}
 
-For situations where  :math:`\delta_{CN}` is negative, we reduce C spent on N uptake and retain more C for growth:
-
- .. math::                         
-   \gamma_{FUN} = \gamma_{FUN}+ 0.5.(delta_CN/c_{flexcn})
-    
-                     
-We then restrict the degree to which C expenditure can be reduced ( to prevent unrea;istically high C:N ratios) as
+We then restrict the degree to which C expenditure can be reduced (to prevent unrealistically high C:N ratios) as
 
  .. math::                         
    \gamma_{FUN} = max(min(1.0,\gamma_{FUN}),0.5) 
+   
+   
+Calculation of N uptake streams from active uptake and fixation
+--------------------------------------------------------
+  
+Once the final :math:`C_{nuptake}` is known, the fluxes of C to the individual pools can be derived as 
+
+ .. math::
+
+   C_{nuptake,x}  = C_{frac,x}.C_{nuptake}
+   
+
+ .. math::
+
+   N_{uptake,x}  = \frac{C_{nuptake}}{N_{cost}}
+   
+   
+Following this, we determine whether the extraction estimates exceed the pool size for each source of N.  Where :math:`N_{active,no3} + N_{nonmyc,no3} > N_{avail,no3}`, we calculate the unmet uptake, :math:`N_{unmet,no3}`
+
+ .. math::
+
+   N_{unmet,no3}  = N_{active,no3} + N_{nonmyc,no3} - N_{avail,no3}
+   
+then modify both fluxes to account   
+
+ .. math::
+
+   N_{active,no3} = N_{active,no3} +  N_{unmet,no3}.\frac{N_{active,no3}}{N_{active,no3}+N_{nonmyc,no3}}
+
+ .. math::
+
+   N_{nonmyc,no3} = N_{nonmyc,no3} +  N_{unmet,no3}.\frac{N_{nonmyc,no3}}{N_{active,no3}+N_{nonmyc,no3}}
+   
+and similarly, for NH4, where :math:`N_{active,nh4} + N_{nonmyc,nh4} > N_{avail,nh4}`, we calculate the unmet uptake, :math:`N_{unmet,no3}`
+
+ .. math::
+
+   N_{unmet,nh4}  = N_{active,nh4} + N_{nonmyc,nh4} - N_{avail,nh4}
+   
+then modify both fluxes to account   
+
+ .. math::
+
+   N_{active,nh4} = N_{active,nh4} +  N_{unmet,nh4}.\frac{N_{active,nh4}}{N_{active,nh4}+N_{nonmyc,nh4}}
+
+ .. math::
+
+   N_{nonmyc,nh4} = N_{nonmyc,nh4} +  N_{unmet,nh4}.\frac{N_{nonmyc,nh4}}{N_{active,nh4}+N_{nonmyc,nh4}}
 
 
- 
+and then update the C spent to account for hte new lower N acquisition in that layer/pool. 
+
+ .. math::
+
+   C_{active,nh4} = N_{active,nh4}.N_{cost,active,nh4}\\
+   C_{active,no3} = N_{active,no3}.N_{cost,active,no3}\\
+   C_{nonmyc,no3} = N_{nonmyc,no3}.N_{cost,nonmyc,no3}\\
+   C_{nonmyc,no3} = N_{nonmyc,no3}.N_{cost,nonmyc,no3}\\
+   
+
+Following this, we determine how much carbon is accounted for for each soil layer.  
+
+ .. math::
+
+   C_{accounted,x,j}  =  C_{spent,j,x} - (N_{acquired,j,x}.CN_{plant}.(1.0+ gr_{frac}))
+   
+   
+   
+
+Types of N uptake streams
+--------------------------------------------------------
+Arbuscular mycorrhizal fungi: 
+Ectomycorrhizal fungi: 
+Nonmycorrhizal plants.
 
 
+ECK_active (step 1) sets active components for Ectomycorrhizal fungi
+ACK_active (step 2) sets active components for Arbuscular fungi
 
+kc_nonmyc (step 1) sets nonmyc components for Ectomycorrhizal fungi
+kc_nonmyc (step 2) sets active components for Arbuscular fungi
 
+ACTIVE vs NONMYC
+ECTO vs ARBU for ACTIVE.
 
+References
+--------------------------------------------------------
+
+Houlton, B.Z., Wang, Y.P., Vitousek, P.M. and Field, C.B., 2008. A unifying framework for dinitrogen fixation in the terrestrial biosphere. Nature, 454(7202), p.327.
 
    
