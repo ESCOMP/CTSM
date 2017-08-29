@@ -345,9 +345,6 @@ contains
      integer  :: c,l,fc                                     ! indices
      real(r8) :: dtime                                      ! land model time step (sec)
      real(r8) :: h2osfc_partial(bounds%begc:bounds%endc)    ! partially-updated h2osfc
-     ! FIXME(wjs, 2017-08-26) remove this variable
-     real(r8) :: h2osfc_old
-     logical  :: truncate_h2osfc_to_zero(bounds%begc:bounds%endc)
      !-----------------------------------------------------------------------
 
      associate(                                                        & 
@@ -384,19 +381,6 @@ contains
         c = filter_hydrologyc(fc)
         h2osfc_partial(c) = h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime
         if (abs(h2osfc_partial(c)) < rel_epsilon * abs(h2osfc(c))) then
-           ! FIXME(wjs, 2017-08-27) Remove this absolute check
-           if (abs(h2osfc_partial(c)) > 1.e-9_r8) then
-              write(iulog,*) 'ERROR: h2osfc_partial truncation triggered despite large absolute value'
-              write(iulog,*) 'h2osfc, qflx_in_h2osfc, qflx_h2osfc_surf, h2osfc_partial = ', &
-                   h2osfc(c), qflx_in_h2osfc(c), qflx_h2osfc_surf(c), h2osfc_partial(c)
-              call endrun('ERROR: h2osfc_partial truncation triggered despite large absolute value')
-           end if
-
-           ! FIXME(wjs, 2017-08-27) Remove this diagnostic print
-           write(iulog,*) 'WJS: truncating h2osfc_partial'
-           write(iulog,*) 'h2osfc, qflx_in_h2osfc, qflx_h2osfc_surf, h2osfc_partial = ', &
-                h2osfc(c), qflx_in_h2osfc(c), qflx_h2osfc_surf(c), h2osfc_partial(c)
-
            h2osfc_partial(c) = 0._r8
         end if
      end do
@@ -406,8 +390,7 @@ contains
           h2osfc = h2osfc_partial(bounds%begc:bounds%endc), &
           frac_h2osfc = frac_h2osfc(bounds%begc:bounds%endc), &
           qinmax = qinmax(bounds%begc:bounds%endc), &
-          qflx_h2osfc_drain = qflx_h2osfc_drain(bounds%begc:bounds%endc), &
-          truncate_h2osfc_to_zero = truncate_h2osfc_to_zero(bounds%begc:bounds%endc))
+          qflx_h2osfc_drain = qflx_h2osfc_drain(bounds%begc:bounds%endc))
 
      ! Update h2osfc based on fluxes
      do fc = 1, num_hydrologyc
@@ -420,35 +403,10 @@ contains
         h2osfc(c) = (h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime) &
              - qflx_h2osfc_drain(c) * dtime
 
-        ! FIXME(wjs, 2017-08-26) Remove the following block of code
-        h2osfc_old = h2osfc(c)
-        if (truncate_h2osfc_to_zero(c)) then
-           if (abs(h2osfc(c)) > rel_epsilon * abs(h2osfc_partial(c))) then
-              write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large relative value'
-              write(iulog,*) 'h2osfc, h2osfc_partial = ', h2osfc(c), h2osfc_partial(c)
-              write(iulog,*) 'qflx_in_h2osfc, qflx_h2osfc_surf, qflx_h2osfc_drain, dtime = ', &
-                   qflx_in_h2osfc(c), qflx_h2osfc_surf(c), qflx_h2osfc_drain(c), dtime
-              call endrun('ERROR: truncate_h2osfc_to_zero true despite large relative value')
-           end if
-           if (abs(h2osfc(c)) > 1.e-9_r8) then
-              write(iulog,*) 'ERROR: truncate_h2osfc_to_zero true despite large absolute value'
-              write(iulog,*) 'h2osfc, h2osfc_partial = ', h2osfc(c), h2osfc_partial(c)
-              call endrun('ERROR: truncate_h2osfc_to_zero true despite large absolute value')
-           end if
-           h2osfc_old = 0._r8
-        end if
-
         ! Due to rounding errors, fluxes that should have brought h2osfc to exactly 0 may
         ! have instead left it slightly less than or slightly greater than 0. Correct for
         ! that here.
         if (abs(h2osfc(c)) < rel_epsilon * abs(h2osfc_partial(c))) then
-           ! FIXME(wjs, 2017-08-26) remove this absolute check
-           if (abs(h2osfc(c)) > 1.e-9_r8) then
-              write(iulog,*) 'ERROR: new truncation triggered despite large absolute value'
-              write(iulog,*) 'h2osfc, h2osfc_partial = ', h2osfc(c), h2osfc_partial(c)
-              call endrun('ERROR: new truncation triggered despite large absolute value')
-           end if
-
            h2osfc(c) = 0._r8
         end if
 
@@ -565,16 +523,13 @@ contains
    !-----------------------------------------------------------------------
    subroutine QflxH2osfcDrain(bounds, num_hydrologyc, filter_hydrologyc, &
         h2osfcflag, h2osfc, frac_h2osfc, qinmax, &
-        qflx_h2osfc_drain, truncate_h2osfc_to_zero)
+        qflx_h2osfc_drain)
      !
      ! !DESCRIPTION:
      ! Compute qflx_h2osfc_drain
      !
      ! Note that, if h2osfc is negative, then qflx_h2osfc_drain will be negative - acting
-     ! to exactly restore h2osfc to 0. In this case, truncate_h2osfc_to_zero will be set
-     ! to true; in all other cases, truncate_h2osfc_to_zero will be set to false. This
-     ! particular behavior of truncate_h2osfc_to_zero is just like this to maintain
-     ! bit-for-bit answers with the old code (see also the TODO note in UpdateH2osfc).
+     ! to exactly restore h2osfc to 0.
      !
      ! !ARGUMENTS:
      type(bounds_type) , intent(in)    :: bounds
@@ -585,8 +540,6 @@ contains
      real(r8)          , intent(in)    :: frac_h2osfc( bounds%begc: )        ! fraction of ground covered by surface water (0 to 1)
      real(r8)          , intent(in)    :: qinmax( bounds%begc: )             ! maximum infiltration rate (mm H2O /s)
      real(r8)          , intent(inout) :: qflx_h2osfc_drain( bounds%begc: )  ! bottom drainage from h2osfc (mm H2O /s)
-     ! FIXME(wjs, 2017-08-26) remove truncate_h2osfc_to_zero
-     logical           , intent(inout) :: truncate_h2osfc_to_zero( bounds%begc: ) ! whether h2osfc should be truncated to 0 to correct for roundoff errors, in order to maintain bit-for-bit the same answers as the old code
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
@@ -599,7 +552,6 @@ contains
      SHR_ASSERT_ALL((ubound(frac_h2osfc) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
      SHR_ASSERT_ALL((ubound(qinmax) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
      SHR_ASSERT_ALL((ubound(qflx_h2osfc_drain) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(truncate_h2osfc_to_zero) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
      
      dtime = get_step_size()
 
@@ -608,14 +560,12 @@ contains
 
         if (h2osfc(c) < 0.0) then
            qflx_h2osfc_drain(c) = h2osfc(c)/dtime
-           truncate_h2osfc_to_zero(c) = .true.
         else
            qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),h2osfc(c)/dtime)
            if(h2osfcflag==0) then
               ! ensure no h2osfc
               qflx_h2osfc_drain(c)= max(0._r8,h2osfc(c)/dtime)
            end if
-           truncate_h2osfc_to_zero(c) = .false.
         end if
      end do
 
