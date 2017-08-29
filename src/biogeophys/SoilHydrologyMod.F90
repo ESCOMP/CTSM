@@ -396,12 +396,7 @@ contains
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
 
-        ! The parenthesization of this expression was just needed to maintain bfb answers
-        ! in the major refactor. Note that the first parenthesized expression is
-        ! h2osfc_partial(c), but I'm writing it out explicitly to facilitate a possible
-        ! future removal of h2osfc_partial.
-        h2osfc(c) = (h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime) &
-             - qflx_h2osfc_drain(c) * dtime
+        h2osfc(c) = h2osfc_partial(c) - qflx_h2osfc_drain(c) * dtime
 
         ! Due to rounding errors, fluxes that should have brought h2osfc to exactly 0 may
         ! have instead left it slightly less than or slightly greater than 0. Correct for
