@@ -17,6 +17,7 @@ list(APPEND clm_sources
   clm_nlUtilsMod.F90
   clm_time_manager.F90
   fileutils.F90
+  NumericsMod.F90
   )
 
 sourcelist_to_parent(clm_sources)

@@ -11,12 +11,13 @@ module SoilHydrologyMod
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
   use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
-  use clm_varcon        , only : pondmx_urban, rel_epsilon
+  use clm_varcon        , only : pondmx_urban
   use clm_varpar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon     , only : icol_road_imperv
   use landunit_varcon   , only : istsoil, istcrop
   use clm_time_manager  , only : get_step_size
+  use NumericsMod       , only : truncate_small_values
   use EnergyFluxType    , only : energyflux_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -380,10 +381,12 @@ contains
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
         h2osfc_partial(c) = h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime
-        if (abs(h2osfc_partial(c)) < rel_epsilon * abs(h2osfc(c))) then
-           h2osfc_partial(c) = 0._r8
-        end if
      end do
+
+     call truncate_small_values(num_f = num_hydrologyc, filter_f = filter_hydrologyc, &
+          lb = bounds%begc, ub = bounds%endc, &
+          data_baseline = h2osfc(bounds%begc:bounds%endc), &
+          data = h2osfc_partial(bounds%begc:bounds%endc))
 
      call QflxH2osfcDrain(bounds, num_hydrologyc, filter_hydrologyc, &
           h2osfcflag = h2osfcflag, &
@@ -395,17 +398,16 @@ contains
      ! Update h2osfc based on fluxes
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
-
         h2osfc(c) = h2osfc_partial(c) - qflx_h2osfc_drain(c) * dtime
-
-        ! Due to rounding errors, fluxes that should have brought h2osfc to exactly 0 may
-        ! have instead left it slightly less than or slightly greater than 0. Correct for
-        ! that here.
-        if (abs(h2osfc(c)) < rel_epsilon * abs(h2osfc_partial(c))) then
-           h2osfc(c) = 0._r8
-        end if
-
      end do
+
+     ! Due to rounding errors, fluxes that should have brought h2osfc to exactly 0 may
+     ! have instead left it slightly less than or slightly greater than 0. Correct for
+     ! that here.
+     call truncate_small_values(num_f = num_hydrologyc, filter_f = filter_hydrologyc, &
+          lb = bounds%begc, ub = bounds%endc, &
+          data_baseline = h2osfc_partial(bounds%begc:bounds%endc), &
+          data = h2osfc(bounds%begc:bounds%endc))
 
     end associate
 

@@ -55,7 +55,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: i
 
-    character(len=*), parameter :: subname = 'filter_from_list'
+    character(len=*), parameter :: subname = 'filter_from_range'
     !-----------------------------------------------------------------------
     
     numf = end - start + 1
