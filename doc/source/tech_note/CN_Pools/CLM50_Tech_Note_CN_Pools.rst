@@ -49,3 +49,17 @@ specifications of decomposition rates, and methods to rapidly
 equilibrate the decomposition model, is in Chapter 
 :numref:`rst_Decomposition`.
 
+Tissue Stoichiometry
+-----------------------
+
+As of CLM5, vegetation tissues have a flexible stoichiometry, as
+described in :ref:`Ghimire et al. (2015) <Ghimireetal2015>`. Each
+tissue has a target C\:N ratio, and nitrogen is allocated at each
+timestep in order to allow the plant to best match the target
+stoichiometry.  Nitrogen downregulation of productivity acts by
+increasing the C\:N ratio of leaves when insufficient nitrogen is
+available to meet stoichiometric demands of leaf growth, thereby
+reducing the N available for photosynthesis and reducing the :math:`V_{\text{c,max25}}` and
+:math:`J_{\text{max25}}` terms, as described in Chapter 
+:numref:`rst_Photosynthetic Capacity`.  Details of the flexible tissue
+stoichiometry are described in Chapter :numref:`rst_CN Allocation`.
