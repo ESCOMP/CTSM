@@ -270,8 +270,8 @@ data files in the mksurfdata_map tool.
 
  Schematic of translation of annual LUH2 land units to CLM5 plant and crop functional types.
  
- .. _Figure Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool
+.. _Figure Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool:
 
-.. figure :: image3.png
+.. figure:: image3.png
 
  Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool
