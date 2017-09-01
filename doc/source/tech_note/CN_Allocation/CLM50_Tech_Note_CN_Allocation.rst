@@ -6,44 +6,6 @@ Carbon and Nitrogen Allocation
 Introduction
 -----------------
 
-CLM includes a fully-prognostic treatment of the terrestrial carbon and
-nitrogen cycles including interactions between these cycles as mediated
-by biological mechanisms of plants and soil heterotrophs. The model is
-fully prognostic with respect to all carbon and nitrogen state variables
-in the vegetation, litter, and soil organic matter. The seasonal timing
-of new vegetation growth and litterfall is also prognostic, responding
-to soil and air temperature, soil water availability, and daylength, in
-varying degrees depending on a specified phenology type for each PFT
-(see Chapter 14). The prognostic LAI, SAI, and vegetation heights are
-utilized by the biophysical model.
-
-Separate state variables for C and N are tracked for leaf, live stem,
-dead stem, live coarse root, dead coarse root, and fine root pools
-(Figure 13.1 and 13.2). Each of these pools has two corresponding
-storage pools representing, respectively, short-term and long-term
-storage of non-structural carbohydrates and labile nitrogen. There are
-two additional carbon pools, one for the storage of growth respiration
-reserves, and another used to meet excess demand for maintenance
-respiration during periods with low photosynthesis. One additional
-nitrogen pool tracks retranslocated nitrogen, mobilized from leaf tissue
-prior to abscission and litterfall. Altogether there are 20 state
-variables for vegetation carbon, and 19 for vegetation nitrogen.
-
-.. _Figure Vegetation fluxes and pools:
-
-.. figure:: image1.png
-    :width: 800px
-    :height: 800px
-
-    Vegetation fluxes and pools.
-
-.. _Figure Carbon and nitrogen pools:
-
-.. figure:: image2.png
-    :width: 400px
-    :height: 400px
-
-    Carbon and nitrogen pools.
 
 Carbon Allocation for Maintenance Respiration Costs
 --------------------------------------------------------
