@@ -15,11 +15,12 @@ structure used in CLM4.0, or a second pool structure, characterized by
 slower decomposition rates, based on the Century model (Parton et al.
 1988). In addition, the user can choose, at compile time, whether to
 allow :math:`{n}_{lev}` to equal 1, as in CLM4.0, or to equal the
-number of soil levels used for the soil hydrology (default 10).
+number of soil levels used for the soil hydrological and thermal
+calculations (see Section  :numref:`Soil Layers` for soil layering).
 
 .. _Figure Schematic of decomposition model in CLM:
 
-.. figure:: image1.png
+.. figure:: CLM4_vertsoil_soilstruct_drawing.png
 
  Schematic of decomposition model in CLM.
 
@@ -60,11 +61,11 @@ pools. Further discussion of the vertical distribution of carbon inputs
 :math:`{R}_{i}`\ (z), vertical turnover times
 :math:`{k}_{j}`\ (z), and vertical transport *D(z)* is below.
 Discussion of the vertical model and analysis of both decomposition
-structures is in Koven et al (2013).
+structures is in :ref:`Koven et al. (2013) <Kovenetal2013>`.
 
 .. _Figure Pool structure:
 
-.. figure:: image2.png
+.. figure:: soil_C_pools_CN_century.png
 
  Pool structure, transitions, respired fractions (numbers at 
  end of arrows), and turnover times (numbers in boxes) for the 2
@@ -271,7 +272,9 @@ unitless) is calculated using a relationship from Andrén and Paustian
 
 where :math:`{\Psi}_{j}` is the soil water potential in
 layer *j*, :math:`{\Psi}_{min}` is a lower limit for soil
-water potential control on decomposition rate (set to -10 MPa).
+water potential control on decomposition rate (in CLM5, this was
+changed from a default value of -10 MPa in CLM4.5 and earlier to a
+default value of -2.5 MPa).
 :math:`{\Psi}_{sat,j}` (MPa) is the saturated soil water
 potential, calculated using the multivariate regression model from Cosby et al. (1984):
 
@@ -294,7 +297,7 @@ of Niu and Yang (2006),
    \psi \left(T\right)=-\frac{L_{f} \left(T-T_{f} \right)}{10^{3} T}
 
 An additional frozen decomposition limitation can be specified using a
-‘frozen Q\ :sub:`10` following Koven et al. (2011), however the
+‘frozen Q\ :sub:`10`' following :ref:`Koven et al. (2011) <Kovenetal2011>`, however the
 default value of this is the same as the unfrozen Q\ :sub:`10`
 value, and therefore the basic hypothesis is that frozen respiration is
 limited by liquid water availability, and can be modeled following the
@@ -322,7 +325,7 @@ of decomposition was shown by Jenkinson and Coleman (2008) to be an
 important term in fitting total C and 14C profiles, and implies that
 unresolved processes, such as priming effects, microscale anoxia, soil
 mineral surface and/or aggregate stabilization may be important in
-controlling the fate of carbon at depth (Koven et al. 2013). CLM
+controlling the fate of carbon at depth :ref:`Koven et al. (2013) <Kovenetal2013>`. CLM
 includes these unresolved depth controls via an exponential decrease in
 the soil turnover time with depth:
 
@@ -331,7 +334,10 @@ the soil turnover time with depth:
 
    r_{depth} =\exp \left(-\frac{z}{z_{\tau } } \right)
 
-where :math:`{z}_{\tau}` is the e-folding depth for decomposition, set by default to 0.5m.
+where :math:`{z}_{\tau}` is the e-folding depth for decomposition. For
+CLM4.5, the default value of this was 0.5m. For CLM5, this has been
+changed to a default value of 10m, which effectively means that
+intrinsic decomposition rates may proceed as quickly at depth as at the surface.
 
 The combined decomposition rate scalar (:math:`{r}_{total}`,unitless) is:
 
@@ -746,15 +752,22 @@ value of the advection term is 0 cm/yr, such that transport is purely
 diffusive. Diffusive transport differs in rate between permafrost soils
 (where cryoturbation is the dominant transport term) and non-permafrost
 soils (where bioturbation dominates). For permafrost soils, a
-parameterization based on that of Koven et al. (2009) is used: the
+parameterization based on that of :ref:`Koven et al. (2009) <Kovenetal2009>` is used: the
 diffusivity parameter is constant through the active layer, and
 decreases linearly from the base of the active layer to zero at a set
 depth (default 3m); the default permafrost diffusivity is 5
 cm\ :sup:`2`/yr. For non-permafrost soils, the default diffusivity
 is 1 cm\ :sup:`2`/yr.
 
-Model Equilibration
-------------------------
+Model Equilibration and its Acceleration
+---------------------------------------
+For transient experiments, it is usually assumed that the carbon cycle
+is starting from a point of relatively close equilibrium, i.e. that
+productivity is balanced by ecosystem carbon losses through
+respiratory and disturbance pathways.  In order to satisfy this
+assumption, the model is generally run until the productivity and loss
+terms find a stable long-term equilibrium; at this point the model is
+considered 'spun up'.
 
 Because of the coupling between the slowest SOM pools and productivity
 through N downregulation of photosynthesis, equilibration of the model
@@ -762,14 +775,13 @@ for initialization purposes will take an extremely long time in the
 standard mode. This is particularly true for the CENTURY-based
 decomposition cascade, which includes a passive pool. In order to
 rapidly equilibrate the model, a modified version of the “accelerated
-decomposition” (Thornton and Rosenbloom, 2005) is used. The fundamental
+decomposition” :ref:`(Thornton and Rosenbloon, 2005) <ThorntonRosenbloom2005>` is used. The fundamental
 idea of this approach is to allow fluxes between the various pools (both
 turnover-defined and vertically-defined fluxes) adjust rapidly, while
 keeping the pool sizes themselves small so that they can fill quickly.
 To do this, the base decomposition rate  :math:`{k}_{i}` for each
 pool *i* is accelerated by a term :math:`{a}_{i}` such that the slow
-pools are collapsed onto an approximately annual timescale (Koven et al.
-2013). Accelerating the pools beyond this timescale distorts the
+pools are collapsed onto an approximately annual timescale :ref:`Koven et al. (2013) <Kovenetal2013>`. Accelerating the pools beyond this timescale distorts the
 seasonal and/or diurnal cycles of decomposition and N mineralization,
 thus leading to a substantially different ecosystem productivity than
 the full model. For the vertical model, the vertical transport terms are
@@ -787,6 +799,21 @@ accelerated decomposition mode are handled automatically by CLM upon
 loading from restart files (which preserve information about the mode of
 the model when restart files were written).
 
-The acceleration terms for the two decomposition cascades are shown in
-Tables 15.1 and 15.3.
+The base acceleration terms for the two decomposition cascades are shown in
+Tables 15.1 and 15.3.  In addition to the base terms, CLM5 also
+includes a geographic term to the acceleration in order to apply
+larger values to high-latitude systems, where decomposition rates are
+particularly slow and thus equilibration can take significantly longer
+than in temperate or tropical climates.  This geographic term takes
+the form of a logistic equation, where :math:`{a}_{i}` is equal to the
+product of the base acceleration term and :math:`{a}_{l}` below:
+
+.. math::
+   :label: 21.62) 
+
+    a_l = 1 + 50 / \left ( 1 + exp \left (-0.1 * (abs(latitude) -
+    60 ) \right ) \right )
+
+   
+
 

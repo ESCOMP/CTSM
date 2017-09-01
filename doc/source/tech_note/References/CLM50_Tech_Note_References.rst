@@ -896,6 +896,13 @@ Koven, C.D. et al. 2013. The effect of vertically-resolved soil
 biogeochemistry and alternate soil C and N models on C dynamics of CLM4.
 Biogeosciences Discussions 10:7201-7256.
 
+.. _Kovenetal2015:
+
+Koven, C.D. et al. 2015. Permafrost carbon-climate feedback is
+sensitive to deep soil carbon decomposability but not deep soil
+nitrogen dynamics. Proceedings of the National Academies of Science,
+112, 12, 3752-3757, doi:10.1073/pnas.1415123112
+
 .. _Kuchariketal2000:
 
 Kucharik, C.J., Foley, J.A., Delire, C., Fisher, V.A., Coe, M.T.,
