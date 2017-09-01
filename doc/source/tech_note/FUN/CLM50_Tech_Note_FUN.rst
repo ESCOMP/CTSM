@@ -1,7 +1,7 @@
 .. _rst_FUN:
 
 Fixation and Uptake of Nitrogen (FUN)
-===============================
+=======================================
 
 Introduction
 -----------------
@@ -286,7 +286,7 @@ the FUN equation above (**link equation**).
 
 
 Response of C expenditure to Nitrogen uptake cost
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The environmental cost of Nitrogen (:math:`N_{cost,tot}`) is used to determine :math:`\gamma_{FUN}`.   
  
  .. math::                         
@@ -296,7 +296,7 @@ where :math:`a_{cnflex}` and :math:`b_{cnflex}` are parameters fitted to give fl
 
 
 Response of C expenditure to plant C:N ratios
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 We first calculate a :math:`\delta_{CN}`, which is the difference between the target C:N (:math:`target_{CN}`) a model parameter, and the existing C:N ratio (:math:`CN_{plant}`) **This isn't strictly how it is worked out. Need to remember why we use c_allometry instead**.  
 
  .. math::                         
@@ -311,7 +311,6 @@ and
 We then increase :math:`\gamma_{FUN}` to  account for situations where (even if N is expensive) plant C:N ratios have increased too far from the target.  Where  :math:`\delta_{CN}` is negative, we reduce C spent on N uptake and retain more C for growth
  
  .. math::
-   :label: 7.23
 
    \gamma_{FUN}  =  
    \left\{\begin{array}{lr} 
@@ -326,7 +325,7 @@ We then restrict the degree to which C expenditure can be reduced (to prevent un
    
    
 Calculation of N uptake streams from active uptake and fixation
---------------------------------------------------------
+----------------------------------------------------------------
   
 Once the final :math:`C_{nuptake}` is known, the fluxes of C to the individual pools can be derived as 
 
