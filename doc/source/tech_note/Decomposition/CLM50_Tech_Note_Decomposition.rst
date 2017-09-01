@@ -273,19 +273,13 @@ unitless) is calculated using a relationship from Andrén and Paustian
 where :math:`{\Psi}_{j}` is the soil water potential in
 layer *j*, :math:`{\Psi}_{min}` is a lower limit for soil
 water potential control on decomposition rate (in CLM5, this was
-changed from a default value of -10 MPa in CLM4.5 and earlier to a
-default value of -2.5 MPa).
-:math:`{\Psi}_{sat,j}` (MPa) is the saturated soil water
-potential, calculated using the multivariate regression model from Cosby et al. (1984):
-
-.. math::
-   :label: 21.7) 
-
-   \Psi _{sat,\, j} =-\left(9.8e-5\right)\exp \left(\left(1.54-0.0095P_{sand,\, j} +0.0063\left(100-P_{sand,\, j} -P_{clay,\, j} \right)\right)\log \left(10\right)\right)
-
-where :math:`{P}_{sand,j}` and :math:`{P}_{clay,j}` are the
-volume percentages of sand and clay in soil layer *j*.
-
+changed from a default value of -10 MPa used in CLM4.5 and earlier to a
+default value of -2.5 MPa). :math:`{\Psi}_{max,j}` (MPa) is the soil
+moisture at which decomposition proceeds at a moisture-unlimited
+rate. The default value of :math:`{\Psi}_{max,j}` for CLM5 is updated
+from a saturated value used in CLM4.5 and earlier, to a value
+nominally at field capacity, with a value of -0.002 MPa
+      
 For frozen soils, the bulk of the rapid dropoff in decomposition with
 decreasing temperature is due to the moisture limitation, since matric
 potential is limited by temperature in the supercooled water formulation
