@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 840;
+my $ntests = 824;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 534;
+   $ntests += 522;
 }
 plan( tests=>$ntests );
 
@@ -144,7 +144,7 @@ if (@ARGV) {
     print "ERROR: unrecognized arguments: @ARGV\n";
     usage();
 }
-my $mode = "-phys clm4_0";
+my $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
@@ -265,7 +265,7 @@ foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-dry
    }
    &cleanup();
 }
-$mode = "-phys clm4_0";
+$mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 
 print "\n==================================================\n";
@@ -274,9 +274,9 @@ print "==================================================\n";
 
 # irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-irrig .true.", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
-                      "-clm_start_type startup", 
+                      "-clm_start_type startup", "-irrig .false. -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
                      ) {
    my $file = $startfile;
@@ -440,10 +440,10 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "-irrig without -crop"      =>{ options=>"-bgc cn -irrig .true. -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_5",
+    "-irrigate=T without -crop"      =>{ options=>"-bgc cn -irrig .true. -envxml_dir .",
+                                    namelst=>"irrigate=.true.",
+                                    GLC_TWO_WAY_COUPLING=>"FALSE",
+                                    conopts=>"-phys clm4_5",
                                    },
      "interp without finidat"    =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_init_interp=.true. finidat=' '",
@@ -923,11 +923,11 @@ foreach my $key ( keys(%failtest) ) {
 }
 
 print "\n==================================================\n";
-print "Test ALL resolutions with CLM4.0 and CN \n";
+print "Test ALL resolutions with CLM5.0 and SP \n";
 print "==================================================\n";
 
-# Check for ALL resolutions with CN
-$mode = "-bgc cn -phys clm4_0";
+# Check for ALL resolutions with CLM50SP
+$mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 my $reslist = `../queryDefaultNamelist.pl -res list -s`;
 my @resolutions = split( / /, $reslist );
@@ -935,13 +935,13 @@ my @regional;
 foreach my $res ( @resolutions ) {
    chomp($res);
    print "=== Test $res === \n";
-   my $options  = "-res $res -envxml_dir .";
+   my $options  = "-res $res -bgc sp -envxml_dir .";
 
-   if ( $res eq "512x1024" ) { 
-      $options .= " -sim_year 1850"; 
-   } elsif ( $res =~ /^([0-9]+x[0-9]+_[a-zA-Z]+)$/ ) {
+   # Regional single point resolutions
+   if ( $res =~ /^([0-9]+x[0-9]+_[a-zA-Z]+)$/ ) {
       push( @regional, $res );
       next;
+   # Resolutions for mksurfdata mapping
    } elsif ( $res eq "0.5x0.5"     ||
              $res eq "0.25x0.25"   ||
              $res eq "0.1x0.1"     ||
@@ -951,6 +951,18 @@ foreach my $res ( @resolutions ) {
              $res eq "0.125x0.125" ||
              $res eq "0.33x0.33"   ||
              $res eq "1km-merge-10min" ) {
+      next;
+   # Resolutions supported in clm40 but NOT clm45/clm50
+   } elsif ( $res eq "ne240np4"    ||
+             $res eq "ne60np4"     ||
+             $res eq "ne4np4"      ||
+             $res eq "2.5x3.33"    ||
+             $res eq "0.23x0.31"   ||
+             $res eq "94x192"      ||
+             $res eq "8x16"        ||
+             $res eq "32x64"       ||
+             $res eq "128x256"     ||
+             $res eq "512x1024" ) {
       next;
    }
 
@@ -979,7 +991,7 @@ print "==================================================\n";
 
 $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
-my @resolutions = ( "10x15", "ne30np4", "ne120np4", "ne16np4", "0.125x0.125", "1.9x2.5", "0.9x1.25" );
+my @resolutions = ( "4x5", "10x15", "ne30np4", "ne120np4", "ne16np4", "1.9x2.5", "0.9x1.25" );
 my @regional;
 my $nlbgcmode = "bgc";
 my $mode = "clm45-$nlbgcmode";
@@ -1064,11 +1076,11 @@ print "Test crop resolutions \n";
 print "==================================================\n";
 
 # Check for crop resolutions
-$mode = "-crop on -bgc cn -phys clm4_0";
+$mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @crop_res = ( "10x15", "1.9x2.5" );
+my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4" );
 foreach my $res ( @crop_res ) {
-   $options = "-res $res -envxml_dir .";
+   $options = "-bgc bgc -crop -res $res -envxml_dir .";
    &make_env_run();
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
@@ -1089,7 +1101,7 @@ print " Test glc_mec resolutions \n";
 print "==================================================\n";
 
 # Check for glc_mec resolutions
-$mode = "-phys clm4_5 -bgc bgc";
+$mode = "-phys clm4_5";
 system( "../configure -s $mode" );
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_rcp2.6_glacierMEC_transient",
@@ -1103,7 +1115,7 @@ my @use_cases = ( "1850-2100_rcp2.6_glacierMEC_transient",
 my $GLC_NEC         = 10;
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @usecases ) {
-      $options = "-glc_nec -glc_present $GLC_NEC -res $res -use_case $usecase -envxml_dir . ";
+      $options = "-bgc bgc -glc_nec -glc_present $GLC_NEC -res $res -use_case $usecase -envxml_dir . ";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
@@ -1120,9 +1132,9 @@ foreach my $res ( @glc_res ) {
    }
 }
 # Transient 20th Century simulations
-$mode = "-phys clm4_0";
+$mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne60np4", "ne120np4", "10x15", "1x1_tropicAtl" );
+my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4", "10x15", "1x1_tropicAtl" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 0;
 foreach my $res ( @tran_res ) {
@@ -1143,12 +1155,12 @@ foreach my $res ( @tran_res ) {
    &cleanup();
 }
 # Transient rcp scenarios
-$mode = "-phys clm4_0";
+$mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
    foreach my $res ( @tran_res ) {
-      $options = "-res $res -use_case $usecase -envxml_dir . ";
+      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );

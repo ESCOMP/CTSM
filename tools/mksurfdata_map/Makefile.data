@@ -9,7 +9,8 @@
 # make -f Makefile.data crop-numa
 #
 # NOTE: The default behavior is to parallelize data set creation using
-# the batch system by submitting jobs to the interactive queue in the
+# the batch system by submitting jobs to the batch queue (on cheyenne).
+# On yellowstone we submit to an interactive queue in the
 # background. Standard out and standard error are redirected to a text
 # file. To change this behavior, you can comment out the BATCHJOBS and
 # BACKGROUND variables and replace them with empty variables.
@@ -24,10 +25,34 @@
 # results in extra processes, but ensures that the surface datasets have the
 # correct name (rather than having 'hist' or 'rcpXXX' in their file name).
 #
-BATCHJOBS = execgy
-BACKGROUND = &> $@.stdout.txt &
 
-MKSURFDATA = $(BATCHJOBS) ./mksurfdata.pl
+# Set up special characters
+null  :=
+
+# Set a few things needed for batch handling
+PROJECT = $(shell cat $(HOME)/.cesm_proj)
+LOGOUT = $@.stdout.txt
+PWD = $(shell pwd)
+
+# Setup batch handling for either cheyenne or yellowstone
+# Determine what to use by machine hostname
+BATCHJOBS_ys = execgy
+# Send to regular  queue for 2 processors with extra memory, combine stdout/stderr output to log file, and send email on abort or exit
+BATCHJOBS_ch = qsub -A $(PROJECT) -q regular -l select=1:ncpus=2:mem=110GB -l walltime=4:00:00 -j oe -N $(LOGOUT) -m ae -- 
+HOST = $(shell hostname)
+FINDCH = $(findstring cheyenne,$(HOST))
+ifeq ($(FINDCH),$(null))
+   ifeq ($(PROJECT),$(null))
+      $(error Can NOT find PROJECT number from ~/.cesm_proj file create it and try again)
+   endif
+   BATCHJOBS = $(BATCHJOBS_ys)
+   BACKGROUND = &> $(LOGOUT) &
+else
+   BATCHJOBS = $(BATCHJOBS_ch)
+   BACKGROUND = -rundir $(PWD)
+endif
+
+MKSURFDATA = $(BATCHJOBS) $(PWD)/mksurfdata.pl
 
 STANDARD_RES = 360x720cru,48x96,0.9x1.25,1.9x2.5,10x15,ne30np4
 
@@ -70,6 +95,11 @@ CROP = \
 
 all : standard tropics crop urban landuse-timeseries
 
+DEBUG:
+	@echo "HOST       := $(HOST)"
+	@echo "PROJECT    := $(PROJECT)"
+	@echo "BATCHJOBS  := $(BATCHJOBS)"
+	@echo "BACKGROUND := $(BACKGROUND)"
 #
 # standard
 #

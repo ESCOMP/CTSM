@@ -81,7 +81,7 @@ REQUIRED OPTIONS
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
                               in degrees for latitude and longitude respectively)
                               "-res list" to list valid resolutions.
-                              (default: 1.9x2.5)
+                              (default: 0.9x1.25)
      -sim_year "year"         Year to simulate for input datasets
                               (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
@@ -1085,7 +1085,9 @@ sub setup_cmdl_irrigation {
   my $var   = "irrig";
 
   if ( $opts->{$var} eq "default" ) {
-    $nl_flags->{$var} = $defaults->get_value($var);
+    my %settings;
+    $settings{'use_crop'} = $nl_flags->{'use_crop'};
+    $nl_flags->{$var} = $defaults->get_value($var, \%settings);
   } else {
     $nl_flags->{$var} = $opts->{$var};
   }
@@ -1107,14 +1109,17 @@ sub setup_cmdl_irrigation {
                   "both irrigation and crop can NOT be on.\n");
     }
   } else {
-    if ( $nl_flags->{'irrig'} =~ /$TRUE/i && $nl_flags->{'use_crop'} =~ /$FALSE/i ) {
-      fatal_error("The -irrig=.true. option requires -crop");
-    }
-    if ( defined($nl->get_value("irrigate")) && $nl->get_value("irrigate") ne $nl_flags->{'irrig'} ) {
-      my $irrigate = $nl->get_value("irrigate");
-      fatal_error("The namelist value 'irrigate=$irrigate' contradicts the command line option '-irrig=$val'\n." .
-                  "Please set 'irrigate' in user_nl_clm AND '-irrig' in env_run.xml CLM_BLDNML_OPTS to the same value ('.true.' or '.false.')!\n");
-
+    if ( defined($nl->get_value("irrigate") ) ) {
+       my $irrigate = $nl->get_value("irrigate");
+       if ( $irrigate ne $nl_flags->{'irrig'} ) {
+         fatal_error("The namelist value 'irrigate=$irrigate' contradicts the command line option '-irrig=$val'\n." .
+                     "Please set 'irrigate' in user_nl_clm AND '-irrig' in env_run.xml CLM_BLDNML_OPTS to the same value ('.true.' or '.false.')!\n");
+       }
+       if ( ! &value_is_true($nl_flags->{'use_crop'}) ) {
+         fatal_error("The namelist value irrigate can NOT be set when crop is not on, only when the prognostic crop model is also turned on\n" .
+                     "(so either add the -crop option to CLM_BLDNML_OPTS or remove the setting for irrigate from your user_nl_clm)\n." .
+                     "Don't set the irrigate flag without crop on." );
+       }
     }
   }
 }
@@ -1875,15 +1880,11 @@ sub setup_logic_irrigate {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( $nl_flags->{'use_crop'} eq ".true." ) {
-      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate', 'val'=>$nl_flags->{'irrig'});
+    if ( value_is_true($nl->get_value('use_crop')) ) {
+       # Set irrigate namelist item to the -irrig command line option value
+       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate', 
+                   'val'=>$nl_flags->{'irrig'} );
     }
-    elsif ( defined($nl->get_value('irrigate')) ) {
-      if ($nl->get_value('irrigate') =~ /$TRUE/i ) {
-        fatal_error("irrigate TRUE needs crop TRUE but it is not\n");
-      }
-    }
-    $nl_flags->{'irrigate'} = lc($nl->get_value('irrigate'));
   }
 }
 
@@ -2322,7 +2323,7 @@ sub setup_logic_initial_conditions {
   # or just ignore the year of the initial date via the -ignore_ic_year option.
   #
   # MUST BE AFTER: setup_logic_demand   which is where flanduse_timeseries is set
-  #         AFTER: setup_logic_irrigate which is where irrigate is set
+  #         AFTER: setup_logic_irrigate which is where irrig is set
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my $finidat = $nl->get_value('finidat');
@@ -2369,7 +2370,7 @@ sub setup_logic_initial_conditions {
           $settings{$item}    = $nl_flags->{$item};
        }
     } else {
-       foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
+       foreach my $item ( "mask", "maxpft", "irrig", "glc_nec", "use_crop", "use_cn", "use_cndv", 
                           "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp"
                         ) {
           $settings{$item}    = $nl_flags->{$item};

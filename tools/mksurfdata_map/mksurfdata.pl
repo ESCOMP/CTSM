@@ -73,6 +73,7 @@ my %opts = (
 	       outnc_double=>undef,
 	       outnc_dims=>"2",     
                usrname=>"",
+               rundir=>"$cwd",
                usr_mapdir=>"../mkmapdata",
                dynpft=>undef,
                csmdata=>$CSMDATA,
@@ -130,6 +131,9 @@ OPTIONS
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory $opts{'rundir'})
      
      -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
 
@@ -426,6 +430,7 @@ EOF
         "no_surfdata"  => \$opts{'no_surfdata'},
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
+        "rundir=s"     => \$opts{'rundir'},
         "soil_col=i"   => \$opts{'soil_col'},
         "soil_fmx=f"   => \$opts{'soil_fmx'},
         "soil_cly=f"   => \$opts{'soil_cly'},
@@ -441,6 +446,8 @@ EOF
    if ( $opts{'help'} ) {
        usage();
    }
+
+   chdir( $opts{'rundir'} ) or die "** can't change to directory: $opts{'rundir'}\n";
    # If csmdata was changed from the default
    if ( $CSMDATA ne $opts{'csmdata'} ) {
       $CSMDATA = $opts{'csmdata'};
@@ -706,6 +713,9 @@ EOF
             }
             my $options = "";
             my $crpdes  = sprintf("%2.2dpfts", $numpft);
+            if ( $numpft == 16 ) {
+               $crpdes .= "_Irrig";
+            }
             if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
             }

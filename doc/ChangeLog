@@ -1,4 +1,129 @@
 ===============================================================
+Tag name:  clm4_5_16_r254
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Sep  1 00:09:25 MDT 2017
+One-line Summary: Update surface datasets, and point to new CMIP6 population density dataset
+
+Purpose of changes
+------------------
+
+Update all surface datasets to new versions that have updated soil albedo, and use latest PFTCFT files. Also
+get mksurdata_map fully working on cheyenne for batch mode. Point to latest CMIP6 population density dataset
+for historical case, this is with HYDE3.2 data. New fsurdat files for 16pft are with irrigation on. If ask for
+irrig=F and 16pft won't be able to find any files.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+ 2479 --- Irrigation is occurring in non-prognostic-crop runs
+
+Known bugs introduced in this tag (include bugzilla ID): (found ...)
+ 2506 --- ntree used before it's set in pftconMod.F90 2017-08-25
+ 2505 --- Set stream_year_first_urbantv/last for CLM4.5 just for consistency  2017-08-25
+ 2504 --- hybrid/branch cases don't allow CLM_FORCE_COLDSTART to be on  2017-08-18
+ 2503 --- Wrong units for FAREA_BURNED  2017-08-16
+ 2502 --- CWDC_HR is identically zero 2017-08-16
+ 2500 --- ne30 case fails on hobart_nag due to floating overflow
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): -irrig .true. is needed without -crop
+   fsurdat files without crop are all just with irrigation on.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): Datasets
+
+Changes to the datasets (e.g., parameter, surface or initial files): new fsurdat, landuse.timeseries, popdens
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi -   OK
+    yellowstone_gnu -   OK
+    cheyenne_intel -    OK
+    cheyenne_gnu -      OK
+    hobart_nag -        OK
+    hobart_pgi -        OK
+    hobart_intel -      OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r253
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:   CLM45/CLM50
+    - what platforms/compilers:   All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+       similar climate CLM4.5/CLM5.0 surface datasets change with latest soil albedo and small changes form raw PFTCFT files.
+       also an updated population-density dataset used for historical
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M   components/clm/tools/mksurfdata_map/mksurfdata.pl -- Add rundir option, if 16pfts add Irrig to filename
+   M   components/clm/tools/mksurfdata_map/Makefile.data -- Get working on cheyenne or yellowstone
+
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ------- Default resolution and sim_year,
+            set irrig to .true. when crop off, update fsurdat, flanduse_timeseries, stream_fldfilename_popdens
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Update soil-color and PFTCFT files
+
+   M   components/clm/bld/CLMBuildNamelist.pm --- check irrig for fsurdat files, fsurdat with 16pft is with irrig=T
+            make sure set only set irrigate when use_crop on
+   M   components/clm/bld/unit_testers/build-namelist_test.pl -- More tests w clm5_0, irrigate=T set without crop
+   M   components/clm/bld/unit_testers/NMLTest/CompFiles.pm ---- Add more documentation
+
+   M   components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm - Update finidat with
+            updated fsurdat file
+
+   M   components/clm/src/biogeophys/PhotosynthesisMod.F90 -- FPSN_W? variables are default off, and instant averaged
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r253
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Aug  4 20:23:25 MDT 2017
