@@ -57,6 +57,12 @@ module SoilHydrologyMod
   !-----------------------------------------------------------------------
   real(r8), private :: baseflow_scalar = 1.e-2_r8
 
+  ! !ALTERNATIVE NUMERICAL SOLUTIONS
+  integer, parameter :: ixExplicitEuler=1001  ! constrained Explicit Euler solution with operator splitting (original)
+  integer, parameter :: ixImplicitEuler=1002  ! implicit Euler solution with operator splitting
+  integer, parameter :: ixAnalytical=1003     ! analytical solution with operator splitting
+  integer  :: ixSolution=ixExplicitEuler
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -482,12 +488,6 @@ contains
      real(r8) :: activePond    ! ponded water above threshold = h2osfc - h2osfc_thresh
      real(r8) :: h2osfc1       ! h2osfc at the end of the time step, given qflx_h2osfc_surf only
 
-     ! !ALTERNATIVE NUMERICAL SOLUTIONS
-     integer, parameter :: ixExplicitEuler=1001  ! constrained Explicit Euler solution with operator splitting (original)
-     integer, parameter :: ixImplicitEuler=1002  ! implicit Euler solution with operator splitting
-     integer, parameter :: ixAnalytical=1003     ! analytical solution with operator splitting
-     integer  :: ixSolution=ixExplicitEuler
-
      character(len=*), parameter :: subname = 'QflxH2osfcSurf'
      !-----------------------------------------------------------------------
 
@@ -517,7 +517,7 @@ contains
            k_wet=1.0e-4_r8 * sin((rpi/180.) * topo_slope(c))
            dRate=k_wet*frac_infclust
 
-           ! poinding above threshold
+           ! ponding above threshold
            activePond = h2osfc(c) - h2osfc_thresh(c)
 
            ! switch between different numerical solutions
@@ -602,6 +602,9 @@ contains
            qflx_h2osfc_drain(c) = h2osfc(c)/dtime
            truncate_h2osfc_to_zero(c) = .true.
         else
+
+
+
            qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),h2osfc(c)/dtime)
            if(h2osfcflag==0) then
               ! ensure no h2osfc
