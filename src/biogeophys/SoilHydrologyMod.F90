@@ -478,6 +478,15 @@ contains
      real(r8) :: dtime         ! land model time step (sec)
      real(r8) :: frac_infclust ! fraction of submerged area that is connected
      real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
+     real(r8) :: dRate         ! effective linear reservoir coefficient for h2osfc (account for fraction of submerged area that is connected)
+     real(r8) :: activePond    ! ponded water above threshold = h2osfc - h2osfc_thresh
+     real(r8) :: h2osfc1       ! h2osfc at the end of the time step, given qflx_h2osfc_surf only
+
+     ! !ALTERNATIVE NUMERICAL SOLUTIONS
+     integer, parameter :: ixExplicitEuler=1001  ! constrained Explicit Euler solution with operator splitting (original)
+     integer, parameter :: ixImplicitEuler=1002  ! implicit Euler solution with operator splitting
+     integer, parameter :: ixAnalytical=1003     ! analytical solution with operator splitting
+     integer  :: ixSolution=ixExplicitEuler
 
      character(len=*), parameter :: subname = 'QflxH2osfcSurf'
      !-----------------------------------------------------------------------
@@ -503,11 +512,36 @@ contains
 
         ! limit runoff to value of storage above S(pc)
         if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
+
            ! spatially variable k_wet
            k_wet=1.0e-4_r8 * sin((rpi/180.) * topo_slope(c))
-           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
+           dRate=k_wet*frac_infclust
 
-           qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
+           ! poinding above threshold
+           activePond = h2osfc(c) - h2osfc_thresh(c)
+
+           ! switch between different numerical solutions
+           select case(ixSolution)
+
+              ! constrained Explicit Euler solution with operator splitting (original)  
+              case(ixExplicitEuler)
+                 qflx_h2osfc_surf(c)=min(dRate*activePond,(h2osfc(c) - h2osfc_thresh(c))/dtime)
+
+              ! implicit Euler solution with operator splitting
+              case(ixImplicitEuler)
+                 qflx_h2osfc_surf(c) = dRate*activePond/(1._r8 + dRate*dtime)
+
+              ! analytical solution with operator splitting
+              case(ixAnalytical)
+                 h2osfc1 = activePond*exp(-dRate*dtime) + h2osfc_thresh(c)
+                 qflx_h2osfc_surf(c) = (h2osfc1 - h2osfc(c))/dtime
+              
+              ! check case identfied
+              case default
+                 call endrun(subname // ':: the numerical solution must be specified!')
+
+           end select ! (switch between different numerical solutions)
+
         else
            qflx_h2osfc_surf(c)= 0._r8
         endif
