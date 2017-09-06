@@ -249,62 +249,62 @@ storage pools (where storage is indicated with *\_stor*) for the various
 tissue types are given as:
 
 .. math::
-   :label: 19.22 
+   :label: 19.14 
 
    CF_{alloc,leaf} \_ =CF_{alloc,leaf\_ tot} f_{cur}
 
 .. math::
-   :label: 19.23 
+   :label: 19.15 
 
    CF_{alloc,leaf\_ stor} \_ =CF_{alloc,leaf\_ tot} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.24 
+   :label: 19.16 
 
    CF_{alloc,froot} \_ =CF_{alloc,leaf\_ tot} a_{1} f_{cur}
 
 .. math::
-   :label: 19.25 
+   :label: 19.17 
 
    CF_{alloc,froot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{1} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.26
+   :label: 19.18
 
    CF_{alloc,livestem} \_ =CF_{alloc,leaf\_ tot} a_{3} a_{4} f_{cur}
 
 .. math::
-   :label: 19.27
+   :label: 19.19
 
    CF_{alloc,livestem\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{3} a_{4} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.28
+   :label: 19.20
 
    CF_{alloc,deadstem} \_ =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)f_{cur}
 
 .. math::
-   :label: 19.29
+   :label: 19.21
 
    CF_{alloc,deadstem\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.30
+   :label: 19.22
 
    CF_{alloc,livecroot} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} f_{cur}
 
 .. math::
-   :label: 19.31
+   :label: 19.23
 
    CF_{alloc,livecroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.32
+   :label: 19.24
 
    CF_{alloc,deadcroot} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)f_{cur}
 
 .. math::
-   :label: 19.33
+   :label: 19.25
 
    CF_{alloc,deadcroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right).
 
@@ -313,160 +313,88 @@ tissue types are given as:
 Nitrogen allocation
 -----------------------------------------
 
-The total flux of nitrogen to be allocated is given by the FUN model (Chapter :numref:`rst_FUN`).  This gives a total N to be allocated within a given timestep, :math:`N_{supply}`.  The total N allocated for a given organ :math:`o` is the minimum between the supply and the demand:
+The total flux of nitrogen to be allocated is given by the FUN model (Chapter :numref:`rst_FUN`).  This gives a total N to be allocated within a given timestep, :math:`N_{supply}`.  The total N allocated for a given tissue :math:`i` is the minimum between the supply and the demand:
 
 .. math::
+   :label: 19.26
 
-   NF_{alloc,o} = min \left( NF_{demand, o}, NF_{supply, o} \right)
+   NF_{alloc,i} = min \left( NF_{demand, i}, NF_{supply, i} \right)
 
 The demand for each tissue, calculated for the tissue to remain on stoichiometry during growth, is:
    
 .. math::
-   :label: 19.34
+   :label: 19.27
 
    NF_{demand,leaf} \_ =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } f_{cur}
 
 .. math::
-   :label: 19.35
+   :label: 19.28
 
    NF_{demand,leaf\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.36
+   :label: 19.29
 
    NF_{demand,froot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } f_{cur}
 
 .. math::
-   :label: 19.37
+   :label: 19.30
 
    NF_{demand,froot\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.38
+   :label: 19.31
 
    NF_{demand,livestem} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } f_{cur}
 
 .. math::
-   :label: 19.39
+   :label: 19.32
 
    NF_{demand,livestem\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.40
+   :label: 19.33
 
    NF_{demand,deadstem} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
 
 .. math::
-   :label: 19.41
+   :label: 19.34
 
    NF_{demand,deadstem\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.42
+   :label: 19.35
 
    NF_{demand,livecroot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } f_{cur}
 
 .. math::
-   :label: 19.43
+   :label: 19.36
 
    NF_{demand,livecroot\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.44
+   :label: 19.37
 
    NF_{demand,deadcroot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
 
 .. math::
-   :label: 19.45
+   :label: 19.38
 
    NF_{demand,deadcroot\_ stor} \_ =\frac{CF_{alloc,leaf} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right).
 
-Autotrophic Respiration
-----------------------------
-
-The model treats maintenance and growth respiration fluxes separately,
-even though it is difficult to measure them as separate fluxes (Lavigne
-and Ryan, 1997; Sprugel et al., 1995). Maintenance respiration is
-defined as the carbon cost to support the metabolic activity of existing
-live tissue, while growth respiration is defined as the additional
-carbon cost for the synthesis of new growth.
-
-13.7.1 Maintenance Respiration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Under the assumption that tissue nitrogen content is a suitable index of
-cellular metabolic rate, maintenance respiration costs for live tissues
-(leaf, live stem, live coarse root, and fine root) are calculated as
-functions tissue nitrogen content and the relevant temperature,
-following the empirical relationship reported by Ryan (1991):
+After each pool's demand is calculated, the total plant N demand is then the sum of each individual pool :math: `i` corresponding to each tissue:
 
 .. math::
-   :label: 19.46
+   :label: 19.39
 
-   CF_{mr\_ leaf} \_ =NS_{leaf} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
+   NF_{demand,tot} = \sum _{i=tissues} NF_{demand,i}
 
-.. math::
-   :label: 19.47
-
-   CF_{mr\_ livestem} \_ =NS_{livestem} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
+and the total supply for each tissue :math: `i` is the product of the fractional demand and the total available N, calculated as the term :math: `N_{uptake}` equal to the sum of the eight N uptake streams described in the FUN model (Chapter :numref:`rst_FUN`).
 
 .. math::
-   :label: 19.48
+   :label: 19.40
 
-   CF_{mr\_ livecroot} \_ =NS_{livecroot} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
+   NF_{alloc,i} = N_{uptake} NF_{demand,i} / NF_{demand,tot}
 
-.. math::
-   :label: 19.49
 
-   CF_{mr\_ froot} \_ =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
-
-where :math:`MR_{base}` (= 2.525e\ :sup:`-6` gC gN\ :sup:`-1` s\ :sup:`-1`) is the base rate of maintenance
-respiration per unit nitrogen content, :math:`MR_{q10}` (= 2.0) is
-the temperature sensitivity for maintenance respiration,
-:math:`T_{2m}` (:sup:`o`\ C) is the air temperature at 2m
-height, :math:`Ts_{j}`* (:sup:`o`\ C) is the soil
-temperature at level *j*, and :math:`rootfr_{j}` is the fraction
-of fine roots distributed in soil level *j*.
-
-Note that, for woody vegetation, maintenance respiration costs are not
-calculated for the dead stem and dead coarse root components. These
-components are assumed to consist of dead xylem cells, with no metabolic
-function. By separating the small live component of the woody tissue
-(ray parenchyma, phloem, and sheathing lateral meristem cells) from the
-larger fraction of dead woody tissue, it is reasonable to assume a
-common base maintenance respiration rate for all live tissue types.
-
-The total maintenance respiration cost is then given as:
-
-.. math::
-   :label: 19.50
-
-   CF_{mr} =CF_{mr\_ leaf} +CF_{mr\_ froot} +CF_{mr\_ livestem} +CF_{mr\_ livecroot} .
-
-13.7.2 Growth Respiration
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Growth respiration is calculated as a factor of 0.3 times the total
-carbon in new growth on a given timestep, based on construction costs
-for a range of woody and non-woody tissues (Larcher, 1995). For new
-carbon and nitrogen allocation that enters storage pools for subsequent
-display, it is not clear what fraction of the associated growth
-respiration should occur at the time of initial allocation, and what
-fraction should occur later, at the time of display of new growth from
-storage. Eddy covariance estimates of carbon fluxes in forest ecosystems
-suggest that the growth respiration associated with transfer of
-allocated carbon and nitrogen from storage into displayed tissue is not
-significant (Churkina et al., 2003), and so it is assumed in CLM that
-all of the growth respiration cost is incurred at the time of initial
-allocation, regardless of the fraction of allocation that is displayed
-immediately (i.e. regardless of the value of :math:`f_{cur}`,
-section 13.5). This behavior is parameterized in such a way that if
-future research suggests that some fraction of the growth respiration
-cost should be incurred at the time of display from storage, a simple
-parameter modification will effect the change. [1]_
-
-.. [1]
-   Parameter :math:`\text{grpnow}`  in routines CNGResp and  CNAllocation, currently set to 1.0, could be changed to a smaller
-   value to transfer some portion (1 - :math:`\text{grpnow}` ) of the growth respiration forward in time to occur at the time of growth
-   display from storage.
 
