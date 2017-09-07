@@ -485,9 +485,6 @@
         <machine compiler="intel" testtype="aux_clm" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm" testmods="clm/default">yellowstone</machine>
       </test>
-      <test name="SMS_Lm25">
-        <machine compiler="gnu" testtype="aux_clm" testmods="clm/cropMonthOutput">yellowstone</machine>
-      </test>
     </grid>
     <grid name="f19_g17_gl4">
       <test name="LII_D_Ld3">
