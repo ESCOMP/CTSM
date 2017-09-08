@@ -58,6 +58,13 @@ module SoilHydrologyMod
   private :: QflxH2osfcSurf      ! Compute qflx_h2osfc_surf
   private :: QflxH2osfcDrain     ! Compute qflx_h2osfc_drain
 
+  type, extends(flux_type) :: drainPond_type
+     real(r8) :: smoothScale
+     real(r8) :: drainMax
+   contains
+     procedure :: getFlux => drainPondFlux
+  end type drainPond_type
+
   !-----------------------------------------------------------------------
   real(r8), private :: baseflow_scalar = 1.e-2_r8
 
@@ -585,7 +592,7 @@ contains
      logical           , intent(inout) :: truncate_h2osfc_to_zero( bounds%begc: ) ! whether h2osfc should be truncated to 0 to correct for roundoff errors, in order to maintain bit-for-bit the same answers as the old code
      !
      ! !LOCAL VARIABLES:
-     procedure(fluxTemplate), pointer :: funcName ! function name
+     type(drainPond_type) :: drainPond_inst
      integer             :: fc, c               
      real(r8)            :: dtime                 ! land model time step (sec)
      real(r8)            :: h2osfc1               ! h2osfc at the end of the time step, given qflx_h2osfc_drain only
@@ -628,10 +635,16 @@ contains
 
               ! implicit Euler solution with operator splitting
            case(ixImplicitEuler)
-              funcName=>drainPond
-              call implicitEuler(funcName, dtime, h2osfc(c), h2osfc1, err, message)
+              ! The next two lines look like extra overhead, but in a real implementation
+              ! (1) smoothScale could probably be local to the drainPond type; (2)
+              ! drainMax would probably also be local to the drainPond type, and if not,
+              ! it would be an array that is just set once outside a loop, rather than
+              ! being set for each loop iteration.
+              drainPond_inst%smoothScale = smoothScale
+              drainPond_inst%drainMax = drainMax
+              call implicitEuler(drainPond_inst, dtime, h2osfc(c), h2osfc1, err, message)
               if(err/=0) call endrun(subname // ':: '//trim(message))
-              call drainPond(h2osfc1, qflx_h2osfc_drain(c))
+              call drainPond_inst%getFlux(h2osfc1, qflx_h2osfc_drain(c))
 
               ! analytical solution with operator splitting
            case(ixAnalytical)
@@ -649,23 +662,21 @@ contains
         end if
      end do
      
-   contains
-
-     ! model-specific flux routine
-     subroutine drainPond(storage, flux, dfdx)
-       ! dummy variables
-       real(r8), intent(in)           :: storage    ! storage
-       real(r8), intent(out)          :: flux       ! drainage flux
-       real(r8), intent(out),optional :: dfdx       ! derivative
-       ! local variables
-       real(r8)                       :: arg        ! temporary argument
-       ! procedure starts here
-       arg  = exp(-storage/smoothScale)
-       flux = -drainMax*(1._r8 - arg)
-       if(present(dfdx)) dfdx = -drainMax*arg/smoothScale
-     end subroutine drainPond
-
    end subroutine QflxH2osfcDrain
+
+   subroutine drainPondFlux(this, x, f, dfdx)
+     ! dummy variables
+     class(drainPond_type), intent(in) :: this
+     real(r8), intent(in)           :: x    ! storage
+     real(r8), intent(out)          :: f    ! drainage flux
+     real(r8), intent(out),optional :: dfdx ! derivative
+     ! local variables
+     real(r8)                       :: arg        ! temporary argument
+     ! procedure starts here
+     arg  = exp(-x/this%smoothScale)
+     f    = -this%drainMax*(1._r8 - arg)
+     if(present(dfdx)) dfdx = -this%drainMax*arg/this%smoothScale
+   end subroutine drainPondFlux
 
 
    !-----------------------------------------------------------------------

@@ -5,24 +5,21 @@ module computeFluxMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   implicit none
 
+  type, abstract :: flux_type
+   contains
+     procedure(getFlux_interface), deferred :: getFlux
+  end type flux_type
+
   abstract interface
-     subroutine fluxTemplate(x,f,dfdx)
+     subroutine getFlux_interface(this,x,f,dfdx)
        use shr_kind_mod      , only : r8 => shr_kind_r8
+       import :: flux_type
        implicit none
+       class(flux_type), intent(in) :: this
        real(r8), intent(in)            :: x    ! state
        real(r8), intent(out)           :: f    ! f(x)
        real(r8), intent(out), optional :: dfdx ! derivative
-     end subroutine fluxTemplate
+     end subroutine getFlux_interface
   end interface
-
-contains
-
-  subroutine getFlux(func, x, f, dfdx)
-    procedure(fluxTemplate), pointer :: func
-    real(r8), intent(in)           :: x    ! state
-    real(r8), intent(out)          :: f    ! f(x)
-    real(r8), intent(out),optional :: dfdx ! derivative
-    call func(x,f,dfdx)
-  end subroutine getFlux
 
 end module computeFluxMod

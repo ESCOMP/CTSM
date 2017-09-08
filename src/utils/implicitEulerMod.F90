@@ -1,14 +1,14 @@
 module implicitEulerMod
 
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use computeFluxMod
+  use computeFluxMod    , only : flux_type
   implicit none
 
 contains
 
-  subroutine implicitEuler(funcName, dt, xInit, xNew, err, message)
+  subroutine implicitEuler(flux_inst, dt, xInit, xNew, err, message)
     ! dummy variables
-    procedure(fluxTemplate), pointer :: funcName
+    class(flux_type), intent(in) :: flux_inst
     real(r8), intent(in)     :: dt            ! time step
     real(r8), intent(in)     :: xInit         ! initial state
     real(r8), intent(out)    :: xNew          ! updated state
@@ -31,7 +31,7 @@ contains
     ! iterate
     do iter=1,maxiter
        ! get the flux and derivative
-       call getFlux(funcName, xNew, flux, dfdx)
+       call flux_inst%getFlux(xNew, flux, dfdx)
        ! get the residual and the update
        xRes = xNew - (xInit + dt*flux)
        delX = -xRes/(1._r8 - dt*dfdx)
