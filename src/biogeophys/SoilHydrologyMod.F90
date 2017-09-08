@@ -593,7 +593,7 @@ contains
      real(r8)            :: const                 ! constant in analytical integral
      real(r8)            :: uFunc                 ! analytical integral
      real(r8), parameter :: smoothScale=0.05_r8   ! smoothing scale
-     integer(i4b)        :: err                   ! error code
+     integer        :: err                   ! error code
      character(len=128)  :: message               ! error message
 
      character(len=*), parameter :: subname = 'QflxH2osfcDrain'
@@ -623,22 +623,23 @@ contains
            select case(ixSolution)
 
               ! constrained Explicit Euler solution with operator splitting (original)
-              case(ixExplicitEuler)
-                 qflx_h2osfc_drain(c)=min(drainMax,h2osfc(c)/dtime)
+           case(ixExplicitEuler)
+              qflx_h2osfc_drain(c)=min(drainMax,h2osfc(c)/dtime)
 
               ! implicit Euler solution with operator splitting
-              case(ixImplicitEuler)
-                 funcName=>drainPond
-                 call implicitEuler(funcName, dtime, h2osfc(c), h2osfc1, err, message)
-                 if(err/=0) call endrun(subname // ':: '//trim(message))
-                 call drainPond(h2osfc1, qflx_h2osfc_drain(c))
+           case(ixImplicitEuler)
+              funcName=>drainPond
+              call implicitEuler(funcName, dtime, h2osfc(c), h2osfc1, err, message)
+              if(err/=0) call endrun(subname // ':: '//trim(message))
+              call drainPond(h2osfc1, qflx_h2osfc_drain(c))
 
               ! analytical solution with operator splitting
-              case(ixAnalytical)
-                 const   = 1._r8 - 1._r8/(1._r8 - exp(-h2osfc(c)/smoothScale))
-                 uFunc   = -1._r8/(const*exp(drainMax*dtime/smoothScale) - 1._r8)
-                 h2osfc1 = -alog(1._r8 - uFunc)*smoothScale
-                 qflx_h2osfc_drain(c)= (h2osfc1 - h2osfc(c))/dtime
+           case(ixAnalytical)
+              const   = 1._r8 - 1._r8/(1._r8 - exp(-h2osfc(c)/smoothScale))
+              uFunc   = -1._r8/(const*exp(drainMax*dtime/smoothScale) - 1._r8)
+              h2osfc1 = -log(1._r8 - uFunc)*smoothScale
+              qflx_h2osfc_drain(c)= (h2osfc1 - h2osfc(c))/dtime
+           end select
 
            if(h2osfcflag==0) then
               ! ensure no h2osfc
@@ -647,22 +648,22 @@ contains
            truncate_h2osfc_to_zero(c) = .false.
         end if
      end do
-
+     
    contains
 
-      ! model-specific flux routine
-      subroutine drainPond(storage, flux, dfdx)
-      ! dummy variables
-      real(r8), intent(in)           :: storage    ! storage
-      real(r8), intent(out)          :: flux       ! drainage flux
-      real(r8), intent(out),optional :: dfdx       ! derivative
-      ! local variables
-      real(r8)                       :: arg        ! temporary argument
-      ! procedure starts here
-      arg  = exp(-storage/smoothScale)
-      flux = -inputRate*(1._dp - arg)
-      if(present(dfdx)) dfdx = -inputRate*arg/smoothScale
-      end subroutine drainPond
+     ! model-specific flux routine
+     subroutine drainPond(storage, flux, dfdx)
+       ! dummy variables
+       real(r8), intent(in)           :: storage    ! storage
+       real(r8), intent(out)          :: flux       ! drainage flux
+       real(r8), intent(out),optional :: dfdx       ! derivative
+       ! local variables
+       real(r8)                       :: arg        ! temporary argument
+       ! procedure starts here
+       arg  = exp(-storage/smoothScale)
+       flux = -drainMax*(1._r8 - arg)
+       if(present(dfdx)) dfdx = -drainMax*arg/smoothScale
+     end subroutine drainPond
 
    end subroutine QflxH2osfcDrain
 
