@@ -77,7 +77,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Schematic of land cover change` Schematic of land cover change impacts on CLM carbon pools and fluxes. 
 
-- :numref:`Figure Schematic of translation of annual UNH land units` Schematic of translation of annual UNH land units to CLM4 plant functional types. 
+- :numref:`Figure Schematic of translation of annual LUH2 land units` Schematic of translation of annual UNH land units to CLM4 plant functional types. 
 
 - :numref:`Figure Atmospheric Delta C14` Atmospheric :math:`\mathrm{\Delta}` 14C used to drive 14C model over the historical period. 
 
@@ -149,9 +149,9 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Crop plant functional types` Crop plant functional types (pfts) in CLM4.5CNcrop and their parameters relating to phenology and morphology. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`. 
 
-- :numref:`Table Crop pfts` Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
+- :numref:`Table Crop plant functional types` Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
 
-- :numref:`Table Pre- and post-grain fill CN ratios` Pre- and post-grain fill C:N ratios for crop leaf, stem, fine root, and reproductive pools. 
+- :numref:`Table Crop allocation parameters` Crop allocation parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
 - :numref:`Table Plant functional type (PFT) biogeography rules` Plant functional type (PFT) biogeography rules with respect to climate. 
 
@@ -533,7 +533,7 @@ Nitrogen for Assimilation (LUNA, :ref:`(Xu et al., 2012<Xuetal2012>` and :ref:`A
 photosynthetic capacity based on optimization of the use of leaf nitrogen under different environmental conditions such that 
 light capture, carboxylation, and respiration are co-limiting.  Allocation changes ... Fixation ???
 
-Representation of human management of the land (agriculture, wood harvest) is augmented in several ways. The CLM4.5 crop model is extended to operate globally through the addition of rice and sugarcane as well as tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerDirmeyer2015>` and :ref:`Levis et al., 2016<Levisetal2016>`.  These crop types are added to the existing temperate corn, temperature soybean, spring wheat, and cotton crop types.  
+Representation of human management of the land (agriculture, wood harvest) is augmented in several ways. The CLM4.5 crop model is extended to operate globally through the addition of rice and sugarcane as well as tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerandDirmeyer2015>` and :ref:`Levis et al., 2016<Levisetal2016>`.  These crop types are added to the existing temperate corn, temperature soybean, spring wheat, and cotton crop types.  
 Fertilization rates and irrigation equipped area updated based on crop type and geographic region through an input dataset.  The irrigation trigger is updated.  Additional minor changes include crop phenological triggers that 
 vary by latitude for selected crop types, grain C and N is now removed at harvest to a 1-year product pool with
 the carbon for the next season's crop seed removed from the grain carbon at harvest.  Through the introduction of 
