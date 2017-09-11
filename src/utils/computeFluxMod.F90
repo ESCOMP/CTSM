@@ -6,6 +6,11 @@ module computeFluxMod
   implicit none
 
   type, abstract :: computeFlux_type
+     ! flux_name is just used to generate more helpful error messages. This needs to be
+     ! set in initialization. (If that's awkward to accomplish, then we could have a
+     ! deferred procedure getFluxName that simply returns a character string giving the
+     ! name of this flux.)
+     character(len=128) :: flux_name
    contains
      procedure(getFlux_interface), deferred :: getFlux
   end type computeFlux_type

@@ -2,28 +2,25 @@ module implicitEulerMod
 
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use computeFluxMod    , only : computeFlux_type
+  use abortutils        , only : endrun
   implicit none
 
 contains
 
-  subroutine implicitEuler(computeFlux_inst, dt, xInit, xNew, err, message)
+  subroutine implicitEuler(computeFlux_inst, dt, xInit, flux)
     ! dummy variables
     class(computeFlux_type), intent(in) :: computeFlux_inst
     real(r8), intent(in)     :: dt            ! time step
     real(r8), intent(in)     :: xInit         ! initial state
-    real(r8), intent(out)    :: xNew          ! updated state
-    integer,intent(out) :: err           ! error code
-    character(*),intent(out) :: message       ! error message
+    real(r8), intent(out)    :: flux          ! flux
     ! local variables
     integer             :: iter          ! iteration index
     integer,parameter   :: maxiter=20    ! maximum number of iterations
     real(r8), parameter      :: xTol=1.e-8_r8 ! convergence tolerance
-    real(r8)                 :: flux          ! flux
+    real(r8)                 :: xNew          ! updated state
     real(r8)                 :: dfdx          ! derivative
     real(r8)                 :: xRes          ! residual error
     real(r8)                 :: delX          ! state update
-    ! initialiuze routine
-    err=0; message='implicitEuler/'
 
     ! initialize
     xNew = xInit
@@ -40,10 +37,12 @@ contains
        if(abs(delX) < xTol) exit
        ! check for non-convergence
        if(iter==maxiter)then
-          message=trim(message)//'the implicit Euler solution did not converge!'
-          err=20; return
+          call endrun(computeFlux_inst%flux_name // ': the implicit Euler solution did not converge!')
        endif
     end do
+
+    ! Get final flux
+    call computeFlux_inst%getFlux(xNew, flux)
   end subroutine implicitEuler
 
 end module implicitEulerMod

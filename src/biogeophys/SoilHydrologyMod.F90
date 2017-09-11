@@ -600,8 +600,6 @@ contains
      real(r8)            :: const                 ! constant in analytical integral
      real(r8)            :: uFunc                 ! analytical integral
      real(r8), parameter :: smoothScale=0.05_r8   ! smoothing scale
-     integer        :: err                   ! error code
-     character(len=128)  :: message               ! error message
 
      character(len=*), parameter :: subname = 'QflxH2osfcDrain'
      !-----------------------------------------------------------------------
@@ -642,9 +640,7 @@ contains
               ! being set for each loop iteration.
               drainPond_inst%smoothScale = smoothScale
               drainPond_inst%drainMax = drainMax
-              call implicitEuler(drainPond_inst, dtime, h2osfc(c), h2osfc1, err, message)
-              if(err/=0) call endrun(subname // ':: '//trim(message))
-              call drainPond_inst%getFlux(h2osfc1, qflx_h2osfc_drain(c))
+              call implicitEuler(drainPond_inst, dtime, h2osfc(c), qflx_h2osfc_drain(c))
 
               ! analytical solution with operator splitting
            case(ixAnalytical)
