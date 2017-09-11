@@ -6,9 +6,9 @@ module implicitEulerMod
 
 contains
 
-  subroutine implicitEuler(flux_inst, dt, xInit, xNew, err, message)
+  subroutine implicitEuler(computeFlux_inst, dt, xInit, xNew, err, message)
     ! dummy variables
-    class(computeFlux_type), intent(in) :: flux_inst
+    class(computeFlux_type), intent(in) :: computeFlux_inst
     real(r8), intent(in)     :: dt            ! time step
     real(r8), intent(in)     :: xInit         ! initial state
     real(r8), intent(out)    :: xNew          ! updated state
@@ -31,7 +31,7 @@ contains
     ! iterate
     do iter=1,maxiter
        ! get the flux and derivative
-       call flux_inst%getFlux(xNew, flux, dfdx)
+       call computeFlux_inst%getFlux(xNew, flux, dfdx)
        ! get the residual and the update
        xRes = xNew - (xInit + dt*flux)
        delX = -xRes/(1._r8 - dt*dfdx)
