@@ -754,7 +754,7 @@ cm\ :sup:`2`/yr. For non-permafrost soils, the default diffusivity
 is 1 cm\ :sup:`2`/yr.
 
 Model Equilibration and its Acceleration
----------------------------------------
+-----------------------------------------
 For transient experiments, it is usually assumed that the carbon cycle
 is starting from a point of relatively close equilibrium, i.e. that
 productivity is balanced by ecosystem carbon losses through
