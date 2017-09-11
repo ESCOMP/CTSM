@@ -1,14 +1,14 @@
 module implicitEulerMod
 
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use computeFluxMod    , only : flux_type
+  use computeFluxMod    , only : computeFlux_type
   implicit none
 
 contains
 
   subroutine implicitEuler(flux_inst, dt, xInit, xNew, err, message)
     ! dummy variables
-    class(flux_type), intent(in) :: flux_inst
+    class(computeFlux_type), intent(in) :: flux_inst
     real(r8), intent(in)     :: dt            ! time step
     real(r8), intent(in)     :: xInit         ! initial state
     real(r8), intent(out)    :: xNew          ! updated state

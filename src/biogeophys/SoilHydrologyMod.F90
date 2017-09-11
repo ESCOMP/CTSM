@@ -29,8 +29,8 @@ module SoilHydrologyMod
   use ColumnType        , only : col                
   use PatchType         , only : patch                
 
-  use computeFluxMod                            ! template for the flux module
-  use implicitEulerMod  , only : implicitEuler  ! implicit Euler solver for a single state
+  use computeFluxMod    , only : computeFlux_type ! template for the flux module
+  use implicitEulerMod  , only : implicitEuler    ! implicit Euler solver for a single state
 
   !
   ! !PUBLIC TYPES:
@@ -58,7 +58,7 @@ module SoilHydrologyMod
   private :: QflxH2osfcSurf      ! Compute qflx_h2osfc_surf
   private :: QflxH2osfcDrain     ! Compute qflx_h2osfc_drain
 
-  type, extends(flux_type) :: drainPond_type
+  type, extends(computeFlux_type) :: drainPond_type
      real(r8) :: smoothScale
      real(r8) :: drainMax
    contains
