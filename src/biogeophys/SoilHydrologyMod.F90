@@ -65,9 +65,9 @@ module SoilHydrologyMod
      real(r8) :: smoothScale = 0.05_r8  ! smoothing scale
    contains
      procedure :: getFlux => drainPondFlux  ! required method to get the current flux estimate
-     procedure :: drainPondExplicitEuler    ! compute the drainPond flux using an explicit euler method
-     procedure :: drainPondImplicitEuler    ! compute the drainPond flux using an implicit euler method
-     procedure :: drainPondAnalytical       ! compute the drainPond flux using an analytical solution
+     procedure :: computeFluxExplicitEuler => drainPondExplicitEuler    ! compute the drainPond flux using an explicit euler method
+     procedure :: computeFluxImplicitEuler => drainPondImplicitEuler    ! compute the drainPond flux using an implicit euler method
+     procedure :: computeFluxAnalytical    => drainPondAnalytical       ! compute the drainPond flux using an analytical solution
   end type drainPond_type
 
   !-----------------------------------------------------------------------
@@ -624,18 +624,7 @@ contains
            ! define maximum drainage
            ! NOTE: check fraction
            drainPond_inst%drainMax = frac_h2osfc(c)*qinmax(c)
-
-           ! switch between different numerical solutions
-           select case(ixSolution)
-
-           case(ixExplicitEuler)
-              call drainPond_inst%drainPondExplicitEuler(h2osfc(c), qflx_h2osfc_drain(c))
-           case(ixImplicitEuler)
-              call drainPond_inst%drainPondImplicitEuler(h2osfc(c), qflx_h2osfc_drain(c))
-              ! analytical solution with operator splitting
-           case(ixAnalytical)
-              call drainPond_inst%drainPondAnalytical(h2osfc(c), qflx_h2osfc_drain(c))
-           end select
+           call drainPond_inst%solveForFlux(h2osfc(c), qflx_h2osfc_drain(c))
 
            if(h2osfcflag==0) then
               ! ensure no h2osfc
@@ -661,40 +650,40 @@ contains
      if(present(dfdx)) dfdx = -this%drainMax*arg/this%smoothScale
    end subroutine drainPondFlux
 
-   subroutine drainPondExplicitEuler(this, h2osfc, qflx_h2osfc_drain)
+   subroutine drainPondExplicitEuler(this, x, f)
      ! Compute the drainPond flux using an explicit euler method
      class(drainPond_type), intent(in) :: this
-     real(r8) , intent(in)  :: h2osfc            ! drainPond storage
-     real(r8) , intent(out) :: qflx_h2osfc_drain ! drainage flux
+     real(r8) , intent(in)  :: x            ! drainPond storage (h2osfc)
+     real(r8) , intent(out) :: f ! drainage flux (qflx_h2osfc_drain)
 
      ! constrained Explicit Euler solution with operator splitting (original)
-     qflx_h2osfc_drain = min(this%drainMax, h2osfc/this%dtime)
+     f = min(this%drainMax, x/this%dtime)
    end subroutine drainPondExplicitEuler
 
-   subroutine drainPondImplicitEuler(this, h2osfc, qflx_h2osfc_drain)
+   subroutine drainPondImplicitEuler(this, x, f)
      ! Compute the drainPond flux using an implicit euler method
      class(drainPond_type), intent(in) :: this
-     real(r8) , intent(in)  :: h2osfc            ! drainPond storage
-     real(r8) , intent(out) :: qflx_h2osfc_drain ! drainage flux
+     real(r8) , intent(in)  :: x            ! drainPond storage (h2osfc)
+     real(r8) , intent(out) :: f ! drainage flux (qflx_h2osfc_drain)
 
      ! implicit Euler solution with operator splitting
-     call implicitEuler(this, this%dtime, h2osfc, qflx_h2osfc_drain)
+     call implicitEuler(this, this%dtime, x, f)
    end subroutine drainPondImplicitEuler
 
-   subroutine drainPondAnalytical(this, h2osfc, qflx_h2osfc_drain)
+   subroutine drainPondAnalytical(this, x, f)
      ! Compute the drainPond flux using an analytical solution
      class(drainPond_type), intent(in) :: this
-     real(r8) , intent(in)  :: h2osfc            ! drainPond storage
-     real(r8) , intent(out) :: qflx_h2osfc_drain ! drainage flux
+     real(r8) , intent(in)  :: x            ! drainPond storage (h2osfc)
+     real(r8) , intent(out) :: f ! drainage flux (qflx_h2osfc_drain)
 
      real(r8) :: h2osfc1 ! h2osfc at the end of the time step, given qflx_h2osfc_drain only
      real(r8) :: const   ! constant in analytical integral
      real(r8) :: uFunc   ! analytical integral
 
-     const   = 1._r8 - 1._r8/(1._r8 - exp(-h2osfc/this%smoothScale))
+     const   = 1._r8 - 1._r8/(1._r8 - exp(-x/this%smoothScale))
      uFunc   = -1._r8/(const*exp(this%drainMax*this%dtime/this%smoothScale) - 1._r8)
      h2osfc1 = -log(1._r8 - uFunc)*this%smoothScale
-     qflx_h2osfc_drain= (h2osfc1 - h2osfc)/this%dtime
+     f = (h2osfc1 - x)/this%dtime
    end subroutine drainPondAnalytical
 
      !-----------------------------------------------------------------------
