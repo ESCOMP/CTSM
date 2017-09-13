@@ -1,6 +1,99 @@
 ===============================================================
 Tag name: ctsm_n08_clm4_5_16_r249
 Originator(s): sacks
+Date: Sep 7, 2017
+One-line Summary: Use full qflx_surf in BGC code
+
+Purpose of changes
+------------------
+
+We had been using a separate variable to avoid changing answers. But
+Dave Lawrence gave his approval to change this.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu - ok
+    cheyenne_intel - ok
+    hobart_nag - ok
+    hobart_pgi - ok
+    hobart_intel - ok
+
+    ok means tests pass, answers change as expected
+
+CLM tag used for the baseline comparisons: ctsm_n08_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All Bgc configurations
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      not investigated carefully; larger than roundoff, but expected to
+      be same climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/biogeochem/ch4Mod.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNLeachingMod.F90
+
+===============================================================
+===============================================================
+Tag name: ctsm_n08_clm4_5_16_r249
+Originator(s): sacks
 Date: Aug 24, 2017
 One-line Summary: Finish Infiltration modularization - mainly h2osfc updates
 
