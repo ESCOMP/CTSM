@@ -53,13 +53,22 @@ module InfiltrationExcessRunoffMod
      procedure, private :: InitCold
 
      procedure, private, nopass :: ComputeQinmaxHksat
-     procedure, private, nopass :: ComputeQinmaxVic
   end type infiltration_excess_runoff_type
 
   ! !PRIVATE DATA MEMBERS:
 
+  ! For methods that don't generate any infiltration excess runoff, we get this end result
+  ! by specifying a huge qinmax value - i.e., an effectively infinite max infiltration
+  ! rate.
+  !
+  ! 1e200 mm H2O /s seems large enough to be effectively infinite, while not being so
+  ! large as to cause floating point overflows elsewhere.
+  real(r8), parameter :: qinmax_unlimited = 1.e200_r8  ! mm H2O /s
+
+  ! The 'none' option avoids generating any infiltration excess runoff by setting qinmax
+  ! to a huge value
+  integer, parameter :: QINMAX_METHOD_NONE = 0
   integer, parameter :: QINMAX_METHOD_HKSAT = 1
-  integer, parameter :: QINMAX_METHOD_VIC  = 2
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -155,7 +164,7 @@ contains
 
     ! TODO(wjs, 2017-08-14) We'll read qinmax_method from namelist.
     if (use_vichydro) then
-       this%qinmax_method = QINMAX_METHOD_VIC
+       this%qinmax_method = QINMAX_METHOD_NONE
     else
        this%qinmax_method = QINMAX_METHOD_HKSAT
     end if
@@ -203,15 +212,16 @@ contains
           )
 
     select case (this%qinmax_method)
+    case (QINMAX_METHOD_NONE)
+       ! NOTE(wjs, 2017-09-01) I'm putting this here for clarity, though it could be
+       ! moved to initialization for efficiency
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          qinmax_on_unsaturated_area(c) = qinmax_unlimited
+       end do
     case (QINMAX_METHOD_HKSAT)
        call this%ComputeQinmaxHksat(bounds, num_hydrologyc, filter_hydrologyc, &
             soilhydrology_inst, soilstate_inst, &
-            qinmax_on_unsaturated_area = qinmax_on_unsaturated_area(bounds%begc:bounds%endc))
-    case (QINMAX_METHOD_VIC)
-       call this%ComputeQinmaxVic(bounds, num_hydrologyc, filter_hydrologyc, &
-            soilhydrology_inst, &
-            fsat = fsat(bounds%begc:bounds%endc), &
-            qflx_in_soil = qflx_in_soil(bounds%begc:bounds%endc), &
             qinmax_on_unsaturated_area = qinmax_on_unsaturated_area(bounds%begc:bounds%endc))
     case default
        write(iulog,*) subname//' ERROR: Unrecognized qinmax_method: ', this%qinmax_method
@@ -269,74 +279,5 @@ contains
     end associate
 
   end subroutine ComputeQinmaxHksat
-
-  !-----------------------------------------------------------------------
-  subroutine ComputeQinmaxVic(bounds, num_hydrologyc, filter_hydrologyc, &
-       soilhydrology_inst, &
-       fsat, qflx_in_soil, qinmax_on_unsaturated_area)
-    !
-    ! !DESCRIPTION:
-    ! Compute qinmax using the VIC parameterization
-    !
-    ! Citation: Wood et al. 1992, "A land-surface hydrology parameterization with subgrid
-    ! variability for general circulation models", JGR 97(D3), 2717-2728.
-    !
-    ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_hydrologyc       ! number of column soil points in column filter
-    integer, intent(in) :: filter_hydrologyc(:) ! column filter for soil points
-    type(soilhydrology_type) , intent(in) :: soilhydrology_inst
-    real(r8) , intent(in)    :: fsat( bounds%begc: )                       ! fractional area with water table at surface
-    real(r8) , intent(in)    :: qflx_in_soil( bounds%begc: )               ! surface input to soil (mm/s)
-    real(r8) , intent(inout) :: qinmax_on_unsaturated_area( bounds%begc: ) ! maximum infiltration rate on the unsaturated fraction of the column (mm H2O /s)
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: fc, c
-    real(r8) :: dtime       ! land model time step (sec)
-    real(r8) :: top_icefrac ! ice fraction in top VIC layers
-    real(r8) :: max_infil   ! max infiltration capacity using the VIC parameterization (mm)
-    real(r8) :: i_0         ! average soil moisture in top VIC layers (mm)
-    real(r8) :: rsurf_vic   ! surface runoff based on the VIC parameterization
-    real(r8) :: basis       ! variable soil moisture holding capacity in top VIC layers for runoff calculation
-
-    character(len=*), parameter :: subname = 'ComputeQinmaxVic'
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL((ubound(fsat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_in_soil) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qinmax_on_unsaturated_area) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-
-    associate( &
-          top_max_moist    =>    soilhydrology_inst%top_max_moist_col, & ! Input:  [real(r8) (:)   ]  maximum soil moisture in top VIC layers
-          top_moist        =>    soilhydrology_inst%top_moist_col    , & ! Input:  [real(r8) (:)   ]  soil moisture in top VIC layers
-          top_ice          =>    soilhydrology_inst%top_ice_col      , & ! Input:  [real(r8) (:)   ]  ice len in top VIC layers
-          b_infil          =>    soilhydrology_inst%b_infil_col        & ! Input:  [real(r8) (:)   ]  VIC b infiltration parameter
-          )
-
-    dtime = get_step_size()
-
-    do fc = 1, num_hydrologyc
-       c = filter_hydrologyc(fc)
-       top_icefrac = min(1._r8,top_ice(c)/top_max_moist(c))
-       max_infil = (1._r8+b_infil(c)) * top_max_moist(c)
-       i_0 = max_infil * (1._r8 - (1._r8 - fsat(c))**(1._r8/b_infil(c)))
-       if(qflx_in_soil(c) <= 0._r8) then
-          rsurf_vic = 0._r8
-       else if(max_infil <= 0._r8) then
-          rsurf_vic = qflx_in_soil(c)
-       else if((i_0 + qflx_in_soil(c)*dtime) > max_infil) then             !(Eq.(3a) Wood et al. 1992)
-          rsurf_vic = (qflx_in_soil(c)*dtime - top_max_moist(c) + top_moist(c))/dtime
-       else                                                                !(Eq.(3b) Wood et al. 1992)
-          basis = 1._r8 - (i_0 + qflx_in_soil(c)*dtime)/max_infil
-          rsurf_vic = (qflx_in_soil(c)*dtime - top_max_moist(c) + top_moist(c)    &
-               + top_max_moist(c) * basis**(1._r8 + b_infil(c)))/dtime
-       end if
-       rsurf_vic = min(qflx_in_soil(c), rsurf_vic)
-       qinmax_on_unsaturated_area(c) = 10._r8**(-e_ice*top_icefrac)*(qflx_in_soil(c) - rsurf_vic)
-    end do
-
-    end associate
-
-  end subroutine ComputeQinmaxVic
 
 end module InfiltrationExcessRunoffMod
