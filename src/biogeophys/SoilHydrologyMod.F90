@@ -604,7 +604,6 @@ contains
           snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
 
           qflx_surf        =>    waterflux_inst%qflx_surf_col        , & ! Output: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
-          qflx_surf_for_bgc =>   waterflux_inst%qflx_surf_for_bgc_col      , & ! Input:  [real(r8) (:)   ]  surface runoff for input into BGC code (mm H2O /s)                        
           qflx_infl_excess_surf => waterflux_inst%qflx_infl_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to infiltration excess (mm H2O /s)
           qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col,  & ! Input:  [real(r8) (:)   ]  surface water runoff (mm H2O /s)
           qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
@@ -629,16 +628,6 @@ contains
         ! Depending on whether h2osfcflag is 0 or 1, one of qflx_infl_excess or
         ! qflx_h2osfc_surf will always be 0. But it's safe to just add them both.
         qflx_surf(c) = qflx_sat_excess_surf(c) + qflx_infl_excess_surf(c) + qflx_h2osfc_surf(c)
-
-        ! TODO(wjs, 2017-07-11) I'm distinguishing between qflx_surf and qflx_surf_for_bgc
-        ! simply to maintain answers as they were before. But I have a feeling that the
-        ! BGC code should really be using the total qflx_surf in its calculations. Once
-        ! Dave Lawrence or someone else signs off on this change, we should change the BGC
-        ! code to use qflx_surf and remove this qflx_surf_for_bgc variable.
-        ! Alternatively, if we deem the current implementation correct, we should
-        ! consider renaming this something better than qflx_surf_for_bgc, or simply
-        ! making the BGC code depend on qflx_sat_excess_surf, if that's what's intended.
-        qflx_surf_for_bgc(c) = qflx_sat_excess_surf(c) + qflx_infl_excess_surf(c)
      end do
 
      ! ------------------------------------------------------------------------
