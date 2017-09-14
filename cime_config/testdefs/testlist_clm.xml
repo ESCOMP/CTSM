@@ -485,8 +485,8 @@
         <machine compiler="intel" testtype="aux_clm" testmods="clm/default">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm" testmods="clm/default">yellowstone</machine>
       </test>
-      <test name="SMS_Lm25">
-        <machine compiler="gnu" testtype="aux_clm" testmods="clm/cropMonthOutput">yellowstone</machine>
+      <test name="SMS_Lm13">
+        <machine compiler="gnu" testtype="aux_clm" testmods="clm/cropMonthOutput" comment="include a relatively long crop test at relatively high resolution">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g17_gl4">
