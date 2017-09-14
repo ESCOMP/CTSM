@@ -59,15 +59,10 @@ module SoilHydrologyMod
   private :: QflxH2osfcDrain     ! Compute qflx_h2osfc_drain
 
   type, extends(computeFlux_type) :: drainPond_type
-     private
-     real(r8), public :: drainMax ! maximum drainage rate of ponded water
-     real(r8), public :: dtime    ! model time step
-     real(r8) :: smoothScale = 0.05_r8  ! smoothing scale
+     real(r8) :: smoothScale
+     real(r8) :: drainMax
    contains
-     procedure :: getFlux => drainPondFlux  ! required method to get the current flux estimate
-     procedure :: drainPondExplicitEuler    ! compute the drainPond flux using an explicit euler method
-     procedure :: drainPondImplicitEuler    ! compute the drainPond flux using an implicit euler method
-     procedure :: drainPondAnalytical       ! compute the drainPond flux using an analytical solution
+     procedure :: getFlux => drainPondFlux
   end type drainPond_type
 
   !-----------------------------------------------------------------------
@@ -600,6 +595,11 @@ contains
      type(drainPond_type) :: drainPond_inst
      integer             :: fc, c               
      real(r8)            :: dtime                 ! land model time step (sec)
+     real(r8)            :: h2osfc1               ! h2osfc at the end of the time step, given qflx_h2osfc_drain only
+     real(r8)            :: drainMax              ! maximum drainage rate of ponded water
+     real(r8)            :: const                 ! constant in analytical integral
+     real(r8)            :: uFunc                 ! analytical integral
+     real(r8), parameter :: smoothScale=0.05_r8   ! smoothing scale
 
      character(len=*), parameter :: subname = 'QflxH2osfcDrain'
      !-----------------------------------------------------------------------
@@ -611,7 +611,6 @@ contains
      SHR_ASSERT_ALL((ubound(truncate_h2osfc_to_zero) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
      
      dtime = get_step_size()
-     drainPond_inst%dtime = dtime
 
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
@@ -623,18 +622,32 @@ contains
 
            ! define maximum drainage
            ! NOTE: check fraction
-           drainPond_inst%drainMax = frac_h2osfc(c)*qinmax(c)
+           drainMax = frac_h2osfc(c)*qinmax(c)
 
            ! switch between different numerical solutions
            select case(ixSolution)
 
+              ! constrained Explicit Euler solution with operator splitting (original)
            case(ixExplicitEuler)
-              call drainPond_inst%drainPondExplicitEuler(h2osfc(c), qflx_h2osfc_drain(c))
+              qflx_h2osfc_drain(c)=min(drainMax,h2osfc(c)/dtime)
+
+              ! implicit Euler solution with operator splitting
            case(ixImplicitEuler)
-              call drainPond_inst%drainPondImplicitEuler(h2osfc(c), qflx_h2osfc_drain(c))
+              ! The next two lines look like extra overhead, but in a real implementation
+              ! (1) smoothScale could probably be local to the drainPond type; (2)
+              ! drainMax would probably also be local to the drainPond type, and if not,
+              ! it would be an array that is just set once outside a loop, rather than
+              ! being set for each loop iteration.
+              drainPond_inst%smoothScale = smoothScale
+              drainPond_inst%drainMax = drainMax
+              call implicitEuler(drainPond_inst, dtime, h2osfc(c), qflx_h2osfc_drain(c))
+
               ! analytical solution with operator splitting
            case(ixAnalytical)
-              call drainPond_inst%drainPondAnalytical(h2osfc(c), qflx_h2osfc_drain(c))
+              const   = 1._r8 - 1._r8/(1._r8 - exp(-h2osfc(c)/smoothScale))
+              uFunc   = -1._r8/(const*exp(drainMax*dtime/smoothScale) - 1._r8)
+              h2osfc1 = -log(1._r8 - uFunc)*smoothScale
+              qflx_h2osfc_drain(c)= (h2osfc1 - h2osfc(c))/dtime
            end select
 
            if(h2osfcflag==0) then
@@ -661,43 +674,8 @@ contains
      if(present(dfdx)) dfdx = -this%drainMax*arg/this%smoothScale
    end subroutine drainPondFlux
 
-   subroutine drainPondExplicitEuler(this, h2osfc, qflx_h2osfc_drain)
-     ! Compute the drainPond flux using an explicit euler method
-     class(drainPond_type), intent(in) :: this
-     real(r8) , intent(in)  :: h2osfc            ! drainPond storage
-     real(r8) , intent(out) :: qflx_h2osfc_drain ! drainage flux
 
-     ! constrained Explicit Euler solution with operator splitting (original)
-     qflx_h2osfc_drain = min(this%drainMax, h2osfc/this%dtime)
-   end subroutine drainPondExplicitEuler
-
-   subroutine drainPondImplicitEuler(this, h2osfc, qflx_h2osfc_drain)
-     ! Compute the drainPond flux using an implicit euler method
-     class(drainPond_type), intent(in) :: this
-     real(r8) , intent(in)  :: h2osfc            ! drainPond storage
-     real(r8) , intent(out) :: qflx_h2osfc_drain ! drainage flux
-
-     ! implicit Euler solution with operator splitting
-     call implicitEuler(this, this%dtime, h2osfc, qflx_h2osfc_drain)
-   end subroutine drainPondImplicitEuler
-
-   subroutine drainPondAnalytical(this, h2osfc, qflx_h2osfc_drain)
-     ! Compute the drainPond flux using an analytical solution
-     class(drainPond_type), intent(in) :: this
-     real(r8) , intent(in)  :: h2osfc            ! drainPond storage
-     real(r8) , intent(out) :: qflx_h2osfc_drain ! drainage flux
-
-     real(r8) :: h2osfc1 ! h2osfc at the end of the time step, given qflx_h2osfc_drain only
-     real(r8) :: const   ! constant in analytical integral
-     real(r8) :: uFunc   ! analytical integral
-
-     const   = 1._r8 - 1._r8/(1._r8 - exp(-h2osfc/this%smoothScale))
-     uFunc   = -1._r8/(const*exp(this%drainMax*this%dtime/this%smoothScale) - 1._r8)
-     h2osfc1 = -log(1._r8 - uFunc)*this%smoothScale
-     qflx_h2osfc_drain= (h2osfc1 - h2osfc)/this%dtime
-   end subroutine drainPondAnalytical
-
-     !-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
    subroutine TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, &
         waterflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, waterstate_inst)
