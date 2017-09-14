@@ -92,31 +92,6 @@ module clm_varcon
   real(r8),public, parameter  :: smallValue  = 1.e-12_r8    ! A small values used by FUN
 
   ! ------------------------------------------------------------------------
-  ! Constants related to model numerics
-  ! ------------------------------------------------------------------------
-
-  ! Relative differences below rel_epsilon are considered to be zero.
-  !
-  ! Note that double precision machine epsilon is approximately 1e-16, so this value of
-  ! 1e-13 allows for 3 orders of magnitude of "slop".
-  !
-  ! Examples of how to use this:
-  !
-  ! (1) Rather than checking
-  !        if (x == y)
-  !     instead check
-  !        if (abs(x - y) < rel_epsilon * x)
-  !     or
-  !        if (abs(x - y) < rel_epsilon * y)
-  !
-  ! (2) After a state update, you can truncate the state to 0 based on this condition:
-  !        if (abs(some_state) < rel_epsilon * abs(some_state_orig)) then
-  !           some_state = 0._r8
-  !        end if
-  !     where some_state_orig is the value of the state variable before the update
-  real(r8), public, parameter :: rel_epsilon = 1.e-13_r8  ! Relative differences below this are considered to be zero
-
-  ! ------------------------------------------------------------------------
   ! Special value flags
   ! ------------------------------------------------------------------------
 
