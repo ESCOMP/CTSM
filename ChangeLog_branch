@@ -1,5 +1,124 @@
 ===============================================================
-Tag name: ctsm_n08_clm4_5_16_r249
+Tag name: ctsm_n10_clm4_5_16_r249
+Originator(s): sacks
+Date: Sep 14, 2017
+One-line Summary: Truncate small h2osfc values to zero
+
+Purpose of changes
+------------------
+
+This replaces the earlier code that only did this truncation in one
+particular circumstance.
+
+This seems mainly important to truncate small negative numbers to 0, but
+it also seems like a good idea to truncate small positive numbers that
+should have been 0.
+
+With some intermediate commits on this branch, I did some careful tests
+to ensure that these diffs introduce no more than roundoff-level
+changes.
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu - ok
+    cheyenne_intel - ok
+    hobart_nag - ok
+    hobart_pgi - ok
+    hobart_intel - ok
+
+    ok means tests pass, change answers as expected
+
+CLM tag used for the baseline comparisons: ctsm_n09_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all clm45/clm50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+      I introduced some temporary code to ensure that, where there are
+      differences between the old and new code, these differences are
+      only roundoff-level (e.g., a roundoff-level value being rounded to
+      0 now where it wasn't before).
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= New utility for truncating small values to 0, and associated
+          unit tests
+A       components/clm/src/utils/NumericsMod.F90
+A       components/clm/src/utils/test/numerics_test/CMakeLists.txt
+A       components/clm/src/utils/test/numerics_test/test_truncate_small_values.pf
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+
+========= New unit tests
+M       components/clm/src/utils/CMakeLists.txt
+M       components/clm/src/utils/test/CMakeLists.txt
+
+========= Unrelated fix to subroutine name
+M       components/clm/src/unit_test_shr/unittestFilterBuilderMod.F90
+
+========= Shorten a test that was taking > 2 hours
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
+Tag name: ctsm_n09_clm4_5_16_r249
 Originator(s): sacks
 Date: Sep 7, 2017
 One-line Summary: Use full qflx_surf in BGC code
