@@ -17,6 +17,7 @@ module SoilHydrologyMod
   use column_varcon     , only : icol_road_imperv
   use landunit_varcon   , only : istsoil, istcrop
   use clm_time_manager  , only : get_step_size
+  use NumericsMod       , only : truncate_small_values
   use EnergyFluxType    , only : energyflux_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -214,12 +215,12 @@ contains
           qflx_top_soil           =>    waterflux_inst%qflx_top_soil_col          , & ! Output: [real(r8) (:)]  net water input into soil from top (mm/s)
           qflx_in_soil            =>    waterflux_inst%qflx_in_soil_col           , & ! Output: [real(r8) (:)]  surface input to soil (mm/s)
           qflx_top_soil_to_h2osfc =>   waterflux_inst%qflx_top_soil_to_h2osfc_col , & ! Output: [real(r8) (:)]  portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
-          qflx_rain_plus_snomelt  => waterflux_inst%qflx_rain_plus_snomelt_col    , & ! Input:  [real(r8) (:)]  rain plus snow melt falling on the soil (mm/s)
+          qflx_rain_plus_snomelt  =>    waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input:  [real(r8) (:)]  rain plus snow melt falling on the soil (mm/s)
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col       , & ! Input:  [real(r8) (:)]  snow falling on surface water (mm/s)
           qflx_floodc             =>    waterflux_inst%qflx_floodc_col            , & ! Input:  [real(r8) (:)]  column flux of flood water from RTM
-          qflx_ev_soil            =>    waterflux_inst%qflx_ev_soil_col           , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
-          qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
-          qflx_ev_h2osfc          =>    waterflux_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]
+          qflx_ev_soil            =>    waterflux_inst%qflx_ev_soil_col           , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
+          qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]
+          qflx_ev_h2osfc          =>    waterflux_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
 
           qflx_sat_excess_surf    => saturated_excess_runoff_inst%qflx_sat_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
@@ -345,7 +346,6 @@ contains
      integer  :: c,l,fc                                     ! indices
      real(r8) :: dtime                                      ! land model time step (sec)
      real(r8) :: h2osfc_partial(bounds%begc:bounds%endc)    ! partially-updated h2osfc
-     logical  :: truncate_h2osfc_to_zero(bounds%begc:bounds%endc)
      !-----------------------------------------------------------------------
 
      associate(                                                        & 
@@ -383,35 +383,31 @@ contains
         h2osfc_partial(c) = h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime
      end do
 
+     call truncate_small_values(num_f = num_hydrologyc, filter_f = filter_hydrologyc, &
+          lb = bounds%begc, ub = bounds%endc, &
+          data_baseline = h2osfc(bounds%begc:bounds%endc), &
+          data = h2osfc_partial(bounds%begc:bounds%endc))
+
      call QflxH2osfcDrain(bounds, num_hydrologyc, filter_hydrologyc, &
           h2osfcflag = h2osfcflag, &
           h2osfc = h2osfc_partial(bounds%begc:bounds%endc), &
           frac_h2osfc = frac_h2osfc(bounds%begc:bounds%endc), &
           qinmax = qinmax(bounds%begc:bounds%endc), &
-          qflx_h2osfc_drain = qflx_h2osfc_drain(bounds%begc:bounds%endc), &
-          truncate_h2osfc_to_zero = truncate_h2osfc_to_zero(bounds%begc:bounds%endc))
+          qflx_h2osfc_drain = qflx_h2osfc_drain(bounds%begc:bounds%endc))
 
+     ! Update h2osfc based on fluxes
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
-
-        ! The parenthesization of this expression is just needed to maintain bfb answers
-        ! in the major refactor. Note that the first parenthesized expression is
-        ! h2osfc_partial(c), but I'm writing it out explicitly to facilitate a possible
-        ! future removal of h2osfc_partial.
-        h2osfc(c) = (h2osfc(c) + (qflx_in_h2osfc(c) - qflx_h2osfc_surf(c)) * dtime) &
-             - qflx_h2osfc_drain(c) * dtime
-
-        ! TODO(wjs, 2017-08-22) This is here to maintain bit-for-bit answers with the old
-        ! code. If we're okay changing answers, we could remove it. Or maybe we want to
-        ! put a more general truncation in here, like:
-        !   if (abs(h2osfc(c)) < 1.e-14_r8 * abs(h2osfc_orig)) h2osfc(c) = 0._r8
-        ! But I'm not sure what the general philosophy is regarding whether and when we
-        ! want to do truncations like this.
-        if (truncate_h2osfc_to_zero(c)) then
-           h2osfc(c) = 0._r8
-        end if
-
+        h2osfc(c) = h2osfc_partial(c) - qflx_h2osfc_drain(c) * dtime
      end do
+
+     ! Due to rounding errors, fluxes that should have brought h2osfc to exactly 0 may
+     ! have instead left it slightly less than or slightly greater than 0. Correct for
+     ! that here.
+     call truncate_small_values(num_f = num_hydrologyc, filter_f = filter_hydrologyc, &
+          lb = bounds%begc, ub = bounds%endc, &
+          data_baseline = h2osfc_partial(bounds%begc:bounds%endc), &
+          data = h2osfc(bounds%begc:bounds%endc))
 
     end associate
 
@@ -524,16 +520,13 @@ contains
    !-----------------------------------------------------------------------
    subroutine QflxH2osfcDrain(bounds, num_hydrologyc, filter_hydrologyc, &
         h2osfcflag, h2osfc, frac_h2osfc, qinmax, &
-        qflx_h2osfc_drain, truncate_h2osfc_to_zero)
+        qflx_h2osfc_drain)
      !
      ! !DESCRIPTION:
      ! Compute qflx_h2osfc_drain
      !
      ! Note that, if h2osfc is negative, then qflx_h2osfc_drain will be negative - acting
-     ! to exactly restore h2osfc to 0. In this case, truncate_h2osfc_to_zero will be set
-     ! to true; in all other cases, truncate_h2osfc_to_zero will be set to false. This
-     ! particular behavior of truncate_h2osfc_to_zero is just like this to maintain
-     ! bit-for-bit answers with the old code (see also the TODO note in UpdateH2osfc).
+     ! to exactly restore h2osfc to 0.
      !
      ! !ARGUMENTS:
      type(bounds_type) , intent(in)    :: bounds
@@ -544,7 +537,6 @@ contains
      real(r8)          , intent(in)    :: frac_h2osfc( bounds%begc: )        ! fraction of ground covered by surface water (0 to 1)
      real(r8)          , intent(in)    :: qinmax( bounds%begc: )             ! maximum infiltration rate (mm H2O /s)
      real(r8)          , intent(inout) :: qflx_h2osfc_drain( bounds%begc: )  ! bottom drainage from h2osfc (mm H2O /s)
-     logical           , intent(inout) :: truncate_h2osfc_to_zero( bounds%begc: ) ! whether h2osfc should be truncated to 0 to correct for roundoff errors, in order to maintain bit-for-bit the same answers as the old code
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
@@ -557,7 +549,6 @@ contains
      SHR_ASSERT_ALL((ubound(frac_h2osfc) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
      SHR_ASSERT_ALL((ubound(qinmax) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
      SHR_ASSERT_ALL((ubound(qflx_h2osfc_drain) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(truncate_h2osfc_to_zero) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
      
      dtime = get_step_size()
 
@@ -566,14 +557,12 @@ contains
 
         if (h2osfc(c) < 0.0) then
            qflx_h2osfc_drain(c) = h2osfc(c)/dtime
-           truncate_h2osfc_to_zero(c) = .true.
         else
            qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),h2osfc(c)/dtime)
            if(h2osfcflag==0) then
               ! ensure no h2osfc
               qflx_h2osfc_drain(c)= max(0._r8,h2osfc(c)/dtime)
            end if
-           truncate_h2osfc_to_zero(c) = .false.
         end if
      end do
 
