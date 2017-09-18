@@ -334,6 +334,10 @@ contains
     ! Citation: Wood et al. 1992, "A land-surface hydrology parameterization with subgrid
     ! variability for general circulation models", JGR 97(D3), 2717-2728.
     !
+    ! This implementation gives a first-order approximation to saturated excess runoff.
+    ! For now we're not including the more exact analytical solution, or even a better
+    ! numerical approximation.
+    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_hydrologyc       ! number of column soil points in column filter

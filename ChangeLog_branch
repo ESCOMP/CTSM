@@ -1,4 +1,104 @@
 ===============================================================
+Tag name: ctsm_n11_clm4_5_16_r249
+Originator(s): sacks
+Date: Sep 18, 2017
+One-line Summary: Remove infiltration excess runoff for VIC
+
+Purpose of changes
+------------------
+
+Martyn Clark reviewed the VIC implementation, and felt that the current
+implementation of infiltration excess runoff is inconsistent with the
+standard VIC implementation. It appears that what was being called VIC's
+infiltration excess runoff was actually just an attempt to give a better
+numerical approximation to the solution for saturated surface excess
+runoff. So deleting this leaves only a first-order approximation to
+VIC's saturated surface excess runoff.
+
+Eventually we may want to put in place a more accurate solution for
+VIC's saturated surface excess runoff. But Martyn's feeling is that this
+can come in with other changes we want to make regarding numerical
+solutions in CTSM.
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu - ok
+    cheyenne_intel - ok
+    hobart_nag - ok
+    hobart_pgi - ok
+    hobart_intel - ok
+
+    ok means tests pass, Vic tests change answers as expected
+
+CLM tag used for the baseline comparisons: ctsm_n10_clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Compsets with Vic
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; likely same climate but not investigated
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/InfiltrationExcessRunoffMod.F90
+M       components/clm/src/biogeophys/SaturatedExcessRunoffMod.F90
+
+===============================================================
+===============================================================
 Tag name: ctsm_n10_clm4_5_16_r249
 Originator(s): sacks
 Date: Sep 14, 2017
