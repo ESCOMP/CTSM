@@ -35,7 +35,7 @@ module controlMod
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
   use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
-  use C14BombSpikeMod                  , only: use_c14_bombspike, atm_c14_filename
+  use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
@@ -229,7 +229,7 @@ contains
     namelist /clm_inparm/ use_dynroot
 
     namelist /clm_inparm/  &
-         use_c14_bombspike, atm_c14_filename
+         use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
@@ -337,11 +337,6 @@ contains
           create_glacier_mec_landunit = .false.
        end if
 
-       if (use_crop .and. (use_c13 .or. use_c14)) then
-          call endrun(msg=' ERROR:: CROP and C13/C14 can NOT be on at the same time'//&
-            errMsg(sourcefile, __LINE__))
-       end if
-       
        if (use_crop .and. .not. create_crop_landunit) then
           call endrun(msg=' ERROR: prognostic crop Patches require create_crop_landunit=.true.'//&
             errMsg(sourcefile, __LINE__))
@@ -670,6 +665,8 @@ contains
     if (use_cn) then
        call mpi_bcast (use_c14_bombspike,  1, MPI_LOGICAL, 0, mpicom, ier)
        call mpi_bcast (atm_c14_filename,  len(atm_c14_filename), MPI_CHARACTER, 0, mpicom, ier)
+       call mpi_bcast (use_c13_timeseries,  1, MPI_LOGICAL, 0, mpicom, ier)
+       call mpi_bcast (atm_c13_filename,  len(atm_c13_filename), MPI_CHARACTER, 0, mpicom, ier)
        call mpi_bcast (use_fun,            1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
@@ -836,6 +833,8 @@ contains
 
     if (use_cn) then
        write(iulog, *) '  use_c13                                                : ', use_c13
+       write(iulog, *) '  use_c13_timeseries                                     : ', use_c13_timeseries
+       write(iulog, *) '  atm_c13_filename                                       : ', atm_c13_filename
        write(iulog, *) '  use_c14                                                : ', use_c14
        write(iulog, *) '  use_c14_bombspike                                      : ', use_c14_bombspike
        write(iulog, *) '  atm_c14_filename                                       : ', atm_c14_filename

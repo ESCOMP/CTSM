@@ -1865,13 +1865,25 @@ Enable C14 model
 
 <entry id="use_c14_bombspike" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
-Flag to use the atmospheric time series of C14 concentrations from bomb fallout, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
+Flag to use the atmospheric time series of C14 concentrations from bomb fallout and Seuss effect, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
 (EXPERIMENTAL and NOT tested)
 </entry>
 
-<entry id="atm_c14_filename" type="char*256"    category="clm_isotope"
-       input_pathname="abs"  group="clm_inparm" valid_values="" >
-Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "atm_delta_c14".  time variable is in format 1950.0, and time values must be monotonically increasing for interpolation, however spacing can be unequal. atm_delta_c14 variable has units of permil.  
+<entry id="atm_c14_filename" type="char*256" category="clm_isotope"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "Delta14co2_in_air". time variable is in format: years since 1850-01-01 0:0:0.0  units are permil.
+(EXPERIMENTAL and NOT tested)
+</entry>
+
+<entry id="use_c13_timeseries" type="logical" category="clm_isotope"
+       group="clm_inparm" valid_values="" >
+Flag to use the atmospheric time series of C13 concentrations from natural abundance and the Seuss Effect, rather than static values.
+(EXPERIMENTAL and NOT tested)
+</entry>
+
+<entry id="atm_c13_filename" type="char*256" category="clm_isotope"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0. units are permil.
 (EXPERIMENTAL and NOT tested)
 </entry>
 

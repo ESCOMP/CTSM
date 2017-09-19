@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r255     erik 09/18/2017 Changes to crop and enabling Carbon isotopes for crop and some miscellaneous small changes
   clm4_5_16_r254     erik 09/01/2017 Update surface datasets, and point to new CMIP6 population density dataset
   clm4_5_16_r253     erik 08/04/2017 Check on reasonable import/export from CLM, check ndep units from input file
   clm4_5_16_r252     erik 07/24/2017 Update parameter file for some crop albedo issues, and fix a bug in urban albedo for nightime

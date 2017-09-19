@@ -1,6 +1,8 @@
 <?xml version= "1.0"?>
 
 <expectedFails>
+   <entry bugz="2511">FAIL ERP_D_Lm9.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_monthly RUN</entry>
+   <entry bugz="2511">FAIL SMS_D_Lm13.f10_f10_musgs.I1850Clm50BgcCrop.yellowstone_intel.clm-ciso_monthly RUN</entry>
    <entry bugz="2461">FAIL NCK_Ld1.f10_f10_musgs.I2000Clm50Sp.cheyenne_intel.clm-default COMPARE_base_multiinst</entry>
    <entry bugz="2461">FAIL NCK_Ld1.f10_f10_musgs.I2000Clm50Sp.yellowstone_intel.clm-default COMPARE_base_multiinst</entry>
    <entry bugz="2461">FAIL ERI_N2_Ld9.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-default RUN</entry>

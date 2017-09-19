@@ -2132,6 +2132,10 @@ sub setup_logic_cnprec {
   if ( $physv->as_long() >= $physv->as_long("clm5_0") && &value_is_true($nl->get_value('use_cn')) ) {
      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
                  $nl, 'ncrit', 'use_cn'=>$nl_flags->{'use_cn'});
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
+                 $nl, 'cnegcrit', 'use_cn'=>$nl_flags->{'use_cn'});
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
+                 $nl, 'nnegcrit', 'use_cn'=>$nl_flags->{'use_cn'});
   }
 }
 #-------------------------------------------------------------------------------
@@ -3091,14 +3095,6 @@ sub setup_logic_c_isotope {
   my $use_c13 = $nl->get_value('use_c13');
   my $use_c14 = $nl->get_value('use_c14');
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" ) {
-    if ( $nl_flags->{'use_crop'} eq ".true." ) {
-      if ( defined($use_c13) ||
-           defined($use_c14) ||
-           defined($nl->get_value('use_c14_bombspike')) ||
-           defined($nl->get_value('atm_c14_filename')) ) {
-        fatal_error("CROP is on and C isotope  namelist variables were set, both can't be used at the same time");
-      }
-    }
     if ( $nl_flags->{'bgc_mode'} ne "bgc" ) {
       if ( defined($use_c13) && $use_c13 =~ /$TRUE/i ) {
         warning("use_c13 is ONLY scientifically validated with the bgc=BGC configuration\n");
@@ -3126,11 +3122,32 @@ sub setup_logic_c_isotope {
         fatal_error("use_c14 NOT set to .true., but use_c14_bompspike/atm_c14_filename defined.\n");
       }
     }
+    if ( defined($use_c13) ) {
+      if ( $use_c13 =~ /$TRUE/i ) {
+        my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
+        if ( defined($use_c13_timeseries) && value_is_true($use_c13_timeseries) ) {
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
+                   'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries') );
+        }
+      } else {
+        if ( defined($nl->get_value('use_c13_timeseries')) ||
+             defined($nl->get_value('atm_c13_filename')) ) {
+          fatal_error("use_c13 is FALSE and use_c13_timeseries or atm_c13_filename set\n");
+        }
+      }
+    } else {
+      if ( defined($nl->get_value('use_c13_timeseries')) ||
+           defined($nl->get_value('atm_c13_filename')) ) {
+        fatal_error("use_c13 NOT set to .true., but use_c13_bompspike/atm_c13_filename defined.\n");
+      }
+    }
   } else {
     if ( defined($use_c13) ||
          defined($use_c14) ||
          defined($nl->get_value('use_c14_bombspike')) ||
-         defined($nl->get_value('atm_c14_filename')) ) {
+         defined($nl->get_value('atm_c14_filename'))  ||
+         defined($nl->get_value('use_c13_timeseries')) ||
+         defined($nl->get_value('atm_c13_filename')) ) {
            fatal_error("bgc=sp and C isotope  namelist variables were set, both can't be used at the same time");
     }
   }

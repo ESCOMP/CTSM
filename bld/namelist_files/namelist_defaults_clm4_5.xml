@@ -85,8 +85,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <stomatalcond_method phys="clm5_0" use_hydrstress=".false.">Ball-Berry1987</stomatalcond_method>
 <stomatalcond_method phys="clm4_5"                         >Ball-Berry1987</stomatalcond_method>
 
-<!-- C14 concentration file -->
-<atm_c14_filename use_c14=".true." use_c14_bombspike=".true." >lnd/clm2/isotopes/atm_delta_C14_data_1850-2007_monthly_23082011.nc</atm_c14_filename>
+<!-- Carbon isotope concentration files -->
+<atm_c13_filename use_c13=".true." use_c13_timeseries=".true." >lnd/clm2/isotopes/atm_delta_C13_CMIP6_1850-2015_yearly_c170429.nc</atm_c13_filename>
+<atm_c14_filename use_c14=".true." use_c14_bombspike =".true." >lnd/clm2/isotopes/atm_delta_C14_CMIP6_3x1_global_1850-2015_yearly_c170429.nc</atm_c14_filename>
 
 <!-- Irrigation default -->
 <irrig use_crop=".true." >.false.</irrig>
@@ -335,8 +336,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c170721.nc</paramfile>
-<paramfile phys="clm4_5">lnd/clm2/paramdata/clm_params.c170317.nc</paramfile>
+<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c170913.nc</paramfile>
+<paramfile phys="clm4_5">lnd/clm2/paramdata/clm_params.c170913.nc</paramfile>
 
 <fates_paramfile>lnd/clm2/paramdata/fates_params.c170331.nc</fates_paramfile>
 
@@ -418,6 +419,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_nguardrail phys="clm5_0" use_cn=".true." >.true.</use_nguardrail>
 
 <ncrit    phys="clm5_0" use_cn=".true.">1.d-9</ncrit>
+<cnegcrit phys="clm5_0" use_cn=".true.">-6.d+1</cnegcrit>
+<nnegcrit phys="clm5_0" use_cn=".true.">-6.d+0</nnegcrit>
+<cnegcrit phys="clm4_5" use_cn=".true.">-6.d+2</cnegcrit>
+<nnegcrit phys="clm4_5" use_cn=".true.">-6.d+1</nnegcrit>
 
 <!-- Plant hydraulic stress -->
 <use_hydrstress phys="clm4_5"                 >.false.</use_hydrstress>
@@ -617,6 +622,8 @@ lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 lnd/clm2/surfdata_map/surfdata_4x5_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc</fsurdat>
+<fsurdat hgrid="1x1_numaIA"       sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_CMIP6_simyr1850_c170917.nc</fsurdat>
 
 <fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_brazil_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
@@ -672,6 +679,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000"
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
+<flanduse_timeseries hgrid="1x1_numaIA"    sim_year_range="1850-2000"
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_numaIA_hist_78pfts_CMIP6_simyr1850-2015_c170917.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne120np4"      sim_year_range="1850-2000" 
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
@@ -687,9 +696,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 
 <!-- Other future scenario Dynamic PFT datasets with crop off -->
 <flanduse_timeseries hgrid="360x720cru"    rcp="8.5" sim_year_range="1850-2100" irrig=".true."
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170428.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100" irrig=".true."
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170428.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100" irrig=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100" irrig=".true."
@@ -747,9 +756,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 
 <!-- Other future scenario Dynamic PFT datasets with crop on -->
 <flanduse_timeseries hgrid="360x720cru"    rcp="8.5" sim_year_range="1850-2100"
- use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_78pfts_CMIP6_simyr1850-2015_c170428.nc</flanduse_timeseries>
+ use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100"
- use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1850-2015_c170428.nc</flanduse_timeseries>
+ use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100"
  use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100"

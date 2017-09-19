@@ -647,6 +647,18 @@ contains
             avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
+       if (use_crop) then
+          this%grainc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_GRAINC', units='gC/m^2', &
+               avgflag='A', long_name='C13 grain C (does not equal yield)', &
+               ptr_patch=this%grainc_patch)
+          this%cropseedc_deficit_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_CROPSEEDC_DEFICIT', units='gC/m^2', &
+               avgflag='A', long_name='C13 C used for crop seed that needs to be repaid', &
+               ptr_patch=this%cropseedc_deficit_patch)
+       end if
+
+
     endif
 
     !-------------------------------
@@ -809,6 +821,18 @@ contains
        call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
+
+       if (use_crop) then
+          this%grainc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_GRAINC', units='gC/m^2', &
+               avgflag='A', long_name='C14 grain C (does not equal yield)', &
+               ptr_patch=this%grainc_patch)
+          this%cropseedc_deficit_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_CROPSEEDC_DEFICIT', units='gC/m^2', &
+               avgflag='A', long_name='C14 C used for crop seed that needs to be repaid', &
+               ptr_patch=this%cropseedc_deficit_patch)
+       end if
+
 
     endif
 
@@ -2062,28 +2086,55 @@ contains
     !--------------------------------
 
     if (use_crop) then
-       ! TODO(wjs, 2017-01-18) Introduce isotopic versions of the following (can follow
-       ! what's done for cropseedc_deficit, below):
-
-       call restartvar(ncid=ncid, flag=flag,  varname='grainc', xtype=ncd_double,  &
-            dim1name='pft', long_name='grain C', units='gC/m2', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
-
-       call restartvar(ncid=ncid, flag=flag,  varname='grainc_storage', xtype=ncd_double,  &
-            dim1name='pft', long_name='grain C storage', units='gC/m2', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
-
-       call restartvar(ncid=ncid, flag=flag,  varname='grainc_xfer', xtype=ncd_double,  &
-            dim1name='pft', long_name='grain C transfer', units='gC/m2', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
-
        if (carbon_type == 'c12') then
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc', xtype=ncd_double,  &
+               dim1name='pft', long_name='grain C', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='grain C storage', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='grain C transfer', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
+
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC/m2', &
                interpinic_flag='interp', readvar=readvar, data=this%cropseedc_deficit_patch)
        end if
 
        if (carbon_type == 'c13') then
+          call restartvar(ncid=ncid, flag=flag, varname='grainc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='c13 grain C', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
+          if (flag=='read' .and. .not. readvar) then
+             call set_missing_from_template( &
+                  my_var = this%grainc_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%grainc_patch, &
+                  multiplier = c3_r2)
+          end if
+
+          call restartvar(ncid=ncid, flag=flag, varname='grainc_13_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='c13 grain C storage', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
+          if (flag=='read' .and. .not. readvar) then
+             call set_missing_from_template( &
+                  my_var = this%grainc_storage_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%grainc_storage_patch, &
+                  multiplier = c3_r2)
+          end if
+
+          call restartvar(ncid=ncid, flag=flag, varname='grainc_13_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='c13 grain C transfer', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
+          if (flag=='read' .and. .not. readvar) then
+             call set_missing_from_template( &
+                  my_var = this%grainc_xfer_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%grainc_xfer_patch, &
+                  multiplier = c3_r2)
+          end if
+
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_13_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC13/m2', &
                interpinic_flag='interp', readvar=readvar, data=this%cropseedc_deficit_patch)
@@ -2096,6 +2147,37 @@ contains
        end if
 
        if ( carbon_type == 'c14' ) then
+
+          call restartvar(ncid=ncid, flag=flag, varname='grainc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='c14 grain C', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
+          if (flag=='read' .and. .not. readvar) then
+             call set_missing_from_template( &
+                  my_var = this%grainc_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%grainc_patch, &
+                  multiplier = c3_r2)
+          end if
+
+          call restartvar(ncid=ncid, flag=flag, varname='grainc_14_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='c14 grain C storage', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_storage_patch)
+          if (flag=='read' .and. .not. readvar) then
+             call set_missing_from_template( &
+                  my_var = this%grainc_storage_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%grainc_storage_patch, &
+                  multiplier = c3_r2)
+          end if
+
+          call restartvar(ncid=ncid, flag=flag, varname='grainc_14_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='c14 grain C transfer', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
+          if (flag=='read' .and. .not. readvar) then
+             call set_missing_from_template( &
+                  my_var = this%grainc_xfer_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%grainc_xfer_patch, &
+                  multiplier = c3_r2)
+          end if
+
           call restartvar(ncid=ncid, flag=flag, varname='cropseedc_14_deficit', xtype=ncd_double,  &
                dim1name='pft', long_name='pool for seeding new crop growth', units='gC14/m2', &
                interpinic_flag='interp', readvar=readvar, data=this%cropseedc_deficit_patch)
@@ -2263,6 +2345,8 @@ contains
     !
     ! !USES:
     use subgridAveMod, only : p2c
+    use clm_time_manager , only : get_nstep
+
     !
     ! !DESCRIPTION:
     ! Perform patch and column-level carbon summary calculations
@@ -2327,8 +2411,7 @@ contains
           this%storvegc_patch(p) =            &
                this%storvegc_patch(p)       + &
                this%grainc_storage_patch(p) + &
-               this%grainc_xfer_patch(p)    + &
-               this%cropseedc_deficit_patch(p)
+               this%grainc_xfer_patch(p)
 
           this%dispvegc_patch(p) =            &
                this%dispvegc_patch(p)       + &
@@ -2345,6 +2428,10 @@ contains
             this%totvegc_patch(p) + &
             this%xsmrpool_patch(p) + &
             this%ctrunc_patch(p)
+
+       if (use_crop) then 
+          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p)
+       end if
 
        ! (WOODC) - wood C
        this%woodc_patch(p) = &
@@ -2569,16 +2656,9 @@ contains
          var = this%cpool_patch(begp:endp), &
          flux_out_grc_area = conv_cflux(begp:endp))
 
-    ! BUG(wjs, 2016-06-01, bugz 2316) Probably the behavior should be the same for carbon
-    ! isotopes as for standard c12, but for now I'm preserving the old behavior.
-    if (this%species == CN_SPECIES_C12) then
-       call update_patch_state( &
-            var = this%xsmrpool_patch(begp:endp), &
-            flux_out_grc_area = conv_cflux(begp:endp))
-    else
-       call update_patch_state( &
-            var = this%xsmrpool_patch(begp:endp))
-    end if
+    call update_patch_state( &
+         var = this%xsmrpool_patch(begp:endp), &
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%ctrunc_patch(begp:endp), &

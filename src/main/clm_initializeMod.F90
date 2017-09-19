@@ -280,7 +280,7 @@ contains
     use clm_time_manager      , only : get_step_size, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
-    use C14BombSpikeMod       , only : C14_init_BombSpike, use_c14_bombspike 
+    use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength, daylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
     use fileutils             , only : getfil
@@ -480,6 +480,10 @@ contains
 
        if ( use_c14 .and. use_c14_bombspike ) then
           call C14_init_BombSpike()
+       end if
+
+       if ( use_c13 .and. use_c13_timeseries ) then
+          call C13_init_TimeSeries()
        end if
     else
        call SatellitePhenologyInit(bounds_proc)

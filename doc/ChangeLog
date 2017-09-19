@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm4_5_16_r255
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Sep 18 21:21:29 MDT 2017
+One-line Summary: Changes to crop and enabling Carbon isotopes for crop and some miscellaneous small changes
+
+Purpose of changes
+------------------
+
+Changes for crop on as well as enabling carbon isotopes when crop is on. Fix some small answer changing issues. 
+Also bring in new timeseries datasets for C14 as well as now C13. The C14 dataset has hardwired latitude sectors 
+it uses (so previous file can NOT be used). Properly handle and update C13/C14 variables when crop is on.
+Handle CIsoFluxCalc calls for a list of crop specific fields. Add cropseedc_deficit, to storvegc as well as totveg.
+Send livestemc to litter for prognostic crop. Ignore downreg for carbon isotopes in Fractionation subroutine.
+For dynamic roots, use rooting values on parameter dataset which is set to values from PFT=1.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+  2508 -- Incorrect landuse.timeseries datasets for f09 and hcru for rcp=8.5 in r254
+  2489 -- Set c/nnegcrit for clm45/clm50 (10X higher for clm45 than clm50)
+  2412 -- Initialize rootfr to PFT==1 value for dynamic roots -- update params files
+  2396 -- make subtraction the default behavior for clm4_5.
+  2316 -- update carbon isotopes same as C12: CNVegCarbonStateType.F90
+  2211 -- Fix time used for Ciso time series
+
+Known bugs introduced in this tag (include bugzilla ID):
+  2511 -- Overflow with Carbon isotopes
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   Change to restarts when c-isotopes on
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist items: use_c13_timeseries, atm_c13_filename
+   New history vars:   C13_GRAINC, C13_CROPSEEDC_DEFICIT, C14_GRAINC, C14_CROPSEEDC_DEFICIT
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Set cnegcrit/nnegcrit for CLM45/CLM50
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New C13 and C14 timeseries files
+   New params files, but only answer changing part is for dynamic roots 
+       (setup bare-soil on file to match what's used for PFT=1)
+   Bring in correct datasets for rcp8.5 for f09 and hcru
+   1x1_numaIA 1850 and 1850-2000 transient files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The C13/C14 timeseries should be implemented with streams for greater flexibility, robustness, and code
+   reuse. The new C14 timeseries file is hardcoded for three specific latitude sectors, and thus can't use
+   the previous file, nor a file of a different configuration. Downreg is passed down from get_downreg_patch 
+   in clm_driver, to CanopyFluxes to Fractionation, but no longer used (it should be removed).
+  
+   Note the following from Dave: While debugging crop isotope code, found that cpool_patch and frootc_patch 
+     could occasionally be very small but nonzero numbers after crop harvest, which persists 
+     through to next planting and for reasons that could not 100% isolate, caused C12/C13 ratios to occasionally 
+     go out of bounds. Zeroing out these small pools and putting them into the flux to the atmosphere solved many 
+     of the crop isotope problems
+
+Changes to tests or testing: Added some tests, two of the new tests fail due to bug 2511
+
+Code reviewed by: self, koven, dlawren, dll, oleson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (234 comparison tests fail)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi -   OK
+    yellowstone_gnu -   OK
+    cheyenne_intel -    OK
+    cheyenne_gnu -      OK
+    hobart_nag -        OK
+    hobart_pgi -        OK
+    hobart_intel -      OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r254
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Crop, Carbon-isotopes
+
+    - what platforms/compilers: All
+    - nature of change:  
+        small change to crop with missing updates, crop with carbon-isotopes are now enabled
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated:
+
+D       components/clm/src/biogeochem/C14BompbSpikeMod.F90 --- Change name to more general
+
+List all files added and what they do:
+
+A       components/clm/src/biogeochem/CNCIsoAtmTimeSeriesReadMod.F90 -- Handle time series
+             for both C13 and C14
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeochem/CNPhenologyMod.F90 -------- Remove subtract_cropseed always do when crop on, pass c13/c14
+           instances down to CNPhenology and CropPhenology. After setting C12-leafc_xfer/totvegc set the c13/c14 
+           leafc_xfer/totvegc as well
+M       components/clm/src/biogeochem/CNCStateUpdate1Mod.F90 ---- Change location of xsmrpool update. Dave added this note:
+             While debugging crop isotope code, found that cpool_patch and frootc_patch 
+             could occasionally be very small but nonzero numbers after crop harvest, which persists 
+             through to next planting and for reasons that could not 100%
+             isolate, caused C12/C13 ratios to occasionally go out of
+             bounds. Zeroing out these small pools and putting them into the flux to the
+             atmosphere solved many of the crop isotope problems
+M       components/clm/src/biogeochem/CNCIsoFluxMod.F90 --------- Add CIsoFluxCalc calls for: soilc_change, cpool_to_resp, 
+           grainc_xfer_to_|grainc|food|seed, crop_seedc_to_leaf, grain_|curmr|xsmr, cpool_|grain|grain_storage|_gr, cpool_to_|grainc|grainc_storage,
+           transfer_grain_gr, grainc_storage_to_xfer, livestemc_to_litter, and if use_grainproduct for ciso-grainc_to_cropprodc/grain_mr
+           pass iso totvegc_path for hrv_xsmrpool_to_atm CIsoFluxCalc, section adding livestemc to litter for crop
+           add additional check for ciso_state(i) /= 0 for divide by check in CIsoFluxCalc
+M       components/clm/src/biogeochem/CNPrecisionControlMod.F90 - Handle c13/c14 TruncateCandNStates for grainc/storage/xfer,
+           cropseedc_deficit_patch and xsmrpool
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90 -- Add: C13_GRAINC, C13_CROPSEEDC_DEFICIT, C14_GRAINC, C14_CROPSEEDC_DEFICIT
+           restartvar calls explicit for c12, c13, c14: grainc, grainc_storage, grainc_xfer (with c13 and c14 for ciso)
+           add cropseedc_deficit, to storvegc as well as totvegc, fix bug 2316 make cisotopes the same as C12
+M       components/clm/src/biogeochem/CNDriverMod.F90 ----------- Pass more c13/c14 instances down to CNPhenology calls
+M       components/clm/src/main/controlMod.F90 ------------------ Add namelist items: use_c13_timeseries, atm_c13_filename
+            remove abort when crop and use_c13/use_c14 is on
+M       components/clm/src/main/clm_initializeMod.F90 ----------- Add call to C13_init_TimeSeries
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90 ----- Handle C13 timeseries (call C13TimeSeries), put C14 bombspike data in 
+            hard-wired latitude sectors, ignore downreg for carbon isotopes in Fractionation subroutine
+M       components/clm/src/biogeophys/RootBiophysMod.F90 -------- Use parameters for roots from params file for bare-soil rather than
+            an explicit if statement for it
+
+M       components/clm/bld/CLMBuildNamelist.pm ------------------- Add cnegcrit/nnegcrit, allow crop and C-isotopes to be
+            on at the same time, add c13 time-series
+M       components/clm/bld/unit_testers/build-namelist_test.pl --- Change testing for time-series
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ----- New datasets for atm_c14_filename, and 
+            atm_c13_filename, new paramdata files, set cnegcrit/nnegcrit, flanduse_timeseries for f09 and hcru @ rcp=8.5
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml --- Add: use_c13_timeseries, atm_c13_filename
+            update similar documenation on c14 bombspike
+M       components/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml -- Same as changes above
+
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_bombspike1963/user_nl_clm - Set use_c13_timeseries=T
+M       components/clm/cime_config/testdefs/testlist_clm.xml - Change two ciso transient tests to include crop, add transient
+                crop ciso test
+
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml -- Add expected fails for new ciso overflow bug 2511
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r254
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Sep  1 00:09:25 MDT 2017

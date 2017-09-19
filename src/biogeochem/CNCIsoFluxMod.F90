@@ -18,6 +18,8 @@ module CNCIsoFluxMod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
+  use clm_varctl                         , only : use_crop
+  use clm_varctl                         , only : use_grainproduct
   !
   implicit none
   private
@@ -70,7 +72,7 @@ contains
     character(len=*)                      , intent(in)    :: isotope         ! 'c13' or 'c14'
     !
     ! !LOCAL VARIABLES:
-    integer :: fp,pi,l,fc,cc,j
+    integer :: fp,pi,l,fc,cc,j,p
     integer :: cdp 
     !-----------------------------------------------------------------------
 
@@ -93,7 +95,7 @@ contains
       ! of each argument, these bounds will need to be passed in, and - importantly for
       ! threading to work properly - the subroutine calls will need to be changed so that
       ! instead of 'call CIsoFluxCalc(foo, ...)' we have 'call CIsoFluxCalc(foo(begp:endp), ...)'.
-      
+     
       call CIsoFluxCalc(&
            iso_cnveg_cf%leafc_xfer_to_leafc_patch           , cnveg_cf%leafc_xfer_to_leafc_patch, &
            iso_cnveg_cs%leafc_xfer_patch                    , cnveg_cs%leafc_xfer_patch, &
@@ -379,6 +381,93 @@ contains
            iso_cnveg_cs%gresp_storage_patch                 , cnveg_cs%gresp_storage_patch, &
            num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%soilc_change_patch                  , cnveg_cf%soilc_change_patch, &
+           iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
+           num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+      ! Note that cpool_to_resp_patch is a diagnostic flux and therefore this Iso flux calculation
+      ! not strictly required. 
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%cpool_to_resp_patch                 , cnveg_cf%cpool_to_resp_patch, &
+           iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
+           num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+      if ( use_crop )then
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%grainc_xfer_to_grainc_patch         , cnveg_cf%grainc_xfer_to_grainc_patch, &
+              iso_cnveg_cs%grainc_xfer_patch                   , cnveg_cs%grainc_xfer_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%grainc_to_food_patch                , cnveg_cf%grainc_to_food_patch, &
+              iso_cnveg_cs%grainc_patch                        , cnveg_cs%grainc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%grainc_to_seed_patch                , cnveg_cf%grainc_to_seed_patch, &
+              iso_cnveg_cs%grainc_patch                        , cnveg_cs%grainc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%crop_seedc_to_leaf_patch            , cnveg_cf%crop_seedc_to_leaf_patch, &
+              iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%grain_curmr_patch                   , cnveg_cf%grain_curmr_patch, &
+              iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%grain_xsmr_patch                    , cnveg_cf%grain_xsmr_patch, &
+              iso_cnveg_cs%totvegc_patch                       , cnveg_cs%totvegc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%cpool_grain_gr_patch                , cnveg_cf%cpool_grain_gr_patch, &
+              iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%cpool_to_grainc_patch               , cnveg_cf%cpool_to_grainc_patch, &
+              iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%cpool_to_grainc_storage_patch       , cnveg_cf%cpool_to_grainc_storage_patch, &
+              iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%transfer_grain_gr_patch             , cnveg_cf%transfer_grain_gr_patch, &
+              iso_cnveg_cs%gresp_xfer_patch                    , cnveg_cs%gresp_xfer_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%cpool_grain_storage_gr_patch        , cnveg_cf%cpool_grain_storage_gr_patch, &
+              iso_cnveg_cs%cpool_patch                         , cnveg_cs%cpool_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%grainc_storage_to_xfer_patch        , cnveg_cf%grainc_storage_to_xfer_patch, &
+              iso_cnveg_cs%grainc_storage_patch                , cnveg_cs%grainc_storage_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         call CIsoFluxCalc(&
+              iso_cnveg_cf%livestemc_to_litter_patch           , cnveg_cf%livestemc_to_litter_patch, &
+              iso_cnveg_cs%livestemc_patch                     , cnveg_cs%livestemc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
+
+         if (use_grainproduct) then
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+               iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%grainc_to_food_patch(p)
+               iso_cnveg_cf%grain_mr_patch(p) = iso_cnveg_cf%grain_xsmr_patch(p) + iso_cnveg_cf%grain_curmr_patch(p)
+            end do
+         endif
+      end if
+
       ! call routine to shift patch-level litterfall fluxes to column, for isotopes
       ! the non-isotope version of this routine is called in CNPhenologyMod.F90
       ! For later clean-up, it would be possible to generalize this function to operate on a single 
@@ -446,6 +535,7 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: iso_cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)    , intent(in)    :: iso_cnveg_carbonstate_inst
     character(len=*)                , intent(in)    :: isotope         ! 'c13' or 'c14'
+
     !
     ! !LOCAL VARIABLES:
     integer :: fp,pi
@@ -459,12 +549,10 @@ contains
          )
 
       ! patch-level gap mortality fluxes
-      
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_leafc_to_litter_patch                          , cnveg_cf%m_leafc_to_litter_patch, &
            iso_cnveg_cs%leafc_patch                                      , cnveg_cs%leafc_patch, &
            num_soilp                                                     , filter_soilp, 1._r8, 0, isotope)
-
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_leafc_storage_to_litter_patch                  , cnveg_cf%m_leafc_storage_to_litter_patch, &
            iso_cnveg_cs%leafc_storage_patch                              , cnveg_cs%leafc_storage_patch, &
@@ -589,6 +677,7 @@ contains
     type(cnveg_carbonflux_type)       , intent(inout) :: iso_cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)      , intent(in)    :: iso_cnveg_carbonstate_inst
     character(len=*)                  , intent(in)    :: isotope         ! 'c13' or 'c14'
+
     !-----------------------------------------------------------------------
 
     associate(                                               &
@@ -599,7 +688,7 @@ contains
          )
 
       ! patch-level gap mortality fluxes
-   
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%hrv_leafc_to_litter_patch              , cnveg_cf%hrv_leafc_to_litter_patch, &
            iso_cnveg_cs%leafc_patch                            , cnveg_cs%leafc_patch, &
@@ -700,9 +789,9 @@ contains
            iso_cnveg_cs%gresp_xfer_patch                       , cnveg_cs%gresp_xfer_patch, &
            num_soilp                                           , filter_soilp, 1._r8, 0, isotope)
 
-      call CIsoFluxCalc(&
+      call CIsoFluxCalc(& 
            iso_cnveg_cf%hrv_xsmrpool_to_atm_patch              , cnveg_cf%hrv_xsmrpool_to_atm_patch, &
-           cnveg_cs%totvegc_patch                          , cnveg_cs%totvegc_patch, &
+           iso_cnveg_cs%totvegc_patch                          , cnveg_cs%totvegc_patch, &
            num_soilp                                           , filter_soilp, 1._r8, 0, isotope)
 
       ! call routine to shift patch-level gap mortality fluxes to column, 
@@ -875,102 +964,101 @@ contains
            iso_cnveg_cs%gresp_xfer_patch                   , cnveg_cs%gresp_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
 
-
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_leafc_to_litter_fire_patch       , cnveg_cf%m_leafc_to_litter_fire_patch, &
            iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_leafc_storage_to_litter_fire_patch, cnveg_cf%m_leafc_storage_to_litter_fire_patch, &
            iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_leafc_xfer_to_litter_fire_patch  , cnveg_cf%m_leafc_xfer_to_litter_fire_patch, &
            iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livestemc_to_litter_fire_patch   , cnveg_cf%m_livestemc_to_litter_fire_patch, &
            iso_cnveg_cs%livestemc_patch                    , cnveg_cs%livestemc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livestemc_storage_to_litter_fire_patch, cnveg_cf%m_livestemc_storage_to_litter_fire_patch, &
            iso_cnveg_cs%livestemc_storage_patch            , cnveg_cs%livestemc_storage_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livestemc_xfer_to_litter_fire_patch, cnveg_cf%m_livestemc_xfer_to_litter_fire_patch, &
            iso_cnveg_cs%livestemc_xfer_patch               , cnveg_cs%livestemc_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livestemc_to_deadstemc_fire_patch, cnveg_cf%m_livestemc_to_deadstemc_fire_patch, &
            iso_cnveg_cs%livestemc_patch                    , cnveg_cs%livestemc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_deadstemc_storage_to_litter_fire_patch, cnveg_cf%m_deadstemc_storage_to_litter_fire_patch, &
            iso_cnveg_cs%deadstemc_storage_patch            , cnveg_cs%deadstemc_storage_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_deadstemc_xfer_to_litter_fire_patch, cnveg_cf%m_deadstemc_xfer_to_litter_fire_patch, &
            iso_cnveg_cs%deadstemc_xfer_patch               , cnveg_cs%deadstemc_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_frootc_to_litter_fire_patch      , cnveg_cf%m_frootc_to_litter_fire_patch, &
            iso_cnveg_cs%frootc_patch                       , cnveg_cs%frootc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_frootc_storage_to_litter_fire_patch, cnveg_cf%m_frootc_storage_to_litter_fire_patch, &
            iso_cnveg_cs%frootc_storage_patch               , cnveg_cs%frootc_storage_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_frootc_xfer_to_litter_fire_patch , cnveg_cf%m_frootc_xfer_to_litter_fire_patch, &
            iso_cnveg_cs%frootc_xfer_patch                  , cnveg_cs%frootc_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livecrootc_to_litter_fire_patch  , cnveg_cf%m_livecrootc_to_litter_fire_patch, &
            iso_cnveg_cs%livecrootc_patch                   , cnveg_cs%livecrootc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livecrootc_storage_to_litter_fire_patch, cnveg_cf%m_livecrootc_storage_to_litter_fire_patch, &
            iso_cnveg_cs%livecrootc_storage_patch           , cnveg_cs%livecrootc_storage_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livecrootc_xfer_to_litter_fire_patch, cnveg_cf%m_livecrootc_xfer_to_litter_fire_patch, &
            iso_cnveg_cs%livecrootc_xfer_patch              , cnveg_cs%livecrootc_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_livecrootc_to_deadcrootc_fire_patch, cnveg_cf%m_livecrootc_to_deadcrootc_fire_patch, &
            iso_cnveg_cs%livecrootc_patch                   , cnveg_cs%livecrootc_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch, cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch, &
            iso_cnveg_cs%deadcrootc_storage_patch           , cnveg_cs%deadcrootc_storage_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch, cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch, &
            iso_cnveg_cs%deadcrootc_xfer_patch              , cnveg_cs%deadcrootc_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_gresp_storage_to_litter_fire_patch, cnveg_cf%m_gresp_storage_to_litter_fire_patch, &
            iso_cnveg_cs%gresp_storage_patch                , cnveg_cs%gresp_storage_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
-      
+
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_gresp_xfer_to_litter_fire_patch  , cnveg_cf%m_gresp_xfer_to_litter_fire_patch, &
            iso_cnveg_cs%gresp_xfer_patch                   , cnveg_cs%gresp_xfer_patch, &
@@ -1070,6 +1158,12 @@ contains
     ! called at the end of cn_phenology to gather all patch-level litterfall fluxes
     ! to the column level and assign them to the three litter pools
     !
+    ! !USES:
+!DML
+    use pftconMod  , only : npcropmin
+    use clm_varctl , only : use_grainproduct
+!DML
+
     ! !ARGUMENTS:
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -1092,10 +1186,14 @@ contains
          fr_flig                   => pftcon%fr_flig                                          , & ! Input:  fine root litter lignin fraction                  
 
          leaf_prof                 => soilbiogeochem_state_inst%leaf_prof_patch               , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
-         froot_prof                => soilbiogeochem_state_inst%froot_prof_patch              , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots                     
+         froot_prof                => soilbiogeochem_state_inst%froot_prof_patch              , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots 
          
-         leafc_to_litter           => iso_cnveg_carbonflux_inst%leafc_to_litter_patch         , & ! Input:  [real(r8) (:)   ]                                                    
-         frootc_to_litter          => iso_cnveg_carbonflux_inst%frootc_to_litter_patch        , & ! Input:  [real(r8) (:)   ]                                                    
+         leafc_to_litter           => iso_cnveg_carbonflux_inst%leafc_to_litter_patch         , & ! Input:  [real(r8) (:)   ]            
+         frootc_to_litter          => iso_cnveg_carbonflux_inst%frootc_to_litter_patch        , & ! Input:  [real(r8) (:)   ] 
+!DML
+         livestemc_to_litter       => iso_cnveg_carbonflux_inst%livestemc_to_litter_patch     , & ! Input:  [real(r8) (:)   ]
+         grainc_to_food            => iso_cnveg_carbonflux_inst%grainc_to_food_patch          , & ! Input:  [real(r8) (:)   ]
+!DML
          phenology_c_to_litr_met_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_met_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
          phenology_c_to_litr_cel_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_cel_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
          phenology_c_to_litr_lig_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_lig_c_col   & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
@@ -1124,6 +1222,29 @@ contains
                           + frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
                      phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
                           + frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+
+!DML
+                     if (ivt(p) >= npcropmin) then ! add livestemc to litter
+                        ! stem litter carbon fluxes
+                        phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
+                             + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
+                             + livestemc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
+                             + livestemc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+
+                        if (.not. use_grainproduct) then
+                         ! grain litter carbon fluxes
+                           phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
+                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                           phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
+                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                           phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
+                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        end if
+
+                     end if
+!DML
                   end if
                end if
 
@@ -1469,7 +1590,7 @@ contains
      ! loop over the supplied filter
      do f = 1,num
         i = filter(f)
-        if (ctot_state(i) /= 0._r8) then
+        if (ctot_state(i) /= 0._r8 .and. ciso_state(i) /= 0._r8) then
            ciso_flux(i) = ctot_flux(i) * (ciso_state(i)/ctot_state(i)) * frax
         else
            ciso_flux(i) = 0._r8

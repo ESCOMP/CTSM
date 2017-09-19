@@ -92,7 +92,6 @@ module CNPhenologyMod
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
   real(r8), private :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
-  logical,  private :: subtract_cropseed = .true.
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -123,7 +122,7 @@ contains
     character(len=*), parameter :: subname = 'CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
-    namelist /cnphenology/ initial_seed_at_planting, subtract_cropseed
+    namelist /cnphenology/ initial_seed_at_planting
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -145,7 +144,6 @@ contains
     end if
 
     call shr_mpi_bcast (initial_seed_at_planting, mpicom)
-    if ( initial_seed_at_planting == 1._r8 ) subtract_cropseed = .false.
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -245,8 +243,9 @@ contains
        doalb, waterstate_inst, temperature_inst, atm2lnd_inst, crop_inst, &
        canopystate_inst, soilstate_inst, dgvs_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
-       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, leaf_prof_patch, &
-       froot_prof_patch, phase)
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+       c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
+       leaf_prof_patch, froot_prof_patch, phase)
     ! !USES:
     use CNSharedParamsMod, only: use_fun
     !
@@ -275,6 +274,8 @@ contains
     type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     real(r8)                       , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
     real(r8)                       , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     integer                        , intent(in)    :: phase
@@ -305,7 +306,8 @@ contains
        if (doalb .and. num_pcropp > 0 ) then
           call CropPhenology(num_pcropp, filter_pcropp, &
                waterstate_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
-               cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+               cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+               c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
        end if
     else if ( phase == 2 ) then
        ! the same onset and offset routines are called regardless of
@@ -1417,7 +1419,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine CropPhenology(num_pcropp, filter_pcropp                     , &
        waterstate_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst , &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,&
+       c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
     ! !DESCRIPTION:
     ! Code from AgroIBIS to determine crop phenology and code from CN to
@@ -1432,6 +1435,8 @@ contains
     use pftconMod        , only : nirrig_cotton, nirrig_rice
     use clm_varcon       , only : spval, secspday
     use clm_varctl       , only : use_fertilizer 
+    use clm_varctl       , only : use_c13, use_c14
+    use clm_varcon       , only : c13ratio, c14ratio
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1445,6 +1450,8 @@ contains
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     !
     ! LOCAL VARAIBLES:
     integer kyr       ! current year
@@ -1632,6 +1639,25 @@ contains
                   crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
                   crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
 
+                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
+                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
+                  if (use_c13) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
+                     endif
+                  endif
+                  if (use_c14) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
+                     endif
+                  endif
+
                   ! latest possible date to plant winter cereal and after all other 
                   ! crops were harvested for that year
 
@@ -1651,6 +1677,25 @@ contains
                   leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
                   crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
                   crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
+
+                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
+                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
+                  if (use_c13) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
+                     endif
+                  endif
+                  if (use_c14) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
+                     endif
+                  endif
                else
                   gddmaturity(p) = 0._r8
                end if
@@ -1697,6 +1742,26 @@ contains
                   crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
                   crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
 
+                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
+                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
+                  if (use_c13) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
+                     endif
+                  endif
+                  if (use_c14) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
+                     endif
+                  endif
+
+
                   ! If hit the max planting julian day -- go ahead and plant
                else if (jday == maxplantjday(ivt(p),h) .and. gdd820(p) > 0._r8 .and. &
                     gdd820(p) /= spval ) then
@@ -1724,6 +1789,25 @@ contains
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
                   crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
                   crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
+
+                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
+                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
+                  if (use_c13) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
+                     endif
+                  endif
+                  if (use_c14) then
+                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+                     else
+                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
+                     endif
+                  endif
 
                else
                   gddmaturity(p) = 0._r8
@@ -1855,14 +1939,10 @@ contains
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
                     fert_counter(p)  = ndays_on * secspday
-                    if ( subtract_cropseed ) then
-                       if (ndays_on .gt. 0) then
-                          fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
-                       else
-                          fert(p) = 0._r8
-                       end if
-                    else
+                    if (ndays_on .gt. 0) then
                        fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
+                    else
+                       fert(p) = 0._r8
                     end if
                else
                   ! this ensures no re-entry to onset of phase2
@@ -1896,6 +1976,13 @@ contains
                   crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
                   leafc_xfer(p) = 0._r8
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
+                  if (use_c13) then
+                     c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
+                  endif
+                  if (use_c14) then
+                     c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
+                  endif
+
                end if
 
                ! enter phase 3 while previous criteria fail and next is true;
@@ -1929,6 +2016,12 @@ contains
             onset_counter(p) = 0._r8
             leafc_xfer(p) = 0._r8
             leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
+            if (use_c13) then
+               c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
+            endif
+            if (use_c14) then
+               c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
+            endif
          end if ! croplive
 
       end do ! prognostic crops loop
@@ -2361,18 +2454,12 @@ contains
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
-                  if ( subtract_cropseed ) then
-                     ! Replenish the seed deficits from grain, if there is enough
-                     ! available grain. (If there is not enough available grain, the seed
-                     ! deficits will accumulate until there is eventually enough grain to
-                     ! replenish them.)
-                     grainc_to_seed(p) = t1 * min(-cropseedc_deficit(p), grainc(p))
-                     grainn_to_seed(p) = t1 * min(-cropseedn_deficit(p), grainn(p))
-                  else
-                     ! It's not necessary to explicitly 0 these, but we do it to be clear
-                     grainc_to_seed(p) = 0._r8
-                     grainn_to_seed(p) = 0._r8
-                  end if
+                  ! Replenish the seed deficits from grain, if there is enough
+                  ! available grain. (If there is not enough available grain, the seed
+                  ! deficits will accumulate until there is eventually enough grain to
+                  ! replenish them.)
+                  grainc_to_seed(p) = t1 * min(-cropseedc_deficit(p), grainc(p))
+                  grainn_to_seed(p) = t1 * min(-cropseedn_deficit(p), grainn(p))
                   ! Send the remaining grain to the food product pool
                   grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
                   grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
