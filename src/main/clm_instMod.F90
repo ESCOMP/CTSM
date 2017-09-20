@@ -294,7 +294,7 @@ contains
     call energyflux_inst%Init(bounds, temperature_inst%t_grnd_col(begc:endc), &
          IsSimpleBuildTemp(), IsProgBuildTemp() )
 
-    call aerosol_inst%Init(bounds)
+    call aerosol_inst%Init(bounds, NLFilename)
 
     call frictionvel_inst%Init(bounds)
 

@@ -12,11 +12,12 @@ module SnowSnicarMod
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use clm_varctl      , only : iulog
-  use clm_varcon      , only : namec 
+  use clm_varcon      , only : namec , tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type
   use AerosolMod      , only : snw_rds_min
+  use atm2lndType     , only : atm2lnd_type
   use WaterStateType  , only : waterstate_type
   use WaterFluxType   , only : waterflux_type
   use TemperatureType , only : temperature_type
@@ -987,7 +988,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SnowAge_grain(bounds, &
        num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
-       waterflux_inst, waterstate_inst, temperature_inst)
+       waterflux_inst, waterstate_inst, temperature_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Updates the snow effective grain size (radius). 
@@ -1037,6 +1038,7 @@ contains
     type(waterflux_type)   , intent(in)    :: waterflux_inst
     type(waterstate_type)  , intent(inout) :: waterstate_inst
     type(temperature_type) , intent(inout) :: temperature_inst
+    type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
     integer :: snl_top                      ! top snow layer index [idx]
@@ -1066,6 +1068,7 @@ contains
     real(r8) :: rhos                        ! snow density [kg m-3]
     real(r8) :: h2osno_lyr                  ! liquid + solid H2O in snow layer [kg m-2]
     real(r8) :: cdz(-nlevsno+1:0)           ! column average layer thickness [m]
+    real(r8) :: snw_rds_fresh               ! fresh snow radius [microns]
     !--------------------------------------------------------------------------!
 
     associate(                                                      & 
@@ -1164,6 +1167,11 @@ contains
             bst_drdt0 = snowage_drdt0(rhos_idx,Tgrd_idx,T_idx)
 
 
+            !LvK extra boundary check, to prevent when using old restart file with lower snw_rds_min than current run
+            if (snw_rds(c_idx,i) < snw_rds_min) then
+               snw_rds(c_idx,i) = snw_rds_min
+            endif
+
             ! change in snow effective radius, using best-fit parameters
             dr_fresh = snw_rds(c_idx,i)-snw_rds_min
             dr = (bst_drdt0*(bst_tau/(dr_fresh+bst_tau))**(1/bst_kappa)) * (dtime/3600)
@@ -1224,8 +1232,11 @@ contains
                frc_oldsnow = 1._r8 - frc_refrz - frc_newsnow
             endif
 
+            ! temperature dependent fresh grain size
+            snw_rds_fresh = FreshSnowRadius(c_idx, atm2lnd_inst)
+
             ! mass-weighted mean of fresh snow, old snow, and re-frozen snow effective radius
-            snw_rds(c_idx,i) = (snw_rds(c_idx,i)+dr)*frc_oldsnow + snw_rds_min*frc_newsnow + snw_rds_refrz*frc_refrz
+            snw_rds(c_idx,i) = (snw_rds(c_idx,i)+dr)*frc_oldsnow + snw_rds_fresh*frc_newsnow + snw_rds_refrz*frc_refrz
             !
             !**********  5. CHECK BOUNDARIES   ***********
             !
@@ -1261,6 +1272,58 @@ contains
     end associate 
 
   end subroutine SnowAge_grain
+
+
+  !-----------------------------------------------------------------------
+  real(r8) function FreshSnowRadius(c_idx, atm2lnd_inst) 
+    !
+    ! !DESCRIPTION:
+    ! Returns fresh snow grain radius, which is linearly dependent on temperature.
+    ! This is implemented to remedy an outstanding bias that SNICAR has in initial
+    ! grain size. See e.g. Sandells et al, 2017 for a discussion (10.5194/tc-11-229-2017).
+    !
+    ! Yang et al. (2017), 10.1016/j.jqsrt.2016.03.033
+    !  discusses grain size observations, which suggest a temperature dependence. 
+    ! 
+    ! !REVISION HISTORY:
+    ! Author: Leo VanKampenhout
+    !
+    ! !USES:
+    use AerosolMod      , only : fresh_snw_rds_max
+    ! !ARGUMENTS:
+    integer, intent(in)                :: c_idx         ! column index
+    type(atm2lnd_type) , intent(in)    :: atm2lnd_inst  ! Forcing from atmosphere
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    real(r8), parameter :: tmin = tfrz - 30._r8       ! start of linear ramp
+    real(r8), parameter :: tmax = tfrz - 0._r8        ! end of linear ramp
+    real(r8), parameter :: gs_min = snw_rds_min       ! minimum value
+    real(r8)            :: gs_max                     ! maximum value
+
+    associate( &
+         forc_t      => atm2lnd_inst%forc_t_downscaled_col & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)
+         )
+       if ( fresh_snw_rds_max <= snw_rds_min )then
+           FreshSnowRadius = snw_rds_min
+       else
+           gs_max = fresh_snw_rds_max
+
+           if (forc_t(c_idx) < tmin) then
+               FreshSnowRadius = gs_min
+           else if (forc_t(c_idx) > tmax) then
+               FreshSnowRadius = gs_max
+           else
+               FreshSnowRadius = (tmax-forc_t(c_idx))/(tmax-tmin)*gs_min + &
+                                 (forc_t(c_idx)-tmin)/(tmax-tmin)*gs_max
+           end if
+       end if
+
+    end associate
+
+  end function FreshSnowRadius
+
+
 
   !-----------------------------------------------------------------------
    subroutine SnowOptics_init( )

@@ -298,6 +298,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <upplim_destruct_metamorph   phys="clm4_5">100.d00</upplim_destruct_metamorph>
 <upplim_destruct_metamorph   phys="clm5_0">175.d00</upplim_destruct_metamorph>
 
+<fresh_snw_rds_max phys="clm4_5">54.526d00</fresh_snw_rds_max>
+<fresh_snw_rds_max phys="clm5_0">204.526d00</fresh_snw_rds_max>
+
 <overburden_compress_tfactor>0.08d00</overburden_compress_tfactor>
 
 <reset_snow>.false.</reset_snow>

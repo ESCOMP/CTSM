@@ -2281,6 +2281,12 @@ WARNING: Setting this to .true. will break water conservation for approximately 
 day of the new run. This is by design: The excess snow is completely removed from the system.
 </entry>
 
+<entry id="fresh_snw_rds_max" type="real" category="clm_physics"
+       group="aerosol"   >
+maximum warm (at freezing) fresh snow effective radius [microns]
+</entry>
+
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to initInterp                                                    -->
 <!-- ========================================================================================  -->

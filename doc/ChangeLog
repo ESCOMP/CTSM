@@ -1,4 +1,122 @@
 ===============================================================
+Tag name:  clm4_5_16_r256
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Sep 20 15:42:17 MDT 2017
+One-line Summary: Fresh snow grain radius is temperature dependent
+
+Purpose of changes
+------------------
+
+Changes from Leo VanKampenhout to have fresh snow grain size a function of air temperature for CLM50.
+Behavior is the same as before for CLM45 with fresh snow grain size a fixed parameter.  For CLM50
+it's that same value (54.526) less than -30C and linear with T up to 204.526 at 0C, and 204.526 for 
+temperatures greater than 0C.
+
+
+Bugs fixed or introduced
+------------------------
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   Added namelist item: fresh_snw_rds_max
+
+Changes made to namelist defaults (e.g., changed parameter values):
+    fresh_snw_rds_max is snw_rds_min for clm4_5
+    fresh_snw_rds_max is 204.526     for clm5_0
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes:  None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,L.vanKampenhout@uu.nl
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (343 compare tests fail since namelists change)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi -   OK
+    yellowstone_gnu -   OK
+    cheyenne_intel -    OK
+    cheyenne_gnu -      OK
+    hobart_nag -        OK
+    hobart_pgi -        PASS
+    hobart_intel -      PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r255
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, for clm5_0
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_0
+    - what platforms/compilers: All
+    - nature of change: more snow melt at expense of ice melt
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: oleson clm50_r251_SNOWGRAIN_2000
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://webext.cgd.ucar.edu/B1850/b.e20.B1850.f09_g17.pi_control.all.196/lnd/b.e20.B1850.f09_g17.pi_control.all.196.8_27-b.e20.B1850.f09_g17.pi_control.all.195.8_27/set1/set1.html
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/src/biogeophys/SnowSnicarMod.F90 -- Pass atm2lnd_inst in, make sure snw_rds isn't less than the min parameter
+        create a function for setting FreshSnowRadius, dependent on atm2lnd_inst (for air temperature), the function sets to min
+        parameter if fresh_snw_rds_max is same as min (clm45), or to min at less than -30C linear between fresh_snw_rds_max and min parameter
+        up to 0C, and then at fresh_snw_rds_max value for clm50.
+   M  components/clm/src/biogeophys/AerosolMod.F90 ----- Add InitReadNML and fresh_snw_rds_max
+   M  components/clm/src/main/clm_driver.F90 ----------- Pass atm2lnd_inst down to SnowAgeGrain
+   M  components/clm/src/main/clm_instMod.F90 ---------- Pass NLFilename to aerosol_inst%Init
+
+   M  components/clm/bld/CLMBuildNamelist.pm - Set fresh_snw_rds_max, and add aerosol namelist
+
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Set fresh_snw_rds_max for clm45 and clm50
+   M  components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Define fresh_snw_rds_max
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r255
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Sep 18 21:21:29 MDT 2017

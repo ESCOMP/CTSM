@@ -757,7 +757,8 @@ contains
        call SnowAge_grain(bounds_clump,                         &
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,     &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc, &
-            waterflux_inst, waterstate_inst, temperature_inst)
+            waterflux_inst, waterstate_inst, temperature_inst, &
+            atm2lnd_inst)
 
        call t_stopf('hylake')
 
@@ -785,7 +786,8 @@ contains
        call SnowAge_grain(bounds_clump,                 &
             filter(nc)%num_snowc, filter(nc)%snowc,     &
             filter(nc)%num_nosnowc, filter(nc)%nosnowc, &
-            waterflux_inst, waterstate_inst, temperature_inst)
+            waterflux_inst, waterstate_inst, temperature_inst, &
+            atm2lnd_inst)
        call t_stopf('snow_init')
 
        ! ============================================================================

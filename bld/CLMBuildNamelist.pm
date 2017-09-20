@@ -3634,6 +3634,7 @@ sub setup_logic_snowpack {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_overburden_compaction_method');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lotmp_snowdensity_method');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'upplim_destruct_metamorph');
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fresh_snw_rds_max');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow');
 
     if (remove_leading_and_trailing_quotes($nl->get_value('snow_overburden_compaction_method')) eq 'Vionnet2012') {
@@ -3751,7 +3752,7 @@ sub write_output_files {
                  clm_initinterp_inparm century_soilbgcdecompcascade
                  soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                  soilwater_movement_inparm rooting_profile_inparm
-                 soil_resis_inparm  bgc_shared canopyfluxes_inparm
+                 soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
                  cnprecision_inparm clm_glacier_behavior crop irrigation_inparm);
 
