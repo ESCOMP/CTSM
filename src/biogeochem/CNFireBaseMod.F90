@@ -392,6 +392,7 @@ contains
          cc_other                            => pftcon%cc_other                                                   , & ! Input: 
          fm_leaf                             => pftcon%fm_leaf                                                    , & ! Input: 
          fm_lstem                            => pftcon%fm_lstem                                                   , & ! Input: 
+         fm_dstem                            => pftcon%fm_dstem                                                   , & ! Input: 
          fm_other                            => pftcon%fm_other                                                   , & ! Input: 
          fm_root                             => pftcon%fm_root                                                    , & ! Input: 
          fm_lroot                            => pftcon%fm_lroot                                                   , & ! Input: 
@@ -650,7 +651,7 @@ contains
              fm_other(patch%itype(p))
         m_livestemc_to_litter_fire(p)               =  livestemc(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))    
+             fm_lstem(patch%itype(p))    
         m_livestemc_storage_to_litter_fire(p)       =  livestemc_storage(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
@@ -659,10 +660,10 @@ contains
              fm_other(patch%itype(p)) 
         m_livestemc_to_deadstemc_fire(p)            =  livestemc(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
-             (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
+             (fm_lstem(patch%itype(p))-fm_dstem(patch%itype(p)))
         m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))    
+             fm_dstem(patch%itype(p))    
         m_deadstemc_storage_to_litter_fire(p)       =  deadstemc_storage(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
@@ -678,7 +679,7 @@ contains
              (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_livecrootc_to_litter_fire(p)              =  livecrootc(p)         * f * &
-             fm_droot(patch%itype(p))
+             fm_lroot(patch%itype(p))
         m_livecrootc_storage_to_litter_fire(p)      =  livecrootc_storage(p) * f * &
              (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p)) 
@@ -715,7 +716,7 @@ contains
              fm_other(patch%itype(p))
         m_livestemn_to_litter_fire(p)              =  livestemn(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))
+             fm_lstem(patch%itype(p))
         m_livestemn_storage_to_litter_fire(p)      =  livestemn_storage(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))   
@@ -727,7 +728,7 @@ contains
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
         m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))    
+             fm_dstem(patch%itype(p))    
         m_deadstemn_storage_to_litter_fire(p)      =  deadstemn_storage(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))

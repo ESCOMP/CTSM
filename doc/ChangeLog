@@ -1,4 +1,122 @@
 ===============================================================
+Tag name:  clm4_5_16_r257
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Sep 29 10:17:36 MDT 2017
+One-line Summary: Fix two bugs found by Hui Tang, one for Carbon isotopes and one in the fire model
+
+Purpose of changes
+------------------
+
+This is a fix for two bugs found by Hui Tang. One is for Carbon isotopes where a fix that came in for
+clm4_5_11_r188, used leafc for too many of the isotope flux calculation calls. This changes it so the
+correct terms are used for the particular flux.
+
+The other fix is in the fire model where fire emissions were using the wrong fire related
+mortality term for dead stem and should have been using a different type. Now it matches the
+flux type, as well as the term used in combustion completness for the particular fire emission.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+  2517 -- Bug in CNFireFluxes for some fire fluxes
+  2516 -- Leafc wrongly used in too many CIsoFluxCalc calls.
+
+Known bugs introduced in this tag (include bugzilla ID):  (new one found)
+  2518 -- --- warnings from CLM build-namelist don't get sent out of preview_namelist
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,oleson,dlawren,Hui Tang
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r256
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 with CN and fire on, and also for carbon isotopes
+    - what platforms/compilers: all
+    - nature of change: very small impact
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: /oleson/clm50_r255_fireiso_1deg_GSWP3V1_1850
+
+   URL for LMWG diagnostics output used to validate new climate:
+http://webext.cgd.ucar.edu/I1850/clm50_r255_fireiso_1deg_GSWP3V1_1850/lnd/clm50_r255_fireiso_1deg_GSWP3V1_1850_21_50-clm50_r255_coniso_1deg_GSWP3V1_1850_21_50/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/src/biogeochem/CNFireBaseMod.F90 --- Some fire emissions were using 
+        fire related mortality for dead stem and should have been using a different type
+        it should match the one used in the combustion completeness factor and the main
+        type
+   M  components/clm/src/biogeochem/CNFireLi2014Mod.F90 - Same change as above
+
+   M  components/clm/src/biogeochem/CNCIsoFluxMod.F90 -- In the fix for bug 2116 that came
+        in with clm4_5_11_r188, leafc was used in too many CNCIsoFluxCalc calls this corrects
+        it to use the correct term
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r256
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Sep 20 15:42:17 MDT 2017

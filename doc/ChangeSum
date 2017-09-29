@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r257     erik 09/29/2017 Fix two bugs found by Hui Tang, one for Carbon isotopes and one in the fire model
   clm4_5_16_r256     erik 09/20/2017 Fresh snow grain radius is temperature dependent
   clm4_5_16_r255     erik 09/18/2017 Changes to crop and enabling Carbon isotopes for crop and some miscellaneous small changes
   clm4_5_16_r254     erik 09/01/2017 Update surface datasets, and point to new CMIP6 population density dataset

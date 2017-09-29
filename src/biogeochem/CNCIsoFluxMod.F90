@@ -971,12 +971,12 @@ contains
 
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_leafc_storage_to_litter_fire_patch, cnveg_cf%m_leafc_storage_to_litter_fire_patch, &
-           iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
+           iso_cnveg_cs%leafc_storage_patch                , cnveg_cs%leafc_storage_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
 
       call CIsoFluxCalc(&
            iso_cnveg_cf%m_leafc_xfer_to_litter_fire_patch  , cnveg_cf%m_leafc_xfer_to_litter_fire_patch, &
-           iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
+           iso_cnveg_cs%leafc_xfer_patch                   , cnveg_cs%leafc_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
 
       call CIsoFluxCalc(&
