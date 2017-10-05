@@ -505,7 +505,7 @@ Community Earth System Model version 1.2 (CESM1.2).
 CLM5.0
 ^^^^^^^^^^^^
 
-Developments for CLM5.0 build on the progress made in CLM4.5.  Most major components of the model have been udpated with particularly
+Developments for CLM5.0 build on the progress made in CLM4.5.  Most major components of the model have been updated with particularly
 notable changes made to soil and plant hydrology, snow density, river modeling, carbon and nitrogen cycling and coupling, 
 and crop modeling. 
 Much of the focus of development centered on a 
@@ -520,7 +520,7 @@ sheets.  The fresh snow density parameterization is updated to more realisticall
 dynamically adjust landunit weights means that a glacier can initiate, grow, shrink, or disappear during
 a simulation when two-way coupling is active.  Multiple elevation classes (10 elevation classes by default) and associated temperature, rain/snow partitioning, and downwelling longwave downscaling are used for glacier landunits to account for the strong topographic elevation heterogeneity over glaciers and ice sheets.    
 
-A plant hydraulic stress routine is introduced which explicitly models water transport through the vegetation according to a simple hydraulic framework (Kennedy et al., to be submitted).  The water supply equations are used to solve for vegetation water potential forced by transpiration demand and a set of layer-by-layer soil water potentials.  Stomatal conductance, therefore, is a function of prognostic leaf water potential.  Water stress is calculated as the ratio of attenuated stomatal conductance to maximum stomatal conductance.  An emergent feature of the plant hydraulics is soil hydraulic redistribution.  In CLM5, maximum stomatal conductance is obtained from the Medlyn conductance model :ref:(Medlyn et al., 2011)<Medlynetal2011>`, rather than the Ball-Berry stomatal conductance model that was utilized in CLM4.5 and prior versions of the model. The Medlyn stomatal conductance model is preferred mainly for it's more realistic behavior at low humidity levels :ref:`(Rogers et al., 2017)<Rogersetal2017>`. The stress deciduous vegetation phenology trigger is augmented with a antecedent precipitation requirement :ref:`(Dahlin et al. 2015)<Dahlinetal2015>`.
+A plant hydraulic stress routine is introduced which explicitly models water transport through the vegetation according to a simple hydraulic framework (Kennedy et al., to be submitted).  The water supply equations are used to solve for vegetation water potential forced by transpiration demand and a set of layer-by-layer soil water potentials.  Stomatal conductance, therefore, is a function of prognostic leaf water potential.  Water stress is calculated as the ratio of attenuated stomatal conductance to maximum stomatal conductance.  An emergent feature of the plant hydraulics is soil hydraulic redistribution.  In CLM5, maximum stomatal conductance is obtained from the Medlyn conductance model :ref:`(Medlyn et al., 2011)<Medlynetal2011>`, rather than the Ball-Berry stomatal conductance model that was utilized in CLM4.5 and prior versions of the model. The Medlyn stomatal conductance model is preferred mainly for it's more realistic behavior at low humidity levels :ref:`(Rogers et al., 2017)<Rogersetal2017>`. The stress deciduous vegetation phenology trigger is augmented with a antecedent precipitation requirement :ref:`(Dahlin et al. 2015)<Dahlinetal2015>`.
 
 Plant nutrient dynamics are substantially updated to resolve several deficiencies with the CLM4 and CLM4.5 nutrient cycling representation.  The Fixation and Update of Nitrogen (FUN) model (refs???) is adapted for CLM :ref:`(Shi et al., 2016)<Shietal2016>` to resolve the
 unrealistic feature that plants get nitrogen for free in CLM4 and CLM4.5.  With FUN, the fact that plants typically spend a 
@@ -533,25 +533,25 @@ Nitrogen for Assimilation (LUNA, :ref:`(Xu et al., 2012<Xuetal2012>` and :ref:`A
 photosynthetic capacity based on optimization of the use of leaf nitrogen under different environmental conditions such that 
 light capture, carboxylation, and respiration are co-limiting.  Allocation changes ... Fixation ???
 
-Representation of human management of the land (agriculture, wood harvest) is augmented in several ways. The CLM4.5 crop model is extended to operate globally through the addition of rice and sugarcane as well as tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerandDirmeyer2015>` and :ref:`Levis et al., 2016<Levisetal2016>`.  These crop types are added to the existing temperate corn, temperature soybean, spring wheat, and cotton crop types.  
-Fertilization rates and irrigation equipped area updated based on crop type and geographic region through an input dataset.  The irrigation trigger is updated.  Additional minor changes include crop phenological triggers that 
+Representation of human management of the land (agriculture, wood harvest) is augmented in several ways. The CLM4.5 crop model is extended to operate globally through the addition of rice and sugarcane as well as tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerDirmeyer2015>` and :ref:`Levis et al., 2016<Levisetal2016>`).  These crop types are added to the existing temperate corn, temperature soybean, spring wheat, and cotton crop types.  
+Fertilization rates and irrigation equipped area are updated annually based on crop type and geographic region through an input dataset.  The irrigation trigger is revised.  Additional minor changes include crop phenological triggers that 
 vary by latitude for selected crop types, grain C and N is now removed at harvest to a 1-year product pool with
 the carbon for the next season's crop seed removed from the grain carbon at harvest.  Through the introduction of 
 the capability to dynamically adjust landunit weights during a simulation, the crop model can now be run coincidentally
 with prescribed land use, which significantly expands the capabilities of the model.  Mass-based rather than area-based wood harvest is applied. Several heat stress indices for both urban and rural areas are calculated and output by default :ref:`(Buzan et al., 2015)<Buzanetal2015>`.   A more sophisticated and realistic building space heating and air conditioning submodel that prognoses interior building air temperature and includes more realistic space heating and air conditioning wasteheat factors
 is incorporated.  
 
-The fire model is the same as utilized in CLM4.5 except that a modified scheme is used to estimate the dependence of fire occurrence and spread on fuel wetness for non-peat fires outside cropland and tropical closed forests :ref:`Li and Lawrence, 2017)<LiLawrence2017>` and the dependence of agricultural fires on fuel load is removed.
+The fire model is the same as utilized in CLM4.5 except that a modified scheme is used to estimate the dependence of fire occurrence and spread on fuel wetness for non-peat fires outside cropland and tropical closed forests :ref:`(Li and Lawrence, 2017)<LiLawrence2017>` and the dependence of agricultural fires on fuel load is removed.
 
 Included with the release of CLM5.0 is a functionally supported version of the Functionally-Assembled Terrestrial Ecosystem Simulator (FATES, :ref:`Fisher et al., 2015)<Fisheretal2015>`. A major motivation of this development is to allow the prediction of biome boundaries directly from plant physiological traits via their competitive interactions. The version of CLM5-FATES that is supported in this release is described here??? Short blurb on what FATES can do??? Note that the classical dynamic global vegetation model (DGVM) that has been available within CLM4 and CLM4.5 remains available, though it is largely untested.  The technical description of the CLM-DGVM can be found within the CLM4.5 Technical Description (:ref:`Oleson et al. 2013)<Olesonetal2013>`.  
 
 During the course of the development of CLM5.0, it became clear that the increasing complexity of the model combined with the increasing number and range
 of model development projects required updates to the underlying CLM infrastructure.  Many such software improvements
-are included in CLM5.0 including a partial transition to an object-oriented modular software structure, extraction of many hard coded model 
-parameters into either the parameter file or the CLM namelist, which allows users to more readily calibrate the model for use at 
+are included in CLM5.0 including a partial transition to an object-oriented modular software structure. Many hard coded model 
+parameters have been extracted into either the parameter file or the CLM namelist, which allows users to more readily calibrate the model for use at 
 specific locations or to conduct parameter sensitivity studies.  As part of the effort to increase 
 the scientific utility of the code, in most instances older generation parameterizations (i.e., the parameterizations 
-available in CLM4 or CLM4.5) are retained under namelist switches, allowing the user to revert to CLM4.5 
+available in CLM4 or CLM4.5) are retained under namelist switches, allowing the user to revert to CLM4.5  
 from the same code base or to revert individual parameterizations where the old parameterizations are compatible with the new code.  Finally, multiple vertical soil layer structures
 are defined and it is relatively easy to add additional structures.
 
