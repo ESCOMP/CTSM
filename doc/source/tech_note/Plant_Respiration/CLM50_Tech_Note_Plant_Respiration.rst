@@ -29,13 +29,7 @@ nitrogen pool tracks retranslocated nitrogen, mobilized from leaf tissue
 prior to abscission and litterfall. Altogether there are 20 state
 variables for vegetation carbon, and 19 for vegetation nitrogen.
 
-Figure 13.1. Vegetation fluxes and pools.
-
-.. image:: image1.png
-    :width: 800px
-    :height: 800px
-
-Figure 13.2: Carbon and nitrogen pools.
+.. _Figure Carbon and nitrogen pools:
 
 .. image:: image2.png
     :width: 400px
