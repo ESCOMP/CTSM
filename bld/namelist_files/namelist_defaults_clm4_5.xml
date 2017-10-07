@@ -283,7 +283,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- For clm4_5, make this effectively unlimited -->
 <int_snow_max phys="clm4_5">1.e30</int_snow_max>
 
-<n_melt_glcmec phys="clm5_0">0.5</n_melt_glcmec>
+<n_melt_glcmec phys="clm5_0">10.0d00</n_melt_glcmec>
 <n_melt_glcmec phys="clm4_5">10.0</n_melt_glcmec>
 
 <wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>

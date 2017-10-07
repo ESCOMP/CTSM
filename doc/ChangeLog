@@ -1,4 +1,104 @@
 ===============================================================
+Tag name:  clm4_5_16_r258
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Oct  6 22:25:29 MDT 2017
+One-line Summary: Revert change to fire, set n_melt_glcmec=10, update mosart to version that doesn't accumulate water in short rivers
+
+Purpose of changes
+------------------
+
+Revert the changes to fire that came in clm4_5_16_r257. Add some notes that clarify that the code as is, is correct.
+Set n_melt_glcmec=10.0 for clm5.0 (This should have happened in the fresh snow grain size change in clm4_5_16_r256).
+Update mosart to a version that doesn't accumulate water in short rivers. This is done by explicitly making sure river length
+isn't smaller than a minimum value.
+
+Bugs fixed or introduced
+------------------------
+
+   2516 -- Mistaken bug for fire mortality calculations for some 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+     Changed n_melt_glcmec to 10.0d00 for clm5_0 (same as clm4_5, but double precision)
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): Some of the
+   fire mortality code is confusing, we added some notes to clarify that's it's correct
+
+Changes to tests or testing: None
+
+Code reviewed by: self, dlawren, oleson, swenson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (231 compare tests fail)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r257
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 and/or with mosart
+    - what platforms/compilers: all
+    - nature of change: small
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): mosart
+    mosart to rlen_min_n01_mosart1_0_26 (will bring trunk version of mosart in an upcoming tag)
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - set
+M       components/clm/src/biogeochem/CNFireBaseMod.F90 --- Revert fire changes (bug 2516) add comments 
+              use fm_droot as it's used to represent fraction of transport from livestem/livecroot to litter
+              or to represent the fraction of plant-tissue mortality for deadstem/deadcroot
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90 - Revert fire changes
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r257
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Sep 29 10:17:36 MDT 2017

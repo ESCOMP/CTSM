@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r258     erik 10/06/2017 Revert change to fire, set n_melt_glcmec=10, update mosart to version that doesn't accumulate water in short rivers
   clm4_5_16_r257     erik 09/29/2017 Fix two bugs found by Hui Tang, one for Carbon isotopes and one in the fire model
   clm4_5_16_r256     erik 09/20/2017 Fresh snow grain radius is temperature dependent
   clm4_5_16_r255     erik 09/18/2017 Changes to crop and enabling Carbon isotopes for crop and some miscellaneous small changes
