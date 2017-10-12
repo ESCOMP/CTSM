@@ -174,7 +174,7 @@ Jiafu Mao, Lei Meng, Sheri Michelson, Guo-Yue Niu, Adam Phillips, Taotao
 Qian, Jon Radakovich, James Randerson, Nan Rosenbloom, Steve Running,
 Koichi Sakaguchi, Adam Schlosser, Andrew Slater, Reto Stöckli, Ying Sun, Quinn
 Thomas, Peter Thornton, Mariana Vertenstein, Nicholas Viovy, Aihui Wang, Guiling Wang,
-Charlie Zender, Xiaodong Zeng, and Xubin Zeng.
+Zong-Liang Yang, Charlie Zender, Xiaodong Zeng, and Xubin Zeng.
 
 .. _rst_Introduction:
 
