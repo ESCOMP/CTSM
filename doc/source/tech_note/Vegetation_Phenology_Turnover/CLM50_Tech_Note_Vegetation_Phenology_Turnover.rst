@@ -116,7 +116,7 @@ out of the transfer pool:
    r_{xfer\_ on} =\left\{\begin{array}{l} {{2\mathord{\left/ {\vphantom {2 t_{onset} }} \right. \kern-\nulldelimiterspace} t_{onset} } \qquad {\rm for\; }t_{onset} \ne \Delta t} \\ {{1\mathord{\left/ {\vphantom {1 \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} \qquad {\rm for\; }t_{onset} =\Delta t} \end{array}\right.
 
 and *t*\ :sub:`onset` (s) is the number of seconds remaining in
-the current phenology onset growth period (Figure 14.1). The form of Eq.
+the current phenology onset growth period (Figure 14.1). The form of Eq. :eq:`ZEqnNum852972` 
 produces a flux from the transfer pool which declines linearly over the
 onset growth period, approaching zero flux in the final timestep.
 
@@ -580,13 +580,16 @@ previous offset period), an accumulated soil water index
    SWI_{sum}^{n} =\left\{\begin{array}{l} {SWI_{sum}^{n-1} +f_{day} \qquad {\rm for\; }\Psi _{s,3} \ge \Psi _{onset} } \\ {SWI_{sum}^{n-1} \qquad \qquad {\rm for\; }\Psi _{s,3} <\Psi _{onset} } \end{array}\right.
 
 where :math:`\Psi`\ :sub:`s,3` is the soil water potential (MPa)
-in the third soil layer and :math:`{\Psi}_{onset} = -2 MPa`
+in the third soil layer and :math:`{\Psi}_{onset} = -0.6 MPa`
 is the onset soil water potential threshold. Onset triggering is
-possible once :math:`{SWI}_{sum} > 15`. If the cold climate
-growing degree-day accumulator is not active at the time when this
-threshold is reached (see below), and if the daylength is greater than 6
+possible once :math:`{SWI}_{sum} > 15`. To avoid spurious onset triggering due to 
+soil moisture in the third soil layer exceeding the threshold due only to
+soil water suction of water from deeper in the soil column, an additional precipitation trigger is included which requires
+at least 20 mm of rain over the previous 10 days :ref:`(Dahlin et al., 2015) <Dahlinetal2015>`.  If the cold climate
+growing degree-day accumulator is not active at the time when the soil moisture and precipitation
+thresholds are reached (see below), and if the daylength is greater than 6
 hours, then onset is triggered. Except as noted below,
-:math:`{SWI}_{sum}` continues to accumulate according to Eq. during
+:math:`{SWI}_{sum}` continues to accumulate according to Eq. :eq:`ZEqnNum503826` during
 the dormant period if the daylength criterion prevents onset triggering,
 and onset is then triggered at the timestep when daylength exceeds 6
 hours.
@@ -604,8 +607,8 @@ with subsequent accumulation calculated as:
 
 If :math:`{FD}_{sum} > 15` during the dormant period, then a
 cold-climate onset triggering criterion is introduced, following exactly
-the growing degree-day summation (:math:`{GDD}_{sum}`) logic of Eqs.
-and . At that time :math:`{SWI}_{sum}` is reset
+the growing degree-day summation (:math:`{GDD}_{sum}`) logic of Eqs. :eq:`ZEqnNum510730`
+and :eq:`ZEqnNum598907`. At that time :math:`{SWI}_{sum}` is reset
 (:math:`{SWI}_{sum} = 0`). Onset triggering under these conditions
 depends on meeting all three of the following criteria:
 :math:`{SWI}_{sum} > 15`, :math:`{GDD}_{sum} > {GDD}_{sum\_crit}`, and daylength greater than 6 hrs.
@@ -613,8 +616,8 @@ depends on meeting all three of the following criteria:
 The following control variables are set when a new onset growth period
 is initiated: :math:`{SWI}_{sum} = 0`, :math:`{FD}_{sum} = 0`, :math:`{GDD}_{sum} = 0`, :math:`{n}_{days\_active} = 0`, and
 :math:`t_{onset} = 86400\cdot n_{days\_ on}` , where :math:`{n}_{days\_on}` is set to a constant value of 30 days. Fluxes
-from storage into transfer pools occur in the timestep when a new onset growth period is initiated, and are handled identically to Eqs. - for
-carbon fluxes, and to Eqs. - for nitrogen fluxes. The onset counter is decremented on each time step after initiation of the onset period,
+from storage into transfer pools occur in the timestep when a new onset growth period is initiated, and are handled identically to Eqs. :eq:`ZEqnNum904388` -:eq:`ZEqnNum195642` for
+carbon fluxes, and to Eqs. :eq:`ZEqnNum812152` - :eq:`ZEqnNum605338` for nitrogen fluxes. The onset counter is decremented on each time step after initiation of the onset period,
 until it reaches zero, signaling the end of the onset period:
 
 .. math::
