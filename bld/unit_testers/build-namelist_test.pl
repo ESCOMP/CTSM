@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 824;
+my $ntests = 836;
 if ( defined($opts{'compare'}) ) {
    $ntests += 522;
 }
@@ -274,9 +274,9 @@ print "==================================================\n";
 
 # irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-irrig .true.", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
-                      "-clm_start_type startup", "-irrig .false. -crop -bgc bgc",
+                      "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
                      ) {
    my $file = $startfile;
@@ -420,7 +420,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "baset_map without crop"     =>{ options=>"-bgc bgc -envxml_dir .",
+     "baset_map without crop"    =>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"baset_mapping='constant'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
@@ -430,17 +430,17 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "irrigate=T without -irr op"=>{ options=>"-crop -bgc cn -envxml_dir .",
-                                     namelst=>"irrigate=.true.",
+     "-irrig with clm5_0"        =>{ options=>"-bgc bgc -crop -irrig .true. -envxml_dir .",
+                                     namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_5",
+                                     conopts=>"-phys clm5_0",
                                    },
-     "irrigate=F with -irrg op"  =>{ options=>"-crop -bgc cn -irrig .true. -envxml_dir .",
-                                     namelst=>"irrigate=.false.",
+     "-irrig with -crop"         =>{ options=>"-irrig .true. -envxml_dir .",
+                                     namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_5",
-                                   },
-    "-irrigate=T without -crop"      =>{ options=>"-bgc cn -irrig .true. -envxml_dir .",
+                                     conopts=>"-phys clm4_0 -bgc cn -crop on",
+                                  },
+     "-irrigate=T without -crop" =>{ options=>"-bgc cn -irrig .true. -envxml_dir .",
                                     namelst=>"irrigate=.true.",
                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                     conopts=>"-phys clm4_5",
@@ -922,6 +922,63 @@ foreach my $key ( keys(%failtest) ) {
    system( "cat $tempfile" );
 }
 
+
+print "\n===============================================================================\n";
+print "Start Warning testing.  These should fail unless -ignore_warnings option is used \n";
+print "=================================================================================\n";
+
+# Warning testing, do things that give warnings, unless -ignore_warnings option is used
+
+my %warntest = ( 
+     # Warnings without the -ignore_warnings option given
+     "coldwfinidat"              =>{ options=>"-envxml_dir . -clm_start_type cold",
+                                     namelst=>"finidat = 'testfile.nc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "bgcspin_w_suplnitro"       =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
+                                     namelst=>"suplnitro='ALL'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "use_c13_wo_bgc"            =>{ options=>"-envxml_dir . -bgc cn",
+                                     namelst=>"use_c13=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "use_c14_wo_bgc"            =>{ options=>"-envxml_dir . -bgc cndv",
+                                     namelst=>"use_c14=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "maxpft_wrong"              =>{ options=>"-envxml_dir . -bgc cndv",
+                                     namelst=>"maxpatch_pft=19",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "bad_megan_spec"            =>{ options=>"-envxml_dir . -bgc bgc -megan",
+                                     namelst=>"megan_specifier='ZZTOP=zztop'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+               );
+foreach my $key ( keys(%warntest) ) {
+   print( "$key\n" );
+   system( "../configure -s ".$warntest{$key}{"conopts"});
+   my $options  = $warntest{$key}{"options"};
+   my $namelist = $warntest{$key}{"namelst"};
+   &make_env_run( GLC_TWO_WAY_COUPLING=>$warntest{$key}{"GLC_TWO_WAY_COUPLING"} );
+   eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+   isnt( $?, 0, $key );
+   system( "cat $tempfile" );
+   # Now run with -ignore_warnings and make sure it works
+   $options .= " -ignore_warnings";
+   eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+   is( $@, '', "$options" );
+   system( "cat $tempfile" );
+}
+
+
 print "\n==================================================\n";
 print "Test ALL resolutions with CLM5.0 and SP \n";
 print "==================================================\n";
@@ -1231,7 +1288,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   system( "../configure -s $mode" );
   my $clmopts = "-bgc cn -crop";
   my $res = "1.9x2.5";
-  $options = "-res $res -irrig .true. -crop -bgc cn  -envxml_dir .";
+  $options = "-res $res -namelist '&a irrigate=.true./' -crop -bgc cn  -envxml_dir .";
   &make_env_run();
   eval{ system( "$bldnml $options $clmopts  > $tempfile 2>&1 " ); };
   is( $@, '', "$options $clmopts" );

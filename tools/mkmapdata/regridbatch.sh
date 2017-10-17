@@ -27,9 +27,10 @@
 #PBS -A P93300606
 #PBS -N regrid
 #PBS -q regular
-#PBS -l select=1:mpiprocs=8:mem=110GB
-#PBS -l walltime=12:00:00
+#PBS -l select=4:ncpus=2:mpiprocs=2:mem=109GB
+#PBS -l walltime=2:00:00
 #PBS -j oe
+#PBS -me
 #PBS -V
 #PBS -S /bin/bash
 

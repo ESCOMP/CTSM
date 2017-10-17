@@ -1691,11 +1691,6 @@ of model version and atmospheric forcing. To run well constants would need to be
 to run with a different type of atmospheric forcing.
 </entry> 
 
-<entry id="irrig" type="logical" category="default_settings"
-       group="default_settings"  >
-If TRUE, irrigation will be active (find surface datasets with active irrigation).
-</entry> 
-
 <entry id="megan" type="integer" category="default_settings"
        group="default_settings"  valid_values="0,1">
 If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)

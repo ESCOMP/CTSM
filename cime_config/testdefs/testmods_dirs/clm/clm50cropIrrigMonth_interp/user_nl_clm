@@ -1,3 +1,6 @@
 use_init_interp = .true.
 
 hist_fincl1 += 'QIRRIG_DEMAND'
+
+! Turn irrigation on
+irrigate = .true.

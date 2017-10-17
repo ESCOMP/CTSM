@@ -1,4 +1,213 @@
 ===============================================================
+Tag name:  clm4_5_16_r259
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Oct 17 10:39:36 MDT 2017
+One-line Summary: Update to latest cime from cesm2_0_beta07 and config_components version 3
+
+Purpose of changes
+------------------
+
+Update CLM to use version 3 for config_components.xml which has additional error checking of compset names. Also
+update it for mosart, cism and rtm. And cime is updated to the version used in cesm2_0_beta07. There are a few
+new features brought in with the latest cime that are described below. CLM now requires one and only one modifier 
+for what type it is in the compset name (i.e. only one "%" as in CLM45%BGC or CLM50%SP). Will now abort when
+CLM build-namelist encounters a warning (after printing information on all warnings). To ignore the warnings
+and continue add the new "-ignore_warnings" to CLM_BLDNML_OPTS. "-irrig" is now an option to CLM_BLDNML_OPTS
+only for clm4_0, set "irrigate" namelist item in your user_nl_clm file for clm4_5 or clm5_0. By default build-namelist
+sets irrigate to true for transient or present-day configurations if crop is on and clm5_0 (unless DV on). Get PTCLMmkdata fully
+converted over to cheyenne, and create a new set of files for testing it's ability to create cases. Checking for
+.true. or .false. in CLM build-namelist is now more robust and allows for "F" or "T" as newer FORTRAN versions do.
+
+
+Fix several bugs as described below. PTCLM and CLM tools were both verified to work and pass testing.
+The PE layout for f10 on hobart was changed to a single-node so that it would compare exactly to previous versions.
+Fix a bug for NCK tests in RTM and MOSART. Get mksurfdata_map working correctly for f05. Error message when
+you set finidat=' ' is more clear on what to do. You can also now do a cold-start for a hybrid case prints a warning),
+but not allowed on a branch case.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+  2519 -- Trouble setting use_aereoxid_prog=.false./
+  2515 -- Setting finidat=' ' gives cryptic error message
+  2510 -- Mapping files from the 1km grid can only be created on geyser
+  2509 -- Bad mapping files for f05 resolution
+  2504 -- hybrid/branch cases don't allow CLM_FORCE_COLDSTART to be on
+  2494 -- MOSART test NLCOMP fails due to duplicate mosart_inparam in user_nl_mosart
+  2477 -- Multiinstance mosart with REFCASE does not initialize
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   This includes an update to cime, so some behavior is a little different than before (see section below)
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+    CLM now allows one and only one modifier for the type of configuration in the compset name 
+    (i.e. CLM50%BGC or CLM45%SP (only one "%" modifier is allowed) ). "-irrig" is now only allowed as an option
+    to CLM_BLDNML_OPTS for clm4_0, for clm4_5/clm5_0 the handling of irrigate is handled inside CLM build-namelist.
+    Remove some no longer needed forcing definitions for compsets (the year range at the beginning of the compset name).
+    Now abort on build-namelist warnings (but adding "-ignore_warnings" option to CLM_BLDNML_OPTS allow it to run without it).
+    Remove compset forcings that aren't being used: 5505, C2R6, C2R8, C2R4, C1, GEOS (start of long compset names)
+
+Changes to CIME user interface:
+- Eleminate --user-compset. Clean up caseroot directory upon failed creation. 
+- Check coupler fields for nan.
+- New xml variable, readmode, 
+- xmlquery --group has been changed go xmlquery --get-group
+- New case.qstatus tool.
+- Autodeletion of broken case dirs.
+- Add --mail-user and --mail-type to case.submit.
+- Remove --user-compset from create_newcase, allow compset longname in testname argument to create_test.
+- New argument to create_clone (--user-mods-dir to also point to user-mods directory that will be used)
+
+Changes made to namelist defaults (e.g., changed parameter values):
+    Correct SCRIP grid file for f05 and add mapping files for them
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing:
+  clm-decStarts cism history is a bit different (shown as changing answers)
+  Allow longname in tests
+- Add --pesfile option to create_test.
+- New --timeout flag for wait_for_tests
+- CLM now needs to define its own LII and SSP tests (they already were put in place, now it's actually using them)
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+          (216 compare tests fail comparing to clm4_5_16_r258 tag)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r258
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (bit for bit)
+
+    clm/decStart tests were changed though
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime, cism, rtm, mosart
+   cime   to cime5.4.0-alpha.03
+   cism   to cism2_1_40
+   rtm    to rtm1_0_63
+   mosart to mosart1_0_28
+
+List all files eliminated: Remove -irrig option for clm4_5/clm5_0 tests
+
+  D   components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_spunup/shell_commands
+  D   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/shell_commands
+  D   components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/shell_commands
+
+List all files added and what they do: 
+
+  A   components/clm/bld/namelist_files/LogMessages.pm - Log message, warning, exit and abort handling for perl
+
+List all existing files that have been modified, and describe the changes:
+
+          Update to new PTCLM directory for testing PTCLM cases
+  M   components/clm/test/tools/nl_files/PTCLM_USUMB_Cycle_clm4_5 -- Change map_gdate
+  M   components/clm/test/tools/nl_files/PTCLM_USUMB_Global_clm4_5 - Change map_gdate
+  M   components/clm/test/tools/nl_files/PTCLM_USUMB_clm4_5 --------- Change map_gdate
+  M   components/clm/test/tools/TSMscript_tools.sh -- Change user_mods directory used for PTCLM case
+
+  M   components/clm/tools/mkmapdata/regridbatch.sh -- Get working on cheyenne
+
+  M   components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Working f05 SCRIP grid file
+  M   components/clm/bld/namelist_files/namelist_definition_clm4_5.xml ----- Remove irrig
+  M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ------- Change irrig to irrigate
+           add mapping files for f05
+
+         Set irrigate for use-cases, .true. for use_crop=T, use_cndv=F and not 1850
+  M   components/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/stdurbpt_pd.xml
+  M   components/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/20thC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/glacierMEC_pd.xml
+  M   components/clm/bld/namelist_files/use_cases/2000_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+
+  M   components/clm/bld/CLMBuildNamelist.pm -- moving warnings, logging, exit, and fatal_error to LogMessages
+        Add -ignore_warnings, -irrig is now only for clm4_0, pass $opts to add_default, not just {test},
+        use value_is_true for all logical evalutions (extend it to all T or F), warnings will all be
+        written out, and abort at the end (unless -ignore_warnings is used)
+        don't die if clm_usr_name is set and didn't find user datasets, add final_exit on completion
+  M   components/clm/bld/unit_testers/build-namelist_test.pl - Add tests for -ignore_warnings option
+        handle -irrig for clm4_5
+
+  M   components/clm/cime_config/config_compsets.xml -- Add I2000Clm50BgcCruGs compset
+  M   components/clm/cime_config/config_pes.xml ------- Set PE count for f10 on hobart to single node
+  M   components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_spunup/user_nl_clm --------------- turn irrigate on
+  M   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/user_nl_clm - turn irrigate on
+  M   components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/user_nl_clm ------- turn irrigate on
+  M   components/clm/cime_config/testdefs/testlist_clm.xml - 1x1_camdenNJ test with stub-GLC: I2000Clm50BgcCruGs
+  M   components/clm/cime_config/config_component.xml --- Update to config_component version 3. CLM must have 1 and exactly
+         one modifier, move setting of -irrig for 2000 and transient compsets to inside of CLM build-namelist
+         remove some no longer needed forcing definitions for compsets
+  M   components/clm/cime_config/buildnml - Print warning if branch and coldstart, allow colstart with hybrid
+         Add warning if doing a coldstart
+
+  M   components/clm/src/CMakeLists.txt - Add additional subdirectory for unit testing (from Bill Sacks)
+
+  M   components/clm/src/main/controlMod.F90 - Allow use_crop=F and irrigate
+
+  M   parse_cime.cs.status - Seperate out differences when baselines don't exist
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r258
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Oct  6 22:25:29 MDT 2017

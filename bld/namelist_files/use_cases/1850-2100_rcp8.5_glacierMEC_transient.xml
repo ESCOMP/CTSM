@@ -21,6 +21,11 @@
 
 <glc_nec>10</glc_nec>
 
+
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false.">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
+
 <clm_start_type>arb_ic</clm_start_type>
 
 <stream_year_first_ndep phys="clm4_0" bgc="cn"   >1850</stream_year_first_ndep>

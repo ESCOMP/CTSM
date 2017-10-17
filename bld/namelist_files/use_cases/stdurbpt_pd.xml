@@ -18,4 +18,8 @@
 
 <urban_hac>'OFF'</urban_hac>
 
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false.">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
+
 </namelist_defaults>

@@ -18,6 +18,7 @@ add_definitions(-DHIDE_MPI)
 # precedence (when there are two files with the same name, the one added later
 # wins).
 add_subdirectory(${CESM_ROOT}/cime/src/share/util csm_share)
+add_subdirectory(${CESM_ROOT}/cime/src/share/unit_test_stubs/util csm_share_stubs)
 add_subdirectory(${CESM_ROOT}/cime/src/share/esmf_wrf_timemgr esmf_wrf_timemgr)
 add_subdirectory(${CESM_ROOT}/cime/src/drivers/mct/shr drv_share)
 

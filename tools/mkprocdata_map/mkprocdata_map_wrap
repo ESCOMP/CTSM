@@ -88,20 +88,20 @@ function change_missing_to_value {
     varname_tmp=${varname}_tmp_$$
 
     cat > cmds.nco.tmp.$$ <<EOF
-*missing = ${varname}.get_miss();
+*missing=${varname}.get_miss();
 
 /* we need to create a temporary variable because it seems that
 delete_miss can only operate on variables that have been previously
 defined in this script */
-*${varname_tmp} = ${varname};
+*${varname_tmp}=${varname};
 
 /* we need to delete the missing value in order to replace those
    values with 0 (needed because ncap2 doesn't let you do operations
    on points that have the missing value) */
 ${varname_tmp}.delete_miss();
 
-where (${varname_tmp} == missing)
-   ${varname_tmp} = ${newval};
+where(${varname_tmp}==missing)
+   ${varname_tmp}=${newval};
 
 /* WJS (6-28-11): I could imagine the following line having negative
    performance implications. However, I think it's best to maintain
@@ -110,7 +110,7 @@ where (${varname_tmp} == missing)
    attribute; I don't know if that would be more or less efficient. */
 ${varname_tmp}.set_miss(missing);
 
-${varname} = ${varname_tmp};
+${varname}=${varname_tmp};
 EOF
        
     do_cmd "ncap2 -O -S cmds.nco.tmp.$$ $infile $outfile" 0
@@ -233,9 +233,9 @@ if [ $do_landfrac_copies -eq 0 ]; then
    integer landmask, because we need to change the FillValue to be
    within the range of an integer before converting landmask to an
    integer */
-*landmask_float = (landfrac > 0);
+*landmask_float=(landfrac > 0);
 landmask_float.change_miss($landmask_fill);
-landmask = int(landmask_float);
+landmask=int(landmask_float);
 EOF
 
     do_cmd "ncap2 -O -S cmds.nco.tmp.$$ $output_file $output_file" 0

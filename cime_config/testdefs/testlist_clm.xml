@@ -528,7 +528,7 @@
       </test>
     </grid>
   </compset>
-  <compset name="I2000Clm50BgcCru">
+  <compset name="I2000Clm50BgcCruGs">
     <grid name="1x1_camdenNJ">
       <test name="ERI_D_Ld9">
         <machine compiler="intel" testtype="prebeta" testmods="clm/default">cheyenne</machine>

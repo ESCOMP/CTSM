@@ -342,11 +342,6 @@ contains
             errMsg(sourcefile, __LINE__))
        end if
        
-       if (.not. use_crop .and. irrigate) then
-          call endrun(msg=' ERROR: irrigate = .true. requires CROP model active.'//&
-            errMsg(sourcefile, __LINE__))
-       end if
-       
        if (use_lch4 .and. use_vertsoilc) then 
           anoxia = .true.
        else

@@ -199,12 +199,18 @@ sub run_csstatus {
          my $over = $2;
          my $fails = ""; my $passes = ""; my $pendings = "";
          my $newline;
+         my $bfail = 0;
          if ( $verbose ) { print "$test\n"; }
          do {
             $newline = shift(@lines);
             if (       $newline =~ /FAIL[ ]+$test ([^ ]+)/ ) {
                $fails .= " $1";
                chomp( $fails );
+               if ( $1 eq "BASELINE" ) {
+                 if ( $newline =~ /ERROR BFAIL baseline directory/ ) {
+                    $bfail = 1;
+                 }
+               }
             } elsif (  $newline =~ /PASS[ ]+$test ([^ ]+)/ ) {
                $passes .= " $1";
                chomp( $passes );
@@ -237,14 +243,7 @@ sub run_csstatus {
             }
          }
          if ( $over eq "DIFF" ) { 
-            my $file = glob( "${test}.*$csdate/TestStatus" );
-            my $result = " ";
-            if ( -f $file ) {
-               $result = `grep "ERROR baseline directory" $file`;
-            } else {
-               if ( $verbose ) { print( "Bad file: $file\n" ); }
-            }
-            if ( $result =~ /ERROR/ ) {
+            if ( $bfail ) {
                $over     = "FAIL_BDNE";
             } else {
                $over     = "DIFF";
@@ -315,6 +314,7 @@ sub print_categories {
    my @fails;
    my @pendings;
    my @compares_diff;
+   my @compares_diff_nobase;
    my @keys = sort( keys(%csstatus) );
    foreach my $key ( @keys ) {
       if (      $csstatus{$key}{'over'} eq "PASS" ) {
@@ -324,7 +324,7 @@ sub print_categories {
          push( @compares_diff, $key );
       } elsif ( $csstatus{$key}{'over'} eq "FAIL_BDNE" ) {
          push( @passes, $key );
-         push( @compares_diff, $key );
+         push( @compares_diff_nobase, $key );
       } elsif ( $csstatus{$key}{'over'} eq "FAIL" ) {
          push( @fails, $key );
       } elsif ( $csstatus{$key}{'over'} eq "PEND" ) {
@@ -339,6 +339,7 @@ sub print_categories {
    printf( "%d Tests pending\n", $#pendings+1 );
    printf( "%d Tests passed\n",  $#passes+1 );
    printf( "%d Tests compare different to baseline\n",  $#compares_diff+1 );
+   printf( "%d Tests are new where there is no baseline\n",  $#compares_diff_nobase+1 );
    printf( "%d Tests failed\n",  $#fails+1 );
    print( "================================================================================\n" );
 
@@ -366,6 +367,14 @@ sub print_categories {
       print( "These tests compare different to the baseline\n" );
       print( "================================================================================\n" );
       foreach my $key ( @compares_diff ) {
+         print( "$key\n" );
+      }
+   }
+   if ( $#compares_diff_nobase >= 0 ) {
+      print( "================================================================================\n" );
+      print( "These tests don't have a baseline to compare to\n" );
+      print( "================================================================================\n" );
+      foreach my $key ( @compares_diff_nobase ) {
          print( "$key\n" );
       }
    }
