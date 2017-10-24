@@ -1,4 +1,128 @@
 ===============================================================
+Tag name:  clm4_5_16_r260
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Oct 24 15:59:41 MDT 2017
+One-line Summary: Update paramater file for CLM50 as well as fates, fix a few issues
+
+Purpose of changes
+------------------
+
+Update the parameter file for CLM5.0, changing: ekc_active,ekn_active,kn_nonmyc,psi50, and stem_leaf. Dave Lawrence,
+Keith Oleson, Will Wieder, and Rosie Fischer were involved in changing these parameters to increase survivability of 
+BDT Tropical and NDT Boreal and to slightly decrease the over-productivity of BDS boreal.
+
+The version of FATES used was updated to one with the same API, but updated science (science_1.3.0 api_1.0.0).
+
+There were a couple issues fixed as well. PTCLM was updated to fix a few issues and also allow us to test running
+with an updated PTCLM user-mods-directory. So the US-UMB testing was updated to point to a freshly created directory.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2524 -- Run with decStart tests
+   2523 -- Run with cnonly
+   2522 -- PTCLMmkdata doesn't handle crop on or off well in latest CLM45/CLM50
+   2521 -- Add warning for when PTCLMmkdata sets MPILIB to mpi-serial by default
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
+    -crop option becomes a toggle for CLM_BLDNML_OPTS (so -no-crop is valid as well)
+    Same setup for mksurfdata.pl was introduced as well (and for PTCLMmkdata)
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New parameter file for CLM5.0
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: USUMB tests updated, tests for PTCLM updated
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (118 compare tests fail)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK (one expected fail)
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r259
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for CLM50 and/or with fates
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all configurations with CLM50 or CLM45 with Fates
+    - what platforms/compilers: All
+    - nature of change: Improvements in survivability of certain trees
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): PTCLM
+
+    PTCLM to PTCLM2_171024b
+
+List all files eliminated: None
+
+List all files added and what they do: Missing file from previous tag
+
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/decStart/user_nl_cism
+
+List all existing files that have been modified, and describe the changes:
+
+   M    components/clm/test/tools/TSMscript_tools.sh --------------------- Update PTCLM version of mapping data being pointed to
+   M    components/clm/test/tools/nl_files/mksrfdt_10x15_1850 ------------ Change -no_crop option to -no-crop
+   M    components/clm/test/tools/nl_files/mksrfdt_1x1_vancouverCAN_2000 - Change -no_crop option to -no-crop
+   M    components/clm/tools/mksurfdata_map/mksurfdata.pl ---------------- Change -no_crop option to -no-crop toggle
+   M    components/clm/bld/CLMBuildNamelist.pm --------------------------- Change -crop option to a toggle (so -no-crop is valid)
+             Fix bug 2523 by setting bgc_spinup
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Update parameter file for CLM50
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/user_nl_clm ---- Point to c171024 version of PTCLM data
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/shell_commands - Point to c171024 version of PTCLM data
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r259
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Oct 17 10:39:36 MDT 2017

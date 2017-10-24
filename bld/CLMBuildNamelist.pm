@@ -324,7 +324,7 @@ sub process_commandline {
              "test"                      => \$opts{'test'},
              "use_case=s"                => \$opts{'use_case'},
              "bgc=s"                     => \$opts{'bgc'},
-             "crop"                      => \$opts{'crop'},
+             "crop!"                     => \$opts{'crop'},
              "dynamic_vegetation"        => \$opts{'dynamic_vegetation'},
              "vichydro"                  => \$opts{'vichydro'},
              "maxpft=i"                  => \$opts{'maxpft'},
@@ -1165,6 +1165,7 @@ sub setup_cmdl_spinup {
          $log->fatal_error("spinup_state is accelerated, but clm_accelerated_spinup is off, change one or the other");
       }
     } else {
+      $nl_flags->{'bgc_spinup'} = "off";
       $val = $defaults->get_value($var);
     }
     $nl_flags->{$var} = $val;

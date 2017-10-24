@@ -54,7 +54,7 @@ my %opts = (
                debug=>0,
                exedir=>undef,
                allownofile=>undef,
-               nocrop=>undef,
+               crop=>1,
                hirespft=>undef,
                years=>"1850,2000",
                glc_nec=>10,
@@ -125,7 +125,7 @@ OPTIONS
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
      -inlandwet                    If you want to allow inland wetlands
-     -no_crop                      Create datasets without the extensive list of prognostic crop types
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
      -no_surfdata                  Do not output a surface dataset
                                    This is useful if you only want a landuse_timeseries file
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
@@ -415,7 +415,7 @@ EOF
         "usr_gname=s"  => \$opts{'usr_gname'},
         "usr_gdate=s"  => \$opts{'usr_gdate'},
         "usr_mapdir=s" => \$opts{'usr_mapdir'},
-        "no_crop"      => \$opts{'no_crop'},
+        "crop!"        => \$opts{'crop'},
         "hirespft"     => \$opts{'hirespft'},
         "l|dinlc=s"    => \$opts{'csmdata'},
         "d|debug"      => \$opts{'debug'},
@@ -524,7 +524,7 @@ EOF
        $opts{'soil_override'} = 1;
    }
    # Check if pft set
-   if ( defined($opts{'no_crop'}) ) { $numpft = 16; }   # First set numpft if crop is off
+   if ( ! $opts{'crop'} ) { $numpft = 16; }   # First set numpft if crop is off
    if ( defined($opts{'pft_frc'}) || defined($opts{'pft_idx'}) ) {
        &check_pft( );
        $opts{'pft_override'} = 1;
