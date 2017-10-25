@@ -1,4 +1,196 @@
 ===============================================================
+Tag name:  clm4_5_16_r261
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Oct 25 07:37:24 MDT 2017
+One-line Summary: Add option to reset snow over glacier columns
+
+Purpose of changes
+------------------
+
+We have had an option to reset snow over non-glacier columns, using the
+reset_snow namelist variable. This is useful when transitioning from a
+spinup with one set of atmospheric forcings to a run with substantially
+different atmospheric forcings. We originally did not provide an option
+to reset snow over glacier columns, because we couldn't find a
+satisfactory way to determine which glacier columns should and should
+not be reset. However, members of the LIWG have found that it's hard to
+analyze some test runs without this option.
+
+This tag, therefore, provides an option to reset snow over glacier
+columns, using a new namelist flag reset_snow_glc. You can optionally
+provide an elevation threshold for this resetting: By setting
+reset_snow_glc_ela to some elevation (in meters), only glacier columns
+below this elevation get their snow packs reset. Note that you run the
+risk of baking in answers with this (how much of the resulting spatial
+patterns are due to your choice of where to reset snow?), but this can
+still be useful in some cases. In general, this is meant for testing,
+and not for "real" scientific production runs.
+
+Original changes were from Leo van Kampenhout, with some refactoring by
+Bill Sacks.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID):
+- 2525: test_build_namelist.pl fails in clm4_5_16_r260
+  (this bug existed prior to this tag, but was first discovered here)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variables:
+  - reset_snow_glc: logical; if set to .true., resets the snow pack over
+    glacier columns
+  - reset_snow_glc_ela: elevation threshold for resetting snow pack over
+    glacier columns
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- reseedresetsnow testmod turns on snow resetting over glacier points,
+  and so changes answers. It uses the reset_snow_glc_ela threshold that
+  Leo has been using.
+
+Code reviewed by: self, Leo van Kampenhout
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok (run on yellowstone)
+    Tests in build-namelist_test.pl pass but change answers as expected
+    due to new namelist options.
+
+    NOTE: prove test_build_namelist.pl fails (see bug 2525)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, NLCOMP failures as expected. Also, expected
+    baseline failure:
+    ERS_D.f19_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-reseedresetsnow
+
+    However, there were also baseline failures in these tests, due to
+    problems with r260:
+
+    (1)
+
+    SMS_Ld5.f19_g17.IHistClm50Bgc.cheyenne_intel.clm-decStart
+    SMS_Ld5.f19_g17.IHistClm50Bgc.yellowstone_pgi.clm-decStart
+    SMS_Ld5.f19_g17.IHistClm50Bgc.yellowstone_intel.clm-decStart
+
+    These are due to problems with the baseline, in terms of which cism
+    history files are present. Baseline comparisons failed in the same
+    way when using out-of-the-box r260. The current code seems correct
+    in this respect, so this is just a problem with the baseline
+    directories.
+
+    (2)
+
+    SMS_D_Ly2.1x1_brazil.IHistClm50BgcQianGs.cheyenne_intel.clm-ciso_bombspike1963
+
+    Differences in C14 history fields. Baseline comparisons failed in
+    the same way when using out-of-the-box r260. I can't tell if the
+    baselines are correct or the trunk code is correct. I have asked
+    Erik to look into this.
+
+CLM tag used for the baseline comparisons: clm4_5_16_r260
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only tests with reseedresetsnow testmod
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      new climate for tests with this testmod
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+========= Unit tests of new changes
+M       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_SnowCappingExcess.pf
+
+========= Pass down new arguments
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+
+========= New namelist variables
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+
+========= Changes to reseedresetsnow testmod to turn on the new option
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/reseedresetsnow/user_nl_clm
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r260
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Oct 24 15:59:41 MDT 2017

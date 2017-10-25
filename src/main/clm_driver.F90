@@ -697,7 +697,7 @@ contains
             clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
             waterflux_inst, waterstate_inst, soilhydrology_inst, aerosol_inst, &
-            canopystate_inst, soil_water_retention_curve)
+            canopystate_inst, soil_water_retention_curve, topo_inst)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterflux_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because
@@ -737,7 +737,7 @@ contains
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,                                  &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc,                              &
             atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
-            energyflux_inst, aerosol_inst, lakestate_inst)
+            energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
        
        !  Calculate column-integrated aerosol masses, and
        !  mass concentrations for radiative calculations and output

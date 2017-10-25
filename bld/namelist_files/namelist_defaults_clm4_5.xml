@@ -304,6 +304,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <overburden_compress_tfactor>0.08d00</overburden_compress_tfactor>
 
 <reset_snow>.false.</reset_snow>
+<reset_snow_glc>.false.</reset_snow_glc>
+<!-- Set default reset_snow_glc_ela value to very large so that, by
+     default, all glacier columns will be reset if reset_snow_glc is set
+     to .true. -->
+<reset_snow_glc_ela>1.e9</reset_snow_glc_ela>
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo

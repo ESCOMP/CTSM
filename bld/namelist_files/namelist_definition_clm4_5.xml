@@ -2263,6 +2263,11 @@ Not used for snow_overburden_compaction_method=Vionnet2012
 Minimum wind speed tht results in compaction (m/s)
 </entry>
 
+<entry id="fresh_snw_rds_max" type="real" category="clm_physics"
+       group="aerosol"   >
+maximum warm (at freezing) fresh snow effective radius [microns]
+</entry>
+
 <entry id="reset_snow" type="logical" category="clm_physics"
        group="clm_snowhydrology_inparm"   >
 If set to .true., then reset the snow pack over non-glacier columns to a small value.
@@ -2276,9 +2281,41 @@ WARNING: Setting this to .true. will break water conservation for approximately 
 day of the new run. This is by design: The excess snow is completely removed from the system.
 </entry>
 
-<entry id="fresh_snw_rds_max" type="real" category="clm_physics"
-       group="aerosol"   >
-maximum warm (at freezing) fresh snow effective radius [microns]
+<entry id="reset_snow_glc" type="logical" category="clm_physics"
+       group="clm_snowhydrology_inparm"   >
+If set to .true., then reset the snow pack over glacier columns to a small value.
+This is useful when transitioning from a spinup under one set of atmospheric forcings
+to a run under a different set of atmospheric forcings: By resetting too-large snow packs,
+we make it more likely that points will remain only seasonally snow-covered under the new
+atmospheric forcings. (This is particularly true in a coupled run, where starting with a
+too-large snow pack can cool the atmosphere, thus maintaining the too-large snow pack.)
+
+See also reset_snow_glc_ela, which controls the elevation below which
+glacier columns are reset.
+
+WARNING: Setting this to .true. will break water conservation for approximately the first
+day of the new run. This is by design: The excess snow is completely removed from the system.
+
+WARNING: This variable is intended for short test runs, and generally
+should not be used for scientific production runs. By resetting snow
+below a given elevation, you risk forcing the system to evolve
+differently in areas below and above reset_snow_glc_ela.
+</entry>
+
+<entry id="reset_snow_glc_ela" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm"   >
+Only relevant if reset_snow_glc is .true.
+
+When resetting snow pack over glacier columns, one can choose to do this over all glacier
+columns, or only those below a certain elevation. A typical use case is to reset only those 
+columns that have a seasonal snow pack in the real world, i.e. SMB less than 0, also known as 
+the equilibrium line altitude (ELA). This parameter sets a single global ELA value. By
+setting this parameter to a large value (i.e. 10000 m), all glacier columns will be reset.
+
+WARNING: This variable is intended for short test runs, and generally
+should not be used for scientific production runs. By resetting snow
+below a given elevation, you risk forcing the system to evolve
+differently in areas below and above reset_snow_glc_ela.
 </entry>
 
 
