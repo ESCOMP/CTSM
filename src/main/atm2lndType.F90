@@ -655,79 +655,72 @@ contains
     end if
 
     this%forc_t_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='Tair', units='K',  &
-         avgflag='A', long_name='atmospheric air temperature', &
+    call hist_addfld1d (fname='Tair_from_atm', units='K',  &
+         avgflag='A', long_name='atmospheric air temperature received from atmosphere (pre-downscaling)', &
          ptr_gcell=this%forc_t_not_downscaled_grc, default='inactive')
 
     this%forc_t_downscaled_col(begc:endc) = spval
-    call hist_addfld1d (fname='Tair_downscaled', units='K', &
-         avgflag='A', long_name='atmospheric air temperature downscaled to columns', &
+    call hist_addfld1d (fname='TBOT', units='K',  &
+         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_t_downscaled_col)
+    call hist_addfld1d (fname='Tair', units='K', &
+         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
          ptr_col=this%forc_t_downscaled_col, default='inactive')
 
-    this%forc_pbot_not_downscaled_grc(begg:endg) = spval
+    ! NOTE(wjs, 2017-10-26) Not setting this to spval because this causes problems with
+    ! the associated accumulation field. So instead leaving it at the value set in
+    ! initAllocate, which is 0. See also http://bugs.cgd.ucar.edu/show_bug.cgi?id=2526
+    call hist_addfld1d (fname='PBOT', units='Pa',  &
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_pbot_downscaled_col)
     call hist_addfld1d (fname='PSurf', units='Pa',  &
-         avgflag='A', long_name='surface pressure', &
-         ptr_gcell=this%forc_pbot_not_downscaled_grc, default='inactive')
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_pbot_downscaled_col, default='inactive')
 
-    this%forc_rain_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='Rainf', units='mm/s',  &
-         avgflag='A', long_name='atmospheric rain', &
-         ptr_gcell=this%forc_rain_not_downscaled_grc, default='inactive')
-
-    this%forc_lwrad_not_downscaled_grc(begg:endg) = spval
+    this%forc_lwrad_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='FLDS', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_lwrad_downscaled_col)
     call hist_addfld1d (fname='LWdown', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation', &
-         ptr_gcell=this%forc_lwrad_not_downscaled_grc, default='inactive')
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_lwrad_downscaled_col, default='inactive')
 
     this%forc_rain_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='RAIN', units='mm/s',  &
-         avgflag='A', long_name='atmospheric rain', &
+    call hist_addfld1d (fname='RAIN_FROM_ATM', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain received from atmosphere (pre-repartitioning)', &
          ptr_lnd=this%forc_rain_not_downscaled_grc)
 
     this%forc_snow_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='SNOW', units='mm/s',  &
-         avgflag='A', long_name='atmospheric snow', &
+    call hist_addfld1d (fname='SNOW_FROM_ATM', units='mm/s',  &
+         avgflag='A', long_name='atmospheric snow received from atmosphere (pre-repartitioning)', &
          ptr_lnd=this%forc_snow_not_downscaled_grc)
 
     this%forc_rain_downscaled_col(begc:endc) = spval
-    call hist_addfld1d (fname='RAIN_REPARTITIONED', units='mm/s',  &
+    call hist_addfld1d (fname='RAIN', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain, after rain/snow repartitioning based on temperature', &
          ptr_col=this%forc_rain_downscaled_col)
+    call hist_addfld1d (fname='Rainf', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain, after rain/snow repartitioning based on temperature', &
+         ptr_col=this%forc_rain_downscaled_col, default='inactive')
 
     this%forc_snow_downscaled_col(begc:endc) = spval
-    call hist_addfld1d (fname='SNOW_REPARTITIONED', units='mm/s',  &
+    call hist_addfld1d (fname='SNOW', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow, after rain/snow repartitioning based on temperature', &
          ptr_col=this%forc_snow_downscaled_col)
 
-    this%forc_t_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='TBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air temperature', &
-         ptr_lnd=this%forc_t_not_downscaled_grc)
-
-    this%forc_th_not_downscaled_grc(begg:endg) = spval
+    this%forc_th_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='THBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air potential temperature', &
-         ptr_lnd=this%forc_th_not_downscaled_grc)
+         avgflag='A', long_name='atmospheric air potential temperature (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_th_downscaled_col)
 
-    this%forc_q_not_downscaled_grc(begg:endg) = spval
+    this%forc_q_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='QBOT', units='kg/kg',  &
-         avgflag='A', long_name='atmospheric specific humidity', &
-         ptr_lnd=this%forc_q_not_downscaled_grc)
-    ! Rename of QBOT for Urban intercomparision project
-    this%forc_q_not_downscaled_grc(begg:endg) = spval
+         avgflag='A', long_name='atmospheric specific humidity (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_q_downscaled_col)
+    ! Rename of QBOT for Urban intercomparison project
     call hist_addfld1d (fname='Qair', units='kg/kg',  &
-         avgflag='A', long_name='atmospheric specific humidity', &
-         ptr_lnd=this%forc_q_not_downscaled_grc, default='inactive')
-
-    this%forc_lwrad_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='FLDS', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation', &
-         ptr_lnd=this%forc_lwrad_not_downscaled_grc)
-
-    this%forc_pbot_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='PBOT', units='Pa',  &
-         avgflag='A', long_name='atmospheric pressure', &
-         ptr_lnd=this%forc_pbot_not_downscaled_grc)
+         avgflag='A', long_name='atmospheric specific humidity (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_q_downscaled_col, default='inactive')
 
     ! Time averaged quantities
     this%fsi24_patch(begp:endp) = spval

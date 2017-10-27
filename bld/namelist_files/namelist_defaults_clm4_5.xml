@@ -312,21 +312,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
-     Greenland periphery: virtual
+     Greenland - inside CISM grid but outside Greenland itself: virtual
      Greenland itself: virtual
      Antarctica: multiple -->
 <glacier_region_behavior>'single_at_atm_topo','virtual','virtual','multiple'</glacier_region_behavior>
 
 <!-- Default glacier melt behavior is:
      Mountain glaciers: remains_in_place
-     Greenland periphery: replaced_by_ice
+     Greenland - inside CISM grid but outside Greenland itself: replaced_by_ice
      Greenland itself: replaced_by_ice
      Antarctica: replaced_by_ice -->
 <glacier_region_melt_behavior>'remains_in_place','replaced_by_ice','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
 
 <!-- Default glacier ice runoff behavior is:
      Mountain glaciers: melted
-     Greenland periphery: melted
+     Greenland - inside CISM grid but outside Greenland itself: melted
      Greenland itself: remains_ice
      Antarctica: remains_ice -->
 <glacier_region_ice_runoff_behavior>'melted','melted','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>

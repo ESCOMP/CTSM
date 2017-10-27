@@ -182,12 +182,10 @@ contains
          avgflag='A', long_name='10-m wind (ice landunits only)', &
          ptr_patch=this%u10_clm_patch, l2g_scale_type='ice', default='inactive')
 
-    if (use_cn) then
-       this%u10_patch(begp:endp) = spval
-       call hist_addfld1d (fname='U10_DUST', units='m/s', &
-            avgflag='A', long_name='10-m wind for dust model', &
-            ptr_patch=this%u10_patch, default='inactive')
-    end if
+    this%u10_patch(begp:endp) = spval
+    call hist_addfld1d (fname='U10_DUST', units='m/s', &
+         avgflag='A', long_name='10-m wind for dust model', &
+         ptr_patch=this%u10_patch)
 
     if (use_cn) then
        this%ram1_patch(begp:endp) = spval

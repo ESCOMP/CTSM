@@ -1,4 +1,241 @@
 ===============================================================
+Tag name:  clm4_5_16_r262
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Oct 27 10:17:54 MDT 2017
+One-line Summary: Rename atm2lnd history fields for downscaled fields, properly turn on vic for clm45, and other minor fixes
+
+Purpose of changes
+------------------
+
+(1) Rename atm2lnd history fields for downscaled fields. The downscaled
+    version is now the default. Non-downscaled history fields are now
+    noted explicitly with a "_FROM_ATM" suffix. A detailed list of
+    changes is given below.
+
+(2) Properly turn on VIC for CLM45 compsets (fixes bug 2465)
+
+(3) Use correct PE layouts for CISM1
+
+(4) Remove CWDC_HR diagnostic field, which was always 0 (fixes bug 2502)
+
+(5) Turn on U10_DUST diagnostic field by default (fixes bug 2246)
+
+(6) Fix documentation of some variables
+
+Detailed list of changes related to (1):
+
+  Rain and snow:
+
+    Old:
+    - RAIN: "atmospheric rain" - NOT downscaled
+    - Rainf: "atmospheric rain" - NOT downscaled
+    - SNOW: "atmospheric snow" - NOT downscaled
+    - RAIN_REPARTITIONED: "atmospheric rain, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - SNOW_REPARTITIONED: "atmospheric snow, after rain/snow repartitioning based on temperature" - DOWNSCALED
+
+    New:
+    - RAIN: "atmospheric rain, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - Rainf: "atmospheric rain, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - SNOW: "atmospheric snow, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - RAIN_FROM_ATM: "atmospheric rain received from atmosphere (pre-repartitioning)" - NOT downscaled
+    - SNOW_FROM_ATM: "atmospheric snow received from atmosphere (pre-repartitioning)" - NOT downscaled
+
+  Air temperature:
+
+    Old:
+    - TBOT: "atmospheric air temperature" - NOT downscaled
+    - Tair: "atmospheric air temperature" - NOT downscaled
+    - Tair_downscaled: "atmospheric air temperature downscaled to columns" - DOWNSCALED
+
+    New:
+    - TBOT: "atmospheric air temperature (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Tair: "atmospheric air temperature (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Tair_from_atm: "atmospheric air temperature received from atmosphere (pre-downscaling)" - NOT downscaled
+
+  Atmospheric pressure:
+
+    Old:
+    - PBOT: "atmospheric pressure" - NOT downscaled
+    - Psurf: "surface pressure" - NOT downscaled
+
+    New:
+    - PBOT: "atmospheric pressure at surface (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Psurf: "atmospheric pressure at surface (downscaled to columns in glacier regions)" - DOWNSCALED
+
+  Atmospheric longwave radiation:
+
+    Old:
+    - FLDS: "atmospheric longwave radiation" - NOT downscaled
+    - LWdown: "atmospheric longwave radiation" - NOT downscaled
+
+    New:
+    - FLDS: "atmospheric longwave radiation (downscaled to columns in glacier regions)" - DOWNSCALED
+    - LWdown: "atmospheric longwave radiation (downscaled to columns in glacier regions)" - DOWNSCALED
+
+  Potential temperature:
+
+    Old:
+    - THBOT: "atmospheric air potential temperature" - NOT downscaled
+
+    New
+    - THBOT: "atmospheric air potential temperature (downscaled to columns in glacier regions)" - DOWNSCALED
+
+  Specific humidity:
+
+    Old:
+    - QBOT: "atmospheric specific humidity" - NOT downscaled
+    - Qair: "atmospheric specific humidity" - NOT downscaled
+
+    New:
+    - QBOT: "atmospheric specific humidity (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Qair: "atmospheric specific humidity (downscaled to columns in glacier regions)" - DOWNSCALED
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2192: wrong units in comment for variables qflx_ev_snow, qflx_ev_soil,
+  qflx_ev_h2osfc
+- 2246: Turn on U10_DUST history field variable by default
+- 2363: inline documentation is wrong in SoilTemperatureMod.F90
+- 2401: Need to put in an "override" for PE layouts for CISM1
+- 2465: ICLM45VIC compset doesn't actually turn VIC on
+- 2502: CWDC_HR is identically zero
+- 2503: Wrong units for FAREA_BURNED
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Changed meaning of some atm2lnd history fields: see above
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self; Sean Swenson did a conceptual review of the
+changes in atm2lnd diagnostic fields
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, answers change for some atm2lnd diagnostic
+    fields as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_16_r261
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      - For most configurations: Changes diagnostic fields only (see
+        below for list)
+      - Changes CLM45 compsets with VIC: actually turns on VIC (there
+        are no CLM45 tests with VIC in the test suite)
+
+      Changes the following fields: FLDS, PBOT, QBOT, RAIN, SNOW, TBOT,
+      THBOT: These now give downscaled versions of these fields.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Rename atm2lnd history fields for downscaled fields
+M       components/clm/src/main/atm2lndType.F90
+
+========= Properly turn on VIC for CLM45 compsets
+M       components/clm/cime_config/config_component.xml
+
+========= Use correct PE layouts for cism1
+M       components/clm/cime_config/config_pes.xml
+
+========= Remove CWDC_HR diagnostic field
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+
+========= Turn on U10_DUST by default
+M       components/clm/src/biogeophys/FrictionVelocityMod.F90
+
+========= Fix various documentation
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/src/biogeophys/BareGroundFluxesMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/biogeophys/SoilFluxesMod.F90
+M       components/clm/src/biogeophys/CanopyFluxesMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeochem/CNVegStateType.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r261
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Oct 25 07:37:24 MDT 2017

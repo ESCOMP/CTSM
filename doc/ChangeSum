@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_16_r262    sacks 10/27/2017 Rename atm2lnd history fields for downscaled fields, properly turn on vic for clm45, and other minor fixes
   clm4_5_16_r261    sacks 10/25/2017 Add option to reset snow over glacier columns
   clm4_5_16_r260     erik 10/24/2017 Update paramater file for CLM50 as well as fates, fix a few issues
   clm4_5_16_r259     erik 10/17/2017 Update to latest cime from cesm2_0_beta07 and config_components version 3

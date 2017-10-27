@@ -2799,11 +2799,6 @@ contains
 
     if (carbon_type == 'c12') then
 
-       this%cwdc_hr_col(begc:endc) = spval
-       call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
-            avgflag='A', long_name='coarse woody debris C heterotrophic respiration', &
-            ptr_col=this%cwdc_hr_col)
-
        this%cwdc_loss_col(begc:endc) = spval
        call hist_addfld1d (fname='CWDC_LOSS', units='gC/m^2/s', &
             avgflag='A', long_name='coarse woody debris C loss', &
