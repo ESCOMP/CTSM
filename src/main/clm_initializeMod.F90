@@ -385,11 +385,10 @@ contains
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1)
              
     ! Initialize maximum daylength, based on latitude and maximum declination
-    ! maximum declination hardwired for present-day orbital parameters, 
-    ! +/- 23.4667 degrees = +/- 0.409571 radians, use negative value for S. Hem
+    ! given by the obliquity use negative value for S. Hem
 
     do g = bounds_proc%begg,bounds_proc%endg
-       max_decl = 0.409571
+       max_decl = obliqr
        if (grc%lat(g) < 0._r8) max_decl = -max_decl
        grc%max_dayl(g) = daylength(grc%lat(g), max_decl)
     end do

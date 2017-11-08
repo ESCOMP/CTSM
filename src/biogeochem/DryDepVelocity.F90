@@ -611,6 +611,8 @@ CONTAINS
                   velocity(pi,ispec) = 0.2_r8
                case ( 'CB1', 'CB2', 'OC1', 'OC2', 'SOAM', 'SOAI', 'SOAT', 'SOAB', 'SOAX' )
                   velocity(pi,ispec) = 0.10_r8
+               case ( 'SO2' )
+                  velocity(pi,ispec) = (1._r8/(ram1(pi)+rb1(pi)+rc))*200._r8
                case default
                   velocity(pi,ispec) = (1._r8/(ram1(pi)+rb1(pi)+rc))*100._r8
                end select

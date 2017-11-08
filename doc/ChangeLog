@@ -1,4 +1,141 @@
 ===============================================================
+Tag name:  clm4_5_17_r263
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Nov  8 15:36:41 MST 2017
+One-line Summary: Drydep vel. for SO2 doubled, influence of organic mater in soil calmed, max daylength not hardwired to present day
+
+Purpose of changes
+------------------
+
+Keep the hydraulic conductivity for organic soil higher than it is for mineral soil. This was found to be an issue and fixed by 
+Sean Swenson, Dave Lawrence, and Keith Oleson. Double dry deposition velocity for SO2 (Jean-Francois Lamaruque) for both clm4_5
+and clm5_0.  Fix bug for value of NACTIVE at first time-step. Partial fix so that max daylengh isn't hardwired to present day at least
+at initialization (see caveat below). Move the sample files for the mkprocdata_map tool (for mapping between unstructured grids
+and regular lat lon grids) out of CLM and into $CSMDATA. Update the c13/c14 timeseries files to the 2.0 version as per Keith Lindsay.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+ 2530 -- organic soil influence varies wildly
+ 2304 -- NACTIVE at first time step
+ 1843 -- Max daylength now uses orbital parameters at initialization rather than hardwired to present day (partial)
+
+Known bugs introduced in this tag:
+ 2529 -- SSP case that runs on cheyenne fails on hobart
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): c13/c14 time-series files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Max daylength will still be wrong in cases where variable_years is used, where the orbit
+  changes after initializaiton. It'll start out correct and begin to diverge each year.
+  Since, this feature is untested it's not worth going through the additional changes to
+  correct it during the run.
+
+  At the time the tag was made, cheyenne was down, so there are six tests that weren't confirmed to pass:
+     ERS_D_Ld3.f19_f19_mg16.IHistClm40SpCruGs.cheyenne_intel.clm-40default
+     ERS_Ly5_P60x1.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput
+     SMS_D_Ld5.f10_f10_musgs.I2000Clm50Fates.cheyenne_intel.clm-fates
+     SMS_D_Ly2.1x1_numaIA.IHistClm50BgcCropGs.cheyenne_intel.clm-ciso_bombspike1963
+     SMS_Ld1.f19_f19_mg16.IHistClm40SpCruGs.cheyenne_intel.clm-40default
+     SMS_Ld1.f19_g17.I2000Clm50Vic.cheyenne_intel.clm-default
+
+Changes to tests or testing: tools testing modified to point to files in CSMDATA
+
+Code reviewed by: self,lamar,oleson,sacks,dlawren
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r262
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5 and clm5_0
+    - what platforms/compilers: all
+    - nature of change: changes answers with bug fixes in a significant way
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: oleson/csm/clm50_r243_1deg_GSWP3V2_cropopt_nsc_hksat_hist
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+        Remove sample files, move to CSMDATA, remove sample namelist
+   D components/clm/tools/mkprocdata_map/clm4054_f19g16_I2000.clm2.h0.2000-01_c170430.nc
+   D components/clm/tools/mkprocdata_map/map_ne30np4_nomask_to_fv1.9x2.5_nomask_aave_da_c121107.nc
+   D components/clm/tools/mkprocdata_map/clm4054_ne30g16_I2000.clm2.h0.2000-01_c170430.nc
+   D components/clm/tools/mkprocdata_map/mkprocdata_map_in
+
+List all files added and what they do:
+
+   A components/clm/tools/mkprocdata_map/README.filedescriptions -- Describe the files in this directory
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/test/tools/nl_files/mkprocdata_ne30_to_f19_I2000 - Point to files in CSMDATA rather than mkprocdata_map dir.
+
+   M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- Point to new v2.0 of the c13/c14 timeseries files
+
+   M components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90 -- Fix bug 2530 for organic mater influence in soil
+   M components/clm/src/biogeochem/DryDepVelocity.F90 ------------- Double SO2 dry deposition rate
+   M components/clm/src/biogeochem/CNFUNMod.F90 ------------------- Bug, 2304 for NACTIVE on history for first time-step
+   M components/clm/src/biogeochem/ch4Mod.F90 --------------------- Bug, 2528, floating overflow for methane (doesn't change answers)
+   M components/clm/src/main/clm_initializeMod.F90 ---------------- Bug, 1843, max daylength no longer hardwired to present day at initialization
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r262
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Oct 27 10:17:54 MDT 2017

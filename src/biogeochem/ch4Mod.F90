@@ -3342,7 +3342,11 @@ contains
 
             o2demand = o2_decomp_depth(c,j) + o2_oxid_depth(c,j) ! o2_decomp_depth includes autotrophic root respiration
             if (o2demand > 0._r8) then
-               o2stress(c,j) = min((conc_o2(c,j) / dtime + o2_aere_depth(c,j)) / o2demand, 1._r8)
+               if ( (conc_o2(c,j) / dtime + o2_aere_depth(c,j)) > o2demand )then
+                  o2stress(c,j) = 1._r8
+               else
+                  o2stress(c,j) = (conc_o2(c,j) / dtime + o2_aere_depth(c,j)) / o2demand
+               end if
             else
                o2stress(c,j) = 1._r8
             end if
