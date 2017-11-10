@@ -3,6 +3,13 @@
 Carbon and Nitrogen Allocation
 ==============================
 
+Summary of CLM5.0 updates relative to the CLM4.5
+-----------------------------------------------------
+- CLM5 now defaults to a static allocation to woody biomass rather than the dynamic allocation term used in CLM4.5.  The dynamic allocation is stil lkept as an option, for details, see the CLM4.5 Tech Note.
+
+ - CLM5 now includes flexible C:N ratios of all plant tissues, which allows allocation of carbon to occur separately from allocation of nitrogen, thus removing the requirement to downregulate photosynthesis based on the instantaneous stoichiometric needs of allocation.
+
+
 Introduction
 -----------------
 
@@ -13,19 +20,19 @@ and available mineral nitrogen, coming from plant uptake of mineral
 nitrogen in the soil or being drawn out of plant reserves. A significant change to CLM5 relative to prior versions is that allocation of carbon and nitrogen proceed independently rather than in a sequential manner.
 
 
-Carbon Allocation for Maintenance Respiration Costs
---------------------------------------------------------
+Carbon Allocation to Cover Prior-Timestep Maintenance Respiration Costs
+----------------------------------------------------------------------------
 
 Allocation of available carbon on each time step is prioritized, with
 first priority given to the demand for carbon to support maintenance
-respiration of live tissues (section 13.7). Second priority is to
-replenish the internal plant carbon pool that supports maintenance
-respiration during times when maintenance respiration exceeds
+respiration of live tissues (Chapter :numref:`rst_Plant Respiration`) and Nitrogen acquisition costs (Chapter :numref:`rst_FUN`). Second priority is to
+replenish the plant carbon deficit pool that balances maintenance
+respiration that occurs during times when maintenance respiration exceeds
 photosynthesis (e.g. at night, during winter for perennial vegetation,
 or during periods of drought stress) (Sprugel et al., 1995). Third
 priority is to support growth of new tissues, including allocation to
 storage pools from which new growth will be displayed in subsequent time
-steps.
+steps, as well as growth respiration costs.
 
 The total maintenance respiration demand (:math:`CF_{mr}`, gC
 m\ :sup:`-2` s\ :sup:`-1`) is calculated as a function of
@@ -116,21 +123,6 @@ Parameters :math:`a_{1}`, :math:`a_{2}`, and :math:`a_{4}` are defined as consta
 constant for all PFTs, based on construction costs for a range of woody
 and non-woody tissues (Larcher, 1995).
 
-The model includes a dynamic allocation scheme for woody vegetation
-(parameter :math:`a_{3}` = -1, :numref:`Table Allocation and CN ratio parameters`), in which case the
-ratio for carbon allocation between new stem and new leaf increases with
-increasing net primary production (NPP), as
-
-.. math::
-   :label: 19.8 
-
-   a_{3} =\frac{2.7}{1+e^{-0.004NPP_{ann} -300} } -0.4
-
-where :math:`NPP_{ann}` is the annual sum of NPP from the previous
-year. This mechanism has the effect of increasing woody allocation in
-favorable growth environments (Allen et al., 2005; Vanninen and Makela,
-2005) and during the phase of stand growth prior to canopy closure
-(Axelsson and Axelsson, 1986).
 
 .. _Table Allocation and CN ratio parameters:
 
@@ -382,14 +374,14 @@ The demand for each tissue, calculated for the tissue to remain on stoichiometry
 
    NF_{demand,deadcroot\_ stor} \_ =\frac{CF_{alloc,leaf} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right).
 
-After each pool's demand is calculated, the total plant N demand is then the sum of each individual pool :math: `i` corresponding to each tissue:
+After each pool's demand is calculated, the total plant N demand is then the sum of each individual pool :math:`i` corresponding to each tissue:
 
 .. math::
    :label: 19.39
 
    NF_{demand,tot} = \sum _{i=tissues} NF_{demand,i}
 
-and the total supply for each tissue :math: `i` is the product of the fractional demand and the total available N, calculated as the term :math: `N_{uptake}` equal to the sum of the eight N uptake streams described in the FUN model (Chapter :numref:`rst_FUN`).
+and the total supply for each tissue :math:`i` is the product of the fractional demand and the total available N, calculated as the term :math:`N_{uptake}` equal to the sum of the eight N uptake streams described in the FUN model (Chapter :numref:`rst_FUN`).
 
 .. math::
    :label: 19.40
