@@ -22,13 +22,13 @@ General Form for Calculating :sup:`13`\ C and :sup:`14`\ C Flux
 --------------------------------------------------------------------------------
 
 In general, the flux of :sup:`13`\ C and corresponding to a given
-flux of total C (*CF\ :math:`{}_{13C}`* and *CF\ :math:`{}_{totC}`*,
-respectively) is determined by *CF\ :math:`{}_{totC}`*, the masses of
+flux of total C (:math:`{CF}_{13C}` and :math:`{CF}_{totC}`,
+respectively) is determined by :math:`{CF}_{totC}`, the masses of
 :sup:`13`\ C and total C in the upstream pools
-(*CS\ :math:`{}_{13C\_up}`* and *CS\ :math:`{}_{totC\_up}`*,
+(:math:`{CS}_{13C\_up}` and :math:`{CS}_{totC\_up}`,
 respectively, i.e. the pools *from which* the fluxes of
 :sup:`13`\ C and total C originate), and a fractionation factor,
-*f\ :math:`{}_{frac}`*:
+:math:`{f}_{frac}`:
 
 .. math::
    :label: ZEqnNum629812 
@@ -36,7 +36,7 @@ respectively, i.e. the pools *from which* the fluxes of
    CF_{13C} =\left\{\begin{array}{l} {CF_{totC} \frac{CS_{13C\_ up} }{CS_{totC\_ up} } f_{frac} \qquad {\rm for\; }CS_{totC} \ne 0} \\ {0\qquad {\rm for\; }CS_{totC} =0} \end{array}\right\}
 
 If the :math:`{f}_{frac}` = 1.0 (no fractionation), then the fluxes
-:math:`{CF}_{13C}` and  :math:`{CF}_{totC}`* will be in simple
+:math:`{CF}_{13C}` and  :math:`{CF}_{totC}` will be in simple
 proportion to the masses :math:`{CS}_{13C\_up}` and
 :math:`{CS}_{totC\_up}`. Values of :math:`{f}_{frac} < 1.0` indicate a discrimination against the heavier isotope
 (:sup:`13`\ C) in the flux-generating process, while
@@ -55,8 +55,8 @@ described in units that implicitly correct out the fractionation of
 Isotope Symbols, Units, and Reference Standards
 ----------------------------------------------------
 
-Carbon has two primary stable isotopes, :math:`{}^{12}`\ C and
-:sup:`13`\ C. :math:`{}^{12}`\ C is the most abundant, comprising
+Carbon has two primary stable isotopes, :sup:`12`\ C and
+:sup:`13`\ C. :sup:`12`\ C is the most abundant, comprising
 about 99% of all carbon. The isotope ratio of a compound,
 :math:`{R}_{A}`, is the mass ratio of the rare isotope to the abundant isotope
 
@@ -133,7 +133,7 @@ Carbon Isotope Discrimination During Photosynthesis
 
 Photosynthesis is modeled in CLM as a two-step process: diffusion of
 CO\ :sub:`2` into the stomatal cavity, followed by enzymatic
-fixation (Chapter 8). Each step is associated with a kinetic isotope
+fixation (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`). Each step is associated with a kinetic isotope
 effect. The kinetic isotope effect during diffusion of
 CO\ :sub:`2` through the stomatal opening is 4.4‰. The kinetic
 isotope effect during fixation of CO\ :sub:`2` with Rubisco is
@@ -173,31 +173,9 @@ calculation as follows:
 
    c_{i} =pCO_{2} -a_{n} p\frac{\left(1.4g_{s} \right)+\left(1.6g_{b} \right)}{g_{b} g_{s} }
 
-and
-
-.. math::
-   :label: 30.11) 
-
-   c_{i}^{*} =pCO_{2} -a_{n} \left(1-d\right)p\frac{\left(1.4g_{s} \right)+\left(1.6g_{b} \right)}{g_{b} g_{s} }
-
-where :math:`a_n` is net carbon assimilation during photosynthesis,
-:math:`d` is downscaling factor due to nitrogen limitation, :math:`p` is
+where :math:`a_n` is net carbon assimilation during photosynthesis, :math:`p` is
 atmospheric pressure, :math:`g_b` is leaf boundary layer conductance,
 and :math:`g_s` is leaf stomatal conductance.
-
-The fractionation factor :math:`{\alpha }_{psn}` and net assimilation
-:math:`a_n` are calculated during the radiation time-step in
-CanopyFluxesMod.F90, whereas the downscaling factor :math:`d` is not
-calculated until after the nitrogen limitation is computed in
-CNAllocationMod.F90. That results in a difference between the actual
-photosynthesis, which is downscaled by :math:`d`, and the potential
-photosynthesis. In order to overcome this mismatch, downscaling due to
-nitrogen limitation is factored in the calculation of the kinetic
-isotope effect during fixation by defining a downscaled version of
-intracellular CO\ :sub:`2` (:math:`c^*_i`), as a first order
-approximation. However, since nitrogen down-regulation is calculated
-after the photosynthesis calculation, down-regulation coefficient
-calculated in the previous time step needs to be used.
 
 Isotopic fractionation code is compatible with multi-layered canopy
 parameterization; i.e., it is possible to calculate varying
@@ -205,7 +183,7 @@ discrimination rates for each layer of a multi-layered canopy. However,
 as with the rest of the photosynthesis model, the number of canopy
 layers is currently set to one by default.
 
-:sup:`14`\ C radioactive decay and historical atmospheric :sup:`14`\ C concentrations
+:sup:`14`\ C radioactive decay and historical atmospheric :sup:`14`\ C and :sup:`13`\ C concentrations
 ------------------------------------------------------------------------------------------------------
 
 In the preindustrial biosphere, radioactive decay of :sup:`14`\ C
@@ -226,18 +204,10 @@ accelerated by the same degree as the decomposition, such that the
 :sup:`14`\ C value of these pools is in equilibrium when taken out
 of the spinup mode.
 
-For variation of atmospheric :sup:`14`\ C over the historical
-period, :math:`\mathrm{\Delta}`\ :sup:`14`\ C values can be set to
-either fixed concentration (:math:`\mathrm{\Delta}`\ :sup:`14`\ C = 0‰) 
-or time-varying concentrations read in from a file. A default file
-is provided that is based on a spline fit through several observational
-datasets spanning the 20\ :math:`{}^{th}` century: (Levin and Kromer,
-2004; Manning and Melhuish, 1994; Nydal and Lövseth, 1996; Turnbull et
-al. 2007). This is shown in Figure 25.1.
+For variation of atmospheric :sup:`14`\ C and :sup:`13`\ C over the historical
+period, :math:`\mathrm{\Delta}`\ :sup:`14`\ C and :math:`\mathrm{\Delta}`\:sup:`13`\ C values can be set to
+either fixed concentrations  
+or time-varying concentrations read in from a file. A default file is provided that spans the historical period (:ref:`Graven et al., 2017 <Gravenetal2017>`).  For 
+:math:`\mathrm{\Delta}`\ :sup:`14`\ C, values are provided and read in for three latitude bands (30 :sup:`o`\ N-90 :sup:`o`\ N, 30 :sup:`o`\ S-30 :sup:`o`\ N, and 30 :sup:`o`\ S-90 :sup:`o`\ S).
 
-.. _Figure Atmospheric Delta C14:
 
-.. figure:: image1.png
-
- Atmospheric :math:`\mathrm{\Delta}`\ :sup:`14`\ C
- used to drive :sup:`14`\ C model over the historical period.

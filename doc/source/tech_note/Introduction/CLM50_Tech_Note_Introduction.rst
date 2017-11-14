@@ -79,8 +79,6 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Schematic of translation of annual LUH2 land units` Schematic of translation of annual UNH land units to CLM4 plant functional types. 
 
-- :numref:`Figure Atmospheric Delta C14` Atmospheric :math:`\mathrm{\Delta}` 14C used to drive 14C model over the historical period. 
-
 **LIST OF TABLES**
 
 - :numref:`Table Plant functional types` Plant functional types 
