@@ -615,6 +615,9 @@ Graham, S.T., Famiglietti, J.S., and Maidment, D.R. 1999. Five-minute,
 use in regional and global hydrologic and climate system modeling
 studies. Water Resour. Res. 35:583-587.
 
+.. _Gravenetal2017: 
+
+Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, H. A. J. Meijer, M. Rubino, P. P. Tans, C. M. Trudinger, B. H. Vaughn and J. W. C. White (2017) Compiled records of carbon isotopes in atmospheric CO2 for historical simulations in CMIP6, Geoscientific Model Development, in review. doi: 10.5194/gmd-2017-166.
 .. _GrenfellWarren1999:
 
 Grenfell, T.C., and Warren, S.G. 1999. Representation of a nonspherical
@@ -1032,11 +1035,6 @@ Letts, M.G., Roulet, N.T., Comer, N.T., Skarupa, M.R., and Verseghy,
 D.L. 2000. Parametrization of peatland hydraulic properties for the
 Canadian Land Surface Scheme. Atmos.-Ocean 38:141-160.
 
-.. _LevinKromer2004:
-
-Levin, I. and Kromer, B. 2004. The tropospheric 14CO2 level in
-mid-latitudes of the Northern Hemisphere (1959-2003) Radiocarbon 46:1.
-
 .. _Levisetal2003:
 
 Levis, S., Wiedinmyer, C., Bonan, G.B., and Guenther, A. 2003.
@@ -1203,12 +1201,6 @@ DOI:10.1029/2005JD006653.
 Makela, A. 2002. Derivation of stem taper from the pipe model theory in
 a carbon balance framework. Tree Phys. 22:891-905.
 
-.. _Manning, M.R. and Melhuish, W.H. 1994. Trends: A Compendium of Data on
-
-Manning, M.R. and Melhuish, W.H. 1994. Trends: A Compendium of Data on
-Global Change. Carbon Dioxide Information Analysis Center,. Oak Ridge
-National Laboratory, U.S. Department of Energy, Oak Ridge, Tenn., U.S.A.
-
 .. _Maoetal2012:
 
 Mao, J., Thornton, P.E., Shi, X., Zhao, M., and Post, W.M. 2012. Remote
@@ -1336,12 +1328,6 @@ Geophys. Res. 112:D07103. DOI:10.1029/2006JD007522.
 Niu, G.-Y., and Yang, Z.-L. 2007. An observation-based formulation of
 snow cover fraction and its evaluation over large North American river
 basins. J. Geophys. Res. 112:D21101. DOI:10.1029/2007JD008674.
-
-.. _NydalLovseth1996:
-
-Nydal, R. and Lövseth, K. 1996. Carbon-14 Measurements In Atmospheric
-CO2 From Northern And Southern Hemisphere Sites, 1962-1993, Carbon
-Dioxide Information Analysis Center.
 
 .. _Oikawaetal2005:
 
@@ -1969,12 +1955,6 @@ Turetsky, M.R., Amiro, B.D., Bosch, E., and Bhatti, J.S. 2004. Historical
 burn area in western Canadian peatlands and its relationship to fire
 weather indices. Global Biogeochem. Cycles 18:GB4014.
 DOI:10.1029/2004GB002222.
-
-.. _Turnbulletal2007:
-
-Turnbull, J.C. et al. 2007. A new high precision (CO2)-C-14 time series
-for North American continental air. Journal of Geophysical
-Research-Atmospheres 112(D11).
 
 .. _Tyeetal2005:
 
