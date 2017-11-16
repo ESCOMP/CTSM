@@ -80,6 +80,7 @@ module clm_instMod
   use SoilHydrologyInitTimeConstMod   , only : SoilHydrologyInitTimeConst
   use SurfaceAlbedoMod                , only : SurfaceAlbedoInitTimeConst 
   use LakeCon                         , only : LakeConInit 
+  use SoilBiogeochemPrecisionControlMod, only: SoilBiogeochemPrecisionControlInit
   !
   implicit none
   public   ! By default everything is public 
@@ -121,6 +122,7 @@ module clm_instMod
   ! Eventually bgc_vegetation_inst will be an allocatable instance of an abstract
   ! interface
   type(cn_vegetation_type)                :: bgc_vegetation_inst
+
   class(nutrient_competition_method_type), allocatable :: nutrient_competition_method
 
   ! Soil biogeochem types 
@@ -178,6 +180,7 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
     use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
+    use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
     use initVerticalMod                    , only : initVertical
     use accumulMod                         , only : print_accum_fields 
@@ -388,6 +391,10 @@ contains
 
        call soilbiogeochem_nitrogenflux_inst%Init(bounds) 
 
+       ! Initialize precision control for soil biogeochemistry
+       call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+                                                c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
+
     end if ! end of if use_cn 
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
@@ -507,29 +514,36 @@ contains
        call ch4_inst%restart(bounds, ncid, flag=flag)
     end if
 
+    if ( use_cn ) then
+       ! Need to do vegetation restart before soil bgc restart to get totvegc_col for purpose
+       ! of resetting soil carbon at exit spinup when no vegetation is growing.
+       call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
+
+       call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag, &
+            totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
+       call soilbiogeochem_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
+
+       call crop_inst%restart(bounds, ncid, flag=flag)
+    end if
+
     if (use_cn .or. use_fates) then
 
        call soilbiogeochem_state_inst%restart(bounds, ncid, flag=flag)
-       call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
+       call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
+            totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
+
        if (use_c13) then
           call c13_soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
+               totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds), &
                c12_soilbiogeochem_carbonstate_inst=soilbiogeochem_carbonstate_inst)
        end if
        if (use_c14) then
           call c14_soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c14', &
+               totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds), &
                c12_soilbiogeochem_carbonstate_inst=soilbiogeochem_carbonstate_inst)
        end if
        call soilbiogeochem_carbonflux_inst%restart(bounds, ncid, flag=flag)
     endif
-    if ( use_cn ) then
-       
-       call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
-       call soilbiogeochem_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
-
-       call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
-
-       call crop_inst%restart(bounds, ncid, flag=flag)
-    end if
 
     if (use_fates) then
 

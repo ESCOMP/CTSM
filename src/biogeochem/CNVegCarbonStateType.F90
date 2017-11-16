@@ -1262,6 +1262,10 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname='totvegc', xtype=ncd_double,  &
                dim1name='pft', long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
+          ! totvegc_col needed for resetting soil carbon stocks during AD spinup exit
+          call restartvar(ncid=ncid, flag=flag, varname='totvegc_col', xtype=ncd_double,  &
+               dim1name='column', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
        end if
 
        !--------------------------------
@@ -1270,8 +1274,7 @@ contains
 
        if ( carbon_type == 'c13')  then
           call restartvar(ncid=ncid, flag=flag, varname='totvegc_13', xtype=ncd_double,  &
-               dim1name='pft', &
-               long_name='', units='', &
+               dim1name='pft', long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
           if (flag=='read' .and. .not. readvar) then
              if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
@@ -1283,6 +1286,21 @@ contains
                 endif
              end do
           end if
+
+          call restartvar(ncid=ncid, flag=flag, varname='totvegc_col_13', xtype=ncd_double,  &
+               dim1name='column', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
+          if (flag=='read' .and. .not. readvar) then
+             if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
+             do i = bounds%begc,bounds%endc
+                if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
+                   this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c3_r2
+                else
+                   this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c4_r2
+                endif
+             end do
+          end if
+
        end if
 
        !--------------------------------
@@ -1301,8 +1319,23 @@ contains
                    this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c14ratio
                 endif
              end do
+          endif
+
+          call restartvar(ncid=ncid, flag=flag, varname='totvegc_col_14', xtype=ncd_double,  &
+               dim1name='column', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%totvegc_col)
+          if (flag=='read' .and. .not. readvar) then
+             if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c14 value'
+             do i = bounds%begc,bounds%endc
+                if (this%totvegc_col(i) /= spval .and. &
+                    .not. isnan(this%totvegc_col(i)) ) then
+                   this%totvegc_col(i) = c12_cnveg_carbonstate_inst%totvegc_col(i) * c14ratio
+                endif
+             end do
           end if
        end if
+
+
        if (  flag == 'read' .and. (enter_spinup .or. (reseed_dead_plants .and. .not. is_restart())) .and. .not. use_cndv) then
              if ( masterproc ) write(iulog, *) 'Reseeding dead plants for CNVegCarbonState'
              ! If a pft is dead (indicated by totvegc = 0) then we reseed that

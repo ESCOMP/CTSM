@@ -291,7 +291,6 @@ contains
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod           , only : restFile_read, restFile_write 
     use ndepStreamMod         , only : ndep_init, ndep_interp
-    use CNDriverMod           , only : CNDriverInit 
     use LakeCon               , only : LakeConInit 
     use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init

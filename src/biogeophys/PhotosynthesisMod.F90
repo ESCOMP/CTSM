@@ -1364,7 +1364,7 @@ contains
          ! But not used as defined here if using sun/shade big leaf code. Instead,
          ! will use canopy integrated scaling factors from SurfaceAlbedo.
 
-         if (dayl_factor(p) .eq. 0._r8) then
+         if (dayl_factor(p)  < 1.0e-12_r8) then
             kn(p) =  0._r8
          else
             kn(p) = exp(0.00963_r8 * vcmax25top/dayl_factor(p) - 2.43_r8)

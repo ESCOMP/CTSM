@@ -1,4 +1,128 @@
 ===============================================================
+Tag name:  clm4_5_17_r264
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Nov 16 13:35:59 MST 2017
+One-line Summary: Changes from Dave Lawrenece on resetting soil carbon for spinup
+
+Purpose of changes
+------------------
+
+Changes from Dave Lawrence so that total vegetation carbon (totvegc) is used for resetting soil carbon
+stocks during the AD spinup exit (to determine if you should reset both carbon and nitrogen). Also read 
+in totvegc for C13, and C14. These are then passed down into soilbiogechemistry nitrogenstate and carbonstate
+restart to determine if the decomposition pools should be reset. The resetting is only done over non-crop
+vegetation (ignoring both prognostic and generic crop types) and is only done on the exit_spinup phase
+going out of accellerated decomposition mode.
+
+Fix a couple small issues that in principle could change answers, but we didn't see answer changes in testing.
+There was an error in how rootfr was initialized if it wasn't on the restart file. Made sure the crop patch
+level restart variables are read after the enter_spinup code.
+
+Bugs fixed or introduced
+------------------------
+  2406 -- Crop patch-level restart variables read after enter_spinup code
+  2426 -- Error in rootfr for SoilStateType restart
+  2447 -- dayl_factor not just exactly zero, but small
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs introduced in this tag (include bugzilla ID): Following found
+  2534 -- rootfr_road_perv calculation now incorrect for CLM50
+  2533 -- c13/c14 isotope time-series is awkward for 1850 control (convert to streams file)
+  2531 -- FATES doesn't call SoilBiogeochemCompetitionInit
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+  SetNCrit in SoilBiogeochemNitrogenStateType.F90, should be SetCCrit, because totvegc is
+  used rather than totvegn. 
+  SoilBiogeochemPrecisionControlInit was added as a new method that could be extended to
+  set ncrit and ccrit from namelist, or to set them from the settings for CNPrecisionControl
+  that are read in by namelist
+
+Changes to tests or testing: None
+
+Code reviewed by: self,dlawren
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular (without testing on cheyenne when tag was made)
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- Ran on yellowstone OK
+    cheyenne_gnu ------ Ran on yellowstone OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_17_r263
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for spinup!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only during spinup (at exit_spinup stage)
+    - what platforms/compilers: All
+    - nature of change: minor for spinup
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+   M   components/clm/src/biogeochem/CNVegCarbonStateType.F90 --- Add totvegc_col (and cor c13/c14) to restart
+   M   components/clm/src/biogeochem/CNVegetationFacade.F90 ----- Add get_totvegc_col to get the column level totvegc
+   M   components/clm/src/main/clm_initializeMod.F90 ------------ Remove use of CNDriverInit, not needed
+   M   components/clm/src/main/clm_instMod.F90 ------------------ Add call to SoilBiogeochemCompetitionInit
+           do vegetation restart before soil bgc restart, pass totvegc down to soilbiogeochem_carbonstate restart (and nitrogenstate)
+   M   components/clm/src/biogeophys/PhotosynthesisMod.F90 ------ Fix bug 2447 checking for small dayl_factor and not just exactly zero
+   M   components/clm/src/biogeophys/SoilStateType.F90 ---------- Fix bug 2446 initialize rootfr only if rootfr not read in
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90 ---- Add SetNCrit to set new module variable ncrit
+           pass totvegc_col into restart, if it is lower than ncrit (and not crop) reset decomposition pools to zero
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemPrecisionControlMod.F90 -- Add SoilBiogeochemPrecisionControlInit, to set
+           ncrit and ccrit now module variables and pass them down to carbonstate and nitrogenstate
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90 ------ Add SetCCrit to set new module variable ccrit
+           pass totvegc_col into restart, if it is lower than ccrit (and not crop) reset decomposition pools to zero
+           save restart_file_spinup_state and read it in with C12
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_17_r263
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Nov  8 15:36:41 MST 2017

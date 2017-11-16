@@ -52,6 +52,7 @@ module SoilBiogeochemNitrogenStateType
      ! the N balance check
      real(r8), pointer :: dyn_no3bal_adjustments_col (:) ! (gN/m2) NO3 adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8), pointer :: dyn_nh4bal_adjustments_col (:) ! (gN/m2) NH4 adjustments to each column made in this timestep via dynamic column adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
+     real(r8)          :: ncrit                          ! (gN/m2) critical value of nitrogen before truncation
 
    contains
 
@@ -60,6 +61,7 @@ module SoilBiogeochemNitrogenStateType
      procedure , public  :: SetValues
      procedure , public  :: Summary
      procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
+     procedure , public  :: SetNCrit
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
@@ -82,6 +84,7 @@ contains
     real(r8)          , intent(in)    :: decomp_cpools_col    (bounds%begc:, 1:)
     real(r8)          , intent(in)    :: decomp_cpools_1m_col (bounds%begc:, 1:)
 
+    this%ncrit = nan
     call this%InitAllocate (bounds )
 
     call this%InitHistory (bounds)
@@ -377,14 +380,14 @@ contains
   end subroutine InitCold
 
   !-----------------------------------------------------------------------
-  subroutine Restart ( this,  bounds, ncid, flag )
+  subroutine Restart ( this,  bounds, ncid, flag, totvegc_col )
     !
     ! !DESCRIPTION: 
-    ! Read/write CN restart data for carbon state
+    ! Read/write CN restart data for nitrogen state
     !
     ! !USES:
-    use shr_infnan_mod      , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_time_manager    , only : is_restart, get_nstep
+    use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
+    use clm_time_manager     , only : is_restart, get_nstep
     use restUtilMod
     use ncdio_pio
     !
@@ -393,6 +396,8 @@ contains
     type(bounds_type)          , intent(in)    :: bounds 
     type(file_desc_t)          , intent(inout) :: ncid   
     character(len=*)           , intent(in)    :: flag   !'read' or 'write' or 'define'
+    real(r8)                   , intent(in)    :: totvegc_col(bounds%begc:bounds%endc) ! (gC/m2) total vegetation carbon
+
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c
@@ -612,10 +617,23 @@ contains
              m = 1. / decomp_cascade_con%spinup_factor(k)
           end if
           do c = bounds%begc, bounds%endc
+             l = col%landunit(c)
              do j = 1, nlevdecomp
                 if ( abs(m - 1._r8) .gt. 0.000001_r8 .and. exit_spinup) then
                    this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m * &
                         get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+                   ! If there is no vegetation nitrogen,
+                   ! implying that all vegetation has
+                   ! died, then 
+                   ! reset decomp pools to near zero during exit_spinup to
+                   ! avoid very 
+                   ! large and inert soil carbon stocks; note that only
+                   ! pools with spinup factor > 1 
+                   ! will be affected, which means that total SOMN and LITN
+                   ! pools will not be set to 0.
+                   if (totvegc_col(c) <= this%ncrit .and. lun%itype(l) /= istcrop) then 
+                      this%decomp_npools_vr_col(c,j,k) = 0._r8
+                   endif
                 elseif ( abs(m - 1._r8) .gt. 0.000001_r8 .and. enter_spinup) then
                    this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m / &
                         get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -984,5 +1002,14 @@ contains
 
  end subroutine DynamicColumnAdjustments
 
+  !------------------------------------------------------------------------
+  subroutine SetNCrit(this, ncrit)
+
+    class(soilbiogeochem_nitrogenstate_type)           :: this
+    real(r8)                              , intent(in) :: ncrit
+
+    this%ncrit = ncrit
+
+  end subroutine SetNCrit
 
 end module SoilBiogeochemNitrogenStateType

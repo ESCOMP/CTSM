@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_17_r264     erik 11/16/2017 Changes from Dave Lawrenece on resetting soil carbon for spinup
   clm4_5_17_r263     erik 11/08/2017 Drydep vel. for SO2 doubled, influence of organic mater in soil calmed, max daylength not hardwired to present day
   clm4_5_16_r262    sacks 10/27/2017 Rename atm2lnd history fields for downscaled fields, properly turn on vic for clm45, and other minor fixes
   clm4_5_16_r261    sacks 10/25/2017 Add option to reset snow over glacier columns
