@@ -1295,6 +1295,11 @@ and Water Assessment Tool, Theoretical Documentation: Version 2005.
 Temple, TX. USDA Agricultural Research Service and Texas A&M Blackland
 Research Center.
 
+.. _Negrón-Juárezetal2015:
+
+Negrón-Juárez, R. Koven, C.D., Riley, W.J., Knox, R.G., Chambers, J.Q.
+2015. Environmental Research Letters 10:064017. DOI:10.1088/1748-9326/10/6/064017.
+
 .. _NemaniRunning1996:
 
 Nemani, R.R., and Running, S.W. 1996. Implementation of a hierarchical
@@ -1644,7 +1649,7 @@ Strugnell, N.C., Zhang, X., Jin, Y., and Muller, J.-P. 2002. First
 operational BRDF, albedo nadir reflectance products from MODIS. Remote
 Sens. Environ. 83:135-148.
 
-.. _Schlesinger, W.H., 1997. Biogeochemistry: an analysis of global change.
+.. _Schlesinger1997:
 
 Schlesinger, W.H., 1997. Biogeochemistry: an analysis of global change.
 Academic Press, London, 588 pp.
@@ -1880,6 +1885,10 @@ Taylor, B.R., Parkinson, D. and Parsons, W.F.J., 1989. Nitrogen and
 lignin content as predictors of litter decay rates: A microcosm test.
 Ecology, 70: 97-104.
 
+.. _Thomasetal2015:
+
+Thomas R.Q., Brookshire E.N., Gerber S. 2015. Nitrogen limitation on land: how can it occur in Earth system models? Global Change Biology, 21, 1777-1793, doi:10.1111/gcb.12813.
+
 .. _Thonickeetal2001:
 
 Thonicke, K., Venevsky, S., Sitch, S., and Cramer, W. 2001. The role of
@@ -2008,7 +2017,7 @@ drivers of global environmental change: enabling use of global SRES
 scenarios at the national and grid levels, Report 550025001, Netherlands
 Environmental Assessment Agency, 45 pp.
 
-.. _Vanninen, P., and Makela, A. 2005. Carbon budget for Scots pine trees:
+.. _VanninenMakela2005:
 
 Vanninen, P., and Makela, A. 2005. Carbon budget for Scots pine trees:
 effects of size, competition and site fertility on growth allocation and
@@ -2072,6 +2081,13 @@ White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000.
 Parameterization and sensitivity analysis of the Biome-BGC terrestrial
 ecosystem model: net primary production controls. Earth Interactions
 4:1-85.
+
+.. _Wiederetal2015:
+
+Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. 
+Effects of model structural uncertainty on carbon cycle projections: 
+biological nitrogen fixation as a case study. Environmental Research 
+Letters, 10(4), 044016.
 
 .. _Williamsetal1996:
 
