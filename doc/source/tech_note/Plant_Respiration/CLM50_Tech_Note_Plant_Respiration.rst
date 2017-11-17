@@ -31,9 +31,11 @@ variables for vegetation carbon, and 19 for vegetation nitrogen.
 
 .. _Figure Carbon and nitrogen pools:
 
-.. image:: image2.png
+.. figure:: image2.png
     :width: 400px
     :height: 400px
+
+    Carbon and nitrogen pools.
 
 Carbon Allocation for Maintenance Respiration Costs
 --------------------------------------------------------
