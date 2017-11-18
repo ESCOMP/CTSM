@@ -1,4 +1,107 @@
 ===============================================================
+Tag name:  clm4_5_17_r265
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Nov 18 12:40:20 MST 2017
+One-line Summary: Update the clm50 parameter file for better behavior with prognostic crop, and fix a bug in clm50 urban model
+
+Purpose of changes
+------------------
+
+Update a few parameters to tweak prognostic crop harvest yields, adjusting FUN costs, and changing C4 crops and 
+wheat by Keith Oleson, Dave Lawrence, and Danica Lombardozzi. Danica had this to say: 
+  Overall, the wheat parameters work well (give us correct Fertilized - Unfertilized behavior 
+  and reasonable crop yields), but the C4 crop parameters are less satisfying. The 2A parameter 
+  changes still have trouble with the fertilized - unfertilized behavior in some regions and 
+  lower yields, but seems to be the best combined set of behaviors since there seems to be 
+  a direct tradeoff between the fertilized behavior and crop yields
+
+Also a fix to urban initialization of rootfr for pervious road. It had used a magic number to assuming nlevsoi
+was 10. Now we divide by the actual nlevsoi.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2434
+   2434 -- urban assumed to have 10 soil layers
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): clm50 params file
+
+Changes to the datasets (e.g., parameter, surface or initial files): clm50 parameter file
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,oleson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_17_r264
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, for CLM50
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all clm50 (except non-urban and non-crop)
+    - what platforms/compilers: all
+    - nature of change: crop behavior changes, urban working better
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- new params file
+M       components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90 ----- Divide by nlevsoi
+            rather than assume nlevsoi is 10 with a magic number.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_17_r264
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Nov 16 13:35:59 MST 2017

@@ -185,7 +185,7 @@ contains
              soilstate_inst%rootfr_road_perv_col(c,lev) = 0._r8
           enddo
           do lev = 1,nlevsoi
-             soilstate_inst%rootfr_road_perv_col(c,lev) = 0.1_r8  ! uniform profile
+             soilstate_inst%rootfr_road_perv_col(c,lev) = 1.0_r8/real(nlevsoi,r8)
           end do
 ! remove roots below bedrock layer
           soilstate_inst%rootfr_road_perv_col(c,1:col%nbedrock(c)) = &
