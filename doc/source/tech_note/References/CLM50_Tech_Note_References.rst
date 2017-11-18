@@ -217,6 +217,10 @@ liquid water content. Ann. Glaciol. 13:22-26.
 
 Brunke, M. A., P. Broxton, J. Pelletier, D. Gochis, P. Hazenberg, D. M. Lawrence, L. R. Leung, G.-Y. Niu, P. A. Troch, and X. Zeng, 2016: Implementing and Evaluating Variable Soil Thickness in the Community Land Model, Version 4.5 (CLM4.5). J. Clim. 29:3441-3461.
 
+.. _Brzosteketal2014:
+
+Brzostek, E. R., J. B. Fisher, and R. P. Phillips, 2014. Modeling the carbon cost of plant nitrogen acquisition: Mycorrhizal trade-offs and multipath resistance uptake improve predictions of retranslocation. J. Geophys. Res. Biogeosci., 119, 1684–1697, doi:10.1002/2014JG002660.
+
 .. _BugmannSolomon2000:
 
 Bugmann, H., and Solomon, A.M. 2000. Explaining forest composition and
@@ -487,6 +491,10 @@ Schimel (Editors). John Wiley and Sons, pp. 7-21.
 
 Fisher, R. A., S. Muszala, M. Verteinstein, P. Lawrence, C. Xu, N. G. McDowell, R. G. Knox, C. Koven, J. Holm, B. M. Rogers, A. Spessa, D. Lawrence, and G. Bonan, 2015: Taking off the training wheels: the properties of a dynamic vegetation model without climate envelopes, CLM4.5(ED). Geosci. Model Dev., 8: 3593-3619, doi:10.5194/gmd-8-3593-2015.
 
+.. _Fisheretal2010:
+
+Fisher, J. B., S. Sitch, Y. Malhi, R. A. Fisher, C. Huntingford, and S.-Y. Tan, 2010. Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation. Global Biogeochem. Cycles, 24, GB1014, doi:10.1029/2009GB003621.
+
 .. _FlannerZender2005:
 
 Flanner, M.G., and Zender. C.S. 2005. Snowpack radiative heating:
@@ -733,6 +741,10 @@ Sensitivity of surface flux simulations to hydrologic parameters based
 on an uncertainty quantification framework applied to the Community Land
 Model. J. Geophys. Res. 117:D15108.
 
+.. _Houltonetal2008:
+
+Houlton, B.Z., Wang, Y.P., Vitousek, P.M. and Field, C.B., 2008. A unifying framework for dinitrogen fixation in the terrestrial biosphere. Nature, 454(7202), p.327.
+
 .. _HuangLiang2006:
 
 Huang, M., and Liang, X. 2006. On the assessment of the impact of
@@ -905,6 +917,10 @@ Koven, C.D. et al. 2015. Permafrost carbon-climate feedback is
 sensitive to deep soil carbon decomposability but not deep soil
 nitrogen dynamics. Proceedings of the National Academies of Science,
 112, 12, 3752-3757, doi:10.1073/pnas.1415123112
+
+.. _Kovenetal2017:
+
+Koven, C.D., G. Hugelius, D.M. Lawrence, and W.R. Wieder, 2017: Higher climatological temperature sensitivity of soil carbon in cold than warm climates. Nature Clim. Change, 7, doi:10.1038/nclimate3421.
 
 .. _Kuchariketal2000:
 
@@ -1295,9 +1311,9 @@ and Water Assessment Tool, Theoretical Documentation: Version 2005.
 Temple, TX. USDA Agricultural Research Service and Texas A&M Blackland
 Research Center.
 
-.. _Negrón-Juárezetal2015:
+.. _NegronJuarezetal2015:
 
-Negrón-Juárez, R. Koven, C.D., Riley, W.J., Knox, R.G., Chambers, J.Q.
+Negron-Juarez, R. Koven, C.D., Riley, W.J., Knox, R.G., Chambers, J.Q.
 2015. Environmental Research Letters 10:064017. DOI:10.1088/1748-9326/10/6/064017.
 
 .. _NemaniRunning1996:
