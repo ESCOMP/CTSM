@@ -156,7 +156,7 @@ and non-woody tissues (:ref:`Larcher, 1995 <Larcher1995>`).
 CLM5.0 applies a fixed allocation scheme for woody vegetation. 
 The decision to use the fixed allocation scheme in CLM5.0 came 
 from biases in above-ground biomass illustrated by Negrón-Juárez 
-et al. (:ref:`2015 <Negrón-Juárezetal2015>`). 
+et al. (:ref:`2015 <NegronJuarezetal2015>`). 
 
 The model maintains the capacity to represent a dynamic allocation scheme 
 for woody vegetation (parameter :math:`a_{3}` = -1, :numref:`Table Allocation 

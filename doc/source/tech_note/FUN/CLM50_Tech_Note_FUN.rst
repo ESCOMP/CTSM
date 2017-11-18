@@ -7,7 +7,7 @@ Introduction
 -----------------
 
 
-The Fixation and Uptake of Nitrogen model is based on work by Fisher (J.) et al., (2008), Brzostek et al. (2015) and Shi et al. (2016).  The concept of FUN is that in most cases, Nitrogen uptake requires the expenditure of energy in the form of carbon, and further, that there are numerous potential sources of Nitrogen in the environment which a plant may exchange for carbon. The ratio of carbon expended to Nitrogen acquired is referred to here as the cost, or exchange rate,  of N acquisition (:math:`E_{nacq}`, gC/gN)). There are eight pathways for N uptake:
+The Fixation and Uptake of Nitrogen model is based on work by :ref:`Fisher et al. (2010)<Fisheretal2010>`, :ref:`Brzostek et al. (2014)<Brzosteketal2014>`, and :ref:`Shi et al. (2016)<Shietal2016>`.  The concept of FUN is that in most cases, Nitrogen uptake requires the expenditure of energy in the form of carbon, and further, that there are numerous potential sources of Nitrogen in the environment which a plant may exchange for carbon. The ratio of carbon expended to Nitrogen acquired is referred to here as the cost, or exchange rate,  of N acquisition (:math:`E_{nacq}`, gC/gN)). There are eight pathways for N uptake:
 
 1. Fixation by symbiotic bacteria in root nodules (for N fixing plants) (:math:`_{fix}`)
 2. Retranslocation of N from senescing tissues (:math:`_{ret}`)
@@ -47,7 +47,7 @@ Available Soil Nitrogen
 
 Cost of Nitrogen Fixation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The cost of fixation is derived from Houlton et al. (2008). 
+The cost of fixation is derived from :ref:`Houlton et al. (2008)<Houltonetal2008>`. 
  .. math::
 
    N_{cost,fix} = -s_{fix}/(1.25 e^{a_{fix} + b_{fix} . t_{soil}  (1 - 0.5 t_{soil}/ c_{fix}) })
@@ -89,7 +89,7 @@ where m=1 pertains to the fraction of the PFT that is ecotmycorrhizal, as oppose
 
 Resolving N cost across simultaneous uptake streams
 --------------------------------------------------------
-The total cost of N uptake is calculated based on the assumption that carbon is partitioned to each stream in proportion to the inverse of the cost of uptake. So, more expensive pathways receive less carbon. Earlier versions of FUN (Fisher et al. 2008) utilized a scheme whereby plants only took up N from the cheapest pathway. Brzostek et al. introduced a scheme for the simultaneous uptake from different pathways. Here we calcualate a 'conductance' to N uptake (analagous to the inverse of the cost function conceptualized as a resistance term) :math:`N_{conductance}` ( gN/gC) as:
+The total cost of N uptake is calculated based on the assumption that carbon is partitioned to each stream in proportion to the inverse of the cost of uptake. So, more expensive pathways receive less carbon. Earlier versions of FUN :ref:`(Fisher et al., 2010)<Fisheretal2010>)` utilized a scheme whereby plants only took up N from the cheapest pathway. :ref:`Brzostek et al. (2014)<Brzosteketal2014>` introduced a scheme for the simultaneous uptake from different pathways. Here we calcualate a 'conductance' to N uptake (analagous to the inverse of the cost function conceptualized as a resistance term) :math:`N_{conductance}` ( gN/gC) as:
 
  .. math::
 
@@ -274,7 +274,7 @@ and the other C and N fluxes can be determined following the logic above.
 
 Modifications to allow variation in C:N ratios
 --------------------------------------------------------
-The original FUN model as developed by Fisher et al. (2008) and Brzostek et al. (2015) assumes a fixed plant tissue C:N ratio. This means that in the case where N is especially limiting, all excess carbon will be utilized in an attempt to take up more Nitrogen. It has been repeatedly observed, however, that in these circumstances in real life, plants have some flexibility in the C:N stoichiometry of their tissues, and therefore, this assumption may not be realistic. **lit review on CN ratios**
+The original FUN model as developed by :ref:`Fisher et al. (2010)<Fisheretal2010>` and :ref:`Brzostek et al. (2014)<Brzosteketal2014>` assumes a fixed plant tissue C:N ratio. This means that in the case where N is especially limiting, all excess carbon will be utilized in an attempt to take up more Nitrogen. It has been repeatedly observed, however, that in these circumstances in real life, plants have some flexibility in the C:N stoichiometry of their tissues, and therefore, this assumption may not be realistic. **lit review on CN ratios**
 
 Thus, in CLM5, we introduce the capacity for tissue C:N ratios to be prognostic, rather than static. Overall N and C availability (:math:`N_{uptake}` and :math:`C_{growth}`) and hence tissue C:N ratios, are both determined by FUN.  Allocation to individual tissues is discussed in the allocation chapter
 
@@ -407,9 +407,3 @@ kc_nonmyc (step 2) sets active components for Arbuscular fungi
 ACTIVE vs NONMYC
 ECTO vs ARBU for ACTIVE.
 
-References
---------------------------------------------------------
-
-Houlton, B.Z., Wang, Y.P., Vitousek, P.M. and Field, C.B., 2008. A unifying framework for dinitrogen fixation in the terrestrial biosphere. Nature, 454(7202), p.327.
-
-   
