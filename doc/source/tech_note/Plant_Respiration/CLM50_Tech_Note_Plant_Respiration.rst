@@ -3,63 +3,11 @@
 Plant Respiration
 =================
 
-Introduction
------------------
 
-CLM includes a fully-prognostic treatment of the terrestrial carbon and
-nitrogen cycles including interactions between these cycles as mediated
-by biological mechanisms of plants and soil heterotrophs. The model is
-fully prognostic with respect to all carbon and nitrogen state variables
-in the vegetation, litter, and soil organic matter. The seasonal timing
-of new vegetation growth and litterfall is also prognostic, responding
-to soil and air temperature, soil water availability, and daylength, in
-varying degrees depending on a specified phenology type for each PFT
-(see Chapter 14). The prognostic LAI, SAI, and vegetation heights are
-utilized by the biophysical model.
-
-Separate state variables for C and N are tracked for leaf, live stem,
-dead stem, live coarse root, dead coarse root, and fine root pools
-(Figure 13.1 and 13.2). Each of these pools has two corresponding
-storage pools representing, respectively, short-term and long-term
-storage of non-structural carbohydrates and labile nitrogen. There are
-two additional carbon pools, one for the storage of growth respiration
-reserves, and another used to meet excess demand for maintenance
-respiration during periods with low photosynthesis. One additional
-nitrogen pool tracks retranslocated nitrogen, mobilized from leaf tissue
-prior to abscission and litterfall. Altogether there are 20 state
-variables for vegetation carbon, and 19 for vegetation nitrogen.
-
-.. _Figure Carbon and nitrogen pools:
-
-.. figure:: image2.png
-    :width: 400px
-    :height: 400px
-
-    Carbon and nitrogen pools.
-
-Carbon Allocation for Maintenance Respiration Costs
+Carbon Expenditure on Plant Maintenance Respiration
 --------------------------------------------------------
 
-The carbon and nitrogen allocation routines in CLM determine the fate of
-newly assimilated carbon, coming from the calculation of photosynthesis,
-and available mineral nitrogen, coming from plant uptake of mineral
-nitrogen in the soil or being drawn out of plant reserves. Allocation
-fluxes are determined in three steps: first :math:`CF_{GPPpot}` is
-used to evaluate the potential allocation of carbon and nitrogen
-assuming an unlimited nitrogen supply, then the actual nitrogen supply
-is compared against the demand, and finally allocation of carbon and
-nitrogen are reduced, if necessary, to match nitrogen supply and demand.
-
-Allocation of available carbon on each time step is prioritized, with
-first priority given to the demand for carbon to support maintenance
-respiration of live tissues (section 13.7). Second priority is to
-replenish the internal plant carbon pool that supports maintenance
-respiration during times when maintenance respiration exceeds
-photosynthesis (e.g. at night, during winter for perennial vegetation,
-or during periods of drought stress) (Sprugel et al., 1995). Third
-priority is to support growth of new tissues, including allocation to
-storage pools from which new growth will be displayed in subsequent time
-steps.
+After the assimilation of photsynthetic carbon, the first expenditure is on plant maintenance respiration (Chapter :numref:`rst_CN Allocation`)
 
 The total maintenance respiration demand (:math:`CF_{mr}`, gC
 m\ :sup:`-2` s\ :sup:`-1`) is calculated as a function of
