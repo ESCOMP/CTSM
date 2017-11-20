@@ -7,32 +7,22 @@ Summary of CLM5.0 updates relative to the CLM4.5
 -----------------------------------------------------
 - CLM5 now defaults to a static allocation to woody biomass rather than the dynamic allocation term used in CLM4.5.  The dynamic allocation is stil lkept as an option, for details, see the CLM4.5 Tech Note.
 
- - CLM5 now includes flexible C:N ratios of all plant tissues, which allows allocation of carbon to occur separately from allocation of nitrogen, thus removing the requirement to downregulate photosynthesis based on the instantaneous stoichiometric needs of allocation.
+- CLM5 now includes flexible C:N ratios of all plant tissues, which allows allocation of carbon to occur separately from allocation of nitrogen, thus removing the requirement to downregulate photosynthesis based on the instantaneous stoichiometric needs of allocation.
+
+- CLM5 accounts for the carbon expenditure on nitrogen aquisition, as determined by the FUN model, and the N uptake it determined by the environmental cost of Nitrogen from fixation, active uptake and retranslocation.
 
 
 Introduction
 -----------------
 
-
-The carbon and nitrogen allocation routines in CLM determine the fate of
-newly assimilated carbon, coming from the calculation of photosynthesis,
-and available mineral nitrogen, coming from plant uptake of mineral
-nitrogen in the soil or being drawn out of plant reserves. A significant change to CLM5 relative to prior versions is that allocation of carbon and nitrogen proceed independently rather than in a sequential manner.
+The carbon and nitrogen allocation routines in CLM determine the fate of newly assimilated carbon, and absorbed nitrogen. The environmental cost of nitrogen estimated by the FUN model modulates the C:N ratios of the plant tissue pools around a target ratio, and absorbed nitrogen is allocated in proportion to the demand, as estimated by the ideal requirements of these target C:N ratios. 
 
 
-Carbon Allocation to Cover Prior-Timestep Maintenance Respiration Costs
+
+Carbon Allocation to Cover Prior-Timestep Maintenance Respiration Costs ("Excess" Respiration)
 ----------------------------------------------------------------------------
 
-Allocation of available carbon on each time step is prioritized, with
-first priority given to the demand for carbon to support maintenance
-respiration of live tissues (Chapter :numref:`rst_Plant Respiration`) and Nitrogen acquisition costs (Chapter :numref:`rst_FUN`). Second priority is to
-replenish the plant carbon deficit pool that balances maintenance
-respiration that occurs during times when maintenance respiration exceeds
-photosynthesis (e.g. at night, during winter for perennial vegetation,
-or during periods of drought stress) (Sprugel et al., 1995). Third
-priority is to support growth of new tissues, including allocation to
-storage pools from which new growth will be displayed in subsequent time
-steps, as well as growth respiration costs.
+After respiration of live tissues (Chapter :numref:`rst_Plant Respiration`), the next priority of the carbon allocation cascade is to replenish the plant carbon deficit pool that balances maintenance respiration that occurs during times when maintenance respiration exceeds photosynthesis (e.g. at night, during winter for perennial vegetation, or during periods of drought stress) (Sprugel et al., 1995).
 
 The total maintenance respiration demand (:math:`CF_{mr}`, gC
 m\ :sup:`-2` s\ :sup:`-1`) is calculated as a function of
@@ -99,16 +89,19 @@ Carbon and Nitrogen Stoichiometry of New Growth
 ----------------------------------------------------
 
 After accounting for the carbon cost of maintenance respiration, the
-remaining carbon flux from photosynthesis which can be allocated to new
-growth (:math:`CF_{avail}`, gC m\ :sup:`-2` s\ :sup:`-1`) is
+remaining carbon flux from photosynthesis which is allocated either to new
+growth or to nitrogen acquisition processes (Chapter  :numref:`rst_FUN`), (:math:`CF_{avail}`, gC m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
    :label: 19.6 
 
    CF_{avail\_ alloc} =CF_{GPP} -CF_{GPP,mr} -CF_{GPP,xs} .
 
-Potential allocation to new growth is calculated for all of the plant
-carbon and nitrogen state variables based on specified C:N ratios for
+
+The FUN model requires an estimate of the C:N requirements of the existing plant structure, given that different relative quantities of wood, root and leaf biomass will result in different necessary C:N ratios for expansion.
+
+These C and N allocation ratios are calculated for all of the plant
+carbon and nitrogen state variables based on target C:N ratios for
 each tissue type and allometric parameters that relate allocation
 between various tissue types. The allometric parameters are defined as
 follows:
@@ -191,17 +184,14 @@ follows:
 where all C:N parameters are defined as constants for a given PFT 
 (:numref:`Table Allocation and CN ratio parameters`).
 
-Given values for the parameters in and , total carbon and nitrogen
-allocation to new growth ( :math:`CF_{alloc}`, gC
-m\ :sup:`-2` s\ :sup:`-1`, and :math:`NF_{alloc}`, gN
-m\ :sup:`-2` s\ :sup:`-1`, respectively) can be expressed as
-functions of new leaf carbon allocation (:math:`CF_{GPP,leaf}`, gC
-m\ :sup:`-2` s\ :sup:`-1`):
+
+The target C:N stoichiometry for new growth allocation can be calculated as
 
 .. math::
-   :label: 19.10
+   :label: 19.13
 
-   \begin{array}{l} {CF_{alloc} =CF_{GPP,leaf} {\kern 1pt} C_{allom} } \\ {NF_{alloc} =CF_{GPP,leaf} {\kern 1pt} N_{allom} } \end{array}
+   CN_{plant\_ target} =\frac{N_{allom} }{C_{allom} } .
+
 
 where
 
@@ -215,16 +205,7 @@ where
 
    N_{allom} =\left\{\begin{array}{l} {\frac{1}{CN_{leaf} } +\frac{a_{1} }{CN_{fr} } +\frac{a_{3} a_{4} \left(1+a_{2} \right)}{CN_{lw} } +} \\ {\qquad \frac{a_{3} \left(1-a_{4} \right)\left(1+a_{2} \right)}{CN_{dw} } \qquad {\rm for\; woody\; PFT}} \\ {\frac{1}{CN_{leaf} } +\frac{a_{1} }{CN_{fr} } \qquad \qquad \qquad {\rm for\; non-woody\; PFT.}} \end{array}\right.
 
-Since the C:N stoichiometry for new growth allocation is defined, from
-Eq. , as :math:`C_{allom}`/ :math:`N_{allom}`, the total carbon available for new growth allocation
-(:math:`CF_{avail\_alloc}`) can be used to calculate the total
-plant nitrogen demand for new growth ( :math:`NF_{plant\_demand}`,
-gN m\ :sup:`-2` s\ :sup:`-1`) as:
 
-.. math::
-   :label: 19.13 
-
-   NF_{plant\_ demand} =CF_{avail\_ alloc} \frac{N_{allom} }{C_{allom} } .
 
 Carbon Allocation to New Growth
 -----------------------------------------
@@ -305,14 +286,8 @@ tissue types are given as:
 Nitrogen allocation
 -----------------------------------------
 
-The total flux of nitrogen to be allocated is given by the FUN model (Chapter :numref:`rst_FUN`).  This gives a total N to be allocated within a given timestep, :math:`N_{supply}`.  The total N allocated for a given tissue :math:`i` is the minimum between the supply and the demand:
+The total flux of nitrogen to be allocated is given by the FUN model (Chapter :numref:`rst_FUN`).  This gives a total N to be allocated within a given timestep, :math:`N_{uptake}`. This is distribution in proportion to the demand for N from different tissues, calculated as:
 
-.. math::
-   :label: 19.26
-
-   NF_{alloc,i} = min \left( NF_{demand, i}, NF_{supply, i} \right)
-
-The demand for each tissue, calculated for the tissue to remain on stoichiometry during growth, is:
    
 .. math::
    :label: 19.27
