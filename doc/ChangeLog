@@ -1,4 +1,175 @@
 ===============================================================
+Tag name:  clm4_5_17_r266
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Nov 27 19:43:39 MST 2017
+One-line Summary: Avoid negative snow densities
+
+Purpose of changes
+------------------
+
+For very low temperatures, fresh snow densities were negative. This was
+only happening at extremely low temperatures (below -100 deg C), but
+caused snow balance errors when it occurred.
+
+In exploring the LoTmpDnsSlater2017 parameterization in
+NewSnowBulkDensity, I came away with the following thoughts:
+
+   It seems like there should be a limit on the temperature-dependent
+   bifall value. I extracted this function into python and played with
+   it for a few minutes:
+
+          else if (new_snow_density == LoTmpDnsSlater2017) then 
+             ! Andrew Slater: A temp of about -15C gives the nicest
+             ! "blower" powder, but as you get colder the flake size decreases so
+             ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic
+             ! winters
+             bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
+          end if
+
+   It looks like the intention is to have snow densities that increase
+   with decreasing temperature (below -15 C), but the effect of this
+   parabolic function is to have densities start coming back down as
+   temperature decreases too low (below about -58 C). My sense is that
+   we should do one of the following in the above block of code:
+
+   (1) Limit bifall(c) to be no less than 50... my read of this code is
+   that temperature-dependent bifall is never meant to go below 50.
+
+   (2) For this cold-temperature-based bifall, use an "effective" forc_t
+   that is never colder than about -58 C – or the point at which this
+   function begins to decrease with further-decreasing temperatures. (We
+   could determine the exact temperature at which this function turns
+   over... -58 C is just an approximation.) I'm not positive that this
+   is what's intended, but my read of the comment suggests that
+   densities were never intended to start decreasing with
+   further-cooling temperatures.
+
+See comments and figures in
+http://bugs.cgd.ucar.edu/show_bug.cgi?id=2536 for more details.
+
+Leo van Kampenhout and Jan Lenaerts support limitation option 2, which
+is my preference as well. Thus, this tag implements that limitation.
+
+This change changes answers for (downscaled) atmospheric forcing
+temperatures below -57.55 deg C. These very low temperatures are rare,
+but they do sometimes occur, both in coupled runs and in offline runs.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2536: Snow balance error
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Leo van Kampenhout
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, answers change as expected
+
+CLM tag used for the baseline comparisons: clm4_5_17_r265
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff/same climate
+
+      Many (but not all) tests show answer changes. Answers should only
+      change for (downscaled) forcing temperatures below -57.55 deg C. I
+      spot-checked one test with answer changes
+      (SMS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default). I
+      checked H2OSNO and FSH in this test, in the last day's h0 file;
+      these fields differ (relative to the baseline) in only one
+      gridcell. TBOT was about -55 deg C in the daily average of the
+      last day, so it seems reasonable that this forcing temperature was
+      below -57.55 deg C at some point in the 3-day simulation.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_newSnowBulkDensity.pf
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_17_r265
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Nov 18 12:40:20 MST 2017

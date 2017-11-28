@@ -78,6 +78,10 @@ module SnowHydrologyMod
   real(r8), public, parameter :: scvng_fct_mlt_dst3  = 0.01_r8 ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
   real(r8), public, parameter :: scvng_fct_mlt_dst4  = 0.01_r8 ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
 
+  ! The following are public for the sake of unit testing
+  integer, parameter, public :: LoTmpDnsSlater2017            = 2    ! For temperature below -15C use equation from Slater 2017
+  integer, parameter, public :: LoTmpDnsTruncatedAnderson1976 = 1    ! Truncate low temp. snow density from the Anderson-1976 version at -15C
+
   ! Definition of snow pack vertical structure
   ! Hardcoded maximum of 12 snowlayers, this is checked elsewhere (controlMod.F90)
   ! The bottom layer has no limit on thickness, hence the last element of the dzmax_*
@@ -97,9 +101,6 @@ module SnowHydrologyMod
 
   integer, parameter :: OverburdenCompactionMethodAnderson1976 = 1
   integer, parameter :: OverburdenCompactionMethodVionnet2012  = 2
-
-  integer, parameter :: LoTmpDnsSlater2017            = 2    ! For temperature below -15C use equation from Slater 2017
-  integer, parameter :: LoTmpDnsTruncatedAnderson1976 = 1    ! Truncate low temp. snow density from the Anderson-1976 version at -15C
 
   ! If true, the density of new snow depends on wind speed, and there is also
   ! wind-dependent snow compaction
@@ -1794,6 +1795,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c, g
+    real(r8) :: t_for_bifall_degC  ! temperature to use in bifall equation (deg C)
 
     character(len=*), parameter :: subname = 'NewSnowBulkDensity'
     !-----------------------------------------------------------------------
@@ -1820,7 +1822,14 @@ contains
           ! "blower" powder, but as you get colder the flake size decreases so
           ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic
           ! winters
-          bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
+          if (forc_t(c) > tfrz - 57.55_r8) then
+             t_for_bifall_degC = (forc_t(c)-tfrz)
+          else
+             ! Below -57.55 deg C, the following function starts to decrease with
+             ! decreasing temperatures. Limit the function to avoid this turning over.
+             t_for_bifall_degC = -57.55_r8
+          end if
+          bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*t_for_bifall_degC - 0.0333_r8*t_for_bifall_degC**2
        end if
 
        if (wind_dependent_snow_density .and. forc_wind(g) > 0.1_r8 ) then
