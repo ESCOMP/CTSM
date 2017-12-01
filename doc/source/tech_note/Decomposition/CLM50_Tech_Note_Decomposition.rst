@@ -200,19 +200,19 @@ those described in Parton et al. (1988) (:numref:`Table Turnover times`).
  +------------+------------------------+-------------+-------------------------------------------+
  |            | Turnover time (year)   | C:N ratio   | Acceleration term (:math:`{a}_{i}`)       |
  +============+========================+=============+===========================================+
- | CWD        | 4.1                    | -           | 1                                         |
+ | CWD        | 3.3                    | -           | 1.65                                      |
  +------------+------------------------+-------------+-------------------------------------------+
- | Litter 1   | 0.066                  | -           | 1                                         |
+ | Litter 1   | 0.054                  | -           | 1                                         |
  +------------+------------------------+-------------+-------------------------------------------+
- | Litter 2   | 0.25                   | -           | 1                                         |
+ | Litter 2   | 0.20                   | -           | 1                                         |
  +------------+------------------------+-------------+-------------------------------------------+
- | Litter 3   | 0.25                   | -           | 1                                         |
+ | Litter 3   | 0.20                   | -           | 1                                         |
  +------------+------------------------+-------------+-------------------------------------------+
- | SOM 1      | 0.17                   | 8           | 1                                         |
+ | SOM 1      | 0.14                   | 12           | 1                                         |
  +------------+------------------------+-------------+-------------------------------------------+
- | SOM 2      | 6.1                    | 11          | 15                                        |
+ | SOM 2      | 5                      | 12          | 5                                         |
  +------------+------------------------+-------------+-------------------------------------------+
- | SOM 3      | 270                    | 11          | 675                                       |
+ | SOM 3      | 222                    | 10          | 222                                       |
  +------------+------------------------+-------------+-------------------------------------------+
 
 Likewise, values for the respiration fraction of Century-based structure are in :numref:`Table Respiration fractions for Century-based structure`.
@@ -794,7 +794,7 @@ loading from restart files (which preserve information about the mode of
 the model when restart files were written).
 
 The base acceleration terms for the two decomposition cascades are shown in
-Tables 15.1 and 15.3.  In addition to the base terms, CLM5 also
+Tables :numref:`Table Decomposition rate constants` and :numref:`Table Turnover times`.  In addition to the base terms, CLM5 also
 includes a geographic term to the acceleration in order to apply
 larger values to high-latitude systems, where decomposition rates are
 particularly slow and thus equilibration can take significantly longer
