@@ -88,7 +88,8 @@ Growth Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Growth respiration is calculated as a factor of 0.11 times the total
-carbon in new growth on a given timestep, based on construction costs
+carbon allocation to new growth (:math:`CF_{growth}`, after allocating carbon for N acquisition, 
+Chapter :numref:`rst_FUN`.)on a given timestep, based on construction costs
 for a range of woody and non-woody tissues (Atkin et al. in prep). For new
 carbon and nitrogen allocation that enters storage pools for subsequent
 display, it is not clear what fraction of the associated growth
