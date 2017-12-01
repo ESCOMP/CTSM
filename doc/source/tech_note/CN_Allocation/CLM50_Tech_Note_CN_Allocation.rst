@@ -20,7 +20,7 @@ The carbon and nitrogen allocation routines in CLM determine the fate of newly a
 
 
 Carbon Allocation to Cover Prior-Timestep Maintenance Respiration Costs ("Excess" Respiration)
-----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 
 After respiration of live tissues (Chapter :numref:`rst_Plant Respiration`), the next priority of the carbon allocation cascade is to replenish the plant carbon deficit pool that balances maintenance respiration that occurs during times when maintenance respiration exceeds photosynthesis (e.g. at night, during winter for perennial vegetation, or during periods of drought stress) (Sprugel et al., 1995).
 
