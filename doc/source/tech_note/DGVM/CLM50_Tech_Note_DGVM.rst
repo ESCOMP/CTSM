@@ -1,7 +1,3 @@
-======================================
-CLM(ED) model: Technical Documentation
-======================================
-
 .. _rst_Dynamic Global Vegetation Model:
 
 Dynamic Global Vegetation
@@ -29,17 +25,6 @@ Preamble
   climate envelopes. Geoscientific Model Development Discussions. 2015
   Apr 1;8(4).
 | https://pdfs.semanticscholar.org/396c/b9f172cb681421ed78325a2237bfb428eece.pdf
-
-Authors
-=======
-
-Rosie Fisher, Stefan Muszala, Mariana Verteinstein, Peter Lawrence, Chonggang Xu,Nate McDowell, Ryan Knox, Charles Koven, Jennifer Holm, Brendan Rogers, David Lawrence, and Gordon Bonan.
-
-Acknowledgements
-================
-
-The development of the ideas in this document has benefitted from
-conversation with many people, including William Bond, Peter Cox, Matthew Forest, Andrew Fox, William Hoffman,  Peter Lawrence, Jeremy Lichstein,  Heike Lischke,  Mark Lomas,  Nathan McDowell, Paul Moorcroft, Colin Prentice, Drew Purves, Naomi Tague, Benjamin Sanderson, Stephen Sitch, Abigail Swann, Anthony Walker, Mathew Williams, F.Ian Woodward \& S\"onke Zaehle.
 
 
 Introduction
