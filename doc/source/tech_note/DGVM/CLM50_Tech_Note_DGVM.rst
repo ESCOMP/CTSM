@@ -4,7 +4,7 @@ Dynamic Global Vegetation
 ===================================
 
 What has changed
-----------------
+^^^^^^^^^^^^^^^^^^^^
 
 - Deprecation of the dynamic global vegetation model (DGVM): The CLM5.0 model contains the legancy 'CNDV' code, which runs the CLM4(CN) model in combination with the LPJ-derived dynamics vegetation model introduced in CLM3. While this capacity has not technically been removed from the model, the DGVM has not been tested in the development of CLM5 and is no longer scientifically supported. 
 
@@ -12,25 +12,22 @@ What has changed
 
 
 Technical Documentation for FATES
-==================================
+===================================
 
 
-Preamble
-========
+Introduction
+^^^^^^^^^^^^^^^^^^^^
 
-| This document is a technical appendix to
-| Fisher RA, Muszala S, Verteinstein M, Lawrence P, Xu C, McDowell NG,
+ This document is a technical appendix to
+  Fisher RA, Muszala S, Verteinstein M, Lawrence P, Xu C, McDowell NG,
   Knox RG, Koven C, Holm J, Rogers BM, Lawrence D. Taking off the
   training wheels: the properties of a dynamic vegetation model without
   climate envelopes. Geoscientific Model Development Discussions. 2015
   Apr 1;8(4).
-| https://pdfs.semanticscholar.org/396c/b9f172cb681421ed78325a2237bfb428eece.pdf
+  https://pdfs.semanticscholar.org/396c/b9f172cb681421ed78325a2237bfb428eece.pdf
 
 
-Introduction
-============
-
-The CLM(ED) model is presented here as an option within the structure of
+FATES is presented here as an option within the structure of
 the Community Land Model (CLM). Ecosystem Demography (‘ED’), is a
 concept derived from the work of :raw-latex:`\cite{mc_2001}` and is a
 cohort model of vegetation competition and co-existence, allowing a
@@ -53,14 +50,11 @@ radiation transfer, for drought-deciduous and cold-deciduous phenology,
 for carbon storage allocation, and for tree mortality under carbon
 stress, are also included and presented here.
 
-This Document
--------------
+This Document UPDATE
+----------------
 
 This document describes the implementation of the Ecosystem Demography
-concept within the Community Land Model. It is intended as a
-supplementary document to the main CLM technical note, which is at the
-time of writing, the CLM4.5 technical note
-:raw-latex:`\parencite{oleson2013}`. The material covered describes how
+concept within the Community Land Model. The material covered describes how
 the Ecosystem Demography code is organized, how it interacts with the
 pre-existing CLM routines, and the new aspects of plant physiology and
 vegetation dynamics that are introduced further to those already
@@ -71,10 +65,10 @@ model, which is a fully operational land surface scheme
 concept and an array of physiological and ecological innovations
 surrounding the basic concept. Therefore, to avoid confusion between the
 concept of ‘Ecosystem Demography’ and the implementation of this concept
-in different models, we refer our model as the ‘CLM(ED)’ throughout.
+in different models, we refer our model as the ‘FATES’ (the functionally Assembled Terrestrial Ecosystem Simulator) throughout.
 
-The representation of ecosystem heterogeneity in the CLM(ED)
-============================================================
+The representation of ecosystem heterogeneity in FATES
+^^^^^^^^^^^^^^^
 
 The land surface of the Earth is heterogeneous for many reasons, driven
 by variations in climate, edaphic history, ecological variability,
@@ -88,7 +82,7 @@ surface (e.g. soils, ice, lakes, bare ground) and then ‘columns’
 referring to elements of the surface that share below ground resources
 (water & nutrients). Within the ‘soil’ landunit, for example, there are
 separate columns for crops, and for natural vegetation, as these are
-assumed to use separate resource pools. The CLM(ED) model at present
+assumed to use separate resource pools. The FATES model at present
 only operates on the naturally vegetated column. The ‘soil’ column is
 sub-divided into numerous tiles, that correspond to statistical
 fractions of the potentially vegetated land area. In the CLM 4.5 (and
@@ -101,7 +95,7 @@ surface models deployed in climate prediction.
 
 The introduction of the Ecosystem Demography concept introduces
 significant alterations to the representation of the land surface in the
-CLM. In the CLM(ED), the tiling structure represents the disturbance
+CLM. In FATES, the tiling structure represents the disturbance
 history of the ecosystem. Thus, some fraction of the land surface is
 characterized as ‘recently disturbed’, some fraction has escaped
 disturbance for a long time, and other areas will have intermediate
@@ -205,7 +199,7 @@ classes within those plant functional types. Each cohort is associated
 with a number of identical trees, :math:`n_{coh}` (where :math:`{coh}`
 denotes the identification or index number for a given cohort)..
 
-The complete hierarchy of elements in the CLM(ED) is therefore now
+The complete hierarchy of elements in FATES is therefore now
 described as follows:
 
 .. math::
@@ -274,7 +268,7 @@ common-disturbance-history units is less clear. Several alternative
 criteria are possible, including Leaf Area Index, total biomass and
 total stem basal area.
 
-In this implementation of the CLM(ED) we assess the amount of
+In this implementation of FATES we assess the amount of
 above-ground biomass in each PFT/plant diameter bin. Biomass is first
 grouped into fixed diameter bins for each PFT (:math:`ft`) and a
 significant difference in any bin will cause patches to remain
@@ -318,7 +312,7 @@ co-occupy patch :math:`o`. The state properties of :math:`m` and
 :math:`n` (litter, seed pools, etc. ) are also averaged in accordance
 with mass conservation .
 
-Linked Lists: the general code structure of CLM(ED)
+Linked Lists: the general code structure of FATES
 ---------------------------------------------------
 
 [4]_ The number of patches in each natural vegetation column and the
@@ -337,7 +331,7 @@ potential number of cohorts for every potential patch, which would
 result in very large amounts of wasted allocated memory, on account of
 the heterogeneity in the number of cohorts between complex and simple
 ecosystems (n.b. this does still happen for some variables at restart
-timesteps). To resolve this, the cohort structure in the CLM(ED) model
+timesteps). To resolve this, the cohort structure in FATES model
 does not use an array system for internal calculations. Instead it uses
 a system of *linked lists* where each cohort structure is linked to the
 cohorts larger than and smaller than itself using a system of pointers.
@@ -361,10 +355,10 @@ Using this structure, it is therefore possible to have an unbounded
   oldest:
 
 
-Indices used in CLM(ED)
+Indices used in FATES
 -----------------------
 
-Some of the indices used in the CLM(ED) are similar to those used in the
+Some of the indices used in FATES are similar to those used in the
 standard CLM4.5 model; column (:math:`c`), land unit(\ :math:`l`), grid
 cell(\ :math:`g`) and soil layer (:math:`j`). On account of the
 additional complexity of the new representation of plant function,
@@ -471,7 +465,7 @@ restarted. The state variables of a cohort are as follows:
 +-----------------+-----------------+-----------------+-----------------+
 
 Patch State Variables
----------------------
+------------------
 
 A patch, as discuss earlier, is a fraction of the landscape which
 contains ecosystems with similar structure and disturbance history. A
@@ -544,7 +538,7 @@ attributed to each cohort are accumulated throughout each daily cycle
 and passed into the ED code as the major driver of vegetation dynamics.
 
 Initialization of vegetation from bare ground
-=============================================
+^^^^^^^^^^^^^^^^
 
 [5]_If the model is restarted from a bare ground state (as opposed to a
 pre-existing vegetation state), the state variables above are
@@ -614,8 +608,8 @@ biomass, assigned per PFT
 
 [table:init]
 
-Allocation of live biomass to leaves roots and sapwood
-------------------------------------------------------
+Allocation of biomass
+^^^^^^^^^^^^^^^^^^^^
 
 [6]_Total live biomass :math:`b_{alive}` is the state variable of the model
 that describes the sum of the three live biomass pools leaf
@@ -724,11 +718,9 @@ To calculated the sapwood biomass, we use
 [table:allom]
 
 Canopy Structure and the Perfect Plasticity Approximation
-=========================================================
+^^^^^^^^^^^^^^^^
 
- [7]_
-
-During initialization and every subsequent daily ED timestep, the canopy
+[7]_During initialization and every subsequent daily ED timestep, the canopy
 structure model is called to determine how the leaf area of the
 different cohorts is arranged relative to the incoming radiation, which
 will then be used to drive the radiation and photosynthesis
@@ -744,10 +736,7 @@ distribution emerges from competition
 
 The standard ED1.0 model makes a simple ’flat disk’ assumption, that the
 leaf area of each cohort is spread in an homogenous layer at one exact
-height across entire the ground area represented by each patch. The
-CLM(ED) model has diverged from this representation due to (at least)
-two problematic emergent properties that we identified as generating
-unrealistic behaviours espetially for large-area patches.
+height across entire the ground area represented by each patch. FATES has diverged from this representation due to (at least) two problematic emergent properties that we identified as generating unrealistic behaviours espetially for large-area patches.
 
 1. Over-estimation of light competition . The vertical stacking of
 cohorts which have all their leaf area at the same nominal height means
@@ -785,7 +774,7 @@ canopies to grow into the available gaps (this is of course, an
 over-simplified but potential useful ecosystem property). The ‘perfect
 plasticity approximation’ (PPA) implies that the community of trees is
 subdivided into discrete canopy layers, and by extension, each cohort
-represented by the CLM(ED) model is assigned a canopy layer status flag,
+represented by FATES model is assigned a canopy layer status flag,
 :math:`C_L`. In this version, we set the maximum number of canopy layers
 at 2 for simplicity, although is possible to have a larger number of
 layers in theory. :math:`C_{L,coh}` = 1 means that all the trees of
@@ -860,11 +849,9 @@ fractions of cohorts are demoted or promoted. Further details can be
 found in the code references in the footnote.
 
 Horizontal Canopy Spread
-------------------------
+-----------------
 
- [8]_
-
-:raw-latex:`\cite{purves2008}` estimated the ratio between canopy and
+[8]_:raw-latex:`\cite{purves2008}` estimated the ratio between canopy and
 stem diameter :math:`c_{p}` as  0.1 m cm\ :math:`^{-1}` for canopy trees
 in North American forests, but this estimate was made on trees in closed
 canopies, whose shape is subject to space competition from other
@@ -922,12 +909,10 @@ This iterative scheme requires two additional parameters (:math:`i` and
 However, the model is relatively insensitive to the choice of either
 :math:`i` or :math:`A_{t}`.
 
-Definition of Leaf Area Profile
--------------------------------
+Definition of Leaf and Stem Area Profile
+-------------------
 
- [9]_
-
-Within each patch, the model defines and tracks cohorts of multiple
+[9]_Within each patch, the model defines and tracks cohorts of multiple
 plant functional types that exist either in the canopy or understorey.
 Light on the top leaf surface of each cohort in the canopy is the same,
 and the rate of decay through the canopy is also the same for each PFT.
@@ -957,9 +942,6 @@ where :math:`\mathrm{sla}_{ft}` is the specific leaf area in
 m\ :math:`^{2}` KgC\ :math:`^{-1}` and :math:`b_{leaf}` is in kGC per
 plant.
 
-Stem Area Index
-~~~~~~~~~~~~~~~
-
 Stem area index (SAI) is ratio of the total area of all woody stems on a
 plant to the area of ground covered by the plant. During winter in
 deciduous areas, the extra absorption by woody stems can have a
@@ -967,7 +949,7 @@ significant impact on the surface energy budget. However, in previous
 ‘big leaf’ versions of the CLM, computing the circumstances under which
 stem area was visible in the absence of leaves was difficult and the
 algorithm was largely heuristic as a result. Given the multi-layer
-canopy introduced for CLM(ED), we can determine the leaves in the higher
+canopy introduced for FATES, we can determine the leaves in the higher
 canopy layers will likely shade stem area in the lower layers when
 leaves are on, and therefore stem area index can be calculated as a
 function of woody biomass directly.
@@ -1071,7 +1053,7 @@ leaf and stem area profiles,
    
 
 Burial of leaf area by snow
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 The calculations above all pertain to the total leaf and stem area
 indices which charecterize the vegetation structure. In addition, the
@@ -1170,10 +1152,10 @@ described later.
    \bigskip 
 
 Radiation Transfer
-==================
+^^^^^^^^^^^^^^^^^^^
 
 Fundamental Radiation Transfer Theory
--------------------------------------
+------------------
 
 [10]_The first interaction of the land surface with the properties of
 vegetation concerns the partitioning of energy into that which is
@@ -1199,7 +1181,7 @@ is based on the work of :raw-latex:`\cite{norman1979}`.
 Here we describe the basic theory of the radiation transfer model for
 the case of a single homogenous canopy, and in the next section we
 discuss how this is applied to the multi layer multi PFT canopy in the
-CLM(ED) implementation. The code considers the fractions of a single
+FATES implementation. The code considers the fractions of a single
 unit of incoming direct and a single unit of incoming diffuse light,
 that are absorbed at each layer of the canopy for a given solar angle
 (:math:`\alpha_{s}`, radians). Direct radiation is extinguished through
@@ -1386,12 +1368,12 @@ fractions, (required by the photosynthesis calculations), is
 
 .. math:: abs_{sun,z} =  abs_{dif,z} \cdot f_{sun}+ abs_{dir,z}
 
-Resolution of radiation transfer theory within the CLM(ED) canopy structure
----------------------------------------------------------------------------
+Resolution of radiation transfer theory within the FATES canopy structure
+------------------
 
 The radiation transfer theory above, was described with reference to a
 single canopy of one plant functional type, for the sake of clarity of
-explanation. The CLM(ED) model, however, calculates radiative and
+explanation. The FATES model, however, calculates radiative and
 photosynthetic fluxes for a more complex hierarchical structure within
 each patch/time-since-disturbance class, as described in the leaf area
 profile section. Firstly, we denote two or more canopy layers (denoted
@@ -1436,7 +1418,7 @@ transfer scheme are calculated with indices of :math:`C_L`,
 :math:`\it{ft}` and :math:`z`. In the following text, we revisit the
 simplified version of the radiation model described above, and explain
 how it is modified to account for the more complex canopy structure used
-by the CLM(ED).
+by FATES.
 
 Firstly, the light penetration functions, :math:`k_{dir}` and
 :math:`g_{dir}` are described as functions of :math:`\it{ft}`, because
@@ -1561,18 +1543,16 @@ layer, functional type and pft for testing if necessary.
    \bigskip 
 
 Photosynthesis
-==============
+^^^^^^^^^^^^^^^^^^^^
 
 Fundamental photosynthetic physiology theory
---------------------------------------------
+------------------
 
- [11]_
-
-In this section we describe the physiological basis of the
-photosynthesis model before describing its application to the CLM(ED)
+[11]_In this section we describe the physiological basis of the
+photosynthesis model before describing its application to the FATES
 canopy structure. This description in this section is largely repeated
 from the Oleson et al. CLM4.5 technical note but included here for
-comparison with its implementation in CLM(ED). Photosynthesis in C3
+comparison with its implementation in FATES. Photosynthesis in C3
 plants is based on the model of :raw-latex:`\cite{farquhar1980}` as
 modified by :raw-latex:`\cite{collatz1991}`. Photosynthetic assimilation
 in C4 plants is based on the model of :raw-latex:`\cite{collatz1992}`.
@@ -1675,8 +1655,8 @@ where the term 0.21 represents the ratio of maximum rates of oxygenation
 to carboxylation, which is virtually constant with temperature
 :raw-latex:`\cite{farquhar1980}`.
 
-Resolution of the photosynthesis theory within the CLM(ED) canopy structure.
-----------------------------------------------------------------------------
+Resolution of the photosynthesis theory within the FATES canopy structure.
+------------------
 
 The photosynthesis scheme is modified from the CLM4.5 model to give
 estimates of photosynthesis, respiration and stomatal conductance for a
@@ -1749,7 +1729,7 @@ s\ :math:`^{-1}`) is calculated in a similar fashion,
    \end{array} \right.
 
 Variation in plant physiology with canopy depth
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------
 
 Both :math:`V_{c,max}` and :math:`J_{max}` vary with vertical depth in
 the canopy on account of the well-documented reduction in canopy
@@ -1809,8 +1789,8 @@ canopy. They obtain the following term to predict :math:`K_{n}`,
 where :math:`V_{cmax}` is again in :math:`\mu`\ mol CO\ :math:`_2`
 m\ :math:`^{-2}` s\ :math:`^{-1}`.
 
-Water Stress Function
-~~~~~~~~~~~~~~~~~~~~~
+Water Stress on gas exchange
+------------------
 
 [12]_ The top of canopy leaf photosynthetic capacity, :math:`V_{c,max0}`, is
 also adjusted for the availability of water to plants as
@@ -1848,7 +1828,7 @@ on the calculation of soil matric potential, see the CLM4.5 technical
 note.
 
 Variation of water stress and water uptake within tiles
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 The remaining drivers of the photosynthesis model remain constant
 (atmospheric CO\ :math:`_2` and O\ :math:`^2` and canopy temperature)
@@ -1868,7 +1848,7 @@ parameter also necessitates recalculation of the vertical water
 extraction profiles. In the original model, the fraction of extraction
 from each layer (:math:`r_{e,j,patch}`) is the product of a single root
 distribution, because each patch only has one plant functional type. In
-the CLM(ED), we need to calculate a new weighted patch effective rooting
+FATES, we need to calculate a new weighted patch effective rooting
 depth profile :math:`r_{e,j,patch}` as the weighted average of the
 functional-type level stress functions and their relative contributions
 to canopy conductance. Thus for each layer :math:`j`, the extraction
@@ -1883,7 +1863,7 @@ canopy conductance for plant functional type :math:`ft`,
 .. math:: G_{s,ft}= \sum_{1}w_{ncoh,ft} {gs_{can,coh} n_{coh} }.
 
 Aggregation of assimilated carbon into cohorts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------
 
 The derivation of photosynthetic rates per leaf layer, as above, give us
 the estimated rate of assimilation for a unit area of leaf at a given
@@ -1966,11 +1946,9 @@ timestep to give KgC cohort\ :math:`^{-1}` day\ :math:`^{-1}`
    \bigskip 
 
 Plant respiration
-=================
+^^^^^^^^^^^^^^^^^^
 
- [13]_
-
-Plant respiration per individual :math:`R_{plant,coh}` (KgC individual
+[13]_Plant respiration per individual :math:`R_{plant,coh}` (KgC individual
 :math:`^{-1}` s\ :math:`^{-1}`) is the sum of two terms, growth and
 maintenance respiration :math:`R_{g,coh}` and :math:`R_{m,coh}`
 
@@ -2104,14 +2082,12 @@ respiration has occurred.
    \bigskip 
 
 Stomatal Conductance
-====================
+^^^^^^^^^^^^^^^^^^
 
 Fundamental stomatal conductance theory
----------------------------------------
+------------------
 
- [14]_
-
-Stomatal conductance is unchanged in concept from the CLM4.5 approach.
+[14]_Stomatal conductance is unchanged in concept from the CLM4.5 approach.
 Leaf stomatal resistance is calculated from the Ball-Berry conductance
 model as described by :raw-latex:`\cite{collatz1991}` and implemented in
 a global climate model by :raw-latex:`\cite{sellers1996}`. The model
@@ -2159,8 +2135,8 @@ R\ :math:`_{gas}` is the universal gas constant (J K\ :math:`^{-1}`
 kmol\ :math:`^{-1}`) and :math:`\theta_{atm}` is the atmospheric
 potential temperature (K).
 
-Resolution of the stomatal conductance theory in the CLM(ED) canopy structure
------------------------------------------------------------------------------
+Resolution of stomatal conductance theory in the FATES canopy structure
+--------------
 
 The stomatal conductance is calculated, as with photosynthesis, for each
 canopy, PFT and leaf layer. The CLM code requires a single canopy
@@ -2193,12 +2169,10 @@ cohort.
 +------------------+--------------------------+-------+------------+
 
 
-Allocation
-==========
+Allocation and Growth
+^^^^^^^^^^^^^^^^
 
- [15]_
-
-Total assimilation carbon enters the ED model each day as a
+[15]_Total assimilation carbon enters the ED model each day as a
 cohort-specific Net Primary Productivity :math:`\mathit{NPP}_{coh}`,
 which is calculated as
 
@@ -2214,7 +2188,7 @@ individual\ :math:`^{-1}` year\ :math:`^{-1}` and ultimately integrated
 using a timesteps of 1/365 years for each day.
 
 Tissue maintenance demand
--------------------------
+---------------
 
 We calculate a ‘tissue maintenance’ flux. The magnitude of this flux is
 such that the quantity of biomass in each pool will remain constant,
@@ -2243,7 +2217,7 @@ phenology section. The total quantity of maintenance demand
 .. math:: t_{md,coh}  = l_{md,coh} + r_{md,coh}
 
 Allocation to storage and turnover
-----------------------------------
+-----------------
 
 The model must now determine whether the NPP input is sufficient to meet
 the maintenance demand and keep tissue levels constant. To determine
@@ -2324,7 +2298,7 @@ and leaf biomass, ameliorated by the leaf trimming fraction (see
 :math:`\rho_{ft}` is the wood density, in g cm\ :math:`^{3}`.
 
 Allocation to Seeds
-~~~~~~~~~~~~~~~~~~~
+---------------
 
 The fraction remaining for growth (expansion of live and structural
 tissues) :math:`f_{growth}` is 1 minus that allocated to seeds.
@@ -2350,7 +2324,7 @@ KgC individual :math:`^{-1}` y\ :math:`^{-1}`) is thus
 .. math:: p_{seed,coh} = C_{growth}\cdot f_{seed,coh}
 
 Allocation to growing pools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------
 
 [16]_ The carbon is then partitioned into carbon available to grow the
 :math:`b_{alive}` and :math:`b_{struc}` pools. A fraction :math:`v_{a}`
@@ -2434,7 +2408,7 @@ structural biomass pools are maintained in this algorithm, which
 diverges from the methodology currently deployed in the CLM4.5.
 
 Integration of allocated fluxes
--------------------------------
+----------------
 
 All of the flux calculations generate differential of the biomass state
 variables against time (in years). To integrate these differential rates
@@ -2503,11 +2477,9 @@ In this case, :math:`\delta t` is set to be one day
    \bigskip 
 
 Control of Leaf Area Index
-==========================
+^^^^^^^^^^^^^^
 
- [17]_
-
-The leaf area :math:`A_{leaf}` (m:math:`^{-2}`) of each cohort is
+[17]_The leaf area :math:`A_{leaf}` (m:math:`^{-2}`) of each cohort is
 calculated from leaf biomass :math:`b_{leaf,coh}` (kgC
 individual\ :math:`^{-1}`) and specific leaf area (SLA, m\ :math:`^2` kg
 C\ :math:`^{-1}`)
@@ -2598,16 +2570,16 @@ the greatly reduced maintenance and turnover requirements.
    \bigskip 
 
 Phenology
-=========
+^^^^^^^^^^^^^^^^^^^^
 
 Cold Deciduous Phenology
-------------------------
+------------------ 
 
 Cold Leaf-out timing
 ~~~~~~~~~~~~~~~~~~~~
 
 [18]_. The phenology model of :raw-latex:`\cite{botta2000}` is used in
-CLM(ED) to determine the leaf-on timing. The Botta et al. model was
+FATES to determine the leaf-on timing. The Botta et al. model was
 verified against satellite data and is one of the only globally verified
 and published models of leaf-out phenology. This model differs from the
 phenology model in the CLM4.5. The model simulates leaf-on date as a
@@ -2685,21 +2657,19 @@ constrain growing degree day accumulation to the second half of the year
 (Jult onwards in the Northern hemisphere, or Jan-June in the Southern)
 and only allow GDD accumulation while the leaves are off.
 
-Drought-deciduous Phenology
----------------------------
+Drought-deciduous Phenology: TBD
+------------------ 
 
 In the current version of the model, a drought deciduous algorithm
-exists, but is not yet operational, due to issue detected in the exsting
+exists, but is not yet operational, due to issue detected in the existing
 CN and soil moisture modules, which also affect the behaviour of the
 native ED drought deciduous model. This is a priority to address before
 the science tag is released.
 
 Carbon Dynamics of deciduous plants
------------------------------------
+------------------ 
 
- [19]_
-
-In the present version, leaf expansion and senescence happen over the
+[19]_In the present version, leaf expansion and senescence happen over the
 course of a single day. This is clearly not an empirically robust
 representation of leaf behaviour, whereby leaf expansion occurs over a
 period of 10-14 days, and senescence over a similar period. This will be
@@ -2775,18 +2745,15 @@ for this carbon accounting scheme.
    \bigskip 
 
 Seed Dynamics and Recruitment
-=============================
+^^^^^^^^^^^^^^^^^^
 
- [20]_
 
-The production of seeds and their subsequent germination is a process
-that must be captured explicitly or implicitly in vegetation models. The
-CLM(ED) contains a seed bank model designed to allow the dynamics of
+[20]_The production of seeds and their subsequent germination is a process
+that must be captured explicitly or implicitly in vegetation models. FATES contains a seed bank model designed to allow the dynamics of
 seed production and germination to be simulated independently. In the
 ED1.0 model, seed recruitment occurs in the same timestep as allocation
 to seeds, which prohibits the survival of a viable seed bank through a
-period of disturbance or low productivity (winter, drought). In the
-CLM(ED) model, a plant functional type specific seed bank is tracked in
+period of disturbance or low productivity (winter, drought). In FATES, a plant functional type specific seed bank is tracked in
 each patch (:math:`Seeds_{patch}` KgC m\ :math:`^{-2}`), whose rate of
 change (KgC m\ :math:`^{-2}` y\ :math:`^{-1}`) is the balance of inputs,
 germination and decay:
@@ -2858,12 +2825,12 @@ of one plant functional type over the seed pool.
 
    \bigskip 
 
-Fragmenting Litter Pool Production and Turnover
-===============================================
+Litter Production and Fragmentation
+^^^^^^^^^^^^^^
 
 | The original CLM4.5 model contains streams of carbon pertaining to
   different chemical properties of litter (lignin, cellulose and labile
-  streams, specifically). In the CLM(ED) model, the fire simulation
+  streams, specifically). In FATES model, the fire simulation
   scheme in the SPITFIRE model requires that the model tracks the pools
   of litter pools that differ with respect to their propensity to burn
   (surface area-volume ratio, bulk density etc.). Therefore, this model
@@ -2873,7 +2840,7 @@ Fragmenting Litter Pool Production and Turnover
   respiration. In this way, we can both maintain above-ground pools that
   affect the rate of burning, and the lag between tree mortality and
   availability of woody material for decomposition.
-| The CLM(ED) recognizes four classes of litter. Above- and below-ground
+| FATES recognizes four classes of litter. Above- and below-ground
   coarse woody debris (:math:`CWD_{AG}`, :math:`CWD_{BG}`) and leaf
   litter (:math:`l_{leaf}` and fine root litter :math:`l_{root}`). All
   pools are represented per patch, and with units of kGC
@@ -2933,9 +2900,7 @@ assigned to each (:math:`f_{lsc}` and :math:`f_{ag}`)
 Litter Outputs
 --------------
 
- [22]_
-
-The fragmenting litter pool is available for burning but not for
+[22]_The fragmenting litter pool is available for burning but not for
 respiration or decomposition. Fragmentation rates are calculated
 according to a maximum fragmentation rate (:math:`\alpha_{cwd,lsc}` or
 :math:`\alpha_{litter}`) which is ameliorated by a temperature and water
@@ -2961,11 +2926,9 @@ sensitivity analyses of the model outputs.
 .. math:: l_{root,out,ft} = l_{root,ft}.\alpha_{root,ft}.S_{tw}
 
 Flux into decompsition cascade
-------------------------------
+--------------
 
- [23]_
-
-Upon fragmentation and release from the litter pool, carbon is
+[23]_Upon fragmentation and release from the litter pool, carbon is
 transferred into the labile, lignin and cellulose decomposition pools.
 These pools are vertically resolved in the biogeochemistry model. The
 movement of carbon into each vertical layer is obviously different for
@@ -3060,7 +3023,7 @@ layer :math:`z`, derived from the CLM(BGC) model.
    \bigskip 
 
 Plant Mortality
-===============
+^^^^^^^^^^^^^^^^
 
 Total plant mortality per cohort :math:`M_{t,coh}`, (fraction
 year\ :math:`^{-1}`) is simulated as the sum of four additive terms,
@@ -3127,12 +3090,10 @@ fire modelling section.
 
    \bigskip 
 
-Fire
-====
+Fire (SPITFIRE)
+^^^^^^^^^^^^^^^^^
 
- [24]_
-
-The influence of fire on vegetation is estimated using the SPITFIRE
+[24]_The influence of fire on vegetation is estimated using the SPITFIRE
 model, which has been modified for use in ED following it’s original
 implementation in the LPJ-SPITFIRE model
 (:raw-latex:`\parencite{thonicke2010,pfeiffer2013}`. This model as
@@ -3156,7 +3117,7 @@ open and closed forests can be represented effectively (we omit the
 ‘patch’ subscript throughout for simplicity).
 
 Properties of fuel load
------------------------
+---------------
 
 Many fire processes are impacted by the properties of the litter pool in
 the SPITFIRE model. There are one live (live grasses) and five dead fuel
@@ -3190,23 +3151,8 @@ as follows.
 
    \bigskip 
 
-Fuel load
-~~~~~~~~~
-
-Total fuel load :math:`F_{tot,patch}` for a given patch is the sum of
-the above ground coarse woody debris and the leaf litter, plus the alive
-grass leaf biomass :math:`b_{l,grass}` multiplied by the non-mineral
-fraction (1-:math:`M_{f}`).
-
-.. math:: F_{tot,patch}=\left(\sum_{fc=1}^{fc=5}  CWD_{AG,fc}+l_{litter}+b_{l,grass}\right)(1-M_{f})
-
-Many of the model behaviours are affected by the patch-level weighted
-average properties of the fuel load. Typically, these are calculated in
-the absence of 1000-h fuels because these do not contribute greatly to
-fire spread properties.
-
 Nesterov Index
-~~~~~~~~~~~~~~
+---------------
 
 Dead fuel moisture (:math:`\emph{moist}_{df,fc}`), and several other
 properties of fire behaviour, are a function of the ‘Nesterov Index’
@@ -3225,6 +3171,23 @@ where :math:`T_{d}` is the daily mean temperature in :math:`^{o}`\ C and
    D&=&\frac{237.70\upsilon}{17.27-\upsilon}\end{aligned}
 
 where :math:`RH` is the relative humidity (%).
+
+
+Fuel properties
+---------------
+
+Total fuel load :math:`F_{tot,patch}` for a given patch is the sum of
+the above ground coarse woody debris and the leaf litter, plus the alive
+grass leaf biomass :math:`b_{l,grass}` multiplied by the non-mineral
+fraction (1-:math:`M_{f}`).
+
+.. math:: F_{tot,patch}=\left(\sum_{fc=1}^{fc=5}  CWD_{AG,fc}+l_{litter}+b_{l,grass}\right)(1-M_{f})
+
+Many of the model behaviours are affected by the patch-level weighted
+average properties of the fuel load. Typically, these are calculated in
+the absence of 1000-h fuels because these do not contribute greatly to
+fire spread properties.
+
 
 Dead Fuel Moisture Content
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3301,7 +3264,7 @@ fuels).
 .. math:: F_{\sigma}=\sum_{fc=1}^{fc=4}  \frac{F_{fc}}{F_{tot}}\sigma_{fuel,fc}+\frac{b_{l,grass}}{F_{tot}}\sigma_{fuel,grass}
 
 Forward rate of spread
-----------------------
+-----------------
 
 For each patch and each day, we calculate the rate of forward spread of
 the fire *ros*\ :math:`_{f}` (nominally in the direction of the wind).
@@ -3414,7 +3377,7 @@ Fire Behaviour Predictions Systems)
 .. math:: D_{f}=\textrm{min}\Big(F_{dur,max},\frac{F_{dur,max}}{1+F_{dur,max}e^{-11.06fdi}}\Big)
 
 Fire Danger Index
------------------
+--------------
 
 Fire danger index (*fdi*) is a representation of the effect of
 meteorological conditions on the likelihood of a fire. It is calculated
@@ -3459,7 +3422,7 @@ The total area burned (:math:`A_{burn}` in m\ :math:`^{2}`) is therefore
 where :math:`n_{f}` is the number of fires.
 
 Crown Damage
-------------
+-------------
 
 :math:`c_{k}` is the fraction of the crown which is consumed by the
 fire. This is calculated from scorch height :math:`H_{s}`, tree height
@@ -3485,7 +3448,7 @@ where :math:`f_{biomass,ft}` is the fraction of the above-ground
 biomass in each plant functional type.
 
 Cambial Damage and Kill
------------------------
+-------------
 
 The cambial kill is a function of the fuel consumed :math:`f_{c,tot}`,
 the bark thickness :math:`t_{b}`, and :math:`\tau_{l}`, the duration of
