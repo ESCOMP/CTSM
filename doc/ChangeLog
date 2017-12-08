@@ -1,4 +1,239 @@
 ===============================================================
+Tag name:  clm4_5_18_r267
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Dec  7 19:26:48 MST 2017
+One-line Summary: Fixes to accumulator fields
+
+Purpose of changes
+------------------
+
+(1) Only accumulate accumulators over active (typically,
+    non-zero-weight) patches/columns. This changes answers for transient
+    runs. Previously, accumulator fields were being accumulated even
+    when a patch/column was inactive. In many cases this was relatively
+    harmless, but in some cases it was accumulating garbage like
+    spval. Then, once the point became active, it could take a while for
+    the garbage accumulated values to be worked out.
+
+    This changes answers for transient runs. I have examined all
+    accumulator fields used in a typical BgcCrop run (this does NOT
+    include fields that are only used for CNDV or FATES). Most changes
+    only last for the first month or so that a point is active, but
+    there are larger changes for:
+
+    - PREC10 and PREC60: The changes in these are probably the most
+      extreme. In the old code, these started as spval (rather than a
+      blank slate) over newly-active patches. PREC10 is garbage for the
+      first few years after a point becomes active. I didn't look at
+      PREC60, but its logic is the same as PREC10, so I would expect it
+      to be garbage for about the first 20 years after a point becomes
+      active. PREC10 is used in the fire code and for stress deciduous
+      phenology. PREC60 is used in the fire code.
+
+    - AnnET: In the old code, this started as 0 (rather than a blank
+      slate) over newly-active points. This affects answers for the
+      first year or two. This is used in N fixation code.
+
+    - FSUN24 and FSUN240: In the old code, these started out as spval;
+      it takes a few years for the FSUN240 accumulator to come back down
+      to reasonable values (even though it's a 10-day accumulator, its
+      "exponential running average" behavior means that it takes much
+      longer for memory of a huge value like spval to disappear). These
+      are just used in VOCEmissionsMod.
+
+    I have not investigated how much these changes in accumulators
+    affect the science of the model. The biggest effects will probably
+    be in the fire code in transient runs, but I haven't looked at how
+    big of an effect these errors in PREC60 have.
+
+    There are also potentially very large changes in CNDV, due to change
+    in behavior of some patch-level accumulators which are needed for
+    PFT establishment (and thus should be available over inactive
+    patches, but no longer are valid for inactive patches). However,
+    these fields were already buggy (see bug 2537).
+
+(2) For startup/hybrid runs with non-blank finidat (including runs with
+    use_init_interp): Continue accumulating continuously from where
+    things were in the finidat file. Previously, many of the
+    accumulators were being reset in startup/hybrid runs. This appeared
+    to be an accident of the implementation details, whose fix was easy
+    as a side-effect of the fix for (1). This shouldn't have a huge
+    effect: most accumulators are order 10 days, with the longest being
+    365 days, so differences should work themselves out within the first
+    year or so. But this could be important if you expect a spinup run
+    to transition continuously into a transient run (for example).
+
+    This changes answers for any startup or hybrid case with non-blank
+    finidat, where the restart file is from this tag or later. It does
+    NOT change answers for old restart files. (These old files are
+    missing the new _NSTEPS fields associated with each accumulator
+    field, and so nsteps values are set to 0 in a startup/hybrid run,
+    similarly to the old behavior.)
+
+Also, a somewhat-unrelated change: Abort if a field is missing from the
+restart file in a branch run (just as we do for a continue run); tell
+the user to do a startup or hybrid run in this case. My reason for
+folding this change into this tag was so that I don't need to worry
+about backwards compatibility of branch runs with old restart files.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2526: Some CLM accumulated fields (via accumulMod) are incorrect with dynamic landunits
+
+Known bugs introduced in this tag (include bugzilla ID):
+- The following pre-existing bugs may be somewhat worse now:
+  - 2537: Climate accumulator fields incorrect for CNDV
+  - 2539: CNDV logic for agdd20 and tmomin20 needs to be revised to
+          account for when a given patch/column becomes active
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+- Can no longer do a branch run if some fields are missing from the
+  restart file, either due to code changes or configuration changes (need
+  to do hybrid or startup).
+
+- Cannot do a branch from restart files generated with prior tags,
+  because the _NSTEPS restart fields associated with accumulation fields
+  are missing.
+
+- Startup or hybrid runs using restart files that were generated from
+  prior tags will not take advantage of fix (2) above.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, answer changes as expected (see below)
+
+CLM tag used for the baseline comparisons: clm4_5_17_r266
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - Cases with transient vegetation (Hist, Dv)
+      - Startup / hybrid cases using restart files generated from this
+        code base. In the test suite, this just shows up as answer
+        changes in ERI and SSP tests, since other tests use old initial
+        conditions files.
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff. Not yet investigated as to whether this is
+      the same or different climate.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Cover accumulMod with unit tests
+A       components/clm/src/main/test/accumul_test/test_accumul.pf
+A       components/clm/src/main/test/accumul_test/CMakeLists.txt
+A       components/clm/src/main/test/accumul_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/main/accumulMod.F90
+M       components/clm/src/biogeophys/TemperatureType.F90
+
+========= Change PREC365 to col-level: with these changes, when it was
+          at patch-level, it would be invalid over not-yet-active
+          patches - yet it's needed there for the sake of PFT
+          establishment in CNDV. Also initialize pbot to spval now that
+          bug 2526 is resolved.
+M       components/clm/src/main/atm2lndType.F90
+M       components/clm/src/biogeochem/CNDVEstablishmentMod.F90
+
+========= Need 'active' flag in gridcell_type (always true), so that
+          gridcell_type has the same interface as other subgrid types in
+          this respect
+M       components/clm/src/main/GridcellType.F90
+
+========= Abort if a field is missing from the restart file in a branch
+          run (see above for details)
+M       components/clm/src/utils/restUtilMod.F90.in
+
+========= Cover accumulMod with unit tests
+M       components/clm/src/main/test/CMakeLists.txt
+
+========= Changes needed so that code under test can call get_proc_bounds
+M       components/clm/src/unit_test_shr/unittestSubgridMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_17_r266
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Nov 27 19:43:39 MST 2017
