@@ -38,7 +38,7 @@ module SoilBiogeochemCarbonStateType
      real(r8), pointer :: decomp_cpools_col    (:,:)   ! (gC/m2)  decomposing (litter, cwd, soil) c pools
      real(r8), pointer :: dyn_cbal_adjustments_col (:) ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
      integer  :: restart_file_spinup_state             ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
-     real(r8)          :: ccrit                        ! critical carbon value
+     real(r8)          :: totvegcthresh                ! threshold for total vegetation carbon to zero out decomposition pools
 
    contains
 
@@ -46,7 +46,7 @@ module SoilBiogeochemCarbonStateType
      procedure , public  :: SetValues 
      procedure , public  :: Restart
      procedure , public  :: Summary
-     procedure , public  :: SetCCrit
+     procedure , public  :: SetTotVgCThresh
      procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
@@ -70,7 +70,7 @@ contains
     real(r8)                              , intent(in)           :: ratio
     type(soilbiogeochem_carbonstate_type) , intent(in), optional :: c12_soilbiogeochem_carbonstate_inst
 
-    this%ccrit = nan
+    this%totvegcthresh = nan
     call this%InitAllocate ( bounds)
     call this%InitHistory ( bounds, carbon_type )
     if (present(c12_soilbiogeochem_carbonstate_inst)) then
@@ -674,6 +674,10 @@ contains
               call endrun(msg=' CNRest: error in entering/exiting spinup - should occur only when nstep = 1'//&
                    errMsg(sourcefile, __LINE__))
            endif
+           if ( exit_spinup .and. isnan(this%totvegcthresh) )then
+              call endrun(msg=' CNRest: error in exit spinup - totvegcthresh was not set with SetTotVgCThresh'//&
+                   errMsg(sourcefile, __LINE__))
+           end if
            do k = 1, ndecomp_pools
               if ( exit_spinup ) then
                  m = decomp_cascade_con%spinup_factor(k)
@@ -690,7 +694,7 @@ contains
                        ! reset decomp pools to near zero during exit_spinup to avoid very 
                        ! large and inert soil carbon stocks; note that only pools with spinup factor > 1 
                        ! will be affected, which means that total SOMC and LITC pools will not be set to 0.
-                       if (totvegc_col(c) <= this%ccrit .and. lun%itype(l) /= istcrop) then 
+                       if (totvegc_col(c) <= this%totvegcthresh .and. lun%itype(l) /= istcrop) then 
                          this%decomp_cpools_vr_col(c,j,k) = 0.0_r8
                        endif
                     elseif ( abs(m - 1._r8) .gt. 0.000001_r8 .and. enter_spinup) then
@@ -923,14 +927,18 @@ contains
   end subroutine Summary
 
   !------------------------------------------------------------------------
-  subroutine SetCCrit(this, ccrit)
+  subroutine SetTotVgCThresh(this, totvegcthresh)
 
     class(soilbiogeochem_carbonstate_type)                       :: this
-    real(r8)                              , intent(in)           :: ccrit
+    real(r8)                              , intent(in)           :: totvegcthresh
 
-    this%ccrit = ccrit
+    if ( totvegcthresh <= 0.0_r8 )then
+        call endrun(msg=' ERROR totvegcthresh is zero or negative and should be > 0'//&
+               errMsg(sourcefile, __LINE__))
+    end if
+    this%totvegcthresh = totvegcthresh
 
-  end subroutine SetCCrit
+  end subroutine SetTotVgCThresh
 
 
   !-----------------------------------------------------------------------

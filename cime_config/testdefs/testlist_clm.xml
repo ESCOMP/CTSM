@@ -141,6 +141,9 @@
       <test name="ERS_Ld3">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/rad_hrly_light_res_half">cheyenne</machine>
       </test>
+      <test name="SSP_D_Ld4">
+        <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_rtmColdSSP">cheyenne</machine>
+      </test>
     </grid>
     <grid name="f09_g17_gl4">
       <test name="ERS_D_Ld3">

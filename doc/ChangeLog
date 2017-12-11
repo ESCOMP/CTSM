@@ -1,4 +1,128 @@
 ===============================================================
+Tag name:  clm4_5_18_r268
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Dec 11 16:47:24 MST 2017
+One-line Summary: Fix calculation of stomatal resistence used in dry-deposition, increase threshold of totvegc for soil decomposition to 0.1
+
+Purpose of changes
+------------------
+
+Changes from Louisa Emmons to fix the calculation of stomatal resistence in the dry-deposition code so it's the inverse
+of the previous calculation (and the arbitrary multiplicitive factor to reduce it was removed). Add new optional history
+fields for dry-deposition.
+
+Increase the threshold of total vegetation carbon for when decomposition pools are reset from 1.e-8 to 0.1. This change comes from
+Dave Lawrence and Keith Oleson. The code was also modified to use better names for this rather than ccrit and ncrit which came in
+clm4_5_17_r264. Add some new checking for these settings at initialization. Add some changes to the default CMIP6 output from
+Keith Oleson.
+
+Add in f05 fsurdat and one landuse.timeseries datasets. Add check in SSP test that makes sure the compset used includes MOSART as
+expected.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2545, 2546
+   2526 -- Fix calculation of stomatal resistance for dry deposition
+   2545 -- SSP test assumes that MOSART is being used, and dies inexplicably if not
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   Add new optional history fields when drydeposition is on:  DRYDEPV_*, RS_DRYDEP_O3
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files) Add f05 fsurdat and one landuse.timeseries file:
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    RS_DRYDEP_O3 history field is hardcoded for Ozone. In most cases the same value would apply to other species, but it is
+    hardcoded to give values for Ozone.
+
+Changes to tests or testing: Add ciso SSP test
+
+Code reviewed by: self,tilmes,emmons,fvitt
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_18_r267
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for drydep and/or exit_spinup
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: with drydep on, or in exit_spinup mode for either clm4_5 or clm5_0
+    - what platforms/compilers: All
+    - nature of change: modest
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: Add new ciso_rtmColdSSP testmod -- includes ciso and rtmColdSSP testmods
+
+  A /clm/cime_config/testdefs/testmods_dirs/clm/ciso_rtmColdSSP/include_user_mods
+
+List all existing files that have been modified, and describe the changes:
+
+  M components/clm/bld/unit_testers/build-namelist_test.pl -- Increase test numbers as now testing f05 datasets
+  M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ---- Add f05 fsurdat files and one landuse.timeseries file
+  M components/clm/bld/namelist_files/namelist_definition_clm4_5.xml -- Add f05 to list of supported resolutions
+
+  M components/clm/cime_config/testdefs/testlist_clm.xml --------------- Add SSP ciso test
+  M components/clm/cime_config/usermods_dirs/cmip6_output/user_nl_clm -- Added FCTR, FCEV, FGEV, FIRE, FSR, and HTOP; 
+     and removed QVEGT; all from the h1 file (fincl2) (from Keith Oleson)
+  M /clm/cime_config/SystemTests/ssp.py ---------------------- Update comments, add expect that compset uses mosart
+
+  M components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90 --- Change ncrit to totvegcthresh and SetNCrit to SetTotVgCThresh
+       add abort if totvegcthresh is unset, and check that it's greater than zero
+  M components/clm/src/soilbiogeochem/SoilBiogeochemPrecisionControlMod.F90 - Set totvegcthresh to 0.1 and pass down via setTotVgCThresh methods
+  M components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90 ----- Change ccrit to totvegcthresh and SetNCrit to SetTotVgCThresh
+       add abort if totvegcthresh is unset, and check that it's greater than zero
+  M components/clm/src/biogeochem/DryDepVelocity.F90 ------------------------ Modifications from Louisa Emmons, Corrected the equation 
+      calculating stomatal resistance from rssun and rssha, add new array rs_drydep_patch, add new history 
+      output possibilities: DRYDEPV_*, RS_DRYDEP_O3, use spval instead of hardcoded magic number 1.e36
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r267
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Dec  7 19:26:48 MST 2017

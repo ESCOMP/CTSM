@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_18_r268     erik 12/11/2017 Fix calculation of stomatal resistence used in dry-deposition, increase threshold of totvegc for soil decomposition to 0.1
   clm4_5_18_r267    sacks 12/07/2017 Fixes to accumulator fields
   clm4_5_17_r266    sacks 11/27/2017 Avoid negative snow densities
   clm4_5_17_r265     erik 11/18/2017 Update the clm50 parameter file for better behavior with prognostic crop, and fix a bug in clm50 urban model

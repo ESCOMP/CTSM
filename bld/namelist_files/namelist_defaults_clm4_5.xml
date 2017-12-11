@@ -528,6 +528,8 @@ lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr2000_c170824.n
 <fsurdat hgrid="48x96"     sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_48x96_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</fsurdat>
 
+<fsurdat hgrid="0.47x0.63"  sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/surfdata_0.47x0.63_16pfts_Irrig_CMIP6_simyr2000_c170919.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false." irrigate=".true.">
@@ -556,6 +558,8 @@ lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts_Irrig_CMIP6_simyr2000_c17082
 >lnd/clm2/surfdata_map/surfdata_64x128_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</fsurdat>
 
 <!-- Crop surface datasets -->
+<fsurdat hgrid="0.47x0.63"  sim_year="2000" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_0.47x0.63_78pfts_CMIP6_simyr2000_c170919.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." >
@@ -594,6 +598,8 @@ lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr1850_c170824.n
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_48x96_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 
+<fsurdat hgrid="0.47x0.63"  sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_0.47x0.63_16pfts_Irrig_CMIP6_simyr1850_c170919.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"     sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"      sim_year="1850" use_crop=".false." >
@@ -620,6 +626,8 @@ lnd/clm2/surfdata_map/surfdata_360x720cru_78pfts_CMIP6_simyr1850_c170824.nc</fsu
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_48x96_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 
+<fsurdat hgrid="0.47x0.63"  sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_0.47x0.63_78pfts_CMIP6_simyr1850_c170919.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".true." >
@@ -647,6 +655,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
      dataset (arbitrarily, RCP8.5) for the historical period, because all of the
      RCP datasets contain the 1850-2000 period as well as the future period. -->
 
+<flanduse_timeseries hgrid="0.47x0.63"      sim_year_range="1850-2000" irrigate=".true."
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c171025.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000" irrigate=".true."

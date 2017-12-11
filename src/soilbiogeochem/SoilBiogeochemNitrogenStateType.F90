@@ -52,7 +52,7 @@ module SoilBiogeochemNitrogenStateType
      ! the N balance check
      real(r8), pointer :: dyn_no3bal_adjustments_col (:) ! (gN/m2) NO3 adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8), pointer :: dyn_nh4bal_adjustments_col (:) ! (gN/m2) NH4 adjustments to each column made in this timestep via dynamic column adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
-     real(r8)          :: ncrit                          ! (gN/m2) critical value of nitrogen before truncation
+     real(r8)          :: totvegcthresh                  ! threshold for total vegetation carbon to zero out decomposition pools
 
    contains
 
@@ -61,7 +61,7 @@ module SoilBiogeochemNitrogenStateType
      procedure , public  :: SetValues
      procedure , public  :: Summary
      procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
-     procedure , public  :: SetNCrit
+     procedure , public  :: SetTotVgCThresh           ! Set value for totvegcthresh needed in Restart
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
@@ -84,7 +84,7 @@ contains
     real(r8)          , intent(in)    :: decomp_cpools_col    (bounds%begc:, 1:)
     real(r8)          , intent(in)    :: decomp_cpools_1m_col (bounds%begc:, 1:)
 
-    this%ncrit = nan
+    this%totvegcthresh = nan
     call this%InitAllocate (bounds )
 
     call this%InitHistory (bounds)
@@ -610,6 +610,10 @@ contains
           call endrun(msg=' Error in entering/exiting spinup - should occur only when nstep = 1'//&
                errMsg(sourcefile, __LINE__))
        endif
+       if ( exit_spinup .and. isnan(this%totvegcthresh) )then
+          call endrun(msg=' Error in exit spinup - totvegcthresh was not set with SetTotVgCThresh'//&
+               errMsg(sourcefile, __LINE__))
+       end if
        do k = 1, ndecomp_pools
           if ( exit_spinup ) then
              m = decomp_cascade_con%spinup_factor(k)
@@ -631,7 +635,7 @@ contains
                    ! pools with spinup factor > 1 
                    ! will be affected, which means that total SOMN and LITN
                    ! pools will not be set to 0.
-                   if (totvegc_col(c) <= this%ncrit .and. lun%itype(l) /= istcrop) then 
+                   if (totvegc_col(c) <= this%totvegcthresh .and. lun%itype(l) /= istcrop) then 
                       this%decomp_npools_vr_col(c,j,k) = 0._r8
                    endif
                 elseif ( abs(m - 1._r8) .gt. 0.000001_r8 .and. enter_spinup) then
@@ -1003,13 +1007,17 @@ contains
  end subroutine DynamicColumnAdjustments
 
   !------------------------------------------------------------------------
-  subroutine SetNCrit(this, ncrit)
+  subroutine SetTotVgCThresh(this, totvegcthresh)
 
     class(soilbiogeochem_nitrogenstate_type)           :: this
-    real(r8)                              , intent(in) :: ncrit
+    real(r8)                              , intent(in) :: totvegcthresh
 
-    this%ncrit = ncrit
+    if ( totvegcthresh <= 0.0_r8 )then
+        call endrun(msg=' Error totvegcthresh is zero or negative and should be > 0'//&
+               errMsg(sourcefile, __LINE__))
+    end if
+    this%totvegcthresh = totvegcthresh
 
-  end subroutine SetNCrit
+  end subroutine SetTotVgCThresh
 
 end module SoilBiogeochemNitrogenStateType

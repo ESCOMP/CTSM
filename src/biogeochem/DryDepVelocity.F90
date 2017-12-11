@@ -48,9 +48,10 @@ Module DryDepVelocity
   !  bugs in rlu and rcl calculations. Added 
   !  no vegetation removal for CO. See README for details and 
   !     Val Martin et al., 2014 GRL for major corrections
+  ! Modified: Louisa Emmons -- 30 November 2017
+  !  Corrected the equation calculating stomatal resistance from rssun and rssha,
+  !     and removed factor that scaled Rs to match observations
   !
-  !*********  !!! IMPORTANT !!!  ************
-  !  STOMATAL RESISTANCE IS OPTIMIZED TO MATCH UP OBSERVATIONS 
   !----------------------------------------------------------------------- 
 
   use shr_log_mod          , only : errMsg => shr_log_errMsg
@@ -81,12 +82,14 @@ Module DryDepVelocity
   !
   type, public :: drydepvel_type
 
-     real(r8), pointer, public :: velocity_patch (:,:) ! Dry Deposition Velocity
+     real(r8), pointer, public  :: velocity_patch (:,:) ! Dry Deposition Velocity
+     real(r8), pointer, private :: rs_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
 
    contains
 
      procedure , public  :: Init 
      procedure , private :: InitAllocate 
+     procedure , private :: InitHistory
 
   end type drydepvel_type
   !----------------------------------------------------------------------- 
@@ -103,6 +106,7 @@ CONTAINS
     type(bounds_type), intent(in) :: bounds  
 
     call this%InitAllocate(bounds)
+    call this%InitHistory(bounds)
 
   end subroutine Init
 
@@ -126,9 +130,52 @@ CONTAINS
     ! Dry Deposition Velocity 
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        allocate(this%velocity_patch(begp:endp, n_drydep));  this%velocity_patch(:,:) = nan 
+       allocate(this%rs_drydep_patch(begp:endp))         ;  this%rs_drydep_patch(:)  = nan 
     end if
 
   end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine InitHistory(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize history output fields for dry deposition diagnositics
+    !
+    ! !USES 
+    use clm_varcon     , only : spval
+    use histFileMod    , only : hist_addfld1d
+    use seq_drydep_mod , only : mapping
+    !
+    ! !ARGUMENTS:
+    class(drydepvel_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8), pointer  :: ptr_1d(:)  ! pointer to 1d patch array
+    !
+    ! !LOCAL VARIABLES
+    integer :: ispec 
+    integer :: begp, endp
+    !---------------------------------------------------------------------
+
+    begp = bounds%begp; endp = bounds%endp
+
+    if ( n_drydep == 0 .or. drydep_method /= DD_XLND ) return
+
+    do ispec=1,n_drydep 
+       if(mapping(ispec) <= 0) cycle 
+
+       this%velocity_patch(begp:endp,ispec)= spval
+       ptr_1d => this%velocity_patch(begp:endp,ispec)
+       call hist_addfld1d ( fname='DRYDEPV_'//trim(drydep_list(ispec)), units='cm/sec',  &
+            avgflag='A', long_name='Dry Deposition Velocity', &
+            ptr_patch=ptr_1d, default='inactive' )
+    end do
+
+    this%rs_drydep_patch(begp:endp)= spval
+    call hist_addfld1d ( fname='RS_DRYDEP_O3', units='s/m',  &
+         avgflag='A', long_name='Stomatal Resistance Associated with Ozone Dry Deposition Velocity', &
+         ptr_patch=this%rs_drydep_patch, default='inactive' )
+
+  end subroutine InitHistory
 
   !----------------------------------------------------------------------- 
   subroutine depvel_compute( bounds, &
@@ -152,6 +199,8 @@ CONTAINS
     use pftconMod      , only : nbrdlf_dcd_brl_shrub,nc3_arctic_grass
     use pftconMod      , only : nc3_nonarctic_grass, nc4_grass, nc3crop
     use pftconMod      , only : nc3irrig, npcropmin, npcropmax
+    use clm_varcon     , only : spval
+
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -177,7 +226,6 @@ CONTAINS
 
     real(r8) :: pg           ! surface pressure 
     real(r8) :: tc           ! temperature in celsius  
-    real(r8) :: rs           ! constant for calculating rsmx  
     real(r8) :: es           ! saturation vapor pressur 
     real(r8) :: ws           ! saturation mixing ratio 
     real(r8) :: rmx          ! resistance by vegetation 
@@ -197,7 +245,6 @@ CONTAINS
 
     !mvm 11/30/2013
     real(r8) :: rlu_lai      ! constant to calculate rlu over bulk canopy
-    real(r8) :: rs_factor      ! constant to optimize stomatal resistance
     
     logical  :: has_dew
     logical  :: has_rain
@@ -209,6 +256,7 @@ CONTAINS
     real(r8), dimension(n_drydep) :: rlux !vegetative resistance (upper canopy) 
     real(r8), dimension(n_drydep) :: rgsx !gournd resistance 
     real(r8), dimension(n_drydep) :: heff   
+    real(r8) :: rs    ! stomatal resistance associated with dry deposition velocity (s/m)
     real(r8) :: rc    !combined surface resistance 
     real(r8) :: cts   !correction to flu rcl and rgs for frost 
     real(r8) :: rlux_o3 !to calculate O3 leaf resistance in dew/rain conditions
@@ -251,7 +299,8 @@ CONTAINS
          mlaidiff   =>    canopystate_inst%mlaidiff_patch       , & ! Input:  [real(r8) (:)   ] difference in lai between month one and month two  
          annlai     =>    canopystate_inst%annlai_patch         , & ! Input:  [real(r8) (:,:) ] 12 months of monthly lai from input data set     
          
-         velocity   =>    drydepvel_inst%velocity_patch           & ! Output: [real(r8) (:,:) ] cm/sec
+         velocity   =>    drydepvel_inst%velocity_patch         , & ! Output: [real(r8) (:,:) ] cm/sec
+         rs_drydep  =>    drydepvel_inst%rs_drydep_patch          & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
          )
 
       !_________________________________________________________________ 
@@ -436,7 +485,7 @@ CONTAINS
                   ! no deposition on snow, ice, desert, and water
                   !-------------------------------------------------------------------------------------
                   if( wesveg == 1 .or. wesveg == 7 .or. wesveg == 8 .or. index_season == 4 ) then
-                     rgsx(ispec) = 1.e36_r8
+                     rgsx(ispec) = spval
                   else
                      var_soilw = max( .1_r8,min( soilw,.3_r8 ) )
                      if( wesveg == 3 ) then
@@ -454,25 +503,24 @@ CONTAINS
                !-------------------------------------------------------------------------------------
 
                no_dep: if( wesveg == 7 .or. elai(pi).le.0_r8 ) then !mvm 11/26/2013
-                  rclx(ispec)=1.e36_r8
-                  rsmx(ispec)=1.e36_r8
-                  rlux(ispec)=1.e36_r8
+                  rclx(ispec)  = spval
+                  rsmx(ispec)  = spval
+                  rlux(ispec)  = spval
+                  rs           = spval
                else
                   
                   !Stomatal resistance  
-                  !MVM: adjusted rs to calculate stomata conductance over bulk canopy (CLM report pag 161)
                   
                   ! fvitt -- at midnight rssun and/or rssha can be zero in some places which sets rs to zero 
                   ! --- this fix prevents divide by zero error (when rsmx is zero)
                   if (rssun(pi)>0._r8 .and. rssun(pi)<1.e30 .and. rssha(pi)>0._r8 .and. rssha(pi)<1.e30 ) then
-                     rs=(fsun(pi)*rssun(pi)/elai(pi))+((rssha(pi)/elai(pi))*(1.-fsun(pi)))
+                     !LKE: corrected rs to add rssun and rssha in parallel (11/30/2017)
+                     rs=1._r8/(fsun(pi)*elai(pi)/rssun(pi) + (1.-fsun(pi))*elai(pi)/rssha(pi))
                   else
-                     rs=1.e36_r8
+                     rs=spval
                   endif
 
-                  !MVM: rs_factor=0.2 to match up Rs observations (Padro et al, 1996)
-                  rs_factor = 0.2_r8
-                  rsmx(ispec) = rs_factor*rs*drat(ispec)+rmx 
+                  rsmx(ispec) = rs*drat(ispec)+rmx 
 
                   ! Leaf resistance
                   !MVM: adjusted rlu by LAI to get leaf resistance over bulk canopy (gao and wesely, 1995)
@@ -489,9 +537,9 @@ CONTAINS
                   !small in vegetation [Mueller and Brasseur, 1995].
                   !------------------------------------
                   if( ispec == index_co ) then
-                     rclx(ispec)=1.e36_r8
-                     rsmx(ispec)=1.e36_r8
-                     rlux(ispec)=1.e36_r8
+                     rclx(ispec)   = spval
+                     rsmx(ispec)   = spval
+                     rlux(ispec)   = spval
                   endif
 
                   !--------------------------------------------
@@ -506,6 +554,9 @@ CONTAINS
                   end if
 
                endif no_dep
+               if ( ispec == index_o3 )then
+                  rs_drydep(pi) = rs
+               end if
 
             end do species_loop1
 
@@ -576,7 +627,7 @@ CONTAINS
                         end if
                         !mvm 11/30/2013: special case for CO
                         if( ispec.eq.index_co ) then
-                           rlux(ispec)=1.e36_r8
+                           rlux(ispec) = spval
                         endif
                      end do species_loop2
                   endif non_freezing

@@ -43,18 +43,19 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
+    real(r8), parameter :: totvegcthresh = 0.1_r8   ! Total vegetation carbon threshold to zero out decomposition pools
     !-----------------------------------------------------------------------
     ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
     ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
 
-    call soilbiogeochem_carbonstate_inst%setCCrit( ccrit )
+    call soilbiogeochem_carbonstate_inst%setTotVgCThresh( totvegcthresh )
     if ( use_c13 )then
-        call c13_soilbiogeochem_carbonstate_inst%setCCrit( ccrit )
+        call c13_soilbiogeochem_carbonstate_inst%setTotVgCThresh( totvegcthresh )
     end if
     if ( use_c14 )then
-        call c14_soilbiogeochem_carbonstate_inst%setCCrit( ccrit )
+        call c14_soilbiogeochem_carbonstate_inst%setTotVgCThresh( totvegcthresh )
     end if
-    call soilbiogeochem_nitrogenstate_inst%setNCrit( ncrit )
+    call soilbiogeochem_nitrogenstate_inst%setTotVgCThresh( totvegcthresh )
 
   end subroutine SoilBiogeochemPrecisionControlInit
 
