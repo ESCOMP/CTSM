@@ -187,73 +187,14 @@ Vegetation Structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Vegetation structure is defined by leaf and stem area indices
-(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ) 
-(:numref:`Table Prescribed plant functional type heights`). Separate leaf and
+(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ). 
+Separate leaf and
 stem area indices and canopy heights are prescribed or calculated for each PFT. Daily leaf 
 and stem area indices are obtained from griddeddatasets of monthly values (section 
-:numref:`Surface Data`). Canopy top and bottom heights are also obtained from gridded datasets. 
-However, these are currently invariant in space and time and were obtained from PFT-specific 
-values (:ref:`Bonan et al. 2002a <Bonanetal2002a>`). When the biogeochemistry model is active, 
+:numref:`Surface Data`). Canopy top and bottom heights are from ICESat (:ref:`Simard et al. (2011) <Simardetal2011>`. 
+When the biogeochemistry model is active, 
 vegetation state (LAI, SAI, canopy top and bottom heights) are calculated prognostically 
 (see Chapter :numref:`rst_Vegetation Phenology and Turnover`).
-
-.. _Table Prescribed plant functional type heights:
-
-.. table:: Prescribed plant functional type heights
-
- +-----------------------------------+------------------------+------------------------+
- | Plant functional type             | :math:`z_{top}`  (m)   | :math:`z_{bot}`  (m)   |
- +===================================+========================+========================+
- | NET Temperate                     | 17                     | 8.5                    |
- +-----------------------------------+------------------------+------------------------+
- | NET Boreal                        | 17                     | 8.5                    |
- +-----------------------------------+------------------------+------------------------+
- | NDT Boreal                        | 14                     | 7                      |
- +-----------------------------------+------------------------+------------------------+
- | BET Tropical                      | 35                     | 1                      |
- +-----------------------------------+------------------------+------------------------+
- | BET temperate                     | 35                     | 1                      |
- +-----------------------------------+------------------------+------------------------+
- | BDT tropical                      | 18                     | 10                     |
- +-----------------------------------+------------------------+------------------------+
- | BDT temperate                     | 20                     | 11.5                   |
- +-----------------------------------+------------------------+------------------------+
- | BDT boreal                        | 20                     | 11.5                   |
- +-----------------------------------+------------------------+------------------------+
- | BES temperate                     | 0.5                    | 0.1                    |
- +-----------------------------------+------------------------+------------------------+
- | BDS temperate                     | 0.5                    | 0.1                    |
- +-----------------------------------+------------------------+------------------------+
- | BDS boreal                        | 0.5                    | 0.1                    |
- +-----------------------------------+------------------------+------------------------+
- | C\ :math:`{}_{3}` arctic grass    | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | C\ :math:`{}_{3}` grass           | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | C\ :math:`{}_{4}` grass           | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | Crop R                            | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | Crop I                            | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Corn R                  | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Corn I                  | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Temp Cereal R           | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Temp Cereal I           | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Winter Cereal R         | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Winter Cereal I         | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Soybean R               | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Soybean I               | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
-
-:sup:`1`\ Determined by the crop model (Chapter :numref:`rst_Crops and Irrigation`)
 
 .. _Phenology and vegetation burial by snow:
 
