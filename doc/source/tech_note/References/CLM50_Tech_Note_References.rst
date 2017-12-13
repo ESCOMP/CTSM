@@ -626,6 +626,7 @@ studies. Water Resour. Res. 35:583-587.
 .. _Gravenetal2017: 
 
 Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, H. A. J. Meijer, M. Rubino, P. P. Tans, C. M. Trudinger, B. H. Vaughn and J. W. C. White (2017) Compiled records of carbon isotopes in atmospheric CO2 for historical simulations in CMIP6, Geoscientific Model Development, in review. doi: 10.5194/gmd-2017-166.
+
 .. _GrenfellWarren1999:
 
 Grenfell, T.C., and Warren, S.G. 1999. Representation of a nonspherical
@@ -1740,6 +1741,12 @@ resources. Water International 25:11-32.
 Siebert, S., Döll, P., Hoogeveen, J., Faures, J.M., Frenken, K., Feick,
 S., 2005. Development and validation of the global map of irrigation
 areas. Hydrol Earth Syst Sc 9:535–547
+
+.. _Simardetal2011:
+
+Simard, M., Pinto, N., Fisher, J.B., and Baccini, A. (2011), Mapping 
+forest canopy height globally with spaceborne lidar.
+J. Geophys. Res., 116, G04021, doi:10.1029/2011JG001708.
 
 .. _Simpsonetal1983:
 

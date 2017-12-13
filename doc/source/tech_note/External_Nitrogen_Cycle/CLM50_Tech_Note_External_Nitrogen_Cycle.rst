@@ -3,9 +3,9 @@
 External Nitrogen Cycle
 ===========================
 
-.. _Summary of CLM5.0 updates relative to the CLM4.5:
+.. _Summary of CLM5.0 updates relative to CLM4.5:
 
-Summary of CLM5.0 updates relative to the CLM4.5
+Summary of CLM5.0 updates relative to CLM4.5
 -----------------------------------------------------
 
 We describe external inputs to the nitrogen cycle in CLM5.0.  Much of the following information appeared in the CLM4.5 Technical Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`) as well as :ref:`Koven et al. (2013) <Kovenetal2013>`.

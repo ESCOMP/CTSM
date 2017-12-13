@@ -58,7 +58,7 @@ concept of 'Ecosystem Demography' and the implementation of this concept
 in different models, the CLM(ED) implementation described by Fisher et al. (2015) will hereafter be called 'FATES' (the Functionally Assembled Terrestrial Ecosystem Simulator).
 
 The representation of ecosystem heterogeneity in FATES
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The terrestrial surface of the Earth is heterogeneous for many reasons, driven
 by variations in climate, edaphic history, ecological variability,
@@ -445,7 +445,7 @@ restarted. The state variables of a cohort are as follows:
 +-----------------+-----------------+-----------------+-----------------+
 
 Patch State Variables
-------------------
+---------------------
 
 A patch, as discuss earlier, is a fraction of the landscape which
 contains ecosystems with similar structure and disturbance history. A
@@ -515,7 +515,7 @@ attributed to each cohort are accumulated throughout each daily cycle
 and passed into the ED code as the major driver of vegetation dynamics.
 
 Initialization of vegetation from bare ground
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 [5]_If the model is restarted from a bare ground state (as opposed to a
 pre-existing vegetation state), the state variables above are
@@ -586,7 +586,7 @@ biomass, assigned per PFT
 [table:init]
 
 Allocation of biomass
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 [6]_Total live biomass :math:`b_{alive}` is the state variable of the model
 that describes the sum of the three live biomass pools leaf
@@ -695,7 +695,7 @@ To calculated the sapwood biomass, we use
 [table:allom]
 
 Canopy Structure and the Perfect Plasticity Approximation
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 [7]_During initialization and every subsequent daily ED timestep, the canopy
 structure model is called to determine how the leaf area of the
@@ -711,7 +711,7 @@ heights, which has a very significant impact on how vegetation
 distribution emerges from competition
 :ref:`Fisher et al. 2010<fisher2010>`.
 
-The standard ED1.0 model makes a simple `flat disk' assumption, that the
+The standard ED1.0 model makes a simple 'flat disk' assumption, that the
 leaf area of each cohort is spread in an homogenous layer at one exact
 height across entire the ground area represented by each patch. FATES has diverged from this representation due to (at least) two problematic emergent properties that we identified as generating unrealistic behaviours espetially for large-area patches.
 
@@ -826,10 +826,10 @@ fractions of cohorts are demoted or promoted. Further details can be
 found in the code references in the footnote.
 
 Horizontal Canopy Spread
------------------
+-------------------------
 
 [8]_:ref:`Purves et al. 2008<purves2008>` estimated the ratio between canopy and
-stem diameter :math:`c_{p}` as�0.1 m cm\ :math:`^{-1}` for canopy trees
+stem diameter :math:`c_{p}` as 0.1 m cm\ :math:`^{-1}` for canopy trees
 in North American forests, but this estimate was made on trees in closed
 canopies, whose shape is subject to space competition from other
 individuals. Sapling trees have no constraints in their horizontal
@@ -887,7 +887,7 @@ However, the model is relatively insensitive to the choice of either
 :math:`i` or :math:`A_{t}`.
 
 Definition of Leaf and Stem Area Profile
--------------------
+----------------------------------------
 
 [9]_Within each patch, the model defines and tracks cohorts of multiple
 plant functional types that exist either in the canopy or understorey.
@@ -1030,7 +1030,7 @@ leaf and stem area profiles,
    
 
 Burial of leaf area by snow
---------------------
+---------------------------
 
 The calculations above all pertain to the total leaf and stem area
 indices which charecterize the vegetation structure. In addition, the
@@ -1129,7 +1129,7 @@ Radiation Transfer
 ^^^^^^^^^^^^^^^^^^^
 
 Fundamental Radiation Transfer Theory
-------------------
+-------------------------------------
 
 [10]_The first interaction of the land surface with the properties of
 vegetation concerns the partitioning of energy into that which is
@@ -1343,7 +1343,7 @@ fractions, (required by the photosynthesis calculations), is
 .. math:: abs_{sun,z} =  abs_{dif,z} \cdot f_{sun}+ abs_{dir,z}
 
 Resolution of radiation transfer theory within the FATES canopy structure
-------------------
+-------------------------------------------------------------------------
 
 The radiation transfer theory above, was described with reference to a
 single canopy of one plant functional type, for the sake of clarity of
@@ -1520,7 +1520,7 @@ Photosynthesis
 ^^^^^^^^^^^^^^^^^^^^
 
 Fundamental photosynthetic physiology theory
-------------------
+--------------------------------------------
 
 [11]_In this section we describe the physiological basis of the
 photosynthesis model before describing its application to the FATES
@@ -1630,7 +1630,7 @@ to carboxylation, which is virtually constant with temperature
 :ref:`Farquhar, 1980<farquhar1980>`.
 
 Resolution of the photosynthesis theory within the FATES canopy structure.
-------------------
+--------------------------------------------------------------------------
 
 The photosynthesis scheme is modified from the CLM4.5 model to give
 estimates of photosynthesis, respiration and stomatal conductance for a
@@ -1703,7 +1703,7 @@ s\ :math:`^{-1}`) is calculated in a similar fashion,
    \end{array} \right.
 
 Variation in plant physiology with canopy depth
-------------------
+-----------------------------------------------
 
 Both :math:`V_{c,max}` and :math:`J_{max}` vary with vertical depth in
 the canopy on account of the well-documented reduction in canopy
@@ -1764,7 +1764,7 @@ where :math:`V_{cmax}` is again in :math:`\mu`\ mol CO\ :math:`_2`
 m\ :math:`^{-2}` s\ :math:`^{-1}`.
 
 Water Stress on gas exchange
-------------------
+----------------------------
 
 [12]_ The top of canopy leaf photosynthetic capacity, :math:`V_{c,max0}`, is
 also adjusted for the availability of water to plants as
@@ -1802,7 +1802,7 @@ on the calculation of soil matric potential, see the CLM4.5 technical
 note.
 
 Variation of water stress and water uptake within tiles
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The remaining drivers of the photosynthesis model remain constant
 (atmospheric CO\ :math:`_2` and O\ :math:`^2` and canopy temperature)
@@ -1837,7 +1837,7 @@ canopy conductance for plant functional type :math:`ft`,
 .. math:: G_{s,ft}= \sum_{1}w_{ncoh,ft} {gs_{can,coh} n_{coh} }.
 
 Aggregation of assimilated carbon into cohorts
-------------------
+----------------------------------------------
 
 The derivation of photosynthetic rates per leaf layer, as above, give us
 the estimated rate of assimilation for a unit area of leaf at a given
@@ -2056,10 +2056,10 @@ respiration has occurred.
    \bigskip 
 
 Stomatal Conductance
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 Fundamental stomatal conductance theory
-------------------
+---------------------------------------
 
 [14]_Stomatal conductance is unchanged in concept from the CLM4.5 approach.
 Leaf stomatal resistance is calculated from the Ball-Berry conductance
@@ -2110,7 +2110,7 @@ kmol\ :math:`^{-1}`) and :math:`\theta_{atm}` is the atmospheric
 potential temperature (K).
 
 Resolution of stomatal conductance theory in the FATES canopy structure
---------------
+-----------------------------------------------------------------------
 
 The stomatal conductance is calculated, as with photosynthesis, for each
 canopy, PFT and leaf layer. The CLM code requires a single canopy
@@ -2144,7 +2144,7 @@ cohort.
 
 
 Allocation and Growth
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 [15]_Total assimilation carbon enters the ED model each day as a
 cohort-specific Net Primary Productivity :math:`\mathit{NPP}_{coh}`,
@@ -2162,7 +2162,7 @@ individual\ :math:`^{-1}` year\ :math:`^{-1}` and ultimately integrated
 using a timesteps of 1/365 years for each day.
 
 Tissue maintenance demand
----------------
+-------------------------
 
 We calculate a ‘tissue maintenance’ flux. The magnitude of this flux is
 such that the quantity of biomass in each pool will remain constant,
@@ -2191,7 +2191,7 @@ phenology section. The total quantity of maintenance demand
 .. math:: t_{md,coh}  = l_{md,coh} + r_{md,coh}
 
 Allocation to storage and turnover
------------------
+----------------------------------
 
 The model must now determine whether the NPP input is sufficient to meet
 the maintenance demand and keep tissue levels constant. To determine
@@ -2272,7 +2272,7 @@ and leaf biomass, ameliorated by the leaf trimming fraction (see
 :math:`\rho_{ft}` is the wood density, in g cm\ :math:`^{3}`.
 
 Allocation to Seeds
----------------
+-------------------
 
 The fraction remaining for growth (expansion of live and structural
 tissues) :math:`f_{growth}` is 1 minus that allocated to seeds.
@@ -2298,7 +2298,7 @@ KgC individual :math:`^{-1}` y\ :math:`^{-1}`) is thus
 .. math:: p_{seed,coh} = C_{growth}\cdot f_{seed,coh}
 
 Allocation to growing pools
-----------------
+---------------------------
 
 [16]_ The carbon is then partitioned into carbon available to grow the
 :math:`b_{alive}` and :math:`b_{struc}` pools. A fraction :math:`v_{a}`
@@ -2382,7 +2382,7 @@ structural biomass pools are maintained in this algorithm, which
 diverges from the methodology currently deployed in the CLM4.5.
 
 Integration of allocated fluxes
-----------------
+-------------------------------
 
 All of the flux calculations generate differential of the biomass state
 variables against time (in years). To integrate these differential rates
@@ -2451,7 +2451,7 @@ In this case, :math:`\delta t` is set to be one day
    \bigskip 
 
 Control of Leaf Area Index
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 [17]_The leaf area :math:`A_{leaf}` (m:math:`^{-2}`) of each cohort is
 calculated from leaf biomass :math:`b_{leaf,coh}` (kgC
@@ -2547,7 +2547,7 @@ Phenology
 ^^^^^^^^^^^^^^^^^^^^
 
 Cold Deciduous Phenology
------------------- 
+------------------------
 
 Cold Leaf-out timing
 ~~~~~~~~~~~~~~~~~~~~
@@ -2632,7 +2632,7 @@ constrain growing degree day accumulation to the second half of the year
 and only allow GDD accumulation while the leaves are off.
 
 Drought-deciduous Phenology: TBD
------------------- 
+-------------------------------- 
 
 In the current version of the model, a drought deciduous algorithm
 exists, but is not yet operational, due to issue detected in the existing
@@ -2641,7 +2641,7 @@ native ED drought deciduous model. This is a priority to address before
 the science tag is released.
 
 Carbon Dynamics of deciduous plants
------------------- 
+----------------------------------- 
 
 [19]_In the present version, leaf expansion and senescence happen over the
 course of a single day. This is clearly not an empirically robust
@@ -2719,7 +2719,7 @@ for this carbon accounting scheme.
    \bigskip 
 
 Seed Dynamics and Recruitment
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 [20]_The production of seeds and their subsequent germination is a process
@@ -2800,7 +2800,7 @@ of one plant functional type over the seed pool.
    \bigskip 
 
 Litter Production and Fragmentation
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 | The original CLM4.5 model contains streams of carbon pertaining to
   different chemical properties of litter (lignin, cellulose and labile
@@ -2900,7 +2900,7 @@ sensitivity analyses of the model outputs.
 .. math:: l_{root,out,ft} = l_{root,ft}.\alpha_{root,ft}.S_{tw}
 
 Flux into decompsition cascade
---------------
+------------------------------
 
 [23]_Upon fragmentation and release from the litter pool, carbon is
 transferred into the labile, lignin and cellulose decomposition pools.
@@ -3091,7 +3091,7 @@ open and closed forests can be represented effectively (we omit the
 `patch` subscript throughout for simplicity).
 
 Properties of fuel load
----------------
+-----------------------
 
 Many fire processes are impacted by the properties of the litter pool in
 the SPITFIRE model. There are one live (live grasses) and five dead fuel
@@ -3238,7 +3238,7 @@ fuels).
 .. math:: F_{\sigma}=\sum_{fc=1}^{fc=4}  \frac{F_{fc}}{F_{tot}}\sigma_{fuel,fc}+\frac{b_{l,grass}}{F_{tot}}\sigma_{fuel,grass}
 
 Forward rate of spread
------------------
+----------------------
 
 For each patch and each day, we calculate the rate of forward spread of
 the fire *ros*\ :math:`_{f}` (nominally in the direction of the wind).
@@ -3351,7 +3351,7 @@ Fire Behaviour Predictions Systems)
 .. math:: D_{f}=\textrm{min}\Big(F_{dur,max},\frac{F_{dur,max}}{1+F_{dur,max}e^{-11.06fdi}}\Big)
 
 Fire Danger Index
---------------
+-----------------
 
 Fire danger index (*fdi*) is a representation of the effect of
 meteorological conditions on the likelihood of a fire. It is calculated
@@ -3422,7 +3422,7 @@ where :math:`f_{biomass,ft}` is the fraction of the above-ground
 biomass in each plant functional type.
 
 Cambial Damage and Kill
--------------
+-----------------------
 
 The cambial kill is a function of the fuel consumed :math:`f_{c,tot}`,
 the bark thickness :math:`t_{b}`, and :math:`\tau_{l}`, the duration of
