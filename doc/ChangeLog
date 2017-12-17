@@ -1,4 +1,98 @@
 ===============================================================
+Tag name:  clm4_5_18_r269
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Sat Dec 16 19:49:41 MST 2017
+One-line Summary: Move externals to version in github
+
+Purpose of changes
+------------------
+
+Move the CLM externals to the version in github for MOSART, RTM and
+PTCLM. For PTCLM this meant updating to a version that didn't take
+advantage of subversion keywords. I also updated to a version that
+can properly compare to the files it keeps even with differences
+of user, machine, path, or date.
+
+
+Bugs fixed or introduced None
+------------------------
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,andre
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_18_r268
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): rtm, mosart, PTCLM
+
+   mosart1_0_28 to github version
+   rtm1_0_63    to github version
+   PTCLM        to PTCLM2_171216c and github version
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes: None
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r268
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Dec 11 16:47:24 MST 2017
