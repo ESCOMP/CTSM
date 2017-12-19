@@ -2344,6 +2344,7 @@ contains
      real(r8) :: dgrad
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
      real(r8), parameter :: k_anisotropic = 20._r8
+     real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) 
      real(r8) :: qflx_net_latflow(bounds%begc:bounds%endc) 
      integer  :: c0, nstep
 
@@ -2400,11 +2401,6 @@ contains
 
        dtime = get_step_size()
        nstep = get_nstep()
-!!$       if ( nstep > 800) then
-!!$          c0=101298
-!!$       else 
-!!$          c0=-1000
-!!$       endif
 
        ! Convert layer thicknesses from m to mm
 
@@ -2431,7 +2427,8 @@ contains
           qflx_latflow_out(c) = 0._r8
           qflx_net_latflow(c) = 0._r8
           qdischarge(c)       = 0._r8
-       end do
+          qflx_latflow_out_vol(c) = 0._r8
+      end do
 
 
        ! The layer index of the first unsaturated layer, 
@@ -2467,6 +2464,8 @@ contains
                       transmis = transmis + 1.e-3_r8*hksat(c,j)*dz(c,j)
                    endif
                 end do
+                ! adjust by 'anisotropy factor'
+                transmis = k_anisotropic*transmis
              endif
              ! constant conductivity based on shallowest saturated layer hk
              if (transmissivity_method == 'constant') then
@@ -2482,8 +2481,7 @@ contains
 
           ! kinematic wave approximation
           if (baseflow_method == 'kinematic') then
-             qdischarge(c) = transmis*col%hill_width(c)*col%hill_slope(c)
-
+             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*col%hill_slope(c)
           endif
           ! darcy's law 
           if (baseflow_method == 'darcy') then
@@ -2493,14 +2491,18 @@ contains
                      - (col%hill_elev(c_down)+(zi(c,nbedrock(c))-zwt(c_down)))
                 dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(c_down))
              else
-!what lower boundary condition to use??
-
+! assume elev = 0 at channel and zwt = 0 at channel
+                dgrad = (col%hill_elev(c)-zwt(c))
+                dgrad = dgrad / (col%hill_distance(c))
              endif
-             qdischarge(c) = transmis*col%hill_width(c)*dgrad
+             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
           end if
 
+! currently this is redundant to above
+          qdischarge(c) = qflx_latflow_out_vol(c)
+
           ! convert volumetric flow to equivalent flux
-          qflx_latflow_out(c) = 1.e3_r8*qdischarge(c)/col%hill_area(c)
+          qflx_latflow_out(c) = 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(c)
 
           ! hilltop column has no inflow
           if (col%colu(c) == ispval) then
@@ -2509,7 +2511,7 @@ contains
 
           ! current outflow is inflow to downhill column normalized by downhill area
           if (col%cold(c) /= ispval) then
-             qflx_latflow_in(col%cold(c)) = 1.e3_r8*qdischarge(c)/col%hill_area(col%cold(c))
+             qflx_latflow_in(col%cold(c)) = qflx_latflow_in(col%cold(c)) + 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(col%cold(c))
           endif
 
         enddo

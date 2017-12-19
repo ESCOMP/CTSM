@@ -682,12 +682,14 @@ contains
     this%forc_rain_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='RAIN', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain', &
-         ptr_lnd=this%forc_rain_not_downscaled_grc)
+!scs         ptr_lnd=this%forc_rain_not_downscaled_grc)
+         ptr_col=this%forc_rain_downscaled_col)
 
     this%forc_snow_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='SNOW', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow', &
-         ptr_lnd=this%forc_snow_not_downscaled_grc)
+!scs         ptr_lnd=this%forc_snow_not_downscaled_grc)
+         ptr_col=this%forc_snow_downscaled_col)
 
     this%forc_rain_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='RAIN_REPARTITIONED', units='mm/s',  &
