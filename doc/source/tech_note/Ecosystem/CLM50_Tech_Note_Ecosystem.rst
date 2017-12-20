@@ -187,73 +187,14 @@ Vegetation Structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Vegetation structure is defined by leaf and stem area indices
-(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ) 
-(:numref:`Table Prescribed plant functional type heights`). Separate leaf and
+(:math:`L,\, S`) and canopy top and bottom heights (:math:`z_{top}`,\ :math:`z_{bot}` ). 
+Separate leaf and
 stem area indices and canopy heights are prescribed or calculated for each PFT. Daily leaf 
 and stem area indices are obtained from griddeddatasets of monthly values (section 
-:numref:`Surface Data`). Canopy top and bottom heights are also obtained from gridded datasets. 
-However, these are currently invariant in space and time and were obtained from PFT-specific 
-values (:ref:`Bonan et al. 2002a <Bonanetal2002a>`). When the biogeochemistry model is active, 
+:numref:`Surface Data`). Canopy top and bottom heights are from ICESat (:ref:`Simard et al. (2011) <Simardetal2011>`. 
+When the biogeochemistry model is active, 
 vegetation state (LAI, SAI, canopy top and bottom heights) are calculated prognostically 
 (see Chapter :numref:`rst_Vegetation Phenology and Turnover`).
-
-.. _Table Prescribed plant functional type heights:
-
-.. table:: Prescribed plant functional type heights
-
- +-----------------------------------+------------------------+------------------------+
- | Plant functional type             | :math:`z_{top}`  (m)   | :math:`z_{bot}`  (m)   |
- +===================================+========================+========================+
- | NET Temperate                     | 17                     | 8.5                    |
- +-----------------------------------+------------------------+------------------------+
- | NET Boreal                        | 17                     | 8.5                    |
- +-----------------------------------+------------------------+------------------------+
- | NDT Boreal                        | 14                     | 7                      |
- +-----------------------------------+------------------------+------------------------+
- | BET Tropical                      | 35                     | 1                      |
- +-----------------------------------+------------------------+------------------------+
- | BET temperate                     | 35                     | 1                      |
- +-----------------------------------+------------------------+------------------------+
- | BDT tropical                      | 18                     | 10                     |
- +-----------------------------------+------------------------+------------------------+
- | BDT temperate                     | 20                     | 11.5                   |
- +-----------------------------------+------------------------+------------------------+
- | BDT boreal                        | 20                     | 11.5                   |
- +-----------------------------------+------------------------+------------------------+
- | BES temperate                     | 0.5                    | 0.1                    |
- +-----------------------------------+------------------------+------------------------+
- | BDS temperate                     | 0.5                    | 0.1                    |
- +-----------------------------------+------------------------+------------------------+
- | BDS boreal                        | 0.5                    | 0.1                    |
- +-----------------------------------+------------------------+------------------------+
- | C\ :math:`{}_{3}` arctic grass    | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | C\ :math:`{}_{3}` grass           | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | C\ :math:`{}_{4}` grass           | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | Crop R                            | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | Crop I                            | 0.5                    | 0.01                   |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Corn R                  | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Corn I                  | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Temp Cereal R           | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Temp Cereal I           | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Winter Cereal R         | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Winter Cereal I         | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Soybean R               | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
- | :sup:`1`\ Soybean I               | -                      | -                      |
- +-----------------------------------+------------------------+------------------------+
-
-:sup:`1`\ Determined by the crop model (Chapter :numref:`rst_Crops and Irrigation`)
 
 .. _Phenology and vegetation burial by snow:
 
@@ -425,6 +366,8 @@ conditions from the current time step.
  +======================================================+================================================+=================================================+
  | :sup:`1`\ Reference height                           | :math:`z'_{atm}`                               | m                                               |
  +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
+ | Atmosphere model's surface height                    | :math:`z_{surf,atm}`                           | m                                               |
+ +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
  | Zonal wind at :math:`z_{atm}`                        | :math:`u_{atm}`                                | m s\ :sup:`-1`                                  |
  +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
  | Meridional wind at :math:`z_{atm}`                   | :math:`v_{atm}`                                | m s\ :sup:`-1`                                  |
@@ -451,7 +394,7 @@ conditions from the current time step.
  +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
  | Incident diffuse near-infrared solar radiation       | :math:`S_{atm} \, \downarrow _{nir}`           | W m\ :sup:`-2`                                  |
  +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
- | Carbon dioxide (CO:sub:`2`) concentration            | :math:`c_{a}`                                  | ppmv                                            |
+ | Carbon dioxide (CO\ :sub:`2`) concentration          | :math:`c_{a}`                                  | ppmv                                            |
  +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
  | :sup:`3`\ Aerosol deposition rate                    | :math:`D_{sp}`                                 | kg m\ :sup:`-2` s\ :sup:`-1`                    |
  +------------------------------------------------------+------------------------------------------------+-------------------------------------------------+
@@ -471,7 +414,7 @@ reference heights for temperature, wind, and specific humidity
 :math:`z_{atm,\, w}` ) are required. These are set equal
 to\ :math:`z_{atm}` .
 
-:sup:`2`\ The placeCAM provides convective and large-scale liquid
+:sup:`2`\ CAM provides convective and large-scale liquid
 and solid precipitation, which are added to yield total liquid
 precipitation :math:`q_{rain}`  and solid precipitation
 :math:`q_{sno}` .
@@ -565,6 +508,8 @@ calculated from molar ratio and the atmospheric pressure
  | Temperature at 2 meter height         | :math:`T_{2m}`                                 | K                                                            |
  +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
  | Specific humidity at 2 meter height   | :math:`q_{2m}`                                 | kg kg\ :sup:`-1`                                             |
+ +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
+ | Wind speed at 10 meter height         | :math:`u_{10m}`                                | m s\ :sup:`-1`                                               |
  +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+
  | Snow water equivalent                 | :math:`W_{sno}`                                | m                                                            |
  +---------------------------------------+------------------------------------------------+--------------------------------------------------------------+

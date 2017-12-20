@@ -139,7 +139,7 @@ for the top snow
 layer. Otherwise, :math:`\beta` is set equal to the near infrared
 fraction of the shortwave radiation reaching the surface simulated by
 the atmospheric model or atmospheric data model used for offline
-simulations (Chapter :numref:`rst_Offline Mode`). The remainder of the shortwave radiation
+simulations (Chapter :numref:`rst_Land-only Mode`). The remainder of the shortwave radiation
 fraction (1 :math:`{-}` :math:`\beta`) is absorbed in the lake
 body or soil as described in section :numref:`Radiation Penetration`.
 

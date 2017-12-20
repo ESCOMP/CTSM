@@ -53,7 +53,7 @@ Tissue Stoichiometry
 -----------------------
 
 As of CLM5, vegetation tissues have a flexible stoichiometry, as
-described in :ref:`Ghimire et al. (2015) <Ghimireetal2015>`. Each
+described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each
 tissue has a target C\:N ratio, and nitrogen is allocated at each
 timestep in order to allow the plant to best match the target
 stoichiometry.  Nitrogen downregulation of productivity acts by

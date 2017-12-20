@@ -919,8 +919,9 @@ Snow aging is represented as evolution of the ice effective grain size
 (:math:`r_{e}`). Previous studies have shown that use of spheres
 which conserve the surface area-to-volume ratio (or specific surface
 area) of ice media composed of more complex shapes produces relatively
-small errors in simulated hemispheric fluxes (e.g., :ref:`Grenfell and Warren
-1999 <GrenfellWarren1999>`). Effective radius is the surface area-weighted mean 
+small errors in simulated hemispheric fluxes 
+(e.g., :ref:`Grenfell and Warren 1999 <GrenfellWarren1999>`).
+Effective radius is the surface area-weighted mean 
 radius of an ensemble of spherical particles and is directly related to specific
 surface area (*SSA*) as
 :math:`r_{e} ={3\mathord{\left/ {\vphantom {3 \left(\rho _{ice} SSA\right)}} \right. \kern-\nulldelimiterspace} \left(\rho _{ice} SSA\right)}` ,

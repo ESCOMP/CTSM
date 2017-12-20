@@ -217,6 +217,10 @@ liquid water content. Ann. Glaciol. 13:22-26.
 
 Brunke, M. A., P. Broxton, J. Pelletier, D. Gochis, P. Hazenberg, D. M. Lawrence, L. R. Leung, G.-Y. Niu, P. A. Troch, and X. Zeng, 2016: Implementing and Evaluating Variable Soil Thickness in the Community Land Model, Version 4.5 (CLM4.5). J. Clim. 29:3441-3461.
 
+.. _Brzosteketal2014:
+
+Brzostek, E. R., J. B. Fisher, and R. P. Phillips, 2014. Modeling the carbon cost of plant nitrogen acquisition: Mycorrhizal trade-offs and multipath resistance uptake improve predictions of retranslocation. J. Geophys. Res. Biogeosci., 119, 1684–1697, doi:10.1002/2014JG002660.
+
 .. _BugmannSolomon2000:
 
 Bugmann, H., and Solomon, A.M. 2000. Explaining forest composition and
@@ -487,6 +491,10 @@ Schimel (Editors). John Wiley and Sons, pp. 7-21.
 
 Fisher, R. A., S. Muszala, M. Verteinstein, P. Lawrence, C. Xu, N. G. McDowell, R. G. Knox, C. Koven, J. Holm, B. M. Rogers, A. Spessa, D. Lawrence, and G. Bonan, 2015: Taking off the training wheels: the properties of a dynamic vegetation model without climate envelopes, CLM4.5(ED). Geosci. Model Dev., 8: 3593-3619, doi:10.5194/gmd-8-3593-2015.
 
+.. _Fisheretal2010:
+
+Fisher, J. B., S. Sitch, Y. Malhi, R. A. Fisher, C. Huntingford, and S.-Y. Tan, 2010. Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation. Global Biogeochem. Cycles, 24, GB1014, doi:10.1029/2009GB003621.
+
 .. _FlannerZender2005:
 
 Flanner, M.G., and Zender. C.S. 2005. Snowpack radiative heating:
@@ -615,6 +623,10 @@ Graham, S.T., Famiglietti, J.S., and Maidment, D.R. 1999. Five-minute,
 use in regional and global hydrologic and climate system modeling
 studies. Water Resour. Res. 35:583-587.
 
+.. _Gravenetal2017: 
+
+Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, H. A. J. Meijer, M. Rubino, P. P. Tans, C. M. Trudinger, B. H. Vaughn and J. W. C. White (2017) Compiled records of carbon isotopes in atmospheric CO2 for historical simulations in CMIP6, Geoscientific Model Development, in review. doi: 10.5194/gmd-2017-166.
+
 .. _GrenfellWarren1999:
 
 Grenfell, T.C., and Warren, S.G. 1999. Representation of a nonspherical
@@ -729,6 +741,10 @@ Hou, Z., Huang, M., Leung, L.R., Lin, G., and Ricciuto, D.M. 2012.
 Sensitivity of surface flux simulations to hydrologic parameters based
 on an uncertainty quantification framework applied to the Community Land
 Model. J. Geophys. Res. 117:D15108.
+
+.. _Houltonetal2008:
+
+Houlton, B.Z., Wang, Y.P., Vitousek, P.M. and Field, C.B., 2008. A unifying framework for dinitrogen fixation in the terrestrial biosphere. Nature, 454(7202), p.327.
 
 .. _HuangLiang2006:
 
@@ -903,6 +919,10 @@ sensitive to deep soil carbon decomposability but not deep soil
 nitrogen dynamics. Proceedings of the National Academies of Science,
 112, 12, 3752-3757, doi:10.1073/pnas.1415123112
 
+.. _Kovenetal2017:
+
+Koven, C.D., G. Hugelius, D.M. Lawrence, and W.R. Wieder, 2017: Higher climatological temperature sensitivity of soil carbon in cold than warm climates. Nature Clim. Change, 7, doi:10.1038/nclimate3421.
+
 .. _Kuchariketal2000:
 
 Kucharik, C.J., Foley, J.A., Delire, C., Fisher, V.A., Coe, M.T.,
@@ -1031,11 +1051,6 @@ environments. John Wiley and Sons, New York, N.Y.
 Letts, M.G., Roulet, N.T., Comer, N.T., Skarupa, M.R., and Verseghy,
 D.L. 2000. Parametrization of peatland hydraulic properties for the
 Canadian Land Surface Scheme. Atmos.-Ocean 38:141-160.
-
-.. _LevinKromer2004:
-
-Levin, I. and Kromer, B. 2004. The tropospheric 14CO2 level in
-mid-latitudes of the Northern Hemisphere (1959-2003) Radiocarbon 46:1.
 
 .. _Levisetal2003:
 
@@ -1203,12 +1218,6 @@ DOI:10.1029/2005JD006653.
 Makela, A. 2002. Derivation of stem taper from the pipe model theory in
 a carbon balance framework. Tree Phys. 22:891-905.
 
-.. _Manning, M.R. and Melhuish, W.H. 1994. Trends: A Compendium of Data on
-
-Manning, M.R. and Melhuish, W.H. 1994. Trends: A Compendium of Data on
-Global Change. Carbon Dioxide Information Analysis Center,. Oak Ridge
-National Laboratory, U.S. Department of Energy, Oak Ridge, Tenn., U.S.A.
-
 .. _Maoetal2012:
 
 Mao, J., Thornton, P.E., Shi, X., Zhao, M., and Post, W.M. 2012. Remote
@@ -1303,6 +1312,11 @@ and Water Assessment Tool, Theoretical Documentation: Version 2005.
 Temple, TX. USDA Agricultural Research Service and Texas A&M Blackland
 Research Center.
 
+.. _NegronJuarezetal2015:
+
+Negron-Juarez, R. Koven, C.D., Riley, W.J., Knox, R.G., Chambers, J.Q.
+2015. Environmental Research Letters 10:064017. DOI:10.1088/1748-9326/10/6/064017.
+
 .. _NemaniRunning1996:
 
 Nemani, R.R., and Running, S.W. 1996. Implementation of a hierarchical
@@ -1336,12 +1350,6 @@ Geophys. Res. 112:D07103. DOI:10.1029/2006JD007522.
 Niu, G.-Y., and Yang, Z.-L. 2007. An observation-based formulation of
 snow cover fraction and its evaluation over large North American river
 basins. J. Geophys. Res. 112:D21101. DOI:10.1029/2007JD008674.
-
-.. _NydalLovseth1996:
-
-Nydal, R. and Lövseth, K. 1996. Carbon-14 Measurements In Atmospheric
-CO2 From Northern And Southern Hemisphere Sites, 1962-1993, Carbon
-Dioxide Information Analysis Center.
 
 .. _Oikawaetal2005:
 
@@ -1662,7 +1670,7 @@ Strugnell, N.C., Zhang, X., Jin, Y., and Muller, J.-P. 2002. First
 operational BRDF, albedo nadir reflectance products from MODIS. Remote
 Sens. Environ. 83:135-148.
 
-.. _Schlesinger, W.H., 1997. Biogeochemistry: an analysis of global change.
+.. _Schlesinger1997:
 
 Schlesinger, W.H., 1997. Biogeochemistry: an analysis of global change.
 Academic Press, London, 588 pp.
@@ -1737,6 +1745,12 @@ resources. Water International 25:11-32.
 Siebert, S., Döll, P., Hoogeveen, J., Faures, J.M., Frenken, K., Feick,
 S., 2005. Development and validation of the global map of irrigation
 areas. Hydrol Earth Syst Sc 9:535–547
+
+.. _Simardetal2011:
+
+Simard, M., Pinto, N., Fisher, J.B., and Baccini, A. (2011), Mapping 
+forest canopy height globally with spaceborne lidar.
+J. Geophys. Res., 116, G04021, doi:10.1029/2011JG001708.
 
 .. _Simpsonetal1983:
 
@@ -1898,6 +1912,10 @@ Taylor, B.R., Parkinson, D. and Parsons, W.F.J., 1989. Nitrogen and
 lignin content as predictors of litter decay rates: A microcosm test.
 Ecology, 70: 97-104.
 
+.. _Thomasetal2015:
+
+Thomas R.Q., Brookshire E.N., Gerber S. 2015. Nitrogen limitation on land: how can it occur in Earth system models? Global Change Biology, 21, 1777-1793, doi:10.1111/gcb.12813.
+
 .. _Thonickeetal2001:
 
 Thonicke, K., Venevsky, S., Sitch, S., and Cramer, W. 2001. The role of
@@ -1974,12 +1992,6 @@ burn area in western Canadian peatlands and its relationship to fire
 weather indices. Global Biogeochem. Cycles 18:GB4014.
 DOI:10.1029/2004GB002222.
 
-.. _Turnbulletal2007:
-
-Turnbull, J.C. et al. 2007. A new high precision (CO2)-C-14 time series
-for North American continental air. Journal of Geophysical
-Research-Atmospheres 112(D11).
-
 .. _Tyeetal2005:
 
 Tye, A.M., et al. 2005. The fate of N-15 added to high Arctic tundra to
@@ -2032,7 +2044,7 @@ drivers of global environmental change: enabling use of global SRES
 scenarios at the national and grid levels, Report 550025001, Netherlands
 Environmental Assessment Agency, 45 pp.
 
-.. _Vanninen, P., and Makela, A. 2005. Carbon budget for Scots pine trees:
+.. _VanninenMakela2005:
 
 Vanninen, P., and Makela, A. 2005. Carbon budget for Scots pine trees:
 effects of size, competition and site fertility on growth allocation and
@@ -2096,6 +2108,13 @@ White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000.
 Parameterization and sensitivity analysis of the Biome-BGC terrestrial
 ecosystem model: net primary production controls. Earth Interactions
 4:1-85.
+
+.. _Wiederetal2015:
+
+Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. 
+Effects of model structural uncertainty on carbon cycle projections: 
+biological nitrogen fixation as a case study. Environmental Research 
+Letters, 10(4), 044016.
 
 .. _Williamsetal1996:
 
@@ -2214,3 +2233,134 @@ Global Biogeochemical Cycles 18. DOI:10.1029/2004GB002239.
 
 Zilitinkevich, S.S. 1970. Dynamics of the Atmospheric Boundary Layer.
 Leningrad Gidrometeor.
+
+.. _bonan2012:
+
+Bonan, Gordon B et al. (2012). `Reconciling leaf physiological traits and canopy flux data: Use of the TRY and FLUXNET databases in the Community Land Model version 4`. Journal of Geophysical Research: Biogeosciences (2005-2012) 117.G2. 
+
+.. _botta2000:
+
+Botta, A et al. (2000). `A global prognostic scheme of leaf onset using satellite data`. Global Change Biology 6.7, pp. 709-725. 
+
+.. _byram1959:
+
+Byram, GM (1959). Combustion of forest fuels. In Forest fire: control and use.(Ed. KP Davis) pp. 61-89. 
+
+.. _collatz1991:
+
+Collatz, G James et al. (1991). `Physiological and environmental regulation of stomatal conductance, photosynthesis and transpiration: a model that includes a laminar boundary layer` Agricultural and Forest Meteorology 54.2, pp. 107-136.
+
+.. _collatz1992:
+
+Collatz, Go J, M Ribas-Carbo, and JA Berry (1992). `Coupled photosynthesis-stomatal conductance model for leaves of C4 plants`. Functional Plant Biology 19.5, pp. 519-538. 
+
+.. _farquhar1980:
+
+Farquhar, GD, S von von Caemmerer, and JA Berry (1980). `A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species`. Planta 149.1, pp. 780-90.
+
+.. _fisher2010:
+
+Fisher, JB et al. (2010). `Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation`. Global Biogeochemical Cycles 24.1. 
+
+.. _foley1996:
+
+Foley, Jonathan A et al. (1996). `An integrated biosphere model of land surface processes, terrestrial carbon balance, and vegetation dynamics`. Global Biogeochemical Cycles 10.4, pp. 603-628. 
+
+.. _fyllas2014:
+
+Fyllas, NM et al. (2014). `Analysing Amazonian forest productivity using a new individual and trait- based model (TFS v. 1)`. Geoscientific Model Development 7.4, pp. 1251-1269.
+
+.. _kucharik1998:
+
+Kucharik, Christopher J, John M Norman, and Stith T Gower (1998). `Measurements of branch area and adjusting leaf area index indirect measurements`. Agricultural and Forest Meteorology 91.1, pp. 69-88.
+
+.. _li2012:
+
+Li, F, XD Zeng, and S Levis (2012). `A process-based fire parameterization of intermediate complexity in a Dynamic Global Vegetation Model`. Biogeosciences 9.7, pp. 2761-2780.
+
+.. _lichstein2011:
+
+Lichstein, Jeremy W and Stephen W Pacala (2011). `Local diversity in heterogeneous landscapes: quantitative assessment with a height-structured forest metacommunity model`. Theoretical Ecology 4.2, pp. 269-281.
+
+.. _lischke2006:
+
+Lischke, Heike et al. (2006). `TreeMig: a forest-landscape model for simulating spatio-temporal patterns from stand to landscape scale`. Ecological Modelling 199.4, pp. 409-420. 41
+
+.. _lloyd2010:
+ 
+Lloyd, J et al. (2010). `Optimisation of photosynthetic carbon gain and within-canopy gradients of associated foliar traits for Amazon forest trees`. Biogeosciences 7.6, pp. 1833-1859. 
+
+.. _mcdowell2013:
+
+McDowell, Nate G et al. (2013). `Evaluating theories of drought-induced vegetation mortality using a multimodel experiment framework`. New Phytologist 200.2, pp. 304-321. 
+
+.. _medlyn2011:
+
+Medlyn, Belinda E et al. (2011). `Reconciling the optimal and empirical approaches to modelling stom- atal conductance`. Global Change Biology 17.6, pp. 2134-2144. 
+
+
+.. _mc_2001:
+
+Moorcroft, PR, GC Hurtt, and Stephen W Pacala (2001). `A method for scaling vegetation dynamics: the ecosystem demography model ED`. Ecological monographs 71.4, pp. 557-586.
+
+.. _norman1979:
+ 
+Norman, JM (1979). `Modeling the complete crop canopy`. Modification of the Aerial Environment of Crops, pp. 249-280. 
+
+.. _oleson2013:
+
+Oleson, KW et al. (2013). `Technical description of version 4.5 of the Community Land Model (CLM)`. 
+
+.. _peterson1986:
+
+Peterson, David L and Kevin C Ryan (1986). `Modeling postfire conifer mortality for long-range planning`. Environmental Management 10.6, pp. 797-808. 
+
+.. _pfeiffer2013:
+
+Pfeiffer, M, A Spessa, and JO Kaplan (2013). `A model for global biomass burning in preindustrial time: LPJ-LMfire (v1. 0)`. Geoscientific Model Development 6.3, pp. 643-685. 
+
+.. _purves2008:
+
+Purves, Drew W et al. (2008). `Predicting and understanding forest dynamics using a simple tractable model`. Proceedings of the National Academy of Sciences 105.44, pp. 17018-17022. 
+
+.. _sato2007:
+
+Sato, Hisashi, Akihiko Itoh, and Takashi Kohyama (2007). `SEIB–DGVM: A new Dynamic Global Vegetation Model using a spatially explicit individual-based approach`. Ecological Modelling 200.3, pp. 2793307. 
+
+.. _sellers1996:
+
+Sellers, Piers J et al. (1996). `A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II: The generation of global fields of terrestrial biophysical parameters from satellite data`. Journal of climate 9.4, pp. 706-737. 
+
+.. _sitch2003:
+
+Sitch, S et al. (2003). `Evaluation of ecosystem dynamics, plant geography and terrestrial carbon cycling in the LPJ dynamic global vegetation model`. Global Change Biology 9.2, pp. 161-185. 
+
+.. _smith2007:
+
+Smith, Alison M and Mark Stitt (2007). `Coordination of carbon supply and plant growth`. Plant, cell & environment 30.9, pp. 1126-1149. 
+
+.. _smith2001:
+
+Smith, Benjamin, I Colin Prentice, and Martin T Sykes (2001). `Representation of vegetation dynamics in the modelling of terrestrial ecosystems: comparing two contrasting approaches within European climate space`. Global Ecology and Biogeography 10.6, pp. 621-637. 
+
+.. _thonicke2010:
+
+Thonicke, K et al. (2010). `The influence of vegetation, fire spread and fire behaviour on biomass burning and trace gas emissions: results from a process-based model`. Biogeosciences 7.6, pp. 1991-2011. 
+
+.. _uriarte2009:
+
+Uriarte, Maria et al. (2009). `Natural disturbance and human land use as determinants of tropical forest dynamics: results from a forest simulator`. Ecological Monographs 79.3, pp. 423-443.
+
+.. _venevsky2002:
+
+Venevsky, Sergey et al. (2002). `Simulating fire regimes in human-dominated ecosystems: Iberian Peninsula case study`. Global Change Biology 8.10, pp. 984-998.
+
+.. _weng2014:
+
+Weng, ES et al. (2014). `Scaling from individuals to ecosystems in an Earth System Model using a mathematically tractable model of height-structured competition for light`. Biogeosciences Discussions 11.12, pp. 17757-17860.
+
+.. _xiaodong2005:
+
+Xiaodong, Yan and HH Shugart (2005). `FAREAST: a forest gap model to simulate dynamics and patterns of eastern Eurasian forests`. Journal of Biogeography 32.9, pp. 1641-1658. 
+42 
+
