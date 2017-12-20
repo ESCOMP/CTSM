@@ -47,41 +47,54 @@ al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
 Canopy Water
 ----------------
 
-Liquid precipitation is either intercepted by the canopy, falls directly to the
-snow/soil surface (throughfall), or drips off the vegetation (canopy
-drip). Solid precipitation is treated similiar, with the addition of unloading of previously intercepted snow.
+Liquid precipitation is either intercepted by the canopy, falls 
+directly to the snow/soil surface (throughfall), or drips off the 
+vegetation (canopy drip). Solid precipitation is treated similarly, 
+with the addition of unloading of previously intercepted snow.  
 Interception by vegetation is divided between liquid and solid phases
-:math:`q_{intr,\,liq}` and :math:`q_{intr,\,ice}` (kg m\ :sup:`-2` s\ :sup:`-1`)
+:math:`q_{intr,\,liq}` and :math:`q_{intr,\,ice}` 
+(kg m\ :sup:`-2` s\ :sup:`-1`) 
 
 .. math::
    :label: 7.2
 
-   q_{intr,\,liq} =\alpha_{liq} q_{rain} \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}
+   q_{intr,\,liq} = f_{pi,\,liq} q_{rain} 
 
 .. math::
    :label: 7.3
 
-   q_{intr,\,ice} =\alpha_{sno} q_{sno} \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}
+   q_{intr,\,ice} = f_{pi,\,ice} q_{sno}
 
-   
-where :math:`L` and :math:`S` are the exposed leaf and stem area index,
+where :math:`f_{pi,\,liq}` and :math:`f_{pi,\,ice}` are the 
+fractions of intercepted precipitation of rain and snow, 
+respectively
+
+.. math::
+   :label: 7.2b
+
+   f_{pi,\,liq} = \alpha_{liq} \ tanh \left(L+S\right)
+
+.. math::
+   :label: 7.3b
+
+   f_{pi,\,ice} =\alpha_{sno} \ \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\} \ ,
+and :math:`L` and :math:`S` are the exposed leaf and stem area index,
 respectively (section :numref:`Phenology and vegetation burial by snow`), and 
 the :math:`\alpha`\'s scale the fractional area of a leaf that collects water 
-(:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`).  Values of 
-:math:`\alpha_{liq} = 0.25` and :math:`\alpha_{sno} = 1` reflect the increased 
-capacity one side of a leaf has for snow than liquid water.
+(:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`).  Default values of 
+:math:`\alpha_{liq}` and :math:`\alpha_{sno}` are set to 1.
 Throughfall (kg m\ :sup:`-2` s\ :sup:`-1`) is also divided into
 liquid and solid phases, reaching the ground (soil or snow surface) as
 
 .. math::
    :label: 7.4
 
-   q_{thru,\, liq} =q_{rain} \left[1-\alpha_{liq} \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}\right]
+   q_{thru,\, liq} = q_{rain} \left(1 - f_{pi,\,liq}\right)
 
 .. math::
    :label: 7.5
 
-   q_{thru,\, ice} =q_{sno} \left[1-\alpha_{sno} \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\}\right].
+   q_{thru,\, ice} = q_{sno} \left(1 - f_{pi,\,ice}\right)
 
 Similarly, the liquid and solid canopy drip fluxes are
 
@@ -126,8 +139,9 @@ They are defined by
 
    W_{can,\,sno}^{max } =p_{ice}\left(L+S\right).
 
-The maximum storage of liquid water is :math:`p_{liq}=0.1` kg m\ :sup:`-2` (:ref:`Dickinson et al.
-1993 <Dickinsonetal1993>`), and that of snow is :math:`p_{sno}=6`, consistent with reported
+The maximum storage of liquid water is :math:`p_{liq}=0.1` kg m\ :sup:`-2` 
+(:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`), and that of snow 
+is :math:`p_{sno}=6` kg m\ :sup:`-2`, consistent with reported
 field measurements (:ref:`Pomeroy et al. 1998 <Pomeroyetal1998>`).
 
 Canopy snow unloading from wind speed :math:`u` and above-freezing temperatures are modeled from linear
@@ -1143,7 +1157,7 @@ exist within the soil column.  Sub-surface runoff is
 .. math::
    :label: 7.168
 
-   q_{subsurface} = \Theta_{ice} K_{baseflow} tan \left( \beta \right) 
+   q_{drai} = \Theta_{ice} K_{baseflow} tan \left( \beta \right) 
    \Delta z_{sat}^{N_{baseflow}} \ ,
 
 where :math:`K_{baseflow}` is a calibration parameter, :math:`\beta` is the 

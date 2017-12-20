@@ -1252,7 +1252,7 @@ and to update the soil surface fluxes (section
 .. math::
    :label: 5.124
 
-   \frac{\partial E_{g} }{\partial T_{g} } =\frac{\beta _{soi} \rho _{atm} }{r'_{aw} +r_{litter} } \frac{c_{a}^{w} +c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } \frac{dq_{g} }{dT_{g} } .
+   \frac{\partial E_{g} }{\partial T_{g} } = \rho _{atm} }{r'_{aw} +r_{soil} } \frac{c_{a}^{w} +c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } \frac{dq_{g} }{dT_{g} } .
 
 The partial derivatives
 :math:`\frac{\partial r'_{ah} }{\partial T_{g} }`  and
