@@ -121,7 +121,7 @@ resolution.
 
  Schematic of urban and atmospheric model coupling.  The urban model is forced by the atmospheric model wind (:math:`u_{atm}` ), temperature (:math:`T_{atm}` ), specific humidity (:math:`q_{atm}` ), precipitation (:math:`P_{atm}` ), solar (:math:`S_{atm} \, \downarrow` ) and longwave (:math:`L_{atm} \, \downarrow` ) radiation at reference height :math:`z'_{atm}`  (section :numref:`Atmospheric Coupling`). Fluxes from the urban landunit to the atmosphere are turbulent sensible (:math:`H`) and latent heat (:math:`\lambda E`), momentum (:math:`\tau` ), albedo (:math:`I\uparrow` ), emitted longwave (:math:`L\uparrow` ), and absorbed shortwave (:math:`\vec{S}`) radiation. Air temperature (:math:`T_{ac}` ), specific humidity (:math:`q_{ac}` ), and wind speed (:math:`u_{c}` ) within the urban canopy layer are diagnosed by the urban model. :math:`H` is the average building height.
 
-The urban model that was first lreleased as a component of CLM4.0 is separately
+The urban model that was first released as a component of CLM4.0 is separately
 described in the urban technical note (:ref:`Oleson et al. (2010b) <Olesonetal2010b>`).
 The main changes in the urban model from CLM4.0 to CLM4.5 were 1)
 an expansion of the single urban landunit to up to three landunits per
