@@ -1247,12 +1247,12 @@ and to update the soil surface fluxes (section
 .. math::
    :label: 5.123
 
-   \frac{\partial H_{g} }{\partial T_{g} } =\frac{\rho _{atm} C_{p} }{r'_{ah} } \frac{c_{a}^{h} +c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} }
+   \frac{\partial H_{g} }{\partial T_{g} } = \frac{\rho _{atm} C_{p} }{r'_{ah} } \frac{c_{a}^{h} +c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} }
 
 .. math::
    :label: 5.124
 
-   \frac{\partial E_{g} }{\partial T_{g} } = \rho _{atm} }{r'_{aw} +r_{soil} } \frac{c_{a}^{w} +c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } \frac{dq_{g} }{dT_{g} } .
+   \frac{\partial E_{g} }{\partial T_{g} } = \frac{\rho _{atm} }{r'_{aw} +r_{soil} } \frac{c_{a}^{w} +c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } \frac{dq_{g} }{dT_{g} } .
 
 The partial derivatives
 :math:`\frac{\partial r'_{ah} }{\partial T_{g} }`  and

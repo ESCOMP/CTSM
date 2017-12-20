@@ -58,12 +58,12 @@ Interception by vegetation is divided between liquid and solid phases
 .. math::
    :label: 7.2
 
-   q_{intr,\,liq} = f_{pi,\,liq} q_{rain} 
+   q_{intr,\,liq} = f_{pi,\,liq} \ q_{rain} 
 
 .. math::
    :label: 7.3
 
-   q_{intr,\,ice} = f_{pi,\,ice} q_{sno}
+   q_{intr,\,ice} = f_{pi,\,ice} \ q_{sno}
 
 where :math:`f_{pi,\,liq}` and :math:`f_{pi,\,ice}` are the 
 fractions of intercepted precipitation of rain and snow, 
