@@ -591,7 +591,7 @@ processes simulated include (:numref:`Figure Land processes`):
 #. Stomatal physiology, photosythetic capacity, and photosynthesis (Chapters :numref:`rst_Stomatal Resistance and Photosynthesis` and 
    :numref:`rst_Photosynthetic Capacity`)
 
-#. Plant hydraulics (Chapter :numref: `rst_Plant Hydraulics`)
+#. Plant hydraulics (Chapter :numref:`rst_Plant Hydraulics`)
 
 #. Lake temperatures and fluxes (Chapter :numref:`rst_Lake Model`)
 
