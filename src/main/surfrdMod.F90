@@ -14,7 +14,7 @@ module surfrdMod
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
-  use clm_varctl      , only : create_glacier_mec_landunit, use_cndv, use_crop
+  use clm_varctl      , only : use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid
@@ -338,6 +338,7 @@ contains
        endif
     endif
 
+    wt_lunit(:,:) = 0._r8
     topo_glc_mec(:,:) = 0._r8
 
     ! Read surface data
@@ -441,7 +442,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : maxpatch_glcmec, nlevurb
-    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istice_mec
+    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice_mec
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
     use UrbanParamsType , only : CheckUrban
     !
@@ -463,7 +464,6 @@ contains
     real(r8),pointer :: pctwet(:)      ! percent of grid cell is wetland
     real(r8),pointer :: pcturb(:,:)    ! percent of grid cell is urbanized
     integer ,pointer :: urban_region_id(:)
-    real(r8),pointer :: pctglc_mec_tot(:) ! percent of grid cell is glacier (sum over classes)
     real(r8),pointer :: pcturb_tot(:)  ! percent of grid cell is urban (sum over density classes)
     real(r8),pointer :: pctspec(:)     ! percent of spec lunits wrt gcell
     integer  :: dens_index             ! urban density index
@@ -478,7 +478,6 @@ contains
     allocate(pcturb(begg:endg,numurbl))
     allocate(pcturb_tot(begg:endg))
     allocate(urban_region_id(begg:endg))
-    allocate(pctglc_mec_tot(begg:endg))
     allocate(pctspec(begg:endg))
 
     call check_dim(ncid, 'nlevsoi', nlevsoifl)
@@ -530,37 +529,25 @@ contains
        enddo
     enddo
 
-    if (create_glacier_mec_landunit) then          ! call ncd_io_gs_int2d
+    ! Read glacier info
 
-       call check_dim(ncid, 'nglcec',   maxpatch_glcmec   )
-       call check_dim(ncid, 'nglcecp1', maxpatch_glcmec+1 )
+    call check_dim(ncid, 'nglcec',   maxpatch_glcmec   )
+    call check_dim(ncid, 'nglcecp1', maxpatch_glcmec+1 )
 
-       call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: PCT_GLC_MEC NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_GLC_MEC NOT on surfdata file'//errMsg(sourcefile, __LINE__))
 
-       wt_glc_mec(:,:) = wt_glc_mec(:,:) / 100._r8
-       call check_sums_equal_1(wt_glc_mec, begg, 'wt_glc_mec', subname)
+    wt_glc_mec(:,:) = wt_glc_mec(:,:) / 100._r8
+    call check_sums_equal_1(wt_glc_mec, begg, 'wt_glc_mec', subname)
 
-       call ncd_io(ncid=ncid, varname='TOPO_GLC_MEC',  flag='read', data=topo_glc_mec, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: TOPO_GLC_MEC NOT on surfdata file'//errMsg(sourcefile, __LINE__))
+    call ncd_io(ncid=ncid, varname='TOPO_GLC_MEC',  flag='read', data=topo_glc_mec, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: TOPO_GLC_MEC NOT on surfdata file'//errMsg(sourcefile, __LINE__))
 
-       topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
+    topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
 
-
-       ! Put glacier area into the GLC_MEC landunit rather than the simple glacier landunit
-       pctglc_mec_tot(:) = pctgla(:)
-       pctgla(:) = 0._r8
-
-       pctspec = pctwet + pctlak + pcturb_tot + pctglc_mec_tot
-
-    else
-
-       pctglc_mec_tot(:) = 0._r8
-       pctspec = pctwet + pctlak + pcturb_tot + pctgla
- 
-    endif
+    pctspec = pctwet + pctlak + pcturb_tot + pctgla
 
     ! Error check: glacier, lake, wetland, urban sum must be less than 100
 
@@ -586,9 +573,7 @@ contains
 
        wt_lunit(nl,istwet)      = pctwet(nl)/100._r8
 
-       wt_lunit(nl,istice)      = pctgla(nl)/100._r8
-
-       wt_lunit(nl,istice_mec)  = pctglc_mec_tot(nl)/100._r8
+       wt_lunit(nl,istice_mec)  = pctgla(nl)/100._r8
 
        do n = isturb_MIN, isturb_MAX
           dens_index = n - isturb_MIN + 1
@@ -599,7 +584,7 @@ contains
 
     call CheckUrban(begg, endg, pcturb(begg:endg,:), subname)
 
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctglc_mec_tot,pctspec)
+    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctspec)
 
   end subroutine surfrd_special
 

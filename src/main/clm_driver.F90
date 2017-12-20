@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_fates
+  use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : is_cold_start, is_interpolated_start
@@ -199,14 +199,13 @@ contains
     need_glacier_initialization = (is_first_step() .and. &
          (is_cold_start .or. is_interpolated_start))
 
-    if (create_glacier_mec_landunit .and. need_glacier_initialization) then
+    if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
 
-          call glc2lnd_inst%update_glc2lnd_non_topo( &
-               bounds = bounds_clump, &
-               glc_behavior = glc_behavior)
+          call glc2lnd_inst%update_glc2lnd_fracs( &
+               bounds = bounds_clump)
 
           call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
 
@@ -1050,19 +1049,17 @@ contains
     ! Determine gridcell averaged properties to send to glc
     ! ============================================================================
 
-    if (create_glacier_mec_landunit) then
-       call t_startf('lnd2glc')
-       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-       do nc = 1,nclumps
-          call get_clump_bounds(nc, bounds_clump)
-          call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
-               filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, glacier_smb_inst, topo_inst,    &
-               init=.false.)           
-       end do
-       !$OMP END PARALLEL DO
-       call t_stopf('lnd2glc')
-    end if
+    call t_startf('lnd2glc')
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
+            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
+            temperature_inst, glacier_smb_inst, topo_inst,    &
+            init=.false.)           
+    end do
+    !$OMP END PARALLEL DO
+    call t_stopf('lnd2glc')
 
     ! ============================================================================
     ! Write global average diagnostics to standard output

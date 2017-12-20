@@ -1,4 +1,369 @@
 ===============================================================
+Tag name:  clm4_5_18_r270
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Dec 20 12:04:25 MST 2017
+One-line Summary: Always use multiple elevation classes for glacier, even with stub glc
+
+Purpose of changes
+------------------
+
+Up until now, we have been using the glacier_mec (multiple elevation
+class) scheme when running with CISM, but the old non-elevation class
+scheme when running with a stub glacier model (SGLC). This is
+problematic because it means that simply switching from CISM to SGLC
+fundamentally changes CLM's glacier physics. (Note: with the current
+configuration, the multiple elevation class scheme is enabled over
+Greenland and Antarctica but not elsewhere.)
+
+There are a few use cases where this is important:
+
+- Single-point and regional runs over glacier regions: In this case, you
+  cannot use CISM. Members of the LIWG want to do runs like this so they
+  can do single-point testing with the multiple elevation class scheme.
+
+- Currently, CISM does not support a Gregorian calendar (i.e., with leap
+  years). So cases with a Gregorian calendar need to use SGLC. This
+  includes data assimilation and CAM specified dynamics runs. We want
+  the physics of these runs to match the standard CLM physics as closely
+  as is feasible.
+
+- There may be other cases where a user doesn't want to include CISM
+  because of the extra complexity this involves, such as when setting up
+  a new grid (which would require additional mapping files for
+  CISM). Again, we want the physics of these runs to match the standard
+  CLM physics as closely as is feasible.
+
+Note that runs with SGLC will still differ somewhat from runs with CISM,
+even when CISM is running in the typical NOEVOLVE mode. This is because
+there will be differences in % glacier and topographic heights over
+Greenland: in a run with CISM, this information comes from CISM at the
+start of the run so that CLM and CISM agree in this respect; in a run
+with SGLC this information comes from CLM's surface dataset.
+
+However: Running with SGLC now gives the same answers as running with
+CISM with GLC_TWO_WAY_COUPLING set to FALSE. (These both differ from the
+standard configuration that uses CISM with GLC_TWO_WAY_COUPLING TRUE
+just over Greenland.)
+
+Mostly-unrelated change: Remove tropicAtl grid
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID):
+- https://github.com/ESCOMP/ctsm/issues/158 now causes test failures for
+  ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.yellowstone_pgi.clm-monthly,
+  since we're now using a new and buggy surface dataset for that case.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- If you use an finidat file from an old run that used SGLC, you'll need
+  to run init_interp and will need to set
+  init_interp_fill_missing_with_natveg = .true. in user_nl_clm. Note
+  that this will initialize glacier_mec landunits with information from
+  vegetated landunits, which is not a very good initialization, so
+  you'll want to spin up for a while to spin up the new glacier_mec
+  landunits.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): no
+
+Changes made to namelist defaults (e.g., changed parameter values): no
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- New surface datasets for single-point and regional runs: These now
+  have the data necessary to run with the multiple elevation class
+  glacier scheme. None of our out-of-the-box single-point or regional
+  datasets have any glacier cover, so this doesn't lead to substantive
+  changes. Note, though, that the smallville datasets hadn't been
+  updated in a while, so there are bigger changes to the smallville
+  datasets. The new smallville datasets are buggy (due to
+  https://github.com/ESCOMP/ctsm/issues/158), but the old ones wouldn't
+  have worked with the new code due to missing glacier_mec
+  information. Note that I have NOT changed the landuse.timeseries
+  files, because those don't change in any substantive way with the
+  setting of -glc_nec in mksurfdata_map.
+
+- Runs with SGLC now point to different finidat files by default: they
+  now point to finidat files that were generated with glacier_mec, which
+  may differ substantially from the files that were generated without
+  glacier_mec (since I think these came from completely different
+  spinups).
+
+Substantial timing or memory changes: Expect some performance
+degradation in SGLC runs, since now we're using multiple elevation
+classes over Greenland and Antarctica, though I haven't investigated it
+carefully.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Delete tropicAtl_subset tests: these tests
+didn't provide much value, and the code they cover is also covered by
+unit tests
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    prove test_build_namelist fails as on trunk
+
+    main build-namelist tests pass, clm4_5 and clm5_0 lnd_in files
+    differ from trunk as expected
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - ok
+
+    Tests pass other than these known issues:
+
+    smfg4 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Global_clm4_5^buildtools
+      See https://github.com/ESCOMP/ctsm/issues/188
+
+    blf84 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_clm4_5^buildtools
+    blfc4 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Cycle_clm4_5^buildtools
+      See https://github.com/ESCOMP/ctsm/issues/187
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - ok
+
+     1 failure, as on the trunk
+
+     compare tests: 40 PASS, 1 Fail; on the trunk, all 41 Failed. I'm
+     not sure why my branch improves things in this respect.
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    Tests pass. Baseline comparisons fail for compsets with SGLC (both
+    global tests and single-point and regional tests). This is expected
+    and is described in detail below.
+
+CLM tag used for the baseline comparisons: clm4_5_18_r269
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All compsets with SGLC (as opposed to CISM)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Potentially new climate, though not investigated carefully
+
+      Answers change in runs with SGLC due to the use of different
+      out-of-the-box finidat files: they now point to finidat files that
+      were generated with glacier_mec, which may differ substantially
+      from the files that were generated without glacier_mec (since I
+      think these came from completely different spinups).
+
+      For global runs, even without finidat differences, answers change
+      over Greenland and Antarctica, since we're now using the
+      multiple-elevation-class scheme there. Answers are the same
+      outside of Greenland and Antarctica, where we still use a single
+      glacier elevation class. (Based on spot-checking FSH in a 3-year
+      cold start run.)
+
+      (For single-point and regional runs, differences are mainly just
+      due to changes in finidat. One exception may be smallville tests,
+      since the smallville surface datasets have changed more
+      extensively; I did not investigate the smallville answer changes
+      carefully.)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+- cime: cime5.4.0-alpha.03 -> billsacks/always_glcmec_n01
+  The changes here are:
+  - always use GLC_NEC=10, except for CLM40
+  - delete references to tropicAtl
+
+List all files eliminated:
+
+========= These glacierMEC use cases weren't accomplishing anything:
+          compared with the similar non-glacierMEC use cases, they just
+          set the glc_nec namelist variable, but this variable didn't
+          even exist! So I have switched cases to use the corresponding
+          non-glacierMEC use cases
+D       components/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+
+========= This use case appeared to be unused
+D       components/clm/bld/namelist_files/use_cases/glacierMEC_pd.xml
+
+========= These tropicAtl_subset tests were hard to maintain and didn't
+          provide much value: the code they covered is also covered via
+          unit tests
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset
+
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Always use -glc_nec 10, delete tropicAtl, and other minor fixes
+M       components/clm/tools/mksurfdata_map/Makefile.data
+
+========= Require glc_nec >= 1 when making surface datasets
+M       components/clm/tools/mksurfdata_map/src/mkfileMod.F90
+M       components/clm/tools/mksurfdata_map/src/mkglcmecMod.F90
+M       components/clm/tools/mksurfdata_map/src/mksurfdat.F90
+M       components/clm/tools/mksurfdata_map/mksurfdata.pl
+
+========= Require glc_nec >= 1 for clm45/clm50
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/unit_testers/build-namelist_test.pl
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/cime_config/buildnml
+
+========= Remove istice; always use glacier_mec type
+M       components/clm/src/biogeochem/DryDepVelocity.F90
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/main/LandunitType.F90
+M       components/clm/src/main/TopoMod.F90
+M       components/clm/src/main/filterMod.F90
+M       components/clm/src/main/lnd2glcMod.F90
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/subgridAveMod.F90
+M       components/clm/src/main/initGridCellsMod.F90
+M       components/clm/src/main/initVerticalMod.F90
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/surfrdMod.F90
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/main/landunit_varcon.F90
+M       components/clm/src/main/subgridWeightsMod.F90
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/subgridMod.F90
+M       components/clm/src/main/ColumnType.F90
+M       components/clm/src/main/histFileMod.F90
+M       components/clm/src/main/restFileMod.F90
+M       components/clm/src/biogeophys/WaterStateType.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/TemperatureType.F90
+M       components/clm/src/biogeophys/SurfaceAlbedoMod.F90
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90
+M       components/clm/src/biogeophys/CanopyTemperatureMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyInitTimeConstMod.F90
+M       components/clm/src/biogeophys/SurfaceResistanceMod.F90
+M       components/clm/src/biogeophys/TotalWaterAndHeatMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       components/clm/src/biogeophys/GlacierSurfaceMassBalanceMod.F90
+M       components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/dyn_subgrid/dynInitColumnsMod.F90
+M       components/clm/src/dyn_subgrid/dynLandunitAreaMod.F90
+M       components/clm/src/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights.pf
+M       components/clm/src/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights_one_gcell.pf
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/cpl/clm_cpl_indices.F90
+M       components/clm/src/cpl/lnd_import_export.F90
+M       components/clm/src/cpl/lnd_comp_mct.F90
+
+========= In addition to supporting the main changes of this tag, also
+          do a fairly major refactor: set fields internally rather than
+          letting lnd_import set the fields
+M       components/clm/src/main/glc2lndMod.F90
+
+========= Fixes to unit tests for changes in glc2lnd
+M       components/clm/src/main/test/topo_test/test_topo.pf
+
+========= Remove tropicAtl tests and references to tropicAtl grid (see
+          above for more notes on this)
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+M       components/clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml
+M       components/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+M       components/clm/bld/namelist_files/namelist_defaults_overall.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+M       components/clm/bld/namelist_files/checkmapfiles.ncl
+M       components/clm/doc/UsersGuide/adding_files.xml
+
+========= No longer use glacierMEC-specific use cases (see above for
+          more notes on this)
+M       components/clm/cime_config/config_component.xml
+
+========= Fix creation date of files pointed to by tests
+M       components/clm/test/tools/nl_files/PTCLM_USUMB_clm4_5
+M       components/clm/test/tools/nl_files/PTCLM_USUMB_Cycle_clm4_5
+M       components/clm/test/tools/nl_files/PTCLM_USUMB_Global_clm4_5
+
+========= No longer need init_interp_fill_missing_with_natveg (I think
+          this could have been removed a while ago)
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KSinkMOut/user_nl_clm
+
+========= New expected failure:
+          ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.yellowstone_pgi.clm-monthly
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r269
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date:  Sat Dec 16 19:49:41 MST 2017

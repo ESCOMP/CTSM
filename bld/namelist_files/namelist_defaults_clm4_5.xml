@@ -459,67 +459,34 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
   set up. If more finidat files are added you may need to add more of these.
   Or one specific file will be chosen over another.
 -->
-<init_interp_attributes sim_year="1850" glc_nec="10" use_cndv=".false."
->hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false.
+<init_interp_attributes sim_year="1850" use_cndv=".false."
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" glc_nec="0" use_cndv=".false."
->hgrid=1.9x2.5 maxpft=17 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.false. irrigate=.true.
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2000" glc_nec="10" use_cndv=".false."
->hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true.
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2000" glc_nec="0" use_cndv=".false." use_cn=".true."
->hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false.
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2000" glc_nec="0" use_cndv=".false." use_cn=".false."
->hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true.
+<init_interp_attributes sim_year="2000" use_cndv=".false."
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <!--
      1850 preindustrial IC (if use_init_interp is true then MUST still interpolate even on an exact match)
 -->
 
-<!-- File from Dave Lawrence for a spinup of 2-degree at 1850 with crop and CISM on -->
+<!-- File from Dave Lawrence for a spinup of 2-degree at 1850 with crop on -->
 <finidat hgrid="1.9x2.5"  maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." 
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.IGM1850GSWCLM50BGCCROP.0481-01-01.1.9x2.5_gx1v6_gl5_simyr1850_c170419.nc
 </finidat>
 
-<!-- Spinup of 2-degree at 1850 with CISM off and crop off -->
-<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false."  
-         ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="0" use_crop=".false." irrigate=".true." use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c170308.nc
-</finidat>
-
 <!--
      Present day IC (if use_init_interp is true then MUST still interpolate even on an exact match)
 -->
 
-<!-- Present day crop spinup at 2-degree with CISM on irrigation on -->
+<!-- Present day crop spinup at 2-degree with irrigation on -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." 
          ic_ymd="20110101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."  use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.IGM2000GSWP3CLM50BGCCROPIRR.2011-01-01.1.9x2.5_gx1v6_gl5_simyr2000_c170419.nc
-</finidat>
-
-<!-- Present day crop spinup at 2-degree with CISM off -->
-<finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." 
-         ic_ymd="00010101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
-         ic_tod="0" glc_nec="0" use_crop=".true." irrigate=".false."  use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.ICLM45BGCCROP.78pfts.levis_reinterpII.1.9x2.5_g1v6_simyr2000_c170216.nc
-</finidat>
-
-<!-- Satellite Phenology with CISM off for 2000 -->
-<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." 
-         ic_ymd="20000101"  sim_year="2000"
-         ic_tod="0" glc_nec="0" use_crop=".false." irrigate=".true." use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.ICRUCLM45SP.2000-01-01.0.9x1.25_g1v6_simyr2000_c170309.nc
 </finidat>
 
 <!-- for present day simulations - year 2000 -->
@@ -547,11 +514,9 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</
 lnd/clm2/surfdata_map/surfdata_ne16np4_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</fsurdat>
 
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</fsurdat>
-<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 
 <!-- Needed for SCAM (Single Column Atmosphere Model) -->
 <fsurdat hgrid="64x128"      sim_year="2000" use_crop=".false." irrigate=".true."
@@ -571,9 +536,9 @@ lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_4x5_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_CMIP6_simyr2000_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr2000_c160127.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_CMIP6_simyr2000_c171214.nc</fsurdat>
 
 <fsurdat hgrid="ne120np4"    sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
@@ -584,13 +549,13 @@ lnd/clm2/surfdata_map/surfdata_ne16np4_78pfts_CMIP6_simyr2000_c170824.nc</fsurda
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_camdenNJ_16pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_camdenNJ_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_vancouverCAN_16pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_vancouverCAN_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_16pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_16pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
 <fsurdat hgrid="360x720cru"   sim_year="1850" use_crop=".false." irrigate=".true." >
@@ -609,10 +574,8 @@ lnd/clm2/surfdata_map/surfdata_10x15_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fs
 <fsurdat hgrid="4x5"          sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_4x5_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 
-<fsurdat hgrid="1x1_tropicAtl" sim_year="1850" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_Irrig_CMIP6_simyr1850_c171214.nc</fsurdat>
 
 
 <fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".false." irrigate=".true.">
@@ -637,12 +600,12 @@ lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_4x5_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_CMIP6_simyr1850_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_CMIP6_simyr1850_c170917.nc</fsurdat>
 
 <fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_brazil_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_brazil_78pfts_CMIP6_simyr1850_c171214.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
@@ -670,8 +633,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="48x96"         sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="1x1_tropicAtl" sim_year_range="1850-2000" irrigate=".true."
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_tropicAtl_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
@@ -910,7 +871,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <ndepmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
 <!-- LAI streams namelist defaults -->
@@ -929,7 +889,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_camdenNJ"        >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_tropicAtl"       >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_brazil"          >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_mexicocityMEX"   >nn</lai_mapalgo>
@@ -937,7 +896,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_camdenNJ"        >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_tropicAtl"       >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
 <!-- lightning streams namelist defaults -->
@@ -961,7 +919,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <lightngmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
 <lightngmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</lightngmapalgo>
 <lightngmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</lightngmapalgo>
 <lightngmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
 <!-- Population density streams namelist defaults -->
@@ -999,7 +956,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <popdensmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
-<popdensmapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
@@ -1042,7 +998,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <urbantvmapalgo hgrid="1x1_urbanc_alpha"    >nn</urbantvmapalgo>
 <urbantvmapalgo hgrid="1x1_camdenNJ"        >nn</urbantvmapalgo>
 <urbantvmapalgo hgrid="1x1_asphaltjungleNJ" >nn</urbantvmapalgo>
-<urbantvmapalgo hgrid="1x1_tropicAtl"       >nn</urbantvmapalgo>
 <urbantvmapalgo hgrid="5x5_amazon"          >nn</urbantvmapalgo>
 
 <!-- Create crop on a separate land-unit -->
@@ -1348,47 +1303,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 >lnd/clm2/mappingdata/maps/1x1_smallvilleIA/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_smallvilleIA_nomask_aave_da_c130403.nc</map>
 
 <!-- mapping files for 1x1_smallvilleIA END --> 
-
-<!-- mapping files for 1x1_tropicAtl START added on Thu Jul 19 13:06:19 2012--> 
-
-<map frm_hgrid="0.5x0.5"    frm_lmask="AVHRR"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.5x0.5_AVHRR_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="MODIS"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.5x0.5_MODIS_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="0.25x0.25"  frm_lmask="MODIS"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.25x0.25_MODIS_to_1x1_tropicAtl_nomask_aave_da_c170321.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.5x0.5_nomask_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_10x10min_nomask_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_MODIS_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_MODIS-wCsp_to_1x1_tropicAtl_nomask_aave_da_c160425.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_USGS_to_1x1_tropicAtl_nomask_aave_da_c120927.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_LandScan2004_to_1x1_tropicAtl_nomask_aave_da_c121114.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="IGBP-GSDP"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_5x5min_IGBP-GSDP_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="ISRIC-WISE"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_5x5min_ISRIC-WISE_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="ORNL-Soil" to_hgrid="1x1_tropicAtl" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_5x5min_ORNL-Soil_to_1x1_tropicAtl_nomask_aave_da_c170706.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_5x5min_nomask_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="3x3min"   frm_lmask="GLOBE-Gardner" to_hgrid="1x1_tropicAtl" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_GLOBE-Gardner_to_1x1_tropicAtl_nomask_aave_da_c120927.nc</map>
-<map frm_hgrid="3x3min"   frm_lmask="GLOBE-Gardner-mergeGIS" to_hgrid="1x1_tropicAtl" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_GLOBE-Gardner-mergeGIS_to_1x1_tropicAtl_nomask_aave_da_c120927.nc</map>
-<map frm_hgrid="0.9x1.25"    frm_lmask="GRDC"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.9x1.25_GRDC_to_1x1_tropicAtl_nomask_aave_da_c130309.nc</map>
-<map frm_hgrid="360x720cru"    frm_lmask="cruncep"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_360x720_cruncep_to_1x1_tropicAtl_nomask_aave_da_c130326.nc</map>
-<map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_tropicAtl_nomask_aave_da_c130403.nc</map>
-
-<!-- mapping files for 1x1_tropicAtl END --> 
 
 <!-- mapping files for 1x1_urbanc_alpha START added on Thu Jul 19 13:06:19 2012--> 
 

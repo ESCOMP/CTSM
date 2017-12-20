@@ -75,7 +75,7 @@ contains
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, zlnd, zsno, tfrz, spval 
     use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
     use column_varcon      , only : icol_road_imperv, icol_road_perv
-    use landunit_varcon    , only : istice, istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
+    use landunit_varcon    , only : istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
     use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
     use clm_varctl         , only : use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -250,8 +250,7 @@ contains
          ! Saturated vapor pressure, specific humidity and their derivatives
          ! at ground surface
          qred = 1._r8
-         if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice  &
-              .AND. lun%itype(l)/=istice_mec) then
+         if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice_mec) then
 
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)
@@ -362,7 +361,7 @@ contains
          ! Urban emissivities are currently read in from data file
 
          if (.not. urbpoi(l)) then
-            if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+            if (lun%itype(l)==istice_mec) then
                emg(c) = 0.97_r8
             else
                emg(c) = (1._r8-frac_sno(c))*0.96_r8 + frac_sno(c)*0.97_r8
@@ -472,8 +471,7 @@ contains
                   forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
                   forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
                end if
-            else if (lun%itype(l) == istwet .or. lun%itype(l) == istice      &
-                 .or. lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istwet .or. lun%itype(l) == istice_mec) then
                forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)
                forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c)
                forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c)

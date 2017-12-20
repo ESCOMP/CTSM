@@ -17,7 +17,7 @@ module restFileMod
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
-  use clm_varctl       , only : create_glacier_mec_landunit, iulog, use_fates, use_hydrstress
+  use clm_varctl       , only : iulog, use_fates, use_hydrstress
   use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
@@ -528,9 +528,7 @@ contains
       call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)
     end if
     call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
-    if (create_glacier_mec_landunit) then
-       call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
-    end if
+    call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
 
     ! Define global attributes
 
@@ -552,7 +550,12 @@ contains
 
     call restFile_add_flag_metadata(ncid, create_crop_landunit, 'create_crop_landunit')
     call restFile_add_flag_metadata(ncid, irrigate, 'irrigate')
-    call restFile_add_flag_metadata(ncid, create_glacier_mec_landunit, 'created_glacier_mec_landunits')
+    ! BACKWARDS_COMPATIBILITY(wjs, 2017-12-13) created_glacier_mec_landunits is always
+    ! true now. However, we can't remove the read of this field from init_interp until we
+    ! can reliably assume that all initial conditions files that might be used in
+    ! init_interp have this flag .true. So until then, we write the flag with a
+    ! hard-coded .true. value.
+    call restFile_add_flag_metadata(ncid, .true., 'created_glacier_mec_landunits')
 
     call restFile_add_ipft_metadata(ncid)
     call restFile_add_icol_metadata(ncid)

@@ -21,7 +21,7 @@ module TotalWaterAndHeatMod
   use TemperatureType    , only : temperature_type
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
-  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice,istice_mec
+  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -585,7 +585,7 @@ contains
              if (col%itype(c) == icol_road_imperv .and. j <= nlev_improad(l)) then
                 heat_dry_mass(c) = heat_dry_mass(c) + &
                      TempToHeat(temp = t_soisno(c,j), cv = (cv_improad(l,j) * dz(c,j)))
-             else if (lun%itype(l) /= istwet .and. lun%itype(l) /= istice .and. lun%itype(l) /= istice_mec) then
+             else if (lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec) then
                 ! Note that this also includes impervious roads below nlev_improad (where
                 ! we have soil)
                 heat_dry_mass(c) = heat_dry_mass(c) + &

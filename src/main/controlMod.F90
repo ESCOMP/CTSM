@@ -330,11 +330,10 @@ contains
            end if
            call clm_varctl_set( nsrest_in=override_nsrest )
        end if
-       
-       if (maxpatch_glcmec > 0) then
-          create_glacier_mec_landunit = .true.
-       else
-          create_glacier_mec_landunit = .false.
+
+       if (maxpatch_glcmec <= 0) then
+          call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
+               errMsg(sourcefile, __LINE__))
        end if
 
        if (use_crop .and. .not. create_crop_landunit) then
@@ -695,7 +694,6 @@ contains
     call mpi_bcast (n_melt_glcmec, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
-    call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -852,15 +850,13 @@ contains
     write(iulog,*) '       snow-covered fraction during melt (mm) =', int_snow_max
     write(iulog,*) '   SCA shape parameter for glc_mec columns (n_melt_glcmec) =', n_melt_glcmec
 
-    if (create_glacier_mec_landunit) then
-       write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
-       if (glc_do_dynglacier) then
-          write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
-       else
-          write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
-       end if
-       write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
-    endif
+    write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
+    if (glc_do_dynglacier) then
+       write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
+    else
+       write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
+    end if
+    write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
 
     if (nsrest == nsrStartup) then
        if (finidat /= ' ') then

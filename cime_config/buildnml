@@ -156,11 +156,6 @@ def buildnml(case, caseroot, compname):
         lnd_grid = clm_usrdat_name
         clmusr = " -clm_usr_name %s "%clm_usrdat_name
 
-    if comp_glc != "sglc":
-        glc_opts = "-glc_present" 
-    else:
-        glc_opts = ""
-
     if comp_atm != "datm":
         nomeg = "-no-megan"
     else:
@@ -233,11 +228,11 @@ def buildnml(case, caseroot, compname):
         cmd = os.path.join(srcroot, "components","clm","bld","build-namelist")
 
         command = ("%s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
-                   "%s %s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
+                   "%s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
                    "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
                    "%s %s %s"
                    %(cmd, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
-                     nomeg, usecase, glc_opts, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
+                     nomeg, usecase, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
                      lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file, 
                      clm_bldnml_opts, spinup, tuning))
 

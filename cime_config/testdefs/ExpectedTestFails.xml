@@ -11,4 +11,5 @@
    <entry bugz="2488">FAIL ERP_D_P24x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart RUN</entry>
    <entry bugz="2488">FAIL ERP_D.f10_f10_musgs.IHistClm50Bgc.yellowstone_gnu.clm-decStart RUN</entry>
    <entry bugz="2489">FAIL ERS_Ly5_P72x1.f10_f10_musgs.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput RUN</entry>
+   <entry bugz="2400">FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.yellowstone_pgi.clm-monthly RUN</entry>
 </expectedFails> 

@@ -970,7 +970,7 @@ contains
      ! !USES:
     use clm_varpar      , only : numrad
     use clm_varcon      , only : tfrz
-    use landunit_varcon , only : istice, istice_mec, istdlak
+    use landunit_varcon , only : istice_mec, istdlak
     use LakeCon         , only : lakepuddling
     !
     ! !ARGUMENTS:
@@ -1032,7 +1032,7 @@ contains
                 !albsoi = albsod
                 albsod(c,ib) = min(albsat(soilcol,ib)+inc, albdry(soilcol,ib))
                 albsoi(c,ib) = albsod(c,ib)
-             else if (lun%itype(l) == istice .or. lun%itype(l) == istice_mec)  then  ! land ice
+             else if (lun%itype(l) == istice_mec)  then  ! land ice
                 ! changed from local variable to clm_type:
                 !albsod = albice(ib)
                 !albsoi = albsod

@@ -101,13 +101,6 @@
       <value compset="RCP4.*_"		>1850-2100_rcp4.5_transient</value>
       <value compset="RCP2.*_"		>1850-2100_rcp2.6_transient</value>
       <value compset="RCP8.*_"		>1850-2100_rcp8.5_transient</value>
-      <value compset="1850.*_.*_CISM"	>1850_glacierMEC_control</value>
-      <value compset="2000.*_.*_CISM"	>2000_glacierMEC_control</value>
-      <value compset="HIST.*_.*_CISM"	>20thC_glacierMEC_transient</value>
-      <value compset="RCP8.*_.*_CISM"	>1850-2100_rcp8.5_glacierMEC_transient</value>
-      <value compset="RCP6.*_.*_CISM"	>1850-2100_rcp6_glacierMEC_transient  </value>
-      <value compset="RCP4.*_.*_CISM"	>1850-2100_rcp4.5_glacierMEC_transient</value>
-      <value compset="RCP2.*_.*_CISM"	>1850-2100_rcp2.6_glacierMEC_transient</value>
       <value compset="AMIP.*_"		>20thC_transient</value>
       <value compset="PIPD_"           >1850-2100_rcp4.5_transient</value>
     </values>

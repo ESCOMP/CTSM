@@ -164,9 +164,6 @@ OPTIONS
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
                               (Note: buildnml copies the file for use by the driver)
-     -glc_present             Set to true if the glc model is present (not sglc).
-                              This is used for error-checking, to make sure other options are
-                              set appropriately.
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
      -help [or -h]            Print usage to STDOUT.
@@ -256,7 +253,6 @@ sub process_commandline {
                clm_demand            => "null",
                help                  => 0,
                glc_nec               => "default",
-               glc_present           => 0,
                light_res             => "default",
                l_ncpl                => undef,
                lnd_tuning_mode       => "default",
@@ -300,7 +296,6 @@ sub process_commandline {
              "note!"                     => \$opts{'note'},
              "megan!"                    => \$opts{'megan'},
              "glc_nec=i"                 => \$opts{'glc_nec'},
-             "glc_present!"              => \$opts{'glc_present'},
              "light_res=s"               => \$opts{'light_res'},
              "irrig=s"                   => \$opts{'irrig'},
              "d:s"                       => \$opts{'dir'},
@@ -1978,57 +1973,42 @@ sub setup_logic_glacier {
   if ( $val != $nl_flags->{'glc_nec'} ) {
     $log->fatal_error("$var set to $val does NOT agree with -glc_nec argument of $nl_flags->{'glc_nec'} (set with GLC_NEC env variable)");
   }
-  if ( $nl_flags->{'glc_nec'} > 0 ) {
-    if (! $opts->{'glc_present'}) {
-      $log->fatal_error("glc_nec is non-zero, but glc_present is not set (probably due to trying to use a stub glc model)");
-    }
 
-    if ( $physv->as_long() < $physv->as_long("clm4_5")) {
-       add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flndtopo'  , 'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'} );
-       add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fglcmask'  , 'hgrid'=>$nl_flags->{'res'});
-    }
+  if ( $physv->as_long >= $physv->as_long("clm4_5") ) {
+     if ( $nl_flags->{'glc_nec'} < 1 ) {
+        $log->fatal_error("For clm4_5 and later, GLC_NEC must be at least 1.");
+     }
 
-    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
-    }
+     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
 
   } else {
-    if ($opts->{'glc_present'}) {
-      $log->fatal_error("glc_present is set (e.g., due to use of CISM), but glc_nec is zero");
-    }
+     # clm4_0
+     if ( $nl_flags->{'glc_nec'} > 0 ) {
+        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flndtopo'  , 'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'} );
+        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fglcmask'  , 'hgrid'=>$nl_flags->{'res'});
+        
+     } else {
+        # glc_nec == 0
 
-    # Error checking for glacier multiple elevation class options when glc_mec off
-    # Make sure various glc_mec-specific logicals are not true, and fglcmask is not set
-    my $create_glcmec = $nl->get_value('create_glacier_mec_landunit');
-    if ( defined($create_glcmec) ) {
-      if ( &value_is_true($create_glcmec) ) {
-        $log->fatal_error("create_glacer_mec_landunit is true, but glc_nec is equal to zero");
-      }
-    }
-    my $glc_dyntopo= $nl->get_value('glc_dyntopo');
-    if ( defined($glc_dyntopo) ) {
-      if ( &value_is_true($glc_dyntopo) ) {
-        $log->fatal_error("glc_dyntopo is true, but glc_nec is equal to zero");
-      }
-    }
-    my $glc_do_dynglacier= $nl->get_value('glc_do_dynglacier');
-    if ( defined($glc_do_dynglacier) ) {
-      if ( &value_is_true($glc_do_dynglacier) ) {
-        $log->fatal_error("glc_do_dynglacier (set from GLC_TWO_WAY_COUPLING env variable) is true, but glc_nec is equal to zero");
-      }
-    }
-    my $fglcmask = $nl->get_value('fglcmask');
-    if ( defined($fglcmask) ) {
-      $log->fatal_error("fglcmask is set, but glc_nec is equal to zero");
-    }
+        # Error checking for glacier multiple elevation class options when glc_mec off
+        # Make sure various glc_mec-specific logicals are not true, and fglcmask is not set
+        my $glc_dyntopo= $nl->get_value('glc_dyntopo');
+        if ( defined($glc_dyntopo) ) {
+           if ( &value_is_true($glc_dyntopo) ) {
+              $log->fatal_error("glc_dyntopo is true, but glc_nec is equal to zero");
+           }
+        }
+        my $fglcmask = $nl->get_value('fglcmask');
+        if ( defined($fglcmask) ) {
+           $log->fatal_error("fglcmask is set, but glc_nec is equal to zero");
+        }
+     }
   }
 
   # Dependence of albice on glc_nec has gone away starting in CLM4_5. Thus, we
   # can remove glc_nec from the following call once we ditch CLM4_0.
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'albice', 'glc_nec'=>$nl_flags->{'glc_nec'});
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     # These controls over glacier region behavior are needed even when running without glc_mec in order to satisfy some error checks in the code
-     # (And since we'll eventually move to always having glc_mec, it's not worth adding some complex logic to determine when they're really needed.)
      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior');
      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_melt_behavior');
      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_ice_runoff_behavior');
@@ -2410,7 +2390,7 @@ sub setup_logic_initial_conditions {
           if ( &value_is_true($nl->get_value($useinitvar) ) ) {
 
              add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
-                        'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
+                        'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
                         'use_cn'=>$nl_flags->{'use_cn'}, 'nofail'=>1 );
              my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
              foreach my $pair ( split( /\s/, $attributes_string) ) {

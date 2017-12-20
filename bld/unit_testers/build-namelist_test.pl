@@ -149,7 +149,7 @@ system( "../configure -s $mode" );
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $real_par_file = "user_nl_clm_real_parameters";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -no-note -output_reals $real_par_file";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -217,7 +217,7 @@ print "Run simple tests with additional options \n";
 print "==================================================\n";
 
 # Exercise a bunch of options
-my $options = "-co2_ppmv 250 -glc_nec 10 -glc_present";
+my $options = "-co2_ppmv 250 ";
    $options .= " -res 0.9x1.25 -rcp 2.6 -envxml_dir .";
 
    &make_env_run();
@@ -735,22 +735,22 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
                                    },
-     "glc_nec inconsistent"      =>{ options=>"-glc_nec 10 -glc_present -envxml_dir .",
+     "glc_nec inconsistent"      =>{ options=>"-envxml_dir .",
                                      namelst=>"maxpatch_glcmec=5",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
                                    },
-     "UpdateGlcNoGLCMec"         =>{ options=>"-envxml_dir .",
+     "NoGLCMec"                  =>{ options=>"-envxml_dir . -glc_nec 0",
                                      namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "UpdateGlcContradict"       =>{ options=>"-glc_nec 10 -glc_present -envxml_dir .",
+     "UpdateGlcContradict"       =>{ options=>"-envxml_dir .",
                                      namelst=>"glc_do_dynglacier=.false.",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "clm40andUpdateGlc"         =>{ options=>"-glc_nec 10 -glc_present -envxml_dir .",
+     "clm40andUpdateGlc"         =>{ options=>"-envxml_dir .",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      conopts=>"-phys clm4_0",
@@ -1158,21 +1158,30 @@ print " Test glc_mec resolutions \n";
 print "==================================================\n";
 
 # Check for glc_mec resolutions
+#
+# NOTE(wjs, 2017-12-17) I'm not sure if these glc_mec-specific tests are
+# still needed: are they covered with other tests now that we always run
+# with glc_mec? Some historical notes: (1) The three resolutions listed
+# here used to be the only three with which you could run glc_mec; now
+# you can run glc_mec with all resolutions. (2) This used to point to
+# all of the glacierMEC use cases; now we don't have glacierMEC-specific
+# use cases, but I've kept these pointing to the equivalent normal use
+# cases; I'm not sure if it's actually important to test this with all
+# of the different use cases.
 $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
-my @use_cases = ( "1850-2100_rcp2.6_glacierMEC_transient",
-                  "1850-2100_rcp4.5_glacierMEC_transient",
-                  "1850-2100_rcp6_glacierMEC_transient",
-                  "1850-2100_rcp8.5_glacierMEC_transient",
-                  "1850_glacierMEC_control",
-                  "2000_glacierMEC_control",
-                  "20thC_glacierMEC_transient",
+my @use_cases = ( "1850-2100_rcp2.6_transient",
+                  "1850-2100_rcp4.5_transient",
+                  "1850-2100_rcp6_transient",
+                  "1850-2100_rcp8.5_transient",
+                  "1850_control",
+                  "2000_control",
+                  "20thC_transient",
                  );
-my $GLC_NEC         = 10;
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @usecases ) {
-      $options = "-bgc bgc -glc_nec -glc_present $GLC_NEC -res $res -use_case $usecase -envxml_dir . ";
+      $options = "-bgc bgc -res $res -use_case $usecase -envxml_dir . ";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
@@ -1191,9 +1200,9 @@ foreach my $res ( @glc_res ) {
 # Transient 20th Century simulations
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4", "10x15", "1x1_tropicAtl" );
+my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4", "10x15" );
 my $usecase  = "20thC_transient";
-my $GLC_NEC         = 0;
+my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
    $options = "-res $res -use_case $usecase -envxml_dir . ";
    &make_env_run();

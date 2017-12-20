@@ -18,7 +18,7 @@ module landunit_varcon
 
   integer, parameter, public :: istsoil    = 1  !soil         landunit type (natural vegetation)
   integer, parameter, public :: istcrop    = 2  !crop         landunit type
-  integer, parameter, public :: istice     = 3  !land ice     landunit type (glacier)
+  ! Landunit 3 currently unused (used to be non-multiple elevation class glacier type: istice)
   integer, parameter, public :: istice_mec = 4  !land ice (multiple elevation classes) landunit type
   integer, parameter, public :: istdlak    = 5  !deep lake    landunit type (now used for all lakes)
   integer, parameter, public :: istwet     = 6  !wetland      landunit type (swamp, marsh, etc.)
@@ -108,6 +108,7 @@ contains
     use shr_sys_mod, only : shr_sys_abort
     !
     character(len=*), parameter :: not_set = 'NOT_SET'
+    character(len=*), parameter :: unused  = 'UNUSED'
     character(len=*), parameter :: subname = 'set_landunit_names'
     !-----------------------------------------------------------------------
     
@@ -115,7 +116,7 @@ contains
 
     landunit_names(istsoil) = 'vegetated_or_bare_soil'
     landunit_names(istcrop) = 'crop'
-    landunit_names(istice) = 'landice'
+    landunit_names(istcrop+1) = unused
     landunit_names(istice_mec) = 'landice_multiple_elevation_classes'
     landunit_names(istdlak) = 'deep_lake'
     landunit_names(istwet) = 'wetland'

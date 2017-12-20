@@ -13,7 +13,6 @@ module TopoMod
   use LandunitType   , only : lun
   use glc2lndMod     , only : glc2lnd_type
   use glcBehaviorMod , only : glc_behavior_type
-  use clm_varctl     , only : create_glacier_mec_landunit
   use landunit_varcon, only : istice_mec
   use filterColMod   , only : filter_col_type, col_filter_from_logical_array_active_only
   !
@@ -198,7 +197,7 @@ contains
     !
     ! Should be called each time step.
     !
-    ! Should be called after glc2lndMod:update_glc2lnd_non_topo, and before
+    ! Should be called after glc2lndMod:update_glc2lnd_fracs, and before
     ! atm2lndMod:downscale_forcings
     !
     ! !ARGUMENTS:
@@ -228,13 +227,11 @@ contains
     call glc_behavior%icemec_cols_need_downscaling(bounds, num_icemecc, filter_icemecc, &
          this%needs_downscaling_col(begc:endc))
 
-    if (create_glacier_mec_landunit) then
-       ! In addition to updating topo_col, this also sets some additional elements of
-       ! needs_downscaling_col to .true. (but leaves the already-.true. values as is.)
-       call glc2lnd_inst%update_glc2lnd_topo(bounds, &
-            this%topo_col(begc:endc), &
-            this%needs_downscaling_col(begc:endc))
-    end if
+    ! In addition to updating topo_col, this also sets some additional elements of
+    ! needs_downscaling_col to .true. (but leaves the already-.true. values as is.)
+    call glc2lnd_inst%update_glc2lnd_topo(bounds, &
+         this%topo_col(begc:endc), &
+         this%needs_downscaling_col(begc:endc))
 
     ! For any point that isn't downscaled, set its topo value to the atmosphere's
     ! topographic height. This shouldn't matter, but is useful if topo_col is written to
@@ -250,9 +247,7 @@ contains
        end if
     end do
 
-    if (create_glacier_mec_landunit) then
-       call glc_behavior%update_glc_classes(bounds, this%topo_col(begc:endc))
-    end if
+    call glc_behavior%update_glc_classes(bounds, this%topo_col(begc:endc))
 
   end subroutine UpdateTopo
 

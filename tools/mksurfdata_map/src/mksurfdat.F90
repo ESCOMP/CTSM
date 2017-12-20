@@ -353,6 +353,10 @@ program mksurfdat
     if ( no_inlandwet )then
        write(6,*) 'Set wetland to 0% over land'
     end if
+    if (nglcec <= 0) then
+       write(6,*) 'nglcec must be at least 1'
+       call abort()
+    end if
 
     !
     ! Call module initialization routines
@@ -772,28 +776,25 @@ program mksurfdat
     ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
     ! This call needs to occur after pctgla has been adjusted for the final time
 
-    if ( nglcec > 0 )then
+    allocate (pctglcmec(ns_o,nglcec), &
+         topoglcmec(ns_o,nglcec), &
+         pctglcmec_gic(ns_o,nglcec), &
+         pctglcmec_icesheet(ns_o,nglcec))
+    allocate (pctglc_gic(ns_o))
+    allocate (pctglc_icesheet(ns_o))
 
-       allocate (pctglcmec(ns_o,nglcec), &
-                 topoglcmec(ns_o,nglcec), &
-                 pctglcmec_gic(ns_o,nglcec), &
-                 pctglcmec_icesheet(ns_o,nglcec))
-       allocate (pctglc_gic(ns_o))
-       allocate (pctglc_icesheet(ns_o))
+    pctglcmec(:,:)          = spval
+    topoglcmec(:,:)         = spval
+    pctglcmec_gic(:,:)      = spval
+    pctglcmec_icesheet(:,:) = spval
+    pctglc_gic(:)           = spval
+    pctglc_icesheet(:)      = spval
 
-       pctglcmec(:,:)          = spval
-       topoglcmec(:,:)         = spval
-       pctglcmec_gic(:,:)      = spval
-       pctglcmec_icesheet(:,:) = spval
-       pctglc_gic(:)           = spval
-       pctglc_icesheet(:)      = spval
-
-       call mkglcmec (ldomain, mapfname=map_fglacier, &
-                      datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-                      pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
-                      pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
-                      pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
-    end if
+    call mkglcmec (ldomain, mapfname=map_fglacier, &
+         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
+         pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
+         pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
 
     ! Determine fractional land from pft dataset
 
@@ -866,29 +867,26 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'GLACIER_REGION', varid), subname)
        call check_ret(nf_put_var_int(ncid, varid, glacier_region), subname)
 
-       if ( nglcec > 0 )then
-          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, pctglcmec), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctglcmec), subname)
 
-          call check_ret(nf_inq_varid(ncid, 'GLC_MEC', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, elevclass), subname)
+       call check_ret(nf_inq_varid(ncid, 'GLC_MEC', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, elevclass), subname)
 
-          call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
+       call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
 
-          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
 
-          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
 
-          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
 
-          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
-
-       end if
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
 
        call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
@@ -1032,8 +1030,8 @@ program mksurfdat
 
     deallocate ( organic )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
-    if ( nglcec > 0 ) deallocate ( pctglcmec, topoglcmec)
-    if ( nglcec > 0 ) deallocate ( pctglc_gic, pctglc_icesheet)
+    deallocate ( pctglcmec, topoglcmec)
+    deallocate ( pctglc_gic, pctglc_icesheet)
     deallocate ( elevclass )
     deallocate ( fmax )
     deallocate ( pctsand, pctclay )

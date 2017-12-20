@@ -31,7 +31,7 @@ module SnowHydrologyMod
   use LandunitType    , only : lun
   use TopoMod, only : topo_type
   use ColumnType      , only : col
-  use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice, istice_mec, istcrop
+  use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
   use clm_time_manager, only : get_step_size, get_nstep
   !
   ! !PUBLIC TYPES:
@@ -1001,7 +1001,7 @@ contains
              if (ltype(l) == istwet) then
                 h2osoi_liq(c,0) = 0.0_r8
              endif
-             if (ltype(l) == istice .or. ltype(l)==istice_mec) then
+             if (ltype(l)==istice_mec) then
                 h2osoi_liq(c,0) = 0.0_r8
              endif
           endif

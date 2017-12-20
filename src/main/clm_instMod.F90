@@ -11,7 +11,7 @@ module clm_instMod
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
   use clm_varctl      , only : use_century_decomp, use_crop
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
-  use landunit_varcon , only : istice, istice_mec, istsoil
+  use landunit_varcon , only : istice_mec, istsoil
   use perf_mod        , only : t_startf, t_stopf
   use controlMod      , only : NLFilename
 
@@ -114,7 +114,7 @@ module clm_instMod
   type(glc2lnd_type)                      :: glc2lnd_inst
   type(lnd2atm_type)                      :: lnd2atm_inst
   type(lnd2glc_type)                      :: lnd2glc_inst
-  type(glc_behavior_type)                 :: glc_behavior
+  type(glc_behavior_type), target         :: glc_behavior
   type(topo_type)                         :: topo_inst
   class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
 
@@ -225,7 +225,7 @@ contains
        ! feedback may not activate on time (or at all). So, as a compromise, we start with
        ! a small amount of snow in places that are likely to be snow-covered for much or
        ! all of the year.
-       if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+       if (lun%itype(l)==istice_mec) then
           h2osno_col(c) = 100._r8
        else if (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8) then 
           h2osno_col(c) = 100._r8
@@ -255,13 +255,6 @@ contains
 
     call atm2lnd_inst%Init( bounds, NLFilename )
     call lnd2atm_inst%Init( bounds, NLFilename )
-
-    ! Initialize glc2lnd and lnd2glc even if running without create_glacier_mec_landunit,
-    ! because at least some variables (such as the icemask) are referred to in code that
-    ! is executed even when running without glc_mec.
-    !
-    ! NOTE(wjs, 2016-04-01) I'm not sure if that's true any more (it isn't true for
-    ! icemask), but I'm keeping this as is for now anyway.
 
     call glc2lnd_inst%Init( bounds, glc_behavior )
     call lnd2glc_inst%Init( bounds )

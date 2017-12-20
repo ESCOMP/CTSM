@@ -453,6 +453,10 @@ EOF
       $CSMDATA = $opts{'csmdata'};
    }
    my $glc_nec = $opts{'glc_nec'};
+   if ( $glc_nec <= 0 ) {
+      print "** glc_nec must be at least 1\n";
+      usage();
+   }
    my $no_inlandwet = ".true.";
    if (defined($opts{'inlandwet'})) {
       $no_inlandwet = ".false.";

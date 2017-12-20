@@ -101,7 +101,7 @@ contains
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct
-    use landunit_varcon     , only : istice, istdlak, istwet, istsoil, istcrop, istice_mec
+    use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
     use organicFileMod      , only : organicrd 
@@ -333,7 +333,7 @@ contains
        g = col%gridcell(c)
        l = col%landunit(c)
 
-       if (lun%itype(l)==istwet .or. lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
 
           do lev = 1,nlevgrnd
              soilstate_inst%bsw_col(c,lev)    = spval

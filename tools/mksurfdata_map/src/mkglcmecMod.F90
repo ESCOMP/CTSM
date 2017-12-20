@@ -107,10 +107,8 @@ subroutine mkglcmecInit( elevclass_o )
   else if ( nglcec == 1  )then
      elevclass(1)  =     0.
      elevclass(2)  = 10000.
-  else if ( nglcec == 0  )then
-     elevclass(1)  = 10000.
   else
-     write(6,*) subname//"ERROR:: nglcec must be 0, 1, 3, 5, 10 or 36",&
+     write(6,*) subname//"ERROR:: nglcec must be 1, 3, 5, 10 or 36",&
           " to work with CLM: "
      call abort()
   end if
@@ -146,8 +144,6 @@ subroutine mkglcmec(ldomain, mapfname, &
 ! Note that the various percentages computed here are given as % of the glc_mec landunit.
 ! If the input glacier area is 0 for a given grid cell, this requires setting these %
 ! variables in an arbitrary way.
-!
-! Does nothing if nglcec==0.
 !
 ! !USES:
   use mkdomainMod, only : domain_type, domain_clean, domain_read
@@ -221,16 +217,6 @@ subroutine mkglcmec(ldomain, mapfname, &
   ! Set number of output points
 
   ns_o = ldomain%ns
-
-  ! -----------------------------------------------------------------
-  ! Exit early, if no elevation class info is requested
-  ! -----------------------------------------------------------------
-  if ( nglcec == 0 )then
-     write (6,*) 'Number of glacier elevation classes is zero ',&
-          '-- set glcmec to zero as well'
-     call shr_sys_flush(6)
-     return
-  end if
 
   write (6,*) 'Attempting to make percent elevation class ',&
        'and mean elevation for glaciers .....'

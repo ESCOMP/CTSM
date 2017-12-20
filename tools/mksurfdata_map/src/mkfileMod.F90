@@ -60,10 +60,8 @@ contains
     end if
 
     if (.not. dynlanduse) then
-       if ( nglcec > 0 )then
-          call check_ret(nf_def_dim (ncid, 'nglcec'  , nglcec      , dimid), subname)
-          call check_ret(nf_def_dim (ncid, 'nglcecp1', nglcec+1    , dimid), subname)
-       end if
+       call check_ret(nf_def_dim (ncid, 'nglcec'  , nglcec      , dimid), subname)
+       call check_ret(nf_def_dim (ncid, 'nglcecp1', nglcec+1    , dimid), subname)
     end if
     call check_ret(nf_def_dim (ncid, 'numurbl' , numurbl     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'nlevurb' , nlevurb     , dimid), subname)
@@ -492,32 +490,30 @@ contains
        call ncd_def_spatial_var(ncid=ncid, varname='GLACIER_REGION', xtype=nf_int, &
             long_name='glacier region ID', units='unitless')
 
-       if ( nglcec > 0 )then
-          call ncd_defvar(ncid=ncid, varname='GLC_MEC', xtype=xtype, &
-               dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
-          
-          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
-          
-          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
-          
-          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
-          
-          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
-               long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
-          
-          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
-               long_name='percent ice sheet (% of landunit)', units='unitless')
-          
-          call ncd_def_spatial_var(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
-               lev1name='nglcec', &
-               long_name='mean elevation on glacier elevation classes', units='m')
-       end if
+       call ncd_defvar(ncid=ncid, varname='GLC_MEC', xtype=xtype, &
+            dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
+
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
+            lev1name='nglcec', &
+            long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
+
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
+            lev1name='nglcec', &
+            long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
+
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
+            lev1name='nglcec', &
+            long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
+
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
+            long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
+
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
+            long_name='percent ice sheet (% of landunit)', units='unitless')
+
+       call ncd_def_spatial_var(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
+            lev1name='nglcec', &
+            long_name='mean elevation on glacier elevation classes', units='m')
 
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
             lev1name='numurbl', &

@@ -15,7 +15,7 @@ module lnd_import_export
 contains
 
   !===============================================================================
-  subroutine lnd_import( bounds, x2l, atm2lnd_inst, glc2lnd_inst)
+  subroutine lnd_import( bounds, x2l, glc_present, atm2lnd_inst, glc2lnd_inst)
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
@@ -23,7 +23,7 @@ contains
     !
     ! !USES:
     use seq_flds_mod    , only: seq_flds_x2l_fields
-    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13, create_glacier_mec_landunit
+    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
     use clm_varctl      , only: ndep_from_cpl 
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
@@ -34,6 +34,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds   ! bounds
     real(r8)           , intent(in)    :: x2l(:,:) ! driver import state to land model
+    logical            , intent(in)    :: glc_present       ! .true. => running with a non-stub GLC model
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst      ! clm internal input data type
     type(glc2lnd_type) , intent(inout) :: glc2lnd_inst      ! clm internal input data type
     !
@@ -57,7 +58,6 @@ contains
     real(r8) :: a0,a1,a2,a3,a4,a5,a6 ! coefficients for esat over water
     real(r8) :: b0,b1,b2,b3,b4,b5,b6 ! coefficients for esat over ice
     real(r8) :: tdc, t               ! Kelvins to Celcius function and its input
-    integer  :: num                  ! counter
     character(len=32) :: fname       ! name of field that is NaN
     character(len=32), parameter :: sub = 'lnd_import'
 
@@ -252,18 +252,6 @@ contains
           atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
        end if
 
-       ! glc coupling 
-
-       if (create_glacier_mec_landunit) then
-          do num = 0,glc_nec
-             glc2lnd_inst%frac_grc(g,num)  = x2l(index_x2l_Sg_ice_covered(num),i)
-             glc2lnd_inst%topo_grc(g,num)  = x2l(index_x2l_Sg_topo(num),i)
-             glc2lnd_inst%hflx_grc(g,num)  = x2l(index_x2l_Flgg_hflx(num),i)
-          end do
-          glc2lnd_inst%icemask_grc(g)  = x2l(index_x2l_Sg_icemask,i)
-          glc2lnd_inst%icemask_coupled_fluxes_grc(g)  = x2l(index_x2l_Sg_icemask_coupled_fluxes,i)
-       end if
-
        if (ndep_from_cpl) then
           ! The coupler is sending ndep in units if kgN/m2/s - and clm uses units of gN/m2/sec - so the
           ! following conversion needs to happen
@@ -271,6 +259,20 @@ contains
        end if
 
     end do
+
+    call glc2lnd_inst%set_glc2lnd_fields( &
+         bounds = bounds, &
+         glc_present = glc_present, &
+         ! NOTE(wjs, 2017-12-13) the x2l argument doesn't have the typical bounds
+         ! subsetting (bounds%begg:bounds%endg). This mirrors the lack of these bounds in
+         ! the call to lnd_import from lnd_run_mct. This is okay as long as this code is
+         ! outside a clump loop.
+         x2l = x2l, &
+         index_x2l_Sg_ice_covered = index_x2l_Sg_ice_covered, &
+         index_x2l_Sg_topo = index_x2l_Sg_topo, &
+         index_x2l_Flgg_hflx = index_x2l_Flgg_hflx, &
+         index_x2l_Sg_icemask = index_x2l_Sg_icemask, &
+         index_x2l_Sg_icemask_coupled_fluxes = index_x2l_Sg_icemask_coupled_fluxes)
 
   end subroutine lnd_import
 
@@ -285,7 +287,7 @@ contains
     ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use seq_flds_mod       , only : seq_flds_l2x_fields
-    use clm_varctl         , only : iulog, create_glacier_mec_landunit
+    use clm_varctl         , only : iulog
     use clm_time_manager   , only : get_nstep, get_step_size  
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
@@ -394,14 +396,14 @@ contains
        l2x(index_l2x_Flrl_irrig,i) = - lnd2atm_inst%qirrig_grc(g)
 
        ! glc coupling
-
-       if (create_glacier_mec_landunit) then
-          do num = 0,glc_nec
-             l2x(index_l2x_Sl_tsrf(num),i)   = lnd2glc_inst%tsrf_grc(g,num)
-             l2x(index_l2x_Sl_topo(num),i)   = lnd2glc_inst%topo_grc(g,num)
-             l2x(index_l2x_Flgl_qice(num),i) = lnd2glc_inst%qice_grc(g,num)
-          end do
-       end if
+       ! We could avoid setting these fields if glc_present is .false., if that would
+       ! help with performance. (The downside would be that we wouldn't have these fields
+       ! available for diagnostic purposes or to force a later T compset with dlnd.)
+       do num = 0,glc_nec
+          l2x(index_l2x_Sl_tsrf(num),i)   = lnd2glc_inst%tsrf_grc(g,num)
+          l2x(index_l2x_Sl_topo(num),i)   = lnd2glc_inst%topo_grc(g,num)
+          l2x(index_l2x_Flgl_qice(num),i) = lnd2glc_inst%qice_grc(g,num)
+       end do
 
        ! Check if any output sent to the coupler is NaN
        if ( any(isnan(l2x(:,i))) )then

@@ -33,7 +33,6 @@ module subgridMod
   public :: subgrid_get_info_urban_md
   public :: subgrid_get_info_lake
   public :: subgrid_get_info_wetland
-  public :: subgrid_get_info_glacier
   public :: subgrid_get_info_glacier_mec
   public :: subgrid_get_info_crop
   public :: crop_patch_exists ! returns true if the given crop patch should be created in memory
@@ -95,9 +94,6 @@ contains
     call accumulate_counters()
 
     call subgrid_get_info_wetland(gi, npatches_temp, ncols_temp, nlunits_temp)
-    call accumulate_counters()
-
-    call subgrid_get_info_glacier(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
 
     call subgrid_get_info_glacier_mec(gi, atm_topo, glc_behavior, &
@@ -340,43 +336,6 @@ contains
   end subroutine subgrid_get_info_wetland
   
   !-----------------------------------------------------------------------
-  subroutine subgrid_get_info_glacier(gi, npatches, ncols, nlunits)
-    !
-    ! !DESCRIPTION:
-    ! Obtain properties for glacier landunit in this grid cell
-    !
-    ! !USES:
-    use landunit_varcon, only : istice
-    !
-    ! !ARGUMENTS:
-    integer, intent(in)  :: gi        ! grid cell index
-    integer, intent(out) :: npatches  ! number of glacier patches in this grid cell
-    integer, intent(out) :: ncols     ! number of glacier columns in this grid cell
-    integer, intent(out) :: nlunits   ! number of glacier landunits in this grid cell
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'subgrid_get_info_glacier'
-    !-----------------------------------------------------------------------
-
-    ! We currently do NOT allow the glacier landunit to expand via dynamic landunits, so
-    ! we only need to allocate space for it where its weight is currently non-zero. (If we
-    ! have dynamic glacier area, we will be using glacier_mec landunits rather than
-    ! glacier landunits.)
-
-    if (wt_lunit(gi, istice) > 0.0_r8) then
-       npatches = 1
-       ncols = 1
-       nlunits = 1
-    else
-       npatches = 0
-       ncols = 0
-       nlunits = 0
-    end if
-
-  end subroutine subgrid_get_info_glacier
-
-    !-----------------------------------------------------------------------
   subroutine subgrid_get_info_glacier_mec(gi, atm_topo, glc_behavior, npatches, ncols, nlunits)
     !
     ! !DESCRIPTION:

@@ -21,7 +21,7 @@ module atm2lndMod
   use filterColMod   , only : filter_col_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col
-  use landunit_varcon, only : istice, istice_mec
+  use landunit_varcon, only : istice_mec
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -298,7 +298,7 @@ contains
              l = col%landunit(c)
              rain_old = forc_rain_c(c)
              snow_old = forc_snow_c(c)
-             if (lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
+             if (lun%itype(l) == istice_mec) then
                 all_snow_t = atm2lnd_inst%params%precip_repartition_glc_all_snow_t
                 frac_rain_slope = atm2lnd_inst%params%precip_repartition_glc_frac_rain_slope
              else
