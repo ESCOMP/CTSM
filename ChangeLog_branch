@@ -1,4 +1,41 @@
 ===============================================================
+Tag name: unified_land_model_n12_clm4_5_16_r249
+Originator(s): sacks
+Date: Dec 28, 2017
+One-line Summary: Edit old ChangeLog entries
+
+Purpose of changes
+------------------
+
+Change ctsm_* to unified_land_model_* in tag names in ChangeLog
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+CLM testing: NONE
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       ChangeLog_branch
+
+===============================================================
+===============================================================
 Tag name: unified_land_model_n11_clm4_5_16_r249
 Originator(s): sacks
 Date: Sep 18, 2017
