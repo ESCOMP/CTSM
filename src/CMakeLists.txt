@@ -8,7 +8,6 @@ project(clm45_tests Fortran C)
 include(CIME_utils)
 
 set(CLM_ROOT "..")
-set(CESM_ROOT "${CLM_ROOT}/../../")
 
 # This definition is needed to avoid having ESMF depend on mpi
 add_definitions(-DHIDE_MPI)
@@ -17,10 +16,10 @@ add_definitions(-DHIDE_MPI)
 # done first, so that in case of name collisions, the CLM versions take
 # precedence (when there are two files with the same name, the one added later
 # wins).
-add_subdirectory(${CESM_ROOT}/cime/src/share/util csm_share)
-add_subdirectory(${CESM_ROOT}/cime/src/share/unit_test_stubs/util csm_share_stubs)
-add_subdirectory(${CESM_ROOT}/cime/src/share/esmf_wrf_timemgr esmf_wrf_timemgr)
-add_subdirectory(${CESM_ROOT}/cime/src/drivers/mct/shr drv_share)
+add_subdirectory(${CIMEROOT}/src/share/util csm_share)
+add_subdirectory(${CIMEROOT}/src/share/unit_test_stubs/util csm_share_stubs)
+add_subdirectory(${CIMEROOT}/src/share/esmf_wrf_timemgr esmf_wrf_timemgr)
+add_subdirectory(${CIMEROOT}/src/drivers/mct/shr drv_share)
 
 # Extract just the files we need from drv_share
 set (drv_sources_needed_base
@@ -83,11 +82,11 @@ add_dependencies(esmf_wrf_timemgr csm_share)
 add_dependencies(clm csm_share esmf_wrf_timemgr)
 
 # We need to look for header files here, in order to pick up shr_assert.h
-include_directories(${CESM_ROOT}/cime/src/share/include)
+include_directories(${CIMEROOT}/src/share/include)
 
 # And we need to look for header files here, for some include files needed by
 # the esmf_wrf_timemgr code
-include_directories(${CESM_ROOT}/cime/src/share/esmf_wrf_timemgr)
+include_directories(${CIMEROOT}/src/share/esmf_wrf_timemgr)
 
 # Tell cmake to look for libraries & mod files here, because this is where we built libraries
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
