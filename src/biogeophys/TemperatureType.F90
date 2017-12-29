@@ -600,7 +600,7 @@ contains
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use shr_const_mod  , only : SHR_CONST_TKFRZ
     use clm_varcon     , only : denice, denh2o, sb
-    use landunit_varcon, only : istice, istwet, istsoil, istdlak, istice_mec
+    use landunit_varcon, only : istwet, istsoil, istdlak, istice_mec
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
     use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
@@ -649,7 +649,7 @@ contains
          ! Below snow temperatures - nonlake points (lake points are set below)
          if (.not. lun%lakpoi(l)) then 
 
-            if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+            if (lun%itype(l)==istice_mec) then
                this%t_soisno_col(c,1:nlevgrnd) = 250._r8
 
             else if (lun%itype(l) == istwet) then
@@ -1381,6 +1381,9 @@ contains
        endif
     end do
 
+    ! Accumulate and extract T10
+    !(acumulates TSA as 10-day running mean)
+
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
 
@@ -1406,14 +1409,17 @@ contains
        ! Accumulate and extract GDD0
 
        do p = begp,endp
-          g = patch%gridcell(p)
-          if (month==1 .and. day==1 .and. secs==dtime) then
-             rbufslp(p) = accumResetVal ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
-             rbufslp(p) = max(0._r8, min(26._r8, this%t_ref2m_patch(p)-SHR_CONST_TKFRZ)) * dtime/SHR_CONST_CDAY
-          else
-             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          ! Avoid unnecessary calculations over inactive points
+          if (patch%active(p)) then
+             g = patch%gridcell(p)
+             if (month==1 .and. day==1 .and. secs==dtime) then
+                rbufslp(p) = accumResetVal ! reset gdd
+             else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                  ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+                rbufslp(p) = max(0._r8, min(26._r8, this%t_ref2m_patch(p)-SHR_CONST_TKFRZ)) * dtime/SHR_CONST_CDAY
+             else
+                rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+             end if
           end if
        end do
        call update_accum_field  ('GDD0', rbufslp, nstep)
@@ -1422,15 +1428,18 @@ contains
        ! Accumulate and extract GDD8
 
        do p = begp,endp
-          g = patch%gridcell(p)
-          if (month==1 .and. day==1 .and. secs==dtime) then
-             rbufslp(p) = accumResetVal ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
-             rbufslp(p) = max(0._r8, min(30._r8, &
-                  this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 8._r8))) * dtime/SHR_CONST_CDAY
-          else
-             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          ! Avoid unnecessary calculations over inactive points
+          if (patch%active(p)) then
+             g = patch%gridcell(p)
+             if (month==1 .and. day==1 .and. secs==dtime) then
+                rbufslp(p) = accumResetVal ! reset gdd
+             else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                  ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+                rbufslp(p) = max(0._r8, min(30._r8, &
+                     this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 8._r8))) * dtime/SHR_CONST_CDAY
+             else
+                rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+             end if
           end if
        end do
        call update_accum_field  ('GDD8', rbufslp, nstep)
@@ -1439,24 +1448,24 @@ contains
        ! Accumulate and extract GDD10
 
        do p = begp,endp
-          g = patch%gridcell(p)
-          if (month==1 .and. day==1 .and. secs==dtime) then
-             rbufslp(p) = accumResetVal ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
-             rbufslp(p) = max(0._r8, min(30._r8, &
-                  this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 10._r8))) * dtime/SHR_CONST_CDAY
-          else
-             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          ! Avoid unnecessary calculations over inactive points
+          if (patch%active(p)) then
+             g = patch%gridcell(p)
+             if (month==1 .and. day==1 .and. secs==dtime) then
+                rbufslp(p) = accumResetVal ! reset gdd
+             else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                  ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+                rbufslp(p) = max(0._r8, min(30._r8, &
+                     this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 10._r8))) * dtime/SHR_CONST_CDAY
+             else
+                rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+             end if
           end if
        end do
        call update_accum_field  ('GDD10', rbufslp, nstep)
        call extract_accum_field ('GDD10', this%gdd10_patch, nstep)
 
     end if
-
-    ! Accumulate and extract T10
-    !(acumulates TSA as 10-day running mean)
 
     deallocate(rbufslp)
 

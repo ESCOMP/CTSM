@@ -2,36 +2,33 @@
 
 <?xml-stylesheet type="text/xsl" href="definitions_variables.xsl" ?>
 
-<definitions_variables>
+<entry_id version="3.0">
 
-  <!-- Descriptions of all the different valid configurations for difference model versions -->
-  <description>
-    <desc compset="_CLM40%[^_]*SP"              >clm4.0 Satellite phenology:</desc>
-    <desc compset="_CLM40%[^_]*CN_"             >clm4.0 cn:</desc>
-    <desc compset="_CLM40%[^_]*CNDV_"           >clm4.0 cndv:</desc>
-    <desc compset="_CLM40%[^_]*CN-CROP"         >clm4.0 CN with prognostic crop:</desc>
-    <desc compset="_CLM40%[^_]*CNDV-CROP"       >clm4.0 CNDV with prognostic crop:</desc>
+  <!-- modifier_mode allowed values are
+       '*' 0 or more modifiers (default)
+       '1' exactly 1 modifier
+       '?' 0 or 1 modifiers
+       '+' 1 or more modifiers
+       This file may have lnd desc entries.
+  -->
 
-    <desc compset="_CLM45%[^_]*SP_"             >clm4.5 Satellite phenology:</desc>
-    <desc compset="_CLM45%[^_]*SP-VIC"          >clm4.5 Satellite phenology with VIC hydrology:</desc>
-    <desc compset="_CLM45%[^_]*CN_"             >clm4.5 cn:</desc>
-    <desc compset="_CLM45%[^_]*CNDV_"           >clm4.5 cn with dynamic vegetation:</desc>
-    <desc compset="_CLM45%[^_]*BGC_"            >clm4.5 bgc (cn and methane):</desc>
-    <desc compset="_CLM45%[^_]*CN-CROP"         >clm4.5 cn with prognostic crop:</desc>
-    <desc compset="_CLM45%[^_]*CNDV-CROP"       >clm4.5 cn with dynamic vegetation with prognostic crop:</desc>
-    <desc compset="_CLM45%[^_]*BGC-CROP"        >clm4.5 bgc (cn and methane) with prognostic crop:</desc>
-    <desc compset="_CLM45%[^_]*FATES"           >clm4.5 FATES (Functionally Assembled Terrestrial Ecosystem Simulator): (experimental)</desc>
-    <desc compset="_CLM45%[^_]*BGCDV_"          >clm4.5 bgc (cn and methane) with dynamic vegetation:</desc>
-    <desc compset="_CLM45%[^_]*BGCDV-CROP"      >clm4.5 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
+  <!-- Descriptions of all the different valid configurations for different model versions -->
+  <description modifier_mode="1">
+    <desc lnd="CLM40[%SP][%CN][%CNDV][%CN-CROP][%CNDV-CROP]"                                                        >clm4.0:</desc>
+    <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]" >clm4.5:</desc>
+    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                              >clm5.0:</desc>
+    <desc option="SP"              >Satellite phenology:</desc>
+    <desc option="CN"              >CN: Carbon Nitrogen model</desc>
+    <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation</desc>
+    <desc option="CN-CROP"         >CN with prognostic crop:</desc>
+    <desc option="CNDV-CROP"       >CNDV with prognostic crop:</desc>
 
-    <desc compset="_CLM50%[^_]*SP"              >clm5.0 Satellite phenology:</desc>
-    <desc compset="_CLM50%[^_]*BGC_"            >clm5.0 bgc (cn and methane):</desc>
-    <desc compset="_CLM50%[^_]*BGCDV_"          >clm5.0 bgc (cn and methane) with dynamic vegetation:</desc>
-    <desc compset="_CLM50%[^_]*BGC-CROP"        >clm5.0 bgc with prognostic crop:</desc>
-    <desc compset="HIST.*_CLM50%[^_]*BGC-CROP"  >clm5.0 bgc with prognostic crop and irrigation:</desc>
-    <desc compset="2000.*_CLM50%[^_]*BGC-CROP"  >clm5.0 bgc (cn and methane) with dynamic vegetation and prognostic crop and irrigation:</desc>
-    <desc compset="_CLM50%[^_]*BGCDV-CROP"      >clm5.0 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
-    <desc compset="_CLM50%[^_]*FATES"           >clm5.0 FATES (Functionally Assembled Terrestrial Ecosystem Simulator): (experimental)</desc>
+    <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
+    <desc option="BGC"             >BGC (vert. resol. CN and methane):</desc>
+    <desc option="BGC-CROP"        >BGC (vert. resol. CN and methane) with prognostic crop:</desc>
+    <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: (experimental)</desc>
+    <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
+    <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
   </description>
 
   <entry id="COMP_LND">
@@ -98,31 +95,13 @@
     <values>
       <!-- Use rcp4.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
       <value compset="2000.*"		>2000_control</value>
-      <value compset="2003.*"		>2000_control</value>
-      <value compset="5505.*"		>1850-2100_rcp4.5_transient</value>
-      <value compset="C2R6.*"		>1850-2100_rcp6_transient</value>
-      <value compset="C2R8.*"		>1850-2100_rcp8.5_transient</value>
-      <value compset="C2R4.*"		>1850-2100_rcp4.5_transient</value>
-      <value compset="C1.*_"		>1850-2100_rcp6_transient</value>
-      <value compset="2013.*"		>1850-2100_rcp4.5_transient</value>
       <value compset="1850.*_"		>1850_control</value>
       <value compset="HIST.*_"		>20thC_transient</value>
       <value compset="RCP6.*_"		>1850-2100_rcp6_transient</value>
       <value compset="RCP4.*_"		>1850-2100_rcp4.5_transient</value>
       <value compset="RCP2.*_"		>1850-2100_rcp2.6_transient</value>
       <value compset="RCP8.*_"		>1850-2100_rcp8.5_transient</value>
-      <value compset="1850.*_.*_CISM"	>1850_glacierMEC_control</value>
-      <value compset="2000.*_.*_CISM"	>2000_glacierMEC_control</value>
-      <value compset="4804.*_.*_CISM"	>2000_glacierMEC_control</value>
-      <value compset="HIST.*_.*_CISM"	>20thC_glacierMEC_transient</value>
-      <value compset="RCP8.*_.*_CISM"	>1850-2100_rcp8.5_glacierMEC_transient</value>
-      <value compset="RCP6.*_.*_CISM"	>1850-2100_rcp6_glacierMEC_transient  </value>
-      <value compset="RCP4.*_.*_CISM"	>1850-2100_rcp4.5_glacierMEC_transient</value>
-      <value compset="RCP2.*_.*_CISM"	>1850-2100_rcp2.6_glacierMEC_transient</value>
-      <value compset="2013.*_.*_CISM"	>1850-2100_rcp4.5_glacierMEC_transient</value>
-      <value compset="GEOS.*_"		>20thC_transient</value>
       <value compset="AMIP.*_"		>20thC_transient</value>
-      <value compset="CISM.*_TEST"	>glacierMEC_pd</value>
       <value compset="PIPD_"           >1850-2100_rcp4.5_transient</value>
     </values>
     <group>run_component_clm</group>
@@ -148,6 +127,7 @@
       <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
       <value compset="_CLM45%[^_]*CNDV-CROP"	 >-bgc cn -dynamic_vegetation -crop</value>
       <value compset="_CLM45%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
+      <value compset="_CLM45%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
       <value compset="_CLM45%[^_]*FATES"	 >-bgc fates -no-megan</value>
 
       <value compset="_CLM50%[^_]*SP"		 >-bgc sp</value>
@@ -158,8 +138,6 @@
       <value compset="_CLM50%[^_]*CN-CROP"	 >-bgc cn -crop</value>
       <value compset="_CLM50%[^_]*CNDV"		 >-bgc cn -dynamic_vegetation</value>
       <value compset="_CLM50%[^_]*CNDV-CROP"	 >-bgc cn -dynamic_vegetation -crop</value>
-      <value compset="HIST.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
-      <value compset="2000.*_CLM50%[^_]*BGC-CROP">-bgc bgc -crop -irrig .true.</value>
       <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
       <value compset="_CLM50%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
       <value compset="_CLM50%[^_]*FATES"         >-bgc fates -no-megan</value>
@@ -248,4 +226,4 @@
     (in other words make sure there is NOT a underbar before the string afterwards)
   </help>
 
-</definitions_variables>
+</entry_id>

@@ -2016,12 +2016,10 @@ contains
        call ncd_defdim(lnfid, 'cft', cft_size, dimid)
        call htape_add_cft_metadata(lnfid)
     end if
-    if (maxpatch_glcmec > 0) then
-       call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
-       ! elevclas (in contrast to glc_nec) includes elevation class 0 (bare land)
-       ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
-       call ncd_defdim(lnfid, 'elevclas' , maxpatch_glcmec + 1, dimid)
-    end if
+    call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
+    ! elevclas (in contrast to glc_nec) includes elevation class 0 (bare land)
+    ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
+    call ncd_defdim(lnfid, 'elevclas' , maxpatch_glcmec + 1, dimid)
 
     do n = 1,num_subs
        call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
@@ -4739,23 +4737,11 @@ contains
           call endrun()
        end if
     case ('glc_nec')
-       if (maxpatch_glcmec > 0) then
-          num2d = maxpatch_glcmec
-       else
-          write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
-               ' only valid for maxpatch_glcmec > 0'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
+       num2d = maxpatch_glcmec
     case ('elevclas')
-       if (maxpatch_glcmec > 0) then
-          ! add one because indexing starts at 0 (elevclas, unlike glc_nec, includes the
-          ! bare ground "elevation class")
-          num2d = maxpatch_glcmec + 1
-       else
-          write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
-               ' only valid for maxpatch_glcmec > 0'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
+       ! add one because indexing starts at 0 (elevclas, unlike glc_nec, includes the
+       ! bare ground "elevation class")
+       num2d = maxpatch_glcmec + 1
     case ('levsno')
        num2d = nlevsno
     case ('nlevcan')

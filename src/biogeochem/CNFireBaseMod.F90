@@ -648,6 +648,8 @@ contains
         m_leafc_xfer_to_litter_fire(p)              =  leafc_xfer(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
         m_livestemc_to_litter_fire(p)               =  livestemc(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              fm_droot(patch%itype(p))    
@@ -657,9 +659,13 @@ contains
         m_livestemc_xfer_to_litter_fire(p)          =  livestemc_xfer(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p)) 
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent the fraction of plant-tissue mortality for deadstem/deadcroot
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516
         m_livestemc_to_deadstemc_fire(p)            =  livestemc(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from deadstem/deadcroot to litter
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
         m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
              fm_droot(patch%itype(p))    
@@ -677,6 +683,8 @@ contains
         m_frootc_xfer_to_litter_fire(p)             =  frootc_xfer(p)        * f * &
              (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
         m_livecrootc_to_litter_fire(p)              =  livecrootc(p)         * f * &
              fm_droot(patch%itype(p))
         m_livecrootc_storage_to_litter_fire(p)      =  livecrootc_storage(p) * f * &
@@ -713,6 +721,8 @@ contains
         m_leafn_xfer_to_litter_fire(p)             =  leafn_xfer(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
         m_livestemn_to_litter_fire(p)              =  livestemn(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              fm_droot(patch%itype(p))
@@ -722,9 +732,13 @@ contains
         m_livestemn_xfer_to_litter_fire(p)         =  livestemn_xfer(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent the fraction of plant-tissue mortality for deadstem/deadcroot
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516
         m_livestemn_to_deadstemn_fire(p)           =  livestemn(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from deadstem/deadcroot to litter
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
         m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
              fm_droot(patch%itype(p))    
@@ -742,6 +756,8 @@ contains
         m_frootn_xfer_to_litter_fire(p)            =  frootn_xfer(p)        * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
+        ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+        ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
         m_livecrootn_to_litter_fire(p)             =  livecrootn(p)         * f * &
              fm_droot(patch%itype(p))
         m_livecrootn_storage_to_litter_fire(p)     =  livecrootn_storage(p) * f * &

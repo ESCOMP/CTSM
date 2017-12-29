@@ -1,0 +1,9 @@
+! The need for this is subtle. The problem is that this decStart testmod is used in short
+! (multi-day) ERP tests, whose length is such that the end of the year occurs in the
+! initial run but not in the restart run. Without setting history_option = 'coupler', this
+! would mean that CISM outputs a history file in the initial run but not in the restart
+! run, which causes the test to fail because the test system requires any component's
+! final history file in one case to have a counterpart in the other case. Setting
+! history_option = 'coupler' forces CISM to output a history file only at the end of the
+! run.
+history_option = 'coupler'

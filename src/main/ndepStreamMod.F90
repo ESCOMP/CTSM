@@ -28,11 +28,14 @@ module ndepStreamMod
   public :: ndep_interp    ! interpolates between two years of ndep file data
   public :: clm_domain_mct ! Sets up MCT domain for this resolution
 
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: check_units   ! Check the units and make sure they can be used
   ! ! PRIVATE TYPES
-  type(shr_strdata_type)  :: sdat         ! input data stream
-  integer :: stream_year_first_ndep       ! first year in stream to use
-  integer :: stream_year_last_ndep        ! last year in stream to use
-  integer :: model_year_align_ndep        ! align stream_year_firstndep with 
+  type(shr_strdata_type)  :: sdat           ! input data stream
+  integer :: stream_year_first_ndep         ! first year in stream to use
+  integer :: stream_year_last_ndep          ! last year in stream to use
+  integer :: model_year_align_ndep          ! align stream_year_firstndep with 
+  logical :: divide_by_secs_per_yr = .true. ! divide by the number of seconds per year
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -105,10 +108,12 @@ contains
       call relavu( nu_nml )
    endif
 
-   call shr_mpi_bcast(stream_year_first_ndep, mpicom)
-   call shr_mpi_bcast(stream_year_last_ndep, mpicom)
-   call shr_mpi_bcast(model_year_align_ndep, mpicom)
+   call shr_mpi_bcast(stream_year_first_ndep , mpicom)
+   call shr_mpi_bcast(stream_year_last_ndep  , mpicom)
+   call shr_mpi_bcast(model_year_align_ndep  , mpicom)
    call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
+   call shr_mpi_bcast(ndep_varlist           , mpicom)
+   call shr_mpi_bcast(ndep_taxmode           , mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -117,9 +122,14 @@ contains
       write(iulog,*) '  stream_year_last_ndep   = ',stream_year_last_ndep   
       write(iulog,*) '  model_year_align_ndep   = ',model_year_align_ndep   
       write(iulog,*) '  stream_fldFileName_ndep = ',stream_fldFileName_ndep
+      write(iulog,*) '  ndep_varList            = ',ndep_varList
+      write(iulog,*) '  ndep_taxmode            = ',ndep_taxmode
       write(iulog,*) ' '
    endif
+   ! Read in units
+   call check_units( stream_fldFileName_ndep, ndep_varList )
 
+   ! Set domain and create streams
    call clm_domain_mct (bounds, dom_clm)
 
    call shr_strdata_create(sdat,name="clmndep",    &
@@ -148,12 +158,61 @@ contains
         calendar=get_calendar(),                   &
 	taxmode=ndep_taxmode                       )
 
+
    if (masterproc) then
       call shr_strdata_print(sdat,'CLMNDEP data')
    endif
 
  end subroutine ndep_init
+ !================================================================
   
+ subroutine check_units( stream_fldFileName_ndep, ndep_varList )
+   !-------------------------------------------------------------------
+   ! Check that units are correct on the file and if need any conversion
+   use ncdio_pio     , only : ncd_pio_openfile, ncd_inqvid, ncd_getatt, ncd_pio_closefile, ncd_nowrite
+   use ncdio_pio     , only : file_desc_t, var_desc_t
+   use shr_kind_mod  , only : CS => shr_kind_cs
+   use shr_log_mod   , only : errMsg => shr_log_errMsg
+   use shr_string_mod, only : shr_string_listGetName
+   implicit none
+
+   !-----------------------------------------------------------------------
+   !
+   ! Arguments
+   character(len=*), intent(IN)  :: stream_fldFileName_ndep  ! ndep filename
+   character(len=*), intent(IN)  :: ndep_varList             ! ndep variable list to examine
+   !
+   ! Local variables
+   type(file_desc_t) :: ncid     ! NetCDF filehandle for ndep file
+   type(var_desc_t)  :: vardesc  ! variable descriptor
+   integer           :: varid    ! variable index
+   logical           :: readvar  ! If variable was read
+   character(len=CS) :: ndepunits! ndep units
+   character(len=CS) :: fname    ! ndep field name
+   !-----------------------------------------------------------------------
+   call ncd_pio_openfile( ncid, trim(stream_fldFileName_ndep), ncd_nowrite )
+   call shr_string_listGetName( ndep_varList, 1, fname )
+   call ncd_inqvid(       ncid, fname, varid, vardesc, readvar=readvar )
+   if ( readvar ) then
+      call ncd_getatt(    ncid, varid, "units", ndepunits )
+   else
+      call endrun(msg=' ERROR finding variable: '//trim(fname)//" in file: "// &
+                      trim(stream_fldFileName_ndep)//errMsg(sourcefile, __LINE__))
+   end if
+   call ncd_pio_closefile( ncid )
+
+   ! Now check to make sure they are correct
+   if (      trim(ndepunits) == "g(N)/m2/s"  )then
+      divide_by_secs_per_yr = .false.
+   else if ( trim(ndepunits) == "g(N)/m2/yr" )then
+      divide_by_secs_per_yr = .true.
+   else
+      call endrun(msg=' ERROR in units for nitrogen deposition equal to: '//trim(ndepunits)//" not units expected"// &
+                      errMsg(sourcefile, __LINE__))
+   end if
+
+ end subroutine check_units
+
  !================================================================
  subroutine ndep_interp(bounds, atm2lnd_inst)
 
@@ -181,12 +240,20 @@ contains
 
    call shr_strdata_advance(sdat, mcdate, sec, mpicom, 'ndepdyn')
 
-   ig = 0
-   dayspyr = get_days_per_year( )
-   do g = bounds%begg,bounds%endg
-      ig = ig+1
-      atm2lnd_inst%forc_ndep_grc(g) = sdat%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
-   end do
+   if ( divide_by_secs_per_yr )then
+      ig = 0
+      dayspyr = get_days_per_year( )
+      do g = bounds%begg,bounds%endg
+         ig = ig+1
+         atm2lnd_inst%forc_ndep_grc(g) = sdat%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      end do
+   else
+      ig = 0
+      do g = bounds%begg,bounds%endg
+         ig = ig+1
+         atm2lnd_inst%forc_ndep_grc(g) = sdat%avs(1)%rAttr(1,ig)
+      end do
+   end if
    
  end subroutine ndep_interp
 

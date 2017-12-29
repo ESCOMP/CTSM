@@ -27,7 +27,7 @@ module BalanceCheckMod
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                
-  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice,istice_mec
+  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varcon         , only : aquifer_water_baseline
@@ -115,7 +115,6 @@ contains
      !
      ! !USES:
      use clm_varcon        , only : spval
-     use clm_varctl        , only : create_glacier_mec_landunit
      use clm_time_manager  , only : get_step_size, get_nstep
      use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
@@ -392,7 +391,7 @@ contains
 
                  if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
                       lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
-                      lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
+                      lun%itype(l) == istice_mec) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
                           +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
@@ -608,7 +607,7 @@ contains
        found = .false.
        do c = bounds%begc,bounds%endc
           if (col%active(c)) then
-             if (abs(errsoi_col(c)) > 1.0e-6_r8 ) then
+             if (abs(errsoi_col(c)) > 1.0e-5_r8 ) then
                 found = .true.
                 indexc = c
              end if

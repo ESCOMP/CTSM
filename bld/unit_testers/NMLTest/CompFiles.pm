@@ -57,7 +57,7 @@ sub checkfilesexist {
    my $confdir  = $self->{'dir'};
    foreach my $file ( @$filesref ) {
       my $exists = ( -f "$confdir/$file" );
-      ok( $exists, "$file file exists" );
+      ok( $exists, "$type $mode: $file file exists" );
       if ( $exists ) {
          $self->dodiffonfile(      $file, $type, $mode );
       } else {

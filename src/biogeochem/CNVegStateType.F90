@@ -321,7 +321,7 @@ contains
          ptr_col=this%nfire_col)
 
     this%farea_burned_col(begc:endc) = spval
-    call hist_addfld1d (fname='FAREA_BURNED',  units='proportion', &
+    call hist_addfld1d (fname='FAREA_BURNED',  units='proportion/sec', &
          avgflag='A', long_name='timestep fractional area burned', &
          ptr_col=this%farea_burned_col)
 

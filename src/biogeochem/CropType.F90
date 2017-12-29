@@ -155,9 +155,9 @@ contains
     this%baset_latvary_intercept = baset_latvary_intercept
     this%baset_latvary_slope     = baset_latvary_slope
     if (      trim(this%baset_mapping) == baset_map_constant ) then
-       write(iulog,*) 'baset mapping for ALL crops are constant'
+       if ( masterproc ) write(iulog,*) 'baset mapping for ALL crops are constant'
     else if ( trim(this%baset_mapping) == baset_map_latvary ) then
-       write(iulog,*) 'baset mapping for crops vary with latitude'
+       if ( masterproc ) write(iulog,*) 'baset mapping for crops vary with latitude'
     else
        call endrun(msg="Bad value for baset_mapping in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
     end if

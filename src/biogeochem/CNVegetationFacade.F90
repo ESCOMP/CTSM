@@ -174,6 +174,7 @@ module CNVegetationFacade
      procedure, public :: get_bgnpp_patch               ! Get patch-level belowground NPP array
      procedure, public :: get_froot_carbon_patch        ! Get patch-level fine root carbon array
      procedure, public :: get_croot_carbon_patch        ! Get patch-level coarse root carbon array
+     procedure, public :: get_totvegc_col               ! Get column-level total vegetation carbon array
 
      procedure, private :: CNReadNML                    ! Read in the CN general namelist
   end type cn_vegetation_type
@@ -1403,5 +1404,33 @@ contains
     end if
 
   end function get_croot_carbon_patch
+
+  !-----------------------------------------------------------------------
+  function get_totvegc_col(this, bounds) result(totvegc_col)
+    !
+    ! !DESCRIPTION:
+    ! Get column-level total vegetation carbon array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: totvegc_col(bounds%begc:bounds%endc)  ! function result: (gC/m2)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_totvegc_col'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       totvegc_col(bounds%begc:bounds%endc) = &
+            this%cnveg_carbonstate_inst%totvegc_col(bounds%begc:bounds%endc)
+    else
+       totvegc_col(bounds%begc:bounds%endc) = nan
+    end if
+
+  end function get_totvegc_col
+
 
 end module CNVegetationFacade

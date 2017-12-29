@@ -107,7 +107,6 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use clm_varctl  , only : create_glacier_mec_landunit, use_cn
     use histFileMod , only : hist_addfld1d
     !
     ! !ARGUMENTS:
@@ -120,26 +119,20 @@ contains
 
     begc = bounds%begc; endc = bounds%endc
 
-    if (create_glacier_mec_landunit) then
-       this%qflx_glcice_col(begc:endc) = spval
-       call hist_addfld1d (fname='QICE',  units='mm/s',  &
-            avgflag='A', long_name='ice growth/melt', &
-            ptr_col=this%qflx_glcice_col, l2g_scale_type='ice')
-    end if
+    this%qflx_glcice_col(begc:endc) = spval
+    call hist_addfld1d (fname='QICE',  units='mm/s',  &
+         avgflag='A', long_name='ice growth/melt', &
+         ptr_col=this%qflx_glcice_col, l2g_scale_type='ice')
 
-    if (create_glacier_mec_landunit) then
-       this%qflx_glcice_frz_col(begc:endc) = spval
-       call hist_addfld1d (fname='QICE_FRZ',  units='mm/s',  &
-            avgflag='A', long_name='ice growth', &
-            ptr_col=this%qflx_glcice_frz_col, l2g_scale_type='ice')
-    end if
+    this%qflx_glcice_frz_col(begc:endc) = spval
+    call hist_addfld1d (fname='QICE_FRZ',  units='mm/s',  &
+         avgflag='A', long_name='ice growth', &
+         ptr_col=this%qflx_glcice_frz_col, l2g_scale_type='ice')
 
-    if (create_glacier_mec_landunit) then
-       this%qflx_glcice_melt_col(begc:endc) = spval
-       call hist_addfld1d (fname='QICE_MELT',  units='mm/s',  &
-            avgflag='A', long_name='ice melt', &
-            ptr_col=this%qflx_glcice_melt_col, l2g_scale_type='ice')
-    end if
+    this%qflx_glcice_melt_col(begc:endc) = spval
+    call hist_addfld1d (fname='QICE_MELT',  units='mm/s',  &
+         avgflag='A', long_name='ice melt', &
+         ptr_col=this%qflx_glcice_melt_col, l2g_scale_type='ice')
 
   end subroutine InitHistory
 

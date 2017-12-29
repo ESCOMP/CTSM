@@ -21,7 +21,7 @@ module  PhotosynthesisMod
   use decompMod           , only : bounds_type
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
-  use C14BombSpikeMod     , only : C14BombSpike, use_c14_bombspike
+  use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
   use atm2lndType         , only : atm2lnd_type
   use CanopyStateType     , only : canopystate_type
   use WaterStateType      , only : waterstate_type
@@ -33,6 +33,7 @@ module  PhotosynthesisMod
   use OzoneBaseMod        , only : ozone_base_type
   use LandunitType        , only : lun
   use PatchType           , only : patch
+  use GridcellType        , only : grc
   !
   implicit none
   private
@@ -353,25 +354,37 @@ contains
          avgflag='A', long_name='leaf N concentration', &
          ptr_patch=this%lnca_patch, set_spec=spval)
 
-    this%fpsn_patch(begp:endp) = spval
-    call hist_addfld1d (fname='FPSN', units='umol/m2s',  &
-         avgflag='A', long_name='photosynthesis', &
-         ptr_patch=this%fpsn_patch, set_lake=0._r8, set_urb=0._r8)
+    ! Don't output photosynthesis variables when FATES is on as they aren't calculated
+    if (.not. use_fates) then
+       this%fpsn_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FPSN', units='umol/m2s',  &
+            avgflag='A', long_name='photosynthesis', &
+            ptr_patch=this%fpsn_patch, set_lake=0._r8, set_urb=0._r8)
 
-    this%fpsn_wc_patch(begp:endp) = spval
-    call hist_addfld1d (fname='FPSN_WC', units='umol/m2s',  &
-         avgflag='A', long_name='Rubisco-limited photosynthesis', &
-         ptr_patch=this%fpsn_wc_patch, set_lake=0._r8, set_urb=0._r8)
+       ! Don't by default output this rate limiting step as only makes sense if you are outputing
+       ! the others each time-step
+       this%fpsn_wc_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FPSN_WC', units='umol/m2s',  &
+            avgflag='I', long_name='Rubisco-limited photosynthesis', &
+            ptr_patch=this%fpsn_wc_patch, set_lake=0._r8, set_urb=0._r8, &
+            default='inactive')
 
-    this%fpsn_wj_patch(begp:endp) = spval
-    call hist_addfld1d (fname='FPSN_WJ', units='umol/m2s',  &
-         avgflag='A', long_name='RuBP-limited photosynthesis', &
-         ptr_patch=this%fpsn_wj_patch, set_lake=0._r8, set_urb=0._r8)
+       ! Don't by default output this rate limiting step as only makes sense if you are outputing
+       ! the others each time-step
+       this%fpsn_wj_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FPSN_WJ', units='umol/m2s',  &
+            avgflag='I', long_name='RuBP-limited photosynthesis', &
+            ptr_patch=this%fpsn_wj_patch, set_lake=0._r8, set_urb=0._r8, &
+            default='inactive')
 
-    this%fpsn_wp_patch(begp:endp) = spval
-    call hist_addfld1d (fname='FPSN_WP', units='umol/m2s',  &
-         avgflag='A', long_name='Product-limited photosynthesis', &
-         ptr_patch=this%fpsn_wp_patch, set_lake=0._r8, set_urb=0._r8)
+       ! Don't by default output this rate limiting step as only makes sense if you are outputing
+       ! the others each time-step
+       this%fpsn_wp_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FPSN_WP', units='umol/m2s',  &
+            avgflag='I', long_name='Product-limited photosynthesis', &
+            ptr_patch=this%fpsn_wp_patch, set_lake=0._r8, set_urb=0._r8, &
+            default='inactive')
+    end if
 
     if (use_cn) then
        this%psnsun_patch(begp:endp) = spval
@@ -806,7 +819,7 @@ contains
     ! Time step initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice, istice_mec, istwet
+    use landunit_varcon, only : istsoil, istcrop, istice_mec, istwet
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
@@ -846,7 +859,7 @@ contains
           endif
        end if
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop &
-            .or. lun%itype(l) == istice .or. lun%itype(l) == istice_mec &
+            .or. lun%itype(l) == istice_mec &
             .or. lun%itype(l) == istwet) then
           if (use_c13) then
              this%rc13_canair_patch(p) = 0._r8
@@ -1351,7 +1364,7 @@ contains
          ! But not used as defined here if using sun/shade big leaf code. Instead,
          ! will use canopy integrated scaling factors from SurfaceAlbedo.
 
-         if (dayl_factor(p) .eq. 0._r8) then
+         if (dayl_factor(p)  < 1.0e-12_r8) then
             kn(p) =  0._r8
          else
             kn(p) = exp(0.00963_r8 * vcmax25top/dayl_factor(p) - 2.43_r8)
@@ -1708,7 +1721,9 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: f,fp,p,l,g               ! indices
-    real(r8) :: rc14_atm
+
+    real(r8) :: rc14_atm(nsectors_c14), rc13_atm
+    integer :: sector_c14
     !-----------------------------------------------------------------------
 
     associate(                                             &
@@ -1746,7 +1761,13 @@ contains
          if (use_c14_bombspike) then
             call C14BombSpike(rc14_atm)
          else
-            rc14_atm = c14ratio
+            rc14_atm(:) = c14ratio
+         end if
+      end if
+
+      if ( use_c13 ) then
+         if (use_c13_timeseries) then
+            call C13TimeSeries(rc13_atm)
          end if
       end if
 
@@ -1763,7 +1784,11 @@ contains
 
          if (use_cn) then
             if ( use_c13 ) then
-               rc13_canair(p) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
+               if (use_c13_timeseries) then
+                  rc13_canair(p) = rc13_atm
+               else
+                  rc13_canair(p) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
+               endif
                rc13_psnsun(p) = rc13_canair(p)/alphapsnsun(p)
                rc13_psnsha(p) = rc13_canair(p)/alphapsnsha(p)
                c13_psnsun(p)  = psnsun(p) * (rc13_psnsun(p)/(1._r8+rc13_psnsun(p)))
@@ -1774,8 +1799,18 @@ contains
                ! c13_psnsha(p) = 0.01095627 * psnsha(p)
             endif
             if ( use_c14 ) then
-               c14_psnsun(p) = rc14_atm * psnsun(p)
-               c14_psnsha(p) = rc14_atm * psnsha(p)
+
+               ! determine latitute sector for radiocarbon bomb spike inputs
+               if ( grc%latdeg(g) .ge. 30._r8 ) then
+                  sector_c14 = 1
+               else if ( grc%latdeg(g) .ge. -30._r8 ) then            
+                  sector_c14 = 2
+               else
+                  sector_c14 = 3
+               endif
+
+               c14_psnsun(p) = rc14_atm(sector_c14) * psnsun(p)
+               c14_psnsha(p) = rc14_atm(sector_c14) * psnsha(p)
             endif
          end if
 
@@ -1793,6 +1828,10 @@ contains
     ! !DESCRIPTION:
     ! C13 fractionation during photosynthesis is calculated here after the nitrogen
     ! limitation is taken into account in the CNAllocation module.
+    ! 
+    ! As of CLM5, nutrient downregulation occurs prior to photosynthesis via leafcn, so we may
+    ! ignore the downregulation term in this and assume that the Ci/Ca used in the photosynthesis
+    ! calculation is consistent with that in the isotope calculation
     !
     !!USES:
     use clm_varctl     , only : use_hydrstress
@@ -1864,7 +1903,7 @@ contains
             if (par_z(p,iv) <= 0._r8) then           ! night time
                alphapsn(p) = 1._r8
             else                                     ! day time
-               ci = co2(p) - ((an(p,iv) * (1._r8-downreg(p)) ) * &
+               ci = co2(p) - (an(p,iv) * &
                     forc_pbot(c) * &
                     (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv)))
                alphapsn(p) = 1._r8 + (((c3psn(patch%itype(p)) * &

@@ -172,7 +172,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : use_cn, create_glacier_mec_landunit, use_fates
+    use clm_varctl           , only : use_cn, use_fates
     use dynInitColumnsMod    , only : initialize_new_columns
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynEDMod             , only : dyn_ED
@@ -262,11 +262,8 @@ contains
           call dyn_ED(bounds_clump)
        end if
 
-       if (create_glacier_mec_landunit) then
-          call glc2lnd_inst%update_glc2lnd_non_topo( &
-               bounds = bounds_clump, &
-               glc_behavior = glc_behavior)
-       end if
+       call glc2lnd_inst%update_glc2lnd_fracs( &
+            bounds = bounds_clump)
 
        ! ========================================================================
        ! Do wrapup stuff after land cover change

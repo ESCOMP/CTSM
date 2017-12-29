@@ -206,12 +206,9 @@ contains
             ptr_lnd=subgrid_weights_diagnostics%pct_cft)
     end if
 
-    if (maxpatch_glcmec > 0) then
-       call hist_addfld2d (fname='PCT_GLC_MEC', units='%', type2d='glc_nec', &
-            avgflag='A', long_name='% of each GLC elevation class on the glc_mec landunit', &
-            ptr_lnd=subgrid_weights_diagnostics%pct_glc_mec)
-    end if
-
+    call hist_addfld2d (fname='PCT_GLC_MEC', units='%', type2d='glc_nec', &
+         avgflag='A', long_name='% of each GLC elevation class on the glc_mec landunit', &
+         ptr_lnd=subgrid_weights_diagnostics%pct_glc_mec)
 
   end subroutine init_subgrid_weights_mod
 
@@ -304,7 +301,7 @@ contains
     ! Determine whether the given landunit is active
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istice, istice_mec
+    use landunit_varcon, only : istsoil, istice_mec
     !
     ! !ARGUMENTS:
     implicit none
@@ -356,21 +353,7 @@ contains
        ! would remain at its cold start initialization values, which would be a Bad
        ! Thing. Ensuring that all vegetated points within the icemask are active gets
        ! around this problem - as well as having other benefits, as noted above.)
-       !
-       ! However, we do NOT include a virtual vegetated column in grid cells that are 100%
-       ! standard (non-mec) glacier. This is for performance reasons: for FV 0.9x1.25,
-       ! excluding these virtual vegetated columns (mostly over Antarctica) leads to a ~
-       ! 6% performance improvement (the performance improvement is much less for ne30,
-       ! though). In such grid cells, we do not need the forcing to CISM (because if we
-       ! needed forcing to CISM, we'd be using an istice_mec point rather than plain
-       ! istice). Furthermore, standard glacier landunits cannot retreat (only istice_mec
-       ! points can retreat, due to coupling with CISM), so we don't need to worry about
-       ! the glacier retreating in this grid cell, exposing new natural veg area. The
-       ! only thing that could happen is the growth of some special landunit - e.g., crop
-       ! - in this grid cell, due to dynamic landunits. We'll live with the fact that
-       ! initialization of the new crop landunit will be initialized in an un-ideal way
-       ! in this rare situation.
-       if (lun%itype(l) == istsoil .and. .not. is_gcell_all_ltypeX(g, istice)) then
+       if (lun%itype(l) == istsoil) then
           is_active_l = .true.
        end if
 
@@ -805,7 +788,6 @@ contains
     ! !USES:
     use landunit_varcon, only : istice_mec
     use column_varcon, only : col_itype_to_icemec_class
-    use clm_varpar, only : maxpatch_glcmec
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -817,18 +799,16 @@ contains
     character(len=*), parameter :: subname = 'set_pct_glc_mec_diagnostics'
     !-----------------------------------------------------------------------
     
-    if (maxpatch_glcmec > 0) then
-       subgrid_weights_diagnostics%pct_glc_mec(bounds%begg:bounds%endg, :) = 0._r8
-    
-       do c = bounds%begc, bounds%endc
-          g = col%gridcell(c)
-          l = col%landunit(c)
-          if (lun%itype(l) == istice_mec) then
-             icemec_class = col_itype_to_icemec_class(col%itype(c))
-             subgrid_weights_diagnostics%pct_glc_mec(g, icemec_class) = col%wtlunit(c) * 100._r8
-          end if
-       end do
-    end if
+    subgrid_weights_diagnostics%pct_glc_mec(bounds%begg:bounds%endg, :) = 0._r8
+
+    do c = bounds%begc, bounds%endc
+       g = col%gridcell(c)
+       l = col%landunit(c)
+       if (lun%itype(l) == istice_mec) then
+          icemec_class = col_itype_to_icemec_class(col%itype(c))
+          subgrid_weights_diagnostics%pct_glc_mec(g, icemec_class) = col%wtlunit(c) * 100._r8
+       end if
+    end do
 
   end subroutine set_pct_glc_mec_diagnostics
 

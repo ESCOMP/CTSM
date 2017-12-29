@@ -246,17 +246,28 @@ contains
          ! grain C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
-                                   croponly=.true. )
+                                   c13=c13cs%grainc_patch, c14=c14cs%grainc_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), croponly=.true. )
 
          ! grain storage C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_storage_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                                   __LINE__, croponly=.true. )
+                                   __LINE__, c13=c13cs%grainc_storage_patch, c14=c14cs%grainc_storage_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), croponly=.true. )
 
          ! grain transfer C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_xfer_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
-                                   croponly=.true. )
+                                   c13=c13cs%grainc_xfer_patch, c14=c14cs%grainc_xfer_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), croponly=.true. )
+
+         ! grain transfer C and N
+         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
+                                   ns%cropseedn_deficit_patch(bounds%begp:bounds%endp), pc(bounds%begp:), &
+                                   pn(bounds%begp:), __LINE__, &
+                                   c13=c13cs%cropseedc_deficit_patch, c14=c14cs%cropseedc_deficit_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
+
       end if
 
       ! livestem C and N
@@ -353,7 +364,9 @@ contains
          ! xsmr is a pool to balance the budget and as such can be freely negative
          call TruncateCStates( bounds, filter_soilp, num_soilp, cs%xsmrpool_patch(bounds%begp:bounds%endp), &
                                pc(bounds%begp:), __LINE__, &
-                               allowneg=.true., croponly=.true. )
+                               c13=c13cs%xsmrpool_patch, c14=c14cs%xsmrpool_patch, &
+                               pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
+
       end if
 
       ! retransn (N only)

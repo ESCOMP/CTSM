@@ -35,7 +35,7 @@ module controlMod
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
   use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
-  use C14BombSpikeMod                  , only: use_c14_bombspike, atm_c14_filename
+  use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
@@ -229,7 +229,7 @@ contains
     namelist /clm_inparm/ use_dynroot
 
     namelist /clm_inparm/  &
-         use_c14_bombspike, atm_c14_filename
+         use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
@@ -330,25 +330,14 @@ contains
            end if
            call clm_varctl_set( nsrest_in=override_nsrest )
        end if
-       
-       if (maxpatch_glcmec > 0) then
-          create_glacier_mec_landunit = .true.
-       else
-          create_glacier_mec_landunit = .false.
+
+       if (maxpatch_glcmec <= 0) then
+          call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
+               errMsg(sourcefile, __LINE__))
        end if
 
-       if (use_crop .and. (use_c13 .or. use_c14)) then
-          call endrun(msg=' ERROR:: CROP and C13/C14 can NOT be on at the same time'//&
-            errMsg(sourcefile, __LINE__))
-       end if
-       
        if (use_crop .and. .not. create_crop_landunit) then
           call endrun(msg=' ERROR: prognostic crop Patches require create_crop_landunit=.true.'//&
-            errMsg(sourcefile, __LINE__))
-       end if
-       
-       if (.not. use_crop .and. irrigate) then
-          call endrun(msg=' ERROR: irrigate = .true. requires CROP model active.'//&
             errMsg(sourcefile, __LINE__))
        end if
        
@@ -670,6 +659,8 @@ contains
     if (use_cn) then
        call mpi_bcast (use_c14_bombspike,  1, MPI_LOGICAL, 0, mpicom, ier)
        call mpi_bcast (atm_c14_filename,  len(atm_c14_filename), MPI_CHARACTER, 0, mpicom, ier)
+       call mpi_bcast (use_c13_timeseries,  1, MPI_LOGICAL, 0, mpicom, ier)
+       call mpi_bcast (atm_c13_filename,  len(atm_c13_filename), MPI_CHARACTER, 0, mpicom, ier)
        call mpi_bcast (use_fun,            1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
@@ -703,7 +694,6 @@ contains
     call mpi_bcast (n_melt_glcmec, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
-    call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -836,6 +826,8 @@ contains
 
     if (use_cn) then
        write(iulog, *) '  use_c13                                                : ', use_c13
+       write(iulog, *) '  use_c13_timeseries                                     : ', use_c13_timeseries
+       write(iulog, *) '  atm_c13_filename                                       : ', atm_c13_filename
        write(iulog, *) '  use_c14                                                : ', use_c14
        write(iulog, *) '  use_c14_bombspike                                      : ', use_c14_bombspike
        write(iulog, *) '  atm_c14_filename                                       : ', atm_c14_filename
@@ -858,15 +850,13 @@ contains
     write(iulog,*) '       snow-covered fraction during melt (mm) =', int_snow_max
     write(iulog,*) '   SCA shape parameter for glc_mec columns (n_melt_glcmec) =', n_melt_glcmec
 
-    if (create_glacier_mec_landunit) then
-       write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
-       if (glc_do_dynglacier) then
-          write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
-       else
-          write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
-       end if
-       write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
-    endif
+    write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
+    if (glc_do_dynglacier) then
+       write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
+    else
+       write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
+    end if
+    write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
 
     if (nsrest == nsrStartup) then
        if (finidat /= ' ') then

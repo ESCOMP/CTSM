@@ -128,7 +128,7 @@ Here's what the entry for resolutions looks like in the file:
        group="default_settings"  
        valid_values=
 "128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,
-0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,
+0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,
 1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,
 1x1_brazil,1x1_urbanc_alpha,0.5x0.5"&gt;
 Horizontal resolutions
@@ -144,7 +144,7 @@ add these resolutions to the
 the <envar>sitespf_pt</envar> name. The entry in that file looks like:
 <screen width="99">
 &lt;entry id="sitespf_pt" 
-valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,
+valid_values="none,1x1_brazil,5x5_amazon,
 1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,
 1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA" 
 value="none" category="physics"&gt;

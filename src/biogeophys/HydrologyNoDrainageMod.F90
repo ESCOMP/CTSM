@@ -23,6 +23,7 @@ Module HydrologyNoDrainageMod
   use CanopyStateType   , only : canopystate_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
+  use TopoMod, only : topo_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -45,7 +46,7 @@ contains
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
        soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
-       aerosol_inst, canopystate_inst, soil_water_retention_curve)
+       aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -98,6 +99,7 @@ contains
     type(infiltration_excess_runoff_type), intent(inout) :: infiltration_excess_runoff_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    class(topo_type)   , intent(in)    :: topo_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                    ! indices
@@ -250,7 +252,7 @@ contains
 
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
-           aerosol_inst, waterflux_inst, waterstate_inst)
+           aerosol_inst, waterflux_inst, waterstate_inst, topo_inst)
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &

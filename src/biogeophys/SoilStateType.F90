@@ -367,6 +367,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c
     logical  :: readvar
+    logical  :: readrootfr = .false.
     !------------------------------------------------------------------------
 
     call restartvar(ncid=ncid, flag=flag, varname='DSL', xtype=ncd_double,  &
@@ -396,9 +397,11 @@ contains
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &
-              interpinic_flag='interp', readvar=readvar, data=this%rootfr_patch)
+              interpinic_flag='interp', readvar=readrootfr, data=this%rootfr_patch)
+     else
+         readrootfr = .false.
      end if
-         if (flag=='read' .and. .not. readvar) then
+     if (flag=='read' .and. .not. readrootfr ) then
             if (masterproc) then
                write(iulog,*) "can't find rootfr in restart (or initial) file..."
                write(iulog,*) "Initialize rootfr to default"

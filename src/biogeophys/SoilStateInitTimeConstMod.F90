@@ -101,7 +101,7 @@ contains
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct
-    use landunit_varcon     , only : istice, istdlak, istwet, istsoil, istcrop, istice_mec
+    use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
     use organicFileMod      , only : organicrd 
@@ -185,7 +185,7 @@ contains
              soilstate_inst%rootfr_road_perv_col(c,lev) = 0._r8
           enddo
           do lev = 1,nlevsoi
-             soilstate_inst%rootfr_road_perv_col(c,lev) = 0.1_r8  ! uniform profile
+             soilstate_inst%rootfr_road_perv_col(c,lev) = 1.0_r8/real(nlevsoi,r8)
           end do
 ! remove roots below bedrock layer
           soilstate_inst%rootfr_road_perv_col(c,1:col%nbedrock(c)) = &
@@ -333,7 +333,7 @@ contains
        g = col%gridcell(c)
        l = col%landunit(c)
 
-       if (lun%itype(l)==istwet .or. lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
 
           do lev = 1,nlevgrnd
              soilstate_inst%bsw_col(c,lev)    = spval
@@ -457,7 +457,7 @@ contains
                 om_watsat         = max(0.93_r8 - 0.1_r8   *(zsoi(lev)/zsapric), 0.83_r8)
                 om_b              = min(2.7_r8  + 9.3_r8   *(zsoi(lev)/zsapric), 12.0_r8)
                 om_sucsat         = min(10.3_r8 - 0.2_r8   *(zsoi(lev)/zsapric), 10.1_r8)
-                om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), 0.0001_r8)
+                om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), xksat)
 
                 soilstate_inst%bd_col(c,lev)        = (1._r8 - soilstate_inst%watsat_col(c,lev))*2.7e3_r8 
                 soilstate_inst%watsat_col(c,lev)    = (1._r8 - om_frac) * soilstate_inst%watsat_col(c,lev) + om_watsat*om_frac

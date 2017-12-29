@@ -11,7 +11,7 @@ module clm_instMod
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
   use clm_varctl      , only : use_century_decomp, use_crop
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
-  use landunit_varcon , only : istice, istice_mec, istsoil
+  use landunit_varcon , only : istice_mec, istsoil
   use perf_mod        , only : t_startf, t_stopf
   use controlMod      , only : NLFilename
 
@@ -82,6 +82,7 @@ module clm_instMod
   use SoilHydrologyInitTimeConstMod   , only : SoilHydrologyInitTimeConst
   use SurfaceAlbedoMod                , only : SurfaceAlbedoInitTimeConst 
   use LakeCon                         , only : LakeConInit 
+  use SoilBiogeochemPrecisionControlMod, only: SoilBiogeochemPrecisionControlInit
   !
   implicit none
   public   ! By default everything is public 
@@ -117,7 +118,7 @@ module clm_instMod
   type(glc2lnd_type)                      :: glc2lnd_inst
   type(lnd2atm_type)                      :: lnd2atm_inst
   type(lnd2glc_type)                      :: lnd2glc_inst
-  type(glc_behavior_type)                 :: glc_behavior
+  type(glc_behavior_type), target         :: glc_behavior
   type(topo_type)                         :: topo_inst
   class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
 
@@ -125,6 +126,7 @@ module clm_instMod
   ! Eventually bgc_vegetation_inst will be an allocatable instance of an abstract
   ! interface
   type(cn_vegetation_type)                :: bgc_vegetation_inst
+
   class(nutrient_competition_method_type), allocatable :: nutrient_competition_method
 
   ! Soil biogeochem types 
@@ -182,6 +184,7 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
     use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
+    use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
     use initVerticalMod                    , only : initVertical
     use accumulMod                         , only : print_accum_fields 
@@ -226,7 +229,7 @@ contains
        ! feedback may not activate on time (or at all). So, as a compromise, we start with
        ! a small amount of snow in places that are likely to be snow-covered for much or
        ! all of the year.
-       if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+       if (lun%itype(l)==istice_mec) then
           h2osno_col(c) = 100._r8
        else if (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8) then 
           h2osno_col(c) = 100._r8
@@ -256,13 +259,6 @@ contains
 
     call atm2lnd_inst%Init( bounds, NLFilename )
     call lnd2atm_inst%Init( bounds, NLFilename )
-
-    ! Initialize glc2lnd and lnd2glc even if running without create_glacier_mec_landunit,
-    ! because at least some variables (such as the icemask) are referred to in code that
-    ! is executed even when running without glc_mec.
-    !
-    ! NOTE(wjs, 2016-04-01) I'm not sure if that's true any more (it isn't true for
-    ! icemask), but I'm keeping this as is for now anyway.
 
     call glc2lnd_inst%Init( bounds, glc_behavior )
     call lnd2glc_inst%Init( bounds )
@@ -298,7 +294,7 @@ contains
     call energyflux_inst%Init(bounds, temperature_inst%t_grnd_col(begc:endc), &
          IsSimpleBuildTemp(), IsProgBuildTemp() )
 
-    call aerosol_inst%Init(bounds)
+    call aerosol_inst%Init(bounds, NLFilename)
 
     call frictionvel_inst%Init(bounds)
 
@@ -394,6 +390,10 @@ contains
             soilbiogeochem_carbonstate_inst%decomp_cpools_1m_col(begc:endc, 1:ndecomp_pools))
 
        call soilbiogeochem_nitrogenflux_inst%Init(bounds) 
+
+       ! Initialize precision control for soil biogeochemistry
+       call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+                                                c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
 
     end if ! end of if use_cn 
 
@@ -514,29 +514,36 @@ contains
        call ch4_inst%restart(bounds, ncid, flag=flag)
     end if
 
+    if ( use_cn ) then
+       ! Need to do vegetation restart before soil bgc restart to get totvegc_col for purpose
+       ! of resetting soil carbon at exit spinup when no vegetation is growing.
+       call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
+
+       call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag, &
+            totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
+       call soilbiogeochem_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
+
+       call crop_inst%restart(bounds, ncid, flag=flag)
+    end if
+
     if (use_cn .or. use_fates) then
 
        call soilbiogeochem_state_inst%restart(bounds, ncid, flag=flag)
-       call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
+       call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
+            totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
+
        if (use_c13) then
           call c13_soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
+               totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds), &
                c12_soilbiogeochem_carbonstate_inst=soilbiogeochem_carbonstate_inst)
        end if
        if (use_c14) then
           call c14_soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c14', &
+               totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds), &
                c12_soilbiogeochem_carbonstate_inst=soilbiogeochem_carbonstate_inst)
        end if
        call soilbiogeochem_carbonflux_inst%restart(bounds, ncid, flag=flag)
     endif
-    if ( use_cn ) then
-       
-       call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
-       call soilbiogeochem_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
-
-       call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
-
-       call crop_inst%restart(bounds, ncid, flag=flag)
-    end if
 
     if (use_fates) then
 

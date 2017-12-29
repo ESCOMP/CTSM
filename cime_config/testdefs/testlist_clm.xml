@@ -32,6 +32,9 @@
       <test name="ERP_P36x2_D_Ld5">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/crop" comment="include a debug test of I1850Clm45BgcCrop">cheyenne</machine>
       </test>
+      <test name="ERS_D_Ld6">
+        <machine compiler="gnu" testtype="aux_clm" testmods="clm/clm50CMIP6frc">cheyenne</machine>
+      </test>
       <test name="SMS_D_Ld5">
         <machine compiler="nag" testtype="aux_clm" testmods="clm/crop" comment="include a nag debug test of Clm45BgcCrop">hobart</machine>
       </test>
@@ -137,6 +140,9 @@
       </test>
       <test name="ERS_Ld3">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/rad_hrly_light_res_half">cheyenne</machine>
+      </test>
+      <test name="SSP_D_Ld4">
+        <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_rtmColdSSP">cheyenne</machine>
       </test>
     </grid>
     <grid name="f09_g17_gl4">
@@ -514,7 +520,7 @@
     </grid>
     <grid name="1x1_smallvilleIA">
       <test name="ERS_Lm20_Mmpi-serial">
-        <machine compiler="pgi" testtype="aux_clm" testmods="clm/monthly" comment="tests mid-year restart, with the restart file being written in the middle of the first year">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm" testmods="clm/monthly" comment="tests mid-year restart, with the restart file being written in the middle of the first year; 12-15-2017: now that we generally use init_interp, this test needs to be changed to point to a blank finidat file to truly test mid-year restart in the first year">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -525,7 +531,7 @@
       </test>
     </grid>
   </compset>
-  <compset name="I2000Clm50BgcCru">
+  <compset name="I2000Clm50BgcCruGs">
     <grid name="1x1_camdenNJ">
       <test name="ERI_D_Ld9">
         <machine compiler="intel" testtype="prebeta" testmods="clm/default">cheyenne</machine>
@@ -1055,10 +1061,6 @@
         <machine compiler="gnu" testtype="aux_clm" testmods="clm/decStart">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm" testmods="clm/decStart">yellowstone</machine>
       </test>
-      <test name="ERP_D_P15x2">
-        <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_decStart" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">cheyenne</machine>
-        <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_decStart" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">yellowstone</machine>
-      </test>
       <test name="ERP_D_P24x1">
         <machine compiler="nag" testtype="aux_clm" testmods="clm/decStart">hobart</machine>
       </test>
@@ -1085,11 +1087,17 @@
   </compset>
   <compset name="IHistClm50BgcCrop">
     <grid name="f10_f10_musgs">
+      <test name="ERP_D_Lm9">
+        <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_monthly" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code">cheyenne</machine>
+      </test>
       <test name="ERP_Ly3_P72x2">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/cropMonthOutput" comment="Multi-year global test of transient crops together with transient glaciers. Use no-evolve glaciers with ERP test">cheyenne</machine>
       </test>
       <test name="ERS_Ly5_P72x1">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">cheyenne</machine>
+      </test>
+      <test name="SMS_D_Lm13">
+        <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_monthly" comment="Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -1101,6 +1109,11 @@
     </grid>
   </compset>
   <compset name="IHistClm50BgcCropGs">
+    <grid name="1x1_numaIA">
+      <test name="SMS_D_Ly2">
+        <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_bombspike1963">cheyenne</machine>
+      </test>
+    </grid>
     <grid name="1x1_smallvilleIA">
       <test name="ERS_D_Ld7_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">cheyenne</machine>
@@ -1119,18 +1132,6 @@
       <test name="SMS_D_Ly2">
         <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_bombspike1963">cheyenne</machine>
         <machine compiler="intel" testtype="aux_clm" testmods="clm/ciso_bombspike1963">yellowstone</machine>
-      </test>
-    </grid>
-    <grid name="1x1_tropicAtl">
-      <test name="SMS_Ly3_Mmpi-serial">
-        <machine compiler="gnu" testtype="aux_clm" testmods="clm/tropicAtl_subsetLate">yellowstone</machine>
-      </test>
-      <test name="SMS_Ly5_Mmpi-serial">
-        <machine compiler="intel" testtype="aux_clm" testmods="clm/tropicAtl_subsetMid">cheyenne</machine>
-        <machine compiler="intel" testtype="aux_clm" testmods="clm/tropicAtl_subsetMid">yellowstone</machine>
-      </test>
-      <test name="SMS_Ly8_Mmpi-serial">
-        <machine compiler="gnu" testtype="aux_clm" testmods="clm/tropicAtl_subsetEarly">yellowstone</machine>
       </test>
     </grid>
   </compset>

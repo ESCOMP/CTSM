@@ -249,9 +249,6 @@ module clm_varctl
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   !----------------------------------------------------------
 
-  ! glacier_mec landunit is not created (set in controlMod)
-  logical , public :: create_glacier_mec_landunit = .false. 
-
   ! true => CLM glacier area & topography changes dynamically 
   logical , public :: glc_do_dynglacier = .false.           
 

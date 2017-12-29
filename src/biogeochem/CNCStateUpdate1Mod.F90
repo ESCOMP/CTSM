@@ -130,7 +130,6 @@ contains
       ! gross photosynthesis fluxes
       do fp = 1,num_soilp
          p = filter_soilp(fp)
-     
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) + cf_veg%psnsun_to_cpool_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) + cf_veg%psnshade_to_cpool_patch(p)*dt
       end do
@@ -300,6 +299,7 @@ contains
          cpool_delta  =  cs_veg%cpool_patch(p) 
          
          ! maintenance respiration fluxes from cpool
+
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_xsmrpool_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%leaf_curmr_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%froot_curmr_patch(p)*dt
@@ -326,16 +326,6 @@ contains
             cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
             cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livecroot_xsmr_patch(p)*dt
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
-            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%grain_xsmr_patch(p)*dt
-            if (harvdate(p) < 999) then ! beginning at harvest, send to atm
-               ! TODO (mv, 11-02-2014) the following line is why the cf_veg is an intent(inout)
-               ! fluxes should not be updated in this module - not sure where this belongs
-               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
-               cs_veg%xsmrpool_patch(p)        = cs_veg%xsmrpool_patch(p)        - cf_veg%xsmrpool_to_atm_patch(p)*dt
-            end if
-         end if
 
          ! allocation fluxes
          if (carbon_resp_opt == 1) then
@@ -353,6 +343,7 @@ contains
          cs_veg%cpool_patch(p)           = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_patch(p)*dt
          cs_veg%frootc_patch(p)          = cs_veg%frootc_patch(p)         + cf_veg%cpool_to_frootc_patch(p)*dt
          cs_veg%cpool_patch(p)           = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_storage_patch(p)*dt
+
          cs_veg%frootc_storage_patch(p)  = cs_veg%frootc_storage_patch(p) + cf_veg%cpool_to_frootc_storage_patch(p)*dt
          if (woody(ivt(p)) == 1._r8) then
             if (carbon_resp_opt == 1) then
@@ -396,10 +387,10 @@ contains
             cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)     + cf_veg%cpool_to_grainc_storage_patch(p)*dt
          end if
 
-
          ! growth respiration fluxes for current growth
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_leaf_gr_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_froot_gr_patch(p)*dt
+
          if (woody(ivt(p)) == 1._r8) then
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livestem_gr_patch(p)*dt
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_deadstem_gr_patch(p)*dt
@@ -428,6 +419,7 @@ contains
          ! growth respiration at time of storage
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_leaf_storage_gr_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_froot_storage_gr_patch(p)*dt
+
          if (woody(ivt(p)) == 1._r8) then
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livestem_storage_gr_patch(p)*dt
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_deadstem_storage_gr_patch(p)*dt
@@ -436,7 +428,9 @@ contains
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livestem_storage_gr_patch(p)*dt
+ 
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_grain_storage_gr_patch(p)*dt
+
          end if
 
          ! growth respiration stored for release during transfer growth
@@ -467,6 +461,31 @@ contains
             cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)    - cf_veg%grainc_storage_to_xfer_patch(p)*dt
             cs_veg%grainc_xfer_patch(p)        = cs_veg%grainc_xfer_patch(p)       + cf_veg%grainc_storage_to_xfer_patch(p)*dt
          end if
+
+         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
+            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%grain_xsmr_patch(p)*dt
+            if (harvdate(p) < 999) then ! beginning at harvest, send to atm
+               ! TODO (mv, 11-02-2014) the following lines are why the cf_veg is
+               ! an intent(inout)
+               ! fluxes should not be updated in this module - not sure where
+               ! this belongs
+               ! DML (06-20-2017) While debugging crop isotope code, found that cpool_patch and frootc_patch 
+               ! could occasionally be very small but nonzero numbers after crop harvest, which persists 
+               ! through to next planting and for reasons that could not 100%
+               ! isolate, caused C12/C13 ratios to occasionally go out of
+               ! bounds. Zeroing out these small pools and putting them into the flux to the
+               ! atmosphere solved many of the crop isotope problems
+
+               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
+               cs_veg%xsmrpool_patch(p)        = 0._r8
+               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
+               cs_veg%cpool_patch(p)           = 0._r8
+               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
+               cs_veg%frootc_patch(p)          = 0._r8
+            end if
+         end if
+
          
       end do ! end of patch loop
     end if

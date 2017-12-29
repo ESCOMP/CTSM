@@ -49,7 +49,8 @@ contains
     this%MINSNOWDENSITY = 50.0_r8
     this%MAXSNOWDENSITY = 170.0_r8
     this%MAXWINDEDSNOWDENSITY = 270.0_r8
-    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., set_new_snow_density=1 )
+    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+         set_new_snow_density=LoTmpDnsTruncatedAnderson1976 )
   end subroutine setUp
   
   subroutine tearDown(this)
@@ -68,7 +69,8 @@ contains
     class(TestSnowHydrology), intent(inout) :: this
     real(r8) :: minsnowdensity
 
-    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., set_new_snow_density=1 )
+    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+         set_new_snow_density=LoTmpDnsTruncatedAnderson1976 )
     this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = this%NEG15C - epsilon(this%NEG15C)
     call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
     write(*,*) 'forc_t   = ', this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc)
@@ -93,14 +95,15 @@ contains
     class(TestSnowHydrology), intent(inout) :: this
     real(r8) :: minsnowdensity
 
-    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., set_new_snow_density=2 )
+    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+         set_new_snow_density=LoTmpDnsSlater2017 )
     this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = this%NEG15C - epsilon(this%NEG15C)
     call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
 
     @assertLessThanOrEqual( this%MINSNOWDENSITY, this%bifall(bounds%begc), message="at -15C SlaterDensity" )
     minsnowdensity = this%bifall(bounds%begc)
 
-    ! Test that above 2C stays at the same value
+    ! Test that from -15 to -100, stays within bounds
     do while( this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) > (tfrz - 100.0_r8) )
        this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) - 0.1_r8
        call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
@@ -111,17 +114,50 @@ contains
   end subroutine newSnowBulkDensity_neg15_SlaterDensity
 
   @Test
+  subroutine newSnowBulkDensity_lowT_SlaterDensity(this)
+    ! Test the input for very low temperatures: density should be no lower than at higher
+    ! temperatures
+    class(TestSnowHydrology), intent(inout) :: this
+    real(r8) :: density_at_neg_57_c(1)
+
+    ! Setup
+
+    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+         set_new_snow_density=LoTmpDnsSlater2017 )
+
+    ! Get density at -57 C. This is close to the highest density for the cold-temperature
+    ! regime.
+    this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = tfrz - 57._r8
+    call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, density_at_neg_57_c)
+
+    ! Exercise: Get density at very cold temperature: just above absolute zero
+    this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = 0.1_r8
+    call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
+
+    ! Make sure that (1) density at -57 C is greater than minsnowdensity, and (2) density
+    ! at really cold T is greater than or equal to than density at -57 C (which is close
+    ! to the maximum snow density for the cold-temperature regime).
+    @assertLessThan(this%MINSNOWDENSITY, density_at_neg_57_c(1), message="density at -57C > min")
+    @assertLessThanOrEqual(density_at_neg_57_c(1), this%bifall(bounds%begc), message="density at very cold > density at -57C")
+
+  end subroutine newSnowBulkDensity_lowT_SlaterDensity
+
+
+
+  @Test
   subroutine checkWindDependentDensity(this)
     ! Test the range of the wind denpendent density
     class(TestSnowHydrology), intent(inout) :: this
     real(r8) :: base_density, last_density, diff
 
     this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = (this%NEG15C + this%TWOC)*0.5
-    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., set_new_snow_density=1 )
+    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+         set_new_snow_density=LoTmpDnsTruncatedAnderson1976 )
     this%atm2lnd_inst%forc_wind_grc(bounds%begg)  = 0.0_r8
     call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
     base_density = this%bifall(bounds%begc)
-    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.true., set_new_snow_density=1 )
+    call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.true., &
+         set_new_snow_density=LoTmpDnsTruncatedAnderson1976 )
     call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
     @assertEqual( base_density, this%bifall(bounds%begc), tolerance=1.0e-12_r8, message="Expect no change with zero wind" )
     write(*,*) 'without wind-depend = ', base_density, ' with wind@0=', this%bifall(bounds%begc)
@@ -163,7 +199,8 @@ contains
     integer :: density_type
 
     do density_type = 1, 2
-       call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., set_new_snow_density=density_type )
+       call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+            set_new_snow_density=density_type )
        write(*,*) 'snow density type = ', density_type
        this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = this%TWOC + epsilon(this%TWOC)
        call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
@@ -188,7 +225,8 @@ contains
     integer :: density_type
 
     do density_type = 1, 2
-       call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., set_new_snow_density=density_type )
+       call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+            set_new_snow_density=density_type )
        write(*,*) 'snow density type = ', density_type
        this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc) = this%TWOC + epsilon(this%TWOC)
        call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
@@ -208,7 +246,8 @@ contains
           lastsnowdensity = this%bifall(bounds%begc)
           ! Check that both density types give same answers
           if ( density_type == 1 ) then
-             call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., set_new_snow_density=2 )
+             call SnowHydrologySetControlForTesting( set_winddep_snowdensity=.false., &
+                  set_new_snow_density=LoTmpDnsSlater2017 )
              call NewSnowBulkDensity(bounds, this%numf, this%filter, this%atm2lnd_inst, this%bifall)
              @assertEqual(   this%bifall(bounds%begc), lastsnowdensity, message="Density methods same for mid temps" )
           end if
