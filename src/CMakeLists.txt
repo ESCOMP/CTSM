@@ -54,6 +54,24 @@ foreach (sourcefile ${share_sources})
   endif()
 endforeach()
 
+# Remove shr_cal_mod from share_sources.
+#
+# shr_cal_mod depends on ESMF (or the lightweight esmf wrf timemgr, at
+# least). Since CTSM doesn't currently use shr_cal_mod, we're avoiding
+# the extra overhead of including esmf_wrf_timemgr sources in this
+# build.
+#
+# TODO: like above, this should be moved into a general-purpose function
+# in Sourcelist_utils.  Then this block of code could be replaced with a
+# single call, like: remove_source_file(${share_sources}
+# "shr_cal_mod.F90")
+foreach (sourcefile ${share_sources})
+  string(REGEX MATCH "shr_cal_mod.F90" match_found ${sourcefile})
+  if(match_found)
+    list(REMOVE_ITEM share_sources ${sourcefile})
+  endif()
+endforeach()
+
 # Build libraries containing stuff needed for the unit tests.
 # Eventually, these add_library calls should probably be distributed into the correct location, rather than being in this top-level CMakeLists.txt file.
 add_library(csm_share ${share_sources} ${drv_sources_needed})
