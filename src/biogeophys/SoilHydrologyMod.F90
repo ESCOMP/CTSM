@@ -2511,7 +2511,8 @@ contains
 
           ! current outflow is inflow to downhill column normalized by downhill area
           if (col%cold(c) /= ispval) then
-             qflx_latflow_in(col%cold(c)) = qflx_latflow_in(col%cold(c)) + 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(col%cold(c))
+             qflx_latflow_in(col%cold(c)) = qflx_latflow_in(col%cold(c)) + &
+                  1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(col%cold(c))
           endif
 
         enddo
