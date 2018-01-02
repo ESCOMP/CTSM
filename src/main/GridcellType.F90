@@ -27,6 +27,7 @@ module GridcellType
      real(r8), pointer :: lon              (:) ! longitude (radians)
      real(r8), pointer :: latdeg           (:) ! latitude (degrees)
      real(r8), pointer :: londeg           (:) ! longitude (degrees)
+     logical , pointer :: active           (:) ! just needed for symmetry with other subgrid types
 
      integer,  pointer :: nbedrock         (:) ! index of uppermost bedrock layer
      integer,  pointer :: ncolumns         (:) ! number of columns per hillslope
@@ -69,6 +70,7 @@ contains
     allocate(this%lon       (begg:endg)) ; this%lon       (:) = nan
     allocate(this%latdeg    (begg:endg)) ; this%latdeg    (:) = nan
     allocate(this%londeg    (begg:endg)) ; this%londeg    (:) = nan
+    allocate(this%active    (begg:endg)) ; this%active    (:) = .true.
     allocate(this%nbedrock  (begg:endg)) ; this%nbedrock  (:) = ispval
     allocate(this%ncolumns   (begg:endg)); this%ncolumns   (:) = ispval
 
@@ -94,6 +96,7 @@ contains
     deallocate(this%lon              )
     deallocate(this%latdeg           )
     deallocate(this%londeg           )
+    deallocate(this%active           )
     deallocate(this%nbedrock         )
     deallocate(this%ncolumns         )
     deallocate(this%max_dayl         )

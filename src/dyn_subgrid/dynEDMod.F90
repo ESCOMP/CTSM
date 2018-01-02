@@ -12,7 +12,7 @@ module dynEDMod
   implicit none
   private
   !
-  public :: dyn_ED     ! transfers weights calculated internally by ED into wtcol. 
+  public :: dyn_ED     ! transfers weights calculated internally by fates into wtcol. 
   !------------------------------------------------------------------------
  
 contains

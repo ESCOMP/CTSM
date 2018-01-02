@@ -11,7 +11,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_ed
+  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
   use spmdMod                            , only : masterproc
@@ -27,7 +27,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
-  use EDCLMLinkMod                       , only : cwd_fcel_ed, cwd_flig_ed
+
   !
   implicit none
   private
@@ -84,6 +84,7 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
 
      real(r8) :: initial_Cstocks(nsompools) ! Initial Carbon stocks for a cold-start
+     real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
      
   end type params_type
   !
@@ -121,13 +122,14 @@ contains
     character(len=*), parameter :: subname = 'DecompCascadeBGCreadNML'
     character(len=*), parameter :: nmlname = 'CENTURY_soilBGCDecompCascade'
     !-----------------------------------------------------------------------
-    real(r8) :: initial_Cstocks(nsompools)
-    namelist /CENTURY_soilBGCDecompCascade/ initial_Cstocks
+    real(r8) :: initial_Cstocks(nsompools), initial_Cstocks_depth
+    namelist /CENTURY_soilBGCDecompCascade/ initial_Cstocks, initial_Cstocks_depth
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
 
-    initial_Cstocks(:) = 200._r8
+    initial_Cstocks(:)    = 200._r8
+    initial_Cstocks_depth = 0.3
 
     if (masterproc) then
        unitn = getavu()
@@ -145,7 +147,8 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (initial_Cstocks, mpicom)
+    call shr_mpi_bcast (initial_Cstocks      , mpicom)
+    call shr_mpi_bcast (initial_Cstocks_depth, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -154,7 +157,8 @@ contains
        write(iulog,*) ' '
     end if
 
-    params_inst%initial_Cstocks(:) = initial_Cstocks(:)
+    params_inst%initial_Cstocks(:)    = initial_Cstocks(:)
+    params_inst%initial_Cstocks_depth = initial_Cstocks_depth
 
   end subroutine DecompCascadeBGCreadNML
 
@@ -288,11 +292,6 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cwd_flig_bgc=tempr 
     
-    if ( use_ed ) then
-       cwd_fcel_ed = params_inst%cwd_fcel_bgc
-       cwd_flig_ed = params_inst%cwd_flig_bgc
-    endif
-
   end subroutine readParams
 
   !-----------------------------------------------------------------------
@@ -371,6 +370,7 @@ contains
          is_cwd                         => decomp_cascade_con%is_cwd                             , & ! Output: [logical           (:)     ]  TRUE => pool is a cwd pool                                
          initial_cn_ratio               => decomp_cascade_con%initial_cn_ratio                   , & ! Output: [real(r8)          (:)     ]  c:n ratio for initialization of pools                    
          initial_stock                  => decomp_cascade_con%initial_stock                      , & ! Output: [real(r8)          (:)     ]  initial concentration for seeding at spinup              
+         initial_stock_soildepth        => decomp_cascade_con%initial_stock_soildepth            , & ! Output: [real(r8)          (:)     ]  soil depth for initial concentration for seeding at spinup              
          is_metabolic                   => decomp_cascade_con%is_metabolic                       , & ! Output: [logical           (:)     ]  TRUE => pool is metabolic material                        
          is_cellulose                   => decomp_cascade_con%is_cellulose                       , & ! Output: [logical           (:)     ]  TRUE => pool is cellulose                                 
          is_lignin                      => decomp_cascade_con%is_lignin                          , & ! Output: [logical           (:)     ]  TRUE => pool is lignin                                    
@@ -418,6 +418,7 @@ contains
             rf_s1s3(c,j) = t
          end do
       end do
+      initial_stock_soildepth = params_inst%initial_Cstocks_depth
 
       !-------------------  list of pools and their attributes  ------------
       floating_cn_ratio_decomp_pools(i_litr1) = .true.
@@ -462,7 +463,7 @@ contains
       is_cellulose(i_litr3) = .false.
       is_lignin(i_litr3) = .true.
 
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          ! CWD
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
          decomp_pool_name_restart(i_cwd) = 'cwd'
@@ -479,7 +480,7 @@ contains
          is_lignin(i_cwd) = .false.
       endif
 
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          i_soil1 = 5
       else
          i_soil1 = 4
@@ -498,7 +499,7 @@ contains
       is_cellulose(i_soil1) = .false.
       is_lignin(i_soil1) = .false.
 
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          i_soil2 = 6
       else
          i_soil2 = 5
@@ -517,7 +518,7 @@ contains
       is_cellulose(i_soil2) = .false.
       is_lignin(i_soil2) = .false.
 
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          i_soil3 = 7
       else
          i_soil3 = 6
@@ -545,7 +546,7 @@ contains
       spinup_factor(i_litr2) = 1._r8
       spinup_factor(i_litr3) = 1._r8
       !CWD
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
       end if
       !som1
@@ -616,7 +617,7 @@ contains
       cascade_receiver_pool(i_s3s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
 
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          i_cwdl2 = 9
          cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
@@ -795,7 +796,7 @@ contains
                spinup_geogterm_l23(c) = 1._r8
             endif
             !
-            if ( .not. use_ed ) then
+            if ( .not. use_fates ) then
                if ( abs(spinup_factor(i_cwd) - 1._r8) .gt. .000001_r8) then
                   spinup_geogterm_cwd(c) = spinup_factor(i_cwd) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
                else
@@ -1096,8 +1097,8 @@ contains
          end do
       end if
 
-      ! do the same for cwd, but only if ed is not enabled, because ED handles CWD on its own structure
-      if (.not. use_ed) then
+      ! do the same for cwd, but only if fates is not enabled, because fates handles CWD on its own structure
+      if (.not. use_fates) then
          if (use_vertsoilc) then
             do j = 1,nlevdecomp
                do fc = 1,num_soilc

@@ -37,7 +37,7 @@ sub GetNameNDir {
    } else {
        $scrdir = $cwd;
    }
-   return( $ProgName );
+   return( $ProgName, $scrdir );
 }
 
 
@@ -53,6 +53,7 @@ REQUIRED OPTIONS
                                     At least one file needs to be given, but you can also
                                     give a list of space seperated files.
 OPTIONS
+     -die_on_duplicate              Die if find a duplicate testname
      -summarize [or -s]             Summarize results into lists of tests in categories (pend, pass, fail etc.)
      -sum_results_perline           Summarize results categories of each test into one line
      -help [or -h]                  Print usage to STDOUT.
@@ -73,6 +74,7 @@ sub process_cmdline {
                  csstatusfiles_ref => undef, 
                  sumintocats      => 0,
                  sumperline       => 0,
+                 dieondup         => 0,
                  help             => 0, 
                  verbose          => 0,
               );
@@ -80,6 +82,7 @@ sub process_cmdline {
    GetOptions(
        "h|help"              => \$opts{'help'},
        "s|summarize"         => \$opts{'sumintocats'},
+       "die_on_duplicate"    => \$opts{'dieondup'},
        "sum_results_perline" => \$opts{'sumperline'},
        "v|verbose"           => \$opts{'verbose'},
    )  or usage($ProgName);
@@ -178,7 +181,7 @@ sub absolute_path {
 
 sub run_csstatus {
    # run a cs.status file and parse it's output
-   my ( $csstatusfilename, $verbose, $csstatus_ref ) = @_;
+   my ( $csstatusfilename, $verbose, $csstatus_ref, $dieondup ) = @_;
 
    if ( ! -x $csstatusfilename ) {
       die "ERROR: cs.status file does NOT exist or can not execute: $csstatusfilename\n";
@@ -196,12 +199,18 @@ sub run_csstatus {
          my $over = $2;
          my $fails = ""; my $passes = ""; my $pendings = "";
          my $newline;
+         my $bfail = 0;
          if ( $verbose ) { print "$test\n"; }
          do {
             $newline = shift(@lines);
             if (       $newline =~ /FAIL[ ]+$test ([^ ]+)/ ) {
                $fails .= " $1";
                chomp( $fails );
+               if ( $1 eq "BASELINE" ) {
+                 if ( $newline =~ /ERROR BFAIL baseline directory/ ) {
+                    $bfail = 1;
+                 }
+               }
             } elsif (  $newline =~ /PASS[ ]+$test ([^ ]+)/ ) {
                $passes .= " $1";
                chomp( $passes );
@@ -222,27 +231,30 @@ sub run_csstatus {
          if ( $over eq "NLCOMP" ) { 
             $over = "PASS";
          }
-         if ( $over eq "FAIL" && $fails =~ /MEMLEAK/ ) { 
-            $over = "PASS";
-         }
-         if ( $over eq "FAIL" && $fails =~ /MEMCOMP/ ) { 
-            $over = "PASS";
+         if ( $over eq "FAIL" && ($fails =~ /MEMLEAK/ || $fails =~ /TPUTCOMP/ || $fails =~ /MEMCOMP/) ) { 
+            my $status = $fails;
+            $status =~ s/MEMLEAK//;
+            $status =~ s/TPUTCOMP//;
+            $status =~ s/MEMCOMP//;
+            $status =~ s/NLCOMP//;
+            $status =~ s/BASELINE//;
+            if ( $status =~ /^\s*$/ ) {
+              $over = "PASS";
+            }
          }
          if ( $over eq "DIFF" ) { 
-            my $file = glob( "${test}.*$csdate/TestStatus" );
-            my $result = " ";
-            if ( -f $file ) {
-               $result = `grep "ERROR baseline directory" $file`;
-            } else {
-               if ( $verbose ) { print( "Bad file: $file\n" ); }
-            }
-            if ( $result =~ /ERROR/ ) {
+            if ( $bfail ) {
                $over     = "FAIL_BDNE";
             } else {
                $over     = "DIFF";
             }
          }
-         if ( exists($$csstatus_ref{$test}) ) { next; }
+         if ( exists($$csstatus_ref{$test}) ) { 
+           if ( $dieondup ) {
+             die "ERROR: Already had a test that matches this one: $test\n";
+           }
+           next; 
+         }
          $$csstatus_ref{$test}{'over'} = $over;
          $$csstatus_ref{$test}{'FAIL'} = $fails;
          $$csstatus_ref{$test}{'PASS'} = $passes;
@@ -294,12 +306,15 @@ sub print_sumperline {
 sub print_categories {
    # Seperate tests into categories
 
+   my $scrdir   = shift(@_);
    my %csstatus = @_;
 
+   my $expectedfailfile = "$scrdir/components/clm/cime_config/testdefs/ExpectedTestFails.xml";
    my @passes;
    my @fails;
    my @pendings;
    my @compares_diff;
+   my @compares_diff_nobase;
    my @keys = sort( keys(%csstatus) );
    foreach my $key ( @keys ) {
       if (      $csstatus{$key}{'over'} eq "PASS" ) {
@@ -309,7 +324,7 @@ sub print_categories {
          push( @compares_diff, $key );
       } elsif ( $csstatus{$key}{'over'} eq "FAIL_BDNE" ) {
          push( @passes, $key );
-         push( @compares_diff, $key );
+         push( @compares_diff_nobase, $key );
       } elsif ( $csstatus{$key}{'over'} eq "FAIL" ) {
          push( @fails, $key );
       } elsif ( $csstatus{$key}{'over'} eq "PEND" ) {
@@ -324,6 +339,7 @@ sub print_categories {
    printf( "%d Tests pending\n", $#pendings+1 );
    printf( "%d Tests passed\n",  $#passes+1 );
    printf( "%d Tests compare different to baseline\n",  $#compares_diff+1 );
+   printf( "%d Tests are new where there is no baseline\n",  $#compares_diff_nobase+1 );
    printf( "%d Tests failed\n",  $#fails+1 );
    print( "================================================================================\n" );
 
@@ -340,7 +356,10 @@ sub print_categories {
       print( "These tests passed\n" );
       print( "================================================================================\n" );
       foreach my $key ( @passes ) {
-         print( "$key\n" );
+         my $expect = ""; 
+         `grep $key $expectedfailfile > /dev/null`;
+         if ( $? == 0 ) { $expect = "FAILED PREVIOUSLY"; }
+         print( "$key\t\t\t$expect\n" );
       }
    }
    if ( $#compares_diff >= 0 ) {
@@ -351,12 +370,23 @@ sub print_categories {
          print( "$key\n" );
       }
    }
+   if ( $#compares_diff_nobase >= 0 ) {
+      print( "================================================================================\n" );
+      print( "These tests don't have a baseline to compare to\n" );
+      print( "================================================================================\n" );
+      foreach my $key ( @compares_diff_nobase ) {
+         print( "$key\n" );
+      }
+   }
    if ( $#fails >= 0 ) {
       print( "================================================================================\n" );
       print( "These tests failed\n" );
       print( "================================================================================\n" );
       foreach my $key ( @fails ) {
-         print( "$key\n" );
+         my $expect = ""; 
+         `grep $key $expectedfailfile > /dev/null`;
+         if ( $? == 0 ) { $expect = "EXPECTED"; }
+         print( "$key\t\t$expect\n" );
       }
    }
 }
@@ -365,20 +395,20 @@ sub print_categories {
 
 sub main {
 # main subroutine
-   my ($ProgName ) = &GetNameNDir( );
+   my ($ProgName, $scrdir) = &GetNameNDir( );
    my $pwd = `pwd`;
    chomp( $pwd );
    my %opts = &process_cmdline( $ProgName );
    my %csstatus;
    my $files_ref = $opts{'csstatusfiles_ref'};
    foreach my $file ( @$files_ref ) {
-      &run_csstatus( "$pwd/$file", $opts{'verbose'}, \%csstatus );
+      &run_csstatus( "$pwd/$file", $opts{'verbose'}, \%csstatus, $opts{'dieondup'} );
    }
    if ( $opts{'verbose'} ) {
       print "Print summary of testing:\n";
    }
    if (      $opts{'sumintocats'} ) {
-      &print_categories( %csstatus );
+      &print_categories( $scrdir, %csstatus );
    } elsif ( $opts{'sumperline'} ) {
       &print_sumperline( %csstatus );
    } else {

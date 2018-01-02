@@ -61,7 +61,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <snowveg_flag>OFF</snowveg_flag>
 
 <more_vertlayers                          >.false.</more_vertlayers>
-<more_vertlayers hgrid="1x1_tropicAtl"    >.true.</more_vertlayers>
 
 <!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
 <glcmec_downscale_rain_snow_convert>.false.</glcmec_downscale_rain_snow_convert>
@@ -74,17 +73,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
 <paramfile       >lnd/clm2/paramdata/clm_params.c130821.nc</paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params.c170331.nc</fates_paramfile>
 
 
 <!--- ========================================  -->
-<!--- Defaults for use_ed = .true.              -->
+<!--- Defaults for use_fates = .true.              -->
 <!--  ========================================  -->
 
-<use_vertsoilc use_ed=".true.">.true.</use_vertsoilc>
-<use_century_decomp use_ed=".true."  >.true.</use_century_decomp>
-<use_ed_spit_fire use_ed=".true.">.true.</use_ed_spit_fire>
-<use_lch4 use_ed=".true.">.false.</use_lch4>
-<use_nitrif_denitrif use_ed=".true.">.false.</use_nitrif_denitrif>
+<use_vertsoilc use_fates=".true.">.true.</use_vertsoilc>
+<use_century_decomp use_fates=".true."  >.true.</use_century_decomp>
+<use_fates_spitfire use_fates=".true.">.true.</use_fates_spitfire>
+<use_lch4 use_fates=".true.">.false.</use_lch4>
+<use_nitrif_denitrif use_fates=".true.">.false.</use_nitrif_denitrif>
 
 
 <!--
@@ -221,8 +221,6 @@ lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_mp24_simyr2000_c130927.nc</fsurd
 lnd/clm2/surfdata_map/surfdata_5x5_amazon_simyr2000_c130927.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_1x1_brazil_simyr2000_c130927.nc</fsurdat>
-<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr2000_c130927.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" use_crop=".false." >
@@ -247,9 +245,6 @@ lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr1850_c130927.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="1850" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_10x15_simyr1850_c130927.nc</fsurdat>
 
-<fsurdat hgrid="1x1_tropicAtl" sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr1850_c130927.nc</fsurdat>
-
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 
@@ -269,9 +264,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
  use_crop=".false." >lnd/clm2/surfdata_map/surfdata.pftdyn_10x15_rcp8.5_simyr1850-2100_c130524.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="48x96"         sim_year_range="1850-2000"
  use_crop=".false."  >lnd/clm2/surfdata_map/surfdata.pftdyn_48x96_rcp8.5_simyr1850-2100_c130524.nc</flanduse_timeseries>
-
-<flanduse_timeseries hgrid="1x1_tropicAtl" sim_year_range="1850-2000"
- use_crop=".false."  >lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_hist_simyr1850-2005_c130627.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000" 
  use_crop=".false."  >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp8.5_simyr1850-2100_c130524.nc</flanduse_timeseries>
@@ -382,7 +374,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
 <!-- lightning streams namelist defaults -->
@@ -399,7 +390,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 <lightngmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
 <lightngmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</lightngmapalgo>
 <lightngmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</lightngmapalgo>
 <lightngmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
 <!-- Population density streams namelist defaults -->
@@ -437,7 +427,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
-<popdensmapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
 <!-- Create crop on a separate land-unit -->
@@ -700,41 +689,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_smallvilleIA/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_smallvilleIA_nomask_aave_da_c130403.nc</map>
 
 <!-- mapping files for 1x1_smallvilleIA END --> 
-
-<!-- mapping files for 1x1_tropicAtl START added on Thu Jul 19 13:06:19 2012--> 
-
-<map frm_hgrid="0.5x0.5"    frm_lmask="AVHRR"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.5x0.5_AVHRR_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="MODIS"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.5x0.5_MODIS_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.5x0.5_nomask_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_10x10min_nomask_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_MODIS_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_USGS_to_1x1_tropicAtl_nomask_aave_da_c120927.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_LandScan2004_to_1x1_tropicAtl_nomask_aave_da_c121114.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="IGBP-GSDP"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_5x5min_IGBP-GSDP_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="ISRIC-WISE"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_5x5min_ISRIC-WISE_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_5x5min_nomask_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
-<map frm_hgrid="3x3min"   frm_lmask="GLOBE-Gardner" to_hgrid="1x1_tropicAtl" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_GLOBE-Gardner_to_1x1_tropicAtl_nomask_aave_da_c120927.nc</map>
-<map frm_hgrid="3x3min"   frm_lmask="GLOBE-Gardner-mergeGIS" to_hgrid="1x1_tropicAtl" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_GLOBE-Gardner-mergeGIS_to_1x1_tropicAtl_nomask_aave_da_c120927.nc</map>
-<map frm_hgrid="0.9x1.25"    frm_lmask="GRDC"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_0.9x1.25_GRDC_to_1x1_tropicAtl_nomask_aave_da_c130309.nc</map>
-<map frm_hgrid="360x720cru"    frm_lmask="cruncep"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_360x720_cruncep_to_1x1_tropicAtl_nomask_aave_da_c130326.nc</map>
-<map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_tropicAtl_nomask_aave_da_c130403.nc</map>
-
-<!-- mapping files for 1x1_tropicAtl END --> 
 
 <!-- mapping files for 1x1_urbanc_alpha START added on Thu Jul 19 13:06:19 2012--> 
 

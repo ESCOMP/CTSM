@@ -52,7 +52,7 @@ contains
     type(dgvs_type)              , intent(inout) :: dgvs_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: g,l,p,m                                 ! indices
+    integer  :: g,l,c,p,m                               ! indices
     integer  :: fn, filterg(bounds%begg-bounds%endg+1)  ! local gridcell filter for error check
     !
     ! gridcell level variables
@@ -108,7 +108,7 @@ contains
          tcmin          =>    dgv_ecophyscon%tcmin                       , & ! Input:  [real(r8) (:) ]  ecophys const - minimum coldest monthly mean temperature
          gddmin         =>    dgv_ecophyscon%gddmin                      , & ! Input:  [real(r8) (:) ]  ecophys const - minimum growing degree days (at or above 5 C)
 
-         prec365        =>    atm2lnd_inst%prec365_patch                 , & ! Input:  [real(r8) (:) ]  365-day running mean of tot. precipitation        
+         prec365        =>    atm2lnd_inst%prec365_col                   , & ! Input:  [real(r8) (:) ]  365-day running mean of tot. precipitation        
 
          agddtw         =>    dgvs_inst%agddtw_patch                     , & ! Input:  [real(r8) (:) ]  accumulated growing degree days above twmax       
          agdd20         =>    dgvs_inst%agdd20_patch                     , & ! Input:  [real(r8) (:) ]  20-yr running mean of agdd                        
@@ -187,6 +187,7 @@ contains
       end do
 
       do p = bounds%begp,bounds%endp
+         c = patch%column(p)
          l = patch%landunit(p)
 
          ! Case 1 -- patch ceases to exist -kill patches not adapted to current climate
@@ -200,7 +201,7 @@ contains
          ! Case 2 -- patch begins to exist - introduce newly "adapted" patches
 
          if (lun%itype(l) == istsoil) then
-            if (.not. present(p) .and. prec365(p) >= prec_min_estab .and. estab(p)) then
+            if (.not. present(p) .and. prec365(c) >= prec_min_estab .and. estab(p)) then
                if (twmax(ivt(p)) > 999._r8 .or. agddtw(p) == 0._r8) then
 
                   present(p) = .true.

@@ -1,0 +1,8 @@
+ reseed_dead_plants = .true.
+ reset_snow = .true.
+ reset_snow_glc = .true.
+
+ ! 1774 m was chosen by Leo van Kampenhout, based on the SMB field from the RACMO 2.3
+ ! regional climate model, period 1960-1989. The elevation corresponds to the highest point
+ ! on the contiguous Greenland ice sheet (GrIS) where SMB <= 1 mmWE/yr
+ reset_snow_glc_ela = 1774.

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<compsets>
+<compsets version="2.0">
 
   <help>
     =========================================
@@ -18,7 +18,7 @@
     ICE  = [CICE, DICE, SICE]
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
-    GLC  = [CISM1, CISM2, SGLC]
+    GLC  = [CISM1, CISM2]
     WAV  = [SWAV]
     BGC  = optional BGC scenario
 
@@ -31,406 +31,260 @@
     Each compset node is associated with the following elements
     - lname
     - alias
-    - support  (optional description of the support level for this compset)
-    Each compset node can also have the following attributes
-    - grid  (optional regular expression match for grid to work with the compset)
+    - science_support  (if this compset is supported scientifically with control simulations)
   </help>
 
-  <!-- I single point forcing -->
+<!-- I single point forcing -->
 
   <compset>
-    <alias>I1PT</alias>
-    <lname>2000_DATM%1PT_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1PtClm50SpGs</alias>
+    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
+
   <compset>
-    <alias>I1PTCLM45</alias>
+    <alias>I1PtClm45SpGs</alias>
     <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
-  <compset>
-    <alias>I1PTCLM50</alias>
-    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
 
-  <!-- I QIAN compsets -->
+<!-- I CLM50 Compsets -->
 
   <compset>
-    <alias>ITEST</alias>
-    <lname>2003_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV_TEST</lname>
-  </compset>
-  <compset>
-    <alias>ICNTEST</alias>
-    <lname>2003_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV_TEST</lname>
-  </compset>
-  <compset>
-    <alias>ICLM45CNTEST</alias>
-    <lname>2003_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV_TEST</lname>
-  </compset>
-  <compset>
-    <alias>I1850</alias>
-    <lname>1850_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I1850CLM45</alias>
-    <lname>1850_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I</alias>
-    <lname>2000_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>ICLM45</alias>
-    <lname>2000_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I4804</alias>
-    <lname>4804_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I4804CLM45</alias>
-    <lname>4804_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHIST</alias>
-    <lname>HIST_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHISTCLM45</alias>
-    <lname>HIST_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>ICN</alias>
-    <lname>2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I1850CN</alias>
-    <lname>1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I1850CLM45CN</alias>
-    <lname>1850_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I1850CLM45ED</alias>
-    <lname>1850_DATM%QIA_CLM45%ED_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <support_level>"Experimental, under development"</support_level>
-  </compset>
-  <compset>
-    <alias>I1850CLM45CNF</alias>
-    <lname>1850_DATM%QIA_CLM45%CN_SICE_SOCN_RTM%FLOOD_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHISTCN</alias>
-    <lname>HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP85CN</alias>
-    <lname>RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP85CLM45CN</alias>
-    <lname>RCP8_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP60CN</alias>
-    <lname>RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP60CLM45CN</alias>
-    <lname>RCP6_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP45CN</alias>
-    <lname>RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP26CN</alias>
-    <lname>RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP26CLM45CN</alias>
-    <lname>RCP2_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>ICNCROP</alias>
-    <lname>2000_DATM%QIA_CLM40%CN-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>ICLM45CNCROP</alias>
-    <lname>2000_DATM%QIA_CLM45%CN-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP45CLM45BGC</alias>
-    <lname>RCP4_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IRCP85CLM45BGC</alias>
-    <lname>RCP8_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <!---I CRUNCEP compsets -->
-
-  <compset>
-    <alias>ICRUCLM45</alias>
-    <lname>2000_DATM%CRU_CLM45_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>ICRUCN</alias>
-    <lname>2000_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm50Sp</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1850CRUCLM45CN</alias>
-    <lname>1850_DATM%CRU_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm50BgcCru</alias>
+    <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
+  <!-- Primarily for testing -->
   <compset>
-    <alias>I1850CRUCLM45BGCDV</alias>
-    <lname>1850_DATM%CRU_CLM45%BGCDV_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>ICRUCLM45BGCCROP</alias>
-    <lname>2000_DATM%CRU_CLM45%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>ICRUCLM45BGCTEST</alias>
-    <lname>2003_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV_TEST</lname>
-  </compset>
-  <compset>
-    <alias>ICRUCLM45BGC</alias>
-    <lname>2000_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I1850CRUCLM45BGC</alias>
-    <lname>1850_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHISTCRUCLM45BGC</alias>
-    <lname>HIST_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm50BgcCropRtm</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>ICRUCLM50BGC</alias>
-    <lname>2000_DATM%CRU_CLM50%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm50BgcCrop</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50Cn</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%CN_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>ICRUCLM50BGCCROP</alias>
-    <lname>2000_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1850Clm50BgcCrop</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
   </compset>
 
   <compset>
-    <alias>I1850CRUCLM50BGCCROP</alias>
-    <lname>1850_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm50SpGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50BgcCropGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>IMCRUCLM50BGC</alias>
-    <lname>2000_DATM%CRU_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <alias>I2000Clm50BgcCruGs</alias>
+    <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
-  <!---I compset system tests -->
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50SpRtmFl</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_RTM%FLOOD_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
 
   <compset>
-    <alias>ICNDVCROP</alias>
-    <lname>2000_DATM%QIA_CLM40%CNDV-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm50Fates</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
+  <!-- Stub glacier needed for regional / single-point -->
   <compset>
-    <alias>ICLM45CNDV</alias>
-    <lname>2000_DATM%QIA_CLM45%CNDV_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm50FatesGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
+
   <compset>
-    <alias>ICLM45BGCDVCROP</alias>
-    <lname>2000_DATM%QIA_CLM45%BGCDV-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <alias>I1850Clm50Bgc</alias>
+     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+   </compset>
+
+  <compset>
+    <alias>IHistClm50BgcCrop</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
   <compset>
-    <alias>ICLM50BGCDVCROP</alias>
-    <lname>2000_DATM%CRU_CLM50%BGCDV-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>IHistClm50Bgc</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
+  <!-- Primarily for testing (stub glc needed for single-point tests); uses Qian
+       atmospheric forcing simply to give faster datm throughput, which is
+       particularly relevant for single-point cases (where datm dominates the
+       runtime) -->
   <compset>
-    <alias>ICLM45VIC</alias>
-    <lname>2000_DATM%QIA_CLM45%SP-VIC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>IHistClm50BgcQianGs</alias>
+    <lname>HIST_DATM%QIA_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
+
+  <!-- Primarily for testing (stub glc needed for single-point tests) -->
   <compset>
-    <alias>ICLM45BGC</alias>
-    <lname>2000_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>IHistClm50BgcCropGs</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
+
+  <!-- Primarily for testing, not entirely sure this configure works -->
   <compset>
-    <alias>ICLM45ED</alias>
-    <lname>2000_DATM%QIA_CLM45%ED_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <support_level>Experimental, under development</support_level>
+    <alias>I2000Clm50BgcDvCrop</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGCDV-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
+  <!-- Primarily for testing; uses Qian atmospheric forcing simply to give
+       faster datm throughput, which is particularly relevant for single-point
+       cases (where datm dominates the runtime) -->
   <compset>
-    <alias>I1850CLM45ED</alias>
-    <lname>1850_DATM%QIA_CLM45%ED_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <support_level>Experimental, under development</support_level>
+    <alias>I2000Clm50BgcDvCropQianGs</alias>
+    <lname>2000_DATM%QIA_CLM50%BGCDV-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
+
+<!-- I cpl history MOAR forcing spinup compsets -->
+
   <compset>
-    <alias>I1850CLM45BGC</alias>
-    <lname>1850_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1850Clm50BgcSpinup</alias>
+    <lname>1850_DATM%S1850_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
+
+<!-- I CLM45 Compsets -->
+
   <compset>
-    <alias>ICLM45BGCCROP</alias>
-    <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1850Clm45BgcCrop</alias>
+    <lname>1850_DATM%GSWP3v1_CLM45%BGC-CROP_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
+  <!-- Primarily for testing -->
   <compset>
-    <alias>ICLM45CRUBGC</alias>
-    <lname>2000_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>IHistClm45BgcCrop</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM45%BGC-CROP_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
+
+  <!-- Primarily for testing; uses Qian atmospheric forcing simply to give
+       faster datm throughput, which is particularly relevant for single-point
+       cases (where datm dominates the runtime) -->
   <compset>
-    <alias>IHISTCLM45BGCCROP</alias>
+    <alias>IHistClm45BgcCropQianGs</alias>
     <lname>HIST_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
-  <compset>
-    <alias>IHISTCLM50BGCCROP</alias>
-    <lname>HIST_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHISTCLM45BGC</alias>
-    <lname>HIST_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHISTCLM50BGC</alias>
-    <lname>HIST_DATM%CRU_CLM50%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <!---I cpl history MOAR forcing spinup compsets -->
 
   <compset>
-    <alias>I1850SPINUPCN</alias>
-    <lname>1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm45Sp</alias>
+    <lname>2000_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm45BgcCrop</alias>
+    <lname>2000_DATM%GSWP3v1_CLM45%BGC-CROP_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm45Fates</alias>
+    <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Stub glacier needed for regional / single-point -->
+  <compset>
+    <alias>I2000Clm45FatesGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm45Cn</alias>
+    <lname>1850_DATM%GSWP3v1_CLM45%CN_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm45Bgc</alias>
+    <lname>1850_DATM%GSWP3v1_CLM45%BGC_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm45BgcCru</alias>
+    <lname>1850_DATM%CRUv7_CLM45%BGC_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>IHistClm45Bgc</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM45%BGC_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50Vic</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP-VIC_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
-    <alias>I1850SPINUPCLM45BGC</alias>
-    <lname>1850_DATM%S1850_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I2000Clm45VicCru</alias>
+    <lname>2000_DATM%CRUv7_CLM45%SP-VIC_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
-  <!---IG compsets -->
+<!-- IG compsets -->
 
-  <compset grid="g%gland">
-    <alias>IG1850</alias>
-    <lname>1850_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  <compset>
+    <alias>I1850Clm50SpG</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
-    <alias>IG1850CLM45</alias>
-    <lname>1850_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  <compset>
+    <alias>IHistClm50SpG</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
-    <alias>IG</alias>
-    <lname>2000_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  <compset>
+    <alias>I1850Clm50BgcCropG</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
-    <alias>IGCLM45</alias>
-    <lname>2000_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  <compset>
+    <alias>IHistClm50BgcCropG</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
-    <alias>IGHIST</alias>
-    <lname>HIST_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  <!-- CLM 4.0 -->
+  <compset>
+    <alias>I2000Clm40SpCruGs</alias>
+    <lname>2000_DATM%CRU_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
-    <alias>IGHISTCLM45</alias>
-    <lname>HIST_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  <compset>
+    <alias>I1850Clm40SpCruGs</alias>
+    <lname>2000_DATM%CRU_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
-    <alias>IGHISTCLM50</alias>
-    <lname>HIST_DATM%CRU_CLM50%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  <compset>
+    <alias>IHistClm40SpCruGs</alias>
+    <lname>2000_DATM%CRU_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
-  <compset grid="g%gland">
-    <alias>IGHISTCLM45CN</alias>
-    <lname>HIST_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
 
-  <compset grid="g%gland">
-    <alias>IGHISTCN</alias>
-    <lname>HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
 
-  <compset grid="g%gland">
-    <alias>IG1850CN</alias>
-    <lname>1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IG1850CLM50</alias>
-    <lname>1850_DATM%QIA_CLM50%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGCN</alias>
-    <lname>2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGCLM45BGC</alias>
-    <lname>2000_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IG1850CRUCLM50BGC</alias>
-    <lname>1850_DATM%CRU_CLM50%BGC_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IG1850CRUCLM50BGCCROP</alias>
-    <lname>1850_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGM1850CRUCLM50BGCCROP</alias>
-    <lname>1850_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGMHISTCRUCLM50BGCCROP</alias>
-    <lname>HIST_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGM1850CRUCLM50BGC</alias>
-    <lname>1850_DATM%CRU_CLM50%BGC_SICE_SOCN_MOSART_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGRCP85CN</alias>
-    <lname>RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGRCP60CN</alias>
-    <lname>RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGRCP45CN</alias>
-    <lname>RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGRCP26CN</alias>
-    <lname>RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGRCP85CLM45CN</alias>
-    <lname>RCP8_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
-
-  <compset grid="g%gland">
-    <alias>IGRCP45CLM45CN</alias>
-    <lname>RCP4_DATM%QIA_CLM45%CN_SICE_SOCN_RTM_CISM2_SWAV</lname>
-  </compset>
+  <!-- changes to driver xml variables - in case of a tie in the values matches the last match is taken -->
 
   <entries>
     <entry id="RUN_STARTDATE">
       <values>
-	<value compset="RCP[2468]"		  >2005-01-01</value>
 	<value compset="HIST_"			  >1850-01-01</value>
-	<value compset="4804_"			  >0001-01-01</value>
 	<value compset="CLM[45].*_CISM.*_TEST"	  >1980-01-15</value>
 	<value compset="CLM[45]%[^_]*CNDV.*_TEST" >1997-12-31</value>
 	<value grid="a%1x1_mexicocityMEX"	  >1993-12-01</value>
@@ -455,119 +309,6 @@
       </values>
     </entry>
 
-    <entry id="RUN_TYPE">
-      <values>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="4804_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="4804_DATM%QIA_CLM40%SPSICE_SOCN_RTM_SGLC_SWAV"	  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >hybrid</value>
-      </values>
-    </entry>
-
-    <entry id="RUN_REFCASE">
-      <values>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I1850CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I1850CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I1850CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="4804_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">I1850CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f19_g16_c100503</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f19_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I1850CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I1850CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I1850CLM40CRUCN_f09_g16_clm4500_c130514</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I1850CLM40CRUCN_f09_g16_clm4500_c130514</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="4804_DATM%QIA_CLM40%SPSICE_SOCN_RTM_SGLC_SWAV"	  >I2000CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">I1850CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f09_g16_c100503</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >I2000CN_f09_g16_c100503</value>
-      </values>
-    </entry>
-
-    <entry id="RUN_REFDATE">
-      <values>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="4804_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >1122-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >1122-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="4804_DATM%QIA_CLM40%SPSICE_SOCN_RTM_SGLC_SWAV"	  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >0001-01-01</value>
-      </values>
-    </entry>
-
-    <entry id="RUN_REFDIR">
-      <values>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="4804_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%1.9x2.5_l%1.9x2.5_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="2000_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="HIST_DATM%CRU_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="4804_DATM%QIA_CLM40%SPSICE_SOCN_RTM_SGLC_SWAV"	  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV">ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP2_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP4_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP6_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-	<value grid="a%0.9x1.25_l%0.9x1.25_.*_r%r05"	compset="RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV"  >ccsm4_init</value>
-      </values>
-    </entry>
-
   </entries>
 
 </compsets>
-

@@ -157,7 +157,7 @@ contains
      ! !USES:
      use clm_varcon         , only : hfus, denice, zlnd, rpi, spval, tfrz, int_snow_max
      use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
-     use landunit_varcon    , only : istcrop, istice, istwet, istsoil, istice_mec 
+     use landunit_varcon    , only : istcrop, istwet, istsoil, istice_mec 
      use clm_varctl         , only : subgridflag
      use clm_varpar         , only : nlevsoi,nlevsno
      use clm_time_manager   , only : get_step_size
@@ -393,7 +393,7 @@ contains
                 end if
              end if
 
-          else if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+          else if (lun%itype(l)==istice_mec) then
 
              h2ocan(p)            = 0._r8
              qflx_candrip(p)      = 0._r8

@@ -229,11 +229,11 @@ contains
     if (present(special_type)) then
        special_type = l_special_type
     end if
-    cs_updater = column_state_updater_type(bounds)
+    cs_updater = column_state_updater_type(bounds, nclumps=1)
     call cs_updater%set_old_weights(bounds)
 
     call this%set_new_lwtgcell(lwtgcell = lwtgcell_new)
-    call cs_updater%set_new_weights(bounds)
+    call cs_updater%set_new_weights(bounds, clump_index=1)
   end subroutine do_all_setup_with_two_vegetated_columns_and_special
 
   subroutine do_all_setup_two_veg_and_special_specialShrinks( &
@@ -303,11 +303,11 @@ contains
     real(r8), intent(in) :: cwtlunit_new(:)
 
     call this%setup_gridcell_with_four_vegetated_columns(cwtlunit_old)
-    cs_updater = column_state_updater_type(bounds)
+    cs_updater = column_state_updater_type(bounds, nclumps=1)
     call cs_updater%set_old_weights(bounds)
 
     call this%set_new_cwtlunit(cwtlunit_new)
-    call cs_updater%set_new_weights(bounds)
+    call cs_updater%set_new_weights(bounds, clump_index=1)
   end subroutine do_all_setup_with_four_vegetated_columns
 
 
@@ -380,7 +380,7 @@ contains
     myvar = [2._r8, 3._r8, 4._r8, 5._r8]
     expected = myvar
 
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar)
 
     @assertEqual(expected, myvar)
   end subroutine noSpecialHandling_noAreaChange
@@ -408,7 +408,7 @@ contains
          cwtlunit_new(3)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar)
 
     ! Verify
     ! First make sure that the transformation is conservative; note that this looks at the
@@ -449,7 +449,7 @@ contains
          cwtlunit_new(4)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar)
 
     ! Verify
     ! First make sure that the transformation is conservative; note that this looks at the
@@ -482,12 +482,12 @@ contains
 
     call this%setup_three_gridcells_with_two_columns_each( &
          cwtlunit_grc1_old, cwtlunit_grc2_old, cwtlunit_grc3_old)
-    cs_updater = column_state_updater_type(bounds)
+    cs_updater = column_state_updater_type(bounds, nclumps=1)
     call cs_updater%set_old_weights(bounds)
 
     call this%set_new_cwtlunit(cwtlunit = &
          [cwtlunit_grc1_new, cwtlunit_grc2_new, cwtlunit_grc3_new])
-    call cs_updater%set_new_weights(bounds)
+    call cs_updater%set_new_weights(bounds, clump_index=1)
 
     myvar = [1._r8, 2._r8, 3._r8, 4._r8, 5._r8, 6._r8]
     myvar_orig = myvar
@@ -504,7 +504,7 @@ contains
          (cwtlunit_grc3_old(1) + g3_weight_change)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar)
 
     ! Verify
     ! First make sure that the transformation is conservative; note that this looks at the
@@ -551,8 +551,8 @@ contains
     expected_non_conserved_mass = this%cwtgcell_new_minus_old(3) * input_from_glacier
 
     ! Exercise
-    call cs_updater%update_column_state_fill_special_using_natveg(bounds, myvar, &
-         non_conserved_mass_grc)
+    call cs_updater%update_column_state_fill_special_using_natveg(bounds, clump_index=1, var=myvar, &
+         non_conserved_mass_grc=non_conserved_mass_grc)
 
     ! Verify
     @assertEqual(expected_var, myvar, tolerance=tol)
@@ -590,8 +590,8 @@ contains
          myvar(2) * this%cwtgcell_new_minus_old(2))
 
     ! Exercise
-    call cs_updater%update_column_state_fill_special_using_natveg(bounds, myvar, &
-         non_conserved_mass_grc)
+    call cs_updater%update_column_state_fill_special_using_natveg(bounds, clump_index=1, var=myvar, &
+         non_conserved_mass_grc=non_conserved_mass_grc)
 
     ! Verify
     @assertEqual(expected_var, myvar, tolerance=tol)
@@ -631,8 +631,8 @@ contains
          cwtlunit_new(3)
 
     ! Exercise
-    call cs_updater%update_column_state_fill_special_using_natveg(bounds, myvar, &
-         non_conserved_mass_grc)
+    call cs_updater%update_column_state_fill_special_using_natveg(bounds, clump_index=1, var=myvar, &
+         non_conserved_mass_grc=non_conserved_mass_grc)
 
     ! Verify
     ! First make sure that the transformation is conservative; note that this looks at the
@@ -680,8 +680,8 @@ contains
     expected_non_conserved_mass = this%cwtgcell_new_minus_old(3) * input_from_special
 
     ! Exercise
-    call cs_updater%update_column_state_fill_using_fixed_values(bounds, myvar, &
-         landunit_values, non_conserved_mass_grc)
+    call cs_updater%update_column_state_fill_using_fixed_values(bounds, clump_index=1, var=myvar, &
+         landunit_values=landunit_values, non_conserved_mass_grc=non_conserved_mass_grc)
 
     ! Verify
     @assertEqual(expected_var, myvar, tolerance=tol)
@@ -728,8 +728,8 @@ contains
          myvar(2) * this%cwtgcell_new_minus_old(2))
 
     ! Exercise
-    call cs_updater%update_column_state_fill_using_fixed_values(bounds, myvar, &
-         landunit_values, non_conserved_mass_grc)
+    call cs_updater%update_column_state_fill_using_fixed_values(bounds, clump_index=1, var=myvar, &
+         landunit_values=landunit_values, non_conserved_mass_grc=non_conserved_mass_grc)
 
     ! Verify
     @assertEqual(expected_var, myvar, tolerance=tol)
@@ -772,8 +772,8 @@ contains
          cwtlunit_new(3)
 
     ! Exercise
-    call cs_updater%update_column_state_fill_using_fixed_values(bounds, myvar, &
-         landunit_values, non_conserved_mass_grc)
+    call cs_updater%update_column_state_fill_using_fixed_values(bounds, clump_index=1, var=myvar, &
+         landunit_values=landunit_values, non_conserved_mass_grc=non_conserved_mass_grc)
 
     ! Verify
     ! First make sure that the transformation is conservative; note that this looks at the
@@ -819,8 +819,8 @@ contains
     expected_non_conserved_mass = this%cwtgcell_new_minus_old(3) * input_from_special
 
     ! Exercise
-    call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, myvar, &
-         input_from_special, non_conserved_mass_grc)
+    call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, clump_index=1, var=myvar, &
+         special_value=input_from_special, non_conserved_mass_grc=non_conserved_mass_grc)
 
     ! Verify
     @assertEqual(expected_var, myvar, tolerance=tol)
@@ -866,10 +866,10 @@ contains
          this%cwtgcell_new_minus_old(2) * fractional_area_old(3))
 
     fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, fractional_area_new)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar, &
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
          fractional_area_old = fractional_area_old, &
          fractional_area_new = fractional_area_new)
 
@@ -907,10 +907,10 @@ contains
     expected = myvar
 
     fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, fractional_area_new)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar, &
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
          fractional_area_old = fractional_area_old, &
          fractional_area_new = fractional_area_new)
 
@@ -944,10 +944,10 @@ contains
     myvar_orig = myvar
     
     fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, fractional_area_new)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar, &
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
          fractional_area_old = fractional_area_old, &
          fractional_area_new = fractional_area_new)
 
@@ -992,11 +992,11 @@ contains
          * input_from_special
 
     fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, fractional_area_new)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
 
     ! Exercise
-    call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, myvar, &
-         input_from_special, non_conserved_mass_grc, &
+    call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, clump_index=1, var=myvar, &
+         special_value=input_from_special, non_conserved_mass_grc=non_conserved_mass_grc, &
          fractional_area_old = fractional_area_old, &
          fractional_area_new = fractional_area_new)
 
@@ -1038,11 +1038,11 @@ contains
          myvar(2) * this%cwtgcell_new_minus_old(2) * fractional_area_old(2))
 
     fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, fractional_area_new)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
 
     ! Exercise
-    call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, myvar, &
-         input_from_special, non_conserved_mass_grc, &
+    call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, clump_index=1, var=myvar, &
+         special_value=input_from_special, non_conserved_mass_grc=non_conserved_mass_grc, &
          fractional_area_old = fractional_area_old, &
          fractional_area_new = fractional_area_new)
 
@@ -1078,7 +1078,7 @@ contains
 
     myvar = [2._r8, 3._r8, 4._r8, 5._r8]
 
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar, &
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
          adjustment = adjustment)
 
     adjustment_expected(:) = 0._r8
@@ -1103,7 +1103,7 @@ contains
     myvar = [2._r8, 3._r8, 4._r8, 5._r8]
     myvar_orig = myvar
 
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar, &
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
          adjustment = adjustment)
 
     adjustment_expected(:) = 0._r8
@@ -1125,8 +1125,8 @@ contains
 
     myvar = [2._r8, 3._r8, 4._r8]
 
-    call cs_updater%update_column_state_fill_special_using_natveg(bounds, myvar, &
-         non_conserved_mass_grc, adjustment = adjustment)
+    call cs_updater%update_column_state_fill_special_using_natveg(bounds, clump_index=1, var=myvar, &
+         non_conserved_mass_grc = non_conserved_mass_grc, adjustment = adjustment)
 
     adjustment_expected(:) = 0._r8
     @assertEqual(adjustment_expected, adjustment)
@@ -1155,10 +1155,10 @@ contains
     adjustment(:) = 0._r8
 
     fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, fractional_area_new)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar, &
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
          fractional_area_old = fractional_area_old, &
          fractional_area_new = fractional_area_new, &
          adjustment = adjustment)
@@ -1197,10 +1197,10 @@ contains
     adjustment(:) = 0._r8
 
     fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, fractional_area_new)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
 
     ! Exercise
-    call cs_updater%update_column_state_no_special_handling(bounds, myvar, &
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
          fractional_area_old = fractional_area_old, &
          fractional_area_new = fractional_area_new, &
          adjustment = adjustment)

@@ -16,11 +16,8 @@ module mkgridmapMod
 ! !PUBLIC TYPES:
   type gridmap_type
      character(len=32) :: set ! If set or not
-     character(len=32) :: name
      integer :: na            ! size of source domain
      integer :: nb            ! size of destination domain
-     integer :: ni            ! number of row in the matrix
-     integer :: nj            ! number of col in the matrix
      integer :: ns            ! number of non-zero elements in matrix
      real(r8), pointer :: yc_src(:)     ! "degrees" 
      real(r8), pointer :: yc_dst(:)     ! "degrees" 
@@ -40,9 +37,11 @@ module mkgridmapMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: gridmap_setptrs     ! Set pointers to gridmap data
+  public :: for_test_create_gridmap  ! Set a gridmap directly, for testing
   public :: gridmap_mapread     ! Read in gridmap
   public :: gridmap_check       ! Check validity of a gridmap
   public :: gridmap_areaave     ! do area average
+  public :: gridmap_areaave_scs ! area average, but multiply by ratio of source over destination weight
   public :: gridmap_areastddev  ! do area-weighted standard deviation
   public :: gridmap_clean       ! Clean and deallocate a gridmap structure
 !
@@ -61,8 +60,14 @@ module mkgridmapMod
   ! from frac_dst which is calculated by mapping frac_src?
   ! in frac - isn't grid1_frac always 1 or 0?
 
-! !PRIVATE MEMBER FUNCTIONS:
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: set_gridmap_var
   private :: gridmap_checkifset
+
+  interface set_gridmap_var
+     module procedure set_gridmap_var_r8
+     module procedure set_gridmap_var_int
+  end interface set_gridmap_var
 
   character(len=32), parameter :: isSet = "gridmap_IsSet"
   
@@ -137,11 +142,14 @@ contains
 ! This subroutine reads in the map file
 !
 ! !USES:
+    use mkncdio, only : nf_open, nf_close, nf_strerror
+    use mkncdio, only : nf_inq_dimid, nf_inq_dimlen
+    use mkncdio, only : nf_inq_varid, nf_get_var_double, nf_get_var_int
+    use mkncdio, only : NF_NOWRITE, NF_NOERR
     use mkncdio, only : convert_latlon
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     type(gridmap_type), intent(out) :: gridmap   ! mapping data
     character(len=*)   , intent(in)  :: filename  ! netCDF file to read
 !
@@ -302,6 +310,167 @@ contains
 
 !==========================================================================
 
+  !-----------------------------------------------------------------------
+  subroutine for_test_create_gridmap(gridmap, na, nb, ns, &
+       src_indx, dst_indx, wovr, &
+       mask_src, mask_dst, frac_src, frac_dst, area_src, area_dst, &
+       xc_src, xc_dst, yc_src, yc_dst)
+    !
+    ! !DESCRIPTION:
+    ! Creates a gridmap object directly from inputs
+    !
+    ! This is meant for testing
+    !
+    ! !ARGUMENTS:
+    type(gridmap_type), intent(out) :: gridmap
+    integer, intent(in) :: na
+    integer, intent(in) :: nb
+    integer, intent(in) :: ns
+    integer, intent(in) :: src_indx(:)
+    integer, intent(in) :: dst_indx(:)
+    real(r8), intent(in) :: wovr(:)
+
+    ! If not provided, mask and frac values are set to 1 everywhere
+    integer, intent(in), optional :: mask_src(:)
+    integer, intent(in), optional :: mask_dst(:)
+    real(r8), intent(in), optional :: frac_src(:)
+    real(r8), intent(in), optional :: frac_dst(:)
+
+    ! If not provided, area values are set to a constant value everywhere
+    real(r8), intent(in), optional :: area_src(:)
+    real(r8), intent(in), optional :: area_dst(:)
+
+    ! If not provided, xc and yc values are set to 0 everywhere
+    real(r8), intent(in), optional :: xc_src(:)
+    real(r8), intent(in), optional :: xc_dst(:)
+    real(r8), intent(in), optional :: yc_src(:)
+    real(r8), intent(in), optional :: yc_dst(:)
+
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'for_test_create_gridmap'
+    !-----------------------------------------------------------------------
+
+    ! ------------------------------------------------------------------------
+    ! Error checking on sizes of arrays
+    ! ------------------------------------------------------------------------
+    call check_input_size('src_indx', size(src_indx), ns)
+    call check_input_size('dst_indx', size(dst_indx), ns)
+    call check_input_size('wovr', size(wovr), ns)
+
+    if (present(mask_src)) then
+       call check_input_size('mask_src', size(mask_src), na)
+    end if
+    if (present(frac_src)) then
+       call check_input_size('frac_src', size(frac_src), na)
+    end if
+    if (present(area_src)) then
+       call check_input_size('area_src', size(area_src), na)
+    end if
+    if (present(xc_src)) then
+       call check_input_size('xc_src', size(xc_src), na)
+    end if
+    if (present(yc_src)) then
+       call check_input_size('yc_src', size(yc_src), na)
+    end if
+
+    if (present(mask_dst)) then
+       call check_input_size('mask_dst', size(mask_dst), nb)
+    end if
+    if (present(frac_dst)) then
+       call check_input_size('frac_dst', size(frac_dst), nb)
+    end if
+    if (present(area_dst)) then
+       call check_input_size('area_dst', size(area_dst), nb)
+    end if
+    if (present(xc_dst)) then
+       call check_input_size('xc_dst', size(xc_dst), nb)
+    end if
+    if (present(yc_dst)) then
+       call check_input_size('yc_dst', size(yc_dst), nb)
+    end if
+
+    ! ------------------------------------------------------------------------
+    ! Create gridmap object
+    ! ------------------------------------------------------------------------
+
+    gridmap%na = na
+    gridmap%nb = nb
+    gridmap%ns = ns
+
+    allocate(gridmap%src_indx(ns))
+    gridmap%src_indx = src_indx
+    allocate(gridmap%dst_indx(ns))
+    gridmap%dst_indx = dst_indx
+    allocate(gridmap%wovr(ns))
+    gridmap%wovr = wovr
+
+    allocate(gridmap%mask_src(na))
+    call set_gridmap_var(gridmap%mask_src, 1, mask_src)
+    allocate(gridmap%mask_dst(nb))
+    call set_gridmap_var(gridmap%mask_dst, 1, mask_dst)
+    allocate(gridmap%frac_src(na))
+    call set_gridmap_var(gridmap%frac_src, 1._r8, frac_src)
+    allocate(gridmap%frac_dst(nb))
+    call set_gridmap_var(gridmap%frac_dst, 1._r8, frac_dst)
+
+    allocate(gridmap%yc_src(na))
+    call set_gridmap_var(gridmap%yc_src, 0._r8, yc_src)
+    allocate(gridmap%yc_dst(nb))
+    call set_gridmap_var(gridmap%yc_dst, 0._r8, yc_dst)
+    allocate(gridmap%xc_src(na))
+    call set_gridmap_var(gridmap%xc_src, 0._r8, xc_src)
+    allocate(gridmap%xc_dst(nb))
+    call set_gridmap_var(gridmap%xc_dst, 0._r8, xc_dst)
+    allocate(gridmap%area_src(na))
+    call set_gridmap_var(gridmap%area_src, 0._r8, area_src)
+    allocate(gridmap%area_dst(nb))
+    call set_gridmap_var(gridmap%area_dst, 0._r8, area_dst)
+
+    gridmap%set = isSet
+
+  contains
+    subroutine check_input_size(varname, actual_size, expected_size)
+      character(len=*), intent(in) :: varname
+      integer, intent(in) :: actual_size
+      integer, intent(in) :: expected_size
+
+      if (actual_size /= expected_size) then
+         write(6,*) subname, ' ERROR: ', trim(varname), ' wrong size: actual, expected = ', &
+              actual_size, expected_size
+         call abort()
+      end if
+    end subroutine check_input_size
+
+  end subroutine for_test_create_gridmap
+
+  subroutine set_gridmap_var_r8(var, default_val, input_val)
+    ! Convenience subroutine to set a variable to an optional input or a default value
+    real(r8), intent(out) :: var(:)
+    real(r8), intent(in) :: default_val
+    real(r8), intent(in), optional :: input_val(:)
+
+    if (present(input_val)) then
+       var = input_val
+    else
+       var = default_val
+    end if
+  end subroutine set_gridmap_var_r8
+
+  subroutine set_gridmap_var_int(var, default_val, input_val)
+    ! Convenience subroutine to set a variable to an optional input or a default value
+    integer, intent(out) :: var(:)
+    integer, intent(in) :: default_val
+    integer, intent(in), optional :: input_val(:)
+
+    if (present(input_val)) then
+       var = input_val
+    else
+       var = default_val
+    end if
+  end subroutine set_gridmap_var_int
+
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -425,6 +594,72 @@ contains
     deallocate(sum_weights)
 
   end subroutine gridmap_areaave_default
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gridmap_areaave_scs
+!
+! !INTERFACE:
+  subroutine gridmap_areaave_scs (gridmap, src_array, dst_array, nodata, src_wt, dst_wt)
+!
+! !DESCRIPTION:
+! This subroutine does a simple area average, but multiplies by the ratio of the source over
+! the destination weight. Sets to zero if destination weight is zero.
+!
+! !ARGUMENTS:
+    implicit none
+    type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
+    real(r8), intent(in) :: src_array(:)
+    real(r8), intent(out):: dst_array(:)
+    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
+    real(r8), intent(in) :: src_wt(:)            ! Source weights
+    real(r8), intent(in) :: dst_wt(:)            ! Destination weights
+
+!
+! !REVISION HISTORY:
+!   Created by Mariana Vertenstein, moditied by Sean Swenson
+!
+! !LOCAL VARIABLES:
+    integer :: n,ns,ni,no
+    real(r8):: wt,frac,swt,dwt
+    real(r8), allocatable :: sum_weights(:)      ! sum of weights on the output grid
+    character(*),parameter :: subName = '(gridmap_areaave_scs) '
+!EOP
+!------------------------------------------------------------------------------
+    call gridmap_checkifset( gridmap, subname )
+    allocate(sum_weights(size(dst_array)))
+    sum_weights = 0._r8
+    dst_array = 0._r8
+
+    do n = 1,gridmap%ns
+       ni = gridmap%src_indx(n)
+       no = gridmap%dst_indx(n)
+       wt = gridmap%wovr(n)
+       frac = gridmap%frac_dst(no)
+       swt = src_wt(ni)
+       dwt = dst_wt(no)
+       wt = wt * swt
+       if(dwt > 0._r8) then 
+          wt = wt / dwt
+       else
+          wt = 0._r8
+       endif
+       if (frac > 0.) then  
+          dst_array(no) = dst_array(no) + wt * src_array(ni)/frac
+          sum_weights(no) = sum_weights(no) + wt
+       end if
+    end do
+
+    where (sum_weights == 0._r8)
+       dst_array = nodata
+    end where
+
+    deallocate(sum_weights)
+
+  end subroutine gridmap_areaave_scs
+
+!==========================================================================
 
 !==========================================================================
 

@@ -13,9 +13,12 @@ determine default values for namelists.
 -->
 
 <!-- Default CLM start-type -->
-<clm_start_type                 >arb_ic</clm_start_type>
-<clm_start_type     spinup="AD" >cold</clm_start_type> <!-- CLM 4.0 -->
-<clm_start_type bgc_spinup="on" >cold</clm_start_type> <!-- CLM 4.5 -->
+<clm_start_type phys="clm4_5"                  >startup</clm_start_type>
+<clm_start_type phys="clm5_0"                  >startup</clm_start_type>
+<clm_start_type phys="clm5_0" use_cndv=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5" use_cndv=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm4_0"                  >arb_ic</clm_start_type>
+<clm_start_type bgc_spinup="on"                >cold</clm_start_type> <!-- CLM 4.5 -->
 
 <!-- Default location of {csmdata} -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
@@ -23,7 +26,6 @@ determine default values for namelists.
 <!-- Default resolution -->
 <res sitespf_pt="none"               >1.9x2.5</res>
 <res sitespf_pt="1x1_brazil"         >1x1_brazil</res>
-<res sitespf_pt="1x1_tropicAtl"      >1x1_tropicAtl</res>
 <res sitespf_pt="5x5_amazon"         >5x5_amazon</res>
 <res sitespf_pt="1x1_camdenNJ"       >1x1_camdenNJ</res>
 <res sitespf_pt="1x1_vancouverCAN"   >1x1_vancouverCAN</res>
@@ -76,7 +78,6 @@ determine default values for namelists.
 <mask hgrid="ne30"                >gx1v6</mask>
 
 <mask hgrid="5x5_amazon"          >navy</mask>
-<mask hgrid="1x1_tropicAtl"       >test</mask>
 <mask hgrid="1x1_camdenNJ"        >navy</mask>
 <mask hgrid="1x1_vancouverCAN"    >navy</mask>
 <mask hgrid="1x1_mexicocityMEX"   >navy</mask>

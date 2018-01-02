@@ -946,7 +946,7 @@ contains
 
     if (use_crop) then
        this%fert_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FERT', units='gN/m^2/s', &
+       call hist_addfld1d (fname='NFERTILIZATION', units='gN/m^2/s', &
             avgflag='A', long_name='fertilizer added', &
             ptr_patch=this%fert_patch)
     end if
@@ -962,7 +962,7 @@ contains
        this%fert_counter_patch(begp:endp) = spval
        call hist_addfld1d (fname='FERT_COUNTER', units='seconds', &
             avgflag='A', long_name='time left to fertilize', &
-            ptr_patch=this%fert_counter_patch)
+            ptr_patch=this%fert_counter_patch, default='inactive')
     end if
 
     !-------------------------------
@@ -1062,7 +1062,7 @@ contains
     this%crop_seedn_to_leaf_patch(begp:endp) = spval
     call hist_addfld1d (fname='CROP_SEEDN_TO_LEAF', units='gN/m^2/s', &
          avgflag='A', long_name='crop seed source to leaf', &
-         ptr_patch=this%crop_seedn_to_leaf_patch)
+         ptr_patch=this%crop_seedn_to_leaf_patch, default='inactive')
 
     this%plant_ndemand_patch(begp:endp) = spval
     call hist_addfld1d (fname='PLANT_NDEMAND', units='gN/m^2/s', &

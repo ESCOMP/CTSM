@@ -58,6 +58,9 @@ module filterColMod
   ! of interest
   public :: col_filter_from_grcflags_ltypes
 
+  ! Create a filter from another filter subset by a column-level logical array
+  public :: col_filter_from_filter_and_logical_array
+
   ! !PRIVATE ROUTINES:
 
   ! Whether a given column should be included in the filter based on the active flag
@@ -323,6 +326,45 @@ contains
     end do  ! g
 
   end function col_filter_from_grcflags_ltypes
+
+  !-----------------------------------------------------------------------
+  function col_filter_from_filter_and_logical_array(bounds, num_orig, filter_orig, logical_col) &
+       result(filter)
+    !
+    ! !DESCRIPTION:
+    ! Create a filter from another filter subset by a column-level logical array
+    !
+    ! !ARGUMENTS:
+    type(filter_col_type) :: filter  ! function result
+
+    ! Accepts separate num & indices arguments rather than a filter of filter_col_type so
+    ! that this function can be called with old-style filters, where these were stored
+    ! separately rather than being bundled together.
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_orig                  ! number of points in original filter
+    integer, intent(in) :: filter_orig(:)            ! column indices in original filter
+    logical, intent(in) :: logical_col(bounds%begc:) ! column-level logical array
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'col_filter_from_filter_and_logical_array'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(logical_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+
+    filter = col_filter_empty(bounds)
+
+    do fc = 1, num_orig
+       c = filter_orig(fc)
+       if (logical_col(c)) then
+          filter%num = filter%num + 1
+          filter%indices(filter%num) = c
+       end if
+    end do
+
+  end function col_filter_from_filter_and_logical_array
+
 
   !-----------------------------------------------------------------------
   pure function include_based_on_active(c, include_inactive) result(include_point)

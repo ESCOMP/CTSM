@@ -10,13 +10,14 @@ module initSubgridMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_ed
+  use clm_varctl     , only : iulog, use_fates
   use clm_varcon     , only : namep, namec, namel
   use decompMod      , only : bounds_type
   use GridcellType   , only : grc                
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch                
+  use column_varcon  , only : is_hydrologically_active
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -417,6 +418,9 @@ contains
     col%wtlunit(ci) = wtlunit
     col%itype(ci) = ctype
     col%type_is_dynamic(ci) = l_type_is_dynamic
+    col%hydrologically_active(ci) = is_hydrologically_active( &
+         col_itype = ctype, &
+         lun_itype = lun%itype(li))
 
   end subroutine add_column
 
@@ -456,9 +460,9 @@ contains
 
     ! TODO (MV, 10-17-14): The following must be commented out because
     ! currently patch%itype is used in CanopyTemperatureMod to calculate 
-    ! z0m(p) and displa(p) - and is still called even when ED is on
+    ! z0m(p) and displa(p) - and is still called even when fates is on
 
-    !if (.not. use_ed) then
+    !if (.not. use_fates) then
     patch%itype(pi) = ptype
     !end if
 

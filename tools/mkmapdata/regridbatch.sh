@@ -23,12 +23,14 @@
 #BSUB -W 24:00
 #BSUB -q geyser          # queue
 
-# hopper/edison specific batch commands:
+# cheyenne specific batch commands:
+#PBS -A P93300606
 #PBS -N regrid
 #PBS -q regular
-#PBS -l mppwidth=8
-#PBS -l walltime=24:00:00
+#PBS -l select=4:ncpus=2:mpiprocs=2:mem=109GB
+#PBS -l walltime=2:00:00
 #PBS -j oe
+#PBS -me
 #PBS -V
 #PBS -S /bin/bash
 

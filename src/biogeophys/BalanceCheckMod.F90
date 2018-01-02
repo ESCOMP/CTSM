@@ -5,12 +5,14 @@ module BalanceCheckMod
   ! Water and energy balance check.
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
   use clm_varctl         , only : iulog
   use clm_varcon         , only : namep, namec
+  use clm_varpar         , only : nlevsoi
   use GetGlobalValuesMod , only : GetGlobalIndex
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
@@ -20,18 +22,24 @@ module BalanceCheckMod
   use WaterfluxType      , only : waterflux_type
   use IrrigationMod      , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
+  use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake, ComputeWaterMassLake
   use GridcellType       , only : grc                
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                
+  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
+  use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
+  use column_varcon      , only : icol_road_perv, icol_road_imperv
+  use clm_varcon         , only : aquifer_water_baseline
   !
   ! !PUBLIC TYPES:
   implicit none
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: BeginWaterBalance  ! Initialize water balance check
-  public :: BalanceCheck       ! Water and energy balance check
+
+  public :: BeginWaterBalance        ! Initialize water balance check
+  public :: BalanceCheck             ! Water and energy balance check
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -42,92 +50,49 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       num_hydrologyc, filter_hydrologyc, &
        soilhydrology_inst, waterstate_inst)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step
     !
-    ! !USES:
-    use subgridAveMod , only : p2c
-    use clm_varpar    , only : nlevgrnd, nlevsoi, nlevurb
-    use column_varcon , only : icol_roof, icol_sunwall, icol_shadewall 
-    use column_varcon , only : icol_road_perv, icol_road_imperv
-    !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds     
     integer                   , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
     integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
-    integer                   , intent(in)    :: num_lakec            ! number of column non-lake points in column filter
-    integer                   , intent(in)    :: filter_lakec(:)      ! column filter for non-lake points
-    integer                   , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
-    integer                   , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+    integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
+    integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(soilhydrology_type)  , intent(inout) :: soilhydrology_inst
     type(waterstate_type)     , intent(inout) :: waterstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c, p, f, j, fc                  ! indices
-    real(r8):: h2osoi_vol
+    integer :: c, j, fc                  ! indices
     !-----------------------------------------------------------------------
 
     associate(                                               & 
          zi           =>    col%zi                         , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
-
-         h2ocan_patch =>    waterstate_inst%h2ocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy water (mm H2O) (patch-level)       
-         h2osfc       =>    waterstate_inst%h2osfc_col     , & ! Input:  [real(r8) (:)   ]  surface water (mm)                      
-         h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
-         h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
-
          zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
          wa           =>    soilhydrology_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
-         h2ocan_col   =>    waterstate_inst%h2ocan_col     , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O) (column level)    
          begwb        =>    waterstate_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
-      ! Determine beginning water balance for time step
-      ! patch-level canopy water averaged to column
+   do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       if (col%hydrologically_active(c)) then
+          if(zwt(c) <= zi(c,nlevsoi)) then
+             wa(c) = aquifer_water_baseline
+          end if
+       end if
+    end do
 
-      call p2c(bounds, num_nolakec, filter_nolakec, &
-           h2ocan_patch(bounds%begp:bounds%endp), &
-           h2ocan_col(bounds%begc:bounds%endc))
+    call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
+         soilhydrology_inst, waterstate_inst, begwb(bounds%begc:bounds%endc))
 
-      do f = 1, num_hydrologyc
-         c = filter_hydrologyc(f)
-         if(zwt(c) <= zi(c,nlevsoi)) then
-            wa(c) = 5000._r8
-         end if
-      end do
-
-      do f = 1, num_nolakec
-         c = filter_nolakec(f)
-         if (col%itype(c) == icol_roof .or. col%itype(c) == icol_sunwall &
-              .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_road_imperv) then
-            begwb(c) = h2ocan_col(c) + h2osno(c)
-         else
-            begwb(c) = h2ocan_col(c) + h2osno(c) + h2osfc(c) + wa(c)
-         end if
-
-      end do
-      do j = 1, nlevgrnd
-         do f = 1, num_nolakec
-            c = filter_nolakec(f)
-            if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-                 .or. col%itype(c) == icol_roof) .and. j > nlevurb) then
-            else
-               begwb(c) = begwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-            end if
-         end do
-      end do
-
-      do f = 1, num_lakec
-         c = filter_lakec(f)
-         begwb(c) = h2osno(c)
-      end do
+    call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
+         waterstate_inst, begwb(bounds%begc:bounds%endc))
 
     end associate 
 
-   end subroutine BeginWaterBalance
+  end subroutine BeginWaterBalance
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
@@ -150,12 +115,8 @@ contains
      !
      ! !USES:
      use clm_varcon        , only : spval
-     use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
-     use column_varcon     , only : icol_road_perv, icol_road_imperv
-     use landunit_varcon   , only : istdlak, istsoil,istcrop,istwet,istice,istice_mec
-     use clm_varctl        , only : create_glacier_mec_landunit
      use clm_time_manager  , only : get_step_size, get_nstep
-     use clm_initializeMod , only : surfalb_inst
+     use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod
      !
@@ -197,18 +158,22 @@ contains
           errh2o                  =>    waterstate_inst%errh2o_col              , & ! Output: [real(r8) (:)   ]  water conservation error (mm H2O)       
           errh2osno               =>    waterstate_inst%errh2osno_col           , & ! Output: [real(r8) (:)   ]  error in h2osno (kg m-2)                
           endwb                   =>    waterstate_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
-
+          total_plant_stored_h2o_col => waterstate_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
+          qflx_rootsoi_col        =>    waterflux_inst%qflx_rootsoi_col         , & ! Input   [real(r8) (:)   ]  water loss in soil layers to root uptake (mm H2O/s)
+                                                                                    !                            (ie transpiration demand, often = transpiration)
           qflx_rain_grnd_col      =>    waterflux_inst%qflx_rain_grnd_col       , & ! Input:  [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
           qflx_snow_grnd_col      =>    waterflux_inst%qflx_snow_grnd_col       , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_evap_soi           =>    waterflux_inst%qflx_evap_soi_col        , & ! Input:  [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
+          qflx_snwcp_liq          =>    waterflux_inst%qflx_snwcp_liq_col       , & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
           qflx_snwcp_ice          =>    waterflux_inst%qflx_snwcp_ice_col       , & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
+          qflx_snwcp_discarded_liq =>   waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
+          qflx_snwcp_discarded_ice =>   waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
           qflx_evap_tot           =>    waterflux_inst%qflx_evap_tot_col        , & ! Input:  [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
           qflx_dew_snow           =>    waterflux_inst%qflx_dew_snow_col        , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
           qflx_sub_snow           =>    waterflux_inst%qflx_sub_snow_col        , & ! Input:  [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
           qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col       , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
           qflx_dew_grnd           =>    waterflux_inst%qflx_dew_grnd_col        , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
           qflx_prec_grnd          =>    waterflux_inst%qflx_prec_grnd_col       , & ! Input:  [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
-          qflx_snwcp_liq          =>    waterflux_inst%qflx_snwcp_liq_col       , & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  snow falling on surface water (mm/s)    
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
           qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
@@ -310,7 +275,8 @@ contains
                   - qflx_drain_perched(c)    &
                   - qflx_ice_runoff_snwcp(c) &
                   - qflx_ice_runoff_xs(c)    &
-                  ) * dtime
+                  - qflx_snwcp_discarded_liq(c) &
+                  - qflx_snwcp_discarded_ice(c)) * dtime
           else
 
              errh2o(c) = 0.0_r8
@@ -355,7 +321,10 @@ contains
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
              write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
              write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
-
+             write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
+             write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
+             write(iulog,*)'qflx_rootsoi_col(1:nlevsoil)  = ',qflx_rootsoi_col(indexc,:)*dtime
+             write(iulog,*)'total_plant_stored_h2o_col = ',total_plant_stored_h2o_col(indexc)
              write(iulog,*)'deltawb          = ',endwb(indexc)-begwb(indexc)
              write(iulog,*)'deltawb/dtime    = ',(endwb(indexc)-begwb(indexc))/dtime
              write(iulog,*)'deltaflux        = ',forc_rain_col(indexc)+forc_snow_col(indexc) - (qflx_evap_tot(indexc) + &
@@ -371,8 +340,10 @@ contains
              write(iulog,*)'errh2o                = ',errh2o(indexc)
              write(iulog,*)'forc_rain             = ',forc_rain_col(indexc)*dtime
              write(iulog,*)'forc_snow             = ',forc_snow_col(indexc)*dtime
+             write(iulog,*)'total_plant_stored_h2o_col = ',total_plant_stored_h2o_col(indexc)
              write(iulog,*)'endwb                 = ',endwb(indexc)
              write(iulog,*)'begwb                 = ',begwb(indexc)
+             
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
              write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
@@ -384,8 +355,10 @@ contains
              write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
              write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux(indexc)*dtime
+             write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
+             write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
+             write(iulog,*)'qflx_rootsoi_col(1:nlevsoil)  = ',qflx_rootsoi_col(indexc,:)*dtime
              write(iulog,*)'cold/colu  = ',col%cold(indexc),col%colu(indexc)
-
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if
@@ -406,7 +379,9 @@ contains
              if (col%snl(c) < 0) then
                 snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
                 snow_sinks(c)  = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_drain(c) &
-                     + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)
+                     + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                     + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
+                     + qflx_sl_top_soil(c)
 
                 if (lun%itype(l) == istdlak) then 
                    snow_sources(c) = qflx_snow_grnd_col(c) &
@@ -414,17 +389,19 @@ contains
                         +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) 
                    snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
                         + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
+                        + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c)  &
                         + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                 endif
 
                 if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
                      lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
-                     lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
+                      lun%itype(l) == istice_mec) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
                           +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
                    snow_sinks(c) = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
                           + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                          + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                 endif
 
@@ -478,6 +455,8 @@ contains
              write(iulog,*)'qflx_dew_grnd      = ',qflx_dew_grnd(indexc)*dtime
              write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)*dtime
              write(iulog,*)'qflx_snwcp_liq     = ',qflx_snwcp_liq(indexc)*dtime
+             write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
+             write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
              write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
              write(iulog,*)'clm model is stopping'
 
@@ -632,7 +611,7 @@ contains
        found = .false.
        do c = bounds%begc,bounds%endc
           if (col%active(c)) then
-             if (abs(errsoi_col(c)) > 1.0e-6_r8 ) then
+             if (abs(errsoi_col(c)) > 1.0e-5_r8 ) then
                 found = .true.
                 indexc = c
              end if

@@ -174,13 +174,13 @@ This downscaling is conservative.
 <default>Default: .true.</default>
 </entry>
 
-<entry id="use_ed" type="logical" category="physics"
+<entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the ED
 (ED = 'on' is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
-<entry id="use_ed_spit_fire" type="logical" category="physics"
+<entry id="use_fates_spitfire" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on spit fire (only relevant if ED is being used).
 </entry>
@@ -189,6 +189,11 @@ Toggle to turn on spit fire (only relevant if ED is being used).
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with plant function type (PFT) constants combined with
 constants for biogeochem modules
+</entry>
+
+<entry id="fates_paramfile" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname to fates parameter file
 </entry>
 
 <entry id="fsurdat" type="char*256"     category="datasets"
@@ -945,7 +950,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
+"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
 Horizontal resolutions
 Note: 0.1x0.1, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
@@ -1002,8 +1007,8 @@ Description of the use case selected.
 Command line arguement for turning on CN spinup mode.
 </entry>
 
-<entry id="bgc_mode" type="char*4" category="default_settings"
-       group="default_settings" valid_values="sp,cn,bgc,ed" >
+<entry id="bgc_mode" type="char*5" category="default_settings"
+       group="default_settings" valid_values="sp,cn,bgc,fates" >
 Command line arguement for biogeochemistry mode for CLM4.5
    sp  = Satellitte Phenology
    cn  = Carbon Nitrogen model
@@ -1144,13 +1149,25 @@ Enable C14 model
 
 <entry id="use_c14_bombspike" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
-Flag to use the atmospheric time series of C14 concentrations from bomb fallout, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
+Flag to use the atmospheric time series of C14 concentrations from bomb fallout and Seuss effect, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
 (EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c14_filename" type="char*256" category="clm_isotope"
        group="clm_inparm" valid_values="" >
-Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "atm_delta_c14".  time variable is in format 1950.0, and time values must be monotonically increasing for interpolation, however spacing can be unequal. atm_delta_c14 variable has units of permil.  
+Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "Delta14co2_in_air". time variable is in format: years since 1850-01-01 0:0:0.0  units are permil.
+(EXPERIMENTAL and NOT tested)
+</entry>
+
+<entry id="use_c13_timeseries" type="logical" category="clm_isotope"
+       group="clm_inparm" valid_values="" >
+Flag to use the atmospheric time series of C13 concentrations from natural abundance and the Seuss Effect, rather than static values.
+(EXPERIMENTAL and NOT tested)
+</entry>
+
+<entry id="atm_c13_filename" type="char*256" category="clm_isotope"
+       group="clm_inparm" valid_values="" >
+Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0  units are permil
 (EXPERIMENTAL and NOT tested)
 </entry>
 

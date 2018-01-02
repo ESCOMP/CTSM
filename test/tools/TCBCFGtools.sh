@@ -85,6 +85,7 @@ if [ $rc -ne 0 ]; then
    exit 5
 fi
 
+. $INITMODULES
 . ./.env_mach_specific.sh
 
 attempt=1

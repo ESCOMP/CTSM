@@ -19,6 +19,8 @@ module surfrdUtilsMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
+  public :: renormalize         ! Renormalize an array
+  public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT:w
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
 
   character(len=*), parameter, private :: sourcefile = &
@@ -29,7 +31,7 @@ module surfrdUtilsMod
 contains
   
   !-----------------------------------------------------------------------
-  subroutine check_sums_equal_1(arr, lb, name, caller)
+  subroutine check_sums_equal_1(arr, lb, name, caller, ier)
     !
     ! !DESCRIPTION:
     ! Confirm that sum(arr(n,:)) == 1 for all n. If this isn't true for any n, abort with a message.
@@ -39,14 +41,16 @@ contains
     real(r8)        , intent(in) :: arr(lb:,:)   ! array to check
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
+    integer, optional, intent(out):: ier         ! Return an error code rather than abort
     !
     ! !LOCAL VARIABLES:
     logical :: found
     integer :: nl
     integer :: nindx
-    real(r8), parameter :: eps = 1.e-14_r8
+    real(r8), parameter :: eps = 1.e-13_r8
     !-----------------------------------------------------------------------
 
+    if( present(ier) ) ier = 0
     found = .false.
 
     do nl = lbound(arr, 1), ubound(arr, 1)
@@ -60,10 +64,80 @@ contains
     if (found) then
        write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not 1.0 at nl=', nindx
        write(iulog,*) 'sum is: ', sum(arr(nindx,:))
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       if( present(ier) ) then
+          ier = -10
+       else
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
     end if
 
   end subroutine check_sums_equal_1
+
+  !-----------------------------------------------------------------------
+  subroutine renormalize(arr, lb, normal)
+    !
+    ! !DESCRIPTION:
+    ! Re normalize an array so that it sums to the input value
+    !
+    ! !ARGUMENTS:
+    integer         , intent(in) :: lb            ! lower bound of the first dimension of arr
+    real(r8)        , intent(inout) :: arr(lb:,:) ! array to check
+    real(r8)        , intent(in) :: normal        ! normal to sum to
+    !
+    ! !LOCAL VARIABLES:
+    integer :: nl        ! Array index
+    real(r8) :: arr_sum  ! sum of array
+    real(r8) :: ratio    ! ratio to multiply by
+    !-----------------------------------------------------------------------
+
+    do nl = lbound(arr, 1), ubound(arr, 1)
+       arr_sum = sum(arr(nl,:))
+       if ( arr_sum /= 0.0_r8 )then
+          ratio     = normal / arr_sum
+          arr(nl,:) = arr(nl,:) * ratio
+       end if
+    end do
+
+  end subroutine renormalize
+
+!-----------------------------------------------------------------------
+  subroutine convert_cft_to_pft( begg, endg, cftsize, wt_cft )
+    !
+    ! !DESCRIPTION:
+    !        Convert generic crop types that were read in as seperate CFT's on
+    !        a crop landunit, and put them on the vegetated landunit.
+    ! !USES:
+    use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
+    use clm_varpar      , only : cft_size, natpft_size
+    use pftconMod       , only : nc3crop
+    use landunit_varcon , only : istsoil, istcrop
+    ! !ARGUMENTS:
+    implicit none
+    integer          , intent(in)    :: begg, endg
+    integer          , intent(in)    :: cftsize          ! CFT size
+    real(r8)         , intent(inout) :: wt_cft(begg:,:)  ! CFT weights
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g    ! index
+!-----------------------------------------------------------------------
+    SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cftsize/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_nat_patch) == (/endg, nc3crop+cftsize-1/)), errMsg(sourcefile, __LINE__))
+
+    do g = begg, endg
+       if ( wt_lunit(g,istcrop) > 0.0_r8 )then
+          ! Move CFT over to PFT and do weighted average of the crop and soil parts
+          wt_nat_patch(g,:) = wt_nat_patch(g,:) * wt_lunit(g,istsoil)
+          wt_cft(g,:)       = wt_cft(g,:) * wt_lunit(g,istcrop)
+          wt_nat_patch(g,nc3crop:) = wt_cft(g,:)      ! Add crop CFT's to end of natural veg PFT's
+          wt_lunit(g,istsoil) = (wt_lunit(g,istsoil) + wt_lunit(g,istcrop)) ! Add crop landunit to soil landunit
+          wt_nat_patch(g,:)   =  wt_nat_patch(g,:) / wt_lunit(g,istsoil)
+          wt_lunit(g,istcrop) = 0.0_r8                ! Zero out crop CFT's
+       else
+          wt_nat_patch(g,nc3crop:) = 0.0_r8    ! Make sure generic crops are zeroed out
+       end if
+    end do
+
+  end subroutine convert_cft_to_pft
 
   !-----------------------------------------------------------------------
   subroutine collapse_crop_types(wt_cft, fert_cft, begg, endg, verbose)

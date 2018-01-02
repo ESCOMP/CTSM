@@ -33,7 +33,6 @@ module dynSubgridDriverMod
   use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
   use ch4Mod,                        only : ch4_type
   use EnergyFluxType               , only : energyflux_type
-  use LakeStateType                , only : lakestate_type
   use PhotosynthesisMod            , only : photosyns_type
   use SoilHydrologyType            , only : soilhydrology_type  
   use SoilStateType                , only : soilstate_type
@@ -42,7 +41,7 @@ module dynSubgridDriverMod
   use TemperatureType              , only : temperature_type
   use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
-  use filterMod                    , only : filter_inactive_and_active
+  use filterMod                    , only : filter, filter_inactive_and_active
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -102,7 +101,7 @@ contains
 
     prior_weights = prior_weights_type(bounds_proc)
     patch_state_updater = patch_state_updater_type(bounds_proc)
-    column_state_updater = column_state_updater_type(bounds_proc)
+    column_state_updater = column_state_updater_type(bounds_proc, nclumps)
 
     ! Initialize stuff for prescribed transient Patches
     if (get_do_transient_pfts()) then
@@ -154,7 +153,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine dynSubgrid_driver(bounds_proc,                                            &
-       urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
+       urbanparams_inst, soilstate_inst, soilhydrology_inst,           &
        waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
@@ -173,7 +172,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : use_cn, create_glacier_mec_landunit, use_ed
+    use clm_varctl           , only : use_cn, use_fates
     use dynInitColumnsMod    , only : initialize_new_columns
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynEDMod             , only : dyn_ED
@@ -182,8 +181,7 @@ contains
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
     type(urbanparams_type)               , intent(in)    :: urbanparams_inst
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
-    type(soilhydrology_type)             , intent(in)    :: soilhydrology_inst
-    type(lakestate_type)                 , intent(in)    :: lakestate_inst
+    type(soilhydrology_type)             , intent(inout) :: soilhydrology_inst
     type(waterstate_type)                , intent(inout) :: waterstate_inst
     type(waterflux_type)                 , intent(inout) :: waterflux_inst
     type(temperature_type)               , intent(inout) :: temperature_inst
@@ -223,7 +221,9 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call dyn_hwcontent_init(bounds_clump, &
-            urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            urbanparams_inst, soilstate_inst, soilhydrology_inst, &
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
@@ -258,15 +258,12 @@ contains
 
        call bgc_vegetation_inst%UpdateSubgridWeights(bounds_clump)
        
-       if (use_ed) then
+       if (use_fates) then
           call dyn_ED(bounds_clump)
        end if
 
-       if (create_glacier_mec_landunit) then
-          call glc2lnd_inst%update_glc2lnd_non_topo( &
-               bounds = bounds_clump, &
-               glc_behavior = glc_behavior)
-       end if
+       call glc2lnd_inst%update_glc2lnd_fracs( &
+            bounds = bounds_clump)
 
        ! ========================================================================
        ! Do wrapup stuff after land cover change
@@ -275,25 +272,32 @@ contains
        ! actually changed some weights in this time step. However, it doesn't do any harm
        ! (other than a small performance hit) to call this stuff all the time, so we do so
        ! for simplicity and safety.
+       !
+       ! NOTE(wjs, 2017-02-24) I'm not positive that the above paragraph is 100% true. It
+       ! is at least *mostly* true, but there may be some subtleties, like resetting of
+       ! some variables, that are needed even in (some) time steps where we haven't
+       ! changed weights.
        ! ========================================================================
 
        call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
 
        call patch_state_updater%set_new_weights(bounds_clump)
-       call column_state_updater%set_new_weights(bounds_clump)
+       call column_state_updater%set_new_weights(bounds_clump, nc)
 
        call set_subgrid_diagnostic_fields(bounds_clump)
 
        call initialize_new_columns(bounds_clump, &
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
-            temperature_inst, waterstate_inst)
+            temperature_inst, waterstate_inst, soilhydrology_inst)
 
        call dyn_hwcontent_final(bounds_clump, &
-            urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            urbanparams_inst, soilstate_inst, soilhydrology_inst, &
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
-          call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, &
+          call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, nc, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
                prior_weights, patch_state_updater, column_state_updater, &

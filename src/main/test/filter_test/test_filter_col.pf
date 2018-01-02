@@ -441,4 +441,36 @@ contains
     @assertTrue(filter == expected)
   end subroutine grcflagsLtypes_ltypeNotPresent
 
+  ! ------------------------------------------------------------------------
+  ! Tests of col_filter_from_filter_and_logical_array
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine filterAndLogicalArray_multiple_points(this)
+    ! Test col_filter_from_filter_and_logical_array with multiple points, with various
+    ! combinations of inside and outside the filter, and inside and outside the logical
+    ! array
+    class(TestFilterCol), intent(inout) :: this
+
+    ! Final filter should be set where both of the following are true:
+    logical, parameter :: logical_orig(6) = [.false., .true.,  .false., .true., .false., .true.]
+    logical, parameter :: logical_new (6) = [.false., .false., .false., .true., .true.,  .true.]
+
+    type(filter_col_type) :: filter_orig
+    type(filter_col_type) :: filter_new
+    type(filter_col_type) :: expected
+
+    call setup_ncells_single_veg_patch(ncells = 6, pft_type = 1)
+    filter_orig = col_filter_from_logical_array(bounds, logical_orig)
+    expected = col_filter_from_index_array(bounds, [bounds%begc+3, bounds%begc+5])
+
+    filter_new = col_filter_from_filter_and_logical_array(&
+         bounds = bounds, &
+         num_orig = filter_orig%num, &
+         filter_orig = filter_orig%indices, &
+         logical_col = logical_new)
+
+    @assertTrue(filter_new == expected)
+  end subroutine filterAndLogicalArray_multiple_points
+
 end module test_filter_col

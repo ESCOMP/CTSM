@@ -1,0 +1,217 @@
+module test_surfrdUtils
+
+  ! Tests of surfrdUtilsMod
+
+  use pfunit_mod
+  use surfrdUtilsMod
+  use shr_kind_mod, only : r8 => shr_kind_r8
+
+  implicit none
+  save
+
+  real(r8), parameter :: tol = 1.e-14_r8
+
+contains
+  
+  @Test
+  subroutine test_convert_cft_to_pft_with_zerocft()
+     use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
+     use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
+     use pftconMod       , only : nbrdlf_evr_shrub, nc4_grass, noveg
+     use landunit_varcon , only : istsoil, istcrop, max_lunit
+     use clm_varpar      , only : natpft_size, cft_size, numveg 
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8), allocatable ::  wtpft(:,:)
+
+     ! Set relevant pftcon values to defaults; these should be overridden by individual
+     ! tests where they matter
+     call pftcon%InitForTesting()
+     wt_cft(begg:,1) = 0.0_r8
+     wt_cft(begg:,2) = 0.0_r8
+     allocate( wt_lunit(begg:endg,max_lunit) )
+     wt_lunit(begg:,:)       =  0.00_r8
+     wt_lunit(begg:,istsoil) = 100.00_r8
+     wt_lunit(begg:,istcrop) =  0.00_r8
+     call check_sums_equal_1( (wt_lunit/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     natpft_size = numveg
+     cft_size    = 0
+     noveg       = 0
+     nc3crop     = 15
+     nc3irrig    = nc3crop + 1
+     ndllf_evr_tmp_tree = 1
+     nbrdlf_evr_shrub   = 9
+     nc4_grass          = 14
+     allocate( wt_nat_patch(begg:endg,0:natpft_size) )
+     allocate( wtpft       (begg:endg,0:natpft_size) )
+     wt_nat_patch(begg:,:) = 0.00_r8
+     wt_nat_patch(begg:,noveg)              =   5.00_r8
+     wt_nat_patch(begg:,ndllf_evr_tmp_tree) =  70.00_r8
+     wt_nat_patch(begg:,nbrdlf_evr_shrub)   =  20.00_r8
+     wt_nat_patch(begg:,nc4_grass)          =   5.00_r8
+     wtpft = wt_nat_patch/100.0_r8
+     call check_sums_equal_1( wtpft,  begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     wt_nat_patch(begg:,nc3crop:)           =   -100000.00_r8  ! set crop PFT's to junk, make sure can handle it
+     ! Convert
+     call convert_cft_to_pft( begg, endg, cftsize, wt_cft )
+     wt_nat_patch(begg:,:) = wt_nat_patch(begg:,:) / 100.00_r8
+     wt_lunit(begg:,:)     = wt_lunit(begg:,:)     / 100.00_r8
+     ! Now check that are correct now
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wtpft,wt_nat_patch)
+     @assertEqual(wt_lunit(begg:,istsoil),(/1.00_r8,1.00_r8/))
+     deallocate( wt_nat_patch )
+     deallocate( wtpft )
+
+     call pftcon%clean()
+  end subroutine test_convert_cft_to_pft_with_zerocft
+
+  @Test
+  subroutine test_convert_cft_to_pft()
+     use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
+     use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
+     use landunit_varcon , only : istsoil, istcrop, max_lunit
+     use clm_varpar      , only : natpft_size, cft_size, numveg
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     real(r8) :: wt_cft(begg:endg,cftsize)
+
+     ! Set relevant pftcon values to defaults; these should be overridden by individual
+     ! tests where they matter
+     call pftcon%InitForTesting()
+     wt_cft(begg:,1) = 25.0_r8
+     wt_cft(begg:,2) = 75.0_r8
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     allocate( wt_lunit(begg:endg,max_lunit) )
+     wt_lunit(begg:,:)       = 00.00_r8
+     wt_lunit(begg:,istsoil) = 25.00_r8
+     wt_lunit(begg:,istcrop) = 75.00_r8
+     call check_sums_equal_1( (wt_lunit/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     natpft_size = numveg
+     cft_size    = 0
+     nc3crop     = 15
+     nc3irrig    = nc3crop + 1
+     ndllf_evr_tmp_tree = 1
+     allocate( wt_nat_patch(begg:endg,0:natpft_size) )
+     wt_nat_patch(begg:,:) = 0.00_r8
+     wt_nat_patch(begg:,ndllf_evr_tmp_tree) = 100.00_r8
+     call check_sums_equal_1( (wt_nat_patch/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     ! Convert
+     wt_nat_patch(begg:,nc3crop:)           =   -100000.00_r8  ! set crop PFT's to junk, make sure can handle it
+     call convert_cft_to_pft( begg, endg, cftsize, wt_cft )
+     wt_nat_patch(begg:,:) = wt_nat_patch(begg:,:) / 100.00_r8
+     wt_lunit(begg:,:)     = wt_lunit(begg:,:)     / 100.00_r8
+     ! Now check that are correct now
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_lunit(begg:,istsoil),               (/1.00_r8,1.00_r8/))
+     @assertEqual(wt_nat_patch(begg:,ndllf_evr_tmp_tree),(/0.25_r8,0.25_r8/))
+     @assertEqual(wt_nat_patch(begg:,nc3crop),           (/0.1875_r8,0.1875_r8/))
+     @assertEqual(wt_nat_patch(begg:,nc3irrig),          (/0.5625_r8,0.5625_r8/))
+
+     call pftcon%clean()
+  end subroutine test_convert_cft_to_pft
+
+  @Test
+  subroutine test_check_sums_add_to_1()
+     implicit none
+     integer, parameter :: lb = 10, ub = 12, lb2 = 1, ub2 = 3
+     real(r8) :: array(lb:ub,lb2:ub2)
+
+     ! Create an array that sums to one, then copy it twice and
+     ! make one element off by less than tol and one off by more than tol
+     ! they should all work this way
+     array(lb,lb2)   = 0.75d00
+     array(lb,lb2+1) = 0.20d00
+     array(lb,lb2+2) = 0.05d00
+     array(lb+1,:)   = array(lb,:)
+     array(lb+1,lb2+2) = array(lb+1,lb2+2) - tol
+     array(lb+2,:)   = array(lb,:)
+     array(lb+1,lb2+2) = array(lb+1,lb2+2) + tol
+     call check_sums_equal_1( array, lb, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+  end subroutine test_check_sums_add_to_1
+
+  @Test
+  subroutine test_check_sums_add_to_1_fail()
+     implicit none
+     integer, parameter :: lb = 10, ub = 12, lb2 = 1, ub2 = 3
+     real(r8) :: array(lb:ub,lb2:ub2)
+     real(r8), parameter :: eps = 2.e-13
+     integer :: ier
+     
+     ! Create an array that sums to one, then copy it twice and
+     ! then make the last element of the last one off by small
+     ! value that should trigger an error
+     array(lb,lb2)   = 0.75d00
+     array(lb,lb2+1) = 0.20d00
+     array(lb,lb2+2) = 0.05d00
+     array(lb+1,:)   = array(lb,:)
+     array(lb+1,lb2+2) = array(lb+1,lb2+2) - tol
+     array(lb+2,:)   = array(lb,:)
+     array(lb+1,lb2+2) = array(lb+1,lb2+2) + eps
+     call check_sums_equal_1( array, lb, "test_check_sums_add_to_1_fail", &
+                              "should trigger an error", ier)
+     @assertEqual(ier,-10)
+  end subroutine test_check_sums_add_to_1_fail
+  @Test
+  subroutine test_renormalize
+     implicit none
+     integer, parameter :: lb = 10, ub = 12, lb2 = 1, ub2 = 3
+     real(r8) :: array(lb:ub,lb2:ub2)
+     real(r8) :: expected(lb:ub,lb2:ub2)
+     integer :: ier
+
+     ! Start with an array that sums to 1 within the tolerance
+     array(lb,lb2)   = 0.75d00
+     array(lb,lb2+1) = 0.20d00
+     array(lb,lb2+2) = 0.05d00
+     array(lb+1,:)   = array(lb,:)
+     array(lb+1,lb2+2) = array(lb+1,lb2+2) - tol
+     array(lb+2,:)   = array(lb,:)
+     array(lb+1,lb2+2) = array(lb+1,lb2+2) + tol
+     ! Add to the first element of each column a 1 which means the expected
+     ! result is half of the starting array
+     array(:,lb2) = array(:,lb2) + 1.0d00
+     expected(:,:) = array(:,:) / 2.0d00
+     ! Make the normalized result 100, so multiply the expected result by 100
+     expected(:,:) = expected(:,:)*100.0d00
+     call renormalize(array, lb, 100.0d00)
+     @assertEqual(array, expected, tolerance=tol)
+     ! divide by 100 and should add to one
+     array = array / 100.0d00
+     call check_sums_equal_1( array, lb, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     ! Call again returning error code, make sure error code is zero
+     call check_sums_equal_1( array, lb, "test_check_sums_add_to_1", &
+                              "should not trigger an error", ier)
+     @assertEqual(ier,0)
+  end subroutine test_renormalize
+
+  @Test
+  subroutine test_renormalize_zero
+     implicit none
+     integer, parameter :: lb = 10, ub = 12, lb2 = 1, ub2 = 3
+     real(r8) :: array(lb:ub,lb2:ub2)
+     real(r8) :: expected(lb:ub,lb2:ub2)
+
+     ! An array that sums to zero will remain zeroed out
+     array(:,:) = 0.0d00
+     expected(:,:) = array
+     call renormalize(array, lb, 100.0d00)
+     @assertEqual(array, expected, tolerance=tol)
+  end subroutine test_renormalize_zero
+
+end module test_surfrdUtils

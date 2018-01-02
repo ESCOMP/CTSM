@@ -11,7 +11,7 @@ module SoilBiogeochemDecompMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_ed
+  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates
   use clm_varcon                         , only : dzsoi_decomp
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
@@ -135,7 +135,7 @@ contains
       ! column loop to calculate actual immobilization and decomp rates, following
       ! resolution of plant/heterotroph  competition for mineral N
 
-   if ( .not. use_ed) then
+   if ( .not. use_fates) then
       ! calculate c:n ratios of applicable pools
       do l = 1, ndecomp_pools
          if ( floating_cn_ratio_decomp_pools(l) ) then
@@ -260,7 +260,7 @@ contains
      do fc = 1,num_soilc
        c = filter_soilc(fc)
          do j = 1,nlevdecomp
-            if(.not.use_ed)then
+            if(.not.use_fates)then
               net_nmin(c) = net_nmin(c) + net_nmin_vr(c,j) * dzsoi_decomp(j)
               gross_nmin(c) = gross_nmin(c) + gross_nmin_vr(c,j) * dzsoi_decomp(j)
             ! else

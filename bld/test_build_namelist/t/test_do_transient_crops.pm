@@ -47,8 +47,8 @@ sub setup : Test(setup => 1) {
   $self->{nl} = Build::Namelist->new();
   isnt($self->{nl}, undef, (caller(0))[3] . " : empty namelist object created.");
 
-  # Set use_ed so that it doesn't conflict with do_transient_crops
-  $self->set_value('use_ed', '.false.');
+  # Set use_fates so that it doesn't conflict with do_transient_crops
+  $self->set_value('use_fates', '.false.');
 }
 
 sub teardown : Test(teardown) {

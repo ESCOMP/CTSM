@@ -6,8 +6,7 @@ In this test, glaciers:
 This also includes some extra bgc fields on the history file, because this test
 is meant to be used to test bgc evolution as glaciers grow and shrink.
 
-This also includes spun-up initial conditions, in order to provide a more
-reasonable test of BGC state variable evolution with dynamic landunits. (With a
+This also ensures that spun-up initial conditions are used, in order to provide a more
+reasonable test of BGC state variable evolution with dynamic landunits. With a
 cold start run, the state variables are evolving so fast that it's hard to see
-the effects of dynamic landunits.) The explicitly-listed finidat file can be
-removed once we have out-of-the-box initial conditions for this test.
+the effects of dynamic landunits.

@@ -35,7 +35,7 @@ module controlMod
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
   use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
-  use C14BombSpikeMod                  , only: use_c14_bombspike, atm_c14_filename
+  use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
@@ -43,6 +43,7 @@ module controlMod
   use SoilHydrologyMod                 , only: soilHydReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
+  use seq_drydep_mod                   , only: drydep_method, DD_XLND, n_drydep
   use clm_varctl                       
   !
   ! !PUBLIC TYPES:
@@ -208,7 +209,8 @@ contains
 
     namelist /clm_inparm/ use_c13, use_c14
 
-    namelist /clm_inparm/ use_ed, use_ed_spit_fire
+
+    namelist /clm_inparm/ fates_paramfile, use_fates, use_fates_spitfire
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -229,7 +231,7 @@ contains
     namelist /clm_inparm/ use_dynroot
 
     namelist /clm_inparm/  &
-         use_c14_bombspike, atm_c14_filename
+         use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
@@ -330,25 +332,14 @@ contains
            end if
            call clm_varctl_set( nsrest_in=override_nsrest )
        end if
-       
-       if (maxpatch_glcmec > 0) then
-          create_glacier_mec_landunit = .true.
-       else
-          create_glacier_mec_landunit = .false.
+
+       if (maxpatch_glcmec <= 0) then
+          call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
+               errMsg(sourcefile, __LINE__))
        end if
 
-       if (use_crop .and. (use_c13 .or. use_c14)) then
-          call endrun(msg=' ERROR:: CROP and C13/C14 can NOT be on at the same time'//&
-            errMsg(sourcefile, __LINE__))
-       end if
-       
        if (use_crop .and. .not. create_crop_landunit) then
           call endrun(msg=' ERROR: prognostic crop Patches require create_crop_landunit=.true.'//&
-            errMsg(sourcefile, __LINE__))
-       end if
-       
-       if (.not. use_crop .and. irrigate) then
-          call endrun(msg=' ERROR: irrigate = .true. requires CROP model active.'//&
             errMsg(sourcefile, __LINE__))
        end if
        
@@ -359,18 +350,43 @@ contains
        end if
 
        ! ----------------------------------------------------------------------
-       !TURN OFF MEGAN VOCs if crop prognostic is on
-       ! This is a temporary place holder and should be removed once MEGAN VOCs and
-       ! crop ar compatible
-       if (use_crop) then
-          use_voc = .false.
-       end if
+       ! Check compatibility with the FATES model 
+       if ( use_fates ) then
 
-       ! ----------------------------------------------------------------------
-       ! ABORT if use_cn AND use_ed are both true
-       if (use_ed .and. use_cn) then
-          call endrun(msg=' ERROR: use_cn and use_ed cannot both be set to true.'//&
-               errMsg(sourcefile, __LINE__))
+          if ( use_cn) then
+             call endrun(msg=' ERROR: use_cn and use_fates cannot both be set to true.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+          
+          if ( use_hydrstress) then
+             call endrun(msg=' ERROR: use_hydrstress and use_fates cannot both be set to true.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+
+          if ( use_crop ) then
+             call endrun(msg=' ERROR: use_crop and use_fates cannot both be set to true.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+          
+          if( use_lch4 ) then
+             call endrun(msg=' ERROR: use_lch4 (methane) and use_fates cannot both be set to true.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+
+          if ( n_drydep > 0 .and. drydep_method /= DD_XLND ) then
+             call endrun(msg=' ERROR: dry deposition via ML Welsey is not compatible with FATES.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+
+          if( use_luna ) then
+             call endrun(msg=' ERROR: luna is not compatible with FATES.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
+
+          if (use_ozone ) then
+             call endrun(msg=' ERROR: ozone is not compatible with FATES.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
        end if
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
@@ -554,7 +570,6 @@ contains
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_voc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_ozone, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -597,8 +612,10 @@ contains
     call mpi_bcast (use_c13, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_c14, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_ed, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_ed_spit_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_fates_spitfire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -646,6 +663,8 @@ contains
     if (use_cn) then
        call mpi_bcast (use_c14_bombspike,  1, MPI_LOGICAL, 0, mpicom, ier)
        call mpi_bcast (atm_c14_filename,  len(atm_c14_filename), MPI_CHARACTER, 0, mpicom, ier)
+       call mpi_bcast (use_c13_timeseries,  1, MPI_LOGICAL, 0, mpicom, ier)
+       call mpi_bcast (atm_c13_filename,  len(atm_c13_filename), MPI_CHARACTER, 0, mpicom, ier)
        call mpi_bcast (use_fun,            1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
@@ -680,7 +699,6 @@ contains
     call mpi_bcast (n_melt_glcmec, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
-    call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -814,6 +832,8 @@ contains
 
     if (use_cn) then
        write(iulog, *) '  use_c13                                                : ', use_c13
+       write(iulog, *) '  use_c13_timeseries                                     : ', use_c13_timeseries
+       write(iulog, *) '  atm_c13_filename                                       : ', atm_c13_filename
        write(iulog, *) '  use_c14                                                : ', use_c14
        write(iulog, *) '  use_c14_bombspike                                      : ', use_c14_bombspike
        write(iulog, *) '  atm_c14_filename                                       : ', atm_c14_filename
@@ -836,20 +856,18 @@ contains
     write(iulog,*) '       snow-covered fraction during melt (mm) =', int_snow_max
     write(iulog,*) '   SCA shape parameter for glc_mec columns (n_melt_glcmec) =', n_melt_glcmec
 
-    if (create_glacier_mec_landunit) then
-       write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
+    write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
        if (glcmec_downscale_longwave) then
           write(iulog,*) '   Longwave radiation will be downscaled'
        else
           write(iulog,*) '   Longwave radiation will NOT be downscaled'
        endif
-       if (glc_do_dynglacier) then
-          write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
-       else
-          write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
-       end if
-       write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
-    endif
+    if (glc_do_dynglacier) then
+       write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
+    else
+       write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
+    end if
+    write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
 
     if (nsrest == nsrStartup) then
        if (finidat /= ' ') then
@@ -927,6 +945,13 @@ contains
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
     write(iulog, *) '  use_luna = ', use_luna
+
+    write(iulog, *) '  ED/FATES: '
+    write(iulog, *) '    use_fates = ', use_fates
+    if (use_fates) then
+       write(iulog, *) '    use_fates_spitfire = ', use_fates_spitfire
+       write(iulog, *) '    fates_paramfile = ', fates_paramfile
+    end if
   end subroutine control_print
 
 

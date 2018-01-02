@@ -5,9 +5,9 @@ module SoilBiogeochemCarbonStateType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
-  use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state, use_ed 
+  use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state, use_fates 
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
@@ -37,6 +37,8 @@ module SoilBiogeochemCarbonStateType
      real(r8), pointer :: decomp_cpools_1m_col (:,:)   ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
      real(r8), pointer :: decomp_cpools_col    (:,:)   ! (gC/m2)  decomposing (litter, cwd, soil) c pools
      real(r8), pointer :: dyn_cbal_adjustments_col (:) ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
+     integer  :: restart_file_spinup_state             ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
+     real(r8)          :: totvegcthresh                ! threshold for total vegetation carbon to zero out decomposition pools
 
    contains
 
@@ -44,10 +46,12 @@ module SoilBiogeochemCarbonStateType
      procedure , public  :: SetValues 
      procedure , public  :: Restart
      procedure , public  :: Summary
+     procedure , public  :: SetTotVgCThresh
      procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
+
 
   end type soilbiogeochem_carbonstate_type
 
@@ -66,6 +70,7 @@ contains
     real(r8)                              , intent(in)           :: ratio
     type(soilbiogeochem_carbonstate_type) , intent(in), optional :: c12_soilbiogeochem_carbonstate_inst
 
+    this%totvegcthresh = nan
     call this%InitAllocate ( bounds)
     call this%InitHistory ( bounds, carbon_type )
     if (present(c12_soilbiogeochem_carbonstate_inst)) then
@@ -99,7 +104,7 @@ contains
     this%decomp_cpools_vr_col(:,:,:)= nan
 
     allocate(this%ctrunc_col     (begc :endc)) ; this%ctrunc_col     (:) = nan
-    if ( .not. use_ed ) then
+    if ( .not. use_fates ) then
        allocate(this%cwdc_col       (begc :endc)) ; this%cwdc_col       (:) = nan
     endif
     allocate(this%totlitc_col    (begc :endc)) ; this%totlitc_col    (:) = nan
@@ -107,6 +112,8 @@ contains
     allocate(this%totlitc_1m_col (begc :endc)) ; this%totlitc_1m_col (:) = nan
     allocate(this%totsomc_1m_col (begc :endc)) ; this%totsomc_1m_col (:) = nan
     allocate(this%dyn_cbal_adjustments_col (begc:endc)) ; this%dyn_cbal_adjustments_col (:) = nan
+
+    this%restart_file_spinup_state = huge(1)
 
   end subroutine InitAllocate
 
@@ -141,10 +148,10 @@ contains
        this%decomp_cpools_col(begc:endc,:) = spval
        do l  = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,:,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levdcmp', &
+             call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levsoi', &
                   avgflag='A', long_name=longname, &
                   ptr_col=data2dptr)
           endif
@@ -162,14 +169,11 @@ contains
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 1 meter'
              call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                   avgflag='A', long_name=longname, &
-                  ptr_col=data1dptr, default = 'inactive')
+                  ptr_col=data1dptr, default='inactive')
           endif
        end do
  
        this%totlitc_col(begc:endc) = spval
-       call hist_addfld1d (fname='LITTERC', units='gC/m^2', &
-            avgflag='A', long_name='litter C', &
-            ptr_col=this%totlitc_col)
        call hist_addfld1d (fname='TOTLITC', units='gC/m^2', &
             avgflag='A', long_name='total litter carbon', &
             ptr_col=this%totlitc_col)
@@ -177,9 +181,6 @@ contains
        this%totsomc_col(begc:endc) = spval
        call hist_addfld1d (fname='TOTSOMC', units='gC/m^2', &
             avgflag='A', long_name='total soil organic matter carbon', &
-            ptr_col=this%totsomc_col)
-       call hist_addfld1d (fname='SOILC', units='gC/m^2', &
-            avgflag='A', long_name='soil C', &
             ptr_col=this%totsomc_col)
 
        if ( nlevdecomp_full > 1 ) then
@@ -199,7 +200,7 @@ contains
        this%ctrunc_col(begc:endc) = spval
        call hist_addfld1d (fname='COL_CTRUNC', units='gC/m^2',  &
             avgflag='A', long_name='column-level sink for C truncation', &
-            ptr_col=this%ctrunc_col)
+            ptr_col=this%ctrunc_col, default='inactive')
 
        this%dyn_cbal_adjustments_col(begc:endc) = spval
        call hist_addfld1d (fname='DYN_COL_SOIL_ADJUSTMENTS_C', units='gC/m^2', &
@@ -219,12 +220,12 @@ contains
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,:,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
              fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levdcmp', &
+             call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levsoi', &
                   avgflag='A', long_name=longname, &
-                  ptr_col=data2dptr)
+                  ptr_col=data2dptr, default='inactive')
           endif
 
           data1dptr => this%decomp_cpools_col(:,l)
@@ -262,7 +263,7 @@ contains
        this%ctrunc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_COL_CTRUNC', units='gC13/m^2',  &
             avgflag='A', long_name='C13 column-level sink for C truncation', &
-            ptr_col=this%ctrunc_col)
+            ptr_col=this%ctrunc_col, default='inactive')
 
        this%dyn_cbal_adjustments_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_DYN_COL_SOIL_ADJUSTMENTS_C', units='gC13/m^2', &
@@ -281,11 +282,11 @@ contains
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
-             data2dptr => this%decomp_cpools_vr_col(:,:,l)
+             data2dptr => this%decomp_cpools_vr_col(:,1:nlevsoi,l)
              fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
-             call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levdcmp', &
-                  avgflag='A', long_name=longname, ptr_col=data2dptr)
+             call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levsoi', &
+                  avgflag='A', long_name=longname, ptr_col=data2dptr, default='inactive')
           endif
 
           data1dptr => this%decomp_cpools_col(:,l)
@@ -328,7 +329,7 @@ contains
        this%ctrunc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_COL_CTRUNC', units='gC14/m^2', &
             avgflag='A', long_name='C14 column-level sink for C truncation', &
-            ptr_col=this%ctrunc_col)
+            ptr_col=this%ctrunc_col, default='inactive')
 
        this%dyn_cbal_adjustments_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_DYN_COL_SOIL_ADJUSTMENTS_C', units='gC14/m^2', &
@@ -371,7 +372,7 @@ contains
 
              do j = 1, nlevdecomp
                 do k = 1, ndecomp_pools
-                   if (zsoi(j) < 0.3 ) then  !! only initialize upper soil column
+                   if (zsoi(j) < decomp_cascade_con%initial_stock_soildepth ) then  !! only initialize upper soil column
                       this%decomp_cpools_vr_col(c,j,k) = decomp_cascade_con%initial_stock(k)
                    else
                       this%decomp_cpools_vr_col(c,j,k) = 0._r8
@@ -414,7 +415,7 @@ contains
           endif
        end if
 
-       if ( .not. use_ed ) then
+       if ( .not. use_fates ) then
           if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
              if (present(c12_soilbiogeochem_carbonstate_inst)) then
                 this%cwdc_col(c)    = c12_soilbiogeochem_carbonstate_inst%cwdc_col(c) * ratio
@@ -451,16 +452,16 @@ contains
   end subroutine InitCold
 
   !-----------------------------------------------------------------------
-  subroutine Restart ( this,  bounds, ncid, flag, carbon_type, c12_soilbiogeochem_carbonstate_inst )
+  subroutine Restart ( this,  bounds, ncid, flag, carbon_type, totvegc_col, c12_soilbiogeochem_carbonstate_inst )
     !
     ! !DESCRIPTION: 
     ! Read/write CN restart data for carbon state
     !
     ! !USES:
-    use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_time_manager , only : is_restart, get_nstep
-    use shr_const_mod    , only : SHR_CONST_PDB
-    use clm_varcon       , only : c14ratio
+    use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
+    use clm_time_manager     , only : is_restart, get_nstep
+    use shr_const_mod        , only : SHR_CONST_PDB
+    use clm_varcon           , only : c14ratio
     use restUtilMod
     use ncdio_pio
     !
@@ -470,7 +471,10 @@ contains
     type(file_desc_t)                     , intent(inout)        :: ncid   ! netcdf id
     character(len=*)                      , intent(in)           :: flag   !'read' or 'write'
     character(len=3)                      , intent(in)           :: carbon_type ! 'c12' or 'c13' or 'c14'
+    real(r8)                              , intent(in)           :: totvegc_col(bounds%begc:bounds%endc) ! (gC/m2) total 
+                                                                                                         ! vegetation carbon
     type(soilbiogeochem_carbonstate_type) , intent(in), optional :: c12_soilbiogeochem_carbonstate_inst
+
     !
     ! !LOCAL VARIABLES:
     integer  :: i,j,k,l,c
@@ -482,8 +486,6 @@ contains
     integer  :: idata
     logical  :: exit_spinup  = .false.
     logical  :: enter_spinup = .false.
-    ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
-    integer  :: restart_file_spinup_state 
     ! flags for comparing the model and restart decomposition cascades
     integer  :: decomp_cascade_state, restart_file_decomp_cascade_state 
     !------------------------------------------------------------------------
@@ -629,28 +631,24 @@ contains
     ! Spinup state
     !--------------------------------
 
-    if (carbon_type == 'c12') then
-        if (flag == 'write') then
-           idata = spinup_state
-        end if
-        call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int,  &
+       
+        if (carbon_type == 'c12') then
+           if (flag == 'write') idata = spinup_state
+           call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int,  &
              long_name='Spinup state of the model that wrote this restart file: ' &
              // ' 0 = normal model mode, 1 = AD spinup', units='', &
              interpinic_flag='copy', readvar=readvar,  data=idata)
-        if (flag == 'read') then
-           if (readvar) then
-              restart_file_spinup_state = idata
-           else
-              ! assume, for sake of backwards compatibility, that if spinup_state is not in 
-              ! the restart file then current model state is the same as prior model state
-              restart_file_spinup_state = spinup_state
-              if ( masterproc ) then
-                 write(iulog,*) ' CNRest: WARNING!  Restart file does not contain info ' &
-                      // ' on spinup state used to generate the restart file. '
-                 write(iulog,*) '   Assuming the same as current setting: ', spinup_state
+           if (flag == 'read') then
+              if (readvar) then
+                 this%restart_file_spinup_state = idata
+              else
+                 call endrun(msg=' CNRest: spinup_state was not on the restart file and is required' // &
+                   errMsg(sourcefile, __LINE__))
               end if
            end if
-        end if
+        else
+           this%restart_file_spinup_state = c12_soilbiogeochem_carbonstate_inst%restart_file_spinup_state
+        endif
 
         ! now compare the model and restart file spinup states, and either take the 
         ! model into spinup mode or out of it if they are not identical
@@ -660,12 +658,12 @@ contains
         ! by the associated AD factor.
         ! only allow this to occur on first timestep of model run.
         
-        if (flag == 'read' .and. spinup_state /= restart_file_spinup_state ) then
-           if (spinup_state == 0 .and. restart_file_spinup_state >= 1 ) then
-              if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools out of AD spinup mode'
+        if (flag == 'read' .and. spinup_state /= this%restart_file_spinup_state ) then
+           if (spinup_state == 0 .and. this%restart_file_spinup_state >= 1 ) then
+              if ( masterproc ) write(iulog,*) ' CNRest: taking ',carbon_type,' SOM pools out of AD spinup mode'
               exit_spinup = .true.
-           else if (spinup_state >= 1 .and. restart_file_spinup_state == 0 ) then
-              if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools into AD spinup mode'
+           else if (spinup_state >= 1 .and. this%restart_file_spinup_state == 0 ) then
+              if ( masterproc ) write(iulog,*) ' CNRest: taking ',carbon_type,' SOM pools into AD spinup mode'
               enter_spinup = .true.
            else
               call endrun(msg=' CNRest: error in entering/exiting spinup.  spinup_state ' &
@@ -676,6 +674,10 @@ contains
               call endrun(msg=' CNRest: error in entering/exiting spinup - should occur only when nstep = 1'//&
                    errMsg(sourcefile, __LINE__))
            endif
+           if ( exit_spinup .and. isnan(this%totvegcthresh) )then
+              call endrun(msg=' CNRest: error in exit spinup - totvegcthresh was not set with SetTotVgCThresh'//&
+                   errMsg(sourcefile, __LINE__))
+           end if
            do k = 1, ndecomp_pools
               if ( exit_spinup ) then
                  m = decomp_cascade_con%spinup_factor(k)
@@ -683,10 +685,18 @@ contains
                  m = 1. / decomp_cascade_con%spinup_factor(k)
               end if
               do c = bounds%begc, bounds%endc
+                 l = col%landunit(c)
                  do j = 1, nlevdecomp_full
                     if ( abs(m - 1._r8) .gt. 0.000001_r8 .and. exit_spinup) then
                        this%decomp_cpools_vr_col(c,j,k) = this%decomp_cpools_vr_col(c,j,k) * m * &
                             get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+                       ! If there is no vegetation carbon, implying that all vegetation has died, then 
+                       ! reset decomp pools to near zero during exit_spinup to avoid very 
+                       ! large and inert soil carbon stocks; note that only pools with spinup factor > 1 
+                       ! will be affected, which means that total SOMC and LITC pools will not be set to 0.
+                       if (totvegc_col(c) <= this%totvegcthresh .and. lun%itype(l) /= istcrop) then 
+                         this%decomp_cpools_vr_col(c,j,k) = 0.0_r8
+                       endif
                     elseif ( abs(m - 1._r8) .gt. 0.000001_r8 .and. enter_spinup) then
                        this%decomp_cpools_vr_col(c,j,k) = this%decomp_cpools_vr_col(c,j,k) * m / &
                             get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -697,7 +707,6 @@ contains
               end do
            end do
         end if
-     end if
 
   end subroutine Restart
 
@@ -719,7 +728,7 @@ contains
 
     do fi = 1,num_column
        i = filter_column(fi)
-       if ( .not. use_ed ) then
+       if ( .not. use_fates ) then
           this%cwdc_col(i)       = value_column
        end if
        this%ctrunc_col(i)     = value_column
@@ -899,7 +908,7 @@ contains
     end do
 
     ! coarse woody debris carbon
-    if (.not. use_ed ) then
+    if (.not. use_fates ) then
        do fc = 1,num_allc
           c = filter_allc(fc)
           this%cwdc_col(c) = 0._r8
@@ -917,8 +926,23 @@ contains
 
   end subroutine Summary
 
+  !------------------------------------------------------------------------
+  subroutine SetTotVgCThresh(this, totvegcthresh)
+
+    class(soilbiogeochem_carbonstate_type)                       :: this
+    real(r8)                              , intent(in)           :: totvegcthresh
+
+    if ( totvegcthresh <= 0.0_r8 )then
+        call endrun(msg=' ERROR totvegcthresh is zero or negative and should be > 0'//&
+               errMsg(sourcefile, __LINE__))
+    end if
+    this%totvegcthresh = totvegcthresh
+
+  end subroutine SetTotVgCThresh
+
+
   !-----------------------------------------------------------------------
-  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+  subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater)
     !
     ! !DESCRIPTION:
     ! Adjust state variables when column areas change due to dynamic landuse
@@ -929,6 +953,11 @@ contains
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonstate_type) , intent(inout) :: this
     type(bounds_type)                      , intent(in)    :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer                                , intent(in)    :: clump_index
+
     type(column_state_updater_type)        , intent(in)    :: column_state_updater
     !
     ! !LOCAL VARIABLES:
@@ -949,6 +978,7 @@ contains
        do j = 1, nlevdecomp
           call column_state_updater%update_column_state_no_special_handling( &
                bounds = bounds, &
+               clump_index = clump_index, &
                var    = this%decomp_cpools_vr_col(begc:endc, j, l), &
                adjustment = adjustment_one_level(begc:endc))
           this%dyn_cbal_adjustments_col(begc:endc) = &
@@ -960,6 +990,7 @@ contains
     do j = 1, nlevdecomp
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%ctrunc_vr_col(begc:endc, j), &
             adjustment = adjustment_one_level(begc:endc))
        this%dyn_cbal_adjustments_col(begc:endc) = &

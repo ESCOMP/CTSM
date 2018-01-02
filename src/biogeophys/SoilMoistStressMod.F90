@@ -210,6 +210,7 @@ contains
        do fc = 1, numf
           c = filter(fc)
           if(j>=jtop(c))then
+             
              !volume of liquid is no greater than effective void space
              vol_liq(c,j) = min(eff_porosity(c,j), h2osoi_liq(c,j)/(col%dz(c,j)*denh2o))
           endif
@@ -413,20 +414,14 @@ contains
                if ( .not.(use_hydrstress) ) then
                   btran(p)    = btran(p) + max(rootr(p,j),0._r8)
                end if
+            end if
+            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
 
-               !smp_node_lf = max(smpsc(patch%itype(p)), -sucsat(c,j)*(h2osoi_vol(c,j)/watsat(c,j))**(-bsw(c,j)))
-               s_node = h2osoi_vol(c,j)/watsat(c,j)
+            call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
 
-!               call soil_water_retention_curve%soil_suction(sucsat(c,j), s_node, bsw(c,j), smp_node_lf)
-!scs
-               call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
-!scs
-
-               !smp_node_lf =  -sucsat(c,j)*(h2osoi_vol(c,j)/watsat(c,j))**(-bsw(c,j))
-               smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf) 
-               btran2(p)   = btran2(p) +rootfr(p,j)*min((smp_node_lf - smpsc(patch%itype(p))) / &
-                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8)
-            endif
+            smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf) 
+            btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
+                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
          end do
       end do
 

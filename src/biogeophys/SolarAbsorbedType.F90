@@ -186,12 +186,12 @@ contains
     this%fsa_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSA_R', units='W/m^2',  &
          avgflag='A', long_name='Rural absorbed solar radiation', &
-         ptr_patch=this%fsa_r_patch, set_spec=spval)
+         ptr_patch=this%fsa_r_patch, set_spec=spval, default='inactive')
 
     this%fsa_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSA_U', units='W/m^2',  &
          avgflag='A', long_name='Urban absorbed solar radiation', &
-         ptr_patch=this%fsa_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
+         ptr_patch=this%fsa_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
 
     this%fsr_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSR', units='W/m^2',  &

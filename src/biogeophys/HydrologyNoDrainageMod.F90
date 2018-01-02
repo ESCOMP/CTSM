@@ -7,8 +7,9 @@ Module HydrologyNoDrainageMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro
+  use clm_varctl        , only : iulog, use_vichydro, use_fates
   use clm_varcon        , only : e_ice, denh2o, denice, rpi, spval
+  use CLMFatesInterfaceMod, only : hlm_fates_interface_type
   use atm2lndType       , only : atm2lnd_type
   use AerosolMod        , only : aerosol_type
   use EnergyFluxType    , only : energyflux_type
@@ -20,6 +21,7 @@ Module HydrologyNoDrainageMod
   use CanopyStateType   , only : canopystate_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
+  use TopoMod, only : topo_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -40,10 +42,11 @@ contains
        num_urbanc, filter_urbanc, &
        num_snowc, filter_snowc, &
        num_nosnowc, filter_nosnowc, &
+       clm_fates, &
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
        soilhydrology_inst, aerosol_inst, &
-       canopystate_inst, soil_water_retention_curve)
+       canopystate_inst, soil_water_retention_curve, topo_inst)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -74,7 +77,8 @@ contains
     use SoilWaterMovementMod , only : SoilWater 
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
-	
+    use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
+
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -90,6 +94,7 @@ contains
     integer                  , intent(inout) :: filter_nosnowc(:)    ! column filter for non-snow points
      integer               , intent(in)    :: num_hillslope       ! number of hillslope soil cols 
      integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hillslope cols.
+    type(hlm_fates_interface_type), intent(inout) :: clm_fates
 
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
@@ -101,6 +106,7 @@ contains
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    class(topo_type)   , intent(in)    :: topo_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                    ! indices
@@ -138,7 +144,6 @@ contains
          snowdp             => waterstate_inst%snowdp_col             , & ! Input:  [real(r8) (:)   ]  area-averaged snow height (m)       
          frac_sno_eff       => waterstate_inst%frac_sno_eff_col       , & ! Input:  [real(r8) (:)   ]  eff.  snow cover fraction (col) [frc]    
          frac_h2osfc        => waterstate_inst%frac_h2osfc_col        , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-         begwb              => waterstate_inst%begwb_col              , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
          snw_rds            => waterstate_inst%snw_rds_col            , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
          snw_rds_top        => waterstate_inst%snw_rds_top_col        , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer(col) [microns] 
          sno_liq_top        => waterstate_inst%sno_liq_top_col        , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer (col) [frc] 
@@ -148,6 +153,8 @@ contains
          h2osoi_liqice_10cm => waterstate_inst%h2osoi_liqice_10cm_col , & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
          h2osoi_ice         => waterstate_inst%h2osoi_ice_col         , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => waterstate_inst%h2osoi_liq_col         , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
+         h2osoi_ice_tot     => waterstate_inst%h2osoi_ice_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
+         h2osoi_liq_tot     => waterstate_inst%h2osoi_liq_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
          h2osoi_vol         => waterstate_inst%h2osoi_vol_col         , & ! Output: [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          h2osno_top         => waterstate_inst%h2osno_top_col         , & ! Output: [real(r8) (:)   ]  mass of snow in top layer (col) [kg]    
          wf                 => waterstate_inst%wf_col                 , & ! Output: [real(r8) (:)   ]  soil water as frac. of whc for top 0.05 m 
@@ -192,9 +199,14 @@ contains
            energyflux_inst, soilhydrology_inst, soilstate_inst, &
            temperature_inst, waterflux_inst, waterstate_inst)
 
+      call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
+           filter_hydrologyc, soilstate_inst, canopystate_inst, waterflux_inst, energyflux_inst)
+      
+      if ( use_fates ) call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterflux_inst)
+      
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-            soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst, temperature_inst, &
-            canopystate_inst, energyflux_inst, soil_water_retention_curve)
+           soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst, temperature_inst, &
+           canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -224,7 +236,7 @@ contains
 	  
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
-           aerosol_inst, waterflux_inst, waterstate_inst)
+           aerosol_inst, waterflux_inst, waterstate_inst, topo_inst)
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &
@@ -304,6 +316,8 @@ contains
             t_soi_10cm(c) = 0._r8
             tsoi17(c) = 0._r8
             h2osoi_liqice_10cm(c) = 0._r8
+            h2osoi_liq_tot(c) = 0._r8
+            h2osoi_ice_tot(c) = 0._r8
          end if
       end do
       do j = 1, nlevsoi
@@ -337,6 +351,10 @@ contains
                           fracl
                   end if
                end if
+
+               h2osoi_liq_tot(c) = h2osoi_liq_tot(c) + h2osoi_liq(c,j)
+               h2osoi_ice_tot(c) = h2osoi_ice_tot(c) + h2osoi_ice(c,j)
+
             end if
          end do
       end do

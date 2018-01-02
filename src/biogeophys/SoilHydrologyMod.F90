@@ -8,7 +8,7 @@ module SoilHydrologyMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
-  use clm_varcon        , only : e_ice, denh2o, denice, rpi
+  use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
   use clm_varcon        , only : ispval
   use EnergyFluxType    , only : energyflux_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -401,11 +401,11 @@ contains
           h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col      , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
           h2osfc           =>    waterstate_inst%h2osfc_col          , & ! Output: [real(r8) (:)   ]  surface water (mm)                                
 
-          qflx_ev_soil     =>    waterflux_inst%qflx_ev_soil_col     , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]    
+          qflx_ev_soil     =>    waterflux_inst%qflx_ev_soil_col     , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]    
           qflx_evap_soi    =>    waterflux_inst%qflx_evap_soi_col    , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
           qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col   , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
           qflx_top_soil    =>    waterflux_inst%qflx_top_soil_col    , & ! Input:  [real(r8) (:)   ]  net water input into soil from top (mm/s)         
-          qflx_ev_h2osfc   =>    waterflux_inst%qflx_ev_h2osfc_col   , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]                      
+          qflx_ev_h2osfc   =>    waterflux_inst%qflx_ev_h2osfc_col   , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
           qflx_surf        =>    waterflux_inst%qflx_surf_col        , & ! Output: [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
           qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col , & ! Output: [real(r8) (:)   ]  surface water runoff (mm/s)                       
           qflx_infl        =>    waterflux_inst%qflx_infl_col        , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)                           
@@ -1271,8 +1271,8 @@ contains
              if(jwt(c) == nlevsoi) then             
                 wa(c)  = wa(c) - rsub_top(c) * dtime
                 zwt(c)     = zwt(c) + (rsub_top(c) * dtime)/1000._r8/rous
-                h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) + max(0._r8,(wa(c)-5000._r8))
-                wa(c)  = min(wa(c), 5000._r8)
+                h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) + max(0._r8,(wa(c)-aquifer_water_baseline))
+                wa(c)  = min(wa(c), aquifer_water_baseline)
              else                                
                 !-- water table within soil layers 1-9  -------------------------------------
                 !============================== RSUB_TOP =========================================

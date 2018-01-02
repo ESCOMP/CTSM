@@ -176,6 +176,8 @@ module pftconMod
      real(r8), allocatable :: grnfill       (:)   ! parameter used in CNPhenology
      integer , allocatable :: mxmat         (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: mbbopt        (:)   ! Ball-Berry equation slope used in Photosynthesis
+     real(r8), allocatable :: medlynslope   (:)   ! Medlyn equation slope used in Photosynthesis
+     real(r8), allocatable :: medlynintercept(:)  ! Medlyn equation intercept used in Photosynthesis
      integer , allocatable :: mnNHplantdate (:)   ! minimum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mxNHplantdate (:)   ! maximum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mnSHplantdate (:)   ! minimum planting date for SouthHemisphere (YYYYMMDD)
@@ -382,6 +384,8 @@ contains
     allocate( this%lfemerg       (0:mxpft) )      
     allocate( this%grnfill       (0:mxpft) )      
     allocate( this%mbbopt        (0:mxpft) )      
+    allocate( this%medlynslope   (0:mxpft) )      
+    allocate( this%medlynintercept(0:mxpft) )      
     allocate( this%mxmat         (0:mxpft) )        
     allocate( this%mnNHplantdate (0:mxpft) )
     allocate( this%mxNHplantdate (0:mxpft) )
@@ -470,9 +474,9 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_ed, use_flexibleCN, use_dynroot
+    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot
     use spmdMod     , only : masterproc
-    use EDPftvarcon , only : EDpftconrd
+    use CLMFatesParamInterfaceMod, only : FatesReadPFTs
     !
     ! !ARGUMENTS:
     class(pftcon_type) :: this
@@ -799,7 +803,7 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('manunitro', this%manunitro, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('fleafcn', this%fleafcn, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -891,6 +895,12 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('mbbopt', this%mbbopt, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('medlynslope', this%medlynslope, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('medlynintercept', this%medlynintercept, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('mxmat', this%mxmat, 'read', ncid, readvar=readv)  
@@ -986,13 +996,6 @@ contains
     end if
 
     !
-    ! ED variables
-    !
-    if ( use_ed ) then
-       ! The following sets the module variable EDpftcon_inst in EDPftcon
-       call EDpftconrd ( ncid )
-    endif
-    !
     ! Dynamic Root variables for crops
     !
     if ( use_crop .and. use_dynroot )then
@@ -1002,8 +1005,10 @@ contains
    
     call ncd_pio_closefile(ncid)
 
+    call FatesReadPFTs()
+
     do i = 0, mxpft
-       if (.not. use_ed)then
+       if (.not. use_fates)then
           if ( trim(adjustl(pftname(i))) /= trim(expected_pftnames(i)) )then
              write(iulog,*)'pftconrd: pftname is NOT what is expected, name = ', &
                   trim(pftname(i)), ', expected name = ', trim(expected_pftnames(i))
@@ -1103,11 +1108,11 @@ contains
        this%fcur(:) = this%fcurdv(:)
     end if
     !
-    ! Do some error checking, but not if ED is on.
+    ! Do some error checking, but not if fates is on.
     !
     ! FIX(SPM,032414) double check if some of these should be on...
 
-    if( .not. use_ed ) then
+    if( .not. use_fates ) then
        if ( npcropmax /= mxpft )then
           call endrun(msg=' ERROR: npcropmax is NOT the last value'//errMsg(sourcefile, __LINE__))
        end if
@@ -1294,6 +1299,8 @@ contains
     deallocate( this%lfemerg)
     deallocate( this%grnfill)
     deallocate( this%mbbopt)
+    deallocate( this%medlynslope)
+    deallocate( this%medlynintercept)
     deallocate( this%mxmat)
     deallocate( this%mnNHplantdate)
     deallocate( this%mxNHplantdate)
@@ -1369,7 +1376,6 @@ contains
     deallocate( this%FUN_fracfixers)
     
   end subroutine Clean
-
 
 end module pftconMod
 

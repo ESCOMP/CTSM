@@ -47,9 +47,9 @@ sub setup : Test(setup => 1) {
   $self->{nl} = Build::Namelist->new();
   isnt($self->{nl}, undef, (caller(0))[3] . " : empty namelist object created.");
 
-  # Set use_cndv and use_ed so that they don't conflict with do_transient_pfts
+  # Set use_cndv and use_fates so that they don't conflict with do_transient_pfts
   $self->set_value('use_cndv', '.false.');
-  $self->set_value('use_ed', '.false.');
+  $self->set_value('use_fates', '.false.');
 }
 
 sub teardown : Test(teardown) {
@@ -143,7 +143,7 @@ sub test_do_transient_pfts__default_ed : Tests {
    my $msg = "Test default value for do_transient_pfts in an ED case.\n";
 
    $self->set_transient;
-   $self->set_value('use_ed', '.true.');
+   $self->set_value('use_fates', '.true.');
    $self->setup_logic_do_transient_pfts;
    my $result = $self->get_do_transient_pfts;
    is($result, undef) || diag($msg);

@@ -92,7 +92,7 @@ contains
     fname = trim(this%species_name) // trim(this%isotope_name) // '_' // &
          trim(basename) // trim(this%species_name)
     if (present(suffix)) then
-       fname = fname // suffix
+       fname = trim(fname) // trim(suffix)
     end if
 
   end function hist_fname
@@ -117,7 +117,7 @@ contains
     species_name_lcase = shr_string_toLower(trim(this%species_name))
     fname = trim(basename) // species_name_lcase // '_' // trim(this%isotope_name)
     if (present(suffix)) then
-       fname = fname // suffix
+       fname = trim(fname) // trim(suffix)
     end if
 
   end function rest_fname

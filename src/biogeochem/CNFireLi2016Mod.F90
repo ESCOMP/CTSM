@@ -597,7 +597,7 @@ contains
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
               arh30=1._r8-max(0.7_r8, min(1._r8,rh30_col(c)/90._r8))
-              if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. forc_t(c)> SHR_CONST_TKFRZ)then
+              if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
                 fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8)*((1._r8 -max(0._r8,&
                     min(1._r8,(btran_col(c)/wtlf(c)-bt_min)/(bt_max-bt_min))))**0.5_r8)
               else

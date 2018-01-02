@@ -42,14 +42,14 @@ if [ -z "$CSMDATA" ]; then
    CSMDATA=/glade/p/cesm/cseg/inputdata
 fi
 if [ -z "$REGRID_PROC" ]; then
-   REGRID_PROC=8
+   REGRID_PROC=36
 fi
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
   echo ""
   echo "**********************"
-  echo "usage on yellowstone:"
+  echo "usage:"
   echo "./mkmapdata.sh"
   echo ""
   echo "valid arguments: "
@@ -67,10 +67,10 @@ usage() {
   echo "     Model output grid type"
   echo "     supported values are [regional,global], (default is global)"
   echo "[-b|--batch]"
-  echo "     Toggles batch mode usage. If you want to run in batch mode"
+  echo "     Toggles batch mode usage (and run with mpi). If you want to run in batch mode"
   echo "     you need to have a separate batch script for a supported machine"
   echo "     that calls this script interactively - you cannot submit this"
-  echo "     script directory to the batch system"
+  echo "     script directly to the batch system"
   echo "[-l|--list]"
   echo "     List mapping files required (use check_input_data to get them)"
   echo "     also writes data to $outfilelist"
@@ -83,12 +83,15 @@ usage() {
   echo ""
   echo " You can also set the following env variables:"
   echo "  ESMFBIN_PATH - Path to ESMF binaries "
+  echo "                 (default is determined by machine running on)"
   echo "  CSMDATA ------ Path to CESM input data"
-  echo "                 (default is /glade/p/cesm/cseg/inputdata)"
+  echo "                 (default is $CSMDATA)"
   echo "  MPIEXEC ------ Name of mpirun executable"
-  echo "                 (default is mpirun.lsf)"
+  echo "                 (default is determined by machine running on)"
   echo "  REGRID_PROC -- Number of MPI processors to use"
-  echo "                 (default is 8)"
+  echo "                 (default is $REGRID_PROC)"
+  echo ""
+  echo "**defaults can be determined on the machines: cheyenne, yellowstone, or edison"
   echo ""
   echo "**pass environment variables by preceding above commands "
   echo "  with 'env var1=setting var2=setting '"
@@ -141,8 +144,8 @@ while [ $# -gt 0 ]; do
 	   verbose="YES"
 	   ;;
        -b|--batch) 
-	      interactive="NO"
-	      ;;
+	   interactive="NO"
+	   ;;
        -d|--debug)
 	   debug="YES"
 	   ;;
@@ -232,6 +235,10 @@ if [ "$type" = "global" ] && [ `echo "$res" | grep -c "1x1_"` = 1 ]; then
    echo "This is a regional resolution and yet it is being run as global, set type with '-t' option\n";
    exit 1
 fi
+if [ "$type" = "global" ] && [ `echo "$res" | grep -c "5x5_"` = 1 ]; then
+   echo "This is a regional resolution and yet it is being run as global, set type with '-t' option\n";
+   exit 1
+fi
 echo "Output grid resolution is $res"
 if [ -z "$GRIDFILE" ]; then
    echo "Output grid file was NOT found for this resolution: $res\n";
@@ -254,6 +261,7 @@ fi
 if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
            "0.5x0.5_AVHRR"     \
+           "0.25x0.25_MODIS"   \
            "0.5x0.5_MODIS"     \
            "3x3min_LandScan2004" \
            "3x3min_MODIS-wCsp" \
@@ -261,13 +269,15 @@ if [ "$phys" = "clm4_5" ]; then
            "5x5min_nomask"     \
            "5x5min_IGBP-GSDP"  \
            "5x5min_ISRIC-WISE" \
+           "5x5min_ORNL-Soil" \
            "10x10min_nomask"   \
            "10x10min_IGBPmergeICESatGIS" \
            "3x3min_GLOBE-Gardner" \
            "3x3min_GLOBE-Gardner-mergeGIS" \
            "0.9x1.25_GRDC" \
            "360x720cru_cruncep" \
-           "1km-merge-10min_HYDRO1K-merge-nomask" )
+           "1km-merge-10min_HYDRO1K-merge-nomask" \
+          )
 
 else
     echo "ERROR: Unknown value for phys: $phys"
@@ -321,7 +331,35 @@ hostname=`hostname`
 if [ -n "$NERSC_HOST" ]; then
    hostname=$NERSC_HOST
 fi
+echo "Hostname = $hostname"
 case $hostname in
+  ##cheyenne
+  cheyenne* | r* )
+  . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  esmfvers=7.0.0
+  intelvers=16.0.3
+  module load esmf_libs/$esmfvers
+  module load intel/$intelvers
+  module load ncl
+  module load nco
+  #export MPI_USE_ARRAY=false
+
+  if [ -z "$ESMFBIN_PATH" ]; then
+     if [ "$interactive" = "NO" ]; then
+        mpi=ncdfio-mpi
+        mpitype="mpi"
+     else
+        mpi=ncdfio
+        mpitype="mpiuni"
+     fi
+     ESMFBIN_PATH=/glade/u/apps/ch/opt/esmf/${esmfvers}-${mpi}/intel/$intelvers/bin/binO/Linux.intel.64.${mpitype}.default
+  fi
+  if [ -z "$MPIEXEC" ]; then
+     #MPIEXEC="mpirun -np $REGRID_PROC"
+     MPIEXEC="mpiexec_mpt -np $REGRID_PROC"
+  fi
+  ;;
+
   ##yellowstone
   ys* | caldera* | geyser* )
   . /glade/apps/opt/lmod/lmod/init/bash
@@ -330,7 +368,7 @@ case $hostname in
   module load nco
 
   if [ -z "$ESMFBIN_PATH" ]; then
-     if [ "$type" = "global" ]; then
+     if [ "$interactive" = "NO" ]; then
         mpi=mpi
         mpitype="mpich2"
      else
@@ -344,29 +382,6 @@ case $hostname in
   fi
   ;;
 
-  ## hopper
-  hopper* )
-  .  /opt/modules/default/init/bash
-  module load ncl/6.1.2
-  module load nco
-  if [ -z "$ESMFBIN_PATH" ]; then
-     module use -a /project/projectdirs/ccsm1/modulefiles/hopper
-     if [ "$type" = "global" ]; then
-        mpi=mpi
-        mpitype="mpi"
-     else
-        mpi=uni
-        mpitype="mpiuni"
-     fi
-     module load esmf/6.3.0r-ncdfio-${mpitype}-O
-     ESMFBIN_PATH=$ESMF_LIBDIR/../bin
-  fi
-  if [ -z "$MPIEXEC" ]; then
-    MPIEXEC="aprun -n $REGRID_PROC"
-  fi
-
-  ;;
-
   ## edison
   edison* )
   .  /opt/modules/default/init/bash
@@ -374,7 +389,7 @@ case $hostname in
   module load nco
   if [ -z "$ESMFBIN_PATH" ]; then
      module use -a /project/projectdirs/ccsm1/modulefiles/edison
-     if [ "$type" = "global" ]; then
+     if [ "$interactive" = "NO" ]; then
         mpi=mpi
         mpitype="mpi"
      else
@@ -419,8 +434,8 @@ if [ "$interactive" = "NO" ]; then
       echo "Set the environment variable: MPIEXEC"
       exit 1
    fi
-   if [ ! -x `which $MPIEXEC` ]; then
-      echo "The MPIEXEC pathname given is NOT an executable: $MPIEXEC"
+   if [ ! -x `which ${MPIEXEC%% *}` ]; then
+      echo "The MPIEXEC pathname given is NOT an executable: ${MPIEXEC%% *}"
       echo "Set the environment variable: MPIEXEC or run in interactive mode without MPI"
       exit 1
    fi

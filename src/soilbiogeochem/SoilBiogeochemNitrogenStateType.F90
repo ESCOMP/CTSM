@@ -9,7 +9,7 @@ module SoilBiogeochemNitrogenStateType
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
@@ -52,6 +52,7 @@ module SoilBiogeochemNitrogenStateType
      ! the N balance check
      real(r8), pointer :: dyn_no3bal_adjustments_col (:) ! (gN/m2) NO3 adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8), pointer :: dyn_nh4bal_adjustments_col (:) ! (gN/m2) NH4 adjustments to each column made in this timestep via dynamic column adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
+     real(r8)          :: totvegcthresh                  ! threshold for total vegetation carbon to zero out decomposition pools
 
    contains
 
@@ -60,6 +61,7 @@ module SoilBiogeochemNitrogenStateType
      procedure , public  :: SetValues
      procedure , public  :: Summary
      procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
+     procedure , public  :: SetTotVgCThresh           ! Set value for totvegcthresh needed in Restart
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
@@ -82,6 +84,7 @@ contains
     real(r8)          , intent(in)    :: decomp_cpools_col    (bounds%begc:, 1:)
     real(r8)          , intent(in)    :: decomp_cpools_1m_col (bounds%begc:, 1:)
 
+    this%totvegcthresh = nan
     call this%InitAllocate (bounds )
 
     call this%InitHistory (bounds)
@@ -169,7 +172,7 @@ contains
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
-               ptr_col=data2dptr, default='inactive')
+               ptr_col=data2dptr)
        endif
 
        data1dptr => this%decomp_npools_col(:,l)
@@ -211,7 +214,7 @@ contains
     this%ntrunc_col(begc:endc) = spval
     call hist_addfld1d (fname='COL_NTRUNC', units='gN/m^2',  &
          avgflag='A', long_name='column-level sink for N truncation', &
-         ptr_col=this%ntrunc_col)
+         ptr_col=this%ntrunc_col, default='inactive')
 
     ! add suffix if number of soil decomposition depths is greater than 1
     if (nlevdecomp > 1) then
@@ -221,17 +224,22 @@ contains
     endif
 
     if (use_nitrif_denitrif) then
-       this%smin_no3_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMIN_NO3'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral NO3 (vert. res.)', &
-            ptr_col=this%smin_no3_vr_col)
-
-       this%smin_nh4_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMIN_NH4'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral NH4 (vert. res.)', &
-            ptr_col=this%smin_nh4_vr_col)
-
        if ( nlevdecomp_full > 1 ) then
+          data2dptr => this%smin_no3_vr_col(begc:endc,1:nlevsoi)
+          call hist_addfld_decomp (fname='SMIN_NO3'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='soil mineral NO3 (vert. res.)', &
+               ptr_col=data2dptr)
+
+          data2dptr => this%smin_nh4_vr_col(begc:endc,1:nlevsoi)
+          call hist_addfld_decomp (fname='SMIN_NH4'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='soil mineral NH4 (vert. res.)', &
+               ptr_col=data2dptr)
+
+          data2dptr => this%sminn_vr_col(begc:endc,1:nlevsoi)
+          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='soil mineral N', &
+               ptr_col=data2dptr)
+
           this%smin_no3_col(begc:endc) = spval
           call hist_addfld1d (fname='SMIN_NO3', units='gN/m^2', &
                avgflag='A', long_name='soil mineral NO3', &
@@ -242,16 +250,14 @@ contains
                avgflag='A', long_name='soil mineral NH4', &
                ptr_col=this%smin_nh4_col)
        endif
-
-       this%sminn_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral N', &
-            ptr_col=this%sminn_vr_col)
     else
-       this%sminn_vr_col(begc:endc,:) = spval
-       call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-            avgflag='A', long_name='soil mineral N', &
-            ptr_col=this%sminn_vr_col)
+       if ( nlevdecomp_full > 1 ) then
+          data2dptr => this%sminn_vr_col(begc:endc,1:nlevsoi) 
+          call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3', type2d='levsoi', &
+               avgflag='A', long_name='soil mineral N', &
+               ptr_col=data2dptr)
+       end if
+
     end if
 
     this%totlitn_col(begc:endc) = spval
@@ -374,14 +380,14 @@ contains
   end subroutine InitCold
 
   !-----------------------------------------------------------------------
-  subroutine Restart ( this,  bounds, ncid, flag )
+  subroutine Restart ( this,  bounds, ncid, flag, totvegc_col )
     !
     ! !DESCRIPTION: 
-    ! Read/write CN restart data for carbon state
+    ! Read/write CN restart data for nitrogen state
     !
     ! !USES:
-    use shr_infnan_mod      , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_time_manager    , only : is_restart, get_nstep
+    use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
+    use clm_time_manager     , only : is_restart, get_nstep
     use restUtilMod
     use ncdio_pio
     !
@@ -390,6 +396,8 @@ contains
     type(bounds_type)          , intent(in)    :: bounds 
     type(file_desc_t)          , intent(inout) :: ncid   
     character(len=*)           , intent(in)    :: flag   !'read' or 'write' or 'define'
+    real(r8)                   , intent(in)    :: totvegc_col(bounds%begc:bounds%endc) ! (gC/m2) total vegetation carbon
+
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c
@@ -602,6 +610,10 @@ contains
           call endrun(msg=' Error in entering/exiting spinup - should occur only when nstep = 1'//&
                errMsg(sourcefile, __LINE__))
        endif
+       if ( exit_spinup .and. isnan(this%totvegcthresh) )then
+          call endrun(msg=' Error in exit spinup - totvegcthresh was not set with SetTotVgCThresh'//&
+               errMsg(sourcefile, __LINE__))
+       end if
        do k = 1, ndecomp_pools
           if ( exit_spinup ) then
              m = decomp_cascade_con%spinup_factor(k)
@@ -609,10 +621,23 @@ contains
              m = 1. / decomp_cascade_con%spinup_factor(k)
           end if
           do c = bounds%begc, bounds%endc
+             l = col%landunit(c)
              do j = 1, nlevdecomp
                 if ( abs(m - 1._r8) .gt. 0.000001_r8 .and. exit_spinup) then
                    this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m * &
                         get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+                   ! If there is no vegetation nitrogen,
+                   ! implying that all vegetation has
+                   ! died, then 
+                   ! reset decomp pools to near zero during exit_spinup to
+                   ! avoid very 
+                   ! large and inert soil carbon stocks; note that only
+                   ! pools with spinup factor > 1 
+                   ! will be affected, which means that total SOMN and LITN
+                   ! pools will not be set to 0.
+                   if (totvegc_col(c) <= this%totvegcthresh .and. lun%itype(l) /= istcrop) then 
+                      this%decomp_npools_vr_col(c,j,k) = 0._r8
+                   endif
                 elseif ( abs(m - 1._r8) .gt. 0.000001_r8 .and. enter_spinup) then
                    this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m / &
                         get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -885,7 +910,7 @@ contains
  end subroutine Summary
 
  !-----------------------------------------------------------------------
- subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+ subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater)
    !
    ! !DESCRIPTION:
    ! Adjust state variables when column areas change due to dynamic landuse
@@ -896,6 +921,11 @@ contains
    ! !ARGUMENTS:
    class(soilbiogeochem_nitrogenstate_type) , intent(inout) :: this
    type(bounds_type)                        , intent(in)    :: bounds
+
+   ! Index of clump on which we're currently operating. Note that this implies that this
+   ! routine must be called from within a clump loop.
+   integer                                  , intent(in)    :: clump_index
+
    type(column_state_updater_type)          , intent(in)    :: column_state_updater
    !
    ! !LOCAL VARIABLES:
@@ -916,6 +946,7 @@ contains
       do j = 1, nlevdecomp
          call column_state_updater%update_column_state_no_special_handling( &
               bounds = bounds, &
+              clump_index = clump_index, &
               var    = this%decomp_npools_vr_col(begc:endc, j, l), &
               adjustment = adjustment_one_level(begc:endc))
          this%dyn_nbal_adjustments_col(begc:endc) = &
@@ -927,6 +958,7 @@ contains
    do j = 1, nlevdecomp
       call column_state_updater%update_column_state_no_special_handling( &
            bounds = bounds, &
+           clump_index = clump_index, &
            var    = this%ntrunc_vr_col(begc:endc, j), &
            adjustment = adjustment_one_level(begc:endc))
       this%dyn_nbal_adjustments_col(begc:endc) = &
@@ -935,6 +967,7 @@ contains
 
       call column_state_updater%update_column_state_no_special_handling( &
            bounds = bounds, &
+           clump_index = clump_index, &
            var    = this%sminn_vr_col(begc:endc, j), &
            adjustment = adjustment_one_level(begc:endc))
       this%dyn_nbal_adjustments_col(begc:endc) = &
@@ -952,6 +985,7 @@ contains
 
          call column_state_updater%update_column_state_no_special_handling( &
               bounds = bounds, &
+              clump_index = clump_index, &
               var    = this%smin_no3_vr_col(begc:endc, j), &
               adjustment = adjustment_one_level(begc:endc))
          this%dyn_no3bal_adjustments_col(begc:endc) = &
@@ -960,6 +994,7 @@ contains
 
          call column_state_updater%update_column_state_no_special_handling( &
               bounds = bounds, &
+              clump_index = clump_index, &
               var    = this%smin_nh4_vr_col(begc:endc, j), &
               adjustment = adjustment_one_level(begc:endc))
          this%dyn_nh4bal_adjustments_col(begc:endc) = &
@@ -971,5 +1006,18 @@ contains
 
  end subroutine DynamicColumnAdjustments
 
+  !------------------------------------------------------------------------
+  subroutine SetTotVgCThresh(this, totvegcthresh)
+
+    class(soilbiogeochem_nitrogenstate_type)           :: this
+    real(r8)                              , intent(in) :: totvegcthresh
+
+    if ( totvegcthresh <= 0.0_r8 )then
+        call endrun(msg=' Error totvegcthresh is zero or negative and should be > 0'//&
+               errMsg(sourcefile, __LINE__))
+    end if
+    this%totvegcthresh = totvegcthresh
+
+  end subroutine SetTotVgCThresh
 
 end module SoilBiogeochemNitrogenStateType

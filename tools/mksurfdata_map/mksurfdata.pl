@@ -54,7 +54,7 @@ my %opts = (
                debug=>0,
                exedir=>undef,
                allownofile=>undef,
-               nocrop=>undef,
+               crop=>1,
                hirespft=>undef,
                years=>"1850,2000",
                glc_nec=>10,
@@ -73,6 +73,7 @@ my %opts = (
 	       outnc_double=>undef,
 	       outnc_dims=>"2",     
                usrname=>"",
+               rundir=>"$cwd",
                usr_mapdir=>"../mkmapdata",
                dynpft=>undef,
                csmdata=>$CSMDATA,
@@ -124,12 +125,15 @@ OPTIONS
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
      -inlandwet                    If you want to allow inland wetlands
-     -no_crop                      Create datasets without the extensive list of prognostic crop types
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
      -no_surfdata                  Do not output a surface dataset
                                    This is useful if you only want a landuse_timeseries file
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory $opts{'rundir'})
      
      -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
 
@@ -259,7 +263,7 @@ sub write_transient_timeseries_file {
         my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $vegtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
-        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fhrvtyp -namelist clmexp`;
+        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $hrvtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $hrvtypyr, $yr;
         if ( $yr % 100 == 0 ) {
@@ -411,7 +415,7 @@ EOF
         "usr_gname=s"  => \$opts{'usr_gname'},
         "usr_gdate=s"  => \$opts{'usr_gdate'},
         "usr_mapdir=s" => \$opts{'usr_mapdir'},
-        "no_crop"      => \$opts{'no_crop'},
+        "crop!"        => \$opts{'crop'},
         "hirespft"     => \$opts{'hirespft'},
         "l|dinlc=s"    => \$opts{'csmdata'},
         "d|debug"      => \$opts{'debug'},
@@ -426,6 +430,7 @@ EOF
         "no_surfdata"  => \$opts{'no_surfdata'},
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
+        "rundir=s"     => \$opts{'rundir'},
         "soil_col=i"   => \$opts{'soil_col'},
         "soil_fmx=f"   => \$opts{'soil_fmx'},
         "soil_cly=f"   => \$opts{'soil_cly'},
@@ -441,11 +446,17 @@ EOF
    if ( $opts{'help'} ) {
        usage();
    }
+
+   chdir( $opts{'rundir'} ) or die "** can't change to directory: $opts{'rundir'}\n";
    # If csmdata was changed from the default
    if ( $CSMDATA ne $opts{'csmdata'} ) {
       $CSMDATA = $opts{'csmdata'};
    }
    my $glc_nec = $opts{'glc_nec'};
+   if ( $glc_nec <= 0 ) {
+      print "** glc_nec must be at least 1\n";
+      usage();
+   }
    my $no_inlandwet = ".true.";
    if (defined($opts{'inlandwet'})) {
       $no_inlandwet = ".false.";
@@ -507,6 +518,9 @@ EOF
          }
       }
    }
+
+   # CMIP series input data is corresponding to
+   my $cmip_series = "CMIP6";
    # Check if soil set
    if ( defined($opts{'soil_cly'}) || 
         defined($opts{'soil_snd'}) ) {
@@ -514,7 +528,7 @@ EOF
        $opts{'soil_override'} = 1;
    }
    # Check if pft set
-   if ( defined($opts{'no_crop'}) ) { $numpft = 16; }   # First set numpft if crop is off
+   if ( ! $opts{'crop'} ) { $numpft = 16; }   # First set numpft if crop is off
    if ( defined($opts{'pft_frc'}) || defined($opts{'pft_idx'}) ) {
        &check_pft( );
        $opts{'pft_override'} = 1;
@@ -695,23 +709,26 @@ EOF
             if ( $vegtyp eq "" ) {
                die "** trouble getting vegtyp file with: $cmd\n";
             }
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fhrvtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
             my $hrvtyp = `$cmd`;
             chomp( $hrvtyp );
             if ( $hrvtyp eq "" ) {
                die "** trouble getting hrvtyp file with: $cmd\n";
             }
             my $options = "";
-            my $crpdes  = sprintf("%2.2dpfts_", $numpft);
+            my $crpdes  = sprintf("%2.2dpfts", $numpft);
+            if ( $numpft == 16 ) {
+               $crpdes .= "_Irrig";
+            }
             if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
             }
             if ( $rcp != -999.9 ) {
-               $desc         = sprintf( "%s%2.1f_%ssimyr%4.4d-%4.4d", "rcp", $rcp, $crpdes, $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "%s%2.1f_%ssimyr%4.4d",       "rcp", $rcp, $crpdes, $sim_yr_surfdat  );
+               $desc         = sprintf( "%s%2.1f_%s_%ssimyr%4.4d-%4.4d", "rcp", $rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%s%2.1f_%s_%ssimyr%4.4d",       "rcp", $rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
             } else {
-               $desc         = sprintf( "hist_%ssimyr%4.4d-%4.4d", $crpdes, $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "%ssimyr%4.4d",            $crpdes, $sim_yr_surfdat  );
+               $desc         = sprintf( "hist_%s_%s_simyr%4.4d-%4.4d", $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%s_%s_simyr%4.4d",            $crpdes, $cmip_series, $sim_yr_surfdat  );
             }
 
             my $fsurdat_fname_base = "";

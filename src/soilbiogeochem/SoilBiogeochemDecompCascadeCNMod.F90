@@ -11,7 +11,7 @@ module SoilBiogeochemDecompCascadeCNMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_ed
+  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -24,7 +24,7 @@ module SoilBiogeochemDecompCascadeCNMod
   use TemperatureType                    , only : temperature_type 
   use ch4Mod                             , only : ch4_type
   use ColumnType                         , only : col                
-  use EDCLMLinkMod                       , only : cwd_fcel_ed, cwd_flig_ed
+
   !
   implicit none
   private
@@ -215,11 +215,6 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cwd_flig_cn=tempr
 
-    if ( use_ed ) then
-       cwd_fcel_ed = params_inst%cwd_fcel_cn
-       cwd_flig_ed = params_inst%cwd_flig_cn
-    endif
-
   end subroutine readParams
 
   !-----------------------------------------------------------------------
@@ -357,7 +352,7 @@ contains
       is_cellulose(i_litr3) = .false.
       is_lignin(i_litr3) = .true.
 
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
          decomp_pool_name_restart(i_cwd) = 'cwd'
          decomp_pool_name_history(i_cwd) = 'CWD'
@@ -373,7 +368,7 @@ contains
          is_lignin(i_cwd) = .false.
       end if
 
-      if ( .not. use_ed ) then
+      if ( .not. use_fates ) then
          i_soil1 = 5
       else
          i_soil1 = 4
@@ -392,7 +387,7 @@ contains
       is_cellulose(i_soil1) = .false.
       is_lignin(i_soil1) = .false.
 
-      if ( .not. use_ed ) then
+      if ( .not. use_fates ) then
          i_soil2 = 6
       else
          i_soil2 = 5
@@ -411,7 +406,7 @@ contains
       is_cellulose(i_soil2) = .false.
       is_lignin(i_soil2) = .false.
 
-      if ( .not. use_ed ) then
+      if ( .not. use_fates ) then
          i_soil3 = 7
       else
          i_soil3 = 6
@@ -430,7 +425,7 @@ contains
       is_cellulose(i_soil3) = .false.
       is_lignin(i_soil3) = .false.
 
-      if ( .not. use_ed ) then
+      if ( .not. use_fates ) then
          i_soil4 = 8
       else
          i_soil4 = 7
@@ -468,7 +463,7 @@ contains
       spinup_factor(i_litr1) = 1._r8
       spinup_factor(i_litr2) = 1._r8
       spinup_factor(i_litr3) = 1._r8
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          spinup_factor(i_cwd) = 1._r8
       end if
       spinup_factor(i_soil1) = params_inst%spinup_vector(1)
@@ -527,7 +522,7 @@ contains
       cascade_receiver_pool(i_s4atm) = i_atm
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.0_r8
 
-      if (.not. use_ed) then
+      if (.not. use_fates) then
          i_cwdl2 = 8
          cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 0._r8
@@ -694,7 +689,7 @@ contains
        i_litr1 = 1
        i_litr2 = 2
        i_litr3 = 3
-       if (use_ed) then
+       if (use_fates) then
           i_soil1 = 4
           i_soil2 = 5
           i_soil3 = 6
@@ -936,8 +931,8 @@ contains
           end do
        end if
 
-      ! do the same for cwd, but only if ed is not enabled (because ED handles CWD on its own structure
-       if (.not. use_ed) then
+      ! do the same for cwd, but only if fates is not enabled (because fates handles CWD on its own structure
+       if (.not. use_fates) then
           if (use_vertsoilc) then
              do j = 1,nlevdecomp
                 do fc = 1,num_soilc

@@ -12,7 +12,7 @@ module filterMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, create_glacier_mec_landunit
+  use clm_varctl     , only : iulog
   use decompMod      , only : bounds_type  
   use GridcellType   , only : grc
   use LandunitType   , only : lun                
@@ -297,7 +297,6 @@ contains
     use decompMod       , only : BOUNDS_LEVEL_CLUMP
     use pftconMod       , only : npcropmin
     use landunit_varcon , only : istsoil, istcrop, istice_mec
-    use column_varcon   , only : is_hydrologically_active
     use clm_varcon      , only : ispval
     !
     ! !ARGUMENTS:
@@ -407,8 +406,7 @@ contains
     f = 0
     do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
-          l =col%landunit(c)
-          if (is_hydrologically_active(col_itype=col%itype(c), lun_itype=lun%itype(l))) then
+          if (col%hydrologically_active(c)) then
              f = f + 1
              this_filter(nc)%hydrologyc(f) = c
           end if
@@ -561,8 +559,7 @@ contains
           ! this region, in order to provide SMB forcing for the bare ground elevation
           ! class (elevation class 0).
           if ( glc_behavior%melt_replaced_by_ice_grc(g) .and. &
-               (lun%itype(l) == istice_mec .or. &
-               (lun%itype(l) == istsoil .and. create_glacier_mec_landunit))) then
+               (lun%itype(l) == istice_mec .or. lun%itype(l) == istsoil)) then
              f = f + 1
              this_filter(nc)%do_smb_c(f) = c
           end if

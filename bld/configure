@@ -650,11 +650,11 @@ sub write_filepath_cesmbld
 		     "soilbiogeochem", 
 		     "dyn_subgrid",
 		     "init_interp",
-		     "ED", 
-		     "ED/main", 
-		     "ED/biogeophys", 
-		     "ED/biogeochem", 
-		     "ED/fire", 
+		     "fates", 
+		     "fates/main", 
+		     "fates/biogeophys", 
+		     "fates/biogeochem", 
+		     "fates/fire", 
 		     "utils", 
 		     "cpl" );
 

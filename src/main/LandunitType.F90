@@ -8,7 +8,7 @@ module LandunitType
   ! -------------------------------------------------------- 
   !   1  => (istsoil)    soil (vegetated or bare soil landunit)
   !   2  => (istcrop)    crop (only for crop configuration)
-  !   3  => (istice)     land ice
+  !   3  => (UNUSED)     (formerly non-multiple elevation class land ice; currently unused)
   !   4  => (istice_mec) land ice (multiple elevation classes) 
   !   5  => (istdlak)    deep lake
   !   6  => (istwet)     wetland

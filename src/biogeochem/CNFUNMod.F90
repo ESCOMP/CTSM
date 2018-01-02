@@ -1472,7 +1472,6 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       
       Nactive_no3(p)            = n_active_no3_acc_total(p)/dt   + n_active_no3_retrans_total(p)/dt
       Nactive_nh4(p)            = n_active_nh4_acc_total(p)/dt   + n_active_nh4_retrans_total(p)/dt  
-      Nactive(p)                = Nactive_no3(p)  + Nactive_nh4(p) + Nnonmyc_no3(p) + Nnonmyc_nh4(p)
       
       
     
@@ -1489,6 +1488,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       Nuptake(p)                = Nactive_no3(p) + Nactive_nh4(p) + Nnonmyc_no3(p) &
                                   + Nnonmyc_nh4(p) + Nfix(p) + Npassive(p) + &
                                   retransn_to_npool(p)+free_retransn_to_npool(p) 
+      Nactive(p)                = Nactive_no3(p)  + Nactive_nh4(p) + Nnonmyc_no3(p) + Nnonmyc_nh4(p)
                                    
      ! free N goes straight to the npool, not throught Nuptake...
       sminn_to_plant_fun(p)     = Nactive_no3(p) + Nactive_nh4(p) + Nnonmyc_no3(p) + Nnonmyc_nh4(p) + Nfix(p) + Npassive(p)

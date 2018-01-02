@@ -73,10 +73,11 @@ fi
 
 echo "Run file type = ${3#*.}"
 if [ ${3#*.} == "runoptions" ]; then
-  echo "$toolrun "`cat ${runfile}`
+  runopts=`cat ${runfile} | sed -e "s|CSMDATA|$CSMDATA|g"`
+  echo "$toolrun $runopts"
   cp $cfgdir/*.nc .
   if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
-     $toolrun  `cat ${runfile}` >> test.log 2>&1
+     $toolrun  $runopts >> test.log 2>&1
      rc=$?
      status="PASS"
   else

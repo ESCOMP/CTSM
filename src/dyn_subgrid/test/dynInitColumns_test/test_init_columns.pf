@@ -14,6 +14,7 @@ module test_init_columns
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use TemperatureType , only : temperature_type
   use WaterstateType  , only : waterstate_type
+  use SoilHydrologyType, only : soilhydrology_type
   use dynColumnTemplateMod, only : TEMPLATE_NONE_FOUND
 
   implicit none
@@ -29,6 +30,7 @@ module test_init_columns
   ! into setup & teardown methods of the class.
   type(temperature_type) :: temperature_vars
   type(waterstate_type)  :: waterstate_vars
+  type(soilhydrology_type) :: soilhydrology_vars
 
 contains
 
@@ -77,16 +79,22 @@ contains
     allocate(waterstate_vars%h2osoi_liq_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
     allocate(waterstate_vars%h2osoi_ice_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
     allocate(waterstate_vars%h2osoi_vol_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
+    allocate(soilhydrology_vars%wa_col(bounds%begc:bounds%endc))
     do lev = -nlevsno+1, nlevgrnd
        do c = bounds%begc, bounds%endc
           temperature_vars%t_soisno_col(c, lev) = c*1000 + lev
 
-          ! Also need to initialize some waterstateType variables, but we don't have any
+          ! Also need to initialize some waterstate_type variables, but we don't have any
           ! assertions on them in this test
           waterstate_vars%h2osoi_liq_col(c, lev) = 0._r8
           waterstate_vars%h2osoi_ice_col(c, lev) = 0._r8
           waterstate_vars%h2osoi_vol_col(c, lev) = 0._r8
        end do
+    end do
+
+    ! Also need to initialize some other variables for which we don't have any assertions
+    do c = bounds%begc, bounds%endc
+       soilhydrology_vars%wa_col(c) = 0._r8
     end do
   end subroutine setup
 
@@ -100,7 +108,8 @@ contains
     deallocate(waterstate_vars%h2osoi_liq_col)
     deallocate(waterstate_vars%h2osoi_ice_col)
     deallocate(waterstate_vars%h2osoi_vol_col)
-    
+    deallocate(soilhydrology_vars%wa_col)
+
   end subroutine cleanup
 
   ! ------------------------------------------------------------------------
@@ -156,7 +165,8 @@ contains
     cactive_prior(lun%coli(l2)+1) = .false.
     col%active(lun%coli(l2)+2) = .false.
     t_soisno_expected = temperature_vars%t_soisno_col
-    call initialize_new_columns(bounds, cactive_prior, temperature_vars, waterstate_vars)
+    call initialize_new_columns(bounds, cactive_prior, &
+         temperature_vars, waterstate_vars, soilhydrology_vars)
     @assertEqual(t_soisno_expected, temperature_vars%t_soisno_col)
     call cleanup()
   end subroutine test_initialize_new_columns_none
@@ -172,7 +182,8 @@ contains
     ! all cactive_prior points were false, so there's nothing to use as a template:
     cactive_prior(:) = .false.
     t_soisno_expected = temperature_vars%t_soisno_col
-    call initialize_new_columns(bounds, cactive_prior, temperature_vars, waterstate_vars)
+    call initialize_new_columns(bounds, cactive_prior, &
+         temperature_vars, waterstate_vars, soilhydrology_vars)
     @assertEqual(t_soisno_expected, temperature_vars%t_soisno_col)
     call cleanup()
   end subroutine test_initialize_new_columns_TEMPLATE_NONE_FOUND
@@ -198,7 +209,8 @@ contains
     ! copied:
     t_soisno_expected(dest_col,1:) = temperature_vars%t_soisno_col(source_col,1:)
 
-    call initialize_new_columns(bounds, cactive_prior, temperature_vars, waterstate_vars)
+    call initialize_new_columns(bounds, cactive_prior, &
+         temperature_vars, waterstate_vars, soilhydrology_vars)
 
     @assertEqual(t_soisno_expected, temperature_vars%t_soisno_col)
     call cleanup()

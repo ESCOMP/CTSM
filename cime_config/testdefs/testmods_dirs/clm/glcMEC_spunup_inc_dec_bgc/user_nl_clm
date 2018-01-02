@@ -1,11 +1,5 @@
 for_testing_allow_non_annual_changes = .true.
 
-! Use spun-up initial conditions so that it's easier to confirm that dynamic landunits
-! are working correctly. Once we have out-of-the-box initial conditions for this test,
-! these lines can be removed
-finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IG1850CRUCLM50BGC.0481-01-01.1.9x2.5_g1v6_gl5_simyr1850_c160127.nc'
-use_init_interp = .true.
-
 ! Add 1-d output for all variables that are conserved with dynamic landunits
 !
 ! Most of these are already on the primary history tape; for those that aren't, we add

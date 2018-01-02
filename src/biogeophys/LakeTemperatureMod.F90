@@ -246,11 +246,10 @@ contains
          t_grnd          =>   temperature_inst%t_grnd_col          , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)             
          t_soisno        =>   temperature_inst%t_soisno_col        , & ! Output: [real(r8) (:,:) ]  soil (or snow) temperature (Kelvin)   
          t_lake          =>   temperature_inst%t_lake_col          , & ! Output: [real(r8) (:,:) ]  col lake temperature (Kelvin)             
-         hc_soi          =>   temperature_inst%hc_soi_col          , & ! Output: [real(r8) (:)   ]  soil heat content (MJ/m2)               
-         hc_soisno       =>   temperature_inst%hc_soisno_col       , & ! Output: [real(r8) (:)   ]  soil plus snow plus lake heat content (MJ/m2)
 
          beta            =>   lakestate_inst%betaprime_col         , & ! Output: [real(r8) (:)   ]  col effective beta: sabg_lyr(p,jtop) for snow layers, beta otherwise
          lake_icefrac    =>   lakestate_inst%lake_icefrac_col      , & ! Output: [real(r8) (:,:) ]  col mass fraction of lake layer that is frozen
+         lake_icefracsurf => lakestate_inst%lake_icefracsurf_col   , & ! Output: [real(r8) (:,:) ]  col mass fraction of surface lake layer that is frozen
          lake_icethick   =>   lakestate_inst%lake_icethick_col     , & ! Output: [real(r8) (:)   ]  col ice thickness (m) (integrated if lakepuddling)
          savedtke1       =>   lakestate_inst%savedtke1_col         , & ! Output: [real(r8) (:)   ]  col top level eddy conductivity (W/mK)      
          lakeresist      =>   lakestate_inst%lakeresist_col        , & ! Output: [real(r8) (:)   ]  col (Needed for calc. of grnd_ch4_cond) (s/m) 
@@ -292,8 +291,6 @@ contains
        ncvts(c) = 0._r8
        esum1(c) = 0._r8
        esum2(c) = 0._r8
-       hc_soisno(c) = 0._r8
-       hc_soi(c)    = 0._r8
        if (use_lch4) then
           jconvect(c) = 0
           jconvectbot(c) = nlevlak+1
@@ -934,6 +931,7 @@ contains
                    lake_icefrac(c,i) = 0._r8
                    t_lake(c,i) = tav_unfr(c) + tfrz
                 end if
+      
                 zsum(c) = zsum(c) + dz_lake(c,i)
 
                 rhow(c,i) = (1._r8 - lake_icefrac(c,i)) * & 
@@ -997,8 +995,6 @@ contains
           ncvts(c) = ncvts(c) + cv_lake(c,j)*(t_lake(c,j)-tfrz) &
                    + cfus*dz_lake(c,j)*(1._r8-lake_icefrac(c,j)) 
           fin(c) = fin(c) + phi(c,j)
-          ! New for CLM 4
-          hc_soisno(c) = hc_soisno(c) + cv_lake(c,j)*t_lake(c,j)/1.e6
        end do
     end do
 
@@ -1013,8 +1009,6 @@ contains
              if (j == 1 .and. h2osno(c) > 0._r8 .and. j == jtop(c)) then
                 ncvts(c) = ncvts(c) - h2osno(c)*hfus
              end if
-             hc_soisno(c) = hc_soisno(c) + cv(c,j)*t_soisno(c,j)/1.e6
-             if (j >= 1) hc_soi(c) = hc_soi(c) + cv(c,j)*t_soisno(c,j)/1.e6
           end if
           if (j == 1) fin(c) = fin(c) + phi_soil(c)
        end do
@@ -1040,12 +1034,13 @@ contains
     end do
     ! This loop assumes only one point per column.
 
-    ! lake_icethick diagnostic.
+    ! lake_icethickness and lake_icefraction at surface diagnostic.
     do j = 1, nlevlak
        do fc = 1, num_lakec
           c = filter_lakec(fc)
 
           if (j == 1) lake_icethick(c) = 0._r8
+          if (j == 1) lake_icefracsurf(c) = lake_icefrac(c,1)
 
           lake_icethick(c) = lake_icethick(c) + lake_icefrac(c,j)*dz_lake(c,j)*denh2o/denice
                                                            ! Convert from nominal to physical thickness

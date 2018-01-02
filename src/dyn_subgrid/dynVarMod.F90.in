@@ -245,9 +245,9 @@ contains
     ! !USES:
     use ncdio_pio      , only : ncd_inqvid, ncd_getatt, var_desc_t
     ! !ARGUMENTS:
-    class(dyn_var_type) , intent(in)  :: this     ! this object
-    character(len=*) ,    intent(in)  :: attname  ! name of the attribute
-    character(len=*) ,    intent(out) :: attvalue ! value of the attribute
+    class(dyn_var_type) , intent(inout):: this     ! this object
+    character(len=*) ,    intent(in)   :: attname  ! name of the attribute
+    character(len=*) ,    intent(out)  :: attvalue ! value of the attribute
     ! !LOCAL VARIABLES:
     integer                     :: varid     ! variable id
     type(var_desc_t)            :: vardesc   ! variable descriptor

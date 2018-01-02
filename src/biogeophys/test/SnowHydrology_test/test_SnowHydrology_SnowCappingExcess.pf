@@ -1,0 +1,230 @@
+module test_SnowHydrology_SnowCappingExcess
+
+  ! Tests of SnowHydrologyMod: SnowCappingExcess
+
+  use pfunit_mod
+  use SnowHydrologyMod
+  use TopoMod, only : topo_type
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod
+  use unittestFilterBuilderMod
+  use unittestTimeManagerMod
+  use unittestArrayMod, only : col_array
+  use clm_varcon, only : h2osno_max
+  use clm_varpar, only : nlevsno
+  use landunit_varcon, only : istsoil, istice_mec
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestSCE
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestSCE
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+  ! Make sure the h2osno_max value is substantially larger than the reset_snow_h2osno
+  ! value, so that tests make sense.
+  real(r8), parameter :: my_h2osno_max = reset_snow_h2osno + 1000._r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestSCE), intent(inout) :: this
+    h2osno_max = my_h2osno_max
+    call SnowHydrologySetControlForTesting( &
+         set_reset_snow = .false., &
+         set_reset_snow_glc = .false., &
+         set_reset_snow_glc_ela = 1.e9_r8)
+    call unittest_timemgr_setup()
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestSCE), intent(inout) :: this
+    call unittest_subgrid_teardown()
+    call unittest_timemgr_teardown()
+  end subroutine tearDown
+
+  @Test
+  subroutine SnowCappingExcess_OneExceeds(this)
+    ! Test with one column that exceeds the max, two that don't
+    class(TestSCE), intent(inout) :: this
+    real(r8) :: h2osno(3)
+    real(r8), parameter :: my_excess = 1._r8
+    real(r8) :: h2osno_excess(3)
+    logical  :: apply_runoff(3)
+    integer :: num_snowc
+    integer, allocatable :: filter_snowc(:)
+
+    call setup_landunit_ncols(ltype=istsoil, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
+    ! Column 2 exceeds the max, other columns don't
+    h2osno = [h2osno_max - 1._r8, h2osno_max + my_excess, h2osno_max - 1._r8]
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno=h2osno, topo=col_array(0._r8), &
+         h2osno_excess=h2osno_excess, apply_runoff=apply_runoff)
+
+    @assertEqual([0._r8, my_excess, 0._r8], h2osno_excess, tolerance=tol)
+    @assertTrue(apply_runoff(2))
+  end subroutine SnowCappingExcess_OneExceeds
+
+  @Test
+  subroutine SnowCappingExcess_ResetNonGlacier(this)
+    ! With reset_snow = .true., should reset non-glacier points
+    class(TestSCE), intent(inout) :: this
+    real(r8) :: h2osno(3)
+    real(r8), parameter :: my_excess = 1._r8
+    real(r8) :: h2osno_excess(3)
+    logical  :: apply_runoff(3)
+    integer :: num_snowc
+    integer, allocatable :: filter_snowc(:)
+
+    call SnowHydrologySetControlForTesting(set_reset_snow = .true.)
+    call setup_landunit_ncols(ltype=istsoil, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
+    ! Column 2 exceeds the max, other columns don't
+    h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno=h2osno, topo=col_array(0._r8), &
+         h2osno_excess=h2osno_excess, apply_runoff=apply_runoff)
+
+    @assertEqual([0._r8, my_excess, 0._r8], h2osno_excess, tolerance=tol)
+    @assertFalse(apply_runoff(2))
+  end subroutine SnowCappingExcess_ResetNonGlacier
+
+  @Test
+  subroutine SnowCappingExcess_DoNotResetGlacier(this)
+    ! With reset_snow = .true. but reset_snow_glc = .false., should not reset glacier
+    class(TestSCE), intent(inout) :: this
+    real(r8) :: h2osno(3)
+    real(r8), parameter :: my_excess = 1._r8
+    real(r8) :: h2osno_excess(3)
+    logical  :: apply_runoff(3)
+    integer :: num_snowc
+    integer, allocatable :: filter_snowc(:)
+
+    call SnowHydrologySetControlForTesting(set_reset_snow = .true., &
+         set_reset_snow_glc = .false., set_reset_snow_glc_ela = 1000._r8)
+    call setup_landunit_ncols(ltype=istice_mec, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
+    ! Column 2 exceeds the max, other columns don't
+    h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno=h2osno, topo=col_array(0._r8), &
+         h2osno_excess=h2osno_excess, apply_runoff=apply_runoff)
+
+    @assertEqual([0._r8, 0._r8, 0._r8], h2osno_excess, tolerance=tol)
+  end subroutine SnowCappingExcess_DoNotResetGlacier
+
+  @Test
+  subroutine SnowCappingExcess_ResetLowGlacier(this)
+    ! With reset_snow_glc = .true., should reset low glacier points
+    class(TestSCE), intent(inout) :: this
+    real(r8) :: h2osno(3)
+    real(r8), parameter :: my_excess = 1._r8
+    real(r8), parameter :: ela = 1000._r8
+    real(r8) :: h2osno_excess(3)
+    logical  :: apply_runoff(3)
+    integer :: num_snowc
+    integer, allocatable :: filter_snowc(:)
+
+    call SnowHydrologySetControlForTesting(set_reset_snow_glc = .true., &
+         set_reset_snow_glc_ela = ela)
+    call setup_landunit_ncols(ltype=istice_mec, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
+    ! Column 2 exceeds the max, other columns don't
+    h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno=h2osno, topo=col_array(ela - 1._r8), &
+         h2osno_excess=h2osno_excess, apply_runoff=apply_runoff)
+
+    @assertEqual([0._r8, my_excess, 0._r8], h2osno_excess, tolerance=tol)
+    @assertFalse(apply_runoff(2))
+  end subroutine SnowCappingExcess_ResetLowGlacier
+
+  @Test
+  subroutine SnowCappingExcess_DoNotResetHighGlacier(this)
+    ! With reset_snow_glc = .true., should not reset high glacier points
+    class(TestSCE), intent(inout) :: this
+    real(r8) :: h2osno(3)
+    real(r8), parameter :: my_excess = 1._r8
+    real(r8), parameter :: ela = 1000._r8
+    real(r8) :: h2osno_excess(3)
+    logical  :: apply_runoff(3)
+    integer :: num_snowc
+    integer, allocatable :: filter_snowc(:)
+
+    call SnowHydrologySetControlForTesting(set_reset_snow_glc = .true., &
+         set_reset_snow_glc_ela = ela)
+    call setup_landunit_ncols(ltype=istice_mec, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
+    ! Column 2 exceeds the max, other columns don't
+    h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno=h2osno, topo=col_array(ela + 1._r8), &
+         h2osno_excess=h2osno_excess, apply_runoff=apply_runoff)
+
+    @assertEqual([0._r8, 0._r8, 0._r8], h2osno_excess, tolerance=tol)
+  end subroutine SnowCappingExcess_DoNotResetHighGlacier
+
+  @Test
+  subroutine SnowCappingExcess_DoNotResetNonGlacier(this)
+    ! With reset_snow_glc = .true. but reset_snow = .false., should not reset non-glacier
+    class(TestSCE), intent(inout) :: this
+    real(r8) :: h2osno(3)
+    real(r8), parameter :: my_excess = 1._r8
+    real(r8) :: h2osno_excess(3)
+    logical  :: apply_runoff(3)
+    integer :: num_snowc
+    integer, allocatable :: filter_snowc(:)
+
+    call SnowHydrologySetControlForTesting(set_reset_snow = .false., &
+         set_reset_snow_glc = .true., set_reset_snow_glc_ela = 1000._r8)
+    call setup_landunit_ncols(ltype=istsoil, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
+    ! Column 2 exceeds the max, other columns don't
+    h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno=h2osno, topo=col_array(0._r8), &
+         h2osno_excess=h2osno_excess, apply_runoff=apply_runoff)
+
+    @assertEqual([0._r8, 0._r8, 0._r8], h2osno_excess, tolerance=tol)
+  end subroutine SnowCappingExcess_DoNotResetNonGlacier
+
+  @Test
+  subroutine SnowCappingExcess_DoNotResetLater(this)
+    ! Make sure resetting doesn't happen after the given number of time steps
+    class(TestSCE), intent(inout) :: this
+    real(r8) :: h2osno(3)
+    real(r8), parameter :: my_excess = 1._r8
+    real(r8) :: h2osno_excess(3)
+    logical  :: apply_runoff(3)
+    integer :: num_snowc
+    integer :: nstep
+    integer, allocatable :: filter_snowc(:)
+
+    call SnowHydrologySetControlForTesting(set_reset_snow = .true.)
+    call setup_landunit_ncols(ltype=istsoil, ctypes=[1,1,1], cweights=[0.5_r8, 0.25_r8, 0.25_r8])
+    call filter_from_range(bounds%begc, bounds%endc, num_snowc, filter_snowc)
+    ! Column 2 exceeds the max, other columns don't
+    h2osno = [reset_snow_h2osno - 1._r8, reset_snow_h2osno + my_excess, reset_snow_h2osno - 1._r8]
+    nstep = nlevsno * reset_snow_timesteps_per_layer + 1
+    call unittest_timemgr_set_nstep(nstep)
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno=h2osno, topo=col_array(0._r8), &
+         h2osno_excess=h2osno_excess, apply_runoff=apply_runoff)
+
+    @assertEqual([0._r8, 0._r8, 0._r8], h2osno_excess, tolerance=tol)
+  end subroutine SnowCappingExcess_DoNotResetLater
+
+end module test_SnowHydrology_SnowCappingExcess

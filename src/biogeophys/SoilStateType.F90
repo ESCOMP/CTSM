@@ -36,7 +36,6 @@ module SoilStateType
      real(r8), pointer :: hksat_min_col        (:,:) ! col mineral hydraulic conductivity at saturation (hksat) (mm/s)
      real(r8), pointer :: hk_l_col             (:,:) ! col hydraulic conductivity (mm/s)
      real(r8), pointer :: smp_l_col            (:,:) ! col soil matric potential (mm)
-     real(r8), pointer :: tsink_l_col          (:,:) ! col soil transpiration sink by layer (mm H2O /s)
      real(r8), pointer :: smpmin_col           (:)   ! col restriction for min of soil potential (mm) 
      real(r8), pointer :: bsw_col              (:,:) ! col Clapp and Hornberger "b" (nlevgrnd)  
      real(r8), pointer :: watsat_col           (:,:) ! col volumetric soil water at saturation (porosity) 
@@ -136,7 +135,6 @@ contains
     allocate(this%hksat_min_col        (begc:endc,nlevgrnd))            ; this%hksat_min_col        (:,:) = spval
     allocate(this%hk_l_col             (begc:endc,nlevgrnd))            ; this%hk_l_col             (:,:) = nan   
     allocate(this%smp_l_col            (begc:endc,nlevgrnd))            ; this%smp_l_col            (:,:) = nan   
-    allocate(this%tsink_l_col          (begc:endc,nlevgrnd))            ; this%tsink_l_col          (:,:) = spval
     allocate(this%smpmin_col           (begc:endc))                     ; this%smpmin_col           (:)   = nan
 
     allocate(this%bsw_col              (begc:endc,nlevgrnd))            ; this%bsw_col              (:,:) = nan
@@ -211,13 +209,10 @@ contains
     else
        active = "inactive"
     end if
+
     call hist_addfld2d (fname='SMP',  units='mm', type2d='levgrnd',  &
          avgflag='A', long_name='soil matric potential (vegetated landunits only)', &
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
-
-    call hist_addfld2d (fname='TSINK',  units='mm/s', type2d='levgrnd',  &
-         avgflag='A', long_name='soil transpiration sink by layer', &
-         ptr_col=this%tsink_l_col, set_spec=spval, l2g_scale_type='veg')
 
        this%root_conductance_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
@@ -269,7 +264,7 @@ contains
        this%soilpsi_col(begc:endc,:) = spval
        call hist_addfld2d (fname='SOILPSI', units='MPa', type2d='levgrnd', &
             avgflag='A', long_name='soil water potential in each soil layer', &
-            ptr_col=this%soilpsi_col)
+            ptr_col=this%soilpsi_col, default='inactive')
     end if
 
     this%thk_col(begc:endc,-nlevsno+1:0) = spval
@@ -291,12 +286,12 @@ contains
     this%soilalpha_col(begc:endc) = spval
     call hist_addfld1d (fname='SoilAlpha',  units='unitless',  &
          avgflag='A', long_name='factor limiting ground evap', &
-         ptr_col=this%soilalpha_col, set_urb=spval)
+         ptr_col=this%soilalpha_col, set_urb=spval, default='inactive' )
 
     this%soilalpha_u_col(begc:endc) = spval
     call hist_addfld1d (fname='SoilAlpha_U',  units='unitless',  &
          avgflag='A', long_name='urban factor limiting ground evap', &
-         ptr_col=this%soilalpha_u_col, set_nourb=spval)
+         ptr_col=this%soilalpha_u_col, set_nourb=spval, default='inactive')
 
     if (use_cn) then
        this%watsat_col(begc:endc,:) = spval 
@@ -372,6 +367,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c
     logical  :: readvar
+    logical  :: readrootfr = .false.
     !------------------------------------------------------------------------
 
     call restartvar(ncid=ncid, flag=flag, varname='DSL', xtype=ncd_double,  &
@@ -401,9 +397,11 @@ contains
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &
-              interpinic_flag='interp', readvar=readvar, data=this%rootfr_patch)
+              interpinic_flag='interp', readvar=readrootfr, data=this%rootfr_patch)
+     else
+         readrootfr = .false.
      end if
-         if (flag=='read' .and. .not. readvar) then
+     if (flag=='read' .and. .not. readrootfr ) then
             if (masterproc) then
                write(iulog,*) "can't find rootfr in restart (or initial) file..."
                write(iulog,*) "Initialize rootfr to default"

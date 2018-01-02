@@ -37,6 +37,7 @@ module ch4Mod
   use LandunitType                   , only : lun                
   use ColumnType                     , only : col                
   use PatchType                      , only : patch                
+  use ch4FInundatedStreamType        , only : ch4finundatedstream_type
   !
   implicit none
   private
@@ -202,6 +203,7 @@ module ch4Mod
 
      real(r8), pointer, public :: grnd_ch4_cond_patch        (:)   ! patch tracer conductance for boundary layer [m/s]
      real(r8), pointer, public :: grnd_ch4_cond_col          (:)   ! col tracer conductance for boundary layer [m/s]
+     type(ch4finundatedstream_type), private :: ch4findstream      ! ch4 finundated stream data
 
    contains
 
@@ -221,17 +223,19 @@ module ch4Mod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init( this, bounds, cellorg_col, fsurdat )
+  subroutine Init( this, bounds, cellorg_col, fsurdat, NLFilename )
 
     class(ch4_type)               :: this
     type(bounds_type), intent(in) :: bounds  
     real(r8)         , intent(in) :: cellorg_col (bounds%begc:, 1:)
     character(len=*) , intent(in) :: fsurdat                         ! surface data file name
+    character(len=*),  intent(in) :: NLFilename                      ! Namelist filename
 
     call this%InitAllocate (bounds)
     if (use_lch4) then
        call this%InitHistory (bounds)
        call this%InitCold (bounds, cellorg_col, fsurdat)
+       call this%ch4findstream%Init( bounds, NLFilename )
     end if
 
   end subroutine Init
@@ -363,6 +367,7 @@ contains
     character(10) :: active
     integer       :: begc,endc
     integer       :: begg,endg 
+    real(r8), pointer :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
     !---------------------------------------------------------------------
 
     begc = bounds%begc; endc = bounds%endc
@@ -394,7 +399,7 @@ contains
     ! finundated is implicitly 1).
     call hist_addfld1d (fname='FINUNDATED_LAG', units='unitless',  &
          avgflag='A', long_name='time-lagged inundated fraction of vegetated columns', &
-         ptr_col=this%finundated_lag_col, l2g_scale_type='veg')
+         ptr_col=this%finundated_lag_col, l2g_scale_type='veg', default='inactive')
 
     this%ch4_surf_diff_sat_col(begc:endc) = spval
     call hist_addfld1d (fname='CH4_SURF_DIFF_SAT', units='mol/m2/s',  &
@@ -654,17 +659,19 @@ contains
     this%conc_o2_sat_col(begc:endc,1:nlevgrnd) = spval
     ! Using l2g_scale_type='veg_plus_lake' to exclude mass in non-lake special landunits,
     ! which can arise from dynamic column adjustments
-    call hist_addfld2d (fname='CONC_O2_SAT', units='mol/m3', type2d='levgrnd', &
+    data2dptr => this%conc_o2_sat_col(:,1:nlevsoi)
+    call hist_addfld2d (fname='CONC_O2_SAT', units='mol/m3', type2d='levsoi', &
          avgflag='A', long_name='O2 soil Concentration for inundated / lake area', &
-         ptr_col=this%conc_o2_sat_col, l2g_scale_type='veg_plus_lake')
+         ptr_col=data2dptr, l2g_scale_type='veg_plus_lake')
 
     this%conc_o2_unsat_col(begc:endc,1:nlevgrnd) = spval
     ! Using l2g_scale_type='veg' to exclude mass in special landunits, which can arise
     ! from dynamic column adjustments. (We also exclude lakes here, because they don't
     ! have any unsaturated area.)
-    call hist_addfld2d (fname='CONC_O2_UNSAT', units='mol/m3', type2d='levgrnd', &
+    data2dptr => this%conc_o2_unsat_col(:,1:nlevsoi)
+    call hist_addfld2d (fname='CONC_O2_UNSAT', units='mol/m3', type2d='levsoi', &
          avgflag='A', long_name='O2 soil Concentration for non-inundated area', &
-         ptr_col=this%conc_o2_unsat_col, l2g_scale_type='veg')
+         ptr_col=data2dptr, l2g_scale_type='veg')
 
     this%ch4co2f_grc(begg:endg) = spval
     call hist_addfld1d (fname='FCH4TOCO2', units='gC/m2/s', &
@@ -689,7 +696,7 @@ contains
     this%qflx_surf_lag_col(begc:endc) = spval
     call hist_addfld1d (fname='QOVER_LAG', units='mm/s',  &
          avgflag='A', long_name='time-lagged surface runoff for soil columns', &
-         ptr_col=this%qflx_surf_lag_col)
+         ptr_col=this%qflx_surf_lag_col, default='inactive')
 
     if (allowlakeprod) then
        this%lake_soilc_col(begc:endc,1:nlevgrnd) = spval
@@ -730,7 +737,8 @@ contains
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevdecomp
     use landunit_varcon , only : istsoil, istdlak, istcrop
     use clm_varctl      , only : iulog
-    use ch4varcon       , only : allowlakeprod, usephfact, fin_use_fsat
+    use ch4varcon       , only : allowlakeprod, usephfact, finundation_mtd
+    use ch4varcon       , only : finundation_mtd_ZWT_inversion
     use spmdMod         , only : masterproc
     use fileutils       , only : getfil
     use ncdio_pio       
@@ -758,16 +766,16 @@ contains
     ! Initialize time constant variables
     !----------------------------------------
 
-    allocate(zwt0_in(bounds%begg:bounds%endg))
-    allocate(f0_in(bounds%begg:bounds%endg))
-    allocate(p3_in(bounds%begg:bounds%endg))
+    allocate(zwt0_in (bounds%begg:bounds%endg))
+    allocate(f0_in   (bounds%begg:bounds%endg))
+    allocate(p3_in   (bounds%begg:bounds%endg))
     if (usephfact) allocate(ph_in(bounds%begg:bounds%endg))
 
     ! Methane code parameters for finundated
 
     call getfil( fsurdat, locfn, 0 ) 
     call ncd_pio_openfile (ncid, trim(locfn), 0)
-    if (.not. fin_use_fsat) then
+    if ( finundation_mtd == finundation_mtd_zwt_inversion ) then
        call ncd_io(ncid=ncid, varname='ZWT0', flag='read', data=zwt0_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           call endrun(msg=' ERROR: Running with CH4 Model but ZWT0 not on surfdata file'//&
@@ -798,10 +806,10 @@ contains
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
 
-       if (.not. fin_use_fsat) then
-          this%zwt0_col(c) = zwt0_in(g)
-          this%f0_col(c)   = f0_in(g)
-          this%p3_col(c)   = p3_in(g)
+       if (finundation_mtd == finundation_mtd_ZWT_inversion ) then
+          this%zwt0_col(c)  = zwt0_in(g)
+          this%f0_col(c)    = f0_in(g)
+          this%p3_col(c)    = p3_in(g)
        end if
        if (usephfact) this%pH_col(c) = pH_in(g)
     end do
@@ -1241,7 +1249,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+  subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater)
     !
     ! !DESCRIPTION:
     ! Adjust state variables when column areas change due to dynamic landuse
@@ -1252,6 +1260,11 @@ contains
     ! !ARGUMENTS:
     class(ch4_type)                 , intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer                         , intent(in)    :: clump_index
+
     type(column_state_updater_type) , intent(in)    :: column_state_updater
     !
     ! !LOCAL VARIABLES:
@@ -1284,6 +1297,7 @@ contains
          this%finundated_col(begc:endc)
     call column_state_updater%update_column_state_no_special_handling( &
          bounds = bounds, &
+         clump_index = clump_index, &
          var    = finundated_new_col(begc:endc))
 
     f_uninundated_col(begc:endc) = &
@@ -1292,10 +1306,12 @@ contains
          f_uninundated_col(begc:endc)
     call column_state_updater%update_column_state_no_special_handling( &
          bounds = bounds, &
+         clump_index = clump_index, &
          var    = f_uninundated_new_col(begc:endc))
 
     call column_state_updater%update_column_state_no_special_handling( &
          bounds = bounds, &
+         clump_index = clump_index, &
          var = this%finundated_lag_col(begc:endc))
 
     this%dyn_ch4bal_adjustments_col(begc:endc) = 0._r8
@@ -1303,6 +1319,7 @@ contains
     do j = 1, nlevsoi
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_ch4_sat_col(begc:endc, j), &
             fractional_area_old = this%finundated_col(begc:endc), &
             fractional_area_new = finundated_new_col(begc:endc), &
@@ -1315,6 +1332,7 @@ contains
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_ch4_unsat_col(begc:endc, j), &
             fractional_area_old = f_uninundated_col(begc:endc), &
             fractional_area_new = f_uninundated_new_col(begc:endc), &
@@ -1328,6 +1346,7 @@ contains
        ! layer_sat_lag just applies to the UNinundated portion of the column
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%layer_sat_lag_col(begc:endc, j), &
             fractional_area_old = f_uninundated_col(begc:endc), &
             fractional_area_new = f_uninundated_new_col(begc:endc))
@@ -1338,12 +1357,14 @@ contains
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_o2_sat_col(begc:endc, j), &
             fractional_area_old = this%finundated_col(begc:endc), &
             fractional_area_new = finundated_new_col(begc:endc))
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_o2_unsat_col(begc:endc, j), &
             fractional_area_old = f_uninundated_col(begc:endc), &
             fractional_area_new = f_uninundated_new_col(begc:endc))
@@ -1616,8 +1637,9 @@ contains
     use subgridAveMod , only : p2c, c2g
     use clm_varpar    , only : nlevgrnd, nlevdecomp
     use pftconMod     , only : noveg
-    use ch4varcon     , only : replenishlakec, allowlakeprod, ch4offline, fin_use_fsat
+    use ch4varcon     , only : replenishlakec, allowlakeprod, ch4offline
     use clm_varcon    , only : secspday
+    use ch4varcon     , only : finundation_mtd, finundation_mtd_h2osfc
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds   
@@ -1702,6 +1724,7 @@ contains
 
          frac_h2osfc          =>   waterstate_inst%frac_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          snow_depth           =>   waterstate_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
+         tws                  =>   waterstate_inst%tws_grc                   , & ! Input:  [real(r8) (:)   ]  total water storage (kg m-2)                                   
          qflx_surf            =>   waterflux_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
 
          conc_o2_sat          =>   ch4_inst%conc_o2_sat_col                  , & ! Input:  [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
@@ -1797,7 +1820,7 @@ contains
          c_atm(g,3) =  forc_pco2(g) / rgasm / forc_t(g) ! [mol/m3 air]
       end do
 
-      ! Calculate finundated
+      ! Save finundated before, and calculate lagged surface runoff
       do fc = 1, num_soilc
          c = filter_soilc(fc)
          g = col%gridcell(c)
@@ -1814,10 +1837,19 @@ contains
          qflx_surf_lag(c) = qflx_surf_lag(c) * exp(-dtime/qflxlags) &
               + qflx_surf(c) * (1._r8 - exp(-dtime/qflxlags))
 
-         !There may be ways to improve this for irrigated crop columns...
-         if (fin_use_fsat) then
-            finundated(c) = frac_h2osfc(c)
-         else
+      end do
+
+      ! Caulculate finundated
+      if ( ch4_inst%ch4findstream%useStreams() &
+           .or. (finundation_mtd == finundation_mtd_h2osfc) )then
+         call ch4_inst%ch4findstream%CalcFinundated( bounds, num_soilc, &
+                               filter_soilc, soilhydrology_inst, waterstate_inst, &
+                               qflx_surf_lag(begc:endc), finundated(begc:endc) )
+      else
+
+         ! Calculate finundated with ZWT inversion from surface dataset
+         do fc = 1, num_soilc
+            c = filter_soilc(fc)
             if (zwt0(c) > 0._r8) then
                if (zwt_perched(c) < z(c,nlevsoi)-1.e-5_r8 .and. zwt_perched(c) < zwt(c)) then
                   zwt_actual = zwt_perched(c)
@@ -1828,8 +1860,13 @@ contains
             else
                finundated(c) = p3(c)*qflx_surf_lag(c)
             end if
-         end if
+   
+         end do
+      end if
 
+      ! Calculate finundated before snow and lagged version of finundated
+      do fc = 1, num_soilc
+         c = filter_soilc(fc)
          if (snow_depth(c) <= 0._r8) then    ! If snow_depth<=0,use the above method to calculate finundated.
             finundated(c) = max( min(finundated(c),1._r8), 0._r8)
             finundated_pre_snow(c) = finundated(c)
@@ -2395,7 +2432,6 @@ contains
       do j=1,nlevsoi
          do fc = 1, num_methc
             c = filter_methc (fc)
-            g = col%gridcell(c)
 
             if (.not. lake) then
 
@@ -3306,7 +3342,11 @@ contains
 
             o2demand = o2_decomp_depth(c,j) + o2_oxid_depth(c,j) ! o2_decomp_depth includes autotrophic root respiration
             if (o2demand > 0._r8) then
-               o2stress(c,j) = min((conc_o2(c,j) / dtime + o2_aere_depth(c,j)) / o2demand, 1._r8)
+               if ( (conc_o2(c,j) / dtime + o2_aere_depth(c,j)) > o2demand )then
+                  o2stress(c,j) = 1._r8
+               else
+                  o2stress(c,j) = (conc_o2(c,j) / dtime + o2_aere_depth(c,j)) / o2demand
+               end if
             else
                o2stress(c,j) = 1._r8
             end if

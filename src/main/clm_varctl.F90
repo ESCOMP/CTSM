@@ -94,10 +94,10 @@ module clm_varctl
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
 
   !----------------------------------------------------------
-  ! Flag to turn on MEGAN VOC's
+  ! Flag to read ndep rather than obtain it from coupler
   !----------------------------------------------------------
-
-  logical, public :: use_voc = .true. 
+  
+  logical, public :: ndep_from_cpl = .false.
 
   !----------------------------------------------------------
   ! Interpolation of finidat if requested
@@ -193,11 +193,11 @@ module clm_varctl
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
 
   !----------------------------------------------------------
-  !  ED switches
+  !  fates switches
   !----------------------------------------------------------
 
-  logical, public :: use_ed = .false.            ! true => use  ED
-  logical, public :: use_ed_spit_fire = .false.  ! true => use spitfire model
+  logical, public :: use_fates = .false.            ! true => use  ED
+  logical, public :: use_fates_spitfire = .false.  ! true => use spitfire model
 
   !----------------------------------------------------------
   !  LUNA switches		
@@ -261,9 +261,6 @@ module clm_varctl
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   !----------------------------------------------------------
 
-  ! glacier_mec landunit is not created (set in controlMod)
-  logical , public :: create_glacier_mec_landunit = .false. 
-
   ! true => CLM glacier area & topography changes dynamically 
   logical , public :: glc_do_dynglacier = .false.           
 
@@ -310,6 +307,11 @@ module clm_varctl
   ! moved hist_wrtch4diag from histFileMod.F90 to here - caused compiler error with intel
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
+
+  !----------------------------------------------------------
+  ! ED/FATES
+  !----------------------------------------------------------
+  character(len=fname_len), public :: fates_paramfile  = ' '
 
   !----------------------------------------------------------
   ! Migration of CPP variables

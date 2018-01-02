@@ -1,1 +1,2 @@
 ./xmlchange RUN_STARTDATE=1851-12-30
+./xmlchange CLM_FORCE_COLDSTART="on"

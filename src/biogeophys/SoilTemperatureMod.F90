@@ -222,12 +222,6 @@ contains
          frac_h2osfc             => waterstate_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
 
          
-         qflx_evap_soi           => waterflux_inst%qflx_evap_soi_patch      , & ! Input:  [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
-         qflx_ev_snow            => waterflux_inst%qflx_ev_snow_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from snow (W/m**2) [+ to atm]
-         qflx_ev_soil            => waterflux_inst%qflx_ev_soil_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
-         qflx_ev_h2osfc          => waterflux_inst%qflx_ev_h2osfc_patch     , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]
-
-         
          sabg_soil               => solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
          sabg_chk                => solarabs_inst%sabg_chk_patch            , & ! Output: [real(r8) (:)   ]  sum of soil/snow using current fsno, for balance check
@@ -244,8 +238,8 @@ contains
          eflx_sh_soil            => energyflux_inst%eflx_sh_soil_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]
          eflx_sh_h2osfc          => energyflux_inst%eflx_sh_h2osfc_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from surface water (W/m**2) [+ to atm]
          eflx_bot                => energyflux_inst%eflx_bot_col            , & ! Input:  [real(r8) (:)   ]  heat flux from beneath column (W/m**2) [+ = upward]
-         eflx_fgr12              => energyflux_inst%eflx_fgr12_col          , & ! Input:  [real(r8) (:)   ]  heat flux between soil layer 1 and 2 (W/m2)
-         eflx_fgr                => energyflux_inst%eflx_fgr_col            , & ! Input:  [real(r8) (:,:) ]  (rural) soil downward heat flux (W/m2) (1:nlevgrnd)
+         eflx_fgr12              => energyflux_inst%eflx_fgr12_col          , & ! Output: [real(r8) (:)   ]  heat flux between soil layer 1 and 2 (W/m2)
+         eflx_fgr                => energyflux_inst%eflx_fgr_col            , & ! Output: [real(r8) (:,:) ]  (rural) soil downward heat flux (W/m2) (1:nlevgrnd)
          eflx_traffic            => energyflux_inst%eflx_traffic_lun        , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
          eflx_traffic_patch      => energyflux_inst%eflx_traffic_patch      , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
          eflx_wasteheat          => energyflux_inst%eflx_wasteheat_lun      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
@@ -260,8 +254,6 @@ contains
          eflx_urban_heat_col     => energyflux_inst%eflx_urban_heat_col     , & ! Output: [real(r8) (:)   ]  urban heating flux (W/m**2)             
 
          emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
-         hc_soi                  => temperature_inst%hc_soi_col             , & ! Input:  [real(r8) (:)   ]  soil heat content (MJ/m2)               ! TODO: make a module variable
-         hc_soisno               => temperature_inst%hc_soisno_col          , & ! Input:  [real(r8) (:)   ]  soil plus snow plus lake heat content (MJ/m2) !TODO: make a module variable
          tssbef                  => temperature_inst%t_ssbef_col            , & ! Input:  [real(r8) (:,:) ]  temperature at previous time step [K] 
          t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Output: [real(r8) (:)   ]  surface water temperature               
          t_soisno                => temperature_inst%t_soisno_col           , & ! Output: [real(r8) (:,:) ]  soil temperature (Kelvin)             
@@ -549,10 +541,6 @@ contains
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
          l = col%landunit(c)
-         if (.not. lun%urbpoi(l)) then
-            hc_soisno(c) = 0._r8
-            hc_soi(c)    = 0._r8
-         end if
          eflx_fgr12(c)= 0._r8
       end do
 
@@ -572,14 +560,6 @@ contains
                eflx_fgr(c,j) = 0._r8
             end if
 
-            if (.not. lun%urbpoi(l)) then
-               if (j >= snl(c)+1) then
-                  hc_soisno(c) = hc_soisno(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
-               endif
-               if (j >= 1) then
-                  hc_soi(c) = hc_soi(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
-               end if
-            end if
          end do
       end do
 
@@ -610,7 +590,7 @@ contains
     ! !USES:
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
-    use landunit_varcon , only : istice, istice_mec, istwet
+    use landunit_varcon , only : istice_mec, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use clm_varctl      , only : iulog
     !
@@ -693,7 +673,7 @@ contains
                   thk(c,j) = tk_roof(l,j)
                else if (col%itype(c) == icol_road_imperv .and. j >= 1 .and. j <= nlev_improad(l)) then
                   thk(c,j) = tk_improad(l,j)
-               else if (lun%itype(l) /= istwet .AND. lun%itype(l) /= istice .AND. lun%itype(l) /= istice_mec &
+               else if (lun%itype(l) /= istwet .AND. lun%itype(l) /= istice_mec &
                     .AND. col%itype(c) /= icol_sunwall .AND. col%itype(c) /= icol_shadewall .AND. &
                     col%itype(c) /= icol_roof) then
 
@@ -713,7 +693,7 @@ contains
                      thk(c,j) = tkdry(c,j)
                   endif
                   if (j > nbedrock(c)) thk(c,j) = thk_bedrock
-               else if (lun%itype(l) == istice .OR. lun%itype(l) == istice_mec) then
+               else if (lun%itype(l) == istice_mec) then
                   thk(c,j) = tkwat
                   if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
                else if (lun%itype(l) == istwet) then                         
@@ -788,7 +768,7 @@ contains
                cv(c,j) = cv_roof(l,j) * dz(c,j)
             else if (col%itype(c) == icol_road_imperv .and. j >= 1 .and. j <= nlev_improad(l)) then
                cv(c,j) = cv_improad(l,j) * dz(c,j)
-            else if (lun%itype(l) /= istwet .AND. lun%itype(l) /= istice .AND. lun%itype(l) /= istice_mec &
+            else if (lun%itype(l) /= istwet .AND. lun%itype(l) /= istice_mec &
                  .AND. col%itype(c) /= icol_sunwall .AND. col%itype(c) /= icol_shadewall .AND. &
                  col%itype(c) /= icol_roof) then
                cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
@@ -796,7 +776,7 @@ contains
             else if (lun%itype(l) == istwet) then 
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
                if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
-            else if (lun%itype(l) == istice .OR. lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice_mec) then
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
             endif
             if (j == 1) then
@@ -1455,9 +1435,9 @@ contains
          
          frac_sno_eff            => waterstate_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
          
-         qflx_ev_snow            => waterflux_inst%qflx_ev_snow_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from snow (W/m**2) [+ to atm]
-         qflx_ev_soil            => waterflux_inst%qflx_ev_soil_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
-         qflx_ev_h2osfc          => waterflux_inst%qflx_ev_h2osfc_patch     , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]
+         qflx_ev_snow            => waterflux_inst%qflx_ev_snow_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
+         qflx_ev_soil            => waterflux_inst%qflx_ev_soil_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
+         qflx_ev_h2osfc          => waterflux_inst%qflx_ev_h2osfc_patch     , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]
          qflx_evap_soi           => waterflux_inst%qflx_evap_soi_patch      , & ! Input:  [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
          qflx_tran_veg           => waterflux_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          

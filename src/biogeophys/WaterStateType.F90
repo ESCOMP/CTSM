@@ -36,12 +36,13 @@ module WaterstateType
      real(r8), pointer :: h2osno_old_col         (:)   ! col snow mass for previous time step (kg/m2) (new)
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
+     real(r8), pointer :: h2osoi_liq_tot_col     (:)   ! vertically summed col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
+     real(r8), pointer :: h2osoi_ice_tot_col     (:)   ! vertically summed col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
      real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
-     real(r8), pointer :: h2ocan_col             (:)   ! col canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
@@ -52,6 +53,12 @@ module WaterstateType
      real(r8), pointer :: ice1_grc               (:)   ! grc initial gridcell total h2o ice content
      real(r8), pointer :: ice2_grc               (:)   ! grc post land cover change total ice content
      real(r8), pointer :: tws_grc                (:)   ! grc total water storage (mm H2O)
+
+     real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
+                                                        ! in most cases, the vegetation scheme does not have a dynamic
+                                                        ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
+                                                        ! When FATES is coupled in with plant hydraulics turned on, this storage
+                                                        ! term is set to non-zero. (kg/m2 H2O)
 
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
@@ -85,9 +92,7 @@ module WaterstateType
 
      ! Balance Checks
 
-     real(r8), pointer :: begwb_patch            (:)   ! water mass begining of the time step
      real(r8), pointer :: begwb_col              (:)   ! water mass begining of the time step
-     real(r8), pointer :: endwb_patch            (:)   ! water mass end of the time step
      real(r8), pointer :: endwb_col              (:)   ! water mass end of the time step
      real(r8), pointer :: errh2o_patch           (:)   ! water conservation error (mm H2O)
      real(r8), pointer :: errh2o_col             (:)   ! water conservation error (mm H2O)
@@ -183,8 +188,9 @@ contains
     allocate(this%h2osoi_liqvol_col      (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liqvol_col      (:,:) = nan
     allocate(this%h2osoi_ice_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_ice_col         (:,:) = nan
     allocate(this%h2osoi_liq_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liq_col         (:,:) = nan
+    allocate(this%h2osoi_ice_tot_col     (begc:endc))                     ; this%h2osoi_ice_tot_col     (:)   = nan
+    allocate(this%h2osoi_liq_tot_col     (begc:endc))                     ; this%h2osoi_liq_tot_col     (:)   = nan
     allocate(this%h2ocan_patch           (begp:endp))                     ; this%h2ocan_patch           (:)   = nan  
-    allocate(this%h2ocan_col             (begc:endc))                     ; this%h2ocan_col             (:)   = nan
     allocate(this%snocan_patch           (begp:endp))                     ; this%snocan_patch           (:)   = nan  
     allocate(this%liqcan_patch           (begp:endp))                     ; this%liqcan_patch           (:)   = nan  
     allocate(this%snounload_patch        (begp:endp))                     ; this%snounload_patch        (:)   = nan  
@@ -195,6 +201,8 @@ contains
     allocate(this%ice1_grc               (begg:endg))                     ; this%ice1_grc               (:)   = nan
     allocate(this%ice2_grc               (begg:endg))                     ; this%ice2_grc               (:)   = nan
     allocate(this%tws_grc                (begg:endg))                     ; this%tws_grc                (:)   = nan
+
+    allocate(this%total_plant_stored_h2o_col(begc:endc))                  ; this%total_plant_stored_h2o_col(:) = nan
 
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
     allocate(this%snw_rds_top_col        (begc:endc))                     ; this%snw_rds_top_col        (:)   = nan
@@ -225,9 +233,7 @@ contains
     allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
 
-    allocate(this%begwb_patch            (begp:endp))                     ; this%begwb_patch            (:)   = nan
     allocate(this%begwb_col              (begc:endc))                     ; this%begwb_col              (:)   = nan
-    allocate(this%endwb_patch            (begp:endp))                     ; this%endwb_patch            (:)   = nan
     allocate(this%endwb_col              (begc:endc))                     ; this%endwb_col              (:)   = nan
     allocate(this%errh2o_patch           (begp:endp))                     ; this%errh2o_patch           (:)   = nan
     allocate(this%errh2o_col             (begc:endc))                     ; this%errh2o_col             (:)   = nan
@@ -242,9 +248,9 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : create_glacier_mec_landunit, use_cn, use_lch4
+    use clm_varctl     , only : use_cn, use_lch4
     use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno
+    use clm_varpar     , only : nlevsno, nlevsoi
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
@@ -276,25 +282,40 @@ contains
          avgflag='A', long_name='Snow ice content', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
-    this%h2osoi_vol_col(begc:endc,:) = spval
-    call hist_addfld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levgrnd', &
+    data2dptr => this%h2osoi_vol_col(begc:endc,1:nlevsoi)
+    call hist_addfld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levsoi', &
          avgflag='A', long_name='volumetric soil water (vegetated landunits only)', &
          ptr_col=this%h2osoi_vol_col, l2g_scale_type='veg')
 
-    this%h2osoi_liq_col(begc:endc,:) = spval
-    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levgrnd', &
-         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
-         ptr_col=this%h2osoi_liq_col, l2g_scale_type='veg')
+!    this%h2osoi_liq_col(begc:endc,:) = spval
+!    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levgrnd', &
+!         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
+!         ptr_col=this%h2osoi_liq_col, l2g_scale_type='veg')
 
-    this%h2osoi_ice_col(begc:endc,:) = spval
-    call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levgrnd', &
+    data2dptr => this%h2osoi_liq_col(begc:endc,1:nlevsoi) 
+    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levsoi', &
+         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
+         ptr_col=data2dptr, l2g_scale_type='veg')
+
+    data2dptr => this%h2osoi_ice_col(begc:endc,1:nlevsoi)
+    call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levsoi', &
          avgflag='A', long_name='soil ice (vegetated landunits only)', &
-         ptr_col=this%h2osoi_ice_col, l2g_scale_type='veg')
+         ptr_col=data2dptr, l2g_scale_type='veg')
 
     this%h2osoi_liqice_10cm_col(begc:endc) = spval
     call hist_addfld1d (fname='SOILWATER_10CM',  units='kg/m2', &
          avgflag='A', long_name='soil liquid water + ice in top 10cm of soil (veg landunits only)', &
          ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+
+    this%h2osoi_liq_tot_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTSOILLIQ',  units='kg/m2', &
+         avgflag='A', long_name='vertically summed soil liquid water (veg landunits only)', &
+         ptr_col=this%h2osoi_liq_tot_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+
+    this%h2osoi_ice_tot_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTSOILICE',  units='kg/m2', &
+         avgflag='A', long_name='vertically summed soil cie (veg landunits only)', &
+         ptr_col=this%h2osoi_ice_tot_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
 
     this%h2ocan_patch(begp:endp) = spval 
     call hist_addfld1d (fname='H2OCAN', units='mm',  &
@@ -326,22 +347,22 @@ contains
          default='inactive')
 
     this%liq1_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_LIQ1',  units='mm',  &
+    call hist_addfld1d (fname='LIQUID_CONTENT1',  units='mm',  &
          avgflag='A', long_name='initial gridcell total liq content', &
          ptr_lnd=this%liq1_grc)
 
     this%liq2_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_LIQ2',  units='mm',  &  
+    call hist_addfld1d (fname='LIQUID_CONTENT2',  units='mm',  &  
          avgflag='A', long_name='post landuse change gridcell total liq content', &              
          ptr_lnd=this%liq2_grc, default='inactive')     
 
     this%ice1_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_ICE1',  units='mm',  &  
+    call hist_addfld1d (fname='ICE_CONTENT1',  units='mm',  &  
          avgflag='A', long_name='initial gridcell total ice content', &              
          ptr_lnd=this%ice1_grc)     
 
     this%ice2_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_ICE2',  units='mm',  &  
+    call hist_addfld1d (fname='ICE_CONTENT2',  units='mm',  &  
          avgflag='A', long_name='post land cover change total ice content', &              
          ptr_lnd=this%ice2_grc, default='inactive')
 
@@ -354,6 +375,14 @@ contains
     call hist_addfld1d (fname='TWS',  units='mm',  &
          avgflag='A', long_name='total water storage', &
          ptr_lnd=this%tws_grc)
+
+    ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
+    !                  I think that since the value is zero in all cases except
+    !                  for FATES plant hydraulics, it will be confusing for users
+    !                  when they see their plants have no water in output files.
+    !                  So it is not useful diagnostic information. The information
+    !                  can be provided through FATES specific history diagnostics
+    !                  if need be.
 
     ! Humidity
 
@@ -370,12 +399,12 @@ contains
     this%rh_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='RH2M_R', units='%',  &
          avgflag='A', long_name='Rural 2m specific humidity', &
-         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval)
+         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%rh_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='RH2M_U', units='%',  &
          avgflag='A', long_name='Urban 2m relative humidity', &
-         ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
+         ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%rh_af_patch(begp:endp) = spval
     call hist_addfld1d (fname='RHAF', units='fraction', &
@@ -444,7 +473,7 @@ contains
     this%snow_depth_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOW_DEPTH',  units='m',  &
          avgflag='A', long_name='snow height of snow covered area', &
-         ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')!, default='inactive')
+         ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='SNOW_DEPTH_ICE', units='m',  &
          avgflag='A', long_name='snow height of snow covered area (ice landunits only)', &
@@ -477,18 +506,16 @@ contains
          ptr_col=this%int_snow_col, l2g_scale_type='ice', &
          default='inactive')
 
-    if (create_glacier_mec_landunit) then
-       this%snow_persistence_col(begc:endc) = spval
-       call hist_addfld1d (fname='SNOW_PERSISTENCE',  units='seconds',  &
-            avgflag='I', long_name='Length of time of continuous snow cover (nat. veg. landunits only)', &
-            ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
-    end if
+    this%snow_persistence_col(begc:endc) = spval
+    call hist_addfld1d (fname='SNOW_PERSISTENCE',  units='seconds',  &
+         avgflag='I', long_name='Length of time of continuous snow cover (nat. veg. landunits only)', &
+         ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
 
     if (use_cn) then
        this%wf_col(begc:endc) = spval
        call hist_addfld1d (fname='WF', units='proportion', &
             avgflag='A', long_name='soil water as frac. of whc for top 0.05 m', &
-            ptr_col=this%wf_col)
+            ptr_col=this%wf_col, default='inactive')
     end if
 
     this%h2osno_top_col(begc:endc) = spval
@@ -561,7 +588,7 @@ contains
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use shr_const_mod   , only : SHR_CONST_TKFRZ
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istice, istwet, istsoil, istdlak, istcrop, istice_mec  
+    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
     use column_varcon   , only : icol_shadewall, icol_road_perv
     use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
     use clm_varcon      , only : denice, denh2o, spval, sb, bdsno 
@@ -625,11 +652,15 @@ contains
        end if
     end do
 
+    ! Water Stored in plants is almost always a static entity, with the exception
+    ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
+    this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
+
+
     associate(snl => col%snl) 
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
       this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
-      this%h2ocan_col(bounds%begc:bounds%endc) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
       this%snounload_patch(bounds%begp:bounds%endp) = 0._r8
@@ -742,7 +773,7 @@ contains
                      this%h2osoi_vol_col(c,j) = 1.0_r8
                   endif
                end do
-            else if (lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice_mec) then
                nlevs = nlevgrnd 
                do j = 1, nlevs
                   this%h2osoi_vol_col(c,j) = 1.0_r8
@@ -766,6 +797,7 @@ contains
             end do
          end if
       end do
+
 
       !--------------------------------------------
       ! Set Lake water
@@ -824,7 +856,7 @@ contains
     !
     ! !USES:
     use spmdMod          , only : masterproc
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin, spval  
+    use clm_varcon       , only : denice, denh2o, pondmx, watmin, spval, nameg
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step
@@ -902,6 +934,13 @@ contains
          dim1name='pft', &
          long_name='Canopy snow unloading', units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%snounload_patch)
+
+    ! TWS is needed when methane is on and the TWS_inversion is used to get exact
+    ! restart.
+    call restartvar(ncid=ncid, flag=flag, varname='TWS', xtype=ncd_double,  &
+         dim1name=nameg, &
+         long_name='Total Water Storage', units='mm', &
+         interpinic_flag='interp', readvar=readvar, data=this%tws_grc)
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, varname='rh10', xtype=ncd_double,  &

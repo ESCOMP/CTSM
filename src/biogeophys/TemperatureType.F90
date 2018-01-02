@@ -92,10 +92,10 @@ module TemperatureType
 
      ! Heat content
      real(r8), pointer :: beta_col                 (:)   ! coefficient of convective velocity [-]
-     real(r8), pointer :: hc_soi_col               (:)   ! col soil heat content (MJ/m2)
-     real(r8), pointer :: hc_soisno_col            (:)   ! col soil plus snow heat content (MJ/m2)
      real(r8), pointer :: heat1_grc                (:)   ! grc initial gridcell total heat content
      real(r8), pointer :: heat2_grc                (:)   ! grc post land cover change total heat content
+     real(r8), pointer :: liquid_water_temp1_grc   (:)   ! grc initial weighted average liquid water temperature (K)
+     real(r8), pointer :: liquid_water_temp2_grc   (:)   ! grc post land cover change weighted average liquid water temperature (K)
 
      ! Flags
      integer , pointer :: imelt_col                (:,:) ! flag for melting (=1), freezing (=2), Not=0 (-nlevsno+1:nlevgrnd) 
@@ -250,10 +250,10 @@ contains
 
     ! Heat content
     allocate(this%beta_col                 (begc:endc))                      ; this%beta_col                 (:)   = nan
-    allocate(this%hc_soi_col               (begc:endc))                      ; this%hc_soi_col               (:)   = nan
-    allocate(this%hc_soisno_col            (begc:endc))                      ; this%hc_soisno_col            (:)   = nan
     allocate(this%heat1_grc                (begg:endg))                      ; this%heat1_grc                (:)   = nan
     allocate(this%heat2_grc                (begg:endg))                      ; this%heat2_grc                (:)   = nan
+    allocate(this%liquid_water_temp1_grc   (begg:endg))                      ; this%liquid_water_temp1_grc   (:)   = nan
+    allocate(this%liquid_water_temp2_grc   (begg:endg))                      ; this%liquid_water_temp2_grc   (:)   = nan
 
     ! flags
     allocate(this%imelt_col                (begc:endc,-nlevsno+1:nlevgrnd))  ; this%imelt_col                (:,:) = huge(1)
@@ -309,7 +309,7 @@ contains
     this%t_grnd_u_col(begc:endc) = spval
     call hist_addfld1d (fname='TG_U', units='K',  &
          avgflag='A', long_name='Urban ground temperature', &
-         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans')
+         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans', default='inactive')
 
     this%t_lake_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TLAKE',  units='K', type2d='levlak', &
@@ -339,7 +339,7 @@ contains
     this%t_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_R', units='K',  &
          avgflag='A', long_name='Rural 2m air temperature', &
-         ptr_patch=this%t_ref2m_r_patch, set_spec=spval)
+         ptr_patch=this%t_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%t_ref2m_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV', units='K',  &
@@ -354,27 +354,27 @@ contains
     this%t_ref2m_min_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_R', units='K',  &
          avgflag='A', long_name='Rural daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval)
+         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval, default='inactive')
 
     this%t_ref2m_max_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_R', units='K',  &
          avgflag='A', long_name='Rural daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval)
+         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval, default='inactive')
 
     this%t_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_U', units='K',  &
          avgflag='A', long_name='Urban 2m air temperature', &
-         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval)
+         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval, default='inactive')
 
     this%t_ref2m_min_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_U', units='K',  &
          avgflag='A', long_name='Urban daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval)
+         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval, default='inactive')
 
     this%t_ref2m_max_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval)
+         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
 
     this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV', units='K',  &
@@ -394,7 +394,7 @@ contains
     this%t_grnd_r_col(begc:endc) = spval
     call hist_addfld1d (fname='TG_R', units='K',  &
          avgflag='A', long_name='Rural ground temperature', &
-         ptr_col=this%t_grnd_r_col, set_spec=spval)
+         ptr_col=this%t_grnd_r_col, set_spec=spval, default='inactive')
 
     this%t_soisno_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TSOI',  units='K', type2d='levgrnd', &
@@ -418,7 +418,7 @@ contains
     this%t_a10_patch(begp:endp) = spval
     call hist_addfld1d (fname='T10', units='K',  &
          avgflag='A', long_name='10-day running mean of 2-m temperature', &
-         ptr_patch=this%t_a10_patch, default=active)
+         ptr_patch=this%t_a10_patch, default='inactive')
 
     if (use_cn .and.  use_crop )then
        this%t_a5min_patch(begp:endp) = spval
@@ -448,43 +448,45 @@ contains
        this%t_roof_inner_lun(begl:endl) = spval
        call hist_addfld1d(fname='TROOF_INNER', units='K',  &
             avgflag='A', long_name='roof inside surface temperature', &
-            ptr_lunit=this%t_roof_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_roof_inner_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
 
        this%t_sunw_inner_lun(begl:endl) = spval
        call hist_addfld1d(fname='TSUNW_INNER', units='K',  &
             avgflag='A', long_name='sunwall inside surface temperature', &
-            ptr_lunit=this%t_sunw_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_sunw_inner_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
 
        this%t_shdw_inner_lun(begl:endl) = spval
        call hist_addfld1d(fname='TSHDW_INNER', units='K',  &
             avgflag='A', long_name='shadewall inside surface temperature', &
-            ptr_lunit=this%t_shdw_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_shdw_inner_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
 
        this%t_floor_lun(begl:endl) = spval
        call hist_addfld1d(fname='TFLOOR', units='K',  &
             avgflag='A', long_name='floor temperature', &
-            ptr_lunit=this%t_floor_lun, set_nourb=spval, l2g_scale_type='unity')
+            ptr_lunit=this%t_floor_lun, set_nourb=spval, l2g_scale_type='unity', &
+            default='inactive')
     end if
 
-    this%hc_soi_col(begc:endc) = spval
-    call hist_addfld1d (fname='HCSOI',  units='MJ/m2',  &
-         avgflag='A', long_name='soil heat content', &
-         ptr_col=this%hc_soi_col, set_lake=spval, set_urb=spval, l2g_scale_type='veg')
-
-    this%hc_soisno_col(begc:endc) = spval
-    call hist_addfld1d (fname='HC',  units='MJ/m2',  &
-         avgflag='A', long_name='heat content of soil/snow/lake', &
-         ptr_col=this%hc_soisno_col, set_urb=spval)
-
     this%heat1_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_HEAT1',  units='J/m^2',  &
+    call hist_addfld1d (fname='HEAT_CONTENT1',  units='J/m^2',  &
          avgflag='A', long_name='initial gridcell total heat content', &
          ptr_lnd=this%heat1_grc)
+    call hist_addfld1d (fname='HEAT_CONTENT1_VEG',  units='J/m^2',  &
+         avgflag='A', long_name='initial gridcell total heat content - vegetated landunits only', &
+         ptr_lnd=this%heat1_grc, l2g_scale_type='veg', default='inactive')
 
     this%heat2_grc(begg:endg) = spval
-    call hist_addfld1d (fname='GC_HEAT2',  units='J/m^2',  &
+    call hist_addfld1d (fname='HEAT_CONTENT2',  units='J/m^2',  &
          avgflag='A', long_name='post land cover change total heat content', &
          ptr_lnd=this%heat2_grc, default='inactive')  
+
+    this%liquid_water_temp1_grc(begg:endg) = spval
+    call hist_addfld1d (fname='LIQUID_WATER_TEMP1', units='K', &
+         avgflag='A', long_name='initial gridcell weighted average liquid water temperature', &
+         ptr_lnd=this%liquid_water_temp1_grc, default='inactive')
 
     this%snot_top_col(begc:endc) = spval 
     call hist_addfld1d (fname='SNOTTOPL', units='K', &
@@ -598,7 +600,7 @@ contains
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use shr_const_mod  , only : SHR_CONST_TKFRZ
     use clm_varcon     , only : denice, denh2o, sb
-    use landunit_varcon, only : istice, istwet, istsoil, istdlak, istice_mec
+    use landunit_varcon, only : istwet, istsoil, istdlak, istice_mec
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
     use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
@@ -647,7 +649,7 @@ contains
          ! Below snow temperatures - nonlake points (lake points are set below)
          if (.not. lun%lakpoi(l)) then 
 
-            if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+            if (lun%itype(l)==istice_mec) then
                this%t_soisno_col(c,1:nlevgrnd) = 250._r8
 
             else if (lun%itype(l) == istwet) then
@@ -1379,6 +1381,9 @@ contains
        endif
     end do
 
+    ! Accumulate and extract T10
+    !(acumulates TSA as 10-day running mean)
+
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
 
@@ -1404,14 +1409,17 @@ contains
        ! Accumulate and extract GDD0
 
        do p = begp,endp
-          g = patch%gridcell(p)
-          if (month==1 .and. day==1 .and. secs==dtime) then
-             rbufslp(p) = accumResetVal ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
-             rbufslp(p) = max(0._r8, min(26._r8, this%t_ref2m_patch(p)-SHR_CONST_TKFRZ)) * dtime/SHR_CONST_CDAY
-          else
-             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          ! Avoid unnecessary calculations over inactive points
+          if (patch%active(p)) then
+             g = patch%gridcell(p)
+             if (month==1 .and. day==1 .and. secs==dtime) then
+                rbufslp(p) = accumResetVal ! reset gdd
+             else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                  ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+                rbufslp(p) = max(0._r8, min(26._r8, this%t_ref2m_patch(p)-SHR_CONST_TKFRZ)) * dtime/SHR_CONST_CDAY
+             else
+                rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+             end if
           end if
        end do
        call update_accum_field  ('GDD0', rbufslp, nstep)
@@ -1420,15 +1428,18 @@ contains
        ! Accumulate and extract GDD8
 
        do p = begp,endp
-          g = patch%gridcell(p)
-          if (month==1 .and. day==1 .and. secs==dtime) then
-             rbufslp(p) = accumResetVal ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
-             rbufslp(p) = max(0._r8, min(30._r8, &
-                  this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 8._r8))) * dtime/SHR_CONST_CDAY
-          else
-             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          ! Avoid unnecessary calculations over inactive points
+          if (patch%active(p)) then
+             g = patch%gridcell(p)
+             if (month==1 .and. day==1 .and. secs==dtime) then
+                rbufslp(p) = accumResetVal ! reset gdd
+             else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                  ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+                rbufslp(p) = max(0._r8, min(30._r8, &
+                     this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 8._r8))) * dtime/SHR_CONST_CDAY
+             else
+                rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+             end if
           end if
        end do
        call update_accum_field  ('GDD8', rbufslp, nstep)
@@ -1437,24 +1448,24 @@ contains
        ! Accumulate and extract GDD10
 
        do p = begp,endp
-          g = patch%gridcell(p)
-          if (month==1 .and. day==1 .and. secs==dtime) then
-             rbufslp(p) = accumResetVal ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
-             rbufslp(p) = max(0._r8, min(30._r8, &
-                  this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 10._r8))) * dtime/SHR_CONST_CDAY
-          else
-             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          ! Avoid unnecessary calculations over inactive points
+          if (patch%active(p)) then
+             g = patch%gridcell(p)
+             if (month==1 .and. day==1 .and. secs==dtime) then
+                rbufslp(p) = accumResetVal ! reset gdd
+             else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                  ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+                rbufslp(p) = max(0._r8, min(30._r8, &
+                     this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 10._r8))) * dtime/SHR_CONST_CDAY
+             else
+                rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+             end if
           end if
        end do
        call update_accum_field  ('GDD10', rbufslp, nstep)
        call extract_accum_field ('GDD10', this%gdd10_patch, nstep)
 
     end if
-
-    ! Accumulate and extract T10
-    !(acumulates TSA as 10-day running mean)
 
     deallocate(rbufslp)
 

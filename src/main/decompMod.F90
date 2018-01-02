@@ -60,7 +60,7 @@ module decompMod
   integer,public :: numl        ! total number of landunits on all procs
   integer,public :: numc        ! total number of columns on all procs
   integer,public :: nump        ! total number of patchs on all procs
-  integer,public :: numCohort   ! total number of ED cohorts on all procs
+  integer,public :: numCohort   ! total number of fates cohorts on all procs
 
   type bounds_type
      integer :: begg, endg       ! beginning and ending gridcell index
@@ -231,7 +231,7 @@ contains
      !------------------------------------------------------------------------------
      !    Make sure this IS being called from a threaded region
 #ifdef _OPENMP
-     ! FIX(SPM, 090314) - for debugging ED and openMP
+     ! FIX(SPM, 090314) - for debugging fates and openMP
      !write(iulog,*) 'SPM omp debug decompMod 1 ', &
           !OMP_GET_NUM_THREADS(),OMP_GET_MAX_THREADS(),OMP_GET_THREAD_NUM()
 
@@ -301,7 +301,7 @@ contains
      !------------------------------------------------------------------------------
      !    Make sure this is NOT being called from a threaded region
 #ifdef _OPENMP
-     ! FIX(SPM, 090314) - for debugging ED and openMP
+     ! FIX(SPM, 090314) - for debugging fates and openMP
      !write(*,*) 'SPM omp debug decompMod 2 ', &
           !OMP_GET_NUM_THREADS(),OMP_GET_MAX_THREADS(),OMP_GET_THREAD_NUM()
 
@@ -394,7 +394,7 @@ contains
      integer, optional, intent(out) :: nl        ! total number of landunits across all processors
      integer, optional, intent(out) :: nc        ! total number of columns across all processors
      integer, optional, intent(out) :: np        ! total number of patchs across all processors
-     integer, optional, intent(out) :: nCohorts  ! total number ED cohorts
+     integer, optional, intent(out) :: nCohorts  ! total number fates cohorts
      !------------------------------------------------------------------------------
 
      if (present(np)) np             = nump

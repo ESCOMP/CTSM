@@ -41,6 +41,8 @@ Changes to tests or testing:
 
 Code reviewed by:
 
+Did you follow the steps in .CLMTrunkChecklist:
+
 CLM testing:
 
 [... Remove before making trunk_tag.  Available test levels:
@@ -59,26 +61,30 @@ CLM testing:
 
   build-namelist tests:
 
-    yellowstone - 
+    cheyenne - 
 
   unit-tests (components/clm/src):
 
-    yellowstone - 
+    cheyenne - 
 
   tools-tests (components/clm/test/tools):
 
-    yellowstone - 
+    cheyenne - 
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     yellowstone - 
+     cheyenne - 
 
-  regular tests (aux_clm40, aux_clm45):
+  regular tests (aux_clm):
 
     yellowstone_intel - 
-    yellowstone_pgi - 
-    yellowstone_gnu (clm45 only) - 
-    hobart_nag - 
+    yellowstone_pgi --- 
+    yellowstone_gnu --- 
+    cheyenne_intel ---- 
+    cheyenne_gnu ------ 
+    hobart_nag -------- 
+    hobart_pgi -------- 
+    hobart_intel ------ 
 
 CLM tag used for the baseline comparisons: 
 

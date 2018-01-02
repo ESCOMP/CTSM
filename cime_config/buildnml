@@ -124,16 +124,22 @@ def buildnml(case, caseroot, compname):
 
     startfile_type = "finidat"
     start_type = "default"
-    if run_type == "startup":
-        if clm_force_coldstart == "on":
-            start_type = "cold"
-    else:
-        if run_type == "hybrid":
-            start_type = "startup"
-        else:
-            start_type = run_type
+    if run_type == "hybrid":
+        start_type = "startup"
+    elif run_type != "startup":
+        start_type = run_type
+
     if run_type == "branch":
         startfile_type = "nrevsn"
+        if clm_force_coldstart == "on":
+           clm_force_coldstart = "off"
+           logger.warning( "WARNING: You've turned on CLM_FORCE_COLDSTART for a branch run_type, which is a contradiction, the coldstart will be ignored\n" +
+                           "  turn off CLM_FORCE_COLDSTART, or set RUN_TYPE=hybrid to get rid of this warning"
+                         )
+
+    if (clm_force_coldstart == "on"):
+        logger.warning( "WARNING: CLM is starting up from a cold state" )
+        start_type = "cold"
 
     if lnd_grid == 'T31':
         lnd_grid = '48x96'
@@ -149,11 +155,6 @@ def buildnml(case, caseroot, compname):
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
         lnd_grid = clm_usrdat_name
         clmusr = " -clm_usr_name %s "%clm_usrdat_name
-
-    if comp_glc != "sglc":
-        glc_opts = "-glc_present" 
-    else:
-        glc_opts = ""
 
     if comp_atm != "datm":
         nomeg = "-no-megan"
@@ -227,11 +228,11 @@ def buildnml(case, caseroot, compname):
         cmd = os.path.join(srcroot, "components","clm","bld","build-namelist")
 
         command = ("%s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
-                   "%s %s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
+                   "%s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
                    "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
                    "%s %s %s"
                    %(cmd, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
-                     nomeg, usecase, glc_opts, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
+                     nomeg, usecase, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
                      lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file, 
                      clm_bldnml_opts, spinup, tuning))
 

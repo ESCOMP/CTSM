@@ -18,7 +18,7 @@ module initVerticalMod
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, soil_layerstruct
-  use clm_varctl        , only : use_ed
+  use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
   use landunit_varcon   , only : istdlak, istice_mec, istsoil
@@ -364,7 +364,7 @@ contains
        end if
     end if
 
-    if(use_ed)then
+    if(use_fates)then
       call ed_hist_scpfmaps
     end if
 
@@ -803,8 +803,8 @@ contains
     ! from the upper layers.
     !
     ! !USES:
-    use landunit_varcon, only : istice, istice_mec, isturb_MIN, isturb_MAX
-    use column_varcon  , only : icol_road_perv, is_hydrologically_active
+    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
+    use column_varcon  , only : icol_road_perv
     !
     ! !ARGUMENTS:
     integer, intent(in) :: col_itype  ! col%itype value
@@ -827,7 +827,7 @@ contains
     ! == istdlak - that way, hasBedrock(lake) would be more likely to get updated
     ! correctly if the lake logic changes.
 
-    if (lun_itype == istice .or. lun_itype == istice_mec) then
+    if (lun_itype == istice_mec) then
        hasBedrock = .false.
     else if (lun_itype >= isturb_MIN .and. lun_itype <= isturb_MAX) then
        if (col_itype == icol_road_perv) then

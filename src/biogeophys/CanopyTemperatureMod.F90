@@ -16,7 +16,7 @@ module CanopyTemperatureMod
   use shr_const_mod        , only : SHR_CONST_PI
   use decompMod            , only : bounds_type
   use abortutils           , only : endrun
-  use clm_varctl           , only : iulog
+  use clm_varctl           , only : iulog, use_fates
   use PhotosynthesisMod    , only : Photosynthesis, PhotosynthesisTotal, Fractionation
   use SurfaceResistanceMod , only : calc_soilevap_resis
   use pftconMod            , only : pftcon
@@ -45,8 +45,9 @@ contains
   !------------------------------------------------------------------------------
   subroutine CanopyTemperature(bounds, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
+       clm_fates, &
        atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
-       waterstate_inst, waterflux_inst, energyflux_inst, temperature_inst)
+       waterstate_inst, waterflux_inst, energyflux_inst, temperature_inst )
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of leaf temperature
@@ -74,8 +75,11 @@ contains
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, zlnd, zsno, tfrz, spval 
     use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
     use column_varcon      , only : icol_road_imperv, icol_road_perv
-    use landunit_varcon    , only : istice, istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
+    use landunit_varcon    , only : istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
     use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
+    use clm_varctl         , only : use_fates
+    use CLMFatesInterfaceMod, only : hlm_fates_interface_type
+    
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -83,6 +87,7 @@ contains
     integer                , intent(in)    :: filter_nolakec(:)   ! column filter for non-lake points
     integer                , intent(in)    :: num_nolakep         ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(:)   ! patch filter for non-lake points
+    type(hlm_fates_interface_type), intent(inout)  :: clm_fates
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(canopystate_type) , intent(inout) :: canopystate_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
@@ -245,8 +250,7 @@ contains
          ! Saturated vapor pressure, specific humidity and their derivatives
          ! at ground surface
          qred = 1._r8
-         if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice  &
-              .AND. lun%itype(l)/=istice_mec) then
+         if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice_mec) then
 
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)
@@ -357,7 +361,7 @@ contains
          ! Urban emissivities are currently read in from data file
 
          if (.not. urbpoi(l)) then
-            if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+            if (lun%itype(l)==istice_mec) then
                emg(c) = 0.97_r8
             else
                emg(c) = (1._r8-frac_sno(c))*0.96_r8 + frac_sno(c)*0.97_r8
@@ -390,8 +394,25 @@ contains
 
       end do ! (end of columns loop)
 
-      ! Initialization
 
+      ! Set roughness and displacement
+      ! Note that FATES passes back z0m and displa at the end
+      ! of its dynamics call.  If and when crops are
+      ! enabled simultaneously with FATES, we will 
+      ! have to apply a filter here.
+      if(use_fates) then
+         call clm_fates%TransferZ0mDisp(bounds,frictionvel_inst,canopystate_inst)
+      end if
+
+      do fp = 1,num_nolakep
+         p = filter_nolakep(fp)
+         if( .not.(patch%is_fates(p))) then
+            z0m(p)    = z0mr(patch%itype(p)) * htop(p)
+            displa(p) = displar(patch%itype(p)) * htop(p)
+         end if
+      end do
+
+      ! Initialization
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
 
@@ -428,9 +449,6 @@ contains
 
          ! Roughness lengths over vegetation
 
-         z0m(p)    = z0mr(patch%itype(p)) * htop(p)
-         displa(p) = displar(patch%itype(p)) * htop(p)
-
          z0mv(p)   = z0m(p)
          z0hv(p)   = z0mv(p)
          z0qv(p)   = z0mv(p)
@@ -453,9 +471,7 @@ contains
                   forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
                   forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
                end if
-
-            else if (lun%itype(l) == istwet .or. lun%itype(l) == istice      &
-                 .or. lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istwet .or. lun%itype(l) == istice_mec) then
                forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)
                forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c)
                forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c)

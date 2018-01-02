@@ -10,7 +10,7 @@ module CanopyStateType
   use landunit_varcon , only : istsoil, istcrop
   use clm_varpar      , only : nlevcan, nvegwcs
   use clm_varcon      , only : spval  
-  use clm_varctl      , only : iulog, use_cn, use_ed, use_hydrstress
+  use clm_varctl      , only : iulog, use_cn, use_fates, use_hydrstress
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
   use PatchType       , only : patch                
@@ -51,7 +51,8 @@ module CanopyStateType
      integer  , pointer :: altmax_lastyear_indx_col (:)   ! col prior year maximum annual depth of thaw 
 
      real(r8) , pointer :: dewmx_patch              (:)   ! patch maximum allowed dew [mm] 
-
+     real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]
+                                                          ! for non-ED/FATES this is the same as pftcon%dleaf()
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
 
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
@@ -141,7 +142,7 @@ contains
     allocate(this%altmax_lastyear_indx_col (begc:endc))           ; this%altmax_lastyear_indx_col (:)   = huge(1)
 
     allocate(this%dewmx_patch              (begp:endp))           ; this%dewmx_patch              (:)   = nan
-
+    allocate(this%dleaf_patch              (begp:endp))           ; this%dleaf_patch              (:)   = nan
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
     allocate(this%vegwp_patch              (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
@@ -197,7 +198,7 @@ contains
          avgflag='A', long_name='shaded projected leaf area index', &
          ptr_patch=this%laisha_patch, set_urb=0._r8)
 
-    if (use_cn .or. use_ed) then
+    if (use_cn .or. use_fates) then
        this%fsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='FSUN', units='proportion', &
             avgflag='A', long_name='sunlit fraction of canopy', &
@@ -238,7 +239,7 @@ contains
        this%altmax_lastyear_col(begc:endc) = spval
        call hist_addfld1d (fname='ALTMAX_LASTYEAR', units='m', &
             avgflag='A', long_name='maximum prior year active layer thickness', &
-            ptr_col=this%altmax_lastyear_col)
+            ptr_col=this%altmax_lastyear_col, default='inactive')
     end if
 
     ! Allow active layer fields to be optionally output even if not running CN
@@ -279,10 +280,12 @@ contains
          ptr_patch=this%elai240_patch, default='inactive')
 
     ! Ed specific field
-    this%rscanopy_patch(begp:endp) = spval
-    call hist_addfld1d (fname='RSCANOPY', units=' s m-1',  &
-         avgflag='A', long_name='canopy resistance', &
-         ptr_patch=this%rscanopy_patch, set_lake=0._r8, set_urb=0._r8)
+    if ( use_fates ) then
+       this%rscanopy_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RSCANOPY', units=' s m-1',  &
+            avgflag='A', long_name='canopy resistance', &
+            ptr_patch=this%rscanopy_patch, set_lake=0._r8, set_urb=0._r8)
+    end if
 
 !    call hist_addfld1d (fname='GCCANOPY', units='none',  &
 !         avgflag='A', long_name='Canopy Conductance: mmol m-2 s-1', &
@@ -597,6 +600,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fsun', xtype=ncd_double,  &
          dim1name='pft', long_name='sunlit fraction of canopy', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%fsun_patch)
+
     if (flag=='read' )then
        do p = bounds%begp,bounds%endp
           if (shr_infnan_isnan(this%fsun_patch(p)) ) then
@@ -605,7 +609,7 @@ contains
        end do
     end if
 
-    if (use_cn .or. use_ed) then
+    if (use_cn .or. use_fates) then
        call restartvar(ncid=ncid, flag=flag, varname='altmax', xtype=ncd_double,  &
             dim1name='column', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%altmax_col) 

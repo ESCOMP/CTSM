@@ -32,6 +32,7 @@ module SoilBiogeochemDecompCascadeConType
      logical           , pointer  :: is_cwd(:)                         ! TRUE => pool is a cwd pool
      real(r8)          , pointer  :: initial_cn_ratio(:)               ! c:n ratio for initialization of pools
      real(r8)          , pointer  :: initial_stock(:)                  ! initial concentration for seeding at spinup
+     real(r8)                     :: initial_stock_soildepth           ! soil depth for initial concentration for seeding at spinup
      logical           , pointer  :: is_metabolic(:)                   ! TRUE => pool is metabolic material
      logical           , pointer  :: is_cellulose(:)                   ! TRUE => pool is cellulose
      logical           , pointer  :: is_lignin(:)                      ! TRUE => pool is lignin
@@ -92,6 +93,7 @@ contains
     decomp_cascade_con%is_cwd(0:ndecomp_pools)                         = .false.
     decomp_cascade_con%initial_cn_ratio(0:ndecomp_pools)               = nan
     decomp_cascade_con%initial_stock(0:ndecomp_pools)                  = nan
+    decomp_cascade_con%initial_stock_soildepth                         = 0.3
     decomp_cascade_con%is_metabolic(0:ndecomp_pools)                   = .false.
     decomp_cascade_con%is_cellulose(0:ndecomp_pools)                   = .false.
     decomp_cascade_con%is_lignin(0:ndecomp_pools)                      = .false.

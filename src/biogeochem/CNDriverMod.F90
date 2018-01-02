@@ -6,12 +6,13 @@ module CNDriverMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : use_c13, use_c14, use_ed, use_dynroot
+  use clm_varctl                      , only : use_c13, use_c14, use_fates, use_dynroot
   use dynSubgridControlMod            , only : get_do_harvest
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
   use clm_varctl                      , only : use_crop
+  use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
@@ -281,9 +282,11 @@ contains
        call CNNFert(bounds, num_soilc,filter_soilc, &
             cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst)
 
-       call  CNSoyfix (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            waterstate_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
-            soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+       if (.not. use_fun) then  ! if FUN is active, then soy fixation handled by FUN
+          call  CNSoyfix (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+               waterstate_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
+               soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+       end if
     end if
 
     call t_startf('CNMResp')
@@ -350,8 +353,10 @@ contains
             crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+            c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
             leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
-            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), phase=1)
+            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
+            phase=1)
        call t_stopf('CNPhenology_phase1')
 
        call t_startf('CNFUNInit')
@@ -443,8 +448,10 @@ contains
             crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+            c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
             leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
-            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), phase=1)
+            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
+            phase=1)
     end if
     call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
          filter_soilp, num_pcropp, filter_pcropp, &
@@ -452,8 +459,10 @@ contains
          crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+         c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
-         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), phase=2)
+         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
+         phase=2)
 
     call t_stopf('CNPhenology')
 
@@ -518,6 +527,7 @@ contains
 
     ! Set the carbon isotopic flux variables (except for gap-phase mortality and fire fluxes)
     if ( use_c13 ) then
+
        call CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp,              &
             soilbiogeochem_state_inst,                                               &
             soilbiogeochem_carbonflux_inst,  soilbiogeochem_carbonstate_inst,        &

@@ -47,8 +47,8 @@ sub setup : Test(setup => 1) {
   $self->{nl} = Build::Namelist->new();
   isnt($self->{nl}, undef, (caller(0))[3] . " : empty namelist object created.");
 
-  # Set use_ed so that it doesn't conflict with do_harvest
-  $self->set_value('use_ed', '.false.');
+  # Set use_fates so that it doesn't conflict with do_harvest
+  $self->set_value('use_fates', '.false.');
 }
 
 sub teardown : Test(teardown) {
@@ -162,7 +162,7 @@ sub test_do_harvest__default_ed : Tests {
 
    $self->set_transient;
    $self->set_cn_true;
-   $self->set_value('use_ed', '.true.');
+   $self->set_value('use_fates', '.true.');
 
    $self->setup_logic_do_harvest;
    my $result = $self->get_do_harvest;

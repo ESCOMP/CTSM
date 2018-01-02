@@ -11,8 +11,8 @@ module clm_initializeMod
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
   use clm_varctl      , only : is_cold_start, is_interpolated_start
-  use clm_varctl      , only : create_glacier_mec_landunit, iulog
-  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_ed
+  use clm_varctl      , only : iulog
+  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl      , only : nhillslope
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec, nhillcol
   use perf_mod        , only : t_startf, t_stopf
@@ -24,7 +24,8 @@ module clm_initializeMod
   use PatchType       , only : patch         ! instance            
   use reweightMod     , only : reweight_wrapup
   use filterMod       , only : allocFilters, filter
-  use EDVecCohortType , only : ed_vec_cohort ! instance, used for domain decomp
+  use FatesInterfaceMod, only : set_fates_global_elements
+
   use clm_instMod       
   ! 
   implicit none
@@ -139,11 +140,7 @@ contains
        write(iulog,*) 'Attempting to read ldomain from ',trim(fatmlndfrc)
        call shr_sys_flush(iulog)
     endif
-    if (create_glacier_mec_landunit) then
-       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
-    else
-       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
-    endif
+    call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
     if (masterproc) then
        call domain_check(ldomain)
     endif
@@ -165,13 +162,8 @@ contains
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft       (begg:endg, cft_lb:cft_ub       ))
-    if (create_glacier_mec_landunit) then
-       allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
-       allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
-    else
-       allocate (wt_glc_mec  (1,1))
-       allocate (topo_glc_mec(1,1))
-    endif
+    allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
+    allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
     if(use_hillslope) then 
        allocate (nhillcol  (begg:endg                      ))
     endif
@@ -183,6 +175,22 @@ contains
     ! Read surface dataset and set up subgrid weight arrays
     
     call surfrd_get_data(begg, endg, ldomain, fsurdat)
+
+    ! ------------------------------------------------------------------------
+    ! Ask Fates to evaluate its own dimensioning needs.
+    ! This determines the total amount of space it requires in its largest
+    ! dimension.  We are currently calling that the "cohort" dimension, but
+    ! it is really a utility dimension that captures the models largest
+    ! size need.
+    ! Sets:
+    ! fates_maxElementsPerPatch
+    ! fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+    ! 
+    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
+    ! to allocate space)
+    ! ------------------------------------------------------------------------
+    
+    call set_fates_global_elements(use_fates)
 
     ! ------------------------------------------------------------------------
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -203,11 +211,6 @@ contains
     call lun%Init  (bounds_proc%begl, bounds_proc%endl)
     call col%Init  (bounds_proc%begc, bounds_proc%endc)
     call patch%Init(bounds_proc%begp, bounds_proc%endp)
-
-    if ( use_ed ) then
-       ! INTERF-TODO:  THIS GUY NEEDS TO BE MOVED TO THE INTERFACE
-       call ed_vec_cohort%Init(bounds_proc%begCohort,bounds_proc%endCohort)
-    end if
 
     ! Build hierarchy and topological info for derived types
     ! This is needed here for the following call to decompInit_glcp
@@ -277,13 +280,13 @@ contains
     use clm_varpar            , only : nlevsno
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_ed
-    use clm_varctl            , only : use_crop
+    use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
+    use clm_varctl            , only : use_crop, ndep_from_cpl
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
-    use C14BombSpikeMod       , only : C14_init_BombSpike, use_c14_bombspike 
+    use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength, daylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
     use fileutils             , only : getfil
@@ -294,7 +297,6 @@ contains
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod           , only : restFile_read, restFile_write 
     use ndepStreamMod         , only : ndep_init, ndep_interp
-    use CNDriverMod           , only : CNDriverInit 
     use LakeCon               , only : LakeConInit 
     use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
@@ -388,11 +390,10 @@ contains
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1)
              
     ! Initialize maximum daylength, based on latitude and maximum declination
-    ! maximum declination hardwired for present-day orbital parameters, 
-    ! +/- 23.4667 degrees = +/- 0.409571 radians, use negative value for S. Hem
+    ! given by the obliquity use negative value for S. Hem
 
     do g = bounds_proc%begg,bounds_proc%endg
-       max_decl = 0.409571
+       max_decl = obliqr
        if (grc%lat(g) < 0._r8) max_decl = -max_decl
        grc%max_dayl(g) = daylength(grc%lat(g), max_decl)
     end do
@@ -483,6 +484,10 @@ contains
 
        if ( use_c14 .and. use_c14_bombspike ) then
           call C14_init_BombSpike()
+       end if
+
+       if ( use_c13 .and. use_c13_timeseries ) then
+          call C13_init_TimeSeries()
        end if
     else
        call SatellitePhenologyInit(bounds_proc)
@@ -576,8 +581,10 @@ contains
 
     if (use_cn) then
        call t_startf('init_ndep')
-       call ndep_init(bounds_proc, NLFilename)
-       call ndep_interp(bounds_proc, atm2lnd_inst)
+       if (.not. ndep_from_cpl) then
+          call ndep_init(bounds_proc, NLFilename)
+          call ndep_interp(bounds_proc, atm2lnd_inst)
+       end if
        call t_stopf('init_ndep')
     end if
 
@@ -644,20 +651,18 @@ contains
     ! Initialize sno export state to send to glc
     !------------------------------------------------------------       
 
-    if (create_glacier_mec_landunit) then  
-       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-       do nc = 1,nclumps
-          call get_clump_bounds(nc, bounds_clump)
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
 
-          call t_startf('init_lnd2glc')
-          call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
-               filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, glacier_smb_inst, topo_inst, &
-               init=.true.)
-          call t_stopf('init_lnd2glc')
-       end do
-       !$OMP END PARALLEL DO
-    end if
+       call t_startf('init_lnd2glc')
+       call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
+            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
+            temperature_inst, glacier_smb_inst, topo_inst, &
+            init=.true.)
+       call t_stopf('init_lnd2glc')
+    end do
+    !$OMP END PARALLEL DO
 
     !------------------------------------------------------------       
     ! Deallocate wt_nat_patch
@@ -669,13 +674,11 @@ contains
     deallocate(wt_nat_patch)
 
     ! --------------------------------------------------------------
-    ! Initialise the ED model state structure
+    ! Initialise the fates model state structure
     ! --------------------------------------------------------------
    
-    if ( use_ed .and. .not.is_restart() ) then
-
-       call clm_fates%init_coldstart(waterstate_inst,canopystate_inst)
-       
+    if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
+       call clm_fates%init_coldstart(waterstate_inst,canopystate_inst,soilstate_inst, frictionvel_inst)
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through

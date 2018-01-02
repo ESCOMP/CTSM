@@ -1,10 +1,15 @@
 <?xml version= "1.0"?>
 
 <expectedFails>
-   <entry bugz="2239" >FAIL RUN ERP_D_Ld5.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay_interp</entry>
-   <entry bugz="2239" >FAIL RUN ERP_Ld5.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay_interp</entry>
-   <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
-   <entry bugz="2291" >FAIL SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput BASELINE</entry>
-   <entry bugz="2388" >FAIL ERS_D_Ld5.f10_f10.ICLM45ED.hobart_nag.clm-edTest BASELINE</entry>
-   <entry bugz="2388" >FAIL SMS_D_Ld5.f10_f10.ICLM45ED.hobart_nag.clm-edTest BASELINE</entry>
+   <entry bugz="2511">FAIL ERP_D_Lm9.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_monthly RUN</entry>
+   <entry bugz="2511">FAIL SMS_D_Lm13.f10_f10_musgs.I1850Clm50BgcCrop.yellowstone_intel.clm-ciso_monthly RUN</entry>
+   <entry bugz="2511">FAIL SMS_D_Lm13.f10_f10_musgs.IHistClm50BgcCrop.yellowstone_intel.clm-ciso_monthly RUN</entry>
+   <entry bugz="2461">FAIL NCK_Ld1.f10_f10_musgs.I2000Clm50Sp.cheyenne_intel.clm-default COMPARE_base_multiinst</entry>
+   <entry bugz="2461">FAIL NCK_Ld1.f10_f10_musgs.I2000Clm50Sp.yellowstone_intel.clm-default COMPARE_base_multiinst</entry>
+   <entry bugz="2461">FAIL ERI_N2_Ld9.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-default RUN</entry>
+   <entry bugz="2488">FAIL SMS_Ld5_D_P24x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart RUN</entry>
+   <entry bugz="2488">FAIL ERP_D_P24x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart RUN</entry>
+   <entry bugz="2488">FAIL ERP_D.f10_f10_musgs.IHistClm50Bgc.yellowstone_gnu.clm-decStart RUN</entry>
+   <entry bugz="2489">FAIL ERS_Ly5_P72x1.f10_f10_musgs.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput RUN</entry>
+   <entry bugz="2400">FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.yellowstone_pgi.clm-monthly RUN</entry>
 </expectedFails> 

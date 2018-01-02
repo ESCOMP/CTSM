@@ -30,7 +30,7 @@ contains
     use spmdMod    , only: iam
     use clm_varcon , only: nameg, namel, namec, namep
     use clm_varctl , only: iulog
-    use mct_mod    , only: mct_gsMap, mct_gsmap_op
+    use mct_mod    , only: mct_gsMap, mct_gsMap_orderedPoints
     use shr_sys_mod, only: shr_sys_abort
     !
     ! Arguments 
@@ -60,7 +60,7 @@ contains
     end if
 
     call get_clmlevel_gsmap(clmlevel=trim(clmlevel), gsmap=gsmap)
-    call mct_gsmap_op(gsmap, iam, gsmap_ordered)
+    call mct_gsMap_orderedPoints(gsmap, iam, gsmap_ordered)
     GetGlobalIndex = gsmap_ordered(decomp_index - beg_index + 1)
     deallocate(gsmap_ordered)
 

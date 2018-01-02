@@ -1,8 +1,0 @@
-nlevsno = 12
-h2osno_max = 20000.
-
-! Add some multi-layer snow history fields
-hist_fincl1 += 'SNO_EXISTENCE', 'SNO_ABS', 'SNO_T:M', 'SNO_GS:X'
-
-! Need to set use_init_interp because initial conditions file has 5 snow layers
-use_init_interp = .true.

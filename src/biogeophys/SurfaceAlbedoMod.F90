@@ -205,7 +205,7 @@ contains
     use shr_orb_mod
     use clm_time_manager   , only : get_nstep
     use abortutils         , only : endrun
-    use clm_varctl         , only : subgridflag, use_snicar_frc, use_ed
+    use clm_varctl         , only : subgridflag, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
 
     ! !ARGUMENTS:
@@ -918,7 +918,7 @@ contains
     ! Calculate surface albedos and fluxes
     ! Only perform on vegetated pfts where coszen > 0
 
-    if (use_ed) then
+    if (use_fates) then
           
        call clm_fates%wrap_canopy_radiation(bounds, nc, &
             num_vegsol, filter_vegsol, &
@@ -970,7 +970,7 @@ contains
      ! !USES:
     use clm_varpar      , only : numrad
     use clm_varcon      , only : tfrz
-    use landunit_varcon , only : istice, istice_mec, istdlak
+    use landunit_varcon , only : istice_mec, istdlak
     use LakeCon         , only : lakepuddling
     !
     ! !ARGUMENTS:
@@ -1032,7 +1032,7 @@ contains
                 !albsoi = albsod
                 albsod(c,ib) = min(albsat(soilcol,ib)+inc, albdry(soilcol,ib))
                 albsoi(c,ib) = albsod(c,ib)
-             else if (lun%itype(l) == istice .or. lun%itype(l) == istice_mec)  then  ! land ice
+             else if (lun%itype(l) == istice_mec)  then  ! land ice
                 ! changed from local variable to clm_type:
                 !albsod = albice(ib)
                 !albsoi = albsod
@@ -1218,7 +1218,11 @@ contains
        gdir(p) = phi1 + phi2*cosz
        twostext(p) = gdir(p)/cosz
        avmu(p) = ( 1._r8 - phi1/phi2 * log((phi1+phi2)/phi1) ) / phi2
-       temp0(p) = gdir(p) + phi2*cosz
+       ! Restrict this calculation of temp0. We have seen cases where small temp0
+       ! can cause unrealistic single scattering albedo (asu) associated with the
+       ! log calculation in temp2 below, thereby eventually causing a negative soil albedo
+       ! See bugzilla bug 2431: http://bugs.cgd.ucar.edu/show_bug.cgi?id=2431
+       temp0(p) = max(gdir(p) + phi2*cosz,1.e-6_r8)
        temp1 = phi1*cosz
        temp2(p) = ( 1._r8 - temp1/temp0(p) * log((temp1+temp0(p))/temp1) )
     end do

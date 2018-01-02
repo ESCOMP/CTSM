@@ -104,6 +104,9 @@ module clm_cpl_indices
   integer, public ::index_x2l_Faxa_dstdry3    ! flux: Size 3 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry4    ! flux: Size 4 dust -- dry deposition
  
+  integer, public ::index_x2l_Faxa_nhx        ! flux nhx from atm
+  integer, public ::index_x2l_Faxa_noy        ! flux noy from atm
+
   integer, public ::index_x2l_Flrr_flood      ! rtm->lnd rof flood flux
   integer, public ::index_x2l_Flrr_volr       ! rtm->lnd rof volr total volume
   integer, public ::index_x2l_Flrr_volrmch    ! rtm->lnd rof volr main channel volume
@@ -136,7 +139,7 @@ contains
     use seq_drydep_mod , only: drydep_fields_token, lnd_drydep
     use shr_megan_mod  , only: shr_megan_fields_token, shr_megan_mechcomps_n
     use shr_fire_emis_mod,only: shr_fire_emis_fields_token, shr_fire_emis_ztop_token, shr_fire_emis_mechcomps_n
-    use clm_varctl     , only: use_voc
+    use clm_varctl     , only:  ndep_from_cpl
     use glc_elevclass_mod, only: glc_get_num_elevation_classes, glc_elevclass_as_string
     !
     ! !ARGUMENTS:
@@ -210,9 +213,7 @@ contains
     index_l2x_Fall_methane  = mct_avect_indexra(l2x,'Fall_methane',perrWith='quiet')
 
     ! MEGAN fluxes
-    ! use_voc is a temporary logic to enable turning off MEGAN fluxes when prognostic crop
-    ! is used
-    if (shr_megan_mechcomps_n>0 .and. use_voc) then
+    if (shr_megan_mechcomps_n>0) then
        index_l2x_Fall_flxvoc = mct_avect_indexra(l2x,trim(shr_megan_fields_token))
     else
        index_l2x_Fall_flxvoc = 0
@@ -271,6 +272,13 @@ contains
     index_x2l_Faxa_dstwet3  = mct_avect_indexra(x2l,'Faxa_dstwet3')
     index_x2l_Faxa_dstwet4  = mct_avect_indexra(x2l,'Faxa_dstwet4')
 
+    index_x2l_Faxa_nhx      = mct_avect_indexra(x2l,'Faxa_nhx', perrWith='quiet')
+    index_x2l_Faxa_noy      = mct_avect_indexra(x2l,'Faxa_noy', perrWith='quiet')
+
+    if (index_x2l_Faxa_nhx > 0 .and. index_x2l_Faxa_noy > 0) then
+       ndep_from_cpl = .true.
+    end if
+
     index_x2l_Flrr_flood    = mct_avect_indexra(x2l,'Flrr_flood')
 
     !-------------------------------------------------------------
@@ -281,36 +289,36 @@ contains
     index_x2l_Sg_icemask_coupled_fluxes = mct_avect_indexra(x2l,'Sg_icemask_coupled_fluxes')
 
     glc_nec = glc_get_num_elevation_classes()
-
-    ! If glc_nec > 0, then create coupling fields for all glc elevation classes
-    ! (1:glc_nec) plus bare land (index 0). Note that, if glc_nec = 0, then we don't even
-    ! need the bare land (0) index.
-    if (glc_nec > 0) then
-       allocate(index_l2x_Sl_tsrf(0:glc_nec))
-       allocate(index_l2x_Sl_topo(0:glc_nec))
-       allocate(index_l2x_Flgl_qice(0:glc_nec))
-       allocate(index_x2l_Sg_ice_covered(0:glc_nec))
-       allocate(index_x2l_Sg_topo(0:glc_nec))
-       allocate(index_x2l_Flgg_hflx(0:glc_nec))
-
-       do num = 0,glc_nec
-          nec_str = glc_elevclass_as_string(num)
-
-          name = 'Sg_ice_covered' // nec_str
-          index_x2l_Sg_ice_covered(num) = mct_avect_indexra(x2l,trim(name))
-          name = 'Sg_topo' // nec_str
-          index_x2l_Sg_topo(num)   = mct_avect_indexra(x2l,trim(name))
-          name = 'Flgg_hflx' // nec_str
-          index_x2l_Flgg_hflx(num) = mct_avect_indexra(x2l,trim(name))
-
-          name = 'Sl_tsrf' // nec_str
-          index_l2x_Sl_tsrf(num)   = mct_avect_indexra(l2x,trim(name))
-          name = 'Sl_topo' // nec_str
-          index_l2x_Sl_topo(num)   = mct_avect_indexra(l2x,trim(name))
-          name = 'Flgl_qice' // nec_str
-          index_l2x_Flgl_qice(num) = mct_avect_indexra(l2x,trim(name))
-       end do
+    if (glc_nec < 1) then
+       call shr_sys_abort('ERROR: In CLM4.5 and later, glc_nec must be at least 1.')
     end if
+
+    ! Create coupling fields for all glc elevation classes (1:glc_nec) plus bare land
+    ! (index 0).
+    allocate(index_l2x_Sl_tsrf(0:glc_nec))
+    allocate(index_l2x_Sl_topo(0:glc_nec))
+    allocate(index_l2x_Flgl_qice(0:glc_nec))
+    allocate(index_x2l_Sg_ice_covered(0:glc_nec))
+    allocate(index_x2l_Sg_topo(0:glc_nec))
+    allocate(index_x2l_Flgg_hflx(0:glc_nec))
+
+    do num = 0,glc_nec
+       nec_str = glc_elevclass_as_string(num)
+
+       name = 'Sg_ice_covered' // nec_str
+       index_x2l_Sg_ice_covered(num) = mct_avect_indexra(x2l,trim(name))
+       name = 'Sg_topo' // nec_str
+       index_x2l_Sg_topo(num)   = mct_avect_indexra(x2l,trim(name))
+       name = 'Flgg_hflx' // nec_str
+       index_x2l_Flgg_hflx(num) = mct_avect_indexra(x2l,trim(name))
+
+       name = 'Sl_tsrf' // nec_str
+       index_l2x_Sl_tsrf(num)   = mct_avect_indexra(l2x,trim(name))
+       name = 'Sl_topo' // nec_str
+       index_l2x_Sl_topo(num)   = mct_avect_indexra(l2x,trim(name))
+       name = 'Flgl_qice' // nec_str
+       index_l2x_Flgl_qice(num) = mct_avect_indexra(l2x,trim(name))
+    end do
 
     call mct_aVect_clean(x2l)
     call mct_aVect_clean(l2x)

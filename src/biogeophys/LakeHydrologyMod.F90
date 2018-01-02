@@ -30,6 +30,7 @@ module LakeHydrologyMod
   use TemperatureType      , only : temperature_type
   use WaterfluxType        , only : waterflux_type
   use WaterstateType       , only : waterstate_type
+  use TotalWaterAndHeatMod , only : ComputeWaterMassLake
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -47,7 +48,7 @@ contains
        num_lakec, filter_lakec, num_lakep, filter_lakep, &
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
        atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
-       energyflux_inst, aerosol_inst, lakestate_inst)
+       energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
     !
     ! !DESCRIPTION:
     ! WARNING: This subroutine assumes lake columns have one and only one pft.
@@ -74,6 +75,7 @@ contains
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers, NewSnowBulkDensity
     use LakeCon         , only : lsadz
+    use TopoMod, only : topo_type
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -93,6 +95,7 @@ contains
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(lakestate_type)   , intent(inout) :: lakestate_inst
+    class(topo_type)   , intent(in)    :: topo_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: p,fp,g,l,c,j,fc,jtop                            ! indices
@@ -177,6 +180,8 @@ contains
          qflx_snow_grnd_col   =>  waterflux_inst%qflx_snow_grnd_col     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
          qflx_evap_tot_col    =>  waterflux_inst%qflx_evap_tot_col      , & ! Output: [real(r8) (:)   ]  pft quantity averaged to the column (assuming one pft)
          qflx_snwcp_ice       =>  waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
+         qflx_snwcp_discarded_ice => waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
+         qflx_snwcp_discarded_liq => waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input: [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
          qflx_drain_perched   =>  waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s) !TODO - move this to somewhere else
          qflx_h2osfc_surf     =>  waterflux_inst%qflx_h2osfc_surf_col   , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)        
          qflx_snow_drain      =>  waterflux_inst%qflx_snow_drain_col    , & ! Output: [real(r8) (:)   ]  drainage from snow pack                          
@@ -204,14 +209,6 @@ contains
 
       ! Determine step size
       dtime = get_step_size()
-
-      ! Add soil water to water balance.
-      do j = 1, nlevgrnd
-         do fc = 1, num_lakec
-            c = filter_lakec(fc)
-            begwb(c) = begwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-         end do
-      end do
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Do precipitation onto ground, etc., from CanopyHydrology
@@ -392,7 +389,7 @@ contains
            atm2lnd_inst, waterflux_inst, waterstate_inst, aerosol_inst)
 
       call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
-           aerosol_inst, waterflux_inst, waterstate_inst)
+           aerosol_inst, waterflux_inst, waterstate_inst, topo_inst)
 
       ! Determine soil hydrology
       ! Here this consists only of making sure that soil is saturated even as it melts and
@@ -607,15 +604,12 @@ contains
 
       ! Determine ending water balance and volumetric soil water
 
-      do fc = 1, num_lakec
-         c = filter_lakec(fc)
-         endwb(c) = h2osno(c)
-      end do
+      call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
+           waterstate_inst, endwb(bounds%begc:bounds%endc))
 
       do j = 1, nlevgrnd
          do fc = 1, num_lakec
             c = filter_lakec(fc)
-            endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
             h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
          end do
       end do
@@ -635,6 +629,7 @@ contains
          ! Insure water balance using qflx_qrgwl
          ! qflx_snwcp_ice(c) has been computed in routine SnowCapping
          qflx_qrgwl(c)     = forc_rain(c) + forc_snow(c) - qflx_evap_tot(p) - qflx_snwcp_ice(c) - &
+              qflx_snwcp_discarded_ice(c) - qflx_snwcp_discarded_liq(c) - &
               (endwb(c)-begwb(c))/dtime + qflx_floodg(g)
          qflx_floodc(c)    = qflx_floodg(g)
          qflx_runoff(c)    = qflx_drain(c) + qflx_qrgwl(c)

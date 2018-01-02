@@ -6,3 +6,6 @@ hist_mfilt  = 1,1
 
 ! In contrast to the standard reduceOutput, use double-precision
 hist_ndens  = 1,1
+
+! Turn irrigation on
+irrigate = .true.

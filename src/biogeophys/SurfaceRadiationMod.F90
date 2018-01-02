@@ -7,7 +7,7 @@ module SurfaceRadiationMod
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use clm_varctl        , only : use_snicar_frc, use_ed
+  use clm_varctl        , only : use_snicar_frc, use_fates
   use decompMod         , only : bounds_type
   use clm_varcon        , only : namec
   use atm2lndType       , only : atm2lnd_type
@@ -266,22 +266,23 @@ contains
     this%fsr_sno_vd_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRVD', units='W/m^2',  &
          avgflag='A', long_name='direct vis reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_vd_patch, default='inactive')
+         ptr_patch=this%fsr_sno_vd_patch)
 
     this%fsr_sno_nd_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRND', units='W/m^2',  &
          avgflag='A', long_name='direct nir reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_nd_patch, default='inactive')
+         ptr_patch=this%fsr_sno_nd_patch)
 
     this%fsr_sno_vi_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRVI', units='W/m^2',  &
          avgflag='A', long_name='diffuse vis reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_vi_patch, default='inactive')
+         ptr_patch=this%fsr_sno_vi_patch)
 
     this%fsr_sno_ni_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSRNI', units='W/m^2',  &
          avgflag='A', long_name='diffuse nir reflected solar radiation from snow', &
-         ptr_patch=this%fsr_sno_ni_patch, default='inactive')
+         ptr_patch=this%fsr_sno_ni_patch)
+
 
   end subroutine InitHistory
 
@@ -318,7 +319,7 @@ contains
     ! 6) shaded leaf area for canopy layer
     ! 7) sunlit fraction of canopy
     !
-    ! This routine has a counterpart when the ed model is turned on.  
+    ! This routine has a counterpart when the fates model is turned on.  
     ! CLMEDInterf_CanopySunShadeFracs()
     ! If changes are applied to this routine, please take a moment to review that 
     ! subroutine as well and consider if any new information related to these types of 
@@ -580,8 +581,8 @@ contains
           fsds_sno_vd     =>    surfrad_inst%fsds_sno_vd_patch    , & ! Output: [real(r8) (:)   ] incident visible, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
-          fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    ,  & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-         frac_sno_eff     => waterstate_inst%frac_sno_eff_col          & !Input: 
+          fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
+          frac_sno_eff    => waterstate_inst%frac_sno_eff_col       & !Input: 
   
           )
 
@@ -615,7 +616,7 @@ contains
 
        ! zero-out fsun for the urban patches
        ! the non-urban patches were set prior to this call
-       ! and split into ed and non-ed specific functions
+       ! and split into fates and non-fates specific functions
        do fp = 1,num_urbanp
           p = filter_urbanp(fp)
           fsun(p) = 0._r8

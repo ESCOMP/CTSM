@@ -9,9 +9,9 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_ed
-  use clm_varctl             , only : use_cn, use_lch4, use_voc, use_noio, use_c13, use_c14
-  use clm_varctl             , only : use_crop
+  use clm_varctl             , only : wrtdia, iulog, use_fates
+  use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
+  use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : is_cold_start, is_interpolated_start
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
@@ -199,14 +199,13 @@ contains
     need_glacier_initialization = (is_first_step() .and. &
          (is_cold_start .or. is_interpolated_start))
 
-    if (create_glacier_mec_landunit .and. need_glacier_initialization) then
+    if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
 
-          call glc2lnd_inst%update_glc2lnd_non_topo( &
-               bounds = bounds_clump, &
-               glc_behavior = glc_behavior)
+          call glc2lnd_inst%update_glc2lnd_fracs( &
+               bounds = bounds_clump)
 
           call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
 
@@ -305,7 +304,7 @@ contains
 
     call t_startf('dyn_subgrid')
     call dynSubgrid_driver(bounds_proc,                                               &
-         urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,        &
+         urbanparams_inst, soilstate_inst, soilhydrology_inst,                        &
          waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,          &
          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,         &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
@@ -337,8 +336,8 @@ contains
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
-            filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
             soilhydrology_inst, waterstate_inst)
+
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
@@ -372,7 +371,9 @@ contains
 
     if (use_cn) then
        call t_startf('bgc_interp')
-       call ndep_interp(bounds_proc, atm2lnd_inst)
+       if (.not. ndep_from_cpl) then
+          call ndep_interp(bounds_proc, atm2lnd_inst)
+       end if
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
     end if
@@ -456,10 +457,8 @@ contains
        ! The nourbanp filter is set in dySubgrid_driver (earlier in this call)
        ! over the patch index range defined by bounds_clump%begp:bounds_proc%endp
 
-       if(use_ed) then
-
+       if(use_fates) then
           call clm_fates%wrap_sunfrac(nc,atm2lnd_inst, canopystate_inst)
-          
        else
           call CanopySunShadeFracs(filter(nc)%nourbanp,filter(nc)%num_nourbanp,     &
                                    atm2lnd_inst, surfalb_inst, canopystate_inst,    &
@@ -496,6 +495,7 @@ contains
        call CanopyTemperature(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                       &
+            clm_fates,                                                        &
             atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
             waterstate_inst, waterflux_inst, energyflux_inst, temperature_inst)
        call t_stopf('bgp1')
@@ -554,17 +554,6 @@ contains
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
 
-       if (use_ed) then
-          ! if ED enabled, summarize productivity fluxes onto CLM history file structure
-          call t_startf('edclmsumprodfluxes')
-          ! INTERF-TODO: THIS NEEDS A WRAPPER call clm_fates%sumprod(bounds_clump)
-          call clm_fates%fates2hlm%SummarizeProductivityFluxes( bounds_clump, &
-                clm_fates%fates(nc)%nsites,                                   &
-                clm_fates%fates(nc)%sites,                                    &
-                clm_fates%f2hmap(nc)%fcolumn)
-          call t_stopf('edclmsumprodfluxes')
-       endif
-       
        ! Fluxes for all urban landunits
 
        call t_startf('uflux')
@@ -629,12 +618,10 @@ contains
             atm2lnd_inst, frictionvel_inst, dust_inst)
 
        ! VOC emission (A. Guenther's MEGAN (2006) model)
-       if (use_voc) then
-          call VOCEmission(bounds_clump,                                         &
+       call VOCEmission(bounds_clump,                                         &
                filter(nc)%num_soilp, filter(nc)%soilp,                           &
                atm2lnd_inst, canopystate_inst, photosyns_inst, temperature_inst, &
                vocemis_inst)
-       end if
 
        call t_stopf('bgc')
 
@@ -688,7 +675,7 @@ contains
        call t_startf('patch2col')
        call clm_drv_patch2col(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, filter(nc)%num_nolakec, filter(nc)%nolakec, &
-            waterstate_inst, energyflux_inst, waterflux_inst)
+            energyflux_inst, waterflux_inst)
        call t_stopf('patch2col')
 
        ! ============================================================================
@@ -707,9 +694,10 @@ contains
             filter(nc)%num_urbanc, filter(nc)%urbanc,                        &
             filter(nc)%num_snowc, filter(nc)%snowc,                          &
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
+            clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
             waterflux_inst, waterstate_inst, soilhydrology_inst, aerosol_inst, &
-            canopystate_inst, soil_water_retention_curve)
+            canopystate_inst, soil_water_retention_curve, topo_inst)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterflux_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because
@@ -749,7 +737,7 @@ contains
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,                                  &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc,                              &
             atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
-            energyflux_inst, aerosol_inst, lakestate_inst)
+            energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
        
        !  Calculate column-integrated aerosol masses, and
        !  mass concentrations for radiative calculations and output
@@ -769,7 +757,8 @@ contains
        call SnowAge_grain(bounds_clump,                         &
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,     &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc, &
-            waterflux_inst, waterstate_inst, temperature_inst)
+            waterflux_inst, waterstate_inst, temperature_inst, &
+            atm2lnd_inst)
 
        call t_stopf('hylake')
 
@@ -797,7 +786,8 @@ contains
        call SnowAge_grain(bounds_clump,                 &
             filter(nc)%num_snowc, filter(nc)%snowc,     &
             filter(nc)%num_nosnowc, filter(nc)%nosnowc, &
-            waterflux_inst, waterstate_inst, temperature_inst)
+            waterflux_inst, waterstate_inst, temperature_inst, &
+            atm2lnd_inst)
        call t_stopf('snow_init')
 
        ! ============================================================================
@@ -832,16 +822,11 @@ contains
 
                 ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
-       if ((.not. use_cn) .and. (.not. use_ed) .and. (doalb)) then 
+       if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb)) then 
           call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                waterstate_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
-       end if
-
-       ! Zero some of the FATES->CLM communicators
-       if (use_ed) then
-          call clm_fates%fates2hlm%SetValues(bounds_clump,0._r8)
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
@@ -890,27 +875,25 @@ contains
 
        end if
 
-       if ( use_ed  .and. is_beg_curr_day() ) then ! run ED at the start of each day
+       if ( use_fates  .and. is_beg_curr_day() ) then ! run fates at the start of each day
           
           if ( masterproc ) then
-             write(iulog,*)  'clm: calling ED model ', get_nstep()
+             write(iulog,*)  'clm: calling FATES model ', get_nstep()
           end if
-
-          ! INTERF-TODO: THIS CHECK WILL BE TURNED ON IN FUTURE VERSION
-!          call clm_fates%check_hlm_active(nc, bounds_clump)
 
           call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                atm2lnd_inst, soilstate_inst, temperature_inst,                   &
-               waterstate_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
+               waterstate_inst, canopystate_inst, soilbiogeochem_carbonflux_inst,&
+               frictionvel_inst)
           
           ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
           ! call to reweight_wrapup, if it's needed at all.
           call setFilters( bounds_clump, glc_behavior )
           
-       end if ! use_ed branch
+       end if ! use_fates branch
        
        
-       if ( use_ed ) then
+       if ( use_fates ) then
           
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
@@ -918,7 +901,6 @@ contains
                filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,                                    &
                bgc_vegetation_inst%cnveg_carbonflux_inst, &
                bgc_vegetation_inst%cnveg_carbonstate_inst, &
-                clm_fates%fates2hlm, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
                soilbiogeochem_state_inst,                                                          &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
@@ -934,10 +916,7 @@ contains
                 c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-                clm_fates%fates2hlm,                                                     &
-                clm_fates%fates(nc)%sites,                                               &
-                clm_fates%fates(nc)%nsites,                                              &
-                clm_fates%f2hmap(nc)%fcolumn )
+                clm_fates, nc)
        end if
 
 
@@ -1025,16 +1004,6 @@ contains
                aerosol_inst, canopystate_inst, waterstate_inst, &
                lakestate_inst, temperature_inst, surfalb_inst)
 
-          ! INTERF-TOD: THIS ACTUALLY WON'T BE TO HARD TO PULL OUT
-          ! ED_Norman_Radiation() is the last thing called
-          ! in SurfaceAlbedo, we can simply remove it
-          ! The clm_fates interfac called below will split
-          ! ED norman radiation into two parts
-          ! the calculation of values relevant to FATES
-          ! and then the transfer back to CLM/ALM memory stucts
-          
-          !call clm_fates%radiation()
-
           call t_stopf('surfalb')
 
           ! Albedos for urban columns
@@ -1075,7 +1044,8 @@ contains
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
          solarabs_inst, drydepvel_inst,       &
-         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst, &
+         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
+         lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')
@@ -1084,19 +1054,17 @@ contains
     ! Determine gridcell averaged properties to send to glc
     ! ============================================================================
 
-    if (create_glacier_mec_landunit) then
-       call t_startf('lnd2glc')
-       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-       do nc = 1,nclumps
-          call get_clump_bounds(nc, bounds_clump)
-          call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
-               filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, glacier_smb_inst, topo_inst,    &
-               init=.false.)           
-       end do
-       !$OMP END PARALLEL DO
-       call t_stopf('lnd2glc')
-    end if
+    call t_startf('lnd2glc')
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
+            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
+            temperature_inst, glacier_smb_inst, topo_inst,    &
+            init=.false.)           
+    end do
+    !$OMP END PARALLEL DO
+    call t_stopf('lnd2glc')
 
     ! ============================================================================
     ! Write global average diagnostics to standard output
@@ -1113,8 +1081,8 @@ contains
     ! ============================================================================
 
     ! FIX(SPM,032414) double check why this isn't called for ED
-    ! FIX(SPM, 082814) - in the ED branch RF and I commented out the if(.not.
-    ! use_ed) then statement ... double check if this is required and why
+    ! FIX(SPM, 082814) - in the fates branch RF and I commented out the if(.not.
+    ! use_fates) then statement ... double check if this is required and why
 
     if (nstep > 0) then
        call t_startf('accum')
@@ -1312,12 +1280,11 @@ contains
   !-----------------------------------------------------------------------
   subroutine clm_drv_patch2col (bounds, &
        num_allc, filter_allc, num_nolakec, filter_nolakec, &
-       waterstate_inst, energyflux_inst, waterflux_inst)
+       energyflux_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
-    ! Averages over all patchs for variables defined over both soil and lake
-    ! to provide the column-level averages of state and flux variables
-    ! defined at the patch level.
+    ! Averages over all patches for variables defined over both soil and lake to provide
+    ! the column-level averages of flux variables defined at the patch level.
     !
     ! !USES:
     use WaterStateType , only : waterstate_type
@@ -1332,7 +1299,6 @@ contains
     integer               , intent(in)    :: filter_allc(:)    ! column filter for all active points
     integer               , intent(in)    :: num_nolakec       ! number of column non-lake points in column filter
     integer               , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
-    type(waterstate_type) , intent(inout) :: waterstate_inst
     type(waterflux_type)  , intent(inout) :: waterflux_inst
     type(energyflux_type) , intent(inout) :: energyflux_inst
     !
@@ -1348,12 +1314,6 @@ contains
     ! fields are explicitly set in LakeHydrologyMod. (The fields that
     ! are included here for lakes are computed elsewhere, e.g., in
     ! LakeFluxesMod.)
-
-    ! Averaging for patch water state variables
-
-    call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterstate_inst%h2ocan_patch(bounds%begp:bounds%endp), &
-         waterstate_inst%h2ocan_col(bounds%begc:bounds%endc))
 
     ! Averaging for patch evaporative flux variables
 

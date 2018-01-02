@@ -46,6 +46,10 @@ contains
     ! Returns a logical value saying whether the given column type is hydrologically
     ! active
     !
+    ! Note that calling this can be bad for performance, because it operates on a single
+    ! point rather than a loop. So in performance-critical parts of the code (or just
+    ! about anywhere, really), you should use the pre-set col%hydrologically_active(c).
+    !
     ! !USES:
     use landunit_varcon, only : istsoil, istcrop
     !

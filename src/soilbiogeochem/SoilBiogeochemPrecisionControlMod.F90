@@ -15,10 +15,49 @@ module SoilBiogeochemPrecisionControlMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public:: SoilBiogeochemPrecisionControl
+  public:: SoilBiogeochemPrecisionControlInit ! Initialization
+  public:: SoilBiogeochemPrecisionControl     ! Apply precision control to soil biogeochemistry carbon and nitrogen states
+
+  ! !PUBLIC DATA:
+  real(r8), public :: ccrit                   ! critical carbon state value for truncation (gC/m2)
+  real(r8), public :: ncrit                   ! critical nitrogen state value for truncation (gN/m2)
   !----------------------------------------------------------------------- 
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+       c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
+
+    !
+    ! !DESCRIPTION: 
+    ! Initialization of soil biogeochemistry precision control
+    !
+    ! !USES:
+    use clm_varctl , only : use_c13, use_c14
+    !
+    ! !ARGUMENTS:
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: totvegcthresh = 0.1_r8   ! Total vegetation carbon threshold to zero out decomposition pools
+    !-----------------------------------------------------------------------
+    ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
+    ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
+
+    call soilbiogeochem_carbonstate_inst%setTotVgCThresh( totvegcthresh )
+    if ( use_c13 )then
+        call c13_soilbiogeochem_carbonstate_inst%setTotVgCThresh( totvegcthresh )
+    end if
+    if ( use_c14 )then
+        call c14_soilbiogeochem_carbonstate_inst%setTotVgCThresh( totvegcthresh )
+    end if
+    call soilbiogeochem_nitrogenstate_inst%setTotVgCThresh( totvegcthresh )
+
+  end subroutine SoilBiogeochemPrecisionControlInit
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemPrecisionControl(num_soilc, filter_soilc, &
@@ -49,8 +88,6 @@ contains
     real(r8):: cc,cn ! truncation terms for column-level corrections
     real(r8):: cc13  ! truncation terms for column-level corrections
     real(r8):: cc14  ! truncation terms for column-level corrections
-    real(r8):: ccrit ! critical carbon state value for truncation
-    real(r8):: ncrit ! critical nitrogen state value for truncation
     !-----------------------------------------------------------------------
 
     ! soilbiogeochem_carbonstate_inst%ctrunc_vr_col          Output:  [real(r8) (:,:)   ]  (gC/m3) column-level sink for C truncation      
@@ -67,13 +104,6 @@ contains
          c13cs => c13_soilbiogeochem_carbonstate_inst , &
          c14cs => c14_soilbiogeochem_carbonstate_inst   &
          )
-
-      ! set the critical carbon state value for truncation (gC/m2)
-      ccrit = 1.e-8_r8
-
-      ! set the critical nitrogen state value for truncation (gN/m2)
-      ncrit = 1.e-8_r8
-
 
       ! column loop
       do fc = 1,num_soilc

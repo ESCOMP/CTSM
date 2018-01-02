@@ -208,7 +208,7 @@ contains
             ptr_patch=this%grainn_patch)
        call hist_addfld1d (fname='CROPSEEDN_DEFICIT', units='gN/m^2', &
             avgflag='A', long_name='N used for crop seed that needs to be repaid', &
-            ptr_patch=this%cropseedn_deficit_patch)
+            ptr_patch=this%cropseedn_deficit_patch, default='inactive')
     end if
 
     this%leafn_patch(begp:endp) = spval
@@ -219,12 +219,12 @@ contains
     this%leafn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='leaf N storage', &
-         ptr_patch=this%leafn_storage_patch)     
+         ptr_patch=this%leafn_storage_patch, default='inactive')     
 
     this%leafn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_XFER', units='gN/m^2', &
          avgflag='A', long_name='leaf N transfer', &
-         ptr_patch=this%leafn_xfer_patch)     
+         ptr_patch=this%leafn_xfer_patch, default='inactive')     
 
     if ( use_fun ) then
        this%leafn_storage_xfer_acc_patch(begp:endp) = spval
@@ -246,12 +246,12 @@ contains
     this%frootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='fine root N storage', &
-         ptr_patch=this%frootn_storage_patch)     
+         ptr_patch=this%frootn_storage_patch, default='inactive')     
 
     this%frootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='fine root N transfer', &
-         ptr_patch=this%frootn_xfer_patch)     
+         ptr_patch=this%frootn_xfer_patch, default='inactive')     
 
     this%livestemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN', units='gN/m^2', &
@@ -261,12 +261,12 @@ contains
     this%livestemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='live stem N storage', &
-         ptr_patch=this%livestemn_storage_patch)    
+         ptr_patch=this%livestemn_storage_patch, default='inactive')    
 
     this%livestemn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_XFER', units='gN/m^2', &
          avgflag='A', long_name='live stem N transfer', &
-         ptr_patch=this%livestemn_xfer_patch)     
+         ptr_patch=this%livestemn_xfer_patch, default='inactive')     
 
     this%deadstemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN', units='gN/m^2', &
@@ -276,12 +276,12 @@ contains
     this%deadstemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='dead stem N storage', &
-         ptr_patch=this%deadstemn_storage_patch)    
+         ptr_patch=this%deadstemn_storage_patch, default='inactive')    
 
     this%deadstemn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_XFER', units='gN/m^2', &
          avgflag='A', long_name='dead stem N transfer', &
-         ptr_patch=this%deadstemn_xfer_patch)    
+         ptr_patch=this%deadstemn_xfer_patch, default='inactive')    
 
     this%livecrootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN', units='gN/m^2', &
@@ -291,12 +291,12 @@ contains
     this%livecrootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='live coarse root N storage', &
-         ptr_patch=this%livecrootn_storage_patch)    
+         ptr_patch=this%livecrootn_storage_patch, default='inactive')    
 
     this%livecrootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='live coarse root N transfer', &
-         ptr_patch=this%livecrootn_xfer_patch)    
+         ptr_patch=this%livecrootn_xfer_patch, default='inactive')    
 
     this%deadcrootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN', units='gN/m^2', &
@@ -306,12 +306,12 @@ contains
     this%deadcrootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='dead coarse root N storage', &
-         ptr_patch=this%deadcrootn_storage_patch)    
+         ptr_patch=this%deadcrootn_storage_patch, default='inactive')    
 
     this%deadcrootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='dead coarse root N transfer', &
-         ptr_patch=this%deadcrootn_xfer_patch)    
+         ptr_patch=this%deadcrootn_xfer_patch, default='inactive')    
 
     this%retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='RETRANSN', units='gN/m^2', &
@@ -326,7 +326,7 @@ contains
     this%ntrunc_patch(begp:endp) = spval
     call hist_addfld1d (fname='PFT_NTRUNC', units='gN/m^2', &
          avgflag='A', long_name='patch-level sink for N truncation', &
-         ptr_patch=this%ntrunc_patch)
+         ptr_patch=this%ntrunc_patch, default='inactive')
 
     this%dispvegn_patch(begp:endp) = spval
     call hist_addfld1d (fname='DISPVEGN', units='gN/m^2', &
@@ -525,7 +525,9 @@ contains
   end subroutine InitCold
 
   !-----------------------------------------------------------------------
-  subroutine Restart ( this,  bounds, ncid, flag )
+  subroutine Restart ( this,  bounds, ncid, flag, leafc_patch, &
+                       leafc_storage_patch, frootc_patch, frootc_storage_patch, &
+                       deadstemc_patch, filter_reseed_patch, num_reseed_patch )
     !
     ! !DESCRIPTION: 
     ! Read/write restart data 
@@ -534,7 +536,8 @@ contains
     use restUtilMod
     use ncdio_pio
     use clm_varctl             , only : spinup_state, use_cndv
-    use clm_time_manager       , only : get_nstep
+    use clm_time_manager       , only : get_nstep, is_restart
+    use clm_varctl             , only : MM_Nuptake_opt   
 
     !
     ! !ARGUMENTS:
@@ -542,9 +545,16 @@ contains
     type(bounds_type)          , intent(in)    :: bounds 
     type(file_desc_t)          , intent(inout) :: ncid   
     character(len=*)           , intent(in)    :: flag   !'read' or 'write' or 'define'
+    real(r8)          , intent(in) :: leafc_patch(bounds%begp:)
+    real(r8)          , intent(in) :: leafc_storage_patch(bounds%begp:)
+    real(r8)          , intent(in) :: frootc_patch(bounds%begp:)            
+    real(r8)          , intent(in) :: frootc_storage_patch(bounds%begp:)    
+    real(r8)          , intent(in) :: deadstemc_patch(bounds%begp:)
+    integer           , intent(in) :: filter_reseed_patch(:)
+    integer           , intent(in) :: num_reseed_patch
     !
     ! !LOCAL VARIABLES:
-    integer            :: i,j,k,l,c
+    integer            :: i, p, l
     logical            :: readvar
     real(r8), pointer  :: ptr1d(:)   ! temp. pointers for slicing larger arrays
     character(len=128) :: varname    ! temporary
@@ -723,6 +733,108 @@ contains
        endif
 
     end if
+    ! Reseed dead plants
+    if ( flag == 'read' .and. num_reseed_patch > 0 )then
+       if ( masterproc ) write(iulog, *) 'Reseed dead plants for CNVegNitrogenState'
+       do i = 1, num_reseed_patch
+          p = filter_reseed_patch(i)
+
+          l = patch%landunit(p)
+
+             if (patch%itype(p) == noveg) then
+                this%leafn_patch(p) = 0._r8
+                this%leafn_storage_patch(p) = 0._r8
+                if (MM_Nuptake_opt .eqv. .true.) then   
+                   this%frootn_patch(p) = 0._r8            
+                   this%frootn_storage_patch(p) = 0._r8    
+                end if 
+             else
+                this%leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
+                this%leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                if (MM_Nuptake_opt .eqv. .true.) then  
+                   this%frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
+                   this%frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                end if 
+             end if
+   
+             this%leafn_xfer_patch(p)        = 0._r8
+
+             this%leafn_storage_xfer_acc_patch(p)        = 0._r8
+             this%storage_ndemand_patch(p)   = 0._r8
+   
+             if ( use_crop )then
+                this%grainn_patch(p)         = 0._r8
+                this%grainn_storage_patch(p) = 0._r8
+                this%grainn_xfer_patch(p)    = 0._r8
+                this%cropseedn_deficit_patch(p)  = 0._r8
+             end if
+             if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
+                this%frootn_patch(p)            = 0._r8
+                this%frootn_storage_patch(p)    = 0._r8
+             end if 
+             this%frootn_xfer_patch(p)       = 0._r8
+             this%livestemn_patch(p)         = 0._r8
+             this%livestemn_storage_patch(p) = 0._r8
+             this%livestemn_xfer_patch(p)    = 0._r8
+   
+             ! tree types need to be initialized with some stem mass so that
+             ! roughness length is not zero in canopy flux calculation
+   
+             if (pftcon%woody(patch%itype(p)) == 1._r8) then
+                this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             else
+                this%deadstemn_patch(p) = 0._r8
+             end if
+
+             this%deadstemn_storage_patch(p)  = 0._r8
+             this%deadstemn_xfer_patch(p)     = 0._r8
+             this%livecrootn_patch(p)         = 0._r8
+             this%livecrootn_storage_patch(p) = 0._r8
+             this%livecrootn_xfer_patch(p)    = 0._r8
+             this%deadcrootn_patch(p)         = 0._r8
+             this%deadcrootn_storage_patch(p) = 0._r8
+             this%deadcrootn_xfer_patch(p)    = 0._r8
+             this%retransn_patch(p)           = 0._r8
+             this%npool_patch(p)              = 0._r8
+             this%ntrunc_patch(p)             = 0._r8
+             this%dispvegn_patch(p)           = 0._r8
+             this%storvegn_patch(p)           = 0._r8
+             this%totvegn_patch(p)            = 0._r8
+             this%totn_patch(p)               = 0._r8
+
+             ! calculate totvegc explicitly so that it is available for the isotope 
+             ! code on the first time step.
+
+             this%totvegn_patch(p) = &
+                           this%leafn_patch(p)              + &
+                           this%leafn_storage_patch(p)      + &
+                           this%leafn_xfer_patch(p)         + &
+                           this%frootn_patch(p)             + &
+                           this%frootn_storage_patch(p)     + &
+                           this%frootn_xfer_patch(p)        + &
+                           this%livestemn_patch(p)          + &
+                           this%livestemn_storage_patch(p)  + &
+                           this%livestemn_xfer_patch(p)     + &
+                           this%deadstemn_patch(p)          + &
+                           this%deadstemn_storage_patch(p)  + &
+                           this%deadstemn_xfer_patch(p)     + &
+                           this%livecrootn_patch(p)         + &
+                           this%livecrootn_storage_patch(p) + &
+                           this%livecrootn_xfer_patch(p)    + &
+                           this%deadcrootn_patch(p)         + &
+                           this%deadcrootn_storage_patch(p) + &
+                           this%deadcrootn_xfer_patch(p)    + &
+                           this%npool_patch(p)
+
+             if ( use_crop )then
+                 this%totvegn_patch(p) =         &
+                              this%totvegn_patch(p)    + &
+                              this%grainn_patch(p)         + &
+                              this%grainn_storage_patch(p) + &
+                              this%grainn_xfer_patch(p)
+             end if
+       end do
+     end if
 
   end subroutine Restart
 

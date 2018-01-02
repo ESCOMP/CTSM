@@ -29,7 +29,10 @@ module SnowHydrologyMod
   use WaterfluxType   , only : waterflux_type
   use WaterstateType  , only : waterstate_type
   use LandunitType    , only : lun
+  use TopoMod, only : topo_type
   use ColumnType      , only : col
+  use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
+  use clm_time_manager, only : get_step_size, get_nstep
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -48,6 +51,7 @@ module SnowHydrologyMod
   public :: NewSnowBulkDensity         ! Compute bulk density of any newly-fallen snow
 
   ! The following are public just for the sake of unit testing:
+  public :: SnowCappingExcess          ! Determine the excess snow that needs to be capped
   public :: SnowHydrologySetControlForTesting ! Set some of the control settings
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -74,6 +78,10 @@ module SnowHydrologyMod
   real(r8), public, parameter :: scvng_fct_mlt_dst3  = 0.01_r8 ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
   real(r8), public, parameter :: scvng_fct_mlt_dst4  = 0.01_r8 ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
 
+  ! The following are public for the sake of unit testing
+  integer, parameter, public :: LoTmpDnsSlater2017            = 2    ! For temperature below -15C use equation from Slater 2017
+  integer, parameter, public :: LoTmpDnsTruncatedAnderson1976 = 1    ! Truncate low temp. snow density from the Anderson-1976 version at -15C
+
   ! Definition of snow pack vertical structure
   ! Hardcoded maximum of 12 snowlayers, this is checked elsewhere (controlMod.F90)
   ! The bottom layer has no limit on thickness, hence the last element of the dzmax_*
@@ -94,9 +102,6 @@ module SnowHydrologyMod
   integer, parameter :: OverburdenCompactionMethodAnderson1976 = 1
   integer, parameter :: OverburdenCompactionMethodVionnet2012  = 2
 
-  integer, parameter :: LoTmpDnsSlater2017            = 2    ! For temperature below -15C use equation from Slater 2017
-  integer, parameter :: LoTmpDnsTruncatedAnderson1976 = 1    ! Truncate low temp. snow density from the Anderson-1976 version at -15C
-
   ! If true, the density of new snow depends on wind speed, and there is also
   ! wind-dependent snow compaction
   logical  :: wind_dependent_snow_density                      ! If snow density depends on wind or not
@@ -105,6 +110,30 @@ module SnowHydrologyMod
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
   real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
   real(r8) :: min_wind_snowcompact        = 5._r8              ! minimum wind speed tht results in compaction (m/s)
+
+  ! ------------------------------------------------------------------------
+  ! Parameters controlling the resetting of the snow pack
+  ! ------------------------------------------------------------------------
+
+  logical  :: reset_snow      = .false.  ! If set to true, we reset the non-glc snow pack, based on the following parameters
+  logical  :: reset_snow_glc  = .false.  ! If set to true, we reset the glc snow pack, based reset_snow_glc_ela
+
+  ! Default for reset_snow_glc_ela implies that snow will be reset for all glacier columns if reset_snow_glc = .true.
+  real(r8) :: reset_snow_glc_ela = 1.e9_r8  ! equilibrium line altitude (m); snow is reset for glacier columns below this elevation if reset_snow_glc = .true. (ignored if reset_snow_glc = .false.)
+
+  ! The following are public simply to support unit testing
+
+  ! 35 mm was chosen by Raymond Sellevold, based on finding the location in Greenland
+  ! with the least amount of snowfall from Sept. 1 (roughly the end of the melt season)
+  ! and Jan. 1 (when we typically start simulations). This location with the least amount
+  ! of snowfall had an average of 35 mm snow fall over this 4-month period.
+  real(r8), parameter, public :: reset_snow_h2osno = 35._r8  ! mm SWE to reset the snow pack to
+
+  ! We scale the number of reset time steps with the number of snow layers, since we can
+  ! remove up to one layer per time step. In the absence of snow accumulation, we might
+  ! be able to get away with 1 reset time step per layer. However, we specify a larger
+  ! number to be more robust.
+  real(r8), parameter, public :: reset_snow_timesteps_per_layer = 4
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -139,7 +168,8 @@ contains
     namelist /clm_snowhydrology_inparm/ &
          wind_dependent_snow_density, snow_overburden_compaction_method, &
          lotmp_snowdensity_method, upplim_destruct_metamorph, &
-         overburden_compress_Tfactor, min_wind_snowcompact
+         overburden_compress_Tfactor, min_wind_snowcompact, &
+         reset_snow, reset_snow_glc, reset_snow_glc_ela
 
     ! Initialize options to default values, in case they are not specified in the namelist
     wind_dependent_snow_density = .false.
@@ -167,6 +197,9 @@ contains
     call shr_mpi_bcast (upplim_destruct_metamorph  , mpicom)
     call shr_mpi_bcast (overburden_compress_Tfactor, mpicom)
     call shr_mpi_bcast (min_wind_snowcompact       , mpicom)
+    call shr_mpi_bcast (reset_snow                 , mpicom)
+    call shr_mpi_bcast (reset_snow_glc             , mpicom)
+    call shr_mpi_bcast (reset_snow_glc_ela         , mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -214,8 +247,6 @@ contains
     !
     ! !USES:
     use clm_varcon        , only : denh2o, denice, wimp, ssi
-    use landunit_varcon   , only : istsoil
-    use clm_time_manager  , only : get_step_size
     use AerosolMod        , only : AerosolFluxes
     !
     ! !ARGUMENTS:
@@ -551,9 +582,7 @@ contains
     ! fraction after the melting versus before the melting.
     !
     ! !USES:
-    use clm_time_manager, only : get_step_size
     use clm_varcon      , only : denice, denh2o, tfrz, rpi, int_snow_max
-    use landunit_varcon , only : istdlak, istsoil, istcrop
     use clm_varctl      , only : subgridflag
     !
     ! !ARGUMENTS:
@@ -752,9 +781,7 @@ contains
     ! clm\_combo.f90 then executes the combination of mass and energy.
     !
     ! !USES:
-    use landunit_varcon  , only : istsoil, istdlak, istsoil, istwet, istice, istice_mec, istcrop
     use LakeCon          , only : lsadz
-    use clm_time_manager , only : get_step_size
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -974,7 +1001,7 @@ contains
              if (ltype(l) == istwet) then
                 h2osoi_liq(c,0) = 0.0_r8
              endif
-             if (ltype(l) == istice .or. ltype(l)==istice_mec) then
+             if (ltype(l)==istice_mec) then
                 h2osoi_liq(c,0) = 0.0_r8
              endif
           endif
@@ -1531,7 +1558,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowCapping(bounds, num_initc, filter_initc, num_snowc, filter_snowc, &
-       aerosol_inst, waterflux_inst, waterstate_inst )
+       aerosol_inst, waterflux_inst, waterstate_inst, topo_inst )
     !
     ! !DESCRIPTION:
     ! Removes mass from bottom snow layer for columns that exceed the maximum snow depth.
@@ -1540,9 +1567,6 @@ contains
     ! therefore they are a passed as an extra argument (filter_initc). 
     ! Density and temperature of the layer are conserved (density needs some work, temperature is a state
     ! variable)
-    !
-    ! !USES:
-    use clm_time_manager   , only : get_step_size
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds          
@@ -1553,15 +1577,20 @@ contains
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(waterflux_type)   , intent(inout) :: waterflux_inst 
     type(waterstate_type)  , intent(inout) :: waterstate_inst
+    class(topo_type)   , intent(in)    :: topo_inst
     !
     ! !LOCAL VARIABLES:
     real(r8)   :: dtime                            ! land model time step (sec)
     real(r8)   :: mss_snwcp_tot                    ! total snow capping mass [kg/m2] 
     real(r8)   :: mss_snow_bottom_lyr              ! total snow mass (ice+liquid) in bottom layer [kg/m2]
+    real(r8)   :: snwcp_flux_ice                   ! snow capping flux (ice) [kg/m2]
+    real(r8)   :: snwcp_flux_liq                   ! snow capping flux (liquid) [kg/m2]
     real(r8)   :: icefrac                          ! fraction of ice mass w.r.t. total mass [unitless]
     real(r8)   :: frac_adjust                      ! fraction of mass remaining after capping
     real(r8)   :: rho                              ! partial density of ice (not scaled with frac_sno) [kg/m3]
     integer    :: fc, c                            ! counters
+    real(r8)   :: h2osno_excess(bounds%begc:bounds%endc) ! excess snow that needs to be capped [mm H2O]
+    logical    :: apply_runoff(bounds%begc:bounds%endc)  ! for columns with capping, whether the capping flux should be sent to runoff
     ! Always keep at least this fraction of the bottom snow layer when doing snow capping
     ! This needs to be slightly greater than 0 to avoid roundoff problems
     real(r8), parameter :: min_snow_to_keep = 1.e-9  ! fraction of bottom snow layer to keep with capping
@@ -1570,6 +1599,8 @@ contains
     associate( &
         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col   , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
         qflx_snwcp_liq     => waterflux_inst%qflx_snwcp_liq_col   , & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
+        qflx_snwcp_discarded_ice => waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
+        qflx_snwcp_discarded_liq => waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
         h2osoi_ice         => waterstate_inst%h2osoi_ice_col      , & ! In/Out: [real(r8) (:,:) ] ice lens (kg/m2)                       
         h2osoi_liq         => waterstate_inst%h2osoi_liq_col      , & ! In/Out: [real(r8) (:,:) ] liquid water (kg/m2)                   
         h2osno             => waterstate_inst%h2osno_col          , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)
@@ -1581,6 +1612,7 @@ contains
         mss_dst2           => aerosol_inst%mss_dst2_col           , & ! In/Out: [real(r8) (:,:) ] dust species 2 mass in snow (col,lyr) [kg]
         mss_dst3           => aerosol_inst%mss_dst3_col           , & ! In/Out: [real(r8) (:,:) ] dust species 3 mass in snow (col,lyr) [kg]
         mss_dst4           => aerosol_inst%mss_dst4_col           , & ! In/Out: [real(r8) (:,:) ] dust species 4 mass in snow (col,lyr) [kg]
+        topo               => topo_inst%topo_col                  , & ! Input : [real(r8) (:)   ] column surface height (m)
         dz                 => col%dz                                & ! In/Out: [real(r8) (:,:) ] layer depth (m)
     )
 
@@ -1592,25 +1624,40 @@ contains
        c = filter_initc(fc)
        qflx_snwcp_ice(c) = 0.0_r8
        qflx_snwcp_liq(c) = 0.0_r8
+       qflx_snwcp_discarded_ice(c) = 0.0_r8
+       qflx_snwcp_discarded_liq(c) = 0.0_r8
     end do
+
+    call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+         h2osno = h2osno(bounds%begc:bounds%endc), &
+         topo = topo(bounds%begc:bounds%endc), &
+         h2osno_excess = h2osno_excess(bounds%begc:bounds%endc), &
+         apply_runoff = apply_runoff(bounds%begc:bounds%endc))
 
     loop_columns: do fc = 1, num_snowc
        c = filter_snowc(fc)
 
-       if (h2osno(c) > h2osno_max) then
+       if (h2osno_excess(c) > 0._r8) then
           mss_snow_bottom_lyr = h2osoi_ice(c,0) + h2osoi_liq(c,0) 
-          mss_snwcp_tot = min(h2osno(c)-h2osno_max, mss_snow_bottom_lyr * (1._r8 - min_snow_to_keep)) ! Can't remove more mass than available
+          mss_snwcp_tot = min(h2osno_excess(c), mss_snow_bottom_lyr * (1._r8 - min_snow_to_keep)) ! Can't remove more mass than available
 
           ! Ratio of snow/liquid in bottom layer determines partitioning of runoff fluxes
           icefrac = h2osoi_ice(c,0) / mss_snow_bottom_lyr
-          qflx_snwcp_ice(c) = mss_snwcp_tot/dtime * icefrac
-          qflx_snwcp_liq(c) = mss_snwcp_tot/dtime * (1._r8 - icefrac)
+          snwcp_flux_ice = mss_snwcp_tot/dtime * icefrac
+          snwcp_flux_liq = mss_snwcp_tot/dtime * (1._r8 - icefrac)
+          if (apply_runoff(c)) then
+             qflx_snwcp_ice(c) = snwcp_flux_ice
+             qflx_snwcp_liq(c) = snwcp_flux_liq
+          else
+             qflx_snwcp_discarded_ice(c) = snwcp_flux_ice
+             qflx_snwcp_discarded_liq(c) = snwcp_flux_liq
+          end if
 
           rho = h2osoi_ice(c,0) / dz(c,0) ! ice only
 
           ! Adjust water content
-          h2osoi_ice(c,0) = h2osoi_ice(c,0) - qflx_snwcp_ice(c)*dtime
-          h2osoi_liq(c,0) = h2osoi_liq(c,0) - qflx_snwcp_liq(c)*dtime
+          h2osoi_ice(c,0) = h2osoi_ice(c,0) - snwcp_flux_ice*dtime
+          h2osoi_liq(c,0) = h2osoi_liq(c,0) - snwcp_flux_liq*dtime
 
           ! Scale dz such that ice density (or: pore space) is conserved
           !
@@ -1648,6 +1695,86 @@ contains
   end subroutine SnowCapping
 
   !-----------------------------------------------------------------------
+  subroutine SnowCappingExcess(bounds, num_snowc, filter_snowc, &
+       h2osno, topo, h2osno_excess, apply_runoff)
+    !
+    ! !DESCRIPTION:
+    ! Determine the amount of excess snow that needs to be capped
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds          
+    integer  , intent(in)  :: num_snowc                     ! number of column snow points in column filter
+    integer  , intent(in)  :: filter_snowc(:)               ! column filter for snow points
+    real(r8) , intent(in)  :: h2osno( bounds%begc: )        ! snow water (mm H2O)
+    real(r8) , intent(in)  :: topo( bounds%begc: )          ! column surface height (m)
+    real(r8) , intent(out) :: h2osno_excess( bounds%begc: ) ! excess snow that needs to be capped (mm H2O)
+    logical  , intent(out) :: apply_runoff( bounds%begc: )  ! whether capped snow should be sent to runoff; only valid where h2osno_excess > 0
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c, l
+    integer :: reset_snow_timesteps
+    logical :: is_reset_snow_active  ! whether snow resetting is active in this time step for at least some points
+
+    character(len=*), parameter :: subname = 'SnowCappingExcess'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(h2osno) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(topo) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osno_excess) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(apply_runoff) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+       h2osno_excess(c) = 0._r8
+       if (h2osno(c) > h2osno_max) then
+          h2osno_excess(c) = h2osno(c) - h2osno_max
+          apply_runoff(c) = .true.
+       end if
+    end do
+
+    ! Implement snow resetting (i.e., resetting points that have h2osno greater than some
+    ! value) by applying the snow capping scheme to a value that's smaller than
+    ! h2osno_max, but NOT sending the resulting capping flux to the coupler. It is easier
+    ! to implement the resetting this way than to try to manually reset the snow pack,
+    ! because there are so many snow pack variables that need to be kept consistent if
+    ! doing this resetting manually. Note that we need to continue to apply the resetting
+    ! for some number of time steps, because we can remove at most one snow layer per
+    ! time step.
+
+    ! It is important that this snow resetting comes after the standard check (h2osno(c) >
+    ! h2osno_max), so that we override any standard capping.
+    is_reset_snow_active = .false.
+    if (reset_snow .or. reset_snow_glc) then
+       reset_snow_timesteps = reset_snow_timesteps_per_layer * nlevsno
+       if (get_nstep() <= reset_snow_timesteps) then
+          is_reset_snow_active = .true.
+       end if
+    end if
+
+    if (is_reset_snow_active) then
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          l = col%landunit(c)
+          if ((lun%itype(l) /= istice_mec) .and. &
+               reset_snow .and. &
+               (h2osno(c) > reset_snow_h2osno)) then
+             h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
+             apply_runoff(c) = .false.
+          else if ((lun%itype(l) == istice_mec) .and. &
+               reset_snow_glc .and. &
+               (h2osno(c) > reset_snow_h2osno) .and. &
+               (topo(c) <= reset_snow_glc_ela)) then
+             h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
+             apply_runoff(c) = .false.
+          end if
+       end do
+    end if
+
+  end subroutine SnowCappingExcess
+
+  !-----------------------------------------------------------------------
   subroutine NewSnowBulkDensity(bounds, num_c, filter_c, atm2lnd_inst, bifall)
     !
     ! !DESCRIPTION:
@@ -1668,6 +1795,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c, g
+    real(r8) :: t_for_bifall_degC  ! temperature to use in bifall equation (deg C)
 
     character(len=*), parameter :: subname = 'NewSnowBulkDensity'
     !-----------------------------------------------------------------------
@@ -1694,7 +1822,14 @@ contains
           ! "blower" powder, but as you get colder the flake size decreases so
           ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic
           ! winters
-          bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
+          if (forc_t(c) > tfrz - 57.55_r8) then
+             t_for_bifall_degC = (forc_t(c)-tfrz)
+          else
+             ! Below -57.55 deg C, the following function starts to decrease with
+             ! decreasing temperatures. Limit the function to avoid this turning over.
+             t_for_bifall_degC = -57.55_r8
+          end if
+          bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*t_for_bifall_degC - 0.0333_r8*t_for_bifall_degC**2
        end if
 
        if (wind_dependent_snow_density .and. forc_wind(g) > 0.1_r8 ) then
@@ -1740,7 +1875,7 @@ contains
   end function OverburdenCompactionAnderson1976
 
   !-----------------------------------------------------------------------
-  pure function OverburdenCompactionVionnet2012(h2osoi_liq, dz, burden, wx, td, bi) &
+  function OverburdenCompactionVionnet2012(h2osoi_liq, dz, burden, wx, td, bi) &
        result(compaction_rate)
     !
     ! !DESCRIPTION:
@@ -1816,7 +1951,7 @@ contains
     real(r8) :: MO          ! Mobility index [-]
     real(r8) :: SI          ! Driftability index [-]
     real(r8) :: gamma_drift ! Scaling factor for wind drift time scale [-]
-    real(r8) :: tau         ! Effective time scale [s]
+    real(r8) :: tau_inverse ! Inverse of the effective time scale [1/s]
 
     real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
     real(r8), parameter :: rho_max = 350._r8     ! wind drift compaction / maximum density [kg/m3]
@@ -1839,8 +1974,8 @@ contains
           ! the pseudo-node for the sake of the following calculation
           zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
           gamma_drift = SI*exp(-zpseudo/0.1_r8)
-          tau = tau_ref / gamma_drift
-          compaction_rate = -max(0.0_r8, rho_max-bi)/tau
+          tau_inverse = gamma_drift / tau_ref
+          compaction_rate = -max(0.0_r8, rho_max-bi) * tau_inverse
           ! Further increase zpseudo to the bottom of the pseudo-node for
           ! the sake of calculations done on the underlying layer (i.e.,
           ! the next time through the j loop).
@@ -1971,7 +2106,8 @@ contains
     end do
   end subroutine BuildSnowFilter
 
-  subroutine SnowHydrologySetControlForTesting( set_winddep_snowdensity, set_new_snow_density )
+  subroutine SnowHydrologySetControlForTesting( set_winddep_snowdensity, set_new_snow_density, &
+       set_reset_snow, set_reset_snow_glc, set_reset_snow_glc_ela)
     !
     ! !DESCRIPTION:
     ! Sets some of the control settings for SnowHydrologyMod
@@ -1980,11 +2116,27 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    logical, intent(in) :: set_winddep_snowdensity  ! Set wind dependent snow density
-    integer, intent(in) :: set_new_snow_density     ! snow density method
+    logical, intent(in), optional :: set_winddep_snowdensity  ! Set wind dependent snow density
+    integer, intent(in), optional :: set_new_snow_density     ! snow density method
+    logical, intent(in), optional :: set_reset_snow           ! whether to reset the snow pack, non-glc_mec points
+    logical, intent(in), optional :: set_reset_snow_glc       ! whether to reset the snow pack, glc_mec points
+    real(r8), intent(in), optional :: set_reset_snow_glc_ela  ! elevation below which to reset the snow pack if set_reset_snow_glc is true (m)
     !-----------------------------------------------------------------------
-    wind_dependent_snow_density = set_winddep_snowdensity
-    new_snow_density            = set_new_snow_density
+    if (present(set_winddep_snowdensity)) then
+       wind_dependent_snow_density = set_winddep_snowdensity
+    end if
+    if (present(set_new_snow_density)) then
+       new_snow_density            = set_new_snow_density
+    end if
+    if (present(set_reset_snow)) then
+       reset_snow = set_reset_snow
+    end if
+    if (present(set_reset_snow_glc)) then
+       reset_snow_glc = set_reset_snow_glc
+    end if
+    if (present(set_reset_snow_glc_ela)) then
+       reset_snow_glc_ela = set_reset_snow_glc_ela
+    end if
 
   end subroutine SnowHydrologySetControlForTesting
 
