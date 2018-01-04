@@ -1,5 +1,5 @@
 ===============================================================
-Tag name: unified_land_model_n12_clm4_5_16_r249
+Tag name: unified_land_model_n12_clm4_5_16_r249 (3f9624be)
 Originator(s): sacks
 Date: Dec 28, 2017
 One-line Summary: Edit old ChangeLog entries
@@ -36,7 +36,7 @@ M       ChangeLog_branch
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n11_clm4_5_16_r249
+Tag name: unified_land_model_n11_clm4_5_16_r249 (6057e1cd)
 Originator(s): sacks
 Date: Sep 18, 2017
 One-line Summary: Remove infiltration excess runoff for VIC
@@ -136,7 +136,7 @@ M       components/clm/src/biogeophys/SaturatedExcessRunoffMod.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n10_clm4_5_16_r249
+Tag name: unified_land_model_n10_clm4_5_16_r249 (02e535c6)
 Originator(s): sacks
 Date: Sep 14, 2017
 One-line Summary: Truncate small h2osfc values to zero
@@ -255,7 +255,7 @@ M       components/clm/cime_config/testdefs/testlist_clm.xml
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n09_clm4_5_16_r249
+Tag name: unified_land_model_n09_clm4_5_16_r249 (92edec11)
 Originator(s): sacks
 Date: Sep 7, 2017
 One-line Summary: Use full qflx_surf in BGC code
@@ -348,7 +348,7 @@ M       components/clm/src/soilbiogeochem/SoilBiogeochemNLeachingMod.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n08_clm4_5_16_r249
+Tag name: unified_land_model_n08_clm4_5_16_r249 (72070e76)
 Originator(s): sacks
 Date: Aug 24, 2017
 One-line Summary: Finish Infiltration modularization - mainly h2osfc updates
@@ -428,7 +428,7 @@ M       components/clm/src/biogeophys/SaturatedExcessRunoffMod.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n07_clm4_5_16_r249
+Tag name: unified_land_model_n07_clm4_5_16_r249 (1479a4c7)
 Originator(s): sacks
 Date: Aug 22, 2017
 One-line Summary: Rename things related to saturated surface runoff
@@ -524,7 +524,7 @@ M       components/clm/cime_config/testdefs/testlist_clm.xml
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n06_clm4_5_16_r249
+Tag name: unified_land_model_n06_clm4_5_16_r249 (7e1bcd5c)
 Originator(s): sacks
 Date: Aug 21, 2017
 One-line Summary: Modularization of Infiltration - first stage
@@ -622,7 +622,7 @@ M       components/clm/src/biogeophys/SurfRunoffSatMod.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n05_clm4_5_16_r249
+Tag name: unified_land_model_n05_clm4_5_16_r249 (7b26ad55)
 Originator(s): sacks
 Date: Aug 17, 2017
 One-line Summary: Re-parenthesize a VIC equation
@@ -721,7 +721,7 @@ M       components/clm/src/biogeophys/SoilHydrologyMod.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n04_clm4_5_16_r249
+Tag name: unified_land_model_n04_clm4_5_16_r249 (46e33419)
 Originator(s): sacks
 Date: July 14, 2017
 One-line Summary: Extract SurfaceRunoff to its own module and related modularization
@@ -808,7 +808,7 @@ M       components/clm/src/main/clm_driver.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n03_clm4_5_16_r249
+Tag name: unified_land_model_n03_clm4_5_16_r249 (0252134a)
 Originator(s): sacks
 Date: July 13, 2017
 One-line Summary: Separate qflx_surf updates into two steps
@@ -921,7 +921,7 @@ M       components/clm/src/cpl/lnd_import_export.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n02_clm4_5_16_r249
+Tag name: unified_land_model_n02_clm4_5_16_r249 (b6191a1f)
 Originator(s): sacks
 Date: July 11, 2017
 One-line Summary: BFB refactorings towards modularization of SurfaceRunoff
@@ -996,7 +996,7 @@ M       components/clm/src/biogeophys/LakeHydrologyMod.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n01_clm4_5_16_r249
+Tag name: unified_land_model_n01_clm4_5_16_r249 (dfd3094c)
 Originator(s): sacks
 Date: July 7, 2017
 One-line Summary: If using VIC, don't use the TOPModel formulation for SurfaceRunoff ever
@@ -1105,7 +1105,7 @@ M       components/clm/src/biogeophys/SoilHydrologyMod.F90
 
 ===============================================================
 ===============================================================
-Tag name: unified_land_model_n00_clm4_5_16_r249
+Tag name: unified_land_model_n00_clm4_5_16_r249 (3889c97c)
 Originator(s): sacks
 Date: July 7, 2017
 One-line Summary: Baseline tag corresponding to clm4_5_16_r249
