@@ -31,9 +31,9 @@ The second subgrid level, the column, is intended to capture potential
 variability in the soil and snow state variables within a single land
 unit. For example, the vegetated land unit could contain several columns
 with independently evolving vertical profiles of soil water and
-temperature. Similarly, the managed vegetation land unit could be
-divided into two columns, irrigated and non-irrigated. The snow/soil
-column is represented by fifteen layers for soil and up to five layers
+temperature. Similarly, the managed vegetation land unit can be
+divided into two columns, irrigated and non-irrigated. The default snow/soil
+column is represented by 25 layers for ground (with up to 20 of these layers classified as soil layers and the remaining layers classified as bedrock layers)  and up to 10 layers
 for snow, depending on snow depth. The central characteristic of the
 column subgrid level is that this is where the state variables for water
 and energy in the soil and snow are defined, as well as the fluxes of
@@ -52,23 +52,19 @@ impervious canyon floor) (Oleson et al. 2010b).
 
 .. Figure:: image1.png
 
-  Configuration of the CLM subgrid hierarchy.
+  Configuration of the CLM subgrid hierarchy.  Box in upper right shows hypothetical subgrid distribution for a single grid cell.  Note that the Crop land unit is only used when the model is run with the crop model active. Abbreviations: TBD – Tall Building District; HD – High Density; MD – Medium Density, G – Glacier, L – Lake, U – Urban, C – Crop, V – Vegetated, PFT – Plant Functional Type, Irr – Irrigated, UIrr – Unirrigated.  Red arrows indicate allowed land unit transitions.  Purple arrows indicate allowed patch-level transitions.  
 
-Note that the Crop land unit is only used when the model is run with the
-crop model active. Abbreviations: TBD – Tall Building District; HD –
-High Density; MD – Medium Density, G – Glacier, L – Lake, U – Urban, C –
-Crop, V – Vegetated, PFT – Plant Functional Type, I – Irrigated, U –
-Unirrigated .
-
-The third subgrid level is referred to as the PFT level, but it also
-includes the treatment for bare ground. It is intended to capture the
+The third subgrid level is referred to as the patch level. Patches can be PFTs or bare ground on the vegetated land unit
+and crop functional types (CFTs) on the crop land unit.
+The patch level is intended to capture the
 biogeophysical and biogeochemical differences between broad categories
 of plants in terms of their functional characteristics. On the vegetated
 land unit, up to 16 possible PFTs that differ in physiology and
 structure may coexist on a single column. All fluxes to and from the
 surface are defined at the PFT level, as are the vegetation state
 variables (e.g. vegetation temperature and canopy water storage). On the
-crop land unit, several different crop types can be represented on each
+crop land unit, typically, different crop types can be represented on each
+
 crop land unit column (see Chapter :numref:`rst_Crops and Irrigation` for details).
 
 In addition to state and flux variable data structures for conserved
@@ -156,30 +152,17 @@ evolve with time if the model is run in transient landcover mode
  +--------------------------------------------------------------+-------------------+
  | C\ :sub:`4` grass                                            | -                 |
  +--------------------------------------------------------------+-------------------+
- | C\ :sub:`3` Unmanaged Rainfed Crop                           | Crop R            |
+ | C\ :sub:`3` Unmanaged Rainfed Crop                           | UCrop UIrr        |
  +--------------------------------------------------------------+-------------------+
- | :sup:`1`\ C\ :sub:`3` Unmanaged Irrigated Crop               | Crop I            |
+ | :sup:`1`\ C\ :sub:`3` Unmanaged Irrigated Crop               | UCrop Irr         |
  +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Rainfed Corn                                       | Corn R            |
+ | :sup:`2`\ Managed Rainfed Unirrigated Crops                  | Crop UIrr         |
  +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Irrigated Corn                                     | Corn I            |
- +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Rainfed Temperate Cereals                          | Temp Cereal R     |
- +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Irrigated Temperate Cereals                        | Temp Cereal I     |
- +--------------------------------------------------------------+-------------------+
- | :sup:`3`\ Rainfed Winter Cereals                             | Winter Cereal R   |
- +--------------------------------------------------------------+-------------------+
- | :sup:`3`\ Irrigated Winter Cereals                           | Winter Cereal I   |
- +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Rainfed Soybean                                    | Soybean R         |
- +--------------------------------------------------------------+-------------------+
- | :sup:`2`\ Irrigated Soybean                                  | Soybean I         |
+ | :sup:`2`\ Managed Irrigated Crops                            | Crop Irr          |
  +--------------------------------------------------------------+-------------------+
 
 :sup:`1`\ Only used if irrigation is active (Chapter :numref:`rst_Crops and Irrigation`).
-:sup:`2`\ Only used if crop model is active (Chapter :numref:`rst_Crops and Irrigation`).
-:sup:`3`\ Reserved for future implementations of crop model (Chapter :numref:`rst_Crops and Irrigation`).
+:sup:`2`\ Only used if crop model is active (see Chapter :numref:`rst_Crops and Irrigation` for list of represented crops).
 
 .. _Vegetation Structure:
 
