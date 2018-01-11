@@ -83,6 +83,8 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Plant functional types` Plant functional types 
 
+- :numref:`Table Plant functional type canopy top and bottom heights` Plant functional type canopy top and bottom heights
+
 - :numref:`Table Soil layer structure` Soil layer structure
 
 - :numref:`Table Atmospheric input to land model` Atmospheric input to land model

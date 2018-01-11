@@ -174,10 +174,40 @@ Vegetation structure is defined by leaf and stem area indices
 Separate leaf and
 stem area indices and canopy heights are prescribed or calculated for each PFT. Daily leaf 
 and stem area indices are obtained from griddeddatasets of monthly values (section 
-:numref:`Surface Data`). Canopy top and bottom heights are from ICESat (:ref:`Simard et al. (2011) <Simardetal2011>`. 
+:numref:`Surface Data`). Canopy top and bottom heights for trees are from ICESat (:ref:`Simard et al. (2011) <Simardetal2011>`). 
+Canopy top and bottom heights for short vegetation are obtained from gridded datasets but are invariant in space
+and time and were obtained from PFT-specific values (:ref:`Bonan et al. (2002a) <Bonanetal2002a>`) (:numref:`Table Plant functional type canopy top and bottom heights`).
 When the biogeochemistry model is active, 
 vegetation state (LAI, SAI, canopy top and bottom heights) are calculated prognostically 
 (see Chapter :numref:`rst_Vegetation Phenology and Turnover`).
+
+.. _Table Plant functional type canopy top and bottom heights:
+
+.. table:: Plant functional type canopy top and bottom heights
+ 
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | Plant functional type                                        | :math:`z_{top}`   | :math:`z_{bot}`   |
+ +==============================================================+===================+===================+
+ | BES Temperate                                                | 0.5               | 0.1               |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | BDS Temperate                                                | 0.5               | 0.1               |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | BDS Boreal                                                   | 0.5               | 0.1               |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | C\ :sub:`3` arctic grass                                     | 0.5               | 0.01              |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | C\ :sub:`3` grass                                            | 0.5               | 0.01              |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | C\ :sub:`4` grass                                            | 0.5               | 0.01              |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | UCrop UIrr                                                   | 0.5               | 0.01              |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | UCrop Irr                                                    | 0.5               | 0.01              |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | Crop UIrr                                                    | 0.5               | 0.01              |
+ +--------------------------------------------------------------+-------------------+-------------------+
+ | Crop Irr                                                     | 0.5               | 0.01              |
+ +--------------------------------------------------------------+-------------------+-------------------+
 
 .. _Phenology and vegetation burial by snow:
 
