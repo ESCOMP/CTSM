@@ -192,7 +192,7 @@ Average spread area of a fire
 Fire fighting capacity depends on socioeconomic conditions and affects
 fire spread area. Due to a lack of observations, we consider the
 socioeconomic impact on the average burned area rather than separately
-on fire spread rate and fire duration：
+on fire spread rate and fire duration:
 
 .. math::
    :label: 23.14

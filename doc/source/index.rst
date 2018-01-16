@@ -6,16 +6,12 @@
 Welcome to the CLM documentation
 ==================================
 
-This document has one major sections.
-
-The :ref:`CLM user's guide <users-guide>` is a basic guide in utilizing CLM.
-
-Table of contents
------------------
+This document has two major sections.
 
 .. toctree::
-   :maxdepth: 1
-      
+   :maxdepth: 2
+   :numbered:
+
    users_guide/index.rst
    tech_note/index.rst
 

@@ -38,17 +38,17 @@ photosynthesis ( :math:`CF_{xs,mr}`, gC m\ :sup:`-2`
 s\ :sup:`-1`):
 
 .. math::
-   :label: 19.1 
+   :label: 19.1
 
    CF_{mr} =CF_{GPP,mr} +CF_{xs,mr}
 
 .. math::
-   :label: 19.2 
+   :label: 19.2
 
    CF_{GPP,mr} =\_ \left\{\begin{array}{l} {CF_{mr} \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPP} } \\ {CF_{GPP} \qquad {\rm for\; }CF_{mr} >CF_{GPP} } \end{array}\right.
 
 .. math::
-   :label: 19.3 
+   :label: 19.3
 
    CF_{xs,mr} =\_ \left\{\begin{array}{l} {0\qquad \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPP} } \\ {CF_{mr} -CF_{GPP} \qquad {\rm for\; }CF_{mr} >CF_{GPP} } \end{array}\right.
 
@@ -72,12 +72,12 @@ flux to  :math:`CS_{xs}` (:math:`CF_{GPP,xs}`, gC
 m\ :sup:`-2` s\ :sup:`-1`) is given as
 
 .. math::
-   :label: 19.4 
+   :label: 19.4
 
    CF_{GPP,xs,pot} =\left\{\begin{array}{l} {0\qquad \qquad \qquad {\rm for\; }CS_{xs} \ge 0} \\ {-CS_{xs} /(86400\tau _{xs} )\qquad {\rm for\; }CS_{xs} <0} \end{array}\right.
 
 .. math::
-   :label: 19.5 
+   :label: 19.5
 
    CF_{GPP,xs} =\left\{\begin{array}{l} {CF_{GPP,xs,pot} \qquad \qquad \qquad {\rm for\; }CF_{GPP,xs,pot} \le CF_{GPP} -CF_{GPP,mr} } \\ {\max (CF_{GPP} -CF_{GPP,mr} ,0)\qquad {\rm for\; }CF_{GPP,xs,pot} >CF_{GPP} -CF_{GPP,mr} } \end{array}\right.
 
@@ -96,7 +96,7 @@ remaining carbon flux from photosynthesis which can be allocated to new
 growth (:math:`CF_{avail}`, gC m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 19.6 
+   :label: 19.6
 
    CF_{avail\_ alloc} =CF_{GPP} -CF_{GPP,mr} -CF_{GPP,xs} .
 
@@ -122,7 +122,7 @@ ratio for carbon allocation between new stem and new leaf increases with
 increasing net primary production (NPP), as
 
 .. math::
-   :label: 19.8 
+   :label: 19.8
 
    a_{3} =\frac{2.7}{1+e^{-0.004NPP_{ann} -300} } -0.4
 
@@ -195,7 +195,7 @@ follows:
 
    \begin{array}{l} {CN_{leaf} =\_ {\rm \; C:N\; for\; leaf}} \\ {CN_{fr} =\_ {\rm \; C:N\; for\; fine\; root}} \\ {CN_{lw} =\_ {\rm \; C:N\; for\; live\; wood\; (in\; stem\; and\; coarse\; root)}} \\ {CN_{dw} =\_ {\rm \; C:N\; for\; dead\; wood\; (in\; stem\; and\; coarse\; root)}} \end{array}
 
-where all C:N parameters are defined as constants for a given PFT 
+where all C:N parameters are defined as constants for a given PFT
 (:numref:`Table Allocation and CN ratio parameters`).
 
 Given values for the parameters in and , total carbon and nitrogen
@@ -213,7 +213,7 @@ m\ :sup:`-2` s\ :sup:`-1`):
 where
 
 .. math::
-   :label: 19.11 
+   :label: 19.11
 
    \begin{array}{l} {C_{allom} =\left\{\begin{array}{l} {\left(1+g_{1} \right)\left(1+a_{1} +a_{3} \left(1+a_{2} \right)\right)\qquad {\rm for\; woody\; PFT}} \\ {1+g_{1} +a_{1} \left(1+g_{1} \right)\qquad \qquad {\rm for\; non-woody\; PFT}} \end{array}\right. } \\ {} \end{array}
 
@@ -229,7 +229,7 @@ plant nitrogen demand for new growth ( :math:`NF_{plant\_demand}`,
 gN m\ :sup:`-2` s\ :sup:`-1`) as:
 
 .. math::
-   :label: 19.13 
+   :label: 19.13
 
    NF_{plant\_ demand} =CF_{avail\_ alloc} \frac{N_{allom} }{C_{allom} } .
 
@@ -248,22 +248,22 @@ storage pools (where storage is indicated with *\_stor*) for the various
 tissue types are given as:
 
 .. math::
-   :label: 19.14 
+   :label: 19.14
 
    CF_{alloc,leaf} \_ =CF_{alloc,leaf\_ tot} f_{cur}
 
 .. math::
-   :label: 19.15 
+   :label: 19.15
 
    CF_{alloc,leaf\_ stor} \_ =CF_{alloc,leaf\_ tot} \left(1-f_{cur} \right)
 
 .. math::
-   :label: 19.16 
+   :label: 19.16
 
    CF_{alloc,froot} \_ =CF_{alloc,leaf\_ tot} a_{1} f_{cur}
 
 .. math::
-   :label: 19.17 
+   :label: 19.17
 
    CF_{alloc,froot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{1} \left(1-f_{cur} \right)
 
@@ -308,7 +308,7 @@ tissue types are given as:
    CF_{alloc,deadcroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right).
 
 
-   
+
 Nitrogen allocation
 -----------------------------------------
 
@@ -320,7 +320,7 @@ The total flux of nitrogen to be allocated is given by the FUN model (Chapter :n
    NF_{alloc,i} = min \left( NF_{demand, i}, NF_{supply, i} \right)
 
 The demand for each tissue, calculated for the tissue to remain on stoichiometry during growth, is:
-   
+
 .. math::
    :label: 19.27
 
@@ -394,6 +394,3 @@ and the total supply for each tissue :math: `i` is the product of the fractional
    :label: 19.40
 
    NF_{alloc,i} = N_{uptake} NF_{demand,i} / NF_{demand,tot}
-
-
-
