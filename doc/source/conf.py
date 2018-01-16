@@ -120,7 +120,9 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    # 'preamble': '',
+    'preamble': '\\usepackage{hyperref}',
+
+    'fncychap': '\\usepackage[Conny]{fncychap}',
 
     # Latex figure (float) alignment
     #
@@ -130,10 +132,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, 'clmdoc.tex', u'clmdoc Documentation',
-     u'Erik Kluzek, Bill Sacks, Ben Andre', 'manual'),
-]
+latex_documents = [(master_doc, 'clmdoc.tex', u'CLM5 Documentation', '', 'manual'),]
 
 
 # -- Options for manual page output ---------------------------------------

@@ -11,7 +11,6 @@ CLM User's Guide
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
 
    overview/index.rst
    setting-up-and-running-a-case/index.rst

@@ -3515,7 +3515,6 @@ within the area affected by fire is a function of the ratio between
 
 .. raw:: latex
 
-   \printbibliography
 
 .. [1]
    This description covers algorithms in the ‘fuse_cohorts’ subroutine.

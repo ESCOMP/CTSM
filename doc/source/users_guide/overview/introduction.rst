@@ -1,5 +1,21 @@
 .. _introduction:
 
+**User's Guide to version 5.0 of the Community Land Model (CLM)**
+
+**Authors: Benjamin Andre, Erik Kluzek, William Sacks**
+
+The National Center for Atmospheric Research (NCAR) is operated by the
+nonprofit University Corporation for Atmospheric Research (UCAR) under
+the sponsorship of the National Science Foundation. Any opinions,
+findings, conclusions, or recommendations expressed in this publication
+are those of the author(s) and do not necessarily reflect the views of
+the National Science Foundation.
+
+National Center for Atmospheric Research
+P. O. Box 3000, Boulder, Colorado 80307-300
+
+.. _rst_Users_Guide_Introduction:
+
 ==============
 Introduction
 ==============
@@ -69,10 +85,10 @@ machine is working correctly.
  What is New with CLM4.5
 =========================
 
-The CESM1.2.0 `What's New Science <CLM-URL>`_ and `What's New Software <CLM-URL>`_ pages gives a synopsis of the changes to all CESM components since the CESM1.1.1 release. 
+The CESM1.2.0 `What's New Science <CLM-URL>`_ and `What's New Software <CLM-URL>`_ pages gives a synopsis of the changes to all CESM components since the CESM1.1.1 release.
 More details are given in the `CLM ChangeLog file <CLM-URL>`_.
 
-Previous release pages give similar list of changes for previous versions of the model. 
+Previous release pages give similar list of changes for previous versions of the model.
 The `CLM4 in CESM1.0.5 User's Guide <CLM-URL>`_ gives information on the updates for versions up to CLM4 in CESM1.0.5.
 
 .. _users-guide-overview:
@@ -81,51 +97,51 @@ The `CLM4 in CESM1.0.5 User's Guide <CLM-URL>`_ gives information on the updates
  Overview of User's Guide
 ==========================
 
-In this introduction we first give a simple guide to understand the document conventions in `How to Use This Document <CLM-URL>`_. 
-The next section `What is new with CLM4.5 in CESM1.2.0 since previous public releases? <CLM-URL>`_ gives references to describe the differences between CLM4.5 in CESM1.2.0 and previous CESM releases both from a scientific as well as a software engineering point of view. 
-For information on previous releases of CLM4.5 before CLM4.5 in CESM1.2.0 see the CESM1.1.1 documentation. 
-The next section `Quickstart to using CLM4.5 <CLM-URL>`_ is for users that are already experts in using CLM and gives a quickstart guide to the bare details on how to use CLM4.5. 
-The next `What is scientifically validated and functional in CLM4.5 in CESM1.2.0? <CLM-URL>`_ tells you about what has been extensively tested and scientifically validated (and maybe more importantly) what has NOT. 
-`What are the UNIX utilities required to use CLM4.5? <CLM-URL>`_ lists the UNIX utilities required to use CLM4.5 and is important if you are running on non-NCAR machines, generic local machines, or machines NOT as well tested by us at NCAR. 
-Next we have `Important Notes and Best Practices for Usage of CLM4.5 <CLM-URL>`_ to detail some of the best practices for using CLM4.5 for science. 
+In this introduction we first give a simple guide to understand the document conventions in `How to Use This Document <CLM-URL>`_.
+The next section `What is new with CLM4.5 in CESM1.2.0 since previous public releases? <CLM-URL>`_ gives references to describe the differences between CLM4.5 in CESM1.2.0 and previous CESM releases both from a scientific as well as a software engineering point of view.
+For information on previous releases of CLM4.5 before CLM4.5 in CESM1.2.0 see the CESM1.1.1 documentation.
+The next section `Quickstart to using CLM4.5 <CLM-URL>`_ is for users that are already experts in using CLM and gives a quickstart guide to the bare details on how to use CLM4.5.
+The next `What is scientifically validated and functional in CLM4.5 in CESM1.2.0? <CLM-URL>`_ tells you about what has been extensively tested and scientifically validated (and maybe more importantly) what has NOT.
+`What are the UNIX utilities required to use CLM4.5? <CLM-URL>`_ lists the UNIX utilities required to use CLM4.5 and is important if you are running on non-NCAR machines, generic local machines, or machines NOT as well tested by us at NCAR.
+Next we have `Important Notes and Best Practices for Usage of CLM4.5 <CLM-URL>`_ to detail some of the best practices for using CLM4.5 for science.
 The last introductory section is `Other resources <CLM-URL>`_ to get help from which lists different resources for getting help with CESM1.0 and CLM4.5.
 
-`Chapter 1 <CLM-URL>`_ goes into detail on how to setup and run simulations with CLM4.5 and especially how to customize cases. 
+`Chapter 1 <CLM-URL>`_ goes into detail on how to setup and run simulations with CLM4.5 and especially how to customize cases.
 Details of cesm_setup modes and build-namelist options as well as namelist options are given in this chapter.
 
-`Chapter 2 <CLM-URL>`_ gives instructions on the CLM tools for either CLM4.0 or CLM4.5 physics for creating input datasets for use by CLM, for the expert user. 
-There's an overview of what each tool does, and some general notes on how to build the FORTRAN tools. 
-Then each tool is described in detail along with different ways in which the tool might be used. 
+`Chapter 2 <CLM-URL>`_ gives instructions on the CLM tools for either CLM4.0 or CLM4.5 physics for creating input datasets for use by CLM, for the expert user.
+There's an overview of what each tool does, and some general notes on how to build the FORTRAN tools.
+Then each tool is described in detail along with different ways in which the tool might be used.
 A final section on how to customize datasets for observational sites for very savvy expert users is given as the last section of this chapter.
 
-As a followup to the tools chapter, `Chapter 3 <CLM-URL>`_ tells how to add files to the XML database for build-namelist to use. 
+As a followup to the tools chapter, `Chapter 3 <CLM-URL>`_ tells how to add files to the XML database for build-namelist to use.
 This is important if you want to use the XML database to automatically select user-created input files that you have created when you setup new cases with CLM (both CLM4.0 and CLM4.5 physics).
 
-In `Chapter 4 <CLM-URL>`_, again for the expert user, we give details on how to do some particularly difficult special cases. 
-For example, we give the protocol for spinning up the CLM4.5-BGC and CLMCN models as well as CLM with dynamic vegetation active (CNDV). 
-We give instructions to do a spinup case from a previous case with Coupler history output for atmospheric forcing. 
-We also give instructions on running both the prognostic crop and irrigation models. 
+In `Chapter 4 <CLM-URL>`_, again for the expert user, we give details on how to do some particularly difficult special cases.
+For example, we give the protocol for spinning up the CLM4.5-BGC and CLMCN models as well as CLM with dynamic vegetation active (CNDV).
+We give instructions to do a spinup case from a previous case with Coupler history output for atmospheric forcing.
+We also give instructions on running both the prognostic crop and irrigation models.
 Lastly we tell the user how to use the DATM model to send historical CO2 data to CLM.
 
-`Chapter 5 <CLM-URL>`_ outlines how to do single-point or regional simulations using CLM4.5. 
-This is useful to either compare CLM4.5 simulations with point observational stations, such as tower sites (which might include your own atmospheric forcing), or to do quick simulations with CLM for example to test a new parameterization. 
-There are several different ways given on how to perform single-point simulations which range from simple PTS_MODE to more complex where you create all your own datasets, tying into `Chapter 2 <CLM-URL>`_ and also `Chapter 3 <CLM-URL>`_ to add the files into the build-namelist XML database. 
-The PTCLM python script to run single-point simulations was added back in for this release (but it has bugs that don't allow it to work out of the box). 
+`Chapter 5 <CLM-URL>`_ outlines how to do single-point or regional simulations using CLM4.5.
+This is useful to either compare CLM4.5 simulations with point observational stations, such as tower sites (which might include your own atmospheric forcing), or to do quick simulations with CLM for example to test a new parameterization.
+There are several different ways given on how to perform single-point simulations which range from simple PTS_MODE to more complex where you create all your own datasets, tying into `Chapter 2 <CLM-URL>`_ and also `Chapter 3 <CLM-URL>`_ to add the files into the build-namelist XML database.
+The PTCLM python script to run single-point simulations was added back in for this release (but it has bugs that don't allow it to work out of the box).
 CLM4 in CESM1.0.5 has a fully working versions of PTCLM.
 
 Need `Chapter 6 <CLM-URL>`_ blurb...
 
-`Chapter 7 <CLM-URL>`_ gives some guidance on trouble-shooting problems when using CLM4.5. 
+`Chapter 7 <CLM-URL>`_ gives some guidance on trouble-shooting problems when using CLM4.5.
 It doesn't cover all possible problems with CLM, but gives you some guidelines for things that can be done for some common problems.
 
-`Chapter 8 <CLM-URL>`_  goes over the automated testing scripts for validating that the CLM is working correctly. 
-The test scripts run many different configurations and options with CLM4.0 physics as well and CLM4.5 physics making sure that they work, as well as doing automated testing to verify restarts are working correctly, and testing at many different resolutions. 
+`Chapter 8 <CLM-URL>`_  goes over the automated testing scripts for validating that the CLM is working correctly.
+The test scripts run many different configurations and options with CLM4.0 physics as well and CLM4.5 physics making sure that they work, as well as doing automated testing to verify restarts are working correctly, and testing at many different resolutions.
 In general this is an activity important only for a developer of CLM4.5, but could also be used by users who are doing extensive code modifications and want to ensure that the model continues to work correctly.
 
 In the appendices we talk about some issues that are useful for advanced users and developers of CLM4.5.
 
-Finally in `Appendix A <CLM-URL>`_ we give instructions on how to build the documentation associated with CLM4.5 (i.e. how to build this document). 
-This document is included in every CLM distribution and can be built so that you can view a local copy rather than having to go to the CESM website. 
+Finally in `Appendix A <CLM-URL>`_ we give instructions on how to build the documentation associated with CLM4.5 (i.e. how to build this document).
+This document is included in every CLM distribution and can be built so that you can view a local copy rather than having to go to the CESM website.
 This also could be useful for developers who need to update the documentation due to changes they have made.
 
 .. _best-practices-for-usage:
@@ -134,40 +150,40 @@ This also could be useful for developers who need to update the documentation du
  Best Practices
 ================
 
-- CLM4.5 includes BOTH the old CLM4.0 physics AND the new CLM4.5 physics and you can toggle between two. 
-  The "standard" practice for CLM4.0 is to run with CN on, and with Qian atmospheric forcing. 
-  While the "standard" practice for CLM4.5 is to run with BGC on, and CRUNCEP atmospheric forcing. 
+- CLM4.5 includes BOTH the old CLM4.0 physics AND the new CLM4.5 physics and you can toggle between two.
+  The "standard" practice for CLM4.0 is to run with CN on, and with Qian atmospheric forcing.
+  While the "standard" practice for CLM4.5 is to run with BGC on, and CRUNCEP atmospheric forcing.
   "BGC" is the new CLM4.5 biogeochemistry and include CENTURY-like pools, vertical resolved carbon, as well as Nitrification and de-Nitrification (see `the Section called Some Acronym's and Terms We'll be Using in Other resources to get help from <CLM-URL>`_ ).
 
-- When running with CLMCN (either CLM4.0 or CLM4.5 physics) or CLM4.5-BGC, it is critical to begin with initial conditions that are provided with the release or to spin the model up following the CN spinup procedure before conducting scientific runs (see `the Section called Spinning up the CLM4.5 biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for CLM4.5 or `the Section called Spinning up the CLM4.0 biogeochemistry Carbon-Nitrogen Model (CN spinup) in Chapter 4 <CLM-URL>`_ for CLM4.0). 
-  Simulations without a proper spinup will effectively be starting from an unvegetated world. 
+- When running with CLMCN (either CLM4.0 or CLM4.5 physics) or CLM4.5-BGC, it is critical to begin with initial conditions that are provided with the release or to spin the model up following the CN spinup procedure before conducting scientific runs (see `the Section called Spinning up the CLM4.5 biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for CLM4.5 or `the Section called Spinning up the CLM4.0 biogeochemistry Carbon-Nitrogen Model (CN spinup) in Chapter 4 <CLM-URL>`_ for CLM4.0).
+  Simulations without a proper spinup will effectively be starting from an unvegetated world.
   See `the Section called Setting Your Initial Conditions File in Chapter 1 <CLM-URL>`_ for information on how to provide initial conditions for your simulation.
 
-- Initial condition files are provided for CLM4.0-CN as before, for fully coupled BCN and offline ICN cases for 1850 and 2000 at finite volume grids: 1deg (0.9x1.25), 2deg (1.9x2.5), and T31 resolutions. 
-  We also have interpolated initial conditions for BCN for 1850 and 2000 for two finite volume grids: 10x15, 4x5 and two HOMME grids (ne30np4 and ne120np4). 
-  There's also an initial condition file for ICN with the prognostic crop model for 2000 at 2deg resolution, and one with CLMSP for 2000 at 2deg resolution. 
-  We also have initial conditions for offline CNDV for 1850. 
-  The 1850 initial condition files are in 'reasonable' equilibrium. 
-  The 2000 initial condition files represent the model state for the year 2000, and have been taken from transient simulations. 
-  Therefore, by design the year 2000 initial condition files do not represent an equilibrium state. 
+- Initial condition files are provided for CLM4.0-CN as before, for fully coupled BCN and offline ICN cases for 1850 and 2000 at finite volume grids: 1deg (0.9x1.25), 2deg (1.9x2.5), and T31 resolutions.
+  We also have interpolated initial conditions for BCN for 1850 and 2000 for two finite volume grids: 10x15, 4x5 and two HOMME grids (ne30np4 and ne120np4).
+  There's also an initial condition file for ICN with the prognostic crop model for 2000 at 2deg resolution, and one with CLMSP for 2000 at 2deg resolution.
+  We also have initial conditions for offline CNDV for 1850.
+  The 1850 initial condition files are in 'reasonable' equilibrium.
+  The 2000 initial condition files represent the model state for the year 2000, and have been taken from transient simulations.
+  Therefore, by design the year 2000 initial condition files do not represent an equilibrium state.
   Note also that spinning the 2000 initial conditions out to equilibrium will not reflect the best estimate of the real carbon/nitrogen state for the year 2000.
-  
-- Initial condition files are also provided for CLM4.5 for several configurations and resolutions. 
-  For CLM4.5-SP and CLM4.5-BGC with CRUNCEP forcing we have initial conditions at 1deg resolution for both 1850 and 2000. 
-  The CLM4.5-BGC initial conditions for 1850 (again with CRUNCEP forcing) were also interpolated to 2deg, CRUNCEP half degree (360x720cru), and ne30np4 resolutions. 
+
+- Initial condition files are also provided for CLM4.5 for several configurations and resolutions.
+  For CLM4.5-SP and CLM4.5-BGC with CRUNCEP forcing we have initial conditions at 1deg resolution for both 1850 and 2000.
+  The CLM4.5-BGC initial conditions for 1850 (again with CRUNCEP forcing) were also interpolated to 2deg, CRUNCEP half degree (360x720cru), and ne30np4 resolutions.
   Also the CLM4.5-BGC initial conditions for 1850 (with CRUNCEP forcing) were interpolated to 1deg CLM4.5-BGC-DV and 2deg CLM4.5-BGC-Crop.
-  
-- Users can generate initial condition files at different resolutions by using the CLM tool interpinic to interpolate from one of the provided resolutions to the resolution of interest. 
+
+- Users can generate initial condition files at different resolutions by using the CLM tool interpinic to interpolate from one of the provided resolutions to the resolution of interest.
   Interpolated initial condition files may no longer be in 'reasonable' equilibrium.
 
-- In CLM4.5 for both CLM4.5-CN and CLM4.5-BGC the new fire model requires lightning frequency data, and human population density (both are read inside of CLM). 
-  By default we have provided a climatology dataset for lightning frequency and a dataset with coverage from 1850 to 2010 for population density. 
-  Both of these datasets are interpolated from the native resolution of the datasets to the resolution you are running the model on. 
+- In CLM4.5 for both CLM4.5-CN and CLM4.5-BGC the new fire model requires lightning frequency data, and human population density (both are read inside of CLM).
+  By default we have provided a climatology dataset for lightning frequency and a dataset with coverage from 1850 to 2010 for population density.
+  Both of these datasets are interpolated from the native resolution of the datasets to the resolution you are running the model on.
   If you are running with an atmosphere model or forcing that is significantly different than present day -- the lightning frequency may NOT appropriately correspond to your atmosphere forcing and fire initiation would be inappropriate.
-  
-- Aerosol deposition is a required field to both CLM4.0 and CLM4.5 physics, sent from the atmosphere model. 
-  Simulations without aerosol deposition will exhibit unreasonably high snow albedos. 
-  The model sends aerosol deposition from the atmospheric model (either CAM or DATM). 
+
+- Aerosol deposition is a required field to both CLM4.0 and CLM4.5 physics, sent from the atmosphere model.
+  Simulations without aerosol deposition will exhibit unreasonably high snow albedos.
+  The model sends aerosol deposition from the atmospheric model (either CAM or DATM).
   When running with prescribed aerosol the atmosphere model will interpolate the aerosols from 2-degree resolution to the resolution the atmosphere model is running at.
 
 .. _how-to-use-this-document:
@@ -185,15 +201,14 @@ Links to descriptions and definitions have been provided in the code below. We u
    Where examples from an interactive shell session are presented, lines
    starting with > indicate the shell prompt.  A backslash "\" at the end
    of a line means the line continues onto the next one (as it does in
-   standard UNIX shell).  Note that $EDITOR" is used to refer to the 
-   text editor of your choice. $EDITOR is a standard UNIX environment 
-   variable and should be set on most UNIX systems. Comment lines are 
+   standard UNIX shell).  Note that $EDITOR" is used to refer to the
+   text editor of your choice. $EDITOR is a standard UNIX environment
+   variable and should be set on most UNIX systems. Comment lines are
    signaled with a "#" sign, which is the standard UNIX comment sign as well.
    $CSMDATA is used to denote the path to the inputdata directory for
-   your CESM data. 
+   your CESM data.
 
    > This is a shell prompt with commands \
    that continues to the following line.
    > $EDITOR filename # means you are using a text editor to edit "filename"
    # This is a comment line
-

@@ -11,7 +11,6 @@ CLM Technical Note
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
 
    Introduction/CLM50_Tech_Note_Introduction.rst
    Ecosystem/CLM50_Tech_Note_Ecosystem.rst
