@@ -52,6 +52,7 @@ OPTIONS
      -cache <file>          Name of output cache file (default: config_cache.xml).
      -cachedir <file>       Name of directory where output cache file is written 
                             (default: CLM build directory).
+     -cimeroot <dir>        REQUIRED: Path to cime directory
      -clm_root <dir>        Root directory of clm source code 
                             (default: directory above location of this script)
      -cppdefs <string>      A string of user specified CPP defines.  Appended to
@@ -122,6 +123,7 @@ my %opts = (
             phys        => "clm4_0",
             nofire      => undef,
             noio        => undef,
+            cimeroot    => undef,
             clm_root    => undef,
             spinup      => "normal",
 	    );
@@ -131,6 +133,7 @@ GetOptions(
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
     "snicar_frc=s"              => \$opts{'snicar_frc'},
+    "cimeroot=s"                => \$opts{'cimeroot'},       
     "clm_root=s"                => \$opts{'clm_root'},
     "cppdefs=s"                 => \$opts{'cppdefs'},
     "comp_intf=s"               => \$opts{'comp_intf'},
@@ -176,9 +179,9 @@ my %cfg = ();           # build configuration
 # Make sure we can find required perl modules and configuration files.
 # Look for them in the directory that contains the configure script.
 
-my $cesmroot   = abs_path( "$cfgdir/../../../");
-my $casecfgdir = "$cesmroot/cime/scripts/Tools";
-my $perl5lib   = "$cesmroot/cime/utils/perl5lib/";
+my $cimeroot   = $opts{'cimeroot'};
+my $casecfgdir = "$cimeroot/scripts/Tools";
+my $perl5lib   = "$cimeroot/utils/perl5lib/";
 
 # The Build::Config module provides utilities to store and manipulate the configuration.
 my $file = "$perl5lib/Build/Config.pm";
