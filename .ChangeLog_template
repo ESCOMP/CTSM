@@ -13,10 +13,10 @@ Purpose of changes
 Bugs fixed or introduced
 ------------------------
 
-Bugs fixed (include bugzilla ID): [If none, remove this line]
+Issues fixed (include CCTSM Issue #): [If none, remove this line]
 CIME Issues fixed (include issue #): [If none, remove this line]
 
-Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
 
 
 Notes of particular relevance for users
@@ -77,9 +77,6 @@ CLM testing:
 
   regular tests (aux_clm):
 
-    yellowstone_intel - 
-    yellowstone_pgi --- 
-    yellowstone_gnu --- 
     cheyenne_intel ---- 
     cheyenne_gnu ------ 
     hobart_nag -------- 

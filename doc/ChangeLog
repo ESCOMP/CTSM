@@ -1,4 +1,120 @@
 ===============================================================
+Tag name:  clm4_5_18_r271
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Jan 20 20:27:00 MST 2018
+One-line Summary: Update testlist to v2 and remove yellowstone
+
+Purpose of changes
+------------------
+
+Redo the testlist in version 2 format and remove yellowstone from it. Also update mosart and rtm with updated
+test lists. The new testlist format also allows wallclock times to be set (and they are) so that they can run 
+in the queue faster. Change some files that referenced bugzilla ID's to github issue #'s. Update tools testing 
+for gen_domain to use version under cime/tools rather than the copy under clm.
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include github issue ID):
+   #216 -- PE layout for hcru_hcru
+   #213 -- CPLHIST case is matching the wrong CLM_NML_USE_CASE
+   #212 -- Can't use a non-fates restart file to interpolate to a simulation with fates
+   #211 -- Can't handle interpolating from a fates restart file because of the cohort dimension
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+   MEMLEAK, TPUTCOMP and MEMCOMP tests now seem to be robust and can be trusted.
+
+Changes to tests or testing: Test list completely redone
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- PASS
+    hobart_intel ------ PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_18_r270
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit, no source code changed
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime, mosart, rtm
+   cime   to clm4518/n02/cime5.4.0-alpha.03 which allows CLM grids in testlist
+   mosart to mosart1_0_29 with redone test list in v2 format
+   rtm    to rtm1_0_64 with redone test list in v2 format
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+  M  parse_cime.cs.status -- MEMLEAK, MEMCOMP, and TPUTCOMP don't need to be ignored anymore
+
+  M  .ChangeLog_template -- Remove bugzilla in place for github issue ids
+
+        Update to test gen_domain under cime/tools rather than the copy under components/clm/tools/gen_domain
+        The copy won't be able to be done in the new github world.
+  M  components/clm/test/tools/TBLCFGtools.sh ----- Set name of test directory by basename (so relative path can be passed in)
+  M  components/clm/test/tools/input_tests_master - gen_domain path is relative to tools directory but under cime now
+  M  components/clm/test/tools/test_driver.sh ----- Remove yellowstone set "--mpilib mpi-serial" for TOOLS CFG string
+  M  components/clm/test/tools/TSMCFGtools.sh ----- Set name of test directory by basename
+  M  components/clm/test/tools/TCBCFGtools.sh ----- Set name of test directory by basename
+
+  M  components/clm/bld/unit_testers/build-namelist_test.pl - Fix number of tests
+
+  M  components/clm/cime_config/testdefs/testlist_clm.xml ------- Completely redo in version 2 format
+  M  components/clm/cime_config/testdefs/ExpectedTestFails.xml -- Update to github issues rather than bugzilla
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r270
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Dec 20 12:04:25 MST 2017
