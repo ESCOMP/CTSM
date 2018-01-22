@@ -33,4 +33,5 @@ CMakeFiles/
 core.*
 *.gz
 *.log !run.log
+*.pyc
 cime_config/buildnmlc
