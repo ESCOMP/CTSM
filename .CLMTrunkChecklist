@@ -42,6 +42,8 @@ This should show no diffs
 
 (8) Make the trunk tag
 
+(9) Send an email to clm-dev with the contents of the latest ChangeLog
+entry (until we have automated this for the git repo)
 
 NOTES:
 
