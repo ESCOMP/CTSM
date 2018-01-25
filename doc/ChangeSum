@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_18_r272     erik 01/25/2018 Bring in latest FATES release version to CLM trunk: fates_s1.4.1_a3.0.0_rev2
   clm4_5_18_r271     erik 01/20/2018 Update testlist to v2 and remove yellowstone
   clm4_5_18_r270    sacks 12/20/2017 Always use multiple elevation classes for glacier, even with stub glc
   clm4_5_18_r269     erik 12/16/2017 Move externals to version in github

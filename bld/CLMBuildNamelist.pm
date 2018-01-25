@@ -741,7 +741,7 @@ sub setup_cmdl_fates_mode {
 
       # The following variables may be set by the user and are compatible with use_fates
       # no need to set defaults, covered in a different routine
-      my @list  = (  "use_fates_spitfire", "use_vertsoilc", "use_century_decomp", "use_lch4" );
+      my @list  = (  "use_vertsoilc", "use_century_decomp", "use_lch4" );
       foreach my $var ( @list ) {
 	  if ( defined($nl->get_value($var))  ) {
 	      $nl_flags->{$var} = $nl->get_value($var);
@@ -754,15 +754,14 @@ sub setup_cmdl_fates_mode {
 	      }
 	  }
       }
-
-#      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_vertsoilc', 'use_fates'=>$nl_flags->{'use_fates'} );
-
-
     } else {
-	# we only dis-allow fates_spit_fire with non-fates runs
-       $var = "use_fates_spitfire";
-       if ( defined($nl->get_value($var)) ) {
-           $log->fatal_error("$var is being set, but can ONLY be set when -bgc fates option is used.");
+       # dis-allow fates specific namelist items with non-fates runs
+       my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
+                      "use_fates_inventory_init", "fates_inventory_ctrl_filename","use_fates_logging" );
+       foreach my $var ( @list ) {
+          if ( defined($nl->get_value($var)) ) {
+              $log->fatal_error("$var is being set, but can ONLY be set when -bgc fates option is used.\n");
+          }
        }
     }
   }
@@ -1244,14 +1243,14 @@ sub setup_cmdl_run_type {
   if (defined $opts->{$var}) {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
-                  'use_cndv'=>$nl_flags->{'use_cndv'} );
+                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'} );
     } else {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
     }
   } else {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
-                  'use_cndv'=>$nl_flags->{'use_cndv'} );
+                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'} );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
 }
@@ -2339,7 +2338,7 @@ sub setup_logic_initial_conditions {
        }
     } else {
        foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                          "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp"
+                          "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates"
                         ) {
           $settings{$item}    = $nl_flags->{$item};
        }
@@ -2381,7 +2380,8 @@ sub setup_logic_initial_conditions {
           } 
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
-                     'sim_year'=>$settings{'sim_year'}, 'nofail'=>1  );
+                     'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 
+                     'use_fates'=>$nl_flags->{'use_fates'} );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
           if ( $try > 1 ) {
              my $group = $definition->get_group_name($useinitvar);
@@ -2390,7 +2390,8 @@ sub setup_logic_initial_conditions {
           if ( &value_is_true($nl->get_value($useinitvar) ) ) {
 
              add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
-                        'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
+                        'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
+                        'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
                         'use_cn'=>$nl_flags->{'use_cn'}, 'nofail'=>1 );
              my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
              foreach my $pair ( split( /\s/, $attributes_string) ) {
@@ -3679,8 +3680,23 @@ sub setup_logic_fates {
     my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
     if ($physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true( $nl_flags->{'use_fates'})  ) {
- 	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_spitfire', 'use_fates'=>$nl_flags->{'use_fates'} );
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
+        my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
+                       "use_fates_inventory_init", "use_fates_logging" );
+        foreach my $var ( @list ) {
+ 	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'} );
+        }
+        my $var = "use_fates_inventory_init";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) ) {
+              $var = "fates_inventory_ctrl_filename";
+              if ( ! defined($nl->get_value($var))  ) {
+                 $log->fatal_error("$var is required when use_fates_inventory_init is set" );
+              } elsif ( ! -f "$nl->get_value($var)" ) {
+                 $log->fatal_error("$var does NOT point to a valid filename" );
+              }
+           }
+        }
     }
 }
 

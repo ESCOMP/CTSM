@@ -1,4 +1,175 @@
 ===============================================================
+Tag name:  clm4_5_18_r272
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Jan 25 01:17:01 MST 2018
+One-line Summary: Bring in latest FATES release version to CLM trunk: fates_s1.4.1_a3.0.0_rev2
+
+Purpose of changes
+------------------
+
+Bring in the latest version of FATES from NGEET/fates-release and the associated interface
+changes in CLM from NGEET/fates-clm. The new version is 1.4.1 for science and version 3.0 of
+the API updated from 1.3.0 for science and 1.0.0 for the API.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CCTSM Issue #): #219
+  #219 -- Options listed incorrectly in testlist_clm.xml
+
+Known bugs introduced in this tag (include github issue ID): (or found)
+  #216 -- PE layout for hcru_hcru needs to be increased so that it can run
+  #213 -- CPLHIST case is matching the wrong CLM_NML_USE_CASE
+  #212 -- Can't use a non-fates restart file to interpolate to a simulation with fates
+  #211 -- Can't handle interpolating from a fates restart file because of the cohort dimension
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): Simple FATES initial-condition
+   files were added for present day at f45 and 1x1_brazil. FATES IC can't be interpolated from
+   so you either have to have an exact match or do a cold start.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): New FATES namelist items:
+   use_fates_planthydro, use_fates_ed_st3, use_fates_ed_prescribed_phys, 
+   use_fates_inventory_init, fates_inventory_ctrl_filename,use_fates_logging
+
+Changes made to namelist defaults (e.g., changed parameter values): when FATES on, non-fates finidat
+   files won't be matched
+
+Changes to the datasets (e.g., parameter, surface or initial files): New fates param file
+    and finidat files for f45 and 1x1_brazil
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: ed test list removed and updated fates list added in
+   with new version=2.0 format, fates test list now sets machine/compiler rather than
+   using generic "fates" for both.
+
+Code reviewed by: self, rgknox, ckoven
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (33 fates namelist tests are different)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons: clm4_5_18_r271
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Only simulations with fates on
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only "-bgc fates"
+    - what platforms/compilers: All
+    - nature of change: new climate, fates science updated from 1.3.0 to 1.4.1
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): rtm, mosart, fates
+   rtm    to rtm1_0_65
+   mosart to mosart1_0_30
+   fates  to fates_s1.4.1_a3.0.0_rev2
+
+List all files eliminated:
+
+          fates test directory changed to one capitolized to be similar to new tests added
+   D    components/clm/cime_config/testdefs/testmods_dirs/clm/fates/user_nl_clm
+   D    components/clm/cime_config/testdefs/testmods_dirs/clm/fates/shell_commands
+
+List all files added and what they do:
+
+         New tests for exercising more Fates options, all are based on the Fates test-mod
+         and add a few changes on top of it
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesShortList/user_nl_clm ------- Short list of hist_fincl1
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesShortList/include_user_mods
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesST3/user_nl_clm ------------- use_fates_ed_st3=T
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesST3/include_user_mods
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesAllVars/user_nl_clm --------- Long list of FATES variables
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesAllVars/include_user_mods
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesAllVars/shell_commands ----- Cold-start
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesLogging/user_nl_clm -------- use_fates_logging=T
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesLogging/include_user_mods
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesColdDef/user_nl_clm -------- Longer list of hist_fincl1
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesColdDef/include_user_mods
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesColdDef/shell_commands ----- Cold-start
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesPPhys/user_nl_clm ---------- use_fates_ed_prescribed_phys=T
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesPPhys/include_user_mods
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/Fates/user_nl_clm -------------- Moved from fates directory, longer
+            hist_fincl1 list
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/Fates/shell_commands ----------- Moved from fates directory, no longer
+            a cold-start
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesNoFire/user_nl_clm -------- use_fates_spitfire=F
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/FatesNoFire/include_user_mods
+
+List all existing files that have been modified, and describe the changes:
+
+   M    components/clm/bld/CLMBuildNamelist.pm - Handle new FATES namelist items, send
+          use_fates down for setting of finidat, if use_fates_inventory_init=T, make
+          sure fates_inventory_ctrl_filename is set
+
+   M    components/clm/bld/unit_testers/build-namelist_test.pl - Change ED to FATES, test new FATES features
+
+   M    components/clm/bld/namelist_files/namelist_defaults_overall.xml -- clm_start_type is arb_ic when use_fates=T
+   M    components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Update fates var descriptsion, and add
+           new namelist items: use_fates_logging, use_fates_planthydro, use_fates_ed_st3, use_fates_ed_prescribed_phys,
+                               use_fates_inventory_init, fates_inventory_ctrl_filename, remove use of ED for FATES
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Update fates_paramfile, use_init_interp=T
+          only if use_fates=F, add use_fates=F to init_interp_attributes, add use_fates setting for finidat files,
+          and add new f45 and 1x1_brazil FATES finidat files, by default new use_fates_* options are False.
+
+   M    components/clm/cime_config/config_compsets.xml ------------- Add a stub-GLC FATES compset: I2000Clm50FatesCruGs
+   M    components/clm/cime_config/testdefs/ExpectedTestFails.xml -- Many new expected fails for #221 and NGEET/fates#315
+   M    components/clm/cime_config/testdefs/testlist_clm.xml ------- Remove "ed" test-category, new "fates" test category
+          Move <options> to after <machines> rather than nested inside (issue #219).
+
+   M    components/clm/src/utils/clmfates_paraminterfaceMod.F90 - Add write about dimension shape on abort
+   M    components/clm/src/utils/clmfates_interfaceMod.F90 ------ New interface control variables, add call to
+          FatesReportParameters, use_fates_plant_hydro=>use_fates_planthydro, fix restart_map, zero_site=>init_site_vars
+          use numpft_ed
+
+   M    components/clm/src/main/decompInitMod.F90 --------- Set gi rather than ci for cohorts
+   M    components/clm/src/main/subgridMod.F90 ------------ Add call subgrid_get_info_cohort, change subgrid_get_info_natveg call
+   M    components/clm/src/main/histFileMod.F90 ----------- Change some of the parameter names, EDTypesMod interfaces get moved
+           to FatesInterfaceMod, nlevsclass_ed=>nlevsclass, maxpft=>numpft_ed, 
+   M    components/clm/src/main/controlMod.F90 ------------ Add new fates flags to namelist and broadcast/print them
+   M    components/clm/src/main/clm_varctl.F90 ------------ New FATES flags, change ED=>FATES and some formatting
+   M    components/clm/src/main/initGridCellsMod.F90 ------ ncohorts=>npatches
+   M    components/clm/src/main/initVerticalMod.F90 ------- Remove call to ed_hist_scpfmaps
+   M    components/clm/src/main/readParamsMod.F90 --------- Remove call to FatesReadParameters
+   M    components/clm/src/biogeophys/CanopyFluxesMod.F90 - Add blank line
+   M    components/clm/src/biogeophys/OzoneMod.F90 -------- Comment out setting of o3* variables to spval
+
+   M    components/clm/src/CMakeLists.txt -- Add fates/main to unit-test directories
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r271
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Jan 20 20:27:00 MST 2018

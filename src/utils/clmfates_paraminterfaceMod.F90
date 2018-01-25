@@ -223,7 +223,9 @@ contains
             size_dim_1 = dimension_sizes(1)
             size_dim_2 = dimension_sizes(2)
          case default
+            write(fates_log(),*) 'dimension shape:',dimension_shape
             call endrun(msg='unsupported number of dimensions reading parameters.')
+            
          end select
          write(fates_log(), *) 'clmfates_interfaceMod.F90:: reading '//trim(name)
          call readNcdio(ncid, name, dimension_shape, dimension_names, subname, data(1:size_dim_1, 1:size_dim_2))

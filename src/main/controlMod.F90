@@ -210,7 +210,14 @@ contains
     namelist /clm_inparm/ use_c13, use_c14
 
 
-    namelist /clm_inparm/ fates_paramfile, use_fates, use_fates_spitfire
+    ! FATES Flags
+    namelist /clm_inparm/ fates_paramfile, use_fates,   &
+          use_fates_spitfire, use_fates_logging,        &
+          use_fates_planthydro, use_fates_ed_st3,       &
+          use_fates_ed_prescribed_phys,                 &
+          use_fates_inventory_init,                     &
+          fates_inventory_ctrl_filename
+
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -220,7 +227,7 @@ contains
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
          CN_partition_opt, CN_evergreen_phenology_opt, carbon_resp_opt  
 
-    namelist /clm_inparm / use_lai_streams
+    namelist /clm_inparm/ use_lai_streams
 
     namelist /clm_inparm/ use_bedrock
 
@@ -298,6 +305,7 @@ contains
        else
           call endrun(msg='ERROR finding clm_nitrogen namelist'//errMsg(sourcefile, __LINE__))
        end if
+
        call relavu( unitn )
 
        ! ----------------------------------------------------------------------
@@ -613,6 +621,12 @@ contains
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_fates_spitfire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
@@ -938,7 +952,13 @@ contains
     write(iulog, *) '    use_fates = ', use_fates
     if (use_fates) then
        write(iulog, *) '    use_fates_spitfire = ', use_fates_spitfire
+       write(iulog, *) '    use_fates_logging = ', use_fates_logging
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
+       write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
+       write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
+       write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
+       write(iulog, *) '    use_fates_inventory_init = ',use_fates_inventory_init
+       write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
     end if
   end subroutine control_print
 
