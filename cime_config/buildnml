@@ -36,7 +36,7 @@ def buildnml(case, caseroot, compname):
     if compname != "clm":
         raise AttributeError
 
-    srcroot = case.get_value("SRCROOT")
+    lnd_root = case.get_value("COMP_ROOT_DIR_LND")
     din_loc_root = case.get_value("DIN_LOC_ROOT")
     ccsm_co2_ppmv = case.get_value("CCSM_CO2_PPMV")
     clm_co2_type = case.get_value("CLM_CO2_TYPE")
@@ -105,7 +105,7 @@ def buildnml(case, caseroot, compname):
             if not filecmp.cmp(file1, file2):
                 call_buildcpp = True
         if call_buildcpp:
-            cmd = os.path.join(os.path.join(srcroot,"components","clm","cime_config","buildcpp"))
+            cmd = os.path.join(os.path.join(lnd_root,"cime_config","buildcpp"))
             logger.info("     ...calling clm buildcpp to set build time options")
             try:
                 mod = imp.load_source("buildcpp", cmd)
@@ -225,13 +225,13 @@ def buildnml(case, caseroot, compname):
 
         create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
 
-        cmd = os.path.join(srcroot, "components","clm","bld","build-namelist")
+        cmd = os.path.join(lnd_root,"bld","build-namelist")
 
-        command = ("%s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
+        command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
                    "%s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
                    "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
                    "%s %s %s"
-                   %(cmd, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
+                   %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
                      nomeg, usecase, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
                      lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file, 
                      clm_bldnml_opts, spinup, tuning))
