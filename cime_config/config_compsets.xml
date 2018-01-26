@@ -104,9 +104,14 @@
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_RTM%FLOOD_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
+  <!---I FATES compsets -->
   <compset>
     <alias>I2000Clm50Fates</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I2000Clm50FatesCruGs</alias>
+    <lname>2000_DATM%CRUv7_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <!-- Stub glacier needed for regional / single-point -->
@@ -277,6 +282,7 @@
     <lname>2000_DATM%CRU_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
+  
 
 
   <!-- changes to driver xml variables - in case of a tie in the values matches the last match is taken -->

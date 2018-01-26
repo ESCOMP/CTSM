@@ -582,15 +582,48 @@ set to 3 meaning branch.
 
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the ED
-(ED = 'on' is EXPERIMENTAL NOT SUPPORTED!)
+Toggle to turn on the FATES model
+(use_fates= '.true.' is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
 <entry id="use_fates_spitfire" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on spit fire (only relevant if ED is being used).
+Toggle to turn on spitfire module for modeling fire (only relevant if FATES is being used).
 </entry>
 
+<entry id="use_fates_logging" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the logging module (only relevant if FATES is being used).
+</entry>
+
+<entry id="use_fates_planthydro" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on plant hydraulics (only relevant if FATES is on).
+(use_fates_planthydro=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+<entry id="use_fates_ed_st3" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on Static Stand Structure Mode (only relevant if FATES is being used).
+(use_fates_ed_st3=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+<entry id="use_fates_ed_prescribed_phys" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on prescribed physiology (only relevant if FATES is being used).
+</entry>
+
+<entry id="use_fates_inventory_init" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on inventory initialization to startup FATES (only relevant if FATES is being used).
+(use_fates_inventory_init=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+<entry id="fates_inventory_ctrl_filename" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname to the inventory initialization control file.
+(Required, if use_fates_inventory_init=T)
+</entry>
 
 <entry id="use_luna" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
@@ -871,13 +904,13 @@ Maximum nitrification rate constant (1/s)
 <entry id="use_vertsoilc" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 Turn on vertical soil carbon.
-Requires the CN or ED model to work (either CN or CNDV).
+Requires the CN or FATES model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_century_decomp" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 Use parameters for decomposition from the CENTURY Carbon model
-Requires the CN or ED model to work (either CN or CNDV).
+Requires the CN or FATES model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_extralakelayers" type="logical" category="physics"

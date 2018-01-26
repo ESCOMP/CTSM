@@ -394,6 +394,19 @@ contains
 !
 !       end if
 
+!       else
+!          ! FATES is fundamentlaly incompatible with this type of patch-level
+!          ! association with plant functional type, so for the time
+!          ! being, fates patches will just push these values to invalid
+!          o3uptakesha(p) = spval
+!          o3coefvsha(p)  = spval
+!          o3coefgsha(p)  = spval
+!          o3uptakesun(p) = spval
+!          o3coefvsun(p)  = spval
+!          o3coefgsun(p)  = spval 
+!
+!       end if
+
     end do
 
     end associate

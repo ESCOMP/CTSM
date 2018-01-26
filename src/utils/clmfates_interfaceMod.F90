@@ -45,12 +45,19 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : iulog
    use clm_varctl        , only : use_vertsoilc 
    use clm_varctl        , only : use_fates_spitfire
+   use clm_varctl        , only : use_fates_planthydro
+   use clm_varctl        , only : use_fates_ed_st3
+   use clm_varctl        , only : use_fates_ed_prescribed_phys
+   use clm_varctl        , only : use_fates_logging
+   use clm_varctl        , only : use_fates_inventory_init
+   use clm_varctl        , only : fates_inventory_ctrl_filename
+ 
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
    use clm_varcon        , only : denice
    use clm_varcon        , only : ispval
 
-   use clm_varpar        , only : numpft
+   use clm_varpar        , only : natpft_size
    use clm_varpar        , only : numrad
    use clm_varpar        , only : ivis
    use clm_varpar        , only : inir
@@ -102,15 +109,14 @@ module CLMFatesInterfaceMod
    use ChecksBalancesMod     , only : SummarizeNetFluxes, FATES_BGC_Carbon_BalanceCheck
    use EDTypesMod            , only : ed_patch_type
    use FatesHydraulicsMemMod , only : nlevsoi_hyd
-   use EDTypesMod            , only : use_fates_plant_hydro
    use FatesInterfaceMod     , only : hlm_numlevgrnd, hlm_numlevsoil, hlm_numlevdecomp_full
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
+   use EDInitMod             , only : init_site_vars
    use EDInitMod             , only : init_patches
    use EDInitMod             , only : set_site_properties
    use EDPftVarcon           , only : EDpftvarcon_inst
-   use EDEcophysConType      , only : EDecophysconInit
    use EDSurfaceRadiationMod , only : ED_SunShadeFracs, ED_Norman_Radiation
    use EDBtranMod            , only : btran_ed, &
                                       get_active_suction_layers
@@ -217,8 +223,8 @@ contains
       ! is not turned on
       ! ---------------------------------------------------------------------------------
      
-      use FatesInterfaceMod, only : FatesInterfaceInit
-      use EDTypesMod       , only : numpft_ed
+      use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
+      use FatesInterfaceMod, only : numpft_ed => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -229,11 +235,16 @@ contains
 
       ! local variables
       integer                                        :: nclumps   ! Number of threads
-      logical :: verbose_output
-      integer :: pass_masterproc
-      integer :: pass_vertsoilc
-      integer :: pass_spitfire
-      integer :: pass_is_restart
+      logical                                        :: verbose_output
+      integer                                        :: pass_masterproc
+      integer                                        :: pass_vertsoilc
+      integer                                        :: pass_spitfire     
+      integer                                        :: pass_ed_st3
+      integer                                        :: pass_ed_prescribed_phys
+      integer                                        :: pass_logging
+      integer                                        :: pass_planthydro
+      integer                                        :: pass_inventory_init
+      integer                                        :: pass_is_restart
       integer                                        :: nc        ! thread index
       integer                                        :: s         ! FATES site index
       integer                                        :: c         ! HLM column index
@@ -248,8 +259,11 @@ contains
       ! This involves to stages
       ! 1) allocate the vectors
       ! 2) add the history variables defined in clm_inst to the history machinery
-      call EDecophysconInit( EDpftvarcon_inst, numpft )
+
+      
+      ! Parameter Routines
       call param_derived%Init( numpft_ed )
+      
 
       verbose_output = .false.
       call FatesInterfaceInit(iulog, verbose_output)
@@ -278,6 +292,9 @@ contains
       call set_fates_ctrlparms('hlm_name',cval='CLM')
       call set_fates_ctrlparms('hio_ignore_val',rval=spval)
       call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
+      call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1)) ! RGK: FATES IGNORES
+                                                                          ! AND DOESNT TOUCH
+                                                                          ! THE BARE SOIL PATCH
 
       if(is_restart()) then
          pass_is_restart = 1
@@ -299,6 +316,44 @@ contains
          pass_spitfire = 0
       end if
       call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
+
+      if(use_fates_ed_st3) then
+        pass_ed_st3 = 1
+      else
+         pass_ed_st3 = 0
+      end if
+      call set_fates_ctrlparms('use_ed_st3',ival=pass_ed_st3)
+      
+      if(use_fates_ed_prescribed_phys) then
+         pass_ed_prescribed_phys = 1
+      else
+         pass_ed_prescribed_phys = 0
+      end if
+      call set_fates_ctrlparms('use_ed_prescribed_phys',ival=pass_ed_prescribed_phys)
+
+      if(use_fates_planthydro) then
+         pass_planthydro = 1
+      else
+         pass_planthydro = 0
+      end if
+      call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
+
+      if(use_fates_logging) then
+         pass_logging = 1
+      else
+         pass_logging = 0
+      end if
+      call set_fates_ctrlparms('use_logging',ival=pass_logging)
+
+      if(use_fates_inventory_init) then
+         pass_inventory_init = 1
+      else
+         pass_inventory_init = 0
+      end if
+      call set_fates_ctrlparms('use_inventory_init',ival=pass_inventory_init)
+
+      call set_fates_ctrlparms('inventory_ctrl_file',cval=fates_inventory_ctrl_filename)
+
 
       if(masterproc)then
          pass_masterproc = 1
@@ -406,7 +461,7 @@ contains
 
          call this%init_soil_depths(nc)
          
-         if (use_fates_plant_hydro) call InitHydrSites(this%fates(nc)%sites)
+         if (use_fates_planthydro) call InitHydrSites(this%fates(nc)%sites)
 
 
          if( this%fates(nc)%nsites == 0 ) then
@@ -434,6 +489,8 @@ contains
 
       call this%init_history_io(bounds_proc)
 
+      ! Report Fates Parameters (debug flag in lower level routines)
+      call FatesReportParameters(masterproc)
 
     end subroutine init
 
@@ -575,7 +632,7 @@ contains
          end do
 
          
-         if(use_fates_plant_hydro)then
+         if(use_fates_planthydro)then
             this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoi)  = soilstate_inst%hksat_col(c,1:nlevsoi)
             this%fates(nc)%bc_in(s)%watsat_sisl(1:nlevsoi) = soilstate_inst%watsat_col(c,1:nlevsoi)
             this%fates(nc)%bc_in(s)%watres_sisl(1:nlevsoi) = soilstate_inst%watres_col(c,1:nlevsoi)
@@ -718,7 +775,7 @@ contains
        !       ! Diagnose water storage in canopy if hydraulics is on
        !       ! This updates the internal value and the bc_out value.
        !       ! If hydraulics is off, it returns 0 storage
-       !       if ( use_fates_plant_hydro ) then
+       !       if ( use_fates_planthydro ) then
        !          call UpdateH2OVeg(this%fates(nc)%nsites, &
        !                this%fates(nc)%sites,  &
        !                this%fates(nc)%bc_out)
@@ -853,6 +910,7 @@ contains
       type(fates_bounds_type) :: fates_clump
       integer                 :: c   ! HLM column index
       integer                 :: s   ! Fates site index
+      integer                 :: g   ! grid-cell index
       integer                 :: dk_index
       character(len=fates_long_string_length) :: ioname
       integer                 :: nvar
@@ -907,16 +965,17 @@ contains
          end do
          !$OMP END PARALLEL DO
          
-         !$OMP PARALLEL DO PRIVATE (nc,s,c)
+         !$OMP PARALLEL DO PRIVATE (nc,s,c,g,bounds_clump)
          do nc = 1,nclumps
-            
+
+            call get_clump_bounds(nc, bounds_clump)
             allocate(this%fates_restart%restart_map(nc)%site_index(this%fates(nc)%nsites))
             allocate(this%fates_restart%restart_map(nc)%cohort1_index(this%fates(nc)%nsites))            
             do s=1,this%fates(nc)%nsites
                c = this%f2hmap(nc)%fcolumn(s)
                this%fates_restart%restart_map(nc)%site_index(s)   = c
-               this%fates_restart%restart_map(nc)%cohort1_index(s) = &
-                    bounds_proc%begCohort + (c-bounds_proc%begc)*fates_maxElementsPerSite + 1
+               g = col%gridcell(c)
+               this%fates_restart%restart_map(nc)%cohort1_index(s) = (g-1)*fates_maxElementsPerSite + 1
             end do
             
          end do
@@ -1094,6 +1153,7 @@ contains
            call get_clump_bounds(nc, bounds_clump)
 
            do s = 1,this%fates(nc)%nsites
+              call init_site_vars(this%fates(nc)%sites(s))
               call zero_site(this%fates(nc)%sites(s))
            end do
            
@@ -1104,7 +1164,7 @@ contains
            ! Called prior to init_patches(). Site level rhizosphere shells must
            ! be set prior to cohort initialization.
            ! ----------------------------------------------------------------------------
-           if (use_fates_plant_hydro) then
+           if (use_fates_planthydro) then
 
               do s = 1,this%fates(nc)%nsites
                  c = this%f2hmap(nc)%fcolumn(s)
@@ -1136,7 +1196,7 @@ contains
 
               end do
 
-              if (use_fates_plant_hydro) call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
+              if (use_fates_planthydro) call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
 
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
@@ -1470,9 +1530,8 @@ contains
     use perf_mod          , only : t_startf, t_stopf
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
-    use EDTypesMod        , only : numpft_ed, dinc_ed
-    use EDtypesMod        , only : ed_patch_type, ed_cohort_type, ed_site_type, numpft_ed
-    use EDEcophysContype  , only : EDecophyscon
+    use EDTypesMod        , only : dinc_ed
+    use EDtypesMod        , only : ed_patch_type, ed_cohort_type, ed_site_type
    
     !
     ! !ARGUMENTS:
@@ -2111,7 +2170,7 @@ contains
     integer :: num_filter_fates
 
 
-    if( .not. use_fates_plant_hydro ) return
+    if( .not. use_fates_planthydro ) return
        
     nc = bounds_clump%clump_index
     
@@ -2154,7 +2213,7 @@ contains
 !   integer :: s
 !   integer :: c 
 !   
-!   if (.not. (use_fates .and. use_fates_plant_hydro) ) return
+!   if (.not. (use_fates .and. use_fates_planthydro) ) return
 !   
 !   do s = 1, this%fates(nc)%nsites
 !      c = this%f2hmap(nc)%fcolumn(s)
@@ -2193,7 +2252,7 @@ contains
    real(r8) :: dtime
 
 
-   if ( .not.use_fates_plant_hydro ) return
+   if ( .not.use_fates_planthydro ) return
 
 
    dtime = get_step_size()
@@ -2262,10 +2321,10 @@ contains
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
    use FatesIODimensionsMod, only : fates_bounds_type
-   use EDtypesMod, only : nlevsclass_ed, nlevage_ed
+   use FatesInterfaceMod, only : nlevsclass, nlevage
    use EDtypesMod, only : nfsc, ncwd
-   use EDtypesMod, only : nlevleaf, nclmax, numpft_ed
-   use EDTypesMod, only : maxpft
+   use EDtypesMod, only : nlevleaf, nclmax
+   use FatesInterfaceMod, only : numpft_ed => numpft
    use clm_varpar, only : nlevgrnd
 
    implicit none
@@ -2286,19 +2345,19 @@ contains
    fates%ground_end = nlevgrnd
    
    fates%sizepft_class_begin = 1
-   fates%sizepft_class_end = nlevsclass_ed * maxpft
+   fates%sizepft_class_end = nlevsclass * numpft_ed
    
    fates%size_class_begin = 1
-   fates%size_class_end = nlevsclass_ed
+   fates%size_class_end = nlevsclass
 
    fates%pft_class_begin = 1
-   fates%pft_class_end = maxpft
+   fates%pft_class_end = numpft_ed
 
    fates%age_class_begin = 1
-   fates%age_class_end = nlevage_ed
+   fates%age_class_end = nlevage
 
    fates%sizeage_class_begin = 1
-   fates%sizeage_class_end   = nlevsclass_ed * nlevage_ed
+   fates%sizeage_class_end   = nlevsclass * nlevage
    
    fates%fuel_begin = 1
    fates%fuel_end = nfsc

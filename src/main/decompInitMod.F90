@@ -730,12 +730,11 @@ contains
     if ( use_fates ) then
        allocate(gindex(begCohort:endCohort))
        ioff(:) = 0
-       ci = begc
+       gi = begg
        do coi = begCohort,endCohort
-          if ( mod(coi, fates_maxElementsPerSite ) == 0 ) ci = ci + 1
-          gi = col%gridcell(ci)          ! convert column into gridcell
           gindex(coi) = coStart(gi) + ioff(gi)
           ioff(gi) = ioff(gi) + 1
+          if ( mod(coi, fates_maxElementsPerSite ) == 0 ) gi = gi + 1
        enddo
        locsize = endCohort-begCohort+1
        globsize = numCohort
