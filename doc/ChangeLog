@@ -16,6 +16,9 @@ of the necessary externals by running:
 
 ./manage_externals/checkout_externals
 
+See the file README_EXTERNALS.rst at the top level of the repository for
+more details on using this tool.
+
 Other than that, this PR mostly involves changes to allow you to run
 from the new directory structure of a standalone checkout: Now all of
 the CLM/CTSM directories appear at the top level of the checkout, rather
@@ -43,6 +46,9 @@ Caveats for users (e.g., need to interpolate initial conditions):
 
 - To get all externals after cloning the git repository, run
   ./manage_externals/checkout_externals
+
+  See the file README_EXTERNALS.rst at the top level of the repository
+  for more details on using this tool.
 
 - More details on working with the git repository will be coming soon
 
