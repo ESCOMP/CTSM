@@ -28,10 +28,6 @@ SYNOPSIS
      $ProgName [options] <tag-name> <one-line-summary>
 
 OPTIONS
-     -compbrnch version     Enter clm branch  version to compare to (under branch_tags in repo).
-      [or -cb]
-     -comptrunk version     Enter clm trunk version to compare to (under trunk_tags in repo).
-      [or -ct]
      -help   [or -h]        Help on this script.
      -update [or -u]        Just update the date/time for the latest tag
                             In this case no other arguments should be given.
@@ -46,24 +42,16 @@ EXAMPLES:
      To document a new tag
 
      $ProgName clm4_5_2_r097 "Description of this tag"
-
-     To document a new tag and compare expected fails to previous tag.
-
-     $ProgName clm4_5_2_r097 "Description of this tag" -ct clm4_5_2_r096
 EOF
 }
 
 my %opts = { 
                help      => 0,
                update    => 0,
-               comptrunk => undef,
-               compbrnch => undef,
            };
 GetOptions( 
     "h|help"         => \$opts{'help'},
     "u|update"       => \$opts{'update'},
-    "ct|comptrunk=s" => \$opts{'comptrunk'},
-    "cb|compbrnch=s" => \$opts{'compbrnch'},
    );
 if ( $opts{'help'} ) {
   usage();
@@ -138,17 +126,6 @@ if ( ! $opts{'update'} ) {
      } elsif ( $_ =~ /One-line Summary:/ ) {
         chomp( $_ );
         print $fh "$_ $sum\n";
-     } elsif ( $_ =~ /CLM tag used for the baseline comparison tests if applicable:/ ) {
-        chomp( $_ );
-        if (      defined($opts{'comptrunk'}) ) {
-           print $fh "$_ $opts{'comptrunk'}\n";
-           &AddExpectedFailDiff( $fh, "trunk_tags/$opts{'comptrunk'}" );
-        } elsif ( defined($opts{'compbrnch'}) ) {
-           print $fh "$_ $opts{'compbrnch'}\n";
-           &AddExpectedFailDiff( $fh, "branch_tags/$opts{'compbrnch'}" );
-        } else {
-           print $fh "$_\n";
-        }
      } else {
         print $fh $_;
      }
@@ -227,32 +204,4 @@ system( "/bin/mv    $changesum_tmp $changesum" );
 if ( ! $opts{'update'} ) {
   system( "$EDITOR $changelog" );
   system( "$EDITOR $changesum" );
-}
-system( "/bin/cp -fp $changelog components/clm/doc/." );
-system( "/bin/cp -fp $changesum components/clm/doc/." );
-system( "/bin/chmod 0444 components/clm/doc/$changelog" );
-system( "/bin/chmod 0444 components/clm/doc/$changesum" );
-
-sub AddExpectedFailDiff {
-#
-# Add information about the expected fail difference
-#
-  my $fh      = shift;
-  my $version = shift;
-
-  my $SVN_MOD_URL  = "https://svn-ccsm-models.cgd.ucar.edu/clm2/";
-  my $expectedFail = `find . -name 'expected*Fail*.xml' -print`;
-  if ( $expectedFail eq "" ) {
-     die "ERROR:: expectedFails file NOT found here\n";
-  }
-
-  `svn ls $SVN_MOD_URL/$version`               || die "ERROR:: Bad version to compare to: $version\n";
-  `svn ls $SVN_MOD_URL/$version/$expectedFail` || die "ERROR:: expectedFails file NOT found in: $version\n";
-  print $fh "\nDifference in expected fails from testing:\n\n";
-  my $diff = `svn diff --old $SVN_MOD_URL/$version/$expectedFail \ \n --new $expectedFail`;
-  if ( $diff eq "" ) {
-     print $fh "    No change in expected failures in testing\n";
-  } else {
-     print $fh $diff;
-  }
 }
