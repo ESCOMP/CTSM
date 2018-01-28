@@ -1,0 +1,45 @@
+Setting CLM configuration script directory to /glade/p/work/erik/ctsm/bld
+Using CLM configuration cache file config_cache.xml
+Using namelist definition file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_definition_drv.xml
+Using namelist definition file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_definition_drv_flds.xml
+Using namelist definition file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_definition_clm4_5.xml
+Using namelist defaults file /glade/p/work/erik/ctsm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+Using namelist defaults file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_defaults_overall.xml
+Using namelist defaults file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_defaults_clm4_5.xml
+Using namelist defaults file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_defaults_drv.xml
+Using namelist defaults file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_defaults_fire_emis.xml
+Using namelist defaults file /glade/p/work/erik/ctsm/bld/namelist_files/namelist_defaults_drydep.xml
+CESM inputdata root directory: /glade/p/cesm/cseg/inputdata
+Open env.xml file: ./env_run.xml
+CLM atm resolution is 1.9x2.5
+CLM land mask is gx1v6
+Using bgc for bgc.
+Using 94x192 for light_res.
+CLM accelerated spinup mode is off
+CLM CN bgc_spinup mode is off
+Using 79 for maxpft.
+Glacier number of elevation classes is 10
+CLM future scenario representative concentration is 6
+CLM sim_year is 1850
+CLM sim_year_range is 1850-2100
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'clm_demand' with val 'flanduse_timeseries'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'clm_start_type' with val 'arb_ic'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'irrigate' with val '.true.'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'model_year_align_ndep' with val '1850'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'model_year_align_popdens' with val '1850'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'model_year_align_urbantv' with val '1850'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'rcp' with val '6'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'sim_year' with val '1850'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'sim_year_range' with val '1850-2100'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'stream_year_first_ndep' with val '1850'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'stream_year_first_popdens' with val '1850'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'stream_year_first_urbantv' with val '1850'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'stream_year_last_ndep' with val '2100'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'stream_year_last_popdens' with val '2010'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'stream_year_last_urbantv' with val '2100'
+CLM adding use_case 1850-2100_rcp6_transient defaults for var 'use_case_desc' with val 'Simulate transient land-use, aerosol and Nitrogen deposition changes with historical data from 1850 to 2005 and then with the RCP6 scenario from AIM
+'
+Using clm5_0_cam5.5 for lnd_tuning_mode
+Writing clm namelist to /glade/p/work/erik/ctsm/bld/unit_testers/lnd_in
+Writing drydep_inparm megan_emis_nl fire_emis_nl carma_inparm namelists to /glade/p/work/erik/ctsm/bld/unit_testers/drv_flds_in
+Successfully made CLM namelist file

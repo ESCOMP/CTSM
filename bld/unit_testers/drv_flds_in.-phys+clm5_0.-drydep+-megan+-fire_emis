@@ -1,0 +1,18 @@
+&drydep_inparm
+ drydep_list = 'O3', 'NO2', 'HNO3', 'NO', 'HO2NO2', 'CH3OOH', 'CH2O', 'CO', 'H2O2', 'CH3COOOH', 'PAN', 'MPAN',
+         'C2H5OOH', 'ONIT', 'POOH', 'C3H7OOH', 'ROOH', 'CH3COCHO', 'CH3COCH3', 'Pb', 'ONITR', 'MACROOH', 'XOOH', 'ISOPOOH',
+         'CH3OH', 'C2H5OH', 'CH3CHO', 'GLYALD', 'HYAC', 'HYDRALD', 'ALKOOH', 'MEKOOH', 'TOLOOH', 'TERPOOH', 'CH3COOH', 'CB1',
+         'CB2', 'OC1', 'OC2', 'SOA', 'SO2', 'SO4', 'NH3', 'NH4NO3'
+ drydep_method = 'xactive_lnd'
+/
+&megan_emis_nl
+ megan_factors_file = '/glade/p/cesm/cseg/inputdata/atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc'
+ megan_specifier = 'ISOP = isoprene', 'C10H16 = pinene_a + carene_3 + thujene_a', 'CH3OH = methanol', 'C2H5OH = ethanol',
+         'CH2O = formaldehyde', 'CH3CHO = acetaldehyde', 'CH3COOH = acetic_acid', 'CH3COCH3 = acetone'
+/
+&fire_emis_nl
+ fire_emis_factors_file = '/glade/p/cesm/cseg/inputdata/lnd/clm2/firedata/fire_emis_factors_c140116.nc'
+ fire_emis_specifier = 'bc_a1 = BC','pom_a1 = 1.4*OC','SO2 = SO2'
+/
+&carma_inparm
+/
