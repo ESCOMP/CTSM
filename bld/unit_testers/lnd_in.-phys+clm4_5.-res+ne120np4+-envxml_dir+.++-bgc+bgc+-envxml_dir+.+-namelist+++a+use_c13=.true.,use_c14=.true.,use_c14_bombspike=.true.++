@@ -1,0 +1,226 @@
+&clm_inparm
+ albice = 0.60,0.40
+ atm_c14_filename = '/glade/p/cesm/cseg/inputdata/lnd/clm2/isotopes/atm_delta_C14_CMIP6_3x1_global_1850-2015_yearly_v2.0_c171012.nc'
+ co2_ppmv = 379.0
+ co2_type = 'constant'
+ create_crop_landunit = .true.
+ dtime = 1800
+ fatmlndfrc = '/glade/p/cesm/cseg/inputdata/atm/datm7/domain.lnd.T31_gx3v7.090928.nc'
+ finidat = '/glade/p/cesm/cseg/inputdata/lnd/clm2/initdata_map/clmi.IGM2000GSWP3CLM50BGCCROPIRR.2011-01-01.1.9x2.5_gx1v6_gl5_simyr2000_c170419.nc'
+ fsnowaging = '/glade/p/cesm/cseg/inputdata/lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc'
+ fsnowoptics = '/glade/p/cesm/cseg/inputdata/lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc'
+ fsurdat = '/glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts_Irrig_CMIP6_simyr2000_c170824.nc'
+ glc_do_dynglacier = .false.
+ glc_snow_persistence_max_days = 7300
+ h2osno_max = 1000.0
+ int_snow_max = 1.e30
+ irrigate = .true.
+ maxpatch_glcmec = 10
+ maxpatch_pft = 17
+ n_melt_glcmec = 10.0
+ nlevsno = 5
+ nsegspc = 35
+ paramfile = '/glade/p/cesm/cseg/inputdata/lnd/clm2/paramdata/clm_params.c170913.nc'
+ soil_layerstruct = '10SL_3.5m'
+ spinup_state = 0
+ use_bedrock = .false.
+ use_c13 = .true.
+ use_c14 = .true.
+ use_c14_bombspike = .true.
+ use_century_decomp = .true.
+ use_cn = .true.
+ use_crop = .false.
+ use_dynroot = .false.
+ use_fates = .false.
+ use_fertilizer = .false.
+ use_flexiblecn = .false.
+ use_fun = .false.
+ use_grainproduct = .false.
+ use_hydrstress = .false.
+ use_init_interp = .true.
+ use_lch4 = .true.
+ use_luna = .false.
+ use_nguardrail = .false.
+ use_nitrif_denitrif = .true.
+ use_vertsoilc = .true.
+/
+&ndepdyn_nml
+ ndepmapalgo = 'bilinear'
+ stream_fldfilename_ndep = '/glade/p/cesm/cseg/inputdata/lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc'
+ stream_year_first_ndep = 2000
+ stream_year_last_ndep = 2000
+/
+&popd_streams
+ popdensmapalgo = 'bilinear'
+ stream_fldfilename_popdens = '/glade/p/cesm/cseg/inputdata/lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c170829.nc'
+ stream_year_first_popdens = 2000
+ stream_year_last_popdens = 2000
+/
+&urbantv_streams
+ stream_fldfilename_urbantv = '/glade/p/cesm/cseg/inputdata/lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc'
+ stream_year_first_urbantv = 2000
+ stream_year_last_urbantv = 2000
+ urbantvmapalgo = 'nn'
+/
+&light_streams
+ lightngmapalgo = 'bilinear'
+ stream_fldfilename_lightng = '/glade/p/cesm/cseg/inputdata/atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
+ stream_year_first_lightng = 0001
+ stream_year_last_lightng = 0001
+/
+&lai_streams
+/
+&atm2lnd_inparm
+ glcmec_downscale_longwave = .true.
+ lapse_rate = 0.006
+ lapse_rate_longwave = 0.032
+ longwave_downscaling_limit = 0.5
+ repartition_rain_snow = .false.
+/
+&lnd2atm_inparm
+ melt_non_icesheet_ice_runoff = .false.
+/
+&clm_canopyhydrology_inparm
+ interception_fraction = 0.25
+ maximum_leaf_wetted_fraction = 1.0
+ snowveg_flag = 'OFF'
+ use_clm5_fpi = .false.
+/
+&cnphenology
+/
+&clm_soilhydrology_inparm
+/
+&dynamic_subgrid
+/
+&cnvegcarbonstate
+ initial_vegc = 1.d00
+/
+&finidat_consistency_checks
+/
+&dynpft_consistency_checks
+/
+&clm_initinterp_inparm
+/
+&century_soilbgcdecompcascade
+ initial_cstocks = 20.0d00, 20.0d00, 20.0d00
+ initial_cstocks_depth = 0.3
+/
+&soilhydrology_inparm
+/
+&luna
+/
+&friction_velocity
+ zetamaxstable = 2.0d00
+/
+&mineral_nitrogen_dynamics
+/
+&soilwater_movement_inparm
+ dtmin = 60.
+ expensive = 42
+ flux_calculation = 1
+ inexpensive = 1
+ lower_boundary_condition = 4
+ soilwater_movement_method = 0
+ upper_boundary_condition = 1
+ verysmall = 1.e-8
+ xtolerlower = 1.e-2
+ xtolerupper = 1.e-1
+/
+&rooting_profile_inparm
+ rooting_profile_method_carbon = 1
+ rooting_profile_method_water = 0
+/
+&soil_resis_inparm
+ soil_resis_method = 0
+/
+&bgc_shared
+ constrain_stress_deciduous_onset = .false.
+ decomp_depth_efolding = 0.5
+/
+&canopyfluxes_inparm
+ use_undercanopy_stability = .true.
+/
+&aerosol
+ fresh_snw_rds_max = 54.526d00
+/
+&clmu_inparm
+ building_temp_method = 0
+ urban_hac = 'ON'
+ urban_traffic = .false.
+/
+&clm_soilstate_inparm
+ organic_frac_squared = .true.
+/
+&clm_nitrogen
+/
+&clm_snowhydrology_inparm
+ lotmp_snowdensity_method = 'TruncatedAnderson1976'
+ overburden_compress_tfactor = 0.08d00
+ reset_snow = .false.
+ reset_snow_glc = .false.
+ reset_snow_glc_ela = 1.e9
+ snow_overburden_compaction_method = 'Anderson1976'
+ upplim_destruct_metamorph = 100.d00
+ wind_dependent_snow_density = .false.
+/
+&cnprecision_inparm
+/
+&clm_glacier_behavior
+ glacier_region_behavior = 'single_at_atm_topo','virtual','virtual','multiple'
+ glacier_region_ice_runoff_behavior = 'melted','melted','remains_ice','remains_ice'
+ glacier_region_melt_behavior = 'remains_in_place','replaced_by_ice','replaced_by_ice','replaced_by_ice'
+/
+&crop
+/
+&irrigation_inparm
+ irrig_depth = 0.6
+ irrig_length = 14400
+ irrig_min_lai = 0.0
+ irrig_start_time = 21600
+ irrig_target_smp = -3400.
+ irrig_threshold_fraction = 0.5
+ limit_irrigation_if_rof_enabled = .false.
+/
+&ch4par_in
+ finundation_method = 'ZWT_inversion'
+ use_aereoxid_prog = .true.
+/
+&clm_humanindex_inparm
+ calc_human_stress_indices = .false.
+/
+&cnmresp_inparm
+/
+&photosyns_inparm
+ leafresp_method = 1
+ light_inhibit = .false.
+ modifyphoto_and_lmr_forcrop = .false.
+ rootstem_acc = .false.
+ stomatalcond_method = 'Ball-Berry1987'
+/
+&cnfire_inparm
+ fire_method = 'li2014qianfrc'
+/
+&cn_general
+/
+&nitrif_inparm
+/
+&lifire_inparm
+ boreal_peatfire_c = 4.2d-5
+ bt_max = 0.7d00
+ bt_min = 0.3d00
+ cli_scale = 0.035d00
+ cmb_cmplt_fact = 0.5d00, 0.25d00
+ cropfire_a1 = 0.3d00
+ lfuel = 75.d00
+ non_boreal_peatfire_c = 0.001d00
+ occur_hi_gdp_tree = 0.39d00
+ pot_hmn_ign_counts_alpha = 0.0035d00
+ rh_hgh = 80.0d00
+ rh_low = 30.0d00
+ ufuel = 1050.d00
+/
+&ch4finundated
+/
+&clm_canopy_inparm
+ leaf_mr_vcm = 0.015d00
+/

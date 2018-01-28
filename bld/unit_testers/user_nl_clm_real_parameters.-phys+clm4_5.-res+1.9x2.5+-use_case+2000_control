@@ -1,0 +1,168 @@
+! Visible and Near-infrared albedo's for glacier ice
+albice = 0.60,0.40
+! Scalar multiplier for base flow rate(ONLY used if lower_boundary_condition is not aquifer or table)
+baseflow_scalar = ?.??
+! Only used when baset_mapping == varytropicsbylatIntercept at zero latitude to add to baset from the PFT parameter file
+baset_latvary_intercept = ?.??
+! Only used when baset_mapping == varytropicsbylatSlope with latitude in degrees to vary tropical baset by
+baset_latvary_slope = ?.??
+! boreal peat fires (/hr)
+boreal_peatfire_c = ?.??
+! CN Maintenence Respiration base rate for roots(if NOT set, use the value for br_mr on the params file)
+br_root = ?.??
+! Saturation BTRAN for ignition (0-1)
+bt_max = ?.??
+! Critical BTRAN for ignition (0-1)
+bt_min = ?.??
+! Critical threshold for truncation of Carbon (truncate Carbon states to zero below this value)
+ccrit = ?.??
+! Global constant for deforestation fires (/day)
+cli_scale = ?.??
+! Combustion completeness factor (for litter and CWD[Course Woody Debris]) (unitless)
+cmb_cmplt_fact = ?.??
+! Critical threshold of negative Carbon to die (abort when Carbon states are below this value)
+cnegcrit = ?.??
+! Atmospheric CO2 molar ratio (by volume) only used when co2_type==constant (umol/mol)(Set by CCSM_CO2_PPMV)
+co2_ppmv = 379.0
+! Scalar for cropfire (/hr)
+cropfire_a1 = ?.??
+! E-folding depth over which decomposition is slowed with depth in all soils.
+decomp_depth_efolding = 0.5
+! Minimum lake depth to increase non-molecular thermal diffusivities by the factor deepmixing_mixfact.
+deepmixing_depthcrit = ?.??
+! Factor to increase non-molecular thermal diffusivities for lakes deeper than deepmixing_depthcritto account for unresolved 3D processes.Set to 1 to 
+deepmixing_mixfact = ?.??
+! Multiplier for nitrate concentration for max denitrification rates(ONLY used if use_nitrif_denitrif is enabled)
+denitrif_nitrateconc_coefficient = ?.??
+! Exponent power for nitrate concentrationfor max denitrification rates(ONLY used if use_nitrif_denitrif is enabled)
+denitrif_nitrateconc_exponent = ?.??
+! Multiplier for heterotrophic respiration for max denitrification rates(ONLY used if use_nitrif_denitrif is enabled)
+denitrif_respiration_coefficient = ?.??
+! Exponent power for heterotrophic respiration for max denitrification rates(ONLY used if use_nitrif_denitrif is enabled)
+denitrif_respiration_exponent = ?.??
+! Time step (seconds)
+dtime = 1800
+! minimum time step length (seconds) for adaptive time stepping in richards equation
+dtmin = 60.
+! Intercept of free living Nitrogen fixation with zero annual ET
+freelivfix_intercept = ?.??
+! Slope of free living Nitrogen fixation with annual ET
+freelivfix_slope_wet = ?.??
+! maximum warm (at freezing) fresh snow effective radius [microns]
+fresh_snw_rds_max = 54.526d00
+! separate q10 for frozen soil respiration rates.  default to same as above zero rates
+froz_q10 = ?.??
+! Maximum snow depth in mm H2O equivalent. Additional mass gains will be capped when this depth is exceeded.Changes in this value should possibly be accompanied by changes in:- nlevsno: larger values of h2osno_max should be accompanied by increases in nlevsno- glc_snow_persistence_max_days: large values of h2osno_max should generally have  glc_snow_persistence_max_days = 0; small values of h2osno_max should generally have  glc_snow_persistence_max_days > 0.
+h2osno_max = 1000.0
+! Initial stocks of Carbon to use in soil organic matter pools for CENTURY decomposition
+initial_cstocks = 20.0d00, 20.0d00, 20.0d00
+! Soil depth to place initial stocks of Carbon in soil organic matter pools for CENTURY decomposition
+initial_cstocks_depth = 0.3
+! Initial seed Carbon to use at planting(only used when CN is on as well as crop)
+initial_seed_at_planting = ?.??
+! How much Carbon to initialize vegetation pools (leafc/frootc and storage) to when -- Michaelis Menten nitrogen uptake kinetics is on
+initial_vegc = ?.??
+! Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt(mm H2O)
+int_snow_max = 1.e30
+! Fraction of intercepted precipitation
+interception_fraction = 0.25
+! Soil depth to which we measure for irrigation (m)
+irrig_depth = 0.6
+! Minimum leaf area index for irrigation to occur
+irrig_min_lai = 0.0
+! Threshold for river water volume below which irrigation is shut off (as a fraction of available river water), if limit_irrigation_if_rof_enabled is .true.A threshold of 0 means allow all river water to be used;a threshold of 0.1 means allow 90% of the river volume to be used; etc.
+irrig_river_volume_threshold = ?.??
+! Target soil matric potential for irrigation (mm).When we irrigate, we aim to bring the total soil moisture in the top (irrig_depth) m of soil up to this level.
+irrig_target_smp = -3400.
+! Determines soil moisture threshold at which we irrigate.If h2osoi_liq_wilting_point is the soil moisture level at wilting point andh2osoi_liq_target is the soil moisture level at the target irrigation level(given by irrig_target_smp), then the threshold at which we irrigate is    h2osoi_liq_wilting_point +         irrig_threshold_fraction*(h2osoi_liq_target - h2osoi_liq_wilting_point)A value of 1 means that we irrigate whenever soil moisture falls below the target.A value of 0 means that we only irrigate when soil moisture falls below the wilting point.
+irrig_threshold_fraction = 0.5
+! baseline proportion of nitrogen allocated for electron transport (J)
+jmaxb1 = ?.??
+! Maximum nitrification rate constant (1/s)(ONLY used if use_nitrif_denitrif is enabled)
+k_nitr_max = ?.??
+! Visible and Near-infrared albedo values for melting lakes. Albedo will relax to these values as temperaturereaches melting when ice is present with no snow layers. Represents puddling, ice disintegration, and white ice.Set to alblak values (0.6, 0.4) to keep albedo constant for ice-covered lakes without snow layers.
+lake_melt_icealb = ?.??
+! Surface temperature lapse rate (K m-1)A positive value means a decrease in temperature with increasing height
+lapse_rate = 0.006
+! Longwave radiation lapse rate (W m-2 m-1)A positive value means a decrease in LW radiation with increasing heightOnly relevant if glcmec_downscale_longwave is .true.
+lapse_rate_longwave = 0.032
+! Scalar of leaf respiration to vcmax
+leaf_mr_vcm = 0.015d00
+! Lower threshold for fuel mass needed for ignition
+lfuel = ?.??
+! Relative limit for how much longwave downscaling can be done (unitless)The pre-normalized, downscaled longwave is restricted to be in the range[lwrad*(1-longwave_downscaling_limit), lwrad*(1+longwave_downscaling_limit)]This parameter must be in the range [0,1]Only relevant if glcmec_downscale_longwave is .true.
+longwave_downscaling_limit = 0.5
+! Maximum depth to mix soils to by croturbation, in permafrost soils.
+max_depth_cryoturb = ?.??
+! Maximum fraction of leaf that may be wet prior to drip occuring
+maximum_leaf_wetted_fraction = 1.0
+! Minimum wind speed tht results in compaction (m/s)
+min_wind_snowcompact = ?.??
+! Eastern edge of the regional grid
+mksrf_edgee = ?.??
+! Northern edge of the regional grid
+mksrf_edgen = ?.??
+! Southern edge of the regional grid
+mksrf_edges = ?.??
+! Western edge of the regional grid
+mksrf_edgew = ?.??
+! SCA shape parameter for glc_mec (glacier multiple elevation class) columnsFor most columns, n_melt is based on the standard deviation of 1km topography in the grid cell;but glc_mec columns already account for subgrid topographic variability through their use ofmultiple elevation classes; thus, to avoid double-accounting for topographic variabilityin these columns, we use a fixed value of n_melt.
+n_melt_glcmec = 10.0
+! Critical threshold for truncation of Nitrogen (truncate Nitrogen states to zero below this value)
+ncrit = ?.??
+! Number of days over which to use exponential relaxation of NPP in N fixation calculation
+nfix_timeconst = ?.??
+! Critical threshold of negative Nitrogen to die (abort when Nitrogen states are below this value)
+nnegcrit = ?.??
+! non-boreal peat fires (/hr)
+non_boreal_peatfire_c = ?.??
+! Fire occurance for high GDP areas that are tree dominated (fraction)
+occur_hi_gdp_tree = ?.??
+! Snow compaction overburden exponential factor (1/K)Not used for snow_overburden_compaction_method=Vionnet2012
+overburden_compress_tfactor = 0.08d00
+! Perturbation limit when doing error growth test
+pertlim = ?.??
+! Plant Function Type fraction to override global file with for mksurfdata
+pft_frc = ?.??
+! Potential human ignition counts (/person/month)
+pot_hmn_ign_counts_alpha = ?.??
+! Temperature above which all precipitation falls as rain, for glacier columns (deg C)Only relevant if repartition_rain_snow is .true.
+precip_repartition_glc_all_rain_t = ?.??
+! Temperature below which all precipitation falls as snow, for glacier columns (deg C)Only relevant if repartition_rain_snow is .true.
+precip_repartition_glc_all_snow_t = ?.??
+! Temperature above which all precipitation falls as rain, for non-glacier columns (deg C)Only relevant if repartition_rain_snow is .true.
+precip_repartition_nonglc_all_rain_t = ?.??
+! Temperature below which all precipitation falls as snow, for non-glacier columns (deg C)Only relevant if repartition_rain_snow is .true.
+precip_repartition_nonglc_all_snow_t = ?.??
+! Representative concentration pathway for future scenarios [radiative forcing at peak or 2100 in W/m^2]-999.9 means do NOT use a future scenario, just use historical data.
+rcp = -999.9
+! Only relevant if reset_snow_glc is .true.When resetting snow pack over glacier columns, one can choose to do this over all glaciercolumns, or only those below a certain elevation. A typical use case is to reset only those columns that have a seasonal snow pack in the real world, i.e. SMB less than 0, also known as the equilibrium line altitude (ELA). This parameter sets a single global ELA value. Bysetting this parameter to a large value (i.e. 10000 m), all glacier columns will be reset.WARNING: This variable is intended for short test runs, and generallyshould not be used for scientific production runs. By resetting snowbelow a given elevation, you risk forcing the system to evolvedifferently in areas below and above reset_snow_glc_ela.
+reset_snow_glc_ela = 1.e9
+! Saturation RH for ignition (0-100)
+rh_hgh = ?.??
+! Critical RH for ignition (0-100)
+rh_low = ?.??
+! Soil percent clay to override global file with for mksurfdata
+soil_clay = ?.??
+! Soil maximum fraction to override global file with for mksurfdata
+soil_fmax = ?.??
+! Soil percent sand to override global file with for mksurfdata
+soil_sand = ?.??
+! Base advective flux (downwards) for SOM.
+som_adv_flux = ?.??
+! Profile over which to distribute C and N coming from surface pools (leaves, stem, grain).
+surfprof_exp = ?.??
+! Upper threshold for fuel mass needed for ignition
+ufuel = ?.??
+! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
+upplim_destruct_metamorph = 100.d00
+! a very small number: used to check for sub step completion for adaptive time stepping in richards equation
+verysmall = 1.e-8
+! Michaelis-Mentin maximum methane oxidation rate (mol/m^3-water/s), in the unsaturated zone.
+vmax_oxid_unsat = ?.??
+! tolerance to double length of substep for adaptive time stepping in richards equation
+xtolerlower = 1.e-2
+! tolerance to halve length of substep for adaptive time stepping in richards equation
+xtolerupper = 1.e-1
+! The maximum value to use for zeta under stable conditions
+zetamaxstable = 2.0d00
