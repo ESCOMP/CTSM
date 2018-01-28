@@ -2319,12 +2319,12 @@ sub setup_logic_initial_conditions {
     my $st_year = int( $ic_date / 10000);
     my $nofail = 1;
     my %settings;
-    $settings{'hgrid'}   = $nl_flags->{'res'};
-    $settings{'phys'}    = $physv->as_string();
-    $settings{'nofail'}  = $nofail;
-    my $fsurdat          = $nl->get_value('fsurdat');
-    $fsurdat             =~ s!(.*)/!!;
-    $settings{'fsurdat'} = $fsurdat;
+    $settings{'hgrid'}           = $nl_flags->{'res'};
+    $settings{'phys'}            = $physv->as_string();
+    $settings{'nofail'}          = $nofail;
+    my $fsurdat                  = $nl->get_value('fsurdat');
+    $fsurdat                     =~ s!(.*)/!!;
+    $settings{'fsurdat'}         = $fsurdat;
     #
     # If not transient use sim_year, otherwise use date
     #
@@ -2336,12 +2336,13 @@ sub setup_logic_initial_conditions {
     }
     if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
        $settings{'bgc'}    = $nl_flags->{'bgc_mode'};
-       foreach my $item ( "mask", "maxpft", "irrig", "glc_nec", "crop" ) {
+       foreach my $item ( "mask", "maxpft", "irrig", "glc_nec", "crop", "lnd_tuning_mode" ) {
           $settings{$item}    = $nl_flags->{$item};
        }
     } else {
        foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                          "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates"
+                          "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
+                          "lnd_tuning_mode"
                         ) {
           $settings{$item}    = $nl_flags->{$item};
        }
@@ -2395,7 +2396,7 @@ sub setup_logic_initial_conditions {
              add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
                         'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
                         'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                        'use_cn'=>$nl_flags->{'use_cn'}, 'nofail'=>1 );
+                        'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},'nofail'=>1 );
              my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
              foreach my $pair ( split( /\s/, $attributes_string) ) {
                 if ( $pair =~ /^([a-z_]+)=([a-z._0-9]+)$/ ) {
