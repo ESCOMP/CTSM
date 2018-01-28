@@ -27,6 +27,24 @@ CMakeFiles/
 # don't ignore cism build utilities directory
 !components/cism/**/build
 
+# configure / build files
+CESM_cppdefs
+Filepath
+config_cache.xml
+clm.input_data_list
+clm.input_data_list.previous
+
+# tools testing output
+td.*.status
+td.*.log
+td.*.status.xFail
+test_driver_*.sh
+
+# mksurfdata output
+surfdata_*.log
+surfdata_*.namelist
+
+
 # build output
 *.o
 *.mod

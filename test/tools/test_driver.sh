@@ -254,15 +254,15 @@ fi
 ##establish script dir and clm_root
 if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
-    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../../../..; pwd \`
+    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
 else
-    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/components/clm/test/tools/test_driver.sh ]; then
-	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/components/clm/test/tools; pwd \`
+    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/tools/test_driver.sh ]; then
+	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/tools; pwd \`
     else
 	echo "ERROR: unable to determine script directory "
 	echo "       if initiating batch job from directory other than the one containing test_driver.sh, "
 	echo "       you must set the environment variable CLM_ROOT to the full path of directory containing "
-        echo "       <components> and <cime/scripts>. "
+        echo "       <cime/scripts>. "
 	exit 3
     fi
 fi
