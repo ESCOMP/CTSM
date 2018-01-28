@@ -52,7 +52,7 @@ OPTIONS
      -cache <file>          Name of output cache file (default: config_cache.xml).
      -cachedir <file>       Name of directory where output cache file is written 
                             (default: CLM build directory).
-     -cimeroot <dir>        Path to cime directory
+     -cimeroot <dir>        REQUIRED: Path to cime directory
      -clm_root <dir>        Root directory of clm source code 
                             (default: directory above location of this script)
      -cppdefs <string>      A string of user specified CPP defines.  Appended to
@@ -179,21 +179,7 @@ my %cfg = ();           # build configuration
 # Make sure we can find required perl modules and configuration files.
 # Look for them in the directory that contains the configure script.
 
-my $cimeroot = $opts{'cimeroot'};
-if ( ! defined($cimeroot) ) {
-   $cimeroot = "$cfgdir/../cime";
-   if (      -d $cimeroot ) {
-   } elsif ( -d "$cfgdir/../../../cime" ) {
-     $cimeroot = "$cfgdir/../../../cime";
-   } else {
-      die <<"EOF";
-** Cannot find the root of the cime directory  enter it using the -cimeroot option
-   Did you run the checkout_externals scripts?
-EOF
-   }
-
-}
-
+my $cimeroot   = $opts{'cimeroot'};
 my $casecfgdir = "$cimeroot/scripts/Tools";
 my $perl5lib   = "$cimeroot/utils/perl5lib/";
 
