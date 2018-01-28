@@ -350,6 +350,19 @@ sub check_for_perl_utils {
 
   # Determine CIME root directory and perl5lib root directory
   my $cimeroot = $opts_ref->{'cimeroot'};
+  if ( ! defined($cimeroot) ) {
+    $cimeroot = "$cfgdir/../cime";
+    if (      -d $cimeroot ) {
+    } elsif ( -d "$cfgdir/../../../cime" ) {
+      $cimeroot = "$cfgdir/../../../cime";
+    } else {
+      die <<"EOF";
+** Cannot find the root of the cime directory  enter it using the -cimeroot option
+   Did you run the checkout_externals scripts?
+EOF
+    }
+  }
+
   my $perl5lib_dir = "$cimeroot/utils/perl5lib";
 
   #-----------------------------------------------------------------------------
