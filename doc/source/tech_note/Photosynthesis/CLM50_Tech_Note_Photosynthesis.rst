@@ -40,9 +40,6 @@ area indices (section :numref:`Solar Fluxes`). Canopy conductance is
 :math:`\frac{1}{r_{b} +r_{s}^{sun} } L^{sun} +\frac{1}{r_{b} +r_{s}^{sha} } L^{sha}` ,
 where :math:`r_{b}`  is the leaf boundary layer resistance (section
 :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
-The implementation is described by Bonan et al. (:ref:`2011 <Bonanetal2011>`), though different 
-methods of calculating stomatal conductance, :math:`J_{max}`, and the nitrogen variables
-used to calculate :math:`V_{cmax25}` are used in CLM5.
 
 .. _Stomatal resistance:
 
@@ -60,7 +57,7 @@ Leaf stomatal resistance is:
 .. math::
    :label: 9.1 
 
-   \frac{1}{r_{s} } =g_{s} = g_{o} + (1 + \frac{g_{1} }{\sqrt{D}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } 
+   \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } 
 
 where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
 :math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance
@@ -68,20 +65,9 @@ where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
 photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2`
 s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial
 pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric
-pressure (Pa), and :math:`D` is the vapor pressure deficit at the leaf surface (Pa).
-:math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`)
-and can be calculated as
+pressure (Pa), and :math:`D` is the vapor pressure deficit at the leaf surface (kPa).
+:math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`).
 
-.. math::
-   :label: 9.2
-
-   g_{1} = {\sqrt{\frac{3\Gamma\lambda}{1.6}}}
- 
-where :math:`\Gamma` (mol mol\ :sup:`-1`) is the CO\ :sub:`2` compensation point
-for photosynthesis without dark respiration,
-1.6 is the ratio of diffusivity of CO\ :sub:`2` to H\ :sub:`2` O  and :math:`\lambda`
-(mol H\ :sub:`2` O mol\ :sup:`-1`) is a parameter
-describing the marginal water cost of carbon gain.
 The value for :math:`g_{o}=100` :math:`\mu` mol m :sup:`-2` s\ :sup:`-1` for
 C\ :sub:`3` and C\ :sub:`4` plants.
 Photosynthesis is calculated for sunlit (:math:`A^{sun}`) and shaded
@@ -93,7 +79,7 @@ the :ref:`rst_Plant Hydraulics` chapter.
 Resistance is converted from units of 
 s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` to  s m\ :sup:`-1` as: 
 1 s m\ :sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }`
-:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, [same as 4.5, but units seem off. check that units are correct] 
+:math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, 
 where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1`
 kmol\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\theta _{atm}` is the
 atmospheric potential temperature (K).
@@ -270,6 +256,7 @@ depend on temperature. Values at 25 :sup:`o` \ C are
 :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`,
 and :math:`R_{d}` also vary with temperature. Parameter values at 25
+[verify with Rosie that LUNA doesn't do this otherwise]
 :sup:`o`\ C are calculated from :math:`V_{c\max }` \ at 25
 :sup:`\o`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}`,
 :math:`T_{p25} =0.167V_{c\max 25}`, and
@@ -293,7 +280,7 @@ The parameters :math:`V_{c\max 25}`,
 
    \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma } & {=} & {\Gamma _{25} \; f\left(T_{v} \right)} \end{array}
 
-with
+[check with Rosie about Rd equation above and below (eq. 14)] with
 
 .. math::
    :label: 9.11
@@ -522,13 +509,32 @@ resistance (:math:`r_{s}` ) as a function of photosynthesis
 .. math::
    :label: 9.36
 
-   c_{s} g_{s}^{2} +\left[c_{s} \left(g_{b} -b\right)-m{\it A}_{n} P_{atm} \right]g_{s} -g_{b} \left[c_{s} b+mA_{n} P_{atm} {e_{a} \mathord{\left/ {\vphantom {e_{a}  e_{\*} \left(T_{v} \right)}} \right. \kern-\nulldelimiterspace} e_{\*} \left(T_{v} \right)} \right]=0.
+   g_{s}^{2} + bg_{s} + c = 0
 
-Stomatal conductance is the larger of the two roots that satisfy the
-quadratic equation. Values for :math:`c_{i}`  are given by
+where
 
 .. math::
    :label: 9.37
+
+   b = 2(g_{o} * 10^{-6} + d) + \frac{(g_{1}d)^{2}}{g_{b}*10^{-6}D}
+
+   c = (g_{o}*10^{-6})^{2} + [2g_{o}*10^{-6} + d \frac{1-g_{1}^{2}} {D}]d
+
+and
+
+.. math::
+   :label: 9.38
+
+   d = \frac {1.6 A_{n}} {c_{s} / P_{atm} * 10^{6}}
+
+   D = \frac {e_{i} - e_{a}} {1000}
+
+
+Stomatal conductance, as solved by equation :eq:`9.36` (mol m :sup:`-2` s :sup:`-1`), is the larger of the two roots that satisfy the
+quadratic equation. Values for :math:`c_{i}`  are given by
+
+.. math::
+   :label: 9.39
 
    c_{i} =c_{a} -\left(1.4r_{b} +1.6r_{s} \right)P_{atm} A{}_{n}
 
@@ -541,23 +547,4 @@ combines the secant method and Brent’s method to solve for
 (:math:`A_{n}^{sun}` , :math:`r_{s}^{sun}` ) and shaded
 (:math:`A_{n}^{sha}` , :math:`r_{s}^{sha}` ) leaves.
 
-The model has an optional (though not supported) multi-layer canopy, as
-described by :ref:`Bonan et al. (2012)<Bonanetal2012>`. The multi-layer model is only intended
-to address the non-linearity of light profiles, photosynthesis, and
-stomatal conductance in the plant canopy. In the multi-layer canopy,
-sunlit (:math:`A_{n}^{sun}` , :math:`r_{s}^{sun}` ) and shaded
-(:math:`A_{n}^{sha}` , :math:`r_{s}^{sha}` ) leaves are explicitly
-resolved at depths in the canopy using a light profile (Chapter :numref:`rst_Radiative Fluxes`). In
-this case, :math:`V_{c\max 25}`  is not integrated over the canopy, but
-is instead given explicitly for each canopy layer using equation :eq:`9.18`. This
-also uses the :ref:`Lloyd et al. (2010)<Lloydetal2010>` relationship whereby
-K\ :sub:`n` scales with V\ :sub:`cmax` as
 
-.. math::
-   :label: 9.38
-
-   K_{n} =\exp \left(0.00963V_{c\max } -2.43\right)
-
-such that higher values of V\ :sub:`cmax` imply steeper declines
-in photosynthetic capacity through the canopy with respect to cumulative
-leaf area.
