@@ -10,3 +10,7 @@ For documentation, quick start, diagnostics, model output and
 references, see
 
 http://www.cesm.ucar.edu/models/cesm2.0/land/
+
+and
+
+https://escomp.github.io/ctsm-docs/
