@@ -55,7 +55,7 @@ the calendar year for the current timestep,
 :math:`landuse.timeseries\_ year(nyears)` are the first and last calendar years in
 the *landuse.timeseries* dataset, respectively, :math:`nyears` is the number of
 years in the *landuse.timeseries* dataset, :math:`nt_{1}`  and :math:`nt_{2}` 
-:math:`{}_{ }`\ are the two bracketing years used in the interpolation
+are the two bracketing years used in the interpolation
 algorithm, and :math:`n` is the index value for the
 :math:`landuse.timeseries\_ year` array corresponding to
 :math:`landuse.timeseries\_ year(n)=year_{cur}` :
@@ -75,7 +75,7 @@ dataset uses a simple linear algorithm, based on the conversion of the
 current time step information into a floating-point value for the number
 of calendar days since January 1 of the current model year
 (:math:`cday`). The interpolation weight for the current time step
-:math:`tw_{cday}` \ :math:`{}_{ }`\ is
+:math:`tw_{cday}` is
 
 .. math::
    :label: 26.3) 
@@ -85,9 +85,9 @@ of calendar days since January 1 of the current model year
 where the numerator is 366 instead of 365 because the time manager
 function for CLM returns a value of :math:`cday=1.0` for midnight
 Greenwich mean time on January 1. With weights :math:`w_{p} (nt_{1} )`
-and :math:`w_{p} (nt_{2} )`\ obtained from the *landuse.timeseries* dataset for fertilizer and wood harvest
+and :math:`w_{p} (nt_{2} )` obtained from the *landuse.timeseries* dataset for fertilizer and wood harvest
 *p* at the bracketing annual time slices
-:math:`nt_{1}` \ :math:`{}_{ }`\ and :math:`nt_{2}` , the interpolated
+:math:`nt_{1}` and :math:`nt_{2}` , the interpolated
 application rate for the current time step (:math:`w_{p,t}` ) is
 
 .. math::
@@ -98,7 +98,7 @@ application rate for the current time step (:math:`w_{p,t}` ) is
 The form of this equation is designed to improve roundoff accuracy
 performance, and guarantees :math:`w_{p,t}`  stays in the range [0,1].
 Note that values for :math:`w_{p} (nt_{1} )`, :math:`w_{p} (nt_{2} )`,
-and :math:`w_{p,t}` \ :math:`{}_{ }`\ are fractional weights at the
+and :math:`w_{p,t}` are fractional weights at the
 column level of the subgrid hierarchy.
 
 The change in weight for a fertilizer or wood harvest rate between the current and previous time
@@ -130,14 +130,14 @@ balance is calculated,
    W_{tot,1} =W_{a} +W_{sno} +\sum _{i=1}^{N_{levgrnd} }\left(w_{liq,i} +w_{ice,i} \right) +\sum _{j=1}^{npft}\left(W_{can,j} wt_{j,1} \right)
 
 where :math:`W_{a}`  is the aquifer water, :math:`W_{sno}`  is the snow
-water, :math:`w_{liq,i}`  and :math:`w_{ice,i}` \ are the liquid and ice
-soil water contents, :math:`W_{can,j}` \ is the canopy water content for
+water, :math:`w_{liq,i}`  and :math:`w_{ice,i}` are the liquid and ice
+soil water contents, :math:`W_{can,j}` is the canopy water content for
 PFT and CFT :math:`j`, and :math:`wt_{j,1}`  is the PFT or CFT weight for
 :math:`j`. For the situation where PFT and CFT weights are changing, any difference 
-between :math:`W_{tot,1}`  and :math:`W_{tot,2}` \ are due to
+between :math:`W_{tot,1}`  and :math:`W_{tot,2}` are due to
 differences in the total canopy water before and after the PFT and CFT weight
 change. To ensure conservation, the typically very small
-difference between :math:`W_{tot,2}` \ and :math:`W_{tot,1}`  is
+difference between :math:`W_{tot,2}` and :math:`W_{tot,1}`  is
 subtracted from the grid cell runoff
 
 .. math::
