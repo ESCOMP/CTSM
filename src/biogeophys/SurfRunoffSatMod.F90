@@ -331,6 +331,9 @@ contains
     ! !DESCRIPTION:
     ! Compute fsat using the VIC-based parameterization
     !
+    ! Citation: Wood et al. 1992, "A land-surface hydrology parameterization with subgrid
+    ! variability for general circulation models", JGR 97(D3), 2717-2728.
+    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_hydrologyc       ! number of column soil points in column filter

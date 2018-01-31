@@ -697,6 +697,7 @@ contains
             clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
             waterflux_inst, waterstate_inst, soilhydrology_inst, surf_runoff_sat_inst, &
+            infiltration_excess_runoff_inst, &
             aerosol_inst, canopystate_inst, soil_water_retention_curve)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
