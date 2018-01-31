@@ -27,8 +27,8 @@ my $debug = 0;
 
 #-----------------------------------------------------------------------------------------------
 # Add $scrdir to the list of paths that Perl searches for modules
-my @dirs = ( $scrdir, "$scrdir/../../../../cime/utils/perl5lib",
-             "$scrdir/../../cime/utils/perl5lib"
+my @dirs = ( "$scrdir/../../cime/utils/perl5lib",
+             "$scrdir/../../../../cime/utils/perl5lib"
            );
 unshift @INC, @dirs;
 my $result = eval "require XML::Lite";
