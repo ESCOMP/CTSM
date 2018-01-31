@@ -29,6 +29,10 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch                
+
+  use computeFluxMod                            ! template for the flux module
+  use implicitEulerMod  , only : implicitEuler  ! implicit Euler solver for a single state
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -57,6 +61,12 @@ module SoilHydrologyMod
 
   !-----------------------------------------------------------------------
   real(r8), private :: baseflow_scalar = 1.e-2_r8
+
+  ! !ALTERNATIVE NUMERICAL SOLUTIONS
+  integer, parameter :: ixExplicitEuler=1001  ! constrained Explicit Euler solution with operator splitting (original)
+  integer, parameter :: ixImplicitEuler=1002  ! implicit Euler solution with operator splitting
+  integer, parameter :: ixAnalytical=1003     ! analytical solution with operator splitting
+  integer  :: ixSolution=ixExplicitEuler
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -474,6 +484,9 @@ contains
      real(r8) :: dtime         ! land model time step (sec)
      real(r8) :: frac_infclust ! fraction of submerged area that is connected
      real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
+     real(r8) :: dRate         ! effective linear reservoir coefficient for h2osfc (account for fraction of submerged area that is connected)
+     real(r8) :: activePond    ! ponded water above threshold = h2osfc - h2osfc_thresh
+     real(r8) :: h2osfc1       ! h2osfc at the end of the time step, given qflx_h2osfc_surf only
 
      character(len=*), parameter :: subname = 'QflxH2osfcSurf'
      !-----------------------------------------------------------------------
@@ -499,11 +512,36 @@ contains
 
         ! limit runoff to value of storage above S(pc)
         if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
+
            ! spatially variable k_wet
            k_wet=1.0e-4_r8 * sin((rpi/180.) * topo_slope(c))
-           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
+           dRate=k_wet*frac_infclust
 
-           qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
+           ! ponding above threshold
+           activePond = h2osfc(c) - h2osfc_thresh(c)
+
+           ! switch between different numerical solutions
+           select case(ixSolution)
+
+              ! constrained Explicit Euler solution with operator splitting (original)  
+              case(ixExplicitEuler)
+                 qflx_h2osfc_surf(c)=min(dRate*activePond,(h2osfc(c) - h2osfc_thresh(c))/dtime)
+
+              ! implicit Euler solution with operator splitting
+              case(ixImplicitEuler)
+                 qflx_h2osfc_surf(c) = dRate*activePond/(1._r8 + dRate*dtime)
+
+              ! analytical solution with operator splitting
+              case(ixAnalytical)
+                 h2osfc1 = activePond*exp(-dRate*dtime) + h2osfc_thresh(c)
+                 qflx_h2osfc_surf(c) = (h2osfc1 - h2osfc(c))/dtime
+              
+              ! check case identfied
+              case default
+                 call endrun(subname // ':: the numerical solution must be specified!')
+
+           end select ! (switch between different numerical solutions)
+
         else
            qflx_h2osfc_surf(c)= 0._r8
         endif
@@ -539,8 +577,16 @@ contains
      real(r8)          , intent(inout) :: qflx_h2osfc_drain( bounds%begc: )  ! bottom drainage from h2osfc (mm H2O /s)
      !
      ! !LOCAL VARIABLES:
-     integer :: fc, c
-     real(r8) :: dtime         ! land model time step (sec)
+     procedure(fluxTemplate), pointer :: funcName ! function name
+     integer             :: fc, c               
+     real(r8)            :: dtime                 ! land model time step (sec)
+     real(r8)            :: h2osfc1               ! h2osfc at the end of the time step, given qflx_h2osfc_drain only
+     real(r8)            :: drainMax              ! maximum drainage rate of ponded water
+     real(r8)            :: const                 ! constant in analytical integral
+     real(r8)            :: uFunc                 ! analytical integral
+     real(r8), parameter :: smoothScale=0.05_r8   ! smoothing scale
+     integer(i4b)        :: err                   ! error code
+     character(len=128)  :: message               ! error message
 
      character(len=*), parameter :: subname = 'QflxH2osfcDrain'
      !-----------------------------------------------------------------------
@@ -558,13 +604,54 @@ contains
         if (h2osfc(c) < 0.0) then
            qflx_h2osfc_drain(c) = h2osfc(c)/dtime
         else
-           qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),h2osfc(c)/dtime)
+
+           ! define maximum drainage
+           ! NOTE: check fraction
+           drainMax = frac_h2osfc(c)*qinmax(c)
+
+           ! switch between different numerical solutions
+           select case(ixSolution)
+
+              ! constrained Explicit Euler solution with operator splitting (original)
+              case(ixExplicitEuler)
+                 qflx_h2osfc_drain(c)=min(drainMax,h2osfc(c)/dtime)
+
+              ! implicit Euler solution with operator splitting
+              case(ixImplicitEuler)
+                 funcName=>drainPond
+                 call implicitEuler(funcName, dtime, h2osfc(c), h2osfc1, err, message)
+                 if(err/=0) call endrun(subname // ':: '//trim(message))
+                 call drainPond(h2osfc1, qflx_h2osfc_drain(c))
+
+              ! analytical solution with operator splitting
+              case(ixAnalytical)
+                 const   = 1._r8 - 1._r8/(1._r8 - exp(-h2osfc(c)/smoothScale))
+                 uFunc   = -1._r8/(const*exp(drainMax*dtime/smoothScale) - 1._r8)
+                 h2osfc1 = -alog(1._r8 - uFunc)*smoothScale
+                 qflx_h2osfc_drain(c)= (h2osfc1 - h2osfc(c))/dtime
+
            if(h2osfcflag==0) then
               ! ensure no h2osfc
               qflx_h2osfc_drain(c)= max(0._r8,h2osfc(c)/dtime)
            end if
         end if
      end do
+
+   contains
+
+      ! model-specific flux routine
+      subroutine drainPond(storage, flux, dfdx)
+      ! dummy variables
+      real(r8), intent(in)           :: storage    ! storage
+      real(r8), intent(out)          :: flux       ! drainage flux
+      real(r8), intent(out),optional :: dfdx       ! derivative
+      ! local variables
+      real(r8)                       :: arg        ! temporary argument
+      ! procedure starts here
+      arg  = exp(-storage/smoothScale)
+      flux = -inputRate*(1._dp - arg)
+      if(present(dfdx)) dfdx = -inputRate*arg/smoothScale
+      end subroutine drainPond
 
    end subroutine QflxH2osfcDrain
 
