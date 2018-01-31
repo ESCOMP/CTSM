@@ -1,4 +1,4 @@
-**July 2017**
+**February 2018**
 
 **Technical Description of version 5.0 of the Community Land Model
 (CLM)**
@@ -31,7 +31,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 **LIST OF FIGURES**
 
-- :numref:`Figure Land processes` Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from Lawrence et al. (2011) for CLM4.5).
+- :numref:`Figure Land processes` Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from Lawrence et al. (2011) for CLM5.0).
 
 - :numref:`Figure CLM subgrid hierarchy` Configuration of the CLM subgrid hierarchy.
 
@@ -57,25 +57,19 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Vegetation fluxes and pools` Vegetation fluxes and pools.
 
-- :numref:`Figure Carbon and nitrogen pools` Carbon and nitrogen pools.
-
 - :numref:`Figure annual phenology cycle` Example of annual phenology cycle for seasonal deciduous.
-
-- 14.2. Example fluxes and pools sizes for an onset growth period of 15 days, with initial transfer pool size of 100 gC m-2 and a timestep of one hour. a) Flux leaving transfer pool (e.g. CFleaf\_xfer,leaf). b) Carbon content of transfer pool and its associated display pool (e.g. CSleaf\_xfer and CSleaf, respectively).
-
-- 14.3. Example fluxes and pool sizes for an offset (litterfall) period of 15 days, with initial display pool size of 100 gC m-2 and a timestep of one hour. a) Litterfall flux (e.g CFleaf,litter). b) Carbon content of display pool and litter pool through the litterfall period, ignoring the losses from litter pool due to decomposition during this period.
 
 - :numref:`Figure Schematic of decomposition model in CLM` Schematic of decomposition model in CLM.
 
-- :numref:`Figure Pool structure` Pool structure, transitions, respired fractions (numbers at end of arrows), and turnover times (numbers in boxes) for the 2 alternate soil decomposition models included in CLM.
+- :numref:`Figure Pool structure` Pool structure, transitions, respired fractions, and turnover times for the 2 alternate soil decomposition models included in CLM.
 
 - :numref:`Figure Biological nitrogen fixation` Biological nitrogen fixation as a function of annual net primary production.
 
-- :numref:`Figure Methane Schematic` Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux. (left) Fully inundated portion of a CLM gridcell and (right) variably saturated portion of a gridcell.
+- :numref:`Figure Methane Schematic` Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux. 
 
 - :numref:`Figure Schematic of land cover change` Schematic of land cover change impacts on CLM carbon pools and fluxes.
 
-- :numref:`Figure Schematic of translation of annual LUH2 land units` Schematic of translation of annual UNH land units to CLM4 plant functional types.
+- :numref:`Figure Schematic of translation of annual LUH2 land units` Schematic of translation of annual UNH land units to CLM plant functional types.
 
 **LIST OF TABLES**
 
@@ -89,7 +83,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Land model output to atmospheric model` Land model output to atmospheric model
 
-- :numref:`Table Surface data required for CLM and their base spatial resolution` Surface data required for CLM4.5 and their base spatial resolution
+- :numref:`Table Surface data required for CLM and their base spatial resolution` Surface data required for CLM and their base spatial resolution
 
 - :numref:`Table Physical constants` Physical constants
 
@@ -113,7 +107,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Coefficients for saturation vapor pressure` Coefficients for e\ :sub:`sat`\ :sup:`T`
 
-- :numref:`Table Coefficients for derivative of esat` Coefficients for 112:numref:`` 6.1. Soil layer structure.
+- :numref:`Table Coefficients for derivative of esat` Coefficients for the derivative of e\ :sub:`sat`\ :sup:`T`
 
 - :numref:`Table Meltwater scavenging` Meltwater scavenging efficiency for particles within snow
 
@@ -129,11 +123,11 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Allocation and CN ratio parameters` Allocation and carbon:nitrogen ratio parameters
 
-- :numref:`Table Decomposition rate constants` Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the CLM-CN decomposition pool structure.
+- :numref:`Table Decomposition rate constants` Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters for the CLM-CN decomposition pool structure.
 
 - :numref:`Table Respiration fractions for litter and SOM pools` Respiration fractions for litter and SOM pools
 
-- :numref:`Table Turnover times` Turnover times, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the Century-based decomposition cascade.
+- :numref:`Table Turnover times` Turnover times, C:N ratios, and acceleration parameters for the Century-based decomposition cascade.
 
 - :numref:`Table Respiration fractions for Century-based structure` Respiration fractions for litter and SOM pools for Century-based structure
 
@@ -143,13 +137,11 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Temperature dependence of aqueous and gaseous diffusion` Temperature dependence of aqueous and gaseous diffusion coefficients for CH4 and O2.
 
-- :numref:`Table Crop plant functional types` Crop plant functional types (pfts) in CLM4.5CNcrop and their parameters relating to phenology and morphology. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
+- :numref:`Table Crop plant functional types` Crop plant functional types (PFTs).
 
-- :numref:`Table Crop plant functional types` Crop pfts in CLM4.5CNcrop and their parameters relating to allocation. Numbers in the first column correspond to the list of pfts in :numref:`Table Plant functional types`.
+- :numref:`Table Crop phenology parameters`  Crop phenology and morphology parameters. 
 
-- :numref:`Table Crop allocation parameters` Crop allocation parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
-
-- :numref:`Table Plant functional type (PFT) biogeography rules` Plant functional type (PFT) biogeography rules with respect to climate.
+- :numref:`Table Crop allocation parameters` Crop allocation parameters. 
 
 - :numref:`Table Dust Mass fraction` Mass fraction m\ :sub:`i` , mass median diameter :sub:`v, i` , and geometric standard deviation :sub:`g, i` , per dust source mode i
 
@@ -614,7 +606,7 @@ processes simulated include (:numref:`Figure Land processes`):
 #. External nitrogen cycling including deposition,
    denitrification, leaching, and losses due to fire (Chapter :numref:`rst_External Nitrogen Cycle`)
 
-#. Plant mortality (Chapter :numref:`rst_Plant_Mortality`)
+#. Plant mortality (Chapter :numref:`rst_Plant Mortality`)
 
 #. Fire ignition, suppression, spread, and emissions, including natural, deforestation, and
    agricultural fire (Chapter :numref:`rst_Fire`)
@@ -635,4 +627,4 @@ processes simulated include (:numref:`Figure Land processes`):
 
 .. figure:: image1.png
 
- Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from :ref:`Lawrence et al. (2011)<Lawrenceetal2011>` for CLM4.5).
+ Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from :ref:`Lawrence et al. (2011)<Lawrenceetal2011>` for CLM5.0).
