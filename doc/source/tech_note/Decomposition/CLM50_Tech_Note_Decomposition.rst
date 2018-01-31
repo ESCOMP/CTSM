@@ -101,7 +101,7 @@ for the coarse woody debris pool (CWD).
 
 .. _Table Decomposition rate constants:
 
-.. table:: Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the CLM-CN decomposition pool structure.
+.. table:: Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters for the CLM-CN decomposition pool structure.
 
  +--------------------------+------------------------------------------------+-----------------------------------------------+---------------+-----------------------------------------+
  |                          | Biome-BGC                                      | CLM-CN                                        |               |                                         |
@@ -195,7 +195,7 @@ those described in Parton et al. (1988) (:numref:`Table Turnover times`).
 
 .. _Table Turnover times:
 
-.. table:: Turnover times, C:N ratios, and acceleration parameters (see section 15.8 for explanation) for the Century-based decomposition cascade.
+.. table:: Turnover times, C:N ratios, and acceleration parameters for the Century-based decomposition cascade.
 
  +------------+------------------------+-------------+-------------------------------------------+
  |            | Turnover time (year)   | C:N ratio   | Acceleration term (:math:`{a}_{i}`)       |
