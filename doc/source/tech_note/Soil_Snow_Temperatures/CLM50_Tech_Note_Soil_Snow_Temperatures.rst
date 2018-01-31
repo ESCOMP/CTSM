@@ -71,12 +71,12 @@ and the thickness of each layer is a function of snow depth
 
 .. math:: 
 
-   \begin{array}{lr} 
-
    \left\{ \begin{array}{l}
    snl=-1 \\ 
    \Delta z_{0} = z_{sno}
    \end{array} \right\} & \qquad {\rm for\; 0.01}\le {\rm z}_{{\rm sno}} \le 0.03 \\
+
+.. math::
 
    \left\{ \begin{array}{l}
    snl=-2  \\ 
@@ -84,11 +84,16 @@ and the thickness of each layer is a function of snow depth
    \Delta z_{0} = \Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.03}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.04 \\ 
    
+.. math::
+
    \left\{ \begin{array}{l}
    snl=-2 \\ 
    \Delta z_{-1} = 0.02 \\
    \Delta z_{0} = z_{sno} -\Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.04}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.07 \\ 
+
+.. math::
+
    \left\{ \begin{array}{l}
    snl=-3 \\ 
    \Delta z_{-2} = 0.02 \\ 
@@ -96,12 +101,16 @@ and the thickness of each layer is a function of snow depth
    \Delta z_{0} = \Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.07}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.12 \\ 
    
+.. math::
+
    \left\{ \begin{array}{l}
    snl=-3 \\ 
    \Delta z_{-2} = 0.02 \\ 
    \Delta z_{-1} = 0.05 \\
    \Delta z_{0} = z_{sno} -\Delta z_{-2} -\Delta z_{-1} 
    \end{array} \right\} & \qquad {\rm for\; 0.12}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.18 \\ 
+
+.. math::
 
    \left\{ \begin{array}{l}
    snl=-4  \\ 
@@ -111,6 +120,8 @@ and the thickness of each layer is a function of snow depth
    \Delta z_{0} =\Delta z_{-1}  
    \end{array} \right\} & \qquad {\rm for\; 0.18}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.29 \\ 
    
+.. math::
+
    \left\{ \begin{array}{l}
    snl=-4 \\ 
    \Delta z_{-3} = 0.02  \\ 
@@ -119,6 +130,8 @@ and the thickness of each layer is a function of snow depth
    \Delta z_{0} = z_{sno} -\Delta z_{-3} -\Delta z_{-2} -\Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.29}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.41 \\ 
 
+.. math::
+
    \left\{ \begin{array}{l}
    snl=-5  \\ 
    \Delta z_{-4} = 0.02  \\ 
@@ -126,8 +139,9 @@ and the thickness of each layer is a function of snow depth
    \Delta z_{-2} = 0.11  \\ 
    \Delta z_{-1} = {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right)\mathord{\left/ {\vphantom {\left(z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} \right) 2}} \right. \kern-\nulldelimiterspace} 2}  \\ 
    \Delta z_{0} = \Delta z_{-1}
-
    \end{array} \right\} & \qquad {\rm for\; 0.41}\, {\rm <}\, {\rm z}_{{\rm sno}} \le 0.64 \\ 
+
+.. math::
 
    \left\{ \begin{array}{l}
    snl=-5 \\ 
@@ -137,8 +151,6 @@ and the thickness of each layer is a function of snow depth
    \Delta z_{-1} = 0.23  \\ 
    \Delta z_{0} = z_{sno} -\Delta z_{-4} -\Delta z_{-3} -\Delta z_{-2} -\Delta z_{-1}
    \end{array} \right\} & \qquad {\rm for\; 0.64}\, {\rm <}\, {\rm z}_{{\rm sno}}
-
-   \end{array}
 
 The node depths, which are located at the midpoint of the snow layers,
 and the layer interfaces are both referenced from the soil surface and

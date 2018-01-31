@@ -81,6 +81,7 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
+imgmath_image_format = 'svg'
 
 # -- Options for HTML output ----------------------------------------------
 
