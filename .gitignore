@@ -28,11 +28,16 @@ CMakeFiles/
 !components/cism/**/build
 
 # configure / build files
-CESM_cppdefs
-Filepath
-config_cache.xml
-clm.input_data_list
-clm.input_data_list.previous
+bld/*CESM_cppdefs
+bld/*Filepath
+bld/*config_cache.xml
+
+# build-naemlist testing
+bld/unit_testers/lnd_in*
+bld/unit_testers/drv_flds_in*
+bld/unit_testers/temp_file.txt*
+bld/unit_testers/user_nl_clm_real_parameters*
+bld/unit_testers/env_run.xml
 
 # tools testing output
 td.*.status
@@ -43,6 +48,8 @@ test_driver_*.sh
 # mksurfdata output
 surfdata_*.log
 surfdata_*.namelist
+clm.input_data_list
+clm.input_data_list.previous
 
 
 # build output

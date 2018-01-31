@@ -427,6 +427,7 @@ sub _readXml
    #-----------------------------------------------------------------------------------------------
    # Add $cfgdir to the list of paths that Perl searches for modules
    my @dirs = ( $cfgdir, "$cfgdir/perl5lib",
+               "$cfgdir/../../../cime/utils/perl5lib",
                "$cfgdir/../../../../cime/utils/perl5lib"
        );
    unshift @INC, @dirs;
