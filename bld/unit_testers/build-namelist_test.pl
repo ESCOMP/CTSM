@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 839;
+my $ntests = 859;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 522;
+   $ntests += 537;
 }
 plan( tests=>$ntests );
 
@@ -1239,7 +1239,7 @@ foreach my $res ( @tran_res ) {
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
-foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
+foreach my $usecase ( "1850_control", "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
