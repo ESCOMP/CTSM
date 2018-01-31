@@ -37,7 +37,7 @@ if [ "$CLM_RERUN" != "yes" ] && [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; t
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/${1}*`
+cfgdir=`ls -1d ${CLM_ROOT}/tools/${1}*`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
