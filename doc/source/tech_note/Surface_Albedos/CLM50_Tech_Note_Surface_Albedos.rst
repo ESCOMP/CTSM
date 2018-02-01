@@ -956,8 +956,13 @@ each time step *t* as
    r_{e} \left(t\right)=\left[r_{e} \left(t-1\right)+dr_{e,\, dry} +dr_{e,\, wet} \right]f_{old} +r_{e,\, 0} f_{new} +r_{e,\, rfz} f_{rfrz}
 
 Here, the effective radius of freshly-fallen snow
-(:math:`r_{e,0}`) is fixed globally at 54.5 :math:`\mu` m (corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sup:`-1`), and the effective
-radius of refrozen liquid water (:math:`r_{e,rfz}`) is set to 1000\ :math:`\mu` m.
+(:math:`r_{e,0}`) is based on a simple linear temperature-relationship. 
+Below -30 degrees Celcius, a minimum value is enforced of 54.5 :math:`\mu` m
+(corresponding to a specific surface area of 60 m\ :sup:`2` kg\ :sup:`-1`).
+Above 0 degrees Celcius, a maximum value is enforced of 204.5  :math:`\mu` m.
+Between -30 and 0 a linear ramp is used. 
+
+The effective radius of refrozen liquid water (:math:`r_{e,rfz}`) is set to 1000\ :math:`\mu` m.
 
 Dry snow aging is based on a microphysical model described by :ref:`Flanner
 and Zender (2006) <FlannerZender2006>`. This model simulates diffusive vapor flux 
