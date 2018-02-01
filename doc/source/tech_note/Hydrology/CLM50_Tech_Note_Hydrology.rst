@@ -1240,22 +1240,15 @@ Runoff from glaciers and snow-capped surfaces
 -------------------------------------------------
 
 All surfaces are constrained to have a snow water equivalent
-:math:`W_{sno} \le 1000` kg m\ :sup:`-2`. For snow-capped
-surfaces, the solid and liquid precipitation reaching the snow surface
-and dew in solid or liquid form, is separated into solid
-:math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}`  runoff terms
+:math:`W_{sno} \le W_{cap} = 10,000` kg m\ :sup:`-2`. For snow-capped
+columns, any addition of mass at the top (precipitation, dew/riping) is 
+balanced by an equally large mass flux at the bottom of the snow column. 
+This so-called capping flux is separated into solid
+:math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}`  runoff terms.
+The partitioning of these phases is based on the phase ratio in the bottom snow 
+layer at the time of the capping, such that phase ratio in this layer is unaltered.
 
-.. math::
-   :label: 7.178
-
-   q_{snwcp,ice} =q_{grnd,ice} +q_{frost}
-
-.. math::
-   :label: 7.179
-
-   q_{snwcp,liq} =q_{grnd,liq} +q_{dew}
-
-and snow pack properties are unchanged. The :math:`q_{snwcp,ice}` 
+The :math:`q_{snwcp,ice}` 
 runoff is sent to the River Transport Model (RTM) (Chapter 11) where it
 is routed to the ocean as an ice stream and, if applicable, the ice is
 melted there.
@@ -1284,5 +1277,3 @@ The contribution of lake runoff to :math:`q_{rgwl}`  is described in
 section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff 
 term :math:`q_{rgwl}`  may be negative for glaciers and lakes, which reduces 
 the total amount of runoff available to the river routing model (Chapter :numref:`rst_River Transport Model (RTM)`).
-
->
