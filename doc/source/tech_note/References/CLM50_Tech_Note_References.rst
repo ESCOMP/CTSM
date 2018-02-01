@@ -2698,6 +2698,15 @@ Lawrence, A.G. Slater, and M.R. van den Broeke, 2017.
 Improving the representation of polar snow and firn in the
 Community Earth System Model, submitted.
 
+.. _VanTrichtetal2016:
+
+|br|
+
+Van Tricht, K., Lhermitte, S., Gorodetskaya, I.V. and van Lipzig,
+N.P.M., 2016. Improving satellite-retrieved surface radiative fluxes in
+polar regions using a smart sampling approach. The Cryosphere
+10:2379-2397. doi:10.5194/tc-10-2379-2016
+
 .. _VanVuurenetal2006:
 
 |br|

@@ -31,22 +31,25 @@ The second subgrid level, the column, is intended to capture potential
 variability in the soil and snow state variables within a single land
 unit. For example, the vegetated land unit could contain several columns
 with independently evolving vertical profiles of soil water and
-temperature. Similarly, the managed vegetation land unit can be
-divided into two columns, irrigated and non-irrigated. The default snow/soil
-column is represented by 25 layers for ground (with up to 20 of these layers classified as soil layers and the remaining layers classified as bedrock layers)  and up to 10 layers
-for snow, depending on snow depth. The central characteristic of the
-column subgrid level is that this is where the state variables for water
-and energy in the soil and snow are defined, as well as the fluxes of
-these components within the soil and snow. Regardless of the number and
-type of PFTs occupying space on the column, the column physics operates
-with a single set of upper boundary fluxes, as well as a single set of
-transpiration fluxes from multiple soil levels. These boundary fluxes
-are weighted averages over all PFTs. Currently, for glacier, lake, and
-vegetated land units, a single column is assigned to each land unit. The
-crop land unit is split into irrigated and unirrigated columns with a
-single crop occupying each column. The urban land units have five
-columns (roof, sunlit walls and shaded walls, and pervious and
-impervious canyon floor) (Oleson et al. 2010b).
+temperature. Similarly, the managed vegetation land unit can be divided
+into two columns, irrigated and non-irrigated. The default snow/soil
+column is represented by 25 layers for ground (with up to 20 of these
+layers classified as soil layers and the remaining layers classified as
+bedrock layers) and up to 10 layers for snow, depending on snow
+depth. The central characteristic of the column subgrid level is that
+this is where the state variables for water and energy in the soil and
+snow are defined, as well as the fluxes of these components within the
+soil and snow. Regardless of the number and type of PFTs occupying space
+on the column, the column physics operates with a single set of upper
+boundary fluxes, as well as a single set of transpiration fluxes from
+multiple soil levels. These boundary fluxes are weighted averages over
+all PFTs. Currently, for lake and vegetated land units, a single column
+is assigned to each land unit. The crop land unit is split into
+irrigated and unirrigated columns with a single crop occupying each
+column. The urban land units have five columns (roof, sunlit walls and
+shaded walls, and pervious and impervious canyon floor) (Oleson et
+al. 2010b). The glacier land unit is separated into up to 10 elevation
+classes.
 
 .. _Figure CLM subgrid hierarchy:
 
@@ -431,6 +434,15 @@ to\ :math:`z_{atm}` .
 and solid precipitation, which are added to yield total liquid
 precipitation :math:`q_{rain}`  and solid precipitation
 :math:`q_{sno}` .
+However, in CLM5, the atmosphere's partitioning into liquid and solid
+precipitation is ignored. Instead, CLM repartitions total precipitation
+using a linear ramp. For most landunits, this ramp generates all snow
+below :math:`0 \textdegree C`, all rain above :math:`2 \textdegree C`,
+and a mix of rain and snow for intermediate temperatures. For glaciers,
+the end points of the ramp are :math:`-2 \textdegree C` and :math:`0
+\textdegree C`, respectively. Changes to the phase of precipitation are
+accompanied by a sensible heat flux (positive or negative) to conserve
+energy.
 
 :sup:`3`\ There are 14 aerosol deposition rates required depending
 on species and affinity for bonding with water; 8 of these are dust
@@ -680,14 +692,14 @@ The percentage glacier mask was derived from vector data of global
 glacier and ice sheet spatial coverage. Vector data for glaciers (ice
 caps, icefields and mountain glaciers) were taken from the first
 globally complete glacier inventory, the Randolph Glacier Inventory
-version 1.0 (RGIv1.0: :ref:`Arendt et al. 2012 <Arendtetal2012>`). 
-Vector data for the Greenland Ice Sheet were provided by Frank Paul and 
-Tobias Bolch (University of Zurich: :ref:`Rastner et al. 2012 <Rastneretal2012>`). 
-Antarctic Ice Sheet data were provided by
-Andrew Bliss (University of Alaska) and were extracted from the
-Scientific Committee on Antarctic Research (SCAR) Antarctic Digital
-Database version 5.0. Floating ice is only provided for the Antarctic
-and does not include the small area of Arctic ice shelves. High spatial
+version 1.0 (RGIv1.0: :ref:`Arendt et al. 2012 <Arendtetal2012>`).
+Vector data for the Greenland Ice Sheet were provided by Frank Paul and
+Tobias Bolch (University of Zurich: :ref:`Rastner et al. 2012
+<Rastneretal2012>`).  Antarctic Ice Sheet data were provided by Andrew
+Bliss (University of Alaska) and were extracted from the Scientific
+Committee on Antarctic Research (SCAR) Antarctic Digital Database
+version 5.0. Floating ice is only provided for the Antarctic and does
+not include the small area of Arctic ice shelves. High spatial
 resolution vector data were then processed to determine the area of
 glacier, ice sheet and floating ice within 30-second grid cells
 globally. The 30-second glacier, ice sheet and Antarctic ice shelf masks
@@ -704,8 +716,13 @@ by elevation and areal ice sheet fractional coverage by elevation. Ice
 fractions were binned at 100 meter intervals, with bin edges defined
 from 0 to 6000 meters (plus one top bin encompassing all remaining
 high-elevation ice, primarily in the Himalaya). These distributions by
-elevation are needed when running CLM4 with multiple glacier elevation
-classes.
+elevation are used to divide each glacier land unit into columns based
+on elevation class.
+
+When running with the CISM ice sheet model, CISM dictates glacier areas
+and elevations in its domain, overriding the values specified by CLM's
+datasets. In typical CLM5 configurations, this means that CISM dictates
+glacier areas and elevations over Greenland.
 
 Percent lake and lake depth are area-averaged from the 90-second
 resolution data of :ref:`Kourzeneva (2009, 2010) <Kourzeneva2009>` to the 0.05\ :sup:`o`
