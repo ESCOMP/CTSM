@@ -6,7 +6,7 @@ Photosynthetic Capacity
 The photosynthetic capacity is represented by two key parameters: 1) the maximum rate of carboxylation at
 25 :sup:`o`\ C, :math:`V_{\text{c,max25}}`; and 2) the maximum rate of electron transport at
 25 :sup:`o`\ C, :math:`J_{\text{max25}}` . They are predicted by a mechanistic model of leaf 
-utilization of nitrogen for assimilation (LUNA V1.0) (Ali et al. 2016) based on an optimality hypothesis to nitrogen allocation 
+utilization of nitrogen for assimilation (LUNA V1.0) (:ref:`Ali et al. 2016<Alietal2016>`) based on an optimality hypothesis to nitrogen allocation 
 among light capture, electron transport, carboxylation, respiration and storage. 
 Specifically, the model allocates the nitrogen by maximizing the daily
 net photosynthetic carbon gain under following two key assumptions:
@@ -30,7 +30,7 @@ The LUNA model includes the following four unitless parameters:
 -  :math:`H` , which determines the response of electron transport rate to relative humidity. 
 
 The above four parameters are estimated by fitting the LUNA model to a global compilation of >800 obervations 
-located at different biomes, canopy locations, and time of the year from 1993-2013 (Ali et al 2015). The model inputs
+located at different biomes, canopy locations, and time of the year from 1993-2013 (Ali et al. 2015). The model inputs
 are area-based leaf nitrogen content, leaf mass per unit leaf area and the driving environmental conditions (average of past 10 days)
 including temperature, CO :sub:`2` concentrations, daily mean and maximum radiation, relative humidity and day length. 
 The estimated values in CLM5 for the listed parameters are 0.0311, 0.1745, 0.8054, and 6.0999, repectively. In LUNA V1.0, the estimated 
@@ -51,9 +51,9 @@ Model structure
 Plant Nitrogen
 ''''''''''''''''''''''''''
 
-The structure of the LUNA model is adapted from Xu et al.(2012), where the plant nitrogen at the leaf level ( :math:`\text{LNC}_{a}`;  gN/ m :sup:`2` leaf) is divided into
+The structure of the LUNA model is adapted from :ref:`Xu et al. (2012)<Xuetal2012>`, where the plant nitrogen at the leaf level ( :math:`\text{LNC}_{a}`;  gN/ m :sup:`2` leaf) is divided into
 four pools: structural nitrogen( :math:`N_{\text{str}}`;  gN/m :sup:`2` leaf), 
-photosynthetic nitrogen ( :math:`N_{\text{psn}}`; gN/ m:sup:`2` leaf),
+photosynthetic nitrogen ( :math:`N_{\text{psn}}`; gN/m :sup:`2` leaf),
 storage nitrogen( :math:`N_{\text{store}}`;  gN/m :sup:`2` leaf),
 and respiratory nitrogen ( :math:`N_{\text{resp}}`;  gN/m :sup:`2` leaf).
 Namely,
@@ -75,14 +75,14 @@ Namely,
    N_{\text{psn}} =N_{\text{et}} + N_{\text{cb}} + N_{\text{lc}}.
 
 The structural nitrogen,  :math:`N_{\text{str}}`, is calculated as the
-multiplication of leaf mass per unit area (LMA: g biomass/m :sup:`2` leaf), and the structural nitrogen content (SNC; gN/g biomass). Namely,
+multiplication of leaf mass per unit area (:math:`\text{LMA}`; g biomass/m :sup:`2` leaf), and the structural nitrogen content (:math:`\text{SNC}`; gN/g biomass). Namely,
 
 .. math::
   :label: 10.3)
 
    N_{\text{str}} = \text{SNC} \cdot \text{LMA}
 
-where SNC is set to be fixed at 0.002 (gN/g biomass), based on data on C:N ratio from dead wood (White etal.,2000).
+where :math:`\text{SNC}` is set to be fixed at 0.002 (gN/g biomass), based on data on C:N ratio from dead wood (White etal.,2000).
 
 We assume that plants optimize their nitrogen allocations (i.e., :math:`N_{\text{store}}`,  :math:`N_{\text{resp}}`,  :math:`N_{\text{lc}}`,  :math:`N_{\text{et}}`, :math:`N_{\text{cb}}`) to maximize the photosynthetic carbon gain, defined as
 the gross photosynthesis ( :math:`A` ) minus the maintenance respiration for
@@ -99,18 +99,18 @@ use. Namely, the solutions of nitrogen allocations \{ :math:`N_{\text{store}}`, 
 
 where  :math:`\text{FNC}_{a}` is the functional nitrogen content defined as the total leaf nitrogen content ( :math:`\text{LNC}_{a}`) minus the structural nitrogen content ( :math:`N_{\text{str}}` ). 
 
-The gross photosynthesis, :math:`A`, was calculated with a coupled leaf gas  exchange model based on the Farquhar et al. (1980) model of
-photosynthesis and Ball--Berry-type stomatal conductance model (Ball et al., 1987). The maintenance respiration for photosynthetic enzymes, :math:`R_{\text{psn}}`, is
+The gross photosynthesis, :math:`A`, was calculated with a coupled leaf gas exchange model based on the :ref:`Farquhar et al. (1980)<Farquharetal1980>` model of
+photosynthesis and Ball--Berry-type stomatal conductance model (Ball et al. 1987). The maintenance respiration for photosynthetic enzymes, :math:`R_{\text{psn}}`, is
 calculated by the multiplication of total photosynthetic nitrogen ( :math:`N_{\text{psn}}` ) and the maintenance respiration cost for photosynthetic enzymes.
 
 Maximum electron transport rate
 '''''''''''''''''''''''''''''''''
 
 In the LUNA model, the maximum electron transport rate
-( :math:`J_{\text{max}}`; :math:`{\mu} mol`  electron / m :sup:`-2`/s)
+( :math:`J_{\text{max}}`; :math:`{\mu} mol`  electron / m :sup:`2`/s)
 is simulated to have a baseline allocation of nitrogen and additional
 nitrogen allocation to change depending on the average daytime
-photosynthetic active radiation (PAR;  :math:`{\mu} mol`  electron / m :sup:`-2`/s), day length (hours) and air humidity.
+photosynthetic active radiation (PAR;  :math:`{\mu} mol`  electron / m :sup:`2`/s), day length (hours) and air humidity.
 Specifically, the LUNA model has
 
 .. math::
@@ -134,7 +134,7 @@ is the nitrogen use efficiency of :math:`J_{\text{{max}}}`. :math:`J_{\text{max}
 transport rate to amount of absorbed light (i.e., :math:`\alpha \text{PAR}`).
 :math:`f\left(\text{day length} \right)` is a function specifies the impact of day
 length (hours) on :math:`J_{\text{max}}` in view that longer day length has been demonstrated by previous studies to alter :math:`V_{\mathrm{c}\text{max}25}` and
-:math:`J_{\text{max}25}` (Bauerle et al., 2012; Comstock and Ehleringer, 1986) through photoperiod sensing and regulation (e.g. Song et al., 2013).
+:math:`J_{\text{max}25}` (Bauerle et al. 2012; Comstock and Ehleringer 1986) through photoperiod sensing and regulation (e.g., Song et al. 2013).
 Following Bauerle et al. (2012), :math:`f\left(\text{day length} \right)` is simulated as follows,
 
 .. math::
@@ -193,7 +193,7 @@ Maximum rate of carboxylation
 
 The maximum rate of carboxylation at 25 :sup:`o`\ C varies with
 foliage nitrogen concentration and specific leaf area and is calculated
-as in Thornton and Zimmermann (2007). At 25ºC,
+as in :ref:`Thornton and Zimmermann (2007)<ThorntonZimmermann2007>`. At 25ºC,
 
 .. math::
   :label: 10.11)
@@ -235,7 +235,7 @@ Hemisphere).
 Implementation of Photosynthetic Capacity
 ''''''''''''''''''''''''''''''''''''''''''
 
-Based on Farquhar et al. (1980) and Wullschleger (1993), we can calculate the
+Based on :ref:`Farquhar et al. (1980)<Farquharetal1980>` and Wullschleger (1993), we can calculate the
 electron-limited photosynthetic rate under daily maximum radiation ( :math:`W_{jx}`)
 and the Rubisco-limited photosynthetic rate ( :math:`W_{\mathrm{c}}`) as follows,
 
@@ -254,7 +254,7 @@ and the Rubisco-limited photosynthetic rate ( :math:`W_{\mathrm{c}}`) as follows
 where :math:`K_{j}` and :math:`K_{\mathrm{c}}` as the conversion factors for
 :math:`J_{x}` and  :math:`V_{{\mathrm{c}, \text{max}}}` ( :math:`V_{{\mathrm{c}, \text{max}}}` to
 :math:`W_{\mathrm{c}}` and :math:`J_{x}` to :math:`W_{J_{x}}`), respectively. Based on
-Xu et al. (2012), Maire et al. (2012) and Walker et al. (2014), we
+:ref:`Xu et al. (2012)<Xuetal2012>`, Maire et al. (2012) and Walker et al. (2014), we
 assume that :math:`W_{\mathrm{c}}` is proportional to
 :math:`W_{J_{x}}`. Specifically, we have
 
@@ -266,14 +266,14 @@ assume that :math:`W_{\mathrm{c}}` is proportional to
 
 where :math:`t_{\mathrm{c}, j0}` is the baseline ratio of :math:`W_{\mathrm{c}}` to
 :math:`W_{J_{x}}`. We recognize that this ratio may change depending on the
-nitrogen use efficiency of carboxylation and electron transport (Ainsworth and Rogers, 2007), 
+nitrogen use efficiency of carboxylation and electron transport (Ainsworth and Rogers 2007), 
 therefore the LUNA model has the modification factor, :math:`t_{\alpha}`, to adjust baseline
-the ratio depending on the nitrogen use efficiency for electron vs carboxylation (Ali et al 2016). 
+the ratio depending on the nitrogen use efficiency for electron vs carboxylation (:ref:`Ali et al. 2016<Alietal2016>`). 
 
 Total Respiration
 '''''''''''''''''''
 
-Following Collatz et al.(1991a), the total respiration ( :math:`R_{\mathrm{t}}`) is
+Following :ref:`Collatz et al. (1991)<Collatzetal1991>`, the total respiration ( :math:`R_{\mathrm{t}}`) is
 calculated in proportion to :math:`V_{\text{c,max}}`,
 
 .. math::
@@ -295,7 +295,7 @@ Accounting for the daytime and nighttime temperature, the daily respirations is 
 where :math:`D_{\text{day}}` and :math:`D_{\text{night}}` are daytime and
 nighttime durations in seconds. :math:`f_{\mathrm{r}}(T_{\text{night}})` and
 :math:`f_{\mathrm{r}}(T_{\text{day}})` are the temperature response functions for
-respiration [see Appendix B in Ali et al (2016) for details ].
+respiration (see Appendix B in :ref:`Ali et al. (2016)<Alietal2016>` for details).
 
 
 .. _Numerical scheme:
@@ -304,7 +304,7 @@ Numerical scheme
 ---------------------------------------------------------
 
 The LUNA model searches for the "optimal" nitrogen allocations for maximum net photosynthetic carbon gain
-by incrementally increase the nitrogen allocated for light capture (i.e.,  :math:`N_{\text{lc}}`) (see Ali et al 2016 for details) . 
+by incrementally increase the nitrogen allocated for light capture (i.e.,  :math:`N_{\text{lc}}`) (see :ref:`Ali et al. (2016)<Alietal2016>` for details). 
 We assume that  plants only optimize the nitrogen allocation when they can grow (i.e., GPP>0.0). 
 If GPP become zero under stress, then the LUNA model assume a certain amount of enzyme will decay at daily rates of 0.1, 
 in view that the half-life time for photosynthetic enzymes are short (~7 days) (Suzuki et al. 2001). 

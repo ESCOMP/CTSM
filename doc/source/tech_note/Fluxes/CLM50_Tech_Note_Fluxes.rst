@@ -1236,7 +1236,7 @@ The leaf boundary layer resistance :math:`r_{b}`  is
 where :math:`C_{v} =0.01` m\ s\ :sup:`-1/2` is the turbulent
 transfer coefficient between the canopy surface and canopy air, and
 :math:`d_{leaf}`  is the characteristic dimension of the leaves in the
-direction of wind flow (:numref:`Table Coefficients for saturation vapor pressure`).
+direction of wind flow (:numref:`Table Plant functional type aerodynamic parameters`).
 
 The partial derivatives of the fluxes from the soil beneath the canopy
 with respect to ground temperature, which are needed for the soil
@@ -1279,7 +1279,7 @@ adjusted for canopy density following :ref:`Zeng and Wang (2007) <ZengWang2007>`
    d = z_{top} R_{d} V
 
 where :math:`z_{top}`  is canopy top height (m) 
-(:numref:`Table Prescribed plant functional type heights`),
+(:numref:`Table Plant functional type canopy top and bottom heights`),
 :math:`R_{z0m}`  and :math:`R_{d}`  are the ratio of momentum roughness
 length and displacement height to canopy top height, respectively 
 (:numref:`Table Plant functional type aerodynamic parameters`), and :math:`z_{0m,\, g}` 

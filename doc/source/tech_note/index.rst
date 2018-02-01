@@ -34,6 +34,7 @@ CLM Technical Note
    Vegetation_Phenology_Turnover/CLM50_Tech_Note_Vegetation_Phenology_Turnover.rst
    Decomposition/CLM50_Tech_Note_Decomposition.rst
    External_Nitrogen_Cycle/CLM50_Tech_Note_External_Nitrogen_Cycle.rst
+   Plant_Mortality/CLM50_Tech_Note_Plant_Mortality.rst
    Fire/CLM50_Tech_Note_Fire.rst
    Methane/CLM50_Tech_Note_Methane.rst
    Crop_Irrigation/CLM50_Tech_Note_Crop_Irrigation.rst

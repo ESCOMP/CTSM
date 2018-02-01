@@ -89,7 +89,7 @@ atmospheric potential temperature (K).
 .. table:: Plant functional type (PFT) stomatal conductance parameters.
 
  +----------------------------------+-------------------+
- | PFT                              |  g\ :sub:`1` (Pa) |
+ | PFT                              |  g\ :sub:`1`      |
  +==================================+===================+
  | NET Temperate                    |        2.35       |
  +----------------------------------+-------------------+

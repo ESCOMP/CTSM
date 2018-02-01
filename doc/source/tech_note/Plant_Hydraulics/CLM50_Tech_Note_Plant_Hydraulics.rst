@@ -183,7 +183,7 @@ modeled according to Darcy's Law for porous media flow as:
 
    q = kA\left( \psi_1 - \psi_2 \right)
 
-:math:`q` is the flux of water (mmH\ :sub:`2`\ O) spanning the segment 
+:math:`q` is the flux of water (mmH\ :sub:`2`\ O/s) spanning the segment 
 between :math:`\psi_1` and :math:`\psi_2`
 
 :math:`k` is the hydraulic conductance (s\ :sup:`-1`\ )
@@ -206,11 +206,11 @@ conductivity (:math:`p50`) and a shape fitting parameter (:math:`c_k`).
   
    k=k_{max}\cdot 2^{-\left(\dfrac{\psi_1}{p50}\right)^{c_k}}
 
-:math:`k_{max}` is the maximum segment conductance (s-1) 
+:math:`k_{max}` is the maximum segment conductance (s\ :sup:`-1`\ ) 
 
-:math:`p50` is the water potential at 50% loss of conductivity (mmH2O) 
+:math:`p50` is the water potential at 50% loss of conductivity (mmH\ :sub:`2`\ O) 
 
-:math:`\psi_1` is the water potential of the lower segment terminus (mmH2O)
+:math:`\psi_1` is the water potential of the lower segment terminus (mmH\ :sub:`2`\ O)
 
 .. _Stem-to-leaf:
 
@@ -255,27 +255,27 @@ basis is the leaf area index (either sunlit or shaded).
 
 Variables:
 
-:math:`q_{1a}` = flux of water (mmH2O/s) from stem to sunlit leaf
+:math:`q_{1a}` = flux of water (mmH\ :sub:`2`\ O/s) from stem to sunlit leaf
 
-:math:`q_{1b}` = flux of water (mmH2O/s) from stem to shaded leaf
+:math:`q_{1b}` = flux of water (mmH\ :sub:`2`\ O/s) from stem to shaded leaf
 
 :math:`LAI_{sun}` = sunlit leaf area index (m2/m2)
 
 :math:`LAI_{shade}` = shaded leaf area index (m2/m2)
 
-:math:`\psi_{stem}` = stem water potential (mmH2O)
+:math:`\psi_{stem}` = stem water potential (mmH\ :sub:`2`\ O)
 
-:math:`\psi_{sunleaf}` = sunlit leaf water potential (mmH2O)
+:math:`\psi_{sunleaf}` = sunlit leaf water potential (mmH\ :sub:`2`\ O)
 
-:math:`\psi_{shadeleaf}` = shaded leaf water potential (mmH2O)
+:math:`\psi_{shadeleaf}` = shaded leaf water potential (mmH\ :sub:`2`\ O)
 
 Parameters:
 
-:math:`k_{1a,max}` = maximum leaf conductance (s-1)
+:math:`k_{1a,max}` = maximum leaf conductance (s\ :sup:`-1`\ )
 
-:math:`k_{1b,max}` = maximum leaf conductance (s-1)
+:math:`k_{1b,max}` = maximum leaf conductance (s\ :sup:`-1`\ )
 
-:math:`p50_{1}` = water potential at 50% loss of conductance (mmH2O)
+:math:`p50_{1}` = water potential at 50% loss of conductance (mmH\ :sub:`2`\ O)
 
 :math:`c_{k}` = vulnerability curve shape-fitting parameter (-)
 
@@ -309,21 +309,21 @@ gravitational potential.
 
 Variables:
 
-:math:`q_2` = flux of water (mmH2O/s) from root to stem
+:math:`q_2` = flux of water (mmH\ :sub:`2`\ O/s) from root to stem
 
 :math:`SAI` = stem area index (m2/m2)
 
-:math:`\Delta\psi_z` = gravitational potential (mmH2O)
+:math:`\Delta\psi_z` = gravitational potential (mmH\ :sub:`2`\ O)
 
-:math:`\psi_{root}` = root water potential (mmH2O)
+:math:`\psi_{root}` = root water potential (mmH\ :sub:`2`\ O)
 
-:math:`\psi_{stem}` = stem water potential (mmH2O)
+:math:`\psi_{stem}` = stem water potential (mmH\ :sub:`2`\ O)
 
 Parameters:
 
 :math:`k_{2,max}` = maximum stem conductivity (m/s)
 
-:math:`p50_2` = water potential at 50% loss of conductivity (mmH2O)
+:math:`p50_2` = water potential at 50% loss of conductivity (mmH\ :sub:`2`\ O)
 
 :math:`z_2` = vegetation height (m)
 
@@ -392,17 +392,17 @@ from the characteristic root spacing (section :numref:`Root Spacing`).
 
 Variables:
 
-:math:`q_{3,i}` = flux of water (mmH2O/s) from soil layer :math:`i` to root
+:math:`q_{3,i}` = flux of water (mmH\ :sub:`2`\ O/s) from soil layer :math:`i` to root
 
-:math:`\Delta\psi_{z,i}` = change in gravitational potential from soil layer :math:`i` to surface (mmH2O)
+:math:`\Delta\psi_{z,i}` = change in gravitational potential from soil layer :math:`i` to surface (mmH\ :sub:`2`\ O)
 
 :math:`LAI` = total leaf area index (m2/m2)
 
 :math:`SAI` = stem area index (m2/m2) 
 
-:math:`\psi_{soil,i}` = water potential in soil layer :math:`i` (mmH2O)
+:math:`\psi_{soil,i}` = water potential in soil layer :math:`i` (mmH\ :sub:`2`\ O)
 
-:math:`\psi_{root}` = root water potential (mmH2O)
+:math:`\psi_{root}` = root water potential (mmH\ :sub:`2`\ O)
 
 :math:`z_{3,i}` = length of root tissue conducting path = soil layer depth + root lateral length (m)
 
@@ -414,7 +414,7 @@ Parameters:
 
 :math:`f_{root-leaf}` = root-to-shoot ratio (-)
 
-:math:`p50_3` = water potential at 50% loss of root tissue conductance (mmH2O)
+:math:`p50_3` = water potential at 50% loss of root tissue conductance (mmH\ :sub:`2`\ O)
 
 :math:`ck` = shape-fitting parameter for vulnerability curve (-)
 
@@ -461,9 +461,9 @@ Vegetation water stress is calculated based on leaf water potential and is used 
 
 :math:`E_{shade,max}` = shaded leaf transpiration absent water stress (mm/s)
 
-:math:`\psi_{sunleaf}` = sunlit leaf water potential (mmH2O)
+:math:`\psi_{sunleaf}` = sunlit leaf water potential (mmH\ :sub:`2`\ O)
 
-:math:`\psi_{shadeleaf}` = shaded leaf water potential (mmH2O) 
+:math:`\psi_{shadeleaf}` = shaded leaf water potential (mmH\ :sub:`2`\ O) 
 
 :math:`\beta_{t,sun}` = sunlit transpiration water stress (-) 
 
