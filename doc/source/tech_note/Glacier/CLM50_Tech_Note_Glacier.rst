@@ -1,7 +1,7 @@
 .. _rst_Glaciers:
 
 Glaciers
-============
+========
 
 This chapter describes features of CLM that are specific to coupling to
 an ice sheet model (in the CESM context, this is the CISM model;
@@ -10,6 +10,42 @@ documentation and user’s guide for CISM). General information
 about glacier land units can be found elsewhere in this document (see
 Chapter :numref:`rst_Surface Characterization, Vertical Discretization,
 and Model Input Requirements` for an overview).
+
+.. _Glaciers summary of CLM5.0 updates relative to CLM4.5:
+
+Summary of CLM5.0 updates relative to CLM4.5
+--------------------------------------------
+
+Compared with CLM4.5 (:ref:`Oleson et al. 2013 <Olesonetal2013>`),
+CLM5.0 contains substantial improvements in its capabilities for
+land-ice science. This section summarizes these improvements, and the
+following sections provide more details.
+
+- All runs include multiple glacier elevation classes over Greenland and
+  Antarctica and compute ice sheet surface mass balance in those
+  regions.
+
+- A number of namelist parameters offer fine-grained control over
+  glacier behavior in different regions of the world (section
+  :numref:`Glacier regions`). (The options used outside of Greenland and
+  Antarctica reproduce the standard CLM4.5 glacier behavior.)
+
+- CLM can now keep its glacier areas and elevations in sync with CISM
+  when running with an evolving ice sheet. (However, in typical
+  configurations, the ice sheet geometry still remains fixed throughout
+  the run.)
+
+- The downscaling to elevation classes now includes downwelling longwave
+  radiation and partitioning of precipitation into rain vs. snow
+  (section :numref:`Multiple elevation class scheme`).
+
+- Other land units within the CISM domain undergo the same downscaling
+  as the glacier land unit, and surface mass balance is computed for the
+  natural vegetated land unit. This allows CLM to produce glacial
+  inception when running with an evolving ice sheet model.
+
+- There have also been substantial improvements to CLM's snow physics,
+  as described in other chapters of this document.
 
 .. _Overview Glaciers:
 
@@ -48,7 +84,7 @@ CISM:
 
 #. We can use the sophisticated snow physics parameterization already in
    CLM instead of implementing a separate scheme for CISM. Any
-   improvements to the CLM are applied to ice sheets automatically.
+   improvements to CLM are applied to ice sheets automatically.
 
 #. The atmosphere model can respond during runtime to ice-sheet surface
    changes (even in the absence of two-way feedbacks with CISM). As
@@ -78,13 +114,13 @@ the run. In these runs, CISM serves two roles in the system:
    SGLC then SMB will still be computed in CLM, but it won't be
    downscaled to a high-resolution ice sheet grid.)
 
-However, it is also possible to run CESM with an evolving ice sheet. In
-this case, CLM responds to CISM's evolution by adjusting the areas of
-the glacier landunit and each elevation class within this landunit, as
-well as the mean topographic heights of each elevation class. Thus,
-CLM's glacier areas and elevations remain in sync with
-CISM's. Conservation of mass and energy is done as for other landcover
-change (see Chapter :numref:`rst_Transient Landcover Change`).
+It is also possible to run CESM with an evolving ice sheet. In this
+case, CLM responds to CISM's evolution by adjusting the areas of the
+glacier land unit and each elevation class within this land unit, as well
+as the mean topographic heights of each elevation class. Thus, CLM's
+glacier areas and elevations remain in sync with CISM's. Conservation of
+mass and energy is done as for other landcover change (see Chapter
+:numref:`rst_Transient Landcover Change`).
 
 .. _Glacier regions:
 
@@ -94,7 +130,7 @@ Glacier regions and their behaviors
 The world's glaciers and ice sheets are broken down into a number of
 different regions (four by default) that differ in three respects:
 
-#. Whether the gridcell's glacier landunit contains:
+#. Whether the gridcell's glacier land unit contains:
 
    a. Multiple elevation classes (section :numref:`Multiple elevation
       class scheme`)
@@ -189,21 +225,21 @@ runaway sea ice growth in that region.
 Multiple elevation class scheme
 -------------------------------
 
-The glacier landunit contains multiple columns based on surface
+The glacier land unit contains multiple columns based on surface
 elevation. These are known as elevation classes, and the land unit is
-referred to as glacier\_mec. (As described in section :numref:`Glacier
+referred to as *glacier\_mec*. (As described in section :numref:`Glacier
 regions`, some regions have only a single elevation class, but they are
-still referred to as glacier\_mec landunits.) The default is to have 10
+still referred to as *glacier\_mec* land units.) The default is to have 10
 elevation classes whose lower limits are 0, 200, 400, 700, 1000, 1300,
 1600, 2000, 2500, and 3000 m. Each column is characterized by a
 fractional area and surface elevation that are read in during model
 initialization, and then possibly overridden by CISM as the run
-progresses. Each glacier\_mec column within a grid cell has distinct ice
+progresses. Each *glacier\_mec* column within a grid cell has distinct ice
 and snow temperatures, snow water content, surface fluxes, and SMB.
 
 The atmospheric surface temperature, potential temperature, specific
 humidity, density, and pressure are downscaled from the atmosphere's
-mean grid cell elevation to the glacier\_mec column elevation using a
+mean grid cell elevation to the *glacier\_mec* column elevation using a
 specified lapse rate (typically 6.0 deg/km) and an assumption of uniform
 relative humidity. Longwave radiation is downscaled by assuming a linear
 decrease in downwelling longwave radiation with increasing elevation
@@ -231,9 +267,9 @@ In contrast to most CLM subgrid units, glacier\_mec columns can be
 active (i.e., have model calculations run there) even if their area is
 zero. These are known as "virtual" columns. This is done because the ice
 sheet model may require a SMB even for some grid cells where CLM does
-not have glacier land units. Virtual columns do not affect energy
-exchange between the land and the atmosphere, but are included for
-potential forcing of CISM.
+not have glacier land units. Virtual columns also facilitate glacial
+advance and retreat in the two-way coupled case. Virtual columns do not
+affect energy exchange between the land and the atmosphere.
 
 .. _Computation of the surface mass balance:
 
@@ -245,7 +281,7 @@ associated runoff terms. The description here only applies to regions
 where glacial melt runs off and is replaced by ice, not to regions where
 glacial melt remains in place. Thus, by default, this only applies to
 Greenland and Antarctica, not to mountain glaciers elsewhere in the
-world. (See also :numref:`Glacier regions`.)
+world. (See also section :numref:`Glacier regions`.)
 
 The SMB of a glacier or ice sheet is the net annual
 accumulation/ablation of mass at the upper surface. Ablation is defined
@@ -299,7 +335,7 @@ then CISM controls the fate of the snow capping mass in
 :math:`q_{ice,frz}` (e.g., eventually transporting it to lower
 elevations where it can be melted or calved). Since CISM will now own
 this mass, the snow capping flux does *not* contribute to any runoff
-fluxes generated by CLM.
+fluxes generated by CLM in this case.
 
 If *glc\_dyn\_runoff\_routing* is false, then CLM sends the snow capping
 flux as runoff, as a crude representation of ice calving (see also
@@ -325,17 +361,18 @@ need is subtle, but can be understood with either of these explanations:
   for each unit of melt.
 
 For a given point in space or time, this reduction can result in
-negative ice runoff. However, when integrated over time and space, for
+negative ice runoff. However, when integrated over space and time, for
 an ice sheet that is near equilibrium, this just serves to decrease the
-too-high positive ice runoff from snow capping. (This near-equilibrium
-assumption is a key point in the treatment of snow capping with
-*glc\_dyn\_runoff\_routing* false. For glaciers and ice sheets that
-violate this assumption, either because they are far out of equilibrium
-with the climate or because the model is being run for hundreds of
-years, there are two ways to avoid the unrealistic ice runoff from snow
-capping: by running with an evolving, two-way-coupled ice sheet or by
-changing a glacier region's ice runoff behavior as described in section
-:numref:`Glacier regions`.)
+too-high positive ice runoff from snow capping. (The treatment of snow
+capping with *glc\_dyn\_runoff\_routing* false is based on this
+near-equilibrium assumption - i.e., that ice accumulation is roughly
+balanced by :math:`calving + melt`, integrated across space and time.
+For glaciers and ice sheets that violate this assumption, either because
+they are far out of equilibrium with the climate or because the model is
+being run for hundreds of years, there are two ways to avoid the
+unrealistic ice runoff from snow capping: by running with an evolving,
+two-way-coupled ice sheet or by changing a glacier region's ice runoff
+behavior as described in section :numref:`Glacier regions`.)
 
 In regions where SMB is computed for glaciers, SMB is also computed for
 the natural vegetated land unit. Because there is no ice to melt in this
