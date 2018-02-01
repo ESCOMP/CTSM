@@ -283,6 +283,12 @@ stomatal conductance in the earth system: linking leaf water-use
 efficiency and water transport along the soil–plant–atmosphere continuum,
 Geosci. Model Dev., 7, 2193-2222, doi:10.5194/gmd-7-2193-2014.
 
+.. _botta2000:
+
+|br|
+
+Botta, A et al., 2000. A global prognostic scheme of leaf onset using satellite data. Global Change Biology 6.7, pp. 709-725.
+
 .. _Brun1989:
 
 |br|
@@ -323,6 +329,12 @@ in old cove forests of the southern Appalachians. Ecology 86:73-84.
 Buzan, J.R., Oleson, K., and Huber, M. 2015: Implementation and
 comparison of a suite of heat stress metrics within the Community Land
 Model version 4.5, Geosci. Model Dev., 8, 151-170, doi:10.5194/gmd-8-151-2015.
+
+.. _byram1959:
+
+|br|
+
+Byram, G.M., 1959. Combustion of forest fuels. In Forest fire: control and use.(Ed. KP Davis) pp. 61-89.
 
 .. _CampbellNorman1998:
 
@@ -656,17 +668,23 @@ Firestone, M.K. and Davidson, E.A. 1989. Exchange of Trace Gases between
 Terrestrial Ecosystems and the Atmosphere. In: M.O. Andreae and D.S.
 Schimel (Editors). John Wiley and Sons, pp. 7-21.
 
+.. _Fisheretal2010:
+
+|br|
+
+Fisher, J. B., S. Sitch, Y. Malhi, R. A. Fisher, C. Huntingford, and S.-Y. Tan, 2010. Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation. Global Biogeochem. Cycles, 24, GB1014, doi:10.1029/2009GB003621.
+
 .. _Fisheretal2015:
 
 |br|
 
 Fisher, R. A., S. Muszala, M. Verteinstein, P. Lawrence, C. Xu, N. G. McDowell, R. G. Knox, C. Koven, J. Holm, B. M. Rogers, A. Spessa, D. Lawrence, and G. Bonan, 2015: Taking off the training wheels: the properties of a dynamic vegetation model without climate envelopes, CLM4.5(ED). Geosci. Model Dev., 8: 3593-3619, doi:10.5194/gmd-8-3593-2015.
 
-.. _Fisheretal2010:
+.. _Fisheretal2017:
 
 |br|
 
-Fisher, J. B., S. Sitch, Y. Malhi, R. A. Fisher, C. Huntingford, and S.-Y. Tan, 2010. Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation. Global Biogeochem. Cycles, 24, GB1014, doi:10.1029/2009GB003621.
+Fisher, R.A., C.D. Koven, W.R.L. Anderegg, et al., 2018: Vegetation demographics in Earth System Models: A review of progress and priorities. Glob Change Biol. 2018;24:35–54. https://doi.org/10.1111/gcb.13910
 
 .. _FlannerZender2005:
 
@@ -698,6 +716,12 @@ Geophys. Res. 112:D11202. DOI:10.1029/2006JD008003.
 Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to
 saturation vapor pressure. J. Appl. Meteor. 31:1507-1513.
 
+.. _foley1996:
+
+|br|
+
+Foley, J.A. et al., 1996. An integrated biosphere model of land surface processes, terrestrial carbon balance, and vegetation dynamics. Global Biogeochemical Cycles 10.4, pp. 603-628.
+
 .. _Friedl,etal2002:
 
 |br|
@@ -714,6 +738,12 @@ from MODIS: algorithms and early results. Remote Sens. Environ.
 
 Frolking, S., et al. 2001. Modeling Northern Peatland Decomposition and
 Peat Accumulation. Ecosystems. 4:479-498.
+
+.. _fyllas2014:
+
+|br|
+
+Fyllas, N.M. et al., 2014. Analysing Amazonian forest productivity using a new individual and trait- based model (TFS v. 1). Geoscientific Model Development 7.4, pp. 1251-1269.
 
 .. _Gallaisetal2006:
 
@@ -842,7 +872,7 @@ studies. Water Resour. Res. 35:583-587.
 
 |br|
 
-Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, H. A. J. Meijer, M. Rubino, P. P. Tans, C. M. Trudinger, B. H. Vaughn and J. W. C. White (2017) Compiled records of carbon isotopes in atmospheric CO2 for historical simulations in CMIP6, Geoscientific Model Development, in review. doi: 10.5194/gmd-2017-166.
+Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, H. A. J. Meijer, M. Rubino, P. P. Tans, C. M. Trudinger, B. H. Vaughn and J. W. C. White, 2017. Compiled records of carbon isotopes in atmospheric CO2 for historical simulations in CMIP6, Geoscientific Model Development, in review. doi: 10.5194/gmd-2017-166.
 
 .. _GrenfellWarren1999:
 
@@ -1232,6 +1262,12 @@ nitrogen dynamics. Proceedings of the National Academies of Science,
 
 Koven, C.D., G. Hugelius, D.M. Lawrence, and W.R. Wieder, 2017: Higher climatological temperature sensitivity of soil carbon in cold than warm climates. Nature Clim. Change, 7, doi:10.1038/nclimate3421.
 
+.. _kucharik1998:
+
+|br|
+
+Kucharik, C.J., J.M. Norman, and S.T. Gower, 1998. Measurements of branch area and adjusting leaf area index indirect measurements. Agricultural and Forest Meteorology 91.1, pp. 69-88.
+
 .. _Kuchariketal2000:
 
 |br|
@@ -1531,6 +1567,12 @@ Liang, X., Lettenmaier, D.P., Wood, E.F., and Burges, S.J. 1994. A
 simple hydrologically based model of land surface water and energy
 fluxes for GSMs. J. Geophys. Res. 99(D7):14,415–14,428.
 
+.. _lichstein2011:
+
+|br|
+
+Lichstein, J.W. and S.W. Pacala, 2011. Local diversity in heterogeneous landscapes: quantitative assessment with a height-structured forest metacommunity model`. Theoretical Ecology 4.2, pp. 269-281.
+
 .. _LipscombSacks2012:
 
 |br|
@@ -1538,6 +1580,13 @@ fluxes for GSMs. J. Geophys. Res. 99(D7):14,415–14,428.
 Lipscomb, W., and Sacks, W. 2012. The CESM land ice model documentation
 and user’s guide. 46 pp. [Available online at
 http://www.cesm.ucar.edu/models/cesm1.1/cism/].
+
+.. _lischke2006:
+
+|br|
+
+Lischke, H. et al., 2006. TreeMig: a forest-landscape model for simulating spatio-temporal patterns from stand to landscape scale. Ecological Modelling 199.4, pp. 409-420. 41
+
 
 .. _LloydTaylor1994:
 
@@ -1652,6 +1701,12 @@ Mary, B., Fresneau, C., Morel, J.L. and Mariotti, A., 1993. C and N
 cycling during decomposition of root mucilage, roots and glucose in
 soil. Soil Biology and Biochemistry 25:1005-1014.
 
+.. _mcdowell2013:
+
+|br|
+
+McDowell, N.G. et al., 2013. Evaluating theories of drought-induced vegetation mortality using a multimodel experiment framework. New Phytologist 200.2, pp. 304-321.
+
 .. _McGuireetal1992:
 
 |br|
@@ -1668,7 +1723,7 @@ potential vegetation in North America. Global Biogeochem. Cycles
 
 Medlyn, B.E., Duursma, R.A., Eamus, D., Ellsworth, D.S., Prentice, I.C.,
 Barton, C.V.M., Crous, K.Y., De Angelis, P., Freeman, M., and
-Wingate, L. (2011), Reconciling the optimal and empirical approaches to
+Wingate, L., 2011. Reconciling the optimal and empirical approaches to
 modelling stomatal conductance. Global Change Biology, 17: 2134–2144.
 doi:10.1111/j.1365-2486.2010.02375.x
 
@@ -1716,6 +1771,12 @@ high-resolution grids. Int. J. Climatol. 25:693-712.
 Moldrup, P. et al. 2003. Modeling diffusion and reaction in soils: X. A
 unifying model for solute and gas diffusivity in unsaturated soil. Soil
 Science 168:321-337.
+
+.. _mc_2001:
+
+|br|
+
+Moorcroft, P.R., G.C. Hurtt, and S.W. Pacala, 2001. A method for scaling vegetation dynamics: the ecosystem demography model ED. Ecological monographs 71.4, pp. 557-586.
 
 .. _Mynenietal2002:
 
@@ -1791,6 +1852,12 @@ Geophys. Res. 112:D07103. DOI:10.1029/2006JD007522.
 Niu, G.-Y., and Yang, Z.-L. 2007. An observation-based formulation of
 snow cover fraction and its evaluation over large North American river
 basins. J. Geophys. Res. 112:D21101. DOI:10.1029/2007JD008674.
+
+.. _norman1979:
+
+|br|
+
+Norman, J.M., 1979. Modeling the complete crop canopy. Modification of the Aerial Environment of Crops, pp. 249-280.
 
 .. _Oikawaetal2005:
 
@@ -1980,12 +2047,24 @@ New York, 480 pp.
 
 Pelletier, J. D., P. D. Broxton, P. Hazenberg, X. Zeng, P. A. Troch, G. Y. Niu, Z. Williams, M. A. Brunke, and D. Gochis, 2016: A gridded global data set of soil, intact regolith, and sedimentary deposit thicknesses for regional and global land surface modeling. J. Adv. Mod. Earth Sys. 8:41-65.
 
+.. _peterson1986:
+
+|br|
+
+Peterson, D.L. and K.C. Ryan, 1986. Modeling postfire conifer mortality for long-range planning. Environmental Management 10.6, pp. 797-808.
+
 .. _Petrescuetal2010:
 
 |br|
 
 Petrescu, A.M.R. et al. 2010. Modeling regional to global CH4 emissions
 of boreal and arctic wetlands. Global Biogeochemical Cycles, 24(GB4009).
+
+.. _pfeiffer2013:
+
+|br|
+
+Pfeiffer, M., A. Spessa, and J.O. Kaplan, 2013. A model for global biomass burning in preindustrial time: LPJ-LMfire (v1. 0). Geoscientific Model Development 6.3, pp. 643-685.
 
 .. _Philip1957:
 
@@ -2058,13 +2137,11 @@ ice-atmosphere interactions underestimates ice sheet melt in
 millennial-scale deglaciation simulations. Geophys. Res. Lett. **
 35:L01503. DOI:10.1029/2007GL031738.
 
-.. _Qianetal2006:
+.. _purves2008:
 
 |br|
 
-Qian, T., Dai, A., Trenberth, K.E., and Oleson, K.W. 2006. Simulation of
-global land surface conditions from 1948 to 2004: Part I: Forcing data
-and evaluations. J. Hydrometeor. 7:953-975.
+Purves, D.W. et al.,  2008. Predicting and understanding forest dynamics using a simple tractable model. Proceedings of the National Academy of Sciences 105.44, pp. 17018-17022.
 
 .. _RamankuttyFoley1998:
 
@@ -2199,10 +2276,20 @@ Saggar, S., Tate, K.R., Feltham, C.W., Childs, C.W. and Parshotam, A.,
 :math:`{}^{14}`\ C-labelled glucose. Soil Biology and Biochemistry, 26:
 1263-1271.
 
+.. _Sakaguchietal2009:
+
+|br|
+
 Sakaguchi, K., and Zeng, X. 2009. Effects of soil wetness, plant litter,
 and under-canopy atmospheric stability on ground evaporation in the
 Community Land Model (CLM3.5). J. Geophys. Res. 114:D01107.
 DOI:10.1029/2008JD010834.
+
+.. _sato2007:
+
+|br|
+
+Sato, H., A. Itoh, and T. Kohyama, 2007. SEIB-DGVM: A new Dynamic Global Vegetation Model using a spatially explicit individual-based approach. Ecological Modelling 200.3, pp. 2793307.
 
 .. _Schaafetal2002:
 
@@ -2285,6 +2372,12 @@ Dazlich, D.A., Zhang, C., Collelo, G.D., and Bounoua, L. 1996. A revised
 land surface parameterization (SiB2) for atmospheric GCMs. Part I: Model
 formulation. J. Climate 9:676-705.
 
+.. _sellers1996:
+
+|br|
+
+Sellers, Piers J et al. (1996). A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II: The generation of global fields of terrestrial biophysical parameters from satellite data. Journal of climate 9.4, pp. 706-737.
+
 .. _Shietal2013:
 
 |br|
@@ -2331,6 +2424,12 @@ Simpson, R.J., Lambers, H., and Dalling, M.J. 1983. Nitrogen
 redistribution during grain growth in wheat (Triticum avestivum L.).
 Plant Physiol. 71:7-14.
 
+.. _sitch2003:
+
+|br|
+
+Sitch, S et al. (2003). Evaluation of ecosystem dynamics, plant geography and terrestrial carbon cycling in the LPJ dynamic global vegetation model. Global Change Biology 9.2, pp. 161-185.
+
 .. _Sivak2013:
 
 |br|
@@ -2338,6 +2437,12 @@ Plant Physiol. 71:7-14.
 Sivak, M. 2013. Air conditioning versus heating: climate control is more
 energy demanding in Minneapolis than in Miami. Environ. Res. Lett., 8,
 doi:10.1088/1748-9326/8/1/014050.
+
+.. _smith2001:
+
+|br|
+
+Smith, B., I.C. Prentice, and M.T. Sykes, 2001. Representation of vegetation dynamics in the modelling of terrestrial ecosystems: comparing two contrasting approaches within European climate space. Global Ecology and Biogeography 10.6, pp. 621-637.
 
 .. _Smithetal2005:
 
@@ -2347,6 +2452,12 @@ Smith, A.M.S., Wooster, M.J., Drake, N.A., Dipotso, F.M. and Perry,
 G.L.W., 2005. Fire in African savanna: Testing the impact of incomplete
 combustion on pyrogenic emissions estimates. Ecological Applications,
 15: 1074-1082.
+
+.. _smith2007:
+
+|br|
+
+Smith, A.M. and M. Stitt, 2007. Coordination of carbon supply and plant growth. Plant, cell & environment 30.9, pp. 1126-1149.
 
 .. _Sollins1982:
 
@@ -2550,6 +2661,13 @@ fire disturbance for global vegetation dynamics: coupling fire into a
 Dynamic Global Vegetation Model. Global Ecology and Biogeography
 10:661-667.
 
+.. _thonicke2010:
+
+|br|
+
+Thonicke, K. et al., 2010. The influence of vegetation, fire spread and fire behaviour on biomass burning and trace gas emissions: results from a process-based model. Biogeosciences 7.6, pp. 1991-2011.
+
+
 .. _Thornton1998:
 
 |br|
@@ -2662,6 +2780,12 @@ site. Agric. For. Meteor. 82:119-153.
 UNSTAT, 2005. National Accounts Main Aggregates Database, United Nations
 Statistics Division.
 
+.. _uriarte2009:
+
+|br|
+
+Uriarte, M. et al., 2009. Natural disturbance and human land use as determinants of tropical forest dynamics: results from a forest simulator. Ecological Monographs 79.3, pp. 423-443.
+
 .. _VallanoSparks2007:
 
 |br|
@@ -2724,6 +2848,12 @@ Vanninen, P., and Makela, A. 2005. Carbon budget for Scots pine trees:
 effects of size, competition and site fertility on growth allocation and
 production. Tree Phys. 25:17-30.
 
+.. _venevsky2002:
+
+|br|
+
+Venevsky, S. et al., 2002. Simulating fire regimes in human-dominated ecosystems: Iberian Peninsula case study. Global Change Biology 8.10, pp. 984-998.
+
 .. _VerdinGreenlee1996:
 
 |br|
@@ -2783,6 +2913,12 @@ model LPJ-WHyMe v1.3. Geoscientific Model Development Discussions
 Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow
 burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci.
 26:877-886. DOI:10.1007/s00376-009-8098-3.
+
+.. _weng2014:
+
+|br|
+
+Weng, E.S. et al., 2014. Scaling from individuals to ecosystems in an Earth System Model using a mathematically tractable model of height-structured competition for light. Biogeosciences Discussions 11.12, pp. 17757-17860.
 
 .. _Whiteetal1997:
 
@@ -2857,9 +2993,15 @@ Water Resour. Res., 47, W03517, doi:10.1029/2009WR008871.
 
 |br|
 
-Wu, H., J. S. Kimball, H. Li, M. Huang, L. R. Leung, and R. F. Adler
-(2012), A New Global River Network Database for Macroscale Hydrologic
+Wu, H., J. S. Kimball, H. Li, M. Huang, L. R. Leung, and R. F. Adler,
+2012. A New Global River Network Database for Macroscale Hydrologic
 modeling, Water Resour. Res., 48, W09701, doi:10.1029/2012WR012313.
+
+.. _xiaodong2005:
+
+|br|
+
+Xiaodong, Y. and H.H. Shugart, 2005. FAREAST: a forest gap model to simulate dynamics and patterns of eastern Eurasian forests. Journal of Biogeography 32.9, pp. 1641-1658.
 
 .. _Xuetal2012:
 
@@ -2966,195 +3108,3 @@ Global Biogeochemical Cycles 18. DOI:10.1029/2004GB002239.
 Zilitinkevich, S.S. 1970. Dynamics of the Atmospheric Boundary Layer.
 Leningrad Gidrometeor.
 
-.. _bonan2012:
-
-|br|
-
-Bonan, Gordon B et al. (2012). `Reconciling leaf physiological traits and canopy flux data: Use of the TRY and FLUXNET databases in the Community Land Model version 4`. Journal of Geophysical Research: Biogeosciences (2005-2012) 117.G2.
-
-.. _botta2000:
-
-|br|
-
-Botta, A et al. (2000). `A global prognostic scheme of leaf onset using satellite data`. Global Change Biology 6.7, pp. 709-725.
-
-.. _byram1959:
-
-|br|
-
-Byram, GM (1959). Combustion of forest fuels. In Forest fire: control and use.(Ed. KP Davis) pp. 61-89.
-
-.. _collatz1991:
-
-|br|
-
-Collatz, G James et al. (1991). `Physiological and environmental regulation of stomatal conductance, photosynthesis and transpiration: a model that includes a laminar boundary layer` Agricultural and Forest Meteorology 54.2, pp. 107-136.
-
-.. _collatz1992:
-
-|br|
-
-Collatz, Go J, M Ribas-Carbo, and JA Berry (1992). `Coupled photosynthesis-stomatal conductance model for leaves of C4 plants`. Functional Plant Biology 19.5, pp. 519-538. 
-
-.. _farquhar1980:
-
-|br|
-
-Farquhar, GD, S von von Caemmerer, and JA Berry (1980). `A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species`. Planta 149.1, pp. 780-90.
-
-.. _fisher2010:
-
-|br|
-
-Fisher, JB et al. (2010). `Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation`. Global Biogeochemical Cycles 24.1.
-
-.. _foley1996:
-
-|br|
-
-Foley, Jonathan A et al. (1996). `An integrated biosphere model of land surface processes, terrestrial carbon balance, and vegetation dynamics`. Global Biogeochemical Cycles 10.4, pp. 603-628.
-
-.. _fyllas2014:
-
-|br|
-
-Fyllas, NM et al. (2014). `Analysing Amazonian forest productivity using a new individual and trait- based model (TFS v. 1)`. Geoscientific Model Development 7.4, pp. 1251-1269.
-
-.. _kucharik1998:
-
-|br|
-
-Kucharik, Christopher J, John M Norman, and Stith T Gower (1998). `Measurements of branch area and adjusting leaf area index indirect measurements`. Agricultural and Forest Meteorology 91.1, pp. 69-88.
-
-.. _li2012:
-
-|br|
-
-Li, F, XD Zeng, and S Levis (2012). `A process-based fire parameterization of intermediate complexity in a Dynamic Global Vegetation Model`. Biogeosciences 9.7, pp. 2761-2780.
-
-.. _lichstein2011:
-
-|br|
-
-Lichstein, Jeremy W and Stephen W Pacala (2011). `Local diversity in heterogeneous landscapes: quantitative assessment with a height-structured forest metacommunity model`. Theoretical Ecology 4.2, pp. 269-281.
-
-.. _lischke2006:
-
-|br|
-
-Lischke, Heike et al. (2006). `TreeMig: a forest-landscape model for simulating spatio-temporal patterns from stand to landscape scale`. Ecological Modelling 199.4, pp. 409-420. 41
-
-.. _lloyd2010:
-
-|br|
-
-Lloyd, J et al. (2010). `Optimisation of photosynthetic carbon gain and within-canopy gradients of associated foliar traits for Amazon forest trees`. Biogeosciences 7.6, pp. 1833-1859.
-
-.. _mcdowell2013:
-
-|br|
-
-McDowell, Nate G et al. (2013). `Evaluating theories of drought-induced vegetation mortality using a multimodel experiment framework`. New Phytologist 200.2, pp. 304-321.
-
-.. _medlyn2011:
-
-|br|
-
-Medlyn, Belinda E et al. (2011). `Reconciling the optimal and empirical approaches to modelling stom- atal conductance`. Global Change Biology 17.6, pp. 2134-2144.
-
-
-.. _mc_2001:
-
-|br|
-
-Moorcroft, PR, GC Hurtt, and Stephen W Pacala (2001). `A method for scaling vegetation dynamics: the ecosystem demography model ED`. Ecological monographs 71.4, pp. 557-586.
-
-.. _norman1979:
-
-|br|
-
-Norman, JM (1979). `Modeling the complete crop canopy`. Modification of the Aerial Environment of Crops, pp. 249-280.
-
-.. _oleson2013:
-
-|br|
-
-Oleson, KW et al. (2013). `Technical description of version 4.5 of the Community Land Model (CLM)`.
-
-.. _peterson1986:
-
-|br|
-
-Peterson, David L and Kevin C Ryan (1986). `Modeling postfire conifer mortality for long-range planning`. Environmental Management 10.6, pp. 797-808.
-
-.. _pfeiffer2013:
-
-|br|
-
-Pfeiffer, M, A Spessa, and JO Kaplan (2013). `A model for global biomass burning in preindustrial time: LPJ-LMfire (v1. 0)`. Geoscientific Model Development 6.3, pp. 643-685.
-
-.. _purves2008:
-
-|br|
-
-Purves, Drew W et al. (2008). `Predicting and understanding forest dynamics using a simple tractable model`. Proceedings of the National Academy of Sciences 105.44, pp. 17018-17022.
-
-.. _sato2007:
-
-|br|
-
-Sato, Hisashi, Akihiko Itoh, and Takashi Kohyama (2007). `SEIB–DGVM: A new Dynamic Global Vegetation Model using a spatially explicit individual-based approach`. Ecological Modelling 200.3, pp. 2793307.
-
-.. _sellers1996:
-
-|br|
-
-Sellers, Piers J et al. (1996). `A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II: The generation of global fields of terrestrial biophysical parameters from satellite data`. Journal of climate 9.4, pp. 706-737.
-
-.. _sitch2003:
-
-|br|
-
-Sitch, S et al. (2003). `Evaluation of ecosystem dynamics, plant geography and terrestrial carbon cycling in the LPJ dynamic global vegetation model`. Global Change Biology 9.2, pp. 161-185.
-
-.. _smith2007:
-
-|br|
-
-Smith, Alison M and Mark Stitt (2007). `Coordination of carbon supply and plant growth`. Plant, cell & environment 30.9, pp. 1126-1149.
-
-.. _smith2001:
-
-|br|
-
-Smith, Benjamin, I Colin Prentice, and Martin T Sykes (2001). `Representation of vegetation dynamics in the modelling of terrestrial ecosystems: comparing two contrasting approaches within European climate space`. Global Ecology and Biogeography 10.6, pp. 621-637.
-
-.. _thonicke2010:
-
-|br|
-
-Thonicke, K et al. (2010). `The influence of vegetation, fire spread and fire behaviour on biomass burning and trace gas emissions: results from a process-based model`. Biogeosciences 7.6, pp. 1991-2011.
-
-.. _uriarte2009:
-
-|br|
-
-Uriarte, Maria et al. (2009). `Natural disturbance and human land use as determinants of tropical forest dynamics: results from a forest simulator`. Ecological Monographs 79.3, pp. 423-443.
-
-.. _venevsky2002:
-
-|br|
-
-Venevsky, Sergey et al. (2002). `Simulating fire regimes in human-dominated ecosystems: Iberian Peninsula case study`. Global Change Biology 8.10, pp. 984-998.
-
-.. _weng2014:
-
-|br|
-
-Weng, ES et al. (2014). `Scaling from individuals to ecosystems in an Earth System Model using a mathematically tractable model of height-structured competition for light`. Biogeosciences Discussions 11.12, pp. 17757-17860.
-
-.. _xiaodong2005:
-
-|br|
-
-Xiaodong, Yan and HH Shugart (2005). `FAREAST: a forest gap model to simulate dynamics and patterns of eastern Eurasian forests`. Journal of Biogeography 32.9, pp. 1641-1658.
