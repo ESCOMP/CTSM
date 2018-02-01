@@ -6,9 +6,9 @@ Dynamic Global Vegetation
 What has changed
 ^^^^^^^^^^^^^^^^^^^^
 
-- Deprecation of the dynamic global vegetation model (DGVM): The CLM5.0 model contains the legancy 'CNDV' code, which runs the CLM4(CN) model in combination with the LPJ-derived dynamics vegetation model introduced in CLM3. While this capacity has not technically been removed from the model, the DGVM has not been tested in the development of CLM5 and is no longer scientifically supported. 
+- Deprecation of the dynamic global vegetation model (DGVM): The CLM5.0 model contains the legacy 'CNDV' code, which runs the CLM biogeochemistry model in combination with the LPJ-derived dynamics vegetation model introduced in CLM3. While this capacity has not technically been removed from the model, the DGVM has not been tested in the development of CLM5 and is no longer scientifically supported. 
 
-- Introduction of FATES: The Functionally Assembled Terrestrial Ecosystem Simulator (FATES) is the actively developed DGVM for the CLM5. See 
+- Introduction of FATES: The Functionally Assembled Terrestrial Ecosystem Simulator (FATES) is the actively developed DGVM for the CLM5. 
 
 
 .. _rst_FATES:
@@ -20,11 +20,7 @@ FATES is the "Functionally Assembled Terrestrial Ecosystem Simulator". It is an 
 
 FATES was derived from the CLM Ecosystem Demography model (CLM(ED)), which was documented in:
 
-Fisher RA, Muszala S, Verteinstein M, Lawrence P, Xu C, McDowell NG,
-  Knox RG, Koven C, Holm J, Rogers BM, Lawrence D. Taking off the
-  training wheels: the properties of a dynamic vegetation model without
-  climate envelopes. Geoscientific Model Development Discussions. 2015
-  Apr 1;8(4).
+Fisher, R. A., Muszala, S., Verteinstein, M., Lawrence, P., Xu, C., McDowell, N. G., Knox, R. G., Koven, C., Holm, J., Rogers, B. M., Spessa, A., Lawrence, D., and Bonan, G.: Taking off the training wheels: the properties of a dynamic vegetation model without climate envelopes, CLM4.5(ED), Geosci. Model Dev., 8, 3593-3619, https://doi.org/10.5194/gmd-8-3593-2015, 2015.
 
 and this technical note was first published as an appendix to that paper. 
 
@@ -53,9 +49,9 @@ for carbon storage allocation, and for tree mortality under carbon
 stress, are also included and presented here.
 
 Numerous other implementations of the
-Ecosystem Demography concept exist (See Fisher et al. 2017 for a review of these) Therefore, to avoid confusion between the
+Ecosystem Demography concept exist (See :ref:`Fisher et al. (2018)<Fisheretal2018>` for a review of these) Therefore, to avoid confusion between the
 concept of 'Ecosystem Demography' and the implementation of this concept
-in different models, the CLM(ED) implementation described by Fisher et al. (2015) will hereafter be called 'FATES' (the Functionally Assembled Terrestrial Ecosystem Simulator).
+in different models, the CLM(ED) implementation described by :ref:`Fisher et al. (2015)<Fisheretal2015>` will hereafter be called 'FATES' (the Functionally Assembled Terrestrial Ecosystem Simulator).
 
 The representation of ecosystem heterogeneity in FATES
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,7 +97,7 @@ history.**
 The 'patch' organizational structure in CLM thus replaces the previous
 'PFT' structure in the organization heirarchy. The original hierarchical
 land surface organizational structure of CLM as described in
-:ref:`Oleson et al. 2013<oleson2013>` may be depicted as:
+:ref:`Oleson et al. 2013<olesonetal2013>` may be depicted as:
 
 .. math::
 
@@ -709,7 +705,7 @@ performance in ED-like cohort based models, since they determine how
 light resources are partitioned between competing plants of varying
 heights, which has a very significant impact on how vegetation
 distribution emerges from competition
-:ref:`Fisher et al. 2010<fisher2010>`.
+:ref:`Fisher et al. 2010<Fisheretal2010>`.
 
 The standard ED1.0 model makes a simple 'flat disk' assumption, that the
 leaf area of each cohort is spread in an homogenous layer at one exact
@@ -796,7 +792,7 @@ Under these circumstances, the `extra` crown area :math:`A_{loss}`
 (i.e., :math:`A_{canopy}` - :math:`A_p`) is moved into the understorey.
 For each cohort already in the canopy, we determine a fraction of trees
 that are moved from the canopy (:math:`L_c`) to the understorey.
-:math:`L_c` is calculated as :ref:`Fisher et al. 2010<fisher2010>`
+:math:`L_c` is calculated as :ref:`Fisher et al. 2010<Fisheretal2010>`
 
 .. math:: L_{c}= \frac{A_{loss,patch} w_{coh}}{\sum_{coh=1}^{nc,patch}{w_{coh}}} ,
 
@@ -1354,7 +1350,7 @@ profile section. Firstly, we denote two or more canopy layers (denoted
 :math:`C_l`). The concept of a ‘canopy layer’ refers to the idea that
 plants are organized into discrete over and under-stories, as predicted
 by the Perfect Plasticity Approximation
-(:ref:`Purves et al. 2008<purves2008>`, :ref:`Fisher et al. 2010<fisher2010>`). Within each canopy layer
+(:ref:`Purves et al. 2008<purves2008>`, :ref:`Fisher et al. 2010<Fisheretal2010>`). Within each canopy layer
 there potentially exist multiple cohorts of different plant functional
 types and heights. Within each canopy layer, :math:`C_l`, and functional
 type, :math:`ft`, the model resolves numerous leaf layers :math:`z`,
@@ -1527,9 +1523,9 @@ photosynthesis model before describing its application to the FATES
 canopy structure. This description in this section is largely repeated
 from the Oleson et al. CLM4.5 technical note but included here for
 comparison with its implementation in FATES. Photosynthesis in C3
-plants is based on the model of :ref:`Farquhar 1980<farquhar1980>` as
-modified by :ref:`Collatz et al. 1991<collatz1991>`. Photosynthetic assimilation
-in C4 plants is based on the model of :ref:`Collatz et al. 1991<collatz1991>`.
+plants is based on the model of :ref:`Farquhar 1980<Farquharetal1980>` as
+modified by :ref:`Collatz et al. (1991)<Collatzeteal1991>`. Photosynthetic assimilation
+in C4 plants is based on the model of :ref:`Collatz et al. (1991)<Collatzetal1991>`.
 In both models, leaf photosynthesis, :math:`\textrm{gpp}`
 (:math:`\mu`\ mol CO\ :math:`_2` m\ :math:`^{-2}` s\ :math:`^{-1}`) is
 calculated as the minimum of three potentially limiting fluxes,
@@ -1556,7 +1552,7 @@ partial pressure (Pa). :math:`K_{c}` and :math:`K_{o}` are the
 Michaelis-Menten constants (Pa) for CO\ :math:`_{2}` and
 O\ :math:`_{2}`. These vary with vegetation temperature :math:`T_v`
 (:math:`^{o}`\ C) according to an Arrhenious function described in
-:ref:`Oleson et al. 2013<oleson2013>`. :math:`V_{c,max}` is the leaf layer
+:ref:`Oleson et al. 2013<olesonetal2013>`. :math:`V_{c,max}` is the leaf layer
 photosynthetic capacity (:math:`\mu` mol CO\ :math:`_2` m\ :math:`^{-2}`
 s\ :math:`^{-1}`).
 
@@ -1627,7 +1623,7 @@ CO\ :math:`_{2}` compensation point :math:`\Gamma_{*}` (Pa) is
 
 where the term 0.21 represents the ratio of maximum rates of oxygenation
 to carboxylation, which is virtually constant with temperature
-:ref:`Farquhar, 1980<farquhar1980>`.
+:ref:`Farquhar, 1980<Farquharetal1980>`.
 
 Resolution of the photosynthesis theory within the FATES canopy structure.
 --------------------------------------------------------------------------
@@ -1753,7 +1749,7 @@ where :math:`V_{canopy}` is calculated as
 
 :math:`K_{n}` is the coefficient of nitrogen decay with canopy depth.
 The value of this parameter is taken from the work of
-:ref:`Lloyd et al. 2010<lloyd2010>` who determined, from 204 vertical profiles
+:ref:`Lloyd et al. 2010<Lloydetal2010>` who determined, from 204 vertical profiles
 of leaf traits, that the decay rate of N through canopies of tropical
 rainforests was a function of the :math:`V_{cmax}` at the top of the
 canopy. They obtain the following term to predict :math:`K_{n}`,
@@ -2063,13 +2059,13 @@ Fundamental stomatal conductance theory
 
 [14]_Stomatal conductance is unchanged in concept from the CLM4.5 approach.
 Leaf stomatal resistance is calculated from the Ball-Berry conductance
-model as described by :ref:`Collatz et al. 1991<collatz1991>` and implemented in
+model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in
 a global climate model by :ref:`Sellers et al. 1996<sellers1996>`. The model
 relates stomatal conductance (i.e., the inverse of resistance) to net
 leaf photosynthesis, scaled by the relative humidity at the leaf surface
 and the CO\ :math:`_2` concentration at the leaf surface. The primary
 difference between the CLM implementation and that used by
-:ref:`Collatz et al. 1991<collatz1991>` and :ref:`Sellers et al. 1996<sellers1996>` is
+:ref:`Collatz et al. (1991)<Collatzetal1991>` and :ref:`Sellers et al. (1996)<sellers1996>` is
 that they used net photosynthesis (i.e., leaf photosynthesis minus leaf
 respiration) instead of gross photosynthesis. As implemented here,
 stomatal conductance equals the minimum conductance (:math:`b`) when
@@ -2093,13 +2089,13 @@ the leaf at the vegetation temperature conductance (:math:`\mu`\ mol
 m\ :math:`^{-2}` s\ :math:`^{-1}`) when :math:`A` = 0 . Typical values
 are :math:`m_{ft}` = 9 for C\ :math:`_3` plants and :math:`m_{ft}` = 4
 for C\ :math:`_4` plants (
-:ref:`Collatz et al. 1991<collatz1991>`, :ref:`Collatz, 1992<collatz1992>`, :ref:`Sellers et al 1996<sellers1996>)`.
+:ref:`Collatz et al. 1991<Collatzetal1991>`, :ref:`Collatz, 1992<Collatzetal1992>`, :ref:`Sellers et al 1996<sellers1996>)`.
 :ref:`Sellers et al. 1996<sellers1996>` used :math:`b` = 10000 for C\ :math:`_3`
 plants and :math:`b` = 40000 for C\ :math:`_4` plants. Here, :math:`b`
 was chosen to give a maximum stomatal resistance of 20000 s
 m\ :math:`^{-1}`. These terms are nevertheless plant strategy dependent,
 and have been found to vary widely with plant type
-:ref:`Medlyn et al. 2001<medlyn2011>`.
+:ref:`Medlyn et al. 2011<Medlynetal2011>`.
 
 Resistance is converted from units of s m\ :math:`^2 \mu`
 mol\ :math:`^{-1}` to s m\ :math:`^{-1}` as: 1 s m\ :math:`^{-1}` =
@@ -3072,7 +3068,7 @@ model, which has been modified for use in ED following it’s original
 implementation in the LPJ-SPITFIRE model
 (:ref:`Thonicke et al. 2010<thonicke2010>, :ref:`Pfeiffer et al. 2013<pfeiffer2013>`). This model as
 described is substantially different from the existing CLM4.5 fire model
-:ref:`Li et al. 2012<li2012>`, however, further developments are
+:ref:`Li et al. 2012<Lietal2012a>`, however, further developments are
 intended to increase the merging of SPITFIRE’s natural vegetation fire
 scheme with the fire suppression, forest-clearing and peat fire
 estimations in the existing model. The coupling to the ED model allows
