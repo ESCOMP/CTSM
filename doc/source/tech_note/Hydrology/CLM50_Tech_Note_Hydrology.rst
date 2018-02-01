@@ -137,7 +137,7 @@ They are defined by
 .. math::
    :label: 7.11
 
-   W_{can,\,sno}^{max } =p_{ice}\left(L+S\right).
+   W_{can,\,sno}^{max } =p_{sno}\left(L+S\right).
 
 The maximum storage of liquid water is :math:`p_{liq}=0.1` kg m\ :sup:`-2` 
 (:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`), and that of snow 

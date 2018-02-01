@@ -31,7 +31,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 **LIST OF FIGURES**
 
-- :numref:`Figure Land processes` Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from Lawrence et al. (2011) for CLM5.0).
+- :numref:`Figure Land processes` Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from :ref:`Lawrence et al. (2011)<Lawrenceetal2011>` for CLM5.0).
 
 - :numref:`Figure CLM subgrid hierarchy` Configuration of the CLM subgrid hierarchy.
 

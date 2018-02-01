@@ -9,7 +9,7 @@ plants due to the aggregate of processes such as wind throw, insect
 attack, disease, extreme temperatures or drought, and age-related
 decline in vigor. These processes are referred to in aggregate as
 “gap-phase” mortality. Mortality due to fire and anthropogenic land
-cover change are treated separately (see Chapters 18 and 21,
+cover change are treated separately (see Chapters :numref:`rst_Fire` and :numref:`rst_Transient Landcover Change`,
 respectively).
 
 Mortality Fluxes Leaving Vegetation Pools
@@ -19,9 +19,9 @@ Whole-plant mortality is parameterized very simply, assuming a mortality
 rate of 2% yr\ :sup:`-1` for all vegetation types. This is clearly
 a gross oversimplification of an important process, and additional work
 is required to better constrain this process in different climate zones
-(Keller et al. 2004; Sollins 1982), for different species mixtures
-(Gomes et al. 2003), and for different size and age classes (Busing
-2005; Law et al. 2003). Literature values for forest mortality rates
+(:ref:`Keller et al. 2004<Kelleretal2004>`; :ref:`Sollins 1982<Sollins1982>`), for different species mixtures
+(:ref:`Gomes et al. 2003<Gomesetal2003>`), and for different size and age classes (:ref:`Busing
+2005<Busing2005>`; :ref:`Law et al. 2003<Lawetal2003>`). Literature values for forest mortality rates
 range from at least 0.7% to 3.0% yr\ :sup:`-1`. Taking the annual
 rate of mortality (*am*, proportion yr\ :sup:`-1`) as 0.02, a
 mortality rate per second (*m*) is calculated as
