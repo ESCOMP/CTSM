@@ -240,6 +240,13 @@ potential forcing of CISM.
 Computation of the surface mass balance
 ---------------------------------------
 
+This section describes the computation of surface mass balance and
+associated runoff terms. The description here only applies to regions
+where glacial melt runs off and is replaced by ice, not to regions where
+glacial melt remains in place. Thus, by default, this only applies to
+Greenland and Antarctica, not to mountain glaciers elsewhere in the
+world. (See also :numref:`Glacier regions`.)
+
 The SMB of a glacier or ice sheet is the net annual
 accumulation/ablation of mass at the upper surface. Ablation is defined
 as the mass of water that runs off to the ocean. Not all the surface
@@ -250,6 +257,26 @@ surface-energy-balance (SEB) scheme to compute the SMB. In this scheme,
 the melting depends on the sum of the radiative, turbulent, and
 conductive fluxes reaching the surface, as described elsewhere in this
 document.
+
+SMB is computed and sent to the CESM coupler regardless of whether and
+where CISM is operating. However, the effect of SMB terms on runoff
+fluxes differs depending on whether and where CISM is evolving in
+two-way-coupled mode. This is described by the variable
+*glc\_dyn\_runoff\_routing*. (This is real-valued in the code to handle
+the edge case where a CLM grid cell partially overlaps with the CISM
+grid, but we describe it as a logical variable here for simplicity.) In
+typical cases where CISM is not evolving, *glc\_dyn\_runoff\_routing*
+will be false everywhere. In cases where CISM is evolving and sending
+its own calving flux to the coupler, *glc\_dyn\_runoff\_routing* will be
+true over the CISM domain and false elsewhere.
+
+FIXME: Rewrite the following paragraph
+
+FIXME: Make sure I talk about the positive liquid runoff and negative
+ice runoff that result from melted ice.
+
+FIXME: With interactive CISM, snow capping is applied to the surface
+mass balance, not ice runoff.
 
 In the modified glacier\_mec columns, the treatment of melting and
 freezing depends on the logical variable *glc\_dyntopo*. This variable
@@ -285,8 +312,3 @@ land unit, it can only generate a zero or positive SMB. A positive SMB
 is generated once the snow pack reaches its maximum depth. When running
 with an evolving ice sheet, this condition triggers glacial inception.
 
-FIXME: Make sure I talk about the positive liquid runoff and negative
-ice runoff that result from melted ice.
-
-FIXME: With interactive CISM, snow capping is applied to the surface
-mass balance, not ice runoff.
