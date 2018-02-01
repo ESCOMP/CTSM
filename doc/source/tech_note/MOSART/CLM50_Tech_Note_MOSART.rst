@@ -228,14 +228,17 @@ Difference between CLM5.0 and CLM4.5
 
 1. Routing methods: RTM, a linear reservoir method, is used in CLM4.5 for 
 river routing, whilst in CLM5.0, MOSART is an added option for river routing 
-based on the more physically-based kinematic wave method. 
+based on the more physically-based kinematic wave method.
+
 2. Runoff treatment: In RTM runoff is routed regardless of its sign so 
 negative streamflow can be simulated at times. MOSART routes only nonnegative 
 runoff and always produces positive streamflow, which is important for 
 future extension for modeling riverine heat and biogeochemical fluxes.
+
 3. Input parameters: RTM in CLM4.5 only requires one layer of spatial variable 
 of channel velocity, whilst MOSART in CLM5.0 requires 13 parameters that 
-are all available globally at 0.5 :sup:`o` resolution. 
+are all available globally at 0.5 :sup:`o` resolution.
+
 4. Outputs: RTM only produces streamflow simulation, whilst MOSART 
 additionally simulates the time-varying channel velocities and channel 
 water depth and channel surface water variation.
