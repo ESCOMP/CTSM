@@ -456,8 +456,7 @@ Allowed values are:
    but no virtual columns
 'virtual': grid cells have virtual columns: values are computed for every glacier
    elevation class, even those with 0 area (in order to provide surface mass
-   balance for every glacier elevation class). In addition, surface mass balance is
-   computed for the vegetated column in this region.
+   balance for every glacier elevation class).
 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
    whose elevation matches the atmosphere's topographic height (so that there is no
    adjustment due to downscaling)
@@ -476,8 +475,11 @@ Allowed values are:
 'remains_in_place': any melted ice remains in place as liquid until it refreezes;
    thus, ice melt does not result in any runoff
 IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not
-generate generate SMB (because negative SMB would be pretty much meaningless in
-those regions). Thus, you cannot use this behavior where GLC is operating.
+compute SMB (because negative SMB would be pretty much meaningless in
+those regions). Thus, you cannot use this behavior where GLC is
+operating.
+Regions with the 'replaced_by_ice' behavior also compute SMB for the
+vegetated column.
 </entry>
 
 <entry id="glacier_region_ice_runoff_behavior" type="char*32(10)" category="clm_physics"
