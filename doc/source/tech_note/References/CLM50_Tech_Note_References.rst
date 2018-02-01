@@ -2695,8 +2695,8 @@ turnover through the microbial biomass in soil. Plant and Soil, 76:
 
 van Kampenhout, L., J.T.M. Lenaerts, W.H. Lipscomb, W.J. Sacks, D.M.
 Lawrence, A.G. Slater, and M.R. van den Broeke, 2017.
-Improving the representation of polar snow and firn in the
-Community Earth System Model, submitted.
+Improving the Representation of Polar Snow and Firn in the
+Community Earth System Model. Journal of Advances in Modeling Earth Systems 9, no. 7: 2583–2600. https://doi.org/10.1002/2017MS000988.
 
 .. _VanTrichtetal2016:
 
