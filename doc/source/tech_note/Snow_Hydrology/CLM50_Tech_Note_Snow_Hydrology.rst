@@ -461,14 +461,13 @@ compaction:
   #. melting (changes in snow structure due to melt-freeze cycles plus changes in crystals due to liquid water)
   #. drifting snow compaction. 
 
-The total fractional compaction rate for
-each snow layer :math:`C_{R,\, i}`  (s\ :sup:`-1`) is the sum of the
-three compaction processes
+The total fractional compaction rate for each snow layer :math:`C_{R,\, i}`
+(s\ :sup:`-1`) is the sum of multiple compaction processes
 
 .. math::
    :label: 8.41
 
-   C_{R,\, i} =\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} =C_{R1,\, i} +C_{R2,\, i} +C_{R3,\, i} +C_{R4,\, i} .
+   C_{R,\, i} =\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} =C_{R1,\, i} +C_{R2,\, i} +C_{R3,\, i} +C_{R4,\, i} +C_{R5,\, i} .
 
 Compaction is not allowed if the layer is saturated
 
@@ -479,10 +478,11 @@ Compaction is not allowed if the layer is saturated
 
 or if the ice content is below a minimum value
 (:math:`w_{ice,\, i} \le 0.1`).
+
 The snow layer thickness after compaction is
 
 .. math::
-   :label: 8.50
+   :label: 8.42b
 
    \Delta z_{i}^{n+1} =\Delta z_{i}^{n} \left(1+C_{R,\, i} \Delta t\right).
 
@@ -575,11 +575,18 @@ mass after the melting to the mass before melting
 .. math::
    :label: 8.48
 
-   C_{R3,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{melt} =-\frac{1}{\Delta t} \max \left(0,\frac{W_{sno,\, i}^{n} -W_{sno,\, i}^{n+1} }{W_{sno,\, i}^{n} } \right)
+   C_{R3,\, i} = \left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{melt}
+   = -\frac{1}{\Delta t} \max \left(0,\frac{W_{sno,\, i}^{n} -W_{sno,\, i}^{n+1} }{W_{sno,\, i}^{n} } \right)
 
 and melting is identified during the phase change calculations (section
-:numref:`Phase Change`). 
-
+:numref:`Phase Change`).  Because snow depth is defined as the average
+depth of the snow covered area, the snow depth must also be updated for
+changes in :math:`f_{sno}` when :math:`W_{sno}` has changed.
+ 
+ .. math::
+    :label: 8.49
+ 
+    C_{R4,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{fsno} =-\frac{1}{\Delta t} \max \left(0,\frac{f_{sno,\, i}^{n} -f_{sno,\, i}^{n+1} }{f_{sno,\, i}^{n} } \right)
 
 .. _Compaction by drifting snow:
 
@@ -591,15 +598,15 @@ but high wind speeds (katabatic winds) are prevailing.
 Therefore a drifting snow compaction parametrization was introduced, based on (:ref:`Vionnet et al. (2012) <Vionnetetal2012>`).
 
 .. math::
-   :label: 8.49
+   :label: 8.50
 
-   C_{R4,\, i} = \left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{drift} = - \frac{\rho_{\max} - \rho_i}{\tau_{i}}.
+   C_{R5,\, i} = \left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{drift} = - \frac{\rho_{\max} - \rho_i}{\tau_{i}}.
 
 Here, :math:`\rho_{\max} = 350` kg m\ :sup:`-3` is the upper limit to which this process is active, and 
 :math:`\tau_{i}` is a timescale which is depth dependent: 
 
 .. math::
-   :label: 8.49b
+   :label: 8.50b
 
    \tau_i = \frac{\tau}{\Gamma_{\mathrm{drift}}^i} \quad \mathrm{,} \:\; \Gamma^i_\mathrm{drift} = \max\left[ 0, S_\mathrm{I}^i \exp(-z_i / 0.1) \right].
 
@@ -610,7 +617,7 @@ The driftability index :math:`S_\mathrm{I}` reflects how well snow can be drifte
 as well as the 10 m wind speed:
 
 .. math::
-   :label: 8.49c
+   :label: 8.50c
 
    \begin{array}{rcl}
    S_\mathrm{I} & = & -2.868 \exp(-0.085 U) + 1 + M_{\mathrm{O}} \\
@@ -620,18 +627,6 @@ as well as the 10 m wind speed:
 The latter equation (for the mobility index :math:`M_\mathrm{O}`) is a simplification from the original paper 
 by removing the dependency on grain size and assuming spherical grains 
 (see :ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`).
-
-.. Because snow depth is defined as the average depth of the snow
-.. covered area, the snow depth must also be updated for changes in
-.. :math:`f_{sno}` .
-.. 
-.. .. math::
-..    :label: 8.49
-.. 
-..    C_{R4,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{fsno} =-\frac{1}{\Delta t} \max \left(0,\frac{f_{sno,\, i}^{n} -f_{sno,\, i}^{n+1} }{f_{sno,\, i}^{n} } \right)
-
-
-
 
 .. _Snow Layer Combination and Subdivision:
 
