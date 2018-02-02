@@ -64,7 +64,7 @@ if [ -n "${BL_ROOT}" ]; then
     echo "TBLCFGtools.sh: generating baseline data from root $BL_ROOT - results in $BL_TESTDIR"
 
     echo "TBLCFGtools.sh: calling ****baseline**** TSMCFGtools.sh for smoke test"
-    bl_dir=`/bin/ls -1d ${BL_ROOT}/components/clm/test/tools`
+    bl_dir=`/bin/ls -1d ${BL_ROOT}/test/tools`
     env CLM_TESTDIR=${BL_TESTDIR} \
         CLM_ROOT=${BL_ROOT} \
         CLM_SCRIPTDIR=$bl_dir \
