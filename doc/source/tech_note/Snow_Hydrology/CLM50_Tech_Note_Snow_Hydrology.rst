@@ -37,7 +37,7 @@ the state variable is the mass of snow :math:`W_{sno}`  (kg m\ :sup:`-2`).
 
 Section :numref:`Snow Covered Area Fraction` describes the calculation 
 of fractional snow covered area, which is used in the surface albedo 
-calculation (Chapter :numref:`rst_Surface Albedos`) and thesurface flux 
+calculation (Chapter :numref:`rst_Surface Albedos`) and the surface flux 
 calculations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent 
 Heat Fluxes`). The following two sections (:numref:`Ice Content` and 
 :numref:`Water Content`) describe the ice and water content of the snow 
@@ -90,7 +90,12 @@ reset to zero. The depletion curve shape parameter is defined as
 
 The standard deviation of the elevation within a grid cell, 
 :math:`\sigma _{topo}`  , is calculated from a high resolution DEM (a
-1km DEM is used for CLM).
+1km DEM is used for CLM). 
+Note that *glacier\_mec* columns (section :numref:`Multiple elevation class scheme`) 
+are treated differently in this respect, as they already account for the
+subgrid topography in a grid cell in their own way. 
+Therefore, in each *glacier\_mec* column very flat terrain is assumed, 
+implemented as :math:`N_{melt}=10`.
 
 .. _Ice Content:
 
@@ -141,13 +146,20 @@ where
    \Delta z_{sno} =\frac{q_{grnd,\, ice} \Delta t}{f_{sno} \rho _{sno} }
 
 and :math:`\rho _{sno}`  is the bulk density of newly fallen snow (kg
-m\ :sup:`-3`) (:ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`, 
-:ref:`Anderson (1976) <Anderson1976>`)
+m\ :sup:`-3`), which parameterized by a temperature-dependent and a 
+wind-dependent term:
 
 .. math::
-   :label: 8.21
+   :label: 8.21a
 
-   \rho_{sno} = 
+   \rho_{sno} = \rho_{T} + \rho_{w}.
+
+The temperature dependent term is given by (:ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`)
+
+.. math::
+   :label: 8.21b
+
+   \rho_{T} = 
    \left\{\begin{array}{lr} 
    50 + 1.7 \left(17\right)^{1.5} & \qquad T_{atm} >T_{f} +2 \ \\ 
    50+1.7 \left(T_{atm} -T_{f} + 15\right)^{1.5} & \qquad T_{f} - 15 < T_{atm} \le T_{f} + 2 \ \\ 
@@ -158,20 +170,20 @@ m\ :sup:`-3`) (:ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`,
 .. bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
 
 where :math:`T_{atm}`  is the atmospheric temperature (K), and :math:`T_{f}` is 
-the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 
-wind speed :math:`W_{atm}` is greater than 0.1 m :sub:`-1`, snow density 
+the freezing temperature of water (K) (:numref:`Table Physical Constants`). 
+When 10 m wind speed :math:`W_{atm}` is greater than 0.1 m\ :sup:`-1`, snow density 
 increases due to wind-driven compaction according to 
-:ref:`(van Kampenhout et al. 2017) <vanKampenhoutetal2017>`
+:ref:`van Kampenhout et al. 2017 <vanKampenhoutetal2017>`
 
 .. math::
-   :label: 8.21b
+   :label: 8.21c
 
-   \Delta \rho_{sno} = 266.861 \left(\frac{1 + tanh(\frac{W_{atm}}{5})}{2}\right)^{8.8}
-
-where :math:`\Delta \rho_{sno}` (kg m\ :sup:`-3`) is the increase in snow 
-density relative to :eq:`8.21`.
+   \rho_{w} = 266.861 \left(\frac{1 + \tanh(\frac{W_{atm}}{5})}{2}\right)^{8.8}
 
 .. bifall(c) = bifall(c) + (266.861_r8 * ((1._r8 + TANH(forc_wind(g)/5.0_r8))/2._r8)**8.8_r8)
+
+which is added to the temperature-dependent term (cf. equation :eq:`8.21a`).
+
 
 The mass of snow :math:`W_{sno}`  is
 
@@ -213,9 +225,9 @@ content is reset to zero and the liquid water content
 :math:`w_{liq,\, snl+1}`  is reduced by the amount required to bring
 :math:`w_{ice,\, snl+1}^{n+1}`  up to zero.
 
-The snow water equivalent :math:`W_{sno}`  is capped to not exceed 1000
+The snow water equivalent :math:`W_{sno}`  is capped to not exceed 10,000
 kg m\ :sup:`-2`. If the addition of :math:`q_{frost}`  were to
-result in :math:`W_{sno} >1000` kg m\ :sup:`-2`, the frost term
+result in :math:`W_{sno} > 10,000` kg m\ :sup:`-2`, the frost term
 :math:`q_{frost}`  is instead added to the ice runoff term
 :math:`q_{snwcp,\, ice}`  (section :numref:`Runoff from glaciers and snow-capped surfaces`).
 
@@ -447,18 +459,22 @@ Snow Compaction
 Snow compaction is initiated after the soil hydrology calculations
 [surface runoff (section :numref:`Surface Runoff`), infiltration (section 
 :numref:`Infiltration`), soil water (section :numref:`Soil Water`)] are
-complete. Compaction of snow includes three types of processes:
-destructive metamorphism of new snow (crystal breakdown due to wind or
-thermodynamic stress); snow load or overburden (pressure); and melting
-(changes in snow structure due to melt-freeze cycles plus changes in
-crystals due to liquid water). The total fractional compaction rate for
+complete. Currently, there are four processes included that lead to snow
+compaction: 
+
+  #. destructive metamorphism of new snow (crystal breakdown due to wind or thermodynamic stress)
+  #. snow load or compaction by overburden pressure
+  #. melting (changes in snow structure due to melt-freeze cycles plus changes in crystals due to liquid water)
+  #. drifting snow compaction. 
+
+The total fractional compaction rate for
 each snow layer :math:`C_{R,\, i}`  (s\ :sup:`-1`) is the sum of the
 three compaction processes
 
 .. math::
    :label: 8.41
 
-   C_{R,\, i} =\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} =C_{R1,\, i} +C_{R2,\, i} +C_{R3,\, i} .
+   C_{R,\, i} =\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} =C_{R1,\, i} +C_{R2,\, i} +C_{R3,\, i} +C_{R4,\, i} .
 
 Compaction is not allowed if the layer is saturated
 
@@ -469,8 +485,21 @@ Compaction is not allowed if the layer is saturated
 
 or if the ice content is below a minimum value
 (:math:`w_{ice,\, i} \le 0.1`).
+The snow layer thickness after compaction is
 
-Compaction as a result of destructive metamorphism :math:`C_{R1,\; i}` (s\ :sub:`-1`) is temperature dependent (:ref:`Anderson (1976) <Anderson1976>`)
+.. math::
+   :label: 8.50
+
+   \Delta z_{i}^{n+1} =\Delta z_{i}^{n} \left(1+C_{R,\, i} \Delta t\right).
+
+
+
+.. _Destructive metamorphism:
+
+Destructive metamorphism
+''''''''''''''''''''''''
+
+Compaction as a result of destructive metamorphism :math:`C_{R1,\; i}` (s\ :sup:`-1`) is temperature dependent (:ref:`Anderson (1976) <Anderson1976>`)
 
 .. math::
    :label: 8.43
@@ -483,11 +512,13 @@ where :math:`c_{3} =2.777\times 10^{-6}`  (s\ :sup:`-1`) is the fractional compa
    :label: 8.44
 
    \begin{array}{lr} 
-   c_{1}  = 1 & \qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } \le 100{\rm \; kg\; m}^{{\rm -3}}  \\ 
-   c_{1}  = \exp \left[-0.046\left(\frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } -100\right)\right] & \qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } >100{\rm \; kg\; m}^{{\rm -3}}  \\
+   c_{1}  = 1 & \qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } \le 175{\rm \; kg\; m}^{{\rm -3}}  \\
+   c_{1}  = \exp \left[-0.046\left(\frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } -175\right)\right] & \qquad \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } >175{\rm \; kg\; m}^{{\rm -3}} \\
    c_{2}  = 2 & \qquad \frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} } >0.01 \\ 
    c_{2}  = 1 & \qquad \frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} } \le 0.01 
    \end{array}
+
+..  upper limit (upplim_destruct_metamorph) used to be 100 but was changed to 175 for CLM5 (Van Kampenhout et al., 2017)
 
 where
 :math:`{w_{ice,\, i} \mathord{\left/ {\vphantom {w_{ice,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
@@ -495,24 +526,20 @@ and
 :math:`{w_{liq,\, i} \mathord{\left/ {\vphantom {w_{liq,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
 are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
-The compaction rate as a result of overburden :math:`C_{R2,\; i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,\, i}` (kg m\ :sup:`-2`) (:ref:`Anderson (1976) <Anderson1976>`)
+
+.. _Overburden pressure compaction:
+
+Overburden pressure compaction
+''''''''''''''''''''''''''''''
+
+The compaction rate as a result of overburden :math:`C_{R2,\; i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,\, i}` (kg m\ :sup:`-2`) (:ref:`Anderson (1976) <Anderson1976>`):
 
 .. math::
    :label: 8.45
 
    C_{R2,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{overburden} =-\frac{P_{s,\, i} }{\eta }
 
-where :math:`\eta`  is a viscosity coefficient (kg s m\ :sup:`-2`) that varies with density and temperature as
-
-.. math::
-   :label: 8.46
-
-   \eta =\eta _{0} \exp \left[c_{5} \left(T_{f} -T_{i} \right)+c_{6} \frac{w_{ice,\, i} }{f_{sno} \Delta z_{i} } \right]
-
-where :math:`\eta _{0} =9\times 10^{5}`  kg s m\ :sup:`-2`, and
-:math:`c_{5} =0.08` K\ :sup:`-1`, :math:`c_{6} =0.023`
-m\ :sup:`3` kg\ :sup:`-1` are constants. The snow load
-pressure :math:`P_{s,\, i}`  is calculated for each layer as the sum of
+The snow load pressure :math:`P_{s,\, i}`  is calculated for each layer as the sum of
 the ice :math:`w_{ice,\, i}`  and liquid water contents
 :math:`w_{liq,\, i}`  of the layers above plus half the ice and liquid
 water contents of the layer being compacted
@@ -522,6 +549,32 @@ water contents of the layer being compacted
 
    P_{s,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{2} +\sum _{j=snl+1}^{j=i-1}\left(w_{ice,\, j} +w_{liq,\, j} \right) .
 
+
+Variable :math:`\eta` in :eq:`8.45` is a viscosity coefficient (kg s m\ :sup:`-2`) that varies with density and 
+temperature as
+
+.. math::
+   :label: 8.46
+
+   \eta = f_{1} f_{2} \eta_{0} \frac{\rho_{i}}{c_{\eta}} \exp \left[ a_{\eta} \left(T_{f} -T_{i} \right) + b_{\eta} \rho_{i} \right]
+
+with constant factors :math:`\eta _{0} = 7.62237 \times 10^{6}`  kg s\ :sup:`-1` m\ :sup:`-2`, 
+:math:`a_{\eta} = 0.1` K\ :sup:`-1`, :math:`b_{\eta} = 0.023` m\ :sup:`-3` kg\ :sup:`-1`, 
+and :math:`c_{\eta} = 358` kg m\ :sup:`-3` (:ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`).
+Further, factor :math:`f_1` accounts for the presence of liquid water (:ref:`Vionnet et al. (2012) <Vionnetetal2012>`):
+
+.. math:: 
+   :label: 8.46b
+
+   f_{1} = \frac{1}{1+ 60 \frac{w_{\mathrm{liq},\, i}}{\rho_{\mathrm{liq}} \Delta z_{i} }}.
+
+Factor :math:`f_2` originally accounts for the presence of angular grains, but since grain shape is not modelled 
+:math:`f_2` is fixed to the value 4. 
+
+.. _Compaction by melt:
+
+Compaction by melt
+''''''''''''''''''
 The compaction rate due to melting :math:`C_{R3,\; i}` (s\ :sup:`-1`) is taken to be the ratio of the change in snow ice
 mass after the melting to the mass before melting
 
@@ -531,21 +584,60 @@ mass after the melting to the mass before melting
    C_{R3,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{melt} =-\frac{1}{\Delta t} \max \left(0,\frac{W_{sno,\, i}^{n} -W_{sno,\, i}^{n+1} }{W_{sno,\, i}^{n} } \right)
 
 and melting is identified during the phase change calculations (section
-:numref:`Phase Change`). Because snow depth is defined as the average depth of the snow
-covered area, the snow depth must also be updated for changes in
-:math:`f_{sno}` .
+:numref:`Phase Change`). 
+
+
+.. _Compaction by drifting snow:
+
+Compaction by drifting snow
+'''''''''''''''''''''''''''
+Crystal breaking by drifting snow leads to higher snow densities at the surface.
+This process is particularly important on ice sheets, where destructive metamorphism is slow due to low temperatures 
+but high wind speeds (katabatic winds) are prevailing. 
+Therefore a drifting snow compaction parametrization was introduced, based on (:ref:`Vionnet et al. (2012) <Vionnetetal2012>`).
 
 .. math::
    :label: 8.49
 
-   C_{R4,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{fsno} =-\frac{1}{\Delta t} \max \left(0,\frac{f_{sno,\, i}^{n} -f_{sno,\, i}^{n+1} }{f_{sno,\, i}^{n} } \right)
+   C_{R4,\, i} = \left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{drift} = - \frac{\rho_{\max} - \rho_i}{\tau_{i}}.
 
-The snow layer thickness after compaction is then
+Here, :math:`\rho_{\max} = 350` kg m\ :sup:`-3` is the upper limit to which this process is active, and 
+:math:`\tau_{i}` is a timescale which is depth dependent: 
 
 .. math::
-   :label: 8.50
+   :label: 8.49b
 
-   \Delta z_{i}^{n+1} =\Delta z_{i}^{n} \left(1+C_{R,\, i} \Delta t\right).
+   \tau_i = \frac{\tau}{\Gamma_{\mathrm{drift}}^i} \quad \mathrm{,} \:\; \Gamma^i_\mathrm{drift} = \max\left[ 0, S_\mathrm{I}^i \exp(-z_i / 0.1) \right].
+
+Here, :math:`\tau` is a characteristic time scale for drifting snow compaction and is empirically set to 48 h, and 
+:math:`z_i` is a pseudo-depth which takes into account previous hardening of snow layers above the current layer:
+:math:`z_i = \sum_j \Delta z_j \cdot (3.25 - S_\mathrm{I}^j)`.
+The driftability index :math:`S_\mathrm{I}` reflects how well snow can be drifted and depends on the mobility of the snow
+as well as the 10 m wind speed:
+
+.. math::
+   :label: 8.49c
+
+   \begin{array}{rcl}
+   S_\mathrm{I} & = & -2.868 \exp(-0.085 U) + 1 + M_{\mathrm{O}} \\
+   M_\mathrm{O} & = & -0.069 + 0.66 F(\rho)
+   \end{array}
+
+The latter equation (for the mobility index :math:`M_\mathrm{O}`) is a simplification from the original paper 
+by removing the dependency on grain size and assuming spherical grains 
+(see :ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`).
+
+.. Because snow depth is defined as the average depth of the snow
+.. covered area, the snow depth must also be updated for changes in
+.. :math:`f_{sno}` .
+.. 
+.. .. math::
+..    :label: 8.49
+.. 
+..    C_{R4,\, i} =\left[\frac{1}{\Delta z_{i} } \frac{\partial \Delta z_{i} }{\partial t} \right]_{fsno} =-\frac{1}{\Delta t} \max \left(0,\frac{f_{sno,\, i}^{n} -f_{sno,\, i}^{n+1} }{f_{sno,\, i}^{n} } \right)
+
+
+
 
 .. _Snow Layer Combination and Subdivision:
 
@@ -725,8 +817,8 @@ Subdivision
 
 The snow layers are subdivided when the layer thickness exceeds the
 prescribed maximum thickness :math:`\Delta z_{\max }`  with lower and
-upper bounds that depend on the number of snow layers (:numref:`Table snow layer thickness`). For
-example, if there is only one layer, then the maximum thickness of that
+upper bounds that depend on the number of snow layers (:numref:`Table snow layer thickness`). 
+For example, if there is only one layer, then the maximum thickness of that
 layer is 0.03 m, however, if there is more than one layer, then the
 maximum thickness of the top layer is 0.02 m. Layers are checked
 sequentially from top to bottom for this limit. If there is only one
