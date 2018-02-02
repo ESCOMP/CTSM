@@ -503,7 +503,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </init_interp_attributes>
 
 <!--
-     1850 preindustrial IC
+     1850 preindustrial IC (if use_init_interp is added and set to .true. then MUST still interpolate even on an exact match)
+                           (if it will work on an exact match, leave use_init_interp off)
 -->
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
@@ -568,7 +569,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <!--
-     Present day IC (if use_init_interp is true then MUST still interpolate even on an exact match)
+     Present day IC (if use_init_interp is set and .true. then MUST still interpolate even on an exact match)
+                    (if it will work on an exact match, leave use_init_interp off)
 -->
 
 <!-- Present day crop spinup at 2-degree with irrigation on -->
@@ -578,7 +580,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.IGM2000GSWP3CLM50BGCCROPIRR.2011-01-01.1.9x2.5_gx1v6_gl5_simyr2000_c170419.nc
 </finidat>
 
-<!-- FATES on for 2000 -->
+<!-- FATES on for 2000 (MUST be an exact match - can't interpolate files for FATES -->
 <finidat hgrid="4x5"  maxpft="17"  mask="gx3v7" use_cn=".false." use_fates=".true."
          ic_ymd="20000101"  use_nitrif_denitrif=".false." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
