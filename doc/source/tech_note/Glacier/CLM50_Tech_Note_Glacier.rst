@@ -93,9 +93,9 @@ CISM:
    ice-sheet retreat on paleoclimate time scales. Without this feedback
    the atmosphere warms much less, and the retreat is delayed.
 
-#. The improved SMB is available in CLM for all glaciated grid cells
-   (e.g., in the Alps, Rockies, Andes, and Himalayas), not just those
-   which are part of ice sheets.
+#. The improved SMB is potentially available in CLM for all glaciated
+   grid cells (e.g., in the Alps, Rockies, Andes, and Himalayas), not
+   just those which are part of ice sheets.
 
 In typical runs, CISM is not evolving; CLM computes the SMB and sends it
 to CISM, but CISM's ice sheet geometry remains fixed over the course of
@@ -104,8 +104,8 @@ the run. In these runs, CISM serves two roles in the system:
 #. Over the CISM domain (typically Greenland in CESM2), CISM dictates
    glacier areas and topographic elevations, overriding the values on
    CLM's surface dataset. CISM also dictates the elevation of
-   non-glacier land units in its domain, and atmospheric fields are
-   downscaled to non-glacier land units only in this domain. (So if you
+   non-glacier land units in its domain, and only in this domain are
+   atmospheric fields downscaled to non-glacier land units. (So if you
    run with a stub glacier model - SGLC - then glacier areas and
    elevations will be taken entirely from CLM's surface dataset, and no
    downscaling will be done over non-glacier land units.)
@@ -266,10 +266,10 @@ CISM domain as consistent as possible.
 In contrast to most CLM subgrid units, glacier\_mec columns can be
 active (i.e., have model calculations run there) even if their area is
 zero. These are known as "virtual" columns. This is done because the ice
-sheet model may require a SMB even for some grid cells where CLM does
-not have glacier land units. Virtual columns also facilitate glacial
-advance and retreat in the two-way coupled case. Virtual columns do not
-affect energy exchange between the land and the atmosphere.
+sheet model may require a SMB for some grid cells where CLM has zero
+glacier area in that elevation range. Virtual columns also facilitate
+glacial advance and retreat in the two-way coupled case. Virtual columns
+do not affect energy exchange between the land and the atmosphere.
 
 .. _Computation of the surface mass balance:
 
