@@ -78,6 +78,7 @@ respectively
    :label: 7.3b
 
    f_{pi,\,ice} =\alpha_{sno} \ \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\} \ ,
+
 and :math:`L` and :math:`S` are the exposed leaf and stem area index,
 respectively (section :numref:`Phenology and vegetation burial by snow`), and 
 the :math:`\alpha`\'s scale the fractional area of a leaf that collects water 
