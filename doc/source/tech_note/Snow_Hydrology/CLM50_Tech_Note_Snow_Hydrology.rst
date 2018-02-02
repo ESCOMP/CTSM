@@ -725,7 +725,7 @@ Subdivision
 
 The snow layers are subdivided when the layer thickness exceeds the
 prescribed maximum thickness :math:`\Delta z_{\max }`  with lower and
-upper bounds that depend on the number of snow layers (numref:`Table snow layer thickness`). For
+upper bounds that depend on the number of snow layers (:numref:`Table snow layer thickness`). For
 example, if there is only one layer, then the maximum thickness of that
 layer is 0.03 m, however, if there is more than one layer, then the
 maximum thickness of the top layer is 0.02 m. Layers are checked
