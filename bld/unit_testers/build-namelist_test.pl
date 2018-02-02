@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 859;
+my $ntests = 895;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 537;
+   $ntests += 564;
 }
 plan( tests=>$ntests );
 
@@ -1326,7 +1326,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
      $cfiles->copyfiles( "$options $clmopts", $mode );
   }
   &cleanup();
-  # Run ED mode for several resolutions and configurations
+  # Run FATES mode for several resolutions and configurations
   system( "../configure -s $mode" );
   my $clmoptions = "-bgc fates -envxml_dir . -no-megan";
   my @clmres = ( "1x1_brazil", "5x5_amazon", "10x15", "1.9x2.5" );
@@ -1348,6 +1348,34 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
         }
         &cleanup();
      }
+  }
+}
+#
+# Run over the differen lnd_tuning modes
+#
+my $res = "0.9x1.25";
+my $mask = "gx1v6";
+my $simyr = "1850";
+foreach my $phys ( "clm4_0", "clm4_5", 'clm5_0' ) {
+  my $mode = "-phys $phys";
+  system( "../configure -s $mode" );
+  foreach my $forc ( "CRUv7", "GSWP3v1", "cam6.0" ) {
+     my $lndtuningmode = "${phys}_${forc}";
+     my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode";
+     if ( $phys ne "clm4_0" ) { $clmoptions .= " -glc_nec 10"; }
+     &make_env_run( );
+     eval{ system( "$bldnml $clmoptions > $tempfile 2>&1 " ); };
+     is( $@, '', "$clmoptions" );
+     $cfiles->checkfilesexist( "$clmoptions", $mode );
+     $cfiles->shownmldiff( "default", "standard" );
+     if ( defined($opts{'compare'}) ) {
+        $cfiles->doNOTdodiffonfile( "$tempfile", "$clmoptions", $mode );
+        $cfiles->comparefiles( "$clmoptions", $mode, $opts{'compare'} );
+     }
+     if ( defined($opts{'generate'}) ) {
+        $cfiles->copyfiles( "$clmoptions", $mode );
+     }
+     &cleanup();
   }
 }
 &cleanup();
