@@ -227,7 +227,7 @@ To represent the LUH2 transient LULCC dataset in CLM5, the annual fractional
 composition of the twelve land units specified in the dataset needs to be
 faithfully represented with a corresponding PFT and CFT mosaics of CLM. 
 CLM5 represents the land surface as a hierarchy of sub-grid types:
-glacier; lake; wetland; urban; vegetated land; and crop land. The vegetated land is
+glacier; lake;  urban; vegetated land; and crop land. The vegetated land is
 further divided into a mosaic of Plant Functional Types (PFTs), while the crop land 
 is divided into a mosaic of Crop Functional Types (CFTs). 
 

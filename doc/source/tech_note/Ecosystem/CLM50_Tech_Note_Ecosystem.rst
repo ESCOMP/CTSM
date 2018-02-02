@@ -680,7 +680,7 @@ are obtained from a variety of sources described below.
 
 At the base spatial resolution of 0.05\ :sup:`o`, the percentage of
 each PFT is defined with respect to the vegetated portion of the grid
-cell and the sum of the PFTs is 100%. The percent lake, wetland,
+cell and the sum of the PFTs is 100%. The percent lake,
 glacier, and urban at their base resolution are specified with respect
 to the entire grid cell. The surface dataset creation routines re-adjust
 the PFT percentages to ensure that the sum of all land cover types in

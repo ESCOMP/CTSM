@@ -34,10 +34,10 @@ mobilization :math:`f_{m}`  is given by
 .. math::
    :label: 29.2 
 
-   f_{m} =\left(1-f_{lake} -f_{wetl} \right)\left(1-f_{sno} \right)\left(1-f_{v} \right)\frac{w_{liq,1} }{w_{liq,1} +w_{ice,1} }
+   f_{m} =\left(1-f_{lake} \right)\left(1-f_{sno} \right)\left(1-f_{v} \right)\frac{w_{liq,1} }{w_{liq,1} +w_{ice,1} }
 
-where :math:`f_{lake}`  and :math:`f_{wetl}`  and :math:`f_{sno}` 
-are the CLM grid cell fractions of lake and wetland (section 
+where :math:`f_{lake}`  and :math:`f_{sno}` 
+are the CLM grid cell fractions of lake (section 
 :numref:`Surface Data`) and snow cover (section 
 :numref:`Snow Covered Area Fraction`), all ranging from zero to one. Not mentioned
 by :ref:`Zender et al. (2003)<Zenderetal2003>`, :math:`w_{liq,\, 1}`  and
