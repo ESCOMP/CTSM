@@ -1,4 +1,110 @@
 ===============================================================
+Tag name:  clm4_5_18_r274
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Jan 30 05:55:53 MST 2018
+One-line Summary: Fix auto-detection of CIME_MODEL in a standalone checkout
+
+Purpose of changes
+------------------
+
+The auto-detection of whether CIME_MODEL is acme or cesm is broken in
+standalone checkouts of clm4_5_18_r273. (This auto-detection relied on
+whether there was an SVN_EXTERNAL_DIRECTORIES file present at the top
+level.)
+
+This tag points to a new cime version that fixes this issue.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- #238 - clm4_5_18_r273 requires setting CIME_MODEL
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    Note: I ran the cheyenne tests with CIME_MODEL=cesm defined in my
+    environment, and the hobart tests without this setting.
+
+CLM tag used for the baseline comparisons: clm4_5_18_r273
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+- cime: clm4518/n03/cime5.4.0-alpha.03 -> clm4518/n04/cime5.4.0-alpha.03
+  Fix to auto-detect that CIME_MODEL=cesm based on presence of
+  manage_externals rather than SVN_EXTERNAL_DIRECTORIES
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Fix the documentation of some expected fails
+M       cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r273
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jan 26 15:26:06 MST 2018
