@@ -2864,6 +2864,14 @@ paper presented at the Third International Conference/Workshop on
 Integrating GIS and Environmental Modeling, Santa Fe, New Mexico, 21–26
 January, Natl. Cent. for Geogr. Inf. and Anal., Santa Barbara, Calif.
 
+.. _Vionnetetal2012:
+
+|br|
+
+Vionnet, V., E. Brun, S. Morin, A. Boone, S. Faroux, P. Le Moigne, E. Martin, and J.-M. Willemet.
+The Detailed Snowpack Scheme Crocus and Its Implementation in SURFEX v7.2.
+GMD 5, no. 3 (May 24, 2012): 773-91. https://doi.org/10.5194/gmd-5-773-2012.
+
 .. _Viovy2011:
 
 |br|
