@@ -1362,7 +1362,7 @@ foreach my $phys ( "clm4_0", "clm4_5", 'clm5_0' ) {
   foreach my $forc ( "CRUv7", "GSWP3v1", "cam6.0" ) {
      my $lndtuningmode = "${phys}_${forc}";
      my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode";
-     if ( $phys ne "clm4_0" ) { $clmoptions .= " -glc_nec 10"; }
+     if ( $phys eq "clm4_0" ) { $clmoptions .= " -glc_nec 0"; }
      &make_env_run( );
      eval{ system( "$bldnml $clmoptions > $tempfile 2>&1 " ); };
      is( $@, '', "$clmoptions" );
