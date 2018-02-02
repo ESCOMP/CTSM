@@ -37,7 +37,7 @@ The implementation of the Ecosystem Demography
 concept within FATES links the surface flux and canopy physiology concepts in the CLM/E3SM
 with numerous additional developments necessary to accommodate the new
 model also documented here. These include a version of the SPITFIRE
-(Spread and InTensity of Fire) model of :ref:`Thonicke et al. (2010)<thonicke2010>`, and an adoption of the concept of
+(Spread and InTensity of Fire) model of :ref:`Thonicke et al. (2010)<thonickeetal2010>`, and an adoption of the concept of
 `Perfect Plasticity Approximation` approach of
 :ref:`Purves et al. 2008<purves2008>`, :ref:`Lichstein et al. 2011<lichstein2011>` and :ref:`Weng et al. 2014<weng2014>`, in accounting
 for the spatial arrangement of crowns. Novel algorithms accounting for
@@ -1524,7 +1524,7 @@ canopy structure. This description in this section is largely repeated
 from the Oleson et al. CLM4.5 technical note but included here for
 comparison with its implementation in FATES. Photosynthesis in C3
 plants is based on the model of :ref:`Farquhar 1980<Farquharetal1980>` as
-modified by :ref:`Collatz et al. (1991)<Collatzeteal1991>`. Photosynthetic assimilation
+modified by :ref:`Collatz et al. (1991)<Collatzetal1991>`. Photosynthetic assimilation
 in C4 plants is based on the model of :ref:`Collatz et al. (1991)<Collatzetal1991>`.
 In both models, leaf photosynthesis, :math:`\textrm{gpp}`
 (:math:`\mu`\ mol CO\ :math:`_2` m\ :math:`^{-2}` s\ :math:`^{-1}`) is
@@ -1703,7 +1703,7 @@ Variation in plant physiology with canopy depth
 
 Both :math:`V_{c,max}` and :math:`J_{max}` vary with vertical depth in
 the canopy on account of the well-documented reduction in canopy
-nitrogen through the leaf profile, see :ref:`Bonan et al. 2012<bonan2012>` for
+nitrogen through the leaf profile, see :ref:`Bonan et al. 2012<bonanetal2012>` for
 details). Thus, both :math:`V_{c,max}` and :math:`J_{max}` are indexed
 by by :math:`C_l`, :math:`ft` and :math:`z` according to the nitrogen
 decay coefficient :math:`K_n` and the amount of vegetation area shading
@@ -2089,7 +2089,7 @@ the leaf at the vegetation temperature conductance (:math:`\mu`\ mol
 m\ :math:`^{-2}` s\ :math:`^{-1}`) when :math:`A` = 0 . Typical values
 are :math:`m_{ft}` = 9 for C\ :math:`_3` plants and :math:`m_{ft}` = 4
 for C\ :math:`_4` plants (
-:ref:`Collatz et al. 1991<Collatzetal1991>`, :ref:`Collatz, 1992<Collatzetal1992>`, :ref:`Sellers et al 1996<sellers1996>)`.
+:ref:`Collatz et al. 1991<Collatzetal1991>`, :ref:`Collatz, 1992<Collatzetal1992>`, :ref:`Sellers et al 1996<sellersetal1996>`).
 :ref:`Sellers et al. 1996<sellers1996>` used :math:`b` = 10000 for C\ :math:`_3`
 plants and :math:`b` = 40000 for C\ :math:`_4` plants. Here, :math:`b`
 was chosen to give a maximum stomatal resistance of 20000 s
@@ -3014,7 +3014,7 @@ given cohort triggers mortality. This parameter is needed to scale from
 individual-level mortality simulation to grid-cell average conditions.
 
 Mechanistic simulation of hydraulic failure is not undertaken on account
-of it’s mechanistic complexity (see :ref:`McDowell et al. 2013<mcdowell2013>`for
+of it’s mechanistic complexity (see :ref:`McDowell et al. 2013<Mcdowelletal2013>` for
 details). Instead, we use a proxy for hydraulic failure induced
 mortality (:math:`M_{hf,coh}`) that uses a water potential threshold
 beyond mortality is triggered, such that the tolerance of low water
@@ -3066,7 +3066,7 @@ Fire (SPITFIRE)
 [24]_The influence of fire on vegetation is estimated using the SPITFIRE
 model, which has been modified for use in ED following it’s original
 implementation in the LPJ-SPITFIRE model
-(:ref:`Thonicke et al. 2010<thonicke2010>, :ref:`Pfeiffer et al. 2013<pfeiffer2013>`). This model as
+(:ref:`Thonicke et al. 2010<thonickeetal2010>`, :ref:`Pfeiffer et al. 2013<pfeiffer2013>`). This model as
 described is substantially different from the existing CLM4.5 fire model
 :ref:`Li et al. 2012<Lietal2012a>`, however, further developments are
 intended to increase the merging of SPITFIRE’s natural vegetation fire
@@ -3096,7 +3096,7 @@ Coarse woody debris is classified into 1h, 10h, 100h, and 1000h fuels,
 defined by the order of magnitude of time required for fuel to lose
 (or gain) 63% of the difference between its current moisture content and
 the equilibrium moisture content under defined atmospheric conditions.
-:ref:`Thonicke et al. 2010<thonicke2010>`. For the purposes of describing
+:ref:`Thonicke et al. 2010<thonickeetal2010>`. For the purposes of describing
 the behaviour of fire, we introduce a new index 'fuel class' *fc*, the
 values of which correspond to each of the six possible fuel categories
 as follows.
@@ -3127,7 +3127,7 @@ Nesterov Index
 Dead fuel moisture (:math:`\emph{moist}_{df,fc}`), and several other
 properties of fire behaviour, are a function of the ‘Nesterov Index’
 (:math:`N_{I}`) which is an accumulation over time of a function of
-temperature and humidity (Eqn 5, :ref:`Thonicke et al. 2010<Thonicke2010>`).
+temperature and humidity (Eqn 5, :ref:`Thonicke et al. 2010<Thonickeetal2010>`).
 
 .. math:: N_{I}=\sum{\textrm{max}(T_{d}(T_{d}-D),0)}
 
@@ -3174,7 +3174,7 @@ Live grass moisture Content
 
 The live grass fractional moisture content(\ :math:`\emph{moist}_{lg}`)
 is a function of the soil moisture content. (Equation B2 in
-:ref:`Thonicke et al. 2010<Thonicke2010>`)
+:ref:`Thonicke et al. 2010<Thonickeetal2010>`)
 
 .. math:: \emph{moist}_{lg}=\textrm{max}(0.0,\frac{10}{9}\theta_{30}-\frac{1}{9})
 
@@ -3244,7 +3244,7 @@ the fire *ros*\ :math:`_{f}` (nominally in the direction of the wind).
 :math:`e_{ps}` is the effective heating number
 (:math:`e^{\frac{-4.528}{F_{\sigma,patch}}}`). :math:`q_{ig}` is the
 heat of pre-ignition (:math:`581+2594F_{m}`). :math:`x_{i}` is the
-propagating flux calculated as (see :ref:`Thonicke et al. 2010<Thonicke2010>`
+propagating flux calculated as (see :ref:`Thonicke et al. 2010<Thonickeetal2010>`
 Appendix A).
 
 .. math::
@@ -3268,7 +3268,7 @@ surface-area-volume ratio :math:`F_{\sigma,patch}`:
 where :math:`p_{d}` is the particle density (513).
 
 :math:`i_{r}` is the reaction intensity, calculated using the following
-set of expressions (from :ref:`Thonicke et al. 2010<Thonicke2010>` Appendix A).:
+set of expressions (from :ref:`Thonicke et al. 2010<Thonickeetal2010>` Appendix A).:
 
 .. math::
 
@@ -3292,7 +3292,7 @@ Fuel Consumption
 The fuel consumption (fraction of biomass pools) of each dead biomass
 pool in the area affected by fire on a given day (:math:`f_{c,dead,fc}`)
 is a function of effective fuel moisture :math:`E_{moist,fc}` and size
-class *fc* (Eqn B1, B4 and B5, :ref:`Thonicke et al. 2010<Thonicke2010>`). The
+class *fc* (Eqn B1, B4 and B5, :ref:`Thonicke et al. 2010<Thonickeetal2010>`). The
 fraction of each fuel class that is consumed decreases as its moisture
 content relative to its moisture of extinction (:math:`E_{moist,fc}`)
 increases.
@@ -3327,7 +3327,7 @@ Fire intensity at the front of the burning area (:math:`I_{surface}`, kW
 m\ :math:`^{-2}`) is a function of the total fuel consumed
 (:math:`f_{ctot,patch}`) and the rate of spread at the front of the
 fire, :math:`\mathit{ros}_{f}` (m min\ :math:`^{-1}`) (Eqn 15
-:ref:`Thonicke et al. 2010<Thonicke2010>`)
+:ref:`Thonicke et al. 2010<Thonickeetal2010>`)
 
 .. math:: I_{surface}=\frac{0.001}{60}f_{energy} f_{ctot,patch}\mathit{ros}_{f}
 
@@ -3341,7 +3341,7 @@ Fire Duration
 
 Fire duration is a function of the fire danger index with a maximum
 length of :math:`F_{dur,max}` (240 minutes in
-:ref:`Thonicke et al. 2010<Thonicke2010>` Eqn 14, derived from Canadian Forest
+:ref:`Thonicke et al. 2010<Thonickeetal2010>` Eqn 14, derived from Canadian Forest
 Fire Behaviour Predictions Systems)
 
 .. math:: D_{f}=\textrm{min}\Big(F_{dur,max},\frac{F_{dur,max}}{1+F_{dur,max}e^{-11.06fdi}}\Big)
@@ -3370,14 +3370,14 @@ respectively).
 .. math:: f_{length}=F_{d}(ros_{b}+ros_{f})
 
 :math:`ros_{b}` is a function of :math:`ros_{f}` and windspeed (Eqn 10
-:ref:`Thonicke et al. 2010<Thonicke2010>`)
+:ref:`Thonicke et al. 2010<Thonickeetal2010>`)
 
 .. math:: ros_{b}=ros_{f}e^{-0.72W}
 
 The minor axis to major axis ratio :math:`l_{b}` of the ellipse is
 determined by the windspeed. If the windspeed (:math:`W`) is less than
 16.67 ms\ :math:`^{-1}` then :math:`l_{b}=1`. Otherwise (Eqn 12 and 13,
-:ref:`Thonicke et al. 2010<Thonicke2010>`)
+:ref:`Thonicke et al. 2010<Thonickeetal2010>`)
 
 .. math:: l_{b}=\textrm{min}\Big(8,f_{tree}(1.0+8.729(1.0-e^{-0.108W})^{2.155})+(f_{grass}(1.1+3.6W^{0.0464}))\Big)
 
@@ -3385,7 +3385,7 @@ determined by the windspeed. If the windspeed (:math:`W`) is less than
 surface covered by grass and trees respectively.
 
 The total area burned (:math:`A_{burn}` in m\ :math:`^{2}`) is therefore
-(Eqn 11, :ref:`Thonicke et al. 2010<Thonicke2010>`)
+(Eqn 11, :ref:`Thonicke et al. 2010<Thonickeetal2010>`)
 
 .. math:: A_{burn}=\frac{n_{f}\frac{3.1416}{4l_{b}}(f_{length}^{2}))}{10000}
 
@@ -3397,7 +3397,7 @@ Crown Damage
 :math:`c_{k}` is the fraction of the crown which is consumed by the
 fire. This is calculated from scorch height :math:`H_{s}`, tree height
 :math:`h` and the crown fraction parameter :math:`F_{crown}` (Eqn 17
-:ref:`Thonicke et al. 2010<Thonicke2010>`):
+:ref:`Thonicke et al. 2010<Thonickeetal2010>`):
 
 .. math::
 
@@ -3410,7 +3410,7 @@ fire. This is calculated from scorch height :math:`H_{s}`, tree height
 The scorch height :math:`H_{s}` (m) is a function of the fire intensity,
 following :ref:`Byram, 1959<byram1959>`, and is proportional to a plant
 functional type specific parameter :math:`\alpha_{s,ft}` (Eqn 16
-:ref:`Thonicke et al. 2010<Thonicke2010>`):
+:ref:`Thonicke et al. 2010<Thonickeetal2010>`):
 
 .. math:: H_{s}=\sum_{FT=1}^{NPFT}{\alpha_{s,p}\cdot f_{biomass,ft}} I_{surface}^{0.667}
 
@@ -3428,19 +3428,19 @@ cambial heating (minutes) (Eqn 8, :ref:`Peterson and Ryan 1986<peterson1986>`):
 
 Bark thickness is a linear function of tree diameter :math:`dbh_{coh}`,
 defined by PFT-specific parameters :math:`\beta_{1,bt}` and
-:math:`\beta_{2,bt}` (Eqn 21 :ref:`Thonicke et al. 2010<Thonicke2010>`):
+:math:`\beta_{2,bt}` (Eqn 21 :ref:`Thonicke et al. 2010<Thonickeetal2010>`):
 
 .. math:: t_{b,coh}=\beta_{1,bt,ft}+\beta_{2,bt,ft}dbh_{coh}
 
 The critical time for cambial kill, :math:`\tau_{c}` (minutes) is given
-as (Eqn 20 :ref:`Thonicke et al. 2010<Thonicke2010>`):
+as (Eqn 20 :ref:`Thonicke et al. 2010<Thonickeetal2010>`):
 
 .. math:: \tau_{c}=2.9t_{b}^{2}
 
 The mortality rate caused by cambial heating :math:`\tau_{pm}` of trees
 within the area affected by fire is a function of the ratio between
 :math:`\tau_{l}` and :math:`\tau_{c}` (Eqn 19,
-:ref:`Thonicke et al. 2010<Thonicke2010>`):
+:ref:`Thonicke et al. 2010<Thonickeetal2010>`):
 
 .. math::
 

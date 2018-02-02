@@ -89,7 +89,7 @@ where m=1 pertains to the fraction of the PFT that is ecotmycorrhizal, as oppose
 
 Resolving N cost across simultaneous uptake streams
 --------------------------------------------------------
-The total cost of N uptake is calculated based on the assumption that carbon is partitioned to each stream in proportion to the inverse of the cost of uptake. So, more expensive pathways receive less carbon. Earlier versions of FUN :ref:`(Fisher et al., 2010)<Fisheretal2010>)` utilized a scheme whereby plants only took up N from the cheapest pathway. :ref:`Brzostek et al. (2014)<Brzosteketal2014>` introduced a scheme for the simultaneous uptake from different pathways. Here we calcualate a 'conductance' to N uptake (analagous to the inverse of the cost function conceptualized as a resistance term) :math:`N_{conductance}` ( gN/gC) as:
+The total cost of N uptake is calculated based on the assumption that carbon is partitioned to each stream in proportion to the inverse of the cost of uptake. So, more expensive pathways receive less carbon. Earlier versions of FUN :ref:`(Fisher et al., 2010)<Fisheretal2010>`) utilized a scheme whereby plants only took up N from the cheapest pathway. :ref:`Brzostek et al. (2014)<Brzosteketal2014>` introduced a scheme for the simultaneous uptake from different pathways. Here we calcualate a 'conductance' to N uptake (analagous to the inverse of the cost function conceptualized as a resistance term) :math:`N_{conductance}` ( gN/gC) as:
 
  .. math::
 

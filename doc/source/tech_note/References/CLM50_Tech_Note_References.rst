@@ -1,12 +1,11 @@
 .. _rst_References:
 
+References
+==============
 
 .. |br| raw:: latex
 
 	      \\
-
-References
-==============
 
 .. _Aberetal1990:
 
@@ -680,7 +679,7 @@ Fisher, J. B., S. Sitch, Y. Malhi, R. A. Fisher, C. Huntingford, and S.-Y. Tan, 
 
 Fisher, R. A., S. Muszala, M. Verteinstein, P. Lawrence, C. Xu, N. G. McDowell, R. G. Knox, C. Koven, J. Holm, B. M. Rogers, A. Spessa, D. Lawrence, and G. Bonan, 2015: Taking off the training wheels: the properties of a dynamic vegetation model without climate envelopes, CLM4.5(ED). Geosci. Model Dev., 8: 3593-3619, doi:10.5194/gmd-8-3593-2015.
 
-.. _Fisheretal2017:
+.. _Fisheretal2018:
 
 |br|
 
@@ -1701,7 +1700,7 @@ Mary, B., Fresneau, C., Morel, J.L. and Mariotti, A., 1993. C and N
 cycling during decomposition of root mucilage, roots and glucose in
 soil. Soil Biology and Biochemistry 25:1005-1014.
 
-.. _mcdowell2013:
+.. _Mcdowelletal2013:
 
 |br|
 
@@ -2142,6 +2141,12 @@ millennial-scale deglaciation simulations. Geophys. Res. Lett. **
 |br|
 
 Purves, D.W. et al.,  2008. Predicting and understanding forest dynamics using a simple tractable model. Proceedings of the National Academy of Sciences 105.44, pp. 17018-17022.
+
+.. _Qianetal2006:
+
+|br|
+
+Qian, T et al.,  2006. Simulation of global land surface conditions from 1948 to 2004: Part I: Forcing data and evaluations. J. Hydrometeorology 7, pp. 953-975.
 
 .. _RamankuttyFoley1998:
 
@@ -2661,7 +2666,7 @@ fire disturbance for global vegetation dynamics: coupling fire into a
 Dynamic Global Vegetation Model. Global Ecology and Biogeography
 10:661-667.
 
-.. _thonicke2010:
+.. _thonickeetal2010:
 
 |br|
 
