@@ -28,7 +28,7 @@ ET from vegetation (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Hea
 :math:`q_{h2osfc}`  is runoff from surface water storage (section :numref:`Surface Runoff`),
 :math:`q_{drai}`  is sub-surface drainage (section :numref:`Lateral Sub-surface Runoff`),
 :math:`q_{rgwl}`  and :math:`q_{snwcp,ice}`  are liquid and solid runoff
-from glaciers, wetlands, and lakes, and runoff from other surface types
+from glaciers and lakes, and runoff from other surface types
 due to snow capping (section :numref:`Runoff from glaciers and snow-capped surfaces`) (all in kg m\ :sup:`-2`
 s\ :sup:`-1`), :math:`N_{levsoi}`  is the number of soil layers
 (note that hydrology calculations are only done over soil layers 1 to
@@ -334,7 +334,7 @@ Surface Water Storage
 
 A surface water store has been added to the model to represent wetlands
 and small, sub-grid scale water bodies. As a result, the wetland land
-unit has been removed. The state variables for surface water are the
+unit has been removed as of CLM4.5. The state variables for surface water are the
 mass of water :math:`W_{sfc}`  (kg m\ :sup:`-2`) and temperature
 :math:`T_{h2osfc}`  (Chapter :numref:`rst_Soil and Snow Temperatures`). 
 Surface water storage and outflow are

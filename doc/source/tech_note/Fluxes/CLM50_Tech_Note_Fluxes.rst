@@ -583,7 +583,7 @@ Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces
 Surfaces are considered non-vegetated for the surface flux calculations
 if leaf plus stem area index :math:`L+S<0.05` (section 
 :numref:`Phenology and vegetation burial by snow`). By
-definition, this includes bare soil, wetlands, and glaciers. The
+definition, this includes bare soil and glaciers. The
 solution for lakes is described in Chapter :numref:`rst_Lake Model`. For these surfaces, the
 surface may be exposed to the atmosphere, snow covered, and/or surface
 water covered, so that the sensible heat flux :math:`H_{g}`  (W
@@ -785,7 +785,7 @@ The roughness lengths used to calculate :math:`r_{am}` ,
 :math:`r_{ah}` , and :math:`r_{aw}`  are :math:`z_{0m} =z_{0m,\, g}` ,
 :math:`z_{0h} =z_{0h,\, g}` , and :math:`z_{0w} =z_{0w,\, g}` . The
 displacement height :math:`d=0`. The momentum roughness length is
-:math:`z_{0m,\, g} =0.01` for soil, glaciers, and wetland, and
+:math:`z_{0m,\, g} =0.01` for soil, glaciers, and
 :math:`z_{0m,\, g} =0.0024` for snow-covered surfaces
 (:math:`f_{sno} >0`). In general, :math:`z_{0m}`  is different from
 :math:`z_{0h}`  because the transfer of momentum is affected by pressure
