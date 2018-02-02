@@ -1905,7 +1905,7 @@ contains
     real(r8) :: f1, f2                          ! overburden compaction modifiers to viscosity
     real(r8) :: eta                             ! Viscosity
 
-    real(r8), parameter :: ceta = 450._r8       ! overburden compaction constant [kg/m3]
+    real(r8), parameter :: ceta = 358._r8       ! overburden compaction constant [kg/m3]
     real(r8), parameter :: aeta = 0.1_r8        ! overburden compaction constant [1/K]
     real(r8), parameter :: beta = 0.023_r8      ! overburden compaction constant [m3/kg]
     real(r8), parameter :: eta0 = 7.62237e6_r8  ! The Viscosity Coefficient Eta0 [kg-s/m2]
