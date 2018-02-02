@@ -835,7 +835,7 @@ conductivity, :math:`K_{e,\, i}`  is the Kersten number,
 saturation, and :math:`\lambda _{bedrock} =3` W m\ :sup:`-1`
 K\ :sup:`-1` is the thermal conductivity assumed for the deep
 ground layers (typical of saturated granitic rock; 
-:ref:`Clauser and Huenges 1995 <ClauserHuenges1995>`). For glaciers and wetlands,
+:ref:`Clauser and Huenges 1995 <ClauserHuenges1995>`). For glaciers,
 
 .. math::
    :label: 6.79
@@ -962,7 +962,7 @@ where :math:`c_{s,bedrock} =2\times 10^{6}`  J m\ :sup:`-3`
 K\ :sup:`-1` is the heat capacity of bedrock and
 :math:`c_{s,om} =2.5\times 10^{6}` \ J m\ :sup:`-3`
 K\ :sup:`-1` (:ref:`Farouki 1981 <Farouki1981>`) is the heat capacity of organic
-matter. For glaciers, wetlands, and snow
+matter. For glaciers and snow
 
 .. math::
    :label: 6.92

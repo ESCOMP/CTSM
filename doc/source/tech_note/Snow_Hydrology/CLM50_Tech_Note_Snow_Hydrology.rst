@@ -204,12 +204,6 @@ The ice content of the top layer and the layer thickness are updated as
 
    \Delta z_{snl+1}^{n+1} =\Delta z_{snl+1}^{n} +\Delta z_{sno} .
 
-Since wetlands are modeled as columns of water (no soil), snow is not
-allowed to accumulate if the surface temperature is above freezing
-(:math:`T_{g} >T_{f}` ). In this case, the incoming solid precipitation
-is assigned to the runoff term :math:`q_{rgwl}`  (section 
-:numref:`Runoff from glaciers and snow-capped surfaces`).
-
 In the second step, after surface fluxes and snow/soil temperatures have
 been determined (Chapters :numref:`rst_Momentum, Sensible Heat, and Latent Heat 
 Fluxes` and :numref:`rst_Soil and Snow Temperatures`), 

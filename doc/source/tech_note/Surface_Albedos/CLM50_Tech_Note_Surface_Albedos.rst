@@ -523,14 +523,14 @@ where :math:`f_{sno}`  is the fraction of the ground covered with snow
 (section :numref:`Snow Covered Area Fraction`).
 
 :math:`\alpha _{soi,\, \Lambda }^{\mu }`  and
-:math:`\alpha _{soi,\, \Lambda }`  vary with glacier, lake, wetland, and
+:math:`\alpha _{soi,\, \Lambda }`  vary with glacier, lake, and
 soil surfaces. Glacier albedos are from :ref:`Paterson (1994) <Paterson1994>`
 
 .. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.6
 
 .. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.4.
 
-Unfrozen lake and wetland albedos depend on the cosine of the solar
+Unfrozen lake albedos depend on the cosine of the solar
 zenith angle :math:`\mu` 
 
 .. math::
@@ -538,7 +538,7 @@ zenith angle :math:`\mu`
 
    \alpha _{soi,\, \Lambda }^{\mu } =\alpha _{soi,\, \Lambda } =0.05\left(\mu +0.15\right)^{-1} .
 
-Frozen lake and wetland albedos are from NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`)
+Frozen lake albedos are from NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`)
 
 .. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.60
 

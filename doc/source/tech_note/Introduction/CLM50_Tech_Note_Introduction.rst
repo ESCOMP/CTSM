@@ -5,16 +5,16 @@
 
 ***Coordinating Lead Authors***
 
-**David M. Lawrence, Rosie Fisher, Charles D. Koven, Keith W. Oleson, Sean Swenson**
+**David Lawrence, Rosie Fisher, Charles Koven, Keith Oleson, Sean Swenson**
 
 ***Lead Authors***
 
-**Gordon Bonan, Bardan Ghimire, Leo van Kampenhout, Daniel Kennedy, Erik Kluzek, Peter J. Lawrence, Fang Li, Hongyi Li, Danica Lombardozzi, Yaqiong Lu, Justin Perket, William J. Riley, William Sacks, Mingjie Shi, Will Wieder, Chonggang Xu**
+**Ben Andre, Gordon Bonan, Bardan Ghimire, Leo van Kampenhout, Daniel Kennedy, Erik Kluzek, Ryan Knox, Peter Lawrence, Fang Li, Hongyi Li, Danica Lombardozzi, Yaqiong Lu, Justin Perket, William Riley, William Sacks, Mingjie Shi, Will Wieder, Chonggang Xu**
 
 ***Contributing Authors***
 
-**Ashehad Ali, Ben Andre, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathon Buzan, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Ryan Knox, Jan Lenaerts, Sam Levis,
-L. Ruby Leung, William Lipscomb, Jon Pelletier, Daniel M. Ricciuto, Ben Sanderson, Andrew Slater, Zachary M. Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Mariana Vertenstein, Francis Vitt, Xubin Zeng**
+**Ashehad Ali, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathon Buzan, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Jan Lenaerts, Sam Levis,
+L. Ruby Leung, William Lipscomb, Jon Pelletier, Daniel M. Ricciuto, Ben Sanderson, Jacqueline Shuman, Andrew Slater, Zachary Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Mariana Vertenstein, Francis Vitt, Xubin Zeng**
 
 
 The National Center for Atmospheric Research (NCAR) is operated by the
