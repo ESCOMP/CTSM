@@ -64,11 +64,11 @@
       <value compset="DATM%GSWP3.+_CLM40" >clm4_0_GSW3P</value>
       <value compset=             "CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
-      <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSW3P</value>
+      <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSW3Pv1</value>
       <value compset="CAM.+_CLM45"        >clm4_5_cam6_0</value>
       <value compset=             "CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM50" >clm5_0_CRUv7</value>
-      <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSW3P</value>
+      <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSW3Pv1</value>
       <value compset="CAM.+_CLM50"        >clm5_0_cam6_0</value>
     </values>
   </entry>

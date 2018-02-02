@@ -2332,12 +2332,12 @@ sub setup_logic_initial_conditions {
     my $st_year = int( $ic_date / 10000);
     my $nofail = 1;
     my %settings;
-    $settings{'hgrid'}           = $nl_flags->{'res'};
-    $settings{'phys'}            = $physv->as_string();
-    $settings{'nofail'}          = $nofail;
-    my $fsurdat                  = $nl->get_value('fsurdat');
-    $fsurdat                     =~ s!(.*)/!!;
-    $settings{'fsurdat'}         = $fsurdat;
+    $settings{'hgrid'}   = $nl_flags->{'res'};
+    $settings{'phys'}    = $physv->as_string();
+    $settings{'nofail'}  = $nofail;
+    my $fsurdat          = $nl->get_value('fsurdat');
+    $fsurdat             =~ s!(.*)/!!;
+    $settings{'fsurdat'} = $fsurdat;
     #
     # If not transient use sim_year, otherwise use date
     #
