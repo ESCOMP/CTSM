@@ -173,7 +173,7 @@ The purpose of this document is to fully describe the biogeophysical and
 biogeochemical parameterizations and numerical implementation of version
 5.0 of the Community Land Model (CLM5.0). Scientific justification and
 evaluation of these parameterizations can be found in the referenced
-scientific papers (:ref:`rst_References`). This document and the CLM5.0
+scientific papers (Chapter :numref:`rst_References`). This document and the CLM5.0
 User’s Guide together provide the user with the scientific description
 and operating instructions for CLM.
 

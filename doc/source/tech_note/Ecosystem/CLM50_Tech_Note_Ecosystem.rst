@@ -67,7 +67,6 @@ structure may coexist on a single column. All fluxes to and from the
 surface are defined at the PFT level, as are the vegetation state
 variables (e.g. vegetation temperature and canopy water storage). On the
 crop land unit, typically, different crop types can be represented on each
-
 crop land unit column (see Chapter :numref:`rst_Crops and Irrigation` for details).
 
 In addition to state and flux variable data structures for conserved
@@ -462,11 +461,11 @@ file defined in the namelist (see the CLM4.5 User’s Guide). Aerosol
 deposition rates were calculated in a transient 1850-2009 CAM simulation
 (at a resolution of 1.9x2.5x26L) with interactive chemistry (troposphere
 and stratosphere) driven by CCSM3 20\ :sup:`th` century
-sea-surface temperatures and emissions (Lamarque et al. 2010) for
+sea-surface temperatures and emissions (:ref:`Lamarque et al. 2010<Lamarqueetal2010>`) for
 short-lived gases and aerosols; observed concentrations were specified
 for methane, N\ :sub:`2`\ O, the ozone-depleting substances (CFCs)
 ,and CO\ :sub:`2`. The fluxes are used by the snow-related
-parameterizations (Chapters :numref:`rst_Surface Albedos` and numref:`rst_Snow Hydrology`).
+parameterizations (Chapters :numref:`rst_Surface Albedos` and :numref:`rst_Snow Hydrology`).
 
 :sup:`4`\ The nitrogen deposition rate is required by the
 biogeochemistry model when active and represents the total deposition of
