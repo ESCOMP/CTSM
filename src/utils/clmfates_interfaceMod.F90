@@ -1873,6 +1873,7 @@ contains
    use FatesIOVariableKindMod, only : site_r8, site_ground_r8, site_size_pft_r8
    use FatesIOVariableKindMod, only : site_size_r8, site_pft_r8, site_age_r8
    use FatesIOVariableKindMod, only : site_fuel_r8, site_cwdsc_r8, site_scag_r8
+   use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
@@ -2112,7 +2113,24 @@ contains
                               ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
                               default=trim(vdefault),                       &
                               set_lake=0._r8,set_urb=0._r8)
-           
+        case(site_scagpft_r8)
+           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
+           dim2name = this%fates_hist%dim_bounds(d_index)%name
+           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
+                              type2d=trim(dim2name),                        &
+                              avgflag=trim(vavgflag),long_name=trim(vlong), &
+                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
+                              default=trim(vdefault),                       &
+                              set_lake=0._r8,set_urb=0._r8)
+        case(site_agepft_r8)
+           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
+           dim2name = this%fates_hist%dim_bounds(d_index)%name
+           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
+                              type2d=trim(dim2name),                        &
+                              avgflag=trim(vavgflag),long_name=trim(vlong), &
+                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
+                              default=trim(vdefault),                       &
+                              set_lake=0._r8,set_urb=0._r8)           
 
         case default
            write(iulog,*) 'A FATES iotype was created that was not registerred'
@@ -2358,6 +2376,12 @@ contains
 
    fates%sizeage_class_begin = 1
    fates%sizeage_class_end   = nlevsclass * nlevage
+
+   fates%agepft_class_begin = 1
+   fates%agepft_class_end   = nlevage * numpft_ed
+   
+   fates%sizeagepft_class_begin = 1
+   fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_ed
    
    fates%fuel_begin = 1
    fates%fuel_end = nfsc
