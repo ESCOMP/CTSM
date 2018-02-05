@@ -650,6 +650,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_vichydro($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_output_reals($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1493,6 +1494,7 @@ sub process_namelist_commandline_use_case {
     $settings{'sim_year'}       = $nl_flags->{'sim_year'};
     $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
     $settings{'phys'}           = $nl_flags->{'phys'};
+    $settings{'lnd_tuning_mode'}= $nl_flags->{'lnd_tuning_mode'};
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
       $settings{'use_cn'}      = $nl_flags->{'use_cn'};
       $settings{'use_cndv'}    = $nl_flags->{'use_cndv'};
@@ -1548,7 +1550,6 @@ sub process_namelist_inline_logic {
   # namelist variables that have not been previously set.
   my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $envxml_ref, $physv) = @_;
 
-  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv);
 
   ##############################
   # namelist group: clm_inparm #
@@ -1788,7 +1789,7 @@ sub setup_logic_site_specific {
 
 sub setup_logic_lnd_tuning {
 
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my $var    = "lnd_tuning_mode";
   if ( $opts->{$var} eq "default" ) {
