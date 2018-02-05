@@ -554,7 +554,7 @@ temperature as
 
 with constant factors :math:`\eta _{0} = 7.62237 \times 10^{6}`  kg s\ :sup:`-1` m\ :sup:`-2`, 
 :math:`a_{\eta} = 0.1` K\ :sup:`-1`, :math:`b_{\eta} = 0.023` m\ :sup:`-3` kg\ :sup:`-1`, 
-and :math:`c_{\eta} = 358` kg m\ :sup:`-3` (:ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`).
+and :math:`c_{\eta} = 450` kg m\ :sup:`-3` (:ref:`van Kampenhout et al. (2017) <vanKampenhoutetal2017>`).
 Further, factor :math:`f_1` accounts for the presence of liquid water (:ref:`Vionnet et al. (2012) <Vionnetetal2012>`):
 
 .. math:: 
