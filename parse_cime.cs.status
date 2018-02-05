@@ -299,6 +299,9 @@ sub print_categories {
    my %csstatus = @_;
 
    my $expectedfailfile = "$scrdir/components/clm/cime_config/testdefs/ExpectedTestFails.xml";
+   if ( ! -f $expectedfailfile ) {
+      $expectedfailfile = "$scrdir/cime_config/testdefs/ExpectedTestFails.xml";
+   }
    my @passes;
    my @fails;
    my @pendings;
