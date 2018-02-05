@@ -650,6 +650,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_vichydro($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_output_reals($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1493,6 +1494,7 @@ sub process_namelist_commandline_use_case {
     $settings{'sim_year'}       = $nl_flags->{'sim_year'};
     $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
     $settings{'phys'}           = $nl_flags->{'phys'};
+    $settings{'lnd_tuning_mode'}= $nl_flags->{'lnd_tuning_mode'};
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
       $settings{'use_cn'}      = $nl_flags->{'use_cn'};
       $settings{'use_cndv'}    = $nl_flags->{'use_cndv'};
@@ -1548,7 +1550,6 @@ sub process_namelist_inline_logic {
   # namelist variables that have not been previously set.
   my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $envxml_ref, $physv) = @_;
 
-  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv);
 
   ##############################
   # namelist group: clm_inparm #
@@ -1788,7 +1789,7 @@ sub setup_logic_site_specific {
 
 sub setup_logic_lnd_tuning {
 
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my $var    = "lnd_tuning_mode";
   if ( $opts->{$var} eq "default" ) {
@@ -2349,12 +2350,13 @@ sub setup_logic_initial_conditions {
     }
     if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
        $settings{'bgc'}    = $nl_flags->{'bgc_mode'};
-       foreach my $item ( "mask", "maxpft", "irrig", "glc_nec", "crop" ) {
+       foreach my $item ( "mask", "maxpft", "irrig", "glc_nec", "crop", "lnd_tuning_mode" ) {
           $settings{$item}    = $nl_flags->{$item};
        }
     } else {
        foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                          "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates"
+                          "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
+                          "lnd_tuning_mode"
                         ) {
           $settings{$item}    = $nl_flags->{$item};
        }
@@ -2396,7 +2398,7 @@ sub setup_logic_initial_conditions {
           } 
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
-                     'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 
+                     'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                      'use_fates'=>$nl_flags->{'use_fates'} );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
           if ( $try > 1 ) {
@@ -2408,7 +2410,7 @@ sub setup_logic_initial_conditions {
              add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
                         'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
                         'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                        'use_cn'=>$nl_flags->{'use_cn'}, 'nofail'=>1 );
+                        'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},'nofail'=>1 );
              my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
              foreach my $pair ( split( /\s/, $attributes_string) ) {
                 if ( $pair =~ /^([a-z_]+)=([a-z._0-9]+)$/ ) {
@@ -3168,6 +3170,16 @@ sub setup_logic_nitrogen_deposition {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
+    if ( defined($opts->{'use_case'}) ) {
+       if ( ($nl_flags->{'lnd_tuning_mode'} =~ /clm5_0_cam/) && ($opts->{'use_case'} eq "1850_control") ) {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
+                      'use_cn'=>$nl_flags->{'use_cn'}, 
+                      'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+       }
+    }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -3181,16 +3193,20 @@ sub setup_logic_nitrogen_deposition {
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'rcp'=>$nl_flags->{'rcp'},
+                'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"1.9x2.5" );
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
     if ( defined($nl->get_value('stream_year_first_ndep')) ||
          defined($nl->get_value('stream_year_last_ndep'))  ||
          defined($nl->get_value('model_year_align_ndep'))  ||
+         defined($nl->get_value('ndep_taxmode'         ))  ||
+         defined($nl->get_value('ndep_varlist'         ))  ||
          defined($nl->get_value('stream_fldfilename_ndep'))
        ) {
       $log->fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
-                  "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" .
+                  "stream_year_last_ndep, model_year_align_ndep, ndep_taxmod, " .
+                  "ndep_varlist, nor stream_fldfilename_ndep" .
                   " can be set!");
     }
   }
