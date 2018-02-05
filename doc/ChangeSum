@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_18_r275     erik 02/05/2018 Update initial condition files, update fates, new CMIP6 pop-dens, more lnd_tuning_mod options, updated ndep for fully coupled
   clm4_5_18_r274    sacks 01/30/2018 Fix auto-detection of CIME_MODEL in a standalone checkout
   clm4_5_18_r273    sacks 01/26/2018 Support a standalone checkout from git
   clm4_5_18_r272     erik 01/25/2018 Bring in latest FATES release version to CLM trunk: fates_s1.4.1_a3.0.0_rev2

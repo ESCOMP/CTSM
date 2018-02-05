@@ -1,4 +1,133 @@
 ===============================================================
+Tag name:  clm4_5_18_r275
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Feb  5 15:02:53 MST 2018
+One-line Summary: Update initial condition files, update fates, new CMIP6 pop-dens, more lnd_tuning_mod options, updated ndep for fully coupled
+
+Purpose of changes
+------------------
+
+Update the initial condition files for clm4_0, clm4_5, clm5_0 at f09_g16 for both CRUNCEpv7 
+forcing and GSWP3v1 forcing. Update FATES with science change to science-1.4.1_api-3.0.0.
+New CMIP6 population density file that has years beyond 1850 (the old one just had 1850, so 
+was incorrect for historical or present-day). clm4_0 compsets now use CRUNCEPv7 forcing rather than
+the CRUNCEPv4 forcing. LND_TUNING_MODE is now used for initial conditions
+for different forcing. For fully coupled 1850 cases the ndep file is updated to a preliminary CMIP6
+version. Fix the tools testing and build-namelist testing to work in the git checkout.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #:
+ #247 -- Clm40 1850 and HIST compsets are incorrect
+ #246 -- New CMIP6 population density file is incorrect as it's constant in time
+ #171 -- CLM is getting the mask from the clm namelist_defaults rather than from top level scripts
+
+Known bugs introduced in this tag (include github issue ID): 
+ #253 -- Bad new IC file for clm4_0
+ #254 -- Failing test ERS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-default (sporadic glitch?)
+ #255 -- PTCLMmkdata doesn't work in the CLM git checkout
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   LND_TUNING_MODE is set by default according to the compset the case is created with.
+  If you change the CLM physics or DATM forcing, you'll want to update the LND_TUNING_MODE.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
+   LND_TUNING_MODE options changed to:
+    clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1
+
+   Several new compset aliases added:
+
+      CLM50: I1850Clm50Sp, I1850Clm50SpCru, I1850Clm50BgcCropCru
+      CLM45: I1850Clm45BgcCruGs, I1850Clm45BgcGs
+      CLM40  I1850Clm40CnGswGs (fixed I2000Clm40SpCruGs, I1850Clm40SpCruGs, and IHistClm40SpCruGs)
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files): New IC files for f09_g16
+    CMIP6 ndep file for fully coupled, pop-density beyond 1850
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Setting of ndep_taxmode/ndep_varlist should be simplified in CLMBuildNamelist.pm
+   Change name of setup_logic_lnd_tuning to setup_cmdl_lnd_tuning in CLMBuildNamelist.pm
+
+Changes to tests or testing: Change a few tests and add a few
+    Add I1850Clm50SpCru, I1850Clm50BgcCropCru, I1850Clm40CnGswGs and I1850Clm50Sp tests at f09_g16
+    Change I1850Clm40SpCruGs f09_f09_mg16 to f09_g16
+    Change I2000Clm50BgcCruGs f09_g17 test to I1850Clm50BgcCruGs f09_g16
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne -  PASS (134 comparison tests are different than clm4_5_18_r275)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - FAIL
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_18_r275
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers:
+    - what code configurations: clm4_0 for f09_g16
+          clm4_0 updated to CRUv7 Forcing
+          all clm4_5 and clm5_0 configurations, FATES-update
+    - what platforms/compilers: All
+    - nature of change: initialization, BGC for HIST/2000 compsets
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): FATES
+    fates to fates_s1.4.1_a3.0.0_rev3
+
+Pull Requests that document changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #252 -- New IC files
+ #251 -- README update
+ #248 -- Documentation of SMB in namelist_definition
+ #228 -- Get tools and testing working
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r274
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Jan 30 05:55:53 MST 2018
