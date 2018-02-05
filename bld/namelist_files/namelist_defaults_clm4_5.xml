@@ -202,7 +202,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <ufuel                    fire_method="li2014qianfrc" >1050.d00</ufuel>
 <cmb_cmplt_fact           fire_method="li2014qianfrc" >0.5d00, 0.25d00</cmb_cmplt_fact>
 
-<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSW3Pv1"
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSWP3v1"
 >30.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_CRUv7"
 >30.0d00</rh_low>
@@ -213,7 +213,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <bt_max                   fire_method="li2016crufrc" >0.98d00</bt_max>
 <cli_scale                fire_method="li2016crufrc" >0.033d00</cli_scale>
 <boreal_peatfire_c        fire_method="li2016crufrc" >0.09d-4</boreal_peatfire_c>
-<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSW3Pv1"
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSWP3v1"
 >0.010d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_CRUv7"
 >0.010d00</pot_hmn_ign_counts_alpha>
@@ -467,11 +467,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
   Or one specific file will be chosen over another.
 -->
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_GSWP3v1"
->hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.false. irrigate=.false. glc_nec=0
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.false. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_CRUv7"
->hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.false. irrigate=.false. glc_nec=0
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.false. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
@@ -509,16 +509,16 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="0" use_crop=".false." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false."
          lnd_tuning_mode="clm4_5_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v6_simyr1850_c170823.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v6_simyr1850_c180204.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="0" use_crop=".false." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false."
          lnd_tuning_mode="clm4_5_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v6_simyr1850_c170825.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v6_simyr1850_c180204.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
