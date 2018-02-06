@@ -61,7 +61,8 @@ contains
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['multiple'], &
-         glacier_region_melt_behavior_str = ['replaced_by_ice'])
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
 
     @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertFalse(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
@@ -79,7 +80,8 @@ contains
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['virtual'], &
-         glacier_region_melt_behavior_str = ['replaced_by_ice'])
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
 
     @assertTrue(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertFalse(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
@@ -97,7 +99,8 @@ contains
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
-         glacier_region_melt_behavior_str = ['replaced_by_ice'])
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
 
     @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertTrue(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
@@ -115,7 +118,8 @@ contains
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
-         glacier_region_melt_behavior_str = ['replaced_by_ice'])
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
 
     @assertTrue(glc_behavior%melt_replaced_by_ice_grc(bounds%begg))
   end subroutine init_replaced_behaviorIsCorrect
@@ -131,10 +135,45 @@ contains
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
-         glacier_region_melt_behavior_str = ['remains_in_place'])
+         glacier_region_melt_behavior_str = ['remains_in_place'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
 
     @assertFalse(glc_behavior%melt_replaced_by_ice_grc(bounds%begg))
   end subroutine init_remains_behaviorIsCorrect
+
+  @Test
+  subroutine init_remainsIce_behaviorIsCorrect(this)
+    ! Make sure ice runoff behavior is correct for 'remains_ice'
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['single_at_atm_topo'], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
+
+    @assertFalse(glc_behavior%ice_runoff_melted_grc(bounds%begg))
+  end subroutine init_remainsIce_behaviorIsCorrect
+
+  @Test
+  subroutine init_melted_behaviorIsCorrect(this)
+    ! Make sure ice runoff behavior is correct for 'melted'
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['single_at_atm_topo'], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['melted'])
+
+    @assertTrue(glc_behavior%ice_runoff_melted_grc(bounds%begg))
+  end subroutine init_melted_behaviorIsCorrect
 
   @Test
   subroutine init_multipleGridCells(this)
@@ -146,7 +185,8 @@ contains
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0, 1, 0], &
          glacier_region_behavior_str = ['multiple', 'virtual '], &
-         glacier_region_melt_behavior_str = ['replaced_by_ice ', 'remains_in_place'])
+         glacier_region_melt_behavior_str = ['replaced_by_ice ', 'remains_in_place'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice', 'melted     '])
 
     @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertTrue(glc_behavior%has_virtual_columns_grc(bounds%begg + 1))
@@ -155,6 +195,10 @@ contains
     @assertTrue(glc_behavior%melt_replaced_by_ice_grc(bounds%begg))
     @assertFalse(glc_behavior%melt_replaced_by_ice_grc(bounds%begg + 1))
     @assertTrue(glc_behavior%melt_replaced_by_ice_grc(bounds%begg + 2))
+
+    @assertFalse(glc_behavior%ice_runoff_melted_grc(bounds%begg))
+    @assertTrue(glc_behavior%ice_runoff_melted_grc(bounds%begg + 1))
+    @assertFalse(glc_behavior%ice_runoff_melted_grc(bounds%begg + 2))
   end subroutine init_multipleGridCells
 
   ! ------------------------------------------------------------------------

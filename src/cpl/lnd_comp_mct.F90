@@ -329,6 +329,7 @@ contains
     logical      :: dosend               ! true => send data back to driver
     logical      :: doalb                ! .true. ==> do albedo calculation on this time step
     logical      :: rof_prognostic       ! .true. => running with a prognostic ROF model
+    logical      :: glc_present          ! .true. => running with a non-stub GLC model
     real(r8)     :: nextsw_cday          ! calday from clock of next radiation computation
     real(r8)     :: caldayp1             ! clm calday plus dtime offset
     integer      :: shrlogunit,shrloglev ! old values for share log unit and log level
@@ -377,6 +378,14 @@ contains
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
 
+    ! Determine if we're running with a prognostic ROF model, and if we're running with a
+    ! non-stub GLC model. These won't change throughout the run, but we can't count on
+    ! their being set in initialization, so need to get them in the run method.
+
+    call seq_infodata_GetData( infodata, &
+         rof_prognostic=rof_prognostic, &
+         glc_present=glc_present)
+
     ! Map MCT to land data type
     ! Perform downscaling if appropriate
 
@@ -384,19 +393,17 @@ contains
     ! Map to clm (only when state and/or fluxes need to be updated)
 
     call t_startf ('lc_lnd_import')
-    call lnd_import( bounds, x2l_l%rattr, atm2lnd_inst, glc2lnd_inst )
+    call lnd_import( bounds, &
+         x2l = x2l_l%rattr, &
+         glc_present = glc_present, &
+         atm2lnd_inst = atm2lnd_inst, &
+         glc2lnd_inst = glc2lnd_inst)
     call t_stopf ('lc_lnd_import')
 
     ! Use infodata to set orbital values if updated mid-run
 
     call seq_infodata_GetData( infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
          orb_lambm0=lambm0, orb_obliqr=obliqr )
-
-    ! Determine if we're running with a prognostic ROF model. This won't change
-    ! throughout the run, but we can't count on this being set in initialization, so need
-    ! to get it in the run method.
-
-    call seq_infodata_GetData( infodata, rof_prognostic=rof_prognostic )
 
     ! Loop over time steps in coupling interval
 

@@ -13,6 +13,8 @@ module CNCStateUpdate3Mod
   use CNVegCarbonStateType          , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType           , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonStateType , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemCarbonFluxType , only : soilbiogeochem_carbonflux_type
+  use clm_varctl                     , only : use_matrixcn,use_soil_matrixcn
   !
   implicit none
   private
@@ -25,7 +27,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst,&
+       soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
@@ -39,6 +42,7 @@ contains
     type(cnveg_carbonflux_type)            , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)  , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l,k ! indices
@@ -49,7 +53,8 @@ contains
     associate(                                      & 
          cf_veg => cnveg_carbonflux_inst ,          & ! Input
          cs_veg => cnveg_carbonstate_inst,          & ! Output
-         cs_soil => soilbiogeochem_carbonstate_inst & ! Output
+         cs_soil => soilbiogeochem_carbonstate_inst, & ! Output
+         cf_soil => soilbiogeochem_carbonflux_inst   & ! Output
          )
 
       ! set time steps
@@ -60,63 +65,87 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             ! patch-level wood to column-level CWD (uncombusted wood)
-            cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
+            if (.not. use_soil_matrixcn) then
+!               if(j .eq. 1 .and. c .eq. 1)print*,'before fire_mortality',cs_soil%decomp_cpools_vr_col(c,j,i_met_lit), cf_veg%m_c_to_litr_met_fire_col(c,j)* dt 
+               cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
                  cf_veg%fire_mortality_c_to_cwdc_col(c,j) * dt
 
             ! patch-level wood to column-level litter (uncombusted wood)
-            cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
+               cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                  cf_veg%m_c_to_litr_met_fire_col(c,j)* dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
+               cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
                  cf_veg%m_c_to_litr_cel_fire_col(c,j)* dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
+               cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
                  cf_veg%m_c_to_litr_lig_fire_col(c,j)* dt
+!               if(j .eq. 1 .and. c .eq. 1)print*,'after fire_mortality',cs_soil%decomp_cpools_vr_col(c,j,i_met_lit), cf_veg%m_c_to_litr_met_fire_col(c,j)* dt 
+            else
+            ! patch-level wood to column-level CWD (uncombusted wood)
+               cf_soil%matrix_input_col(c,j,i_cwd) = cf_soil%matrix_input_col(c,j,i_cwd) + &
+                 cf_veg%fire_mortality_c_to_cwdc_col(c,j) * dt
+
+            ! patch-level wood to column-level litter (uncombusted wood)
+               cf_soil%matrix_input_col(c,j,i_met_lit) = cf_soil%matrix_input_col(c,j,i_met_lit) + &
+                 cf_veg%m_c_to_litr_met_fire_col(c,j)* dt
+               cf_soil%matrix_input_col(c,j,i_cel_lit) = cf_soil%matrix_input_col(c,j,i_cel_lit) + &
+                 cf_veg%m_c_to_litr_cel_fire_col(c,j)* dt
+               cf_soil%matrix_input_col(c,j,i_lig_lit) = cf_soil%matrix_input_col(c,j,i_lig_lit) + &
+                 cf_veg%m_c_to_litr_lig_fire_col(c,j)* dt
+            end if
          end do
       end do
 
       ! litter and CWD losses to fire
-      do l = 1, ndecomp_pools
-         do j = 1, nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               cs_soil%decomp_cpools_vr_col(c,j,l) = cs_soil%decomp_cpools_vr_col(c,j,l) - &
+!      print*,'before fire',cs_soil%decomp_cpools_vr_col(1,1,i_cwd),cf_veg%m_decomp_cpools_to_fire_vr_col(1,1,i_cwd) * dt
+      if(.not. use_soil_matrixcn)then
+         do l = 1, ndecomp_pools
+            do j = 1, nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+!               if (.not. use_soil_matrixcn)then
+                  cs_soil%decomp_cpools_vr_col(c,j,l) = cs_soil%decomp_cpools_vr_col(c,j,l) - &
                     cf_veg%m_decomp_cpools_to_fire_vr_col(c,j,l) * dt
+!               end if
+               end do
             end do
          end do
-      end do
+      end if
+!      print*,'after fire',cs_soil%decomp_cpools_vr_col(1,1,i_cwd),cf_veg%m_decomp_cpools_to_fire_vr_col(1,1,i_cwd) * dt
 
       ! patch-level carbon fluxes from fire
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
-
-         ! displayed pools
-         cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
-              cf_veg%m_leafc_to_fire_patch(p) * dt
-         cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
-              cf_veg%m_leafc_to_litter_fire_patch(p) * dt
-         cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) -                         &
-              cf_veg%m_frootc_to_fire_patch(p) * dt
-         cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) -                         &
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
+          if(.not. use_matrixcn)then 
+          ! displayed pools
+            cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
+                 cf_veg%m_leafc_to_fire_patch(p) * dt
+            cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
+                cf_veg%m_leafc_to_litter_fire_patch(p) * dt
+            cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) -                         &
+                cf_veg%m_frootc_to_fire_patch(p) * dt
+            cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) -                         &
               cf_veg%m_frootc_to_litter_fire_patch(p) * dt
-         cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p) -                   &
+            cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p) -                   &
               cf_veg%m_livestemc_to_fire_patch(p) * dt
-         cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p) -                   &
+            cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p) -                   &
               cf_veg%m_livestemc_to_litter_fire_patch(p) * dt  -                   &
               cf_veg%m_livestemc_to_deadstemc_fire_patch(p) * dt
-         cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p) -                   &
+            cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p) -                   &
               cf_veg%m_deadstemc_to_fire_patch(p) * dt
-         cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p) -                   &
+            cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p) -                   &
               cf_veg%m_deadstemc_to_litter_fire_patch(p) * dt  +                   &
               cf_veg%m_livestemc_to_deadstemc_fire_patch(p) * dt
-         cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p) -                 &
+            cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p) -                 &
               cf_veg%m_livecrootc_to_fire_patch(p) * dt
-         cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p) -                 &
+            cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p) -                 &
               cf_veg%m_livecrootc_to_litter_fire_patch(p) * dt   -                 &
               cf_veg%m_livecrootc_to_deadcrootc_fire_patch(p) * dt
-         cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p) -                 &
+!            if(p .eq. 8428)print*,'before fire',cs_veg%deadcrootc_patch(p),cf_veg%m_deadcrootc_to_fire_patch(p) * dt,cf_veg%m_deadcrootc_to_litter_fire_patch(p)* dt,  cf_veg%m_livecrootc_to_deadcrootc_fire_patch(p) * dt
+            cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p) -                 &
               cf_veg%m_deadcrootc_to_fire_patch(p) * dt
-         cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p) -                 &
+            cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p) -                 &
               cf_veg%m_deadcrootc_to_litter_fire_patch(p)* dt    +                 &
               cf_veg%m_livecrootc_to_deadcrootc_fire_patch(p) * dt
+!            if(p .eq. 8428)print*,'after fire',cs_veg%deadcrootc_patch(p)
 
          ! storage pools
          cs_veg%leafc_storage_patch(p) = cs_veg%leafc_storage_patch(p) -           &
@@ -177,8 +206,19 @@ contains
               cf_veg%m_gresp_xfer_to_fire_patch(p) * dt
          cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
               cf_veg%m_gresp_xfer_to_litter_fire_patch(p) * dt
+        else
+         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
+              cf_veg%m_gresp_storage_to_fire_patch(p) * dt
+         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
+              cf_veg%m_gresp_storage_to_litter_fire_patch(p) * dt
+         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
+              cf_veg%m_gresp_xfer_to_fire_patch(p) * dt
+         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
+              cf_veg%m_gresp_xfer_to_litter_fire_patch(p) * dt  
+        end if !end use_matrixcn
+ 
+       end do ! end of patch loop
 
-      end do ! end of patch loop
 
     end associate
 

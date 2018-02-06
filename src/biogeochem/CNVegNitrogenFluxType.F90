@@ -4,9 +4,9 @@ module CNVegNitrogenFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp,nvegpool
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
+  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop, use_matrixcn
   use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -242,6 +242,19 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: cost_nactive_patch                        (:)     ! Average cost of active uptake     (gN/m2/s)
      real(r8), pointer :: cost_nretrans_patch                       (:)     ! Average cost of retranslocation   (gN/m2/s)
      real(r8), pointer :: nuptake_npp_fraction_patch                (:)    ! frac of npp spent on N acquisition   (gN/m2/s)
+	 ! Matrix
+     real(r8), pointer :: matrix_nalloc_patch       (:,:)    ! B-matrix for nitrogen allocation
+     real(r8), pointer :: matrix_Ninput_patch       (:)      ! N input
+	 
+     real(r8), pointer :: matrix_nphtransfer_patch     (:,:,:)   ! A-matrix_phenologh
+     real(r8), pointer :: matrix_nphturnover_patch     (:,:,:)   ! C-matrix_phenologh
+  
+     real(r8), pointer :: matrix_ngmtransfer_patch     (:,:,:)   ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_ngmturnover_patch     (:,:,:)   ! C-matrix_gap mortality
+  
+     real(r8), pointer :: matrix_n2phtransfer_patch     (:,:,:)   ! matrix_phenologh for N transfer
+
+     real(r8), pointer :: matrix_nfiturnover_patch     (:,:,:)   ! C-matrix_fire	 
 
    contains
 
@@ -518,6 +531,18 @@ contains
     allocate(this%cost_nactive_patch           (begp:endp)) ;    this%cost_nactive_patch         (:) = nan
     allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
     allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
+	! Matrix
+    allocate(this%matrix_Ninput_patch          (begp:endp)) ;              this%matrix_Ninput_patch      (:) = nan
+    allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegpool)) ;   this%matrix_nalloc_patch      (:,:) = nan
+
+    allocate(this%matrix_nphtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_nphtransfer_patch  (:,:,:) = nan
+    allocate(this%matrix_nphturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nphturnover_patch  (:,:,:) = nan
+
+    allocate(this%matrix_ngmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_ngmtransfer_patch  (:,:,:) = nan
+    allocate(this%matrix_ngmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_ngmturnover_patch  (:,:,:) = nan
+
+    allocate(this%matrix_n2phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_n2phtransfer_patch  (:,:,:) = nan
+    allocate(this%matrix_nfiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nfiturnover_patch  (:,:,:) = nan	
 
   end subroutine InitAllocate
 
@@ -652,7 +677,7 @@ contains
     this%m_retransn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_RETRANSN_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='retranslocated N pool mortality', &
-         ptr_patch=this%m_retransn_to_litter_patch, default='inactive')
+         ptr_patch=this%m_retransn_to_litter_patch)!, default='inactive')
 
     this%m_leafn_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LEAFN_TO_FIRE', units='gN/m^2/s', &
@@ -757,7 +782,7 @@ contains
     this%m_retransn_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_RETRANSN_TO_FIRE', units='gN/m^2/s', &
          avgflag='A', long_name='retranslocated N pool fire loss', &
-         ptr_patch=this%m_retransn_to_fire_patch, default='inactive')
+         ptr_patch=this%m_retransn_to_fire_patch)!, default='inactive')
 
     this%leafn_xfer_to_leafn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_XFER_TO_LEAFN', units='gN/m^2/s', &
@@ -797,7 +822,7 @@ contains
     this%leafn_to_retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_TO_RETRANSN', units='gN/m^2/s', &
          avgflag='A', long_name='leaf N to retranslocated N pool', &
-         ptr_patch=this%leafn_to_retransn_patch, default='inactive')
+         ptr_patch=this%leafn_to_retransn_patch)!, default='inactive')
 
     this%frootn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_TO_LITTER', units='gN/m^2/s', &
@@ -1078,6 +1103,12 @@ contains
     call hist_addfld1d (fname='PLANT_NALLOC', units='gN/m^2/s', &
          avgflag='A', long_name='total allocated N flux', &
          ptr_patch=this%plant_nalloc_patch, default='inactive')
+    if (use_matrixcn) then		 
+    this%matrix_Ninput_patch(begp:endp) = spval
+    call hist_addfld1d (fname='MATRIX PLANT_NALLOC', units='gN/m^2/s', &
+         avgflag='A', long_name='total allocated N flux for matrix', &
+         ptr_patch=this%matrix_Ninput_patch, default='inactive')
+    end if 
     
     if ( use_fun ) then
        this%Nactive_patch(begp:endp)  = spval
@@ -1310,7 +1341,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (&
+    call this%SetValues (nvegpool=18, &
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -1406,7 +1437,12 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='plant_nalloc', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch)
+		 
+    call restartvar(ncid=ncid, flag=flag, varname='matrix_plant_nalloc', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%matrix_Ninput_patch)	 
 
      if ( use_fun ) then
         call restartvar(ncid=ncid, flag=flag, varname='Nactive', xtype=ncd_double,       &
@@ -1515,7 +1551,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this, &
+  subroutine SetValues ( this,nvegpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -1525,7 +1561,7 @@ contains
     ! !ARGUMENTS:
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
-    integer , intent(in) :: num_patch
+    integer , intent(in) :: num_patch,nvegpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -1660,6 +1696,7 @@ contains
 
        this%crop_seedn_to_leaf_patch(i)                  = value_patch
        this%grainn_to_cropprodn_patch(i)                 = value_patch
+
     end do
 
     if ( use_crop )then
@@ -1723,7 +1760,24 @@ contains
           this%m_decomp_npools_to_fire_col(i,k) = value_column
        end do
     end do
-
+! Matrix
+     do k=1,nvegpool
+       do fi = 1,num_patch
+          i = filter_patch(fi)
+          this%matrix_nalloc_patch(i,k)              = value_patch
+          do j = 1, nvegpool+1
+               if(j .le. nvegpool)then
+                  this%matrix_nphturnover_patch (i,j,k) = value_patch
+                  this%matrix_ngmturnover_patch (i,j,k) = value_patch
+                  this%matrix_nfiturnover_patch (i,j,k) = value_patch
+               end if
+                this%matrix_nphtransfer_patch (i,j,k) = value_patch
+                this%matrix_ngmtransfer_patch (i,j,k) = value_patch
+                this%matrix_n2phtransfer_patch (i,j,k) = value_patch
+               
+          end do
+       end do
+    end do
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
           do fi = 1,num_column
@@ -1732,7 +1786,6 @@ contains
           end do
        end do
     end do
-
   end subroutine SetValues
 
   !-----------------------------------------------------------------------

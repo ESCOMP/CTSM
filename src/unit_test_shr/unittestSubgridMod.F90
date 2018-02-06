@@ -39,7 +39,7 @@ module unittestSubgridMod
   !    is true.
 
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod    , only : bounds_type, BOUNDS_LEVEL_PROC
+  use decompMod    , only : bounds_type, procinfo, get_proc_bounds
   use GridcellType , only : grc                
   use LandunitType , only : lun                
   use ColumnType   , only : col                
@@ -162,15 +162,59 @@ contains
     
     character(len=*), parameter :: subname = 'unittest_subgrid_setup_end'
     !-----------------------------------------------------------------------
-    
-    call set_bounds
+
+    call set_decomp_info
+    call create_bounds_object
     call clm_ptrs_compdown(bounds)
     call compute_higher_order_weights(bounds)
 
   end subroutine unittest_subgrid_setup_end
 
   !-----------------------------------------------------------------------
-  subroutine set_bounds
+  subroutine set_decomp_info
+    !
+    ! !DESCRIPTION:
+    ! Set up decomp info in decompMod.
+    !
+    ! We need to do this (in addition to just making sure that the bounds derived type
+    ! object is set up correctly) for the sake of callers of get_proc_bounds.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'set_decomp_info'
+    !-----------------------------------------------------------------------
+
+    ! For now, not setting up clump info, because it isn't needed in any unit tests. We
+    ! may have to fix this in the future.
+    procinfo%nclumps = 1
+    allocate(procinfo%cid(procinfo%nclumps))
+    procinfo%cid(:) = -1
+
+    procinfo%begg = begg
+    procinfo%endg = gi
+    procinfo%begl = begl
+    procinfo%endl = li
+    procinfo%begc = begc
+    procinfo%endc = ci
+    procinfo%begp = begp
+    procinfo%endp = pi
+
+    procinfo%ncells = procinfo%endg - procinfo%begg + 1
+    procinfo%nlunits = procinfo%endl - procinfo%begl + 1
+    procinfo%ncols = procinfo%endc - procinfo%begc + 1
+    procinfo%npatches = procinfo%endp - procinfo%begp + 1
+
+    ! Currently leaving cohort info unset because it isn't needed in any unit tests. We
+    ! may have to fix this in the future.
+
+  end subroutine set_decomp_info
+
+  !-----------------------------------------------------------------------
+  subroutine create_bounds_object
     !
     ! !DESCRIPTION:
     ! Create the bounds derived type object
@@ -183,24 +227,15 @@ contains
     
     character(len=*), parameter :: subname = 'set_bounds'
     !-----------------------------------------------------------------------
-    
-    bounds%begg = begg
-    bounds%endg = gi
-    bounds%begl = begl
-    bounds%endl = li
-    bounds%begc = begc
-    bounds%endc = ci
-    bounds%begp = begp
-    bounds%endp = pi
 
     ! Some routines want a proc-level bounds. So for now, just making bounds be
     ! proc-level. In the future, we may need both a proc-level and clumps-level bounds
     ! object (if other routines want a clump-level bounds). (For the sake of unit
     ! testing, proc-level and clump-level bounds objects can probably be the same except
     ! for bounds%level and bounds%clump_index.)
-    bounds%level = BOUNDS_LEVEL_PROC
+    call get_proc_bounds(bounds)
 
-  end subroutine set_bounds
+  end subroutine create_bounds_object
 
 
 

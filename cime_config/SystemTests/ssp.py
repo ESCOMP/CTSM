@@ -3,12 +3,14 @@ Implementation of the CIME SSP test.  This class inherits from SystemTestsCommon
 
 This is a CLM specific test:
 Verifies that spinup works correctly
-this test is only valid for CLM compsets with CLM45
+this test is only valid for CLM compsets with CLM45 or CLM50
 (1) do an initial spin test
     - set CLM_ACCELERATED_SPINUP to on
     - write restarts at the end of the run, turn on short term archiving
+    - turn MOSART off
 (2) do a hybrid non-spinup simulation run
     - start from the restart files generated in (1)
+    - turn MOSART off
 """
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
@@ -23,6 +25,8 @@ class SSP(SystemTestsCommon):
         initialize an object interface to the SSP system test
         """
         SystemTestsCommon.__init__(self, case)
+        rof = self._case.get_value("COMP_ROF")
+        expect(rof == "mosart", "ERROR: SSP test requires that ROF component be mosart")
 
     def run_phase(self):
         caseroot = self._case.get_value("CASEROOT")
@@ -52,7 +56,7 @@ class SSP(SystemTestsCommon):
         logger.info("  short term archiving is on ")
 
         clone.set_value("CLM_ACCELERATED_SPINUP", "on")
-        clone.set_value("RTM_MODE", "NULL")
+        clone.set_value("MOSART_MODE", "NULL")
         clone.set_value("STOP_N",stop_n1)
         clone.flush()
 
@@ -84,7 +88,7 @@ class SSP(SystemTestsCommon):
         self._case.set_value("RUN_TYPE", "hybrid")
         self._case.set_value("GET_REFCASE", False)
         self._case.set_value("RUN_REFCASE", "{}.ref1".format(orig_casevar))
-        self._case.set_value("RTM_MODE", "NULL")
+        self._case.set_value("MOSART_MODE", "NULL")
 
         self._case.set_value("RUN_REFDATE", refdate)
         self._case.set_value("STOP_N", stop_n2)

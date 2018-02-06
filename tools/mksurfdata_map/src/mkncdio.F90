@@ -72,6 +72,7 @@ module mkncdio
   public :: nf_max_name
   public :: nf_max_var_dims
   public :: nf_noerr
+  public :: nf_nowrite
   public :: nf_enotatt
   public :: nf_strerror
 !EOP

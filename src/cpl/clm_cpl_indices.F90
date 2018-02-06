@@ -289,36 +289,36 @@ contains
     index_x2l_Sg_icemask_coupled_fluxes = mct_avect_indexra(x2l,'Sg_icemask_coupled_fluxes')
 
     glc_nec = glc_get_num_elevation_classes()
-
-    ! If glc_nec > 0, then create coupling fields for all glc elevation classes
-    ! (1:glc_nec) plus bare land (index 0). Note that, if glc_nec = 0, then we don't even
-    ! need the bare land (0) index.
-    if (glc_nec > 0) then
-       allocate(index_l2x_Sl_tsrf(0:glc_nec))
-       allocate(index_l2x_Sl_topo(0:glc_nec))
-       allocate(index_l2x_Flgl_qice(0:glc_nec))
-       allocate(index_x2l_Sg_ice_covered(0:glc_nec))
-       allocate(index_x2l_Sg_topo(0:glc_nec))
-       allocate(index_x2l_Flgg_hflx(0:glc_nec))
-
-       do num = 0,glc_nec
-          nec_str = glc_elevclass_as_string(num)
-
-          name = 'Sg_ice_covered' // nec_str
-          index_x2l_Sg_ice_covered(num) = mct_avect_indexra(x2l,trim(name))
-          name = 'Sg_topo' // nec_str
-          index_x2l_Sg_topo(num)   = mct_avect_indexra(x2l,trim(name))
-          name = 'Flgg_hflx' // nec_str
-          index_x2l_Flgg_hflx(num) = mct_avect_indexra(x2l,trim(name))
-
-          name = 'Sl_tsrf' // nec_str
-          index_l2x_Sl_tsrf(num)   = mct_avect_indexra(l2x,trim(name))
-          name = 'Sl_topo' // nec_str
-          index_l2x_Sl_topo(num)   = mct_avect_indexra(l2x,trim(name))
-          name = 'Flgl_qice' // nec_str
-          index_l2x_Flgl_qice(num) = mct_avect_indexra(l2x,trim(name))
-       end do
+    if (glc_nec < 1) then
+       call shr_sys_abort('ERROR: In CLM4.5 and later, glc_nec must be at least 1.')
     end if
+
+    ! Create coupling fields for all glc elevation classes (1:glc_nec) plus bare land
+    ! (index 0).
+    allocate(index_l2x_Sl_tsrf(0:glc_nec))
+    allocate(index_l2x_Sl_topo(0:glc_nec))
+    allocate(index_l2x_Flgl_qice(0:glc_nec))
+    allocate(index_x2l_Sg_ice_covered(0:glc_nec))
+    allocate(index_x2l_Sg_topo(0:glc_nec))
+    allocate(index_x2l_Flgg_hflx(0:glc_nec))
+
+    do num = 0,glc_nec
+       nec_str = glc_elevclass_as_string(num)
+
+       name = 'Sg_ice_covered' // nec_str
+       index_x2l_Sg_ice_covered(num) = mct_avect_indexra(x2l,trim(name))
+       name = 'Sg_topo' // nec_str
+       index_x2l_Sg_topo(num)   = mct_avect_indexra(x2l,trim(name))
+       name = 'Flgg_hflx' // nec_str
+       index_x2l_Flgg_hflx(num) = mct_avect_indexra(x2l,trim(name))
+
+       name = 'Sl_tsrf' // nec_str
+       index_l2x_Sl_tsrf(num)   = mct_avect_indexra(l2x,trim(name))
+       name = 'Sl_topo' // nec_str
+       index_l2x_Sl_topo(num)   = mct_avect_indexra(l2x,trim(name))
+       name = 'Flgl_qice' // nec_str
+       index_l2x_Flgl_qice(num) = mct_avect_indexra(l2x,trim(name))
+    end do
 
     call mct_aVect_clean(x2l)
     call mct_aVect_clean(l2x)

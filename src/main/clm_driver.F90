@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_fates
+  use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : is_cold_start, is_interpolated_start
@@ -199,14 +199,13 @@ contains
     need_glacier_initialization = (is_first_step() .and. &
          (is_cold_start .or. is_interpolated_start))
 
-    if (create_glacier_mec_landunit .and. need_glacier_initialization) then
+    if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
 
-          call glc2lnd_inst%update_glc2lnd_non_topo( &
-               bounds = bounds_clump, &
-               glc_behavior = glc_behavior)
+          call glc2lnd_inst%update_glc2lnd_fracs( &
+               bounds = bounds_clump)
 
           call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
 
@@ -310,8 +309,8 @@ contains
          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
          c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
-         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-         glc_behavior)
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+         soilbiogeochem_carbonflux_inst, ch4_inst, glc_behavior)
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
@@ -392,6 +391,7 @@ contains
 
     ! Get time as of beginning of time step
     call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
+!    if(bounds_clump%begp .le. 8428 .and. bounds_clump%endp .ge. 8428)print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
 
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
@@ -697,7 +697,7 @@ contains
             clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
             waterflux_inst, waterstate_inst, soilhydrology_inst, aerosol_inst, &
-            canopystate_inst, soil_water_retention_curve)
+            canopystate_inst, soil_water_retention_curve, topo_inst)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterflux_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because
@@ -737,7 +737,7 @@ contains
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,                                  &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc,                              &
             atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
-            energyflux_inst, aerosol_inst, lakestate_inst)
+            energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
        
        !  Calculate column-integrated aerosol masses, and
        !  mass concentrations for radiative calculations and output
@@ -757,7 +757,8 @@ contains
        call SnowAge_grain(bounds_clump,                         &
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,     &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc, &
-            waterflux_inst, waterstate_inst, temperature_inst)
+            waterflux_inst, waterstate_inst, temperature_inst, &
+            atm2lnd_inst)
 
        call t_stopf('hylake')
 
@@ -785,7 +786,8 @@ contains
        call SnowAge_grain(bounds_clump,                 &
             filter(nc)%num_snowc, filter(nc)%snowc,     &
             filter(nc)%num_nosnowc, filter(nc)%nosnowc, &
-            waterflux_inst, waterstate_inst, temperature_inst)
+            waterflux_inst, waterstate_inst, temperature_inst, &
+            atm2lnd_inst)
        call t_stopf('snow_init')
 
        ! ============================================================================
@@ -861,6 +863,7 @@ contains
                filter(nc)%num_soilp, filter(nc)%soilp, &
                doalb, crop_inst, &
                waterstate_inst, waterflux_inst, frictionvel_inst, canopystate_inst, &
+               soilstate_inst, soilbiogeochem_state_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -1038,7 +1041,8 @@ contains
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
          solarabs_inst, drydepvel_inst,       &
-         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst, &
+         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
+         lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')
@@ -1047,19 +1051,17 @@ contains
     ! Determine gridcell averaged properties to send to glc
     ! ============================================================================
 
-    if (create_glacier_mec_landunit) then
-       call t_startf('lnd2glc')
-       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-       do nc = 1,nclumps
-          call get_clump_bounds(nc, bounds_clump)
-          call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
-               filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, glacier_smb_inst, topo_inst,    &
-               init=.false.)           
-       end do
-       !$OMP END PARALLEL DO
-       call t_stopf('lnd2glc')
-    end if
+    call t_startf('lnd2glc')
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
+            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
+            temperature_inst, glacier_smb_inst, topo_inst,    &
+            init=.false.)           
+    end do
+    !$OMP END PARALLEL DO
+    call t_stopf('lnd2glc')
 
     ! ============================================================================
     ! Write global average diagnostics to standard output

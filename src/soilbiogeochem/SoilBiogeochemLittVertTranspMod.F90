@@ -6,6 +6,7 @@ module SoilBiogeochemLittVertTranspMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog, use_c13, use_c14, spinup_state, use_vertsoilc, use_fates, use_cn
+  use clm_varctl                         , only : use_soil_matrixcn
   use clm_varcon                         , only : secspday
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -156,6 +157,7 @@ contains
     real(r8), pointer :: conc_ptr(:,:,:)                                           ! pointer, concentration state variable being transported
     real(r8), pointer :: source(:,:,:)                                             ! pointer, source term
     real(r8), pointer :: trcr_tendency_ptr(:,:,:)                                  ! poiner, store the vertical tendency (gain/loss due to vertical transport)
+    real(r8), pointer :: matrix_input(:,:,:)                                  ! poiner, store the vertical tendency (gain/loss due to vertical transport)
     !-----------------------------------------------------------------------
 
     ! Set statement functions
@@ -169,7 +171,10 @@ contains
          altmax_lastyear  => canopystate_inst%altmax_lastyear_col       ,  & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                  
 
          som_adv_coef     => soilbiogeochem_state_inst%som_adv_coef_col ,  & ! Output: [real(r8) (:,:) ]  SOM advective flux (m/s)                               
-         som_diffus_coef  => soilbiogeochem_state_inst%som_diffus_coef_col & ! Output: [real(r8) (:,:) ]  SOM diffusivity due to bio/cryo-turbation (m2/s)       
+         som_diffus_coef  => soilbiogeochem_state_inst%som_diffus_coef_col, & ! Output: [real(r8) (:,:) ]  SOM diffusivity due to bio/cryo-turbation (m2/s)  
+         matrix_a_tri     => soilbiogeochem_carbonflux_inst%matrix_a_tri_col, & ! Output: "A"-for matrix 
+         matrix_b_tri     => soilbiogeochem_carbonflux_inst%matrix_b_tri_col, & ! Output: "B"-for matrix
+         matrix_c_tri     => soilbiogeochem_carbonflux_inst%matrix_c_tri_col  & ! Output: "C"-for matrix
          )
 
       !Set parameters of vertical mixing of SOM
@@ -252,11 +257,13 @@ contains
             conc_ptr          => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col
             source            => soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col
             trcr_tendency_ptr => soilbiogeochem_carbonflux_inst%decomp_cpools_transport_tendency_col
+            matrix_input      => soilbiogeochem_carbonflux_inst%matrix_input_col
          case (2)  ! N
             if (use_cn ) then
                conc_ptr          => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col
                source            => soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col
                trcr_tendency_ptr => soilbiogeochem_nitrogenflux_inst%decomp_npools_transport_tendency_col
+               matrix_input      => soilbiogeochem_nitrogenflux_inst%matrix_input_col
             endif
          case (3)
             if ( use_c13 ) then
@@ -281,15 +288,13 @@ contains
                call endrun(msg=errMsg(sourcefile, __LINE__))
             endif
          end select
-
          if (use_vertsoilc) then
 
             do s = 1, ndecomp_pools
-
                if ( .not. is_cwd(s) ) then
-
-                  do j = 1,nlevdecomp+1
-                     do fc = 1, num_soilc
+                  if(.not. use_soil_matrixcn .or. s .eq. 1)then
+                     do j = 1,nlevdecomp+1
+                        do fc = 1, num_soilc
                         c = filter_soilc (fc)
                         !
                         if ( spinup_state >= 1 ) then
@@ -315,20 +320,20 @@ contains
                            diffus(c,j) = som_diffus_coef(c,j) * spinup_term
                         endif
                         !
+                        end do
                      end do
-                  end do
 
                   ! Set Pe (Peclet #) and D/dz throughout column
 
-                  do fc = 1, num_soilc ! dummy terms here
-                     c = filter_soilc (fc)
-                     conc_trcr(c,0) = 0._r8
-                     conc_trcr(c,col%nbedrock(c)+1:nlevdecomp+1) = 0._r8
-                  end do
+                     do fc = 1, num_soilc ! dummy terms here
+                        c = filter_soilc (fc)
+                        conc_trcr(c,0) = 0._r8
+                        conc_trcr(c,col%nbedrock(c)+1:nlevdecomp+1) = 0._r8
+                     end do
 
 
-                  do j = 1,nlevdecomp+1
-                     do fc = 1, num_soilc
+                     do j = 1,nlevdecomp+1
+                        do fc = 1, num_soilc
                         c = filter_soilc (fc)
 
                         conc_trcr(c,j) = conc_ptr(c,j,s)
@@ -386,8 +391,9 @@ contains
                            pe_m1(c,j) = f_m1(c,j) / d_m1_zm1(c,j) ! Peclet #
                            pe_p1(c,j) = f_p1(c,j) / d_p1_zp1(c,j) ! Peclet #
                         end if
-                     enddo ! fc
-                  enddo ! j; nlevdecomp
+                        enddo ! fc
+                     enddo ! j; nlevdecomp
+                  end if
 
 
                   ! Calculate the tridiagonal coefficients
@@ -408,19 +414,32 @@ contains
                         elseif (j == 1) then
                            a_tri(c,j) = -(d_m1_zm1(c,j) * aaa(pe_m1(c,j)) + max( f_m1(c,j), 0._r8)) ! Eqn 5.47 Patankar
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
-                           b_tri(c,j) = -a_tri(c,j) - c_tri(c,j) + a_p_0
-                           r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr(c,j) 
+                           b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
+                           r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr(c,j)
+ !if use soil_matrix                          
+                           if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then !vertical matrix are the same for all pools
+                              matrix_a_tri(c,j) = a_tri(c,j) 
+                              matrix_c_tri(c,j) = c_tri(c,j)
+                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
+                           end if
                         elseif (j < nlevdecomp+1) then
                            a_tri(c,j) = -(d_m1_zm1(c,j) * aaa(pe_m1(c,j)) + max( f_m1(c,j), 0._r8)) ! Eqn 5.47 Patankar
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
-                           b_tri(c,j) = -a_tri(c,j) - c_tri(c,j) + a_p_0
+                           b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
+   !if use soil_matrix     
+                           if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then                   
+                              matrix_a_tri(c,j) = a_tri(c,j) ! Eqn 5.47 Patankar
+                              matrix_c_tri(c,j) = c_tri(c,j)
+                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
+                           end if
                         else ! j==nlevdecomp+1; 0 concentration gradient at bottom
                            a_tri(c,j) = -1._r8
                            b_tri(c,j) = 1._r8
                            c_tri(c,j) = 0._r8 
                            r_tri(c,j) = 0._r8
                         endif
+!for matrix-zgdu
                      enddo ! fc; column
                   enddo ! j; nlevdecomp
 
@@ -433,12 +452,17 @@ contains
                   do fc = 1, num_soilc
                      c = filter_soilc (fc)
                      do j = 1, nlevdecomp
-                        trcr_tendency_ptr(c,j,s) = 0.-(conc_trcr(c,j) + source(c,j,s))
-                     end do
+                        if (.not. use_soil_matrixcn) then
+                           trcr_tendency_ptr(c,j,s) = 0.-(conc_trcr(c,j) + source(c,j,s))
+                        else
+                           trcr_tendency_ptr(c,j,s) = 0.0_r8
+                       end if !soil_matrix 
+                    end do
                   end do
 
+                  if (.not. use_soil_matrixcn) then
                   ! Solve for the concentration profile for this time step
-                  call Tridiagonal(bounds, 0, nlevdecomp+1, &
+                     call Tridiagonal(bounds, 0, nlevdecomp+1, &
                        jtop(bounds%begc:bounds%endc), &
                        num_soilc, filter_soilc, &
                        a_tri(bounds%begc:bounds%endc, :), &
@@ -446,47 +470,56 @@ contains
                        c_tri(bounds%begc:bounds%endc, :), &
                        r_tri(bounds%begc:bounds%endc, :), &
                        conc_trcr(bounds%begc:bounds%endc,0:nlevdecomp+1))
-
                   ! add post-transport concentration to calculate tendency term
-                  do fc = 1, num_soilc
-                     c = filter_soilc (fc)
-                     do j = 1, nlevdecomp
-                        trcr_tendency_ptr(c,j,s) = trcr_tendency_ptr(c,j,s) + conc_trcr(c,j)
-                        trcr_tendency_ptr(c,j,s) = trcr_tendency_ptr(c,j,s) / dtime
+                     do fc = 1, num_soilc
+                        c = filter_soilc (fc)
+                        do j = 1, nlevdecomp
+                           trcr_tendency_ptr(c,j,s) = trcr_tendency_ptr(c,j,s) + conc_trcr(c,j)
+                           trcr_tendency_ptr(c,j,s) = trcr_tendency_ptr(c,j,s) / dtime
+                        end do
                      end do
-                  end do
-
+                  else
+                     do j = 1,nlevdecomp
+                        do fc =1,num_soilc
+                           c = filter_soilc(fc)
+                           matrix_input(c,j,s) = matrix_input(c,j,s) + source(c,j,s)
+                        end do
+                     end do
+                  end if  !soil_matrix
                else
                   ! for CWD pools, just add
                   do j = 1,nlevdecomp
                      do fc = 1, num_soilc
                         c = filter_soilc (fc)
-                        conc_trcr(c,j) = conc_ptr(c,j,s) + source(c,j,s)
+                        if(.not. use_soil_matrixcn)then
+                           conc_trcr(c,j) = conc_ptr(c,j,s) + source(c,j,s)
+                        else
+                           matrix_input(c,j,s) = matrix_input(c,j,s) + source(c,j,s)
+                        end if
                         if (j > col%nbedrock(c) .and. source(c,j,s) > 0._r8) then 
                            write(iulog,*) 'source >0',c,j,s,source(c,j,s)
                         end if
                         if (j > col%nbedrock(c) .and. conc_ptr(c,j,s) > 0._r8) then
                            write(iulog,*) 'conc_ptr >0',c,j,s,conc_ptr(c,j,s)
                         end if
-
                      end do
                   end do
-
                end if ! not CWD
 
-               do j = 1,nlevdecomp
-                  do fc = 1, num_soilc
-                     c = filter_soilc (fc)
-                     conc_ptr(c,j,s) = conc_trcr(c,j) 
-                     ! Correct for small amounts of carbon that leak into bedrock
-                     if (j > col%nbedrock(c)) then 
-                        conc_ptr(c,col%nbedrock(c),s) = conc_ptr(c,col%nbedrock(c),s) + &
-                           conc_trcr(c,j) * (dzsoi_decomp(j) / dzsoi_decomp(col%nbedrock(c)))
-                        conc_ptr(c,j,s) = 0._r8
-                     end if
+              if (.not. use_soil_matrixcn) then
+                 do j = 1,nlevdecomp
+                    do fc = 1, num_soilc
+                       c = filter_soilc (fc)
+                       conc_ptr(c,j,s) = conc_trcr(c,j) 
+                       ! Correct for small amounts of carbon that leak into bedrock
+                       if (j > col%nbedrock(c)) then 
+                          conc_ptr(c,col%nbedrock(c),s) = conc_ptr(c,col%nbedrock(c),s) + &
+                             conc_trcr(c,j) * (dzsoi_decomp(j) / dzsoi_decomp(col%nbedrock(c)))
+                          conc_ptr(c,j,s) = 0._r8
+                       end if
+                    end do
                   end do
-               end do
-
+               end if ! soil_matrix
             end do ! s (pool loop)
 
          else
@@ -504,7 +537,6 @@ contains
                   end do
                end do
             end do
-
          endif
 
       end do  ! i_type

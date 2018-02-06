@@ -11,7 +11,7 @@ module clm_initializeMod
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
   use clm_varctl      , only : is_cold_start, is_interpolated_start
-  use clm_varctl      , only : create_glacier_mec_landunit, iulog
+  use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
@@ -137,11 +137,7 @@ contains
        write(iulog,*) 'Attempting to read ldomain from ',trim(fatmlndfrc)
        call shr_sys_flush(iulog)
     endif
-    if (create_glacier_mec_landunit) then
-       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
-    else
-       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
-    endif
+    call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
     if (masterproc) then
        call domain_check(ldomain)
     endif
@@ -163,13 +159,8 @@ contains
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
-    if (create_glacier_mec_landunit) then
-       allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
-       allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
-    else
-       allocate (wt_glc_mec  (1,1))
-       allocate (topo_glc_mec(1,1))
-    endif
+    allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
+    allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
 
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
@@ -280,7 +271,7 @@ contains
     use clm_time_manager      , only : get_step_size, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
-    use C14BombSpikeMod       , only : C14_init_BombSpike, use_c14_bombspike 
+    use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength, daylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
     use fileutils             , only : getfil
@@ -291,7 +282,6 @@ contains
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod           , only : restFile_read, restFile_write 
     use ndepStreamMod         , only : ndep_init, ndep_interp
-    use CNDriverMod           , only : CNDriverInit 
     use LakeCon               , only : LakeConInit 
     use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
@@ -385,11 +375,10 @@ contains
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1)
              
     ! Initialize maximum daylength, based on latitude and maximum declination
-    ! maximum declination hardwired for present-day orbital parameters, 
-    ! +/- 23.4667 degrees = +/- 0.409571 radians, use negative value for S. Hem
+    ! given by the obliquity use negative value for S. Hem
 
     do g = bounds_proc%begg,bounds_proc%endg
-       max_decl = 0.409571
+       max_decl = obliqr
        if (grc%lat(g) < 0._r8) max_decl = -max_decl
        grc%max_dayl(g) = daylength(grc%lat(g), max_decl)
     end do
@@ -480,6 +469,10 @@ contains
 
        if ( use_c14 .and. use_c14_bombspike ) then
           call C14_init_BombSpike()
+       end if
+
+       if ( use_c13 .and. use_c13_timeseries ) then
+          call C13_init_TimeSeries()
        end if
     else
        call SatellitePhenologyInit(bounds_proc)
@@ -643,20 +636,18 @@ contains
     ! Initialize sno export state to send to glc
     !------------------------------------------------------------       
 
-    if (create_glacier_mec_landunit) then  
-       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-       do nc = 1,nclumps
-          call get_clump_bounds(nc, bounds_clump)
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
 
-          call t_startf('init_lnd2glc')
-          call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
-               filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, glacier_smb_inst, topo_inst, &
-               init=.true.)
-          call t_stopf('init_lnd2glc')
-       end do
-       !$OMP END PARALLEL DO
-    end if
+       call t_startf('init_lnd2glc')
+       call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
+            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
+            temperature_inst, glacier_smb_inst, topo_inst, &
+            init=.true.)
+       call t_stopf('init_lnd2glc')
+    end do
+    !$OMP END PARALLEL DO
 
     !------------------------------------------------------------       
     ! Deallocate wt_nat_patch

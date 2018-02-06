@@ -13,7 +13,7 @@ module dynLandunitAreaMod
   use clm_varctl     , only : iulog
   use clm_varcon     , only : ispval, namel
   use landunit_varcon, only : isturb_hd, isturb_md, isturb_tbd
-  use landunit_varcon, only : istsoil, istcrop, istice, istdlak, istwet, max_lunit 
+  use landunit_varcon, only : istsoil, istcrop, istdlak, istwet, max_lunit 
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use GridcellType   , only : grc
@@ -113,8 +113,8 @@ contains
     ! the areas specified by GLC. In general, the code will NOT be robust if more than
     ! one landunit is excluded from this list. Meaning: since istice_mec is excluded from
     ! this list, all other landunits should appear in this list!
-    integer, parameter :: decrease_order(8) = &
-         (/istsoil, istcrop, isturb_md, isturb_hd, isturb_tbd, istwet, istdlak, istice/)
+    integer, parameter :: decrease_order(7) = &
+         (/istsoil, istcrop, isturb_md, isturb_hd, isturb_tbd, istwet, istdlak/)
 
     real(r8), parameter :: tol = 1.e-14  ! tolerance for making sure sum of landunit weights equals 1
     

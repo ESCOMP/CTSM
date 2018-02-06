@@ -248,7 +248,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : create_glacier_mec_landunit, use_cn, use_lch4
+    use clm_varctl     , only : use_cn, use_lch4
     use clm_varctl     , only : hist_wrtch4diag
     use clm_varpar     , only : nlevsno, nlevsoi
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
@@ -506,12 +506,10 @@ contains
          ptr_col=this%int_snow_col, l2g_scale_type='ice', &
          default='inactive')
 
-    if (create_glacier_mec_landunit) then
-       this%snow_persistence_col(begc:endc) = spval
-       call hist_addfld1d (fname='SNOW_PERSISTENCE',  units='seconds',  &
-            avgflag='I', long_name='Length of time of continuous snow cover (nat. veg. landunits only)', &
-            ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
-    end if
+    this%snow_persistence_col(begc:endc) = spval
+    call hist_addfld1d (fname='SNOW_PERSISTENCE',  units='seconds',  &
+         avgflag='I', long_name='Length of time of continuous snow cover (nat. veg. landunits only)', &
+         ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
 
     if (use_cn) then
        this%wf_col(begc:endc) = spval
@@ -591,7 +589,7 @@ contains
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use shr_const_mod   , only : SHR_CONST_TKFRZ
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istice, istwet, istsoil, istdlak, istcrop, istice_mec  
+    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
     use column_varcon   , only : icol_shadewall, icol_road_perv
     use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
     use clm_varcon      , only : denice, denh2o, spval, sb, bdsno 
@@ -776,7 +774,7 @@ contains
                      this%h2osoi_vol_col(c,j) = 1.0_r8
                   endif
                end do
-            else if (lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice_mec) then
                nlevs = nlevgrnd 
                do j = 1, nlevs
                   this%h2osoi_vol_col(c,j) = 1.0_r8

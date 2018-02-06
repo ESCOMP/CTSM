@@ -18,7 +18,7 @@ module CNFireLi2014Mod
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog, spinup_state
+  use clm_varctl                         , only : iulog, spinup_state, use_matrixcn, use_soil_matrixcn
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
   use clm_varcon                         , only : dzsoi_decomp
   use pftconMod                          , only : noveg, pftcon
@@ -33,6 +33,7 @@ module CNFireLi2014Mod
   use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use EnergyFluxType                     , only : energyflux_type
   use SoilHydrologyType                  , only : soilhydrology_type  
   use WaterstateType                     , only : waterstate_type
@@ -41,6 +42,7 @@ module CNFireLi2014Mod
   use PatchType                          , only : patch                
   use CNFireMethodMod                    , only : cnfire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
+!  use CNVegMatrixType              , only : cnveg_cnmatrix_type
   !
   implicit none
   private
@@ -238,7 +240,7 @@ contains
            leafc(bounds%begp:bounds%endp), &
            leafc_col(bounds%begc:bounds%endc))
 
-     call get_curr_date (kyr, kmo, kda, mcsec)
+      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
      ! Get model step size
      dt      = real( get_step_size(), r8 )
@@ -626,8 +628,8 @@ contains
 
  !-----------------------------------------------------------------------
  subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-      dgvs_inst, cnveg_state_inst,                                                                      &
-      cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+       dgvs_inst,  soilbiogeochem_carbonflux_inst, cnveg_state_inst,cnveg_carbonstate_inst,                       &
+       cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
       leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
       totsomc_col, decomp_cpools_vr_col, decomp_npools_vr_col, somc_fire_col)
    !
@@ -648,6 +650,12 @@ contains
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover
+   use clm_varpar            , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                       ilivestem,ilivestem_st,ilivestem_xf,&
+                                       ideadstem,ideadstem_st,ideadstem_xf,&
+                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                       ideadcroot,ideadcroot_st,ideadcroot_xf,iout
+   
    !
    ! !ARGUMENTS:
    class(cnfire_li2014_type)                      :: this
@@ -658,10 +666,13 @@ contains
    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
    type(dgvs_type)                , intent(inout) :: dgvs_inst
    type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
+   type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
    type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
    type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
    type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
+!   type(cnveg_cnmatrix_type)   , intent(inout) :: cnveg_carbonstate_inst
+   
    real(r8)                       , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
    real(r8)                       , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
    real(r8)                       , intent(in)    :: croot_prof_patch(bounds%begp:,1:)
@@ -836,6 +847,7 @@ contains
          m_c_to_litr_met_fire                => cnveg_carbonflux_inst%m_c_to_litr_met_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_cel_fire                => cnveg_carbonflux_inst%m_c_to_litr_cel_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_lig_fire                => cnveg_carbonflux_inst%m_c_to_litr_lig_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
+         matrix_decomp_fire_k                => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col           , & ! Output: [real(r8) (:,:)   ]                                                  
          
          fire_mortality_n_to_cwdn            => cnveg_nitrogenflux_inst%fire_mortality_n_to_cwdn_col              , & ! Input:  [real(r8) (:,:)   ]  N flux fire mortality to CWD (gN/m3/s)
          m_leafn_to_fire                     => cnveg_nitrogenflux_inst%m_leafn_to_fire_patch                     , & ! Input:  [real(r8) (:)     ]  (gN/m2/s) N emis. leafn		  
@@ -881,8 +893,9 @@ contains
          m_decomp_npools_to_fire_vr          => cnveg_nitrogenflux_inst%m_decomp_npools_to_fire_vr_col            , & ! Output: [real(r8) (:,:,:) ]  VR decomp. N fire loss (gN/m3/s)
          m_n_to_litr_met_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_met_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          m_n_to_litr_cel_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_cel_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                    & ! Output: [real(r8) (:,:)   ]                                                  
-         )
+         m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
+         matrix_fitransfer                   => cnveg_carbonflux_inst%matrix_fitransfer_patch                         &		 
+		 )
 
      transient_landcover = run_has_transient_landcover()
 
@@ -921,7 +934,8 @@ contains
         if (spinup_state == 2) then
            m = 10._r8
         end if
-
+ 
+!      if (.not. use_matrixcn) then 
         m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
         m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
         m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * f * cc_other(patch%itype(p))
@@ -964,9 +978,29 @@ contains
         m_deadcrootn_xfer_to_fire(p)     =  deadcrootn_xfer(p)    * f * cc_other(patch%itype(p)) 
         m_deadcrootn_storage_to_fire(p)  =  deadcrootn_storage(p) * f * cc_other(patch%itype(p))
         m_retransn_to_fire(p)            =  retransn(p)           * f * cc_other(patch%itype(p))
+		!for cn matrix
+!      else
+        matrix_fitransfer(p,iout,ileaf)         = matrix_fitransfer(p,iout,ileaf)         + f * cc_leaf(patch%itype(p))
+        matrix_fitransfer(p,iout,ileaf_st)      = matrix_fitransfer(p,iout,ileaf_st)      + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ileaf_xf)      = matrix_fitransfer(p,iout,ileaf_xf)      + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ilivestem)     = matrix_fitransfer(p,iout,ilivestem)     + f * cc_lstem(patch%itype(p))
+        matrix_fitransfer(p,iout,ilivestem_st)  = matrix_fitransfer(p,iout,ilivestem_st)  + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ilivestem_xf)  = matrix_fitransfer(p,iout,ilivestem_xf)  + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ideadstem)     = matrix_fitransfer(p,iout,ideadstem)     + f * cc_dstem(patch%itype(p))*m
+        matrix_fitransfer(p,iout,ideadstem_st)  = matrix_fitransfer(p,iout,ideadstem_st)  + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ideadstem_xf)  = matrix_fitransfer(p,iout,ideadstem_xf)  + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ifroot)        = matrix_fitransfer(p,iout,ifroot)        + f * 0._r8
+        matrix_fitransfer(p,iout,ifroot_st)     = matrix_fitransfer(p,iout,ifroot_st)     + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ifroot_xf)     = matrix_fitransfer(p,iout,ifroot_xf)     + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ilivecroot)    = matrix_fitransfer(p,iout,ilivecroot)    + f * 0._r8
+        matrix_fitransfer(p,iout,ilivecroot_st) = matrix_fitransfer(p,iout,ilivecroot_st) + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ilivecroot_xf) = matrix_fitransfer(p,iout,ilivecroot_xf) + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ideadcroot)    = matrix_fitransfer(p,iout,ideadcroot)    + f * 0._r8
+        matrix_fitransfer(p,iout,ideadcroot_st) = matrix_fitransfer(p,iout,ideadcroot_st) + f * cc_other(patch%itype(p))
+        matrix_fitransfer(p,iout,ideadcroot_xf) = matrix_fitransfer(p,iout,ideadstem_xf)  + f * cc_other(patch%itype(p))
+!     end if
 
-        ! mortality due to fire
-        ! carbon pools
+!     if (.not. use_matrixcn) then	  
         m_leafc_to_litter_fire(p)                   =  leafc(p) * f * &
              (1._r8 - cc_leaf(patch%itype(p))) * &
              fm_leaf(patch%itype(p))
@@ -1091,6 +1125,49 @@ contains
         m_retransn_to_litter_fire(p)               =  retransn(p)           * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p)) 
+! for cn matrix			 
+ !     else  
+           matrix_fitransfer(p,iout,ileaf)           = matrix_fitransfer(p,iout,ileaf) &
+             + f * (1._r8 - cc_leaf(patch%itype(p))) * fm_leaf(patch%itype(p))
+           matrix_fitransfer(p,iout,ileaf_st)        = matrix_fitransfer(p,iout,ileaf_st) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,iout,ileaf_xf)        = matrix_fitransfer(p,iout,ileaf_xf) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,iout,ilivestem)       = matrix_fitransfer(p,iout,ilivestem) &
+             + f * (1._r8 - cc_lstem(patch%itype(p))) * fm_droot(patch%itype(p))
+           matrix_fitransfer(p,iout,ilivestem_st)    = matrix_fitransfer(p,iout,ilivestem_st) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,iout,ilivestem_xf)    = matrix_fitransfer(p,iout,ilivestem_xf) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,ideadstem,ilivestem) = matrix_fitransfer(p,ideadstem,ilivestem) &
+             + f * (1._r8 - cc_lstem(patch%itype(p))) * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
+           matrix_fitransfer(p,iout,ideadstem)       = matrix_fitransfer(p,iout,ideadstem) &
+             + f * m*(1._r8 - cc_dstem(patch%itype(p))) * fm_droot(patch%itype(p))
+           matrix_fitransfer(p,iout,ideadstem_st)    = matrix_fitransfer(p,iout,ideadstem_st) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,iout,ilivestem_xf)    = matrix_fitransfer(p,iout,ideadstem_xf) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,iout,ifroot)          = matrix_fitransfer(p,iout,ifroot) &
+             + f * fm_root(patch%itype(p))
+           matrix_fitransfer(p,iout,ifroot_st)       = matrix_fitransfer(p,iout,ifroot_st) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,iout,ifroot_xf)       = matrix_fitransfer(p,iout,ifroot_xf) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
+           matrix_fitransfer(p,iout,ilivecroot)      = matrix_fitransfer(p,iout,ilivecroot) &
+             + f * fm_droot(patch%itype(p))
+           matrix_fitransfer(p,iout,ilivecroot_st)      = matrix_fitransfer(p,iout,ilivecroot_st) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
+           matrix_fitransfer(p,iout,ilivecroot_xf)      = matrix_fitransfer(p,iout,ilivecroot_xf) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
+           matrix_fitransfer(p,ideadcroot,ilivecroot)   = matrix_fitransfer(p,ideadcroot,ilivecroot) &
+             + f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
+           matrix_fitransfer(p,iout,ideadcroot)         = matrix_fitransfer(p,iout,ideadcroot) &
+             + f * m * fm_droot(patch%itype(p))
+           matrix_fitransfer(p,iout,ideadcroot_st)      = matrix_fitransfer(p,iout,ideadcroot_st) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
+           matrix_fitransfer(p,iout,ideadcroot_xf)      = matrix_fitransfer(p,iout,ideadcroot_xf) &
+             + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
+!		end if	 			 
 
         if (use_cndv) then
            if ( woody(patch%itype(p)) == 1._r8 )then
@@ -1201,11 +1278,18 @@ contains
            ! carbon fluxes
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
-                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * 0.5_r8 
+                 if(.not. use_soil_matrixcn)then
+                    m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * 0.5_r8 
+                 else
+                    matrix_decomp_fire_k(c,j,l) = matrix_decomp_fire_k(c,j,l) + f * 0.5_r8
+                 end if
               end if
               if ( is_cwd(l) ) then
-                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
-                      (f-baf_crop(c)) * 0.25_r8
+                 if(.not. use_soil_matrixcn)then
+                    m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (f-baf_crop(c)) * 0.25_r8
+                 else
+                    matrix_decomp_fire_k(c,j,l) = matrix_decomp_fire_k(c,j,l) + (f-baf_crop(c)) * 0.25_r8
+                 end if
               end if
            end do
 
@@ -1264,5 +1348,23 @@ contains
    end associate 
 
  end subroutine CNFireFluxes
+!     subroutine vegc_fitransfer(ito,ifrom,default_transfer,matrix_transfer,vegcpool,fi_rate,p)
+  
+    ! !ARGUMENTS:
+!    integer :: ifrom
+!    integer :: ito
+	
+!    integer :: p
+!    real(r8),allocatable,dimension(:) :: default_transfer(:),vegcpool(:)
+!    real(r8),allocatable,dimension(:,:,:) :: matrix_transfer(:,:,:)
+!    real(r8) :: fi_rate
+!    logical :: use_matrixcn 
+	
+!     if(use_matrixcn)then
+!        matrix_transfer(p,ito,ifrom) = matrix_transfer(p,ito,ifrom) + fi_rate
+!     else
+!        default_transfer(p) = fi_rate * vegcpool(p)
+!     end if
+!  end subroutine vegc_fitransfer 
 
 end module CNFireLi2014Mod

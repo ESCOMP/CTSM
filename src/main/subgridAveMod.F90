@@ -1286,7 +1286,7 @@ contains
     ! each landunit type depending on l2g_scale_type
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak
+    use landunit_varcon, only : istsoil, istcrop, istice_mec, istdlak
     use landunit_varcon, only : isturb_MIN, isturb_MAX, max_lunit
     !
     ! !ARGUMENTS:
@@ -1327,7 +1327,6 @@ contains
         scale_lookup(istsoil) = 1.0_r8
         scale_lookup(istcrop) = 1.0_r8
      else if (l2g_scale_type == 'ice') then
-        scale_lookup(istice) = 1.0_r8
         scale_lookup(istice_mec) = 1.0_r8
      else if (l2g_scale_type == 'nonurb') then
         scale_lookup(:) = 1.0_r8

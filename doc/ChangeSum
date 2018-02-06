@@ -1,5 +1,30 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_18_r270    sacks 12/20/2017 Always use multiple elevation classes for glacier, even with stub glc
+  clm4_5_18_r269     erik 12/16/2017 Move externals to version in github
+  clm4_5_18_r268     erik 12/11/2017 Fix calculation of stomatal resistence used in dry-deposition, increase threshold of totvegc for soil decomposition to 0.1
+  clm4_5_18_r267    sacks 12/07/2017 Fixes to accumulator fields
+  clm4_5_17_r266    sacks 11/27/2017 Avoid negative snow densities
+  clm4_5_17_r265     erik 11/18/2017 Update the clm50 parameter file for better behavior with prognostic crop, and fix a bug in clm50 urban model
+  clm4_5_17_r264     erik 11/16/2017 Changes from Dave Lawrenece on resetting soil carbon for spinup
+  clm4_5_17_r263     erik 11/08/2017 Drydep vel. for SO2 doubled, influence of organic mater in soil calmed, max daylength not hardwired to present day
+  clm4_5_16_r262    sacks 10/27/2017 Rename atm2lnd history fields for downscaled fields, properly turn on vic for clm45, and other minor fixes
+  clm4_5_16_r261    sacks 10/25/2017 Add option to reset snow over glacier columns
+  clm4_5_16_r260     erik 10/24/2017 Update paramater file for CLM50 as well as fates, fix a few issues
+  clm4_5_16_r259     erik 10/17/2017 Update to latest cime from cesm2_0_beta07 and config_components version 3
+  clm4_5_16_r258     erik 10/06/2017 Revert change to fire, set n_melt_glcmec=10, update mosart to version that doesn't accumulate water in short rivers
+  clm4_5_16_r257     erik 09/29/2017 Fix two bugs found by Hui Tang, one for Carbon isotopes and one in the fire model
+  clm4_5_16_r256     erik 09/20/2017 Fresh snow grain radius is temperature dependent
+  clm4_5_16_r255     erik 09/18/2017 Changes to crop and enabling Carbon isotopes for crop and some miscellaneous small changes
+  clm4_5_16_r254     erik 09/01/2017 Update surface datasets, and point to new CMIP6 population density dataset
+  clm4_5_16_r253     erik 08/04/2017 Check on reasonable import/export from CLM, check ndep units from input file
+  clm4_5_16_r252     erik 07/24/2017 Update parameter file for some crop albedo issues, and fix a bug in urban albedo for nightime
+  clm4_5_16_r251     erik 07/14/2017 Update mksurfdata_map for soil depth/color, add new mapping files
+  clm4_5_16_r250     erik 07/13/2017 Update finundation dataset, new fsurdat files with updated soil color and soil depth, 
+                                     update mosart areas, fix cheyenne_gnu
+  clm4_5_16_r249    sacks 07/06/2017 All new compsets, reworked test lists, and related fixes
+  clm4_5_16_r248    sacks 06/28/2017 Melt most ice runoff
+  clm4_5_16_r247    sacks 06/26/2017 New GLACIER_REGION field with CISM domain split in two
   clm4_5_16_r246    sacks 06/14/2017 Update to latest cime
   clm4_5_16_r245    sacks 06/14/2017 Only adjust glc_mec topographic heights if glc_do_dynglacier is true
   clm4_5_16_r244     erik 06/09/2017 Update cime and cism externals, changes answers for IG compsets, test g17 grids, fix a few 

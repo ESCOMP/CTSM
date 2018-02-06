@@ -48,7 +48,7 @@ contains
        num_lakec, filter_lakec, num_lakep, filter_lakep, &
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
        atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
-       energyflux_inst, aerosol_inst, lakestate_inst)
+       energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
     !
     ! !DESCRIPTION:
     ! WARNING: This subroutine assumes lake columns have one and only one pft.
@@ -75,6 +75,7 @@ contains
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers, NewSnowBulkDensity
     use LakeCon         , only : lsadz
+    use TopoMod, only : topo_type
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -94,6 +95,7 @@ contains
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(lakestate_type)   , intent(inout) :: lakestate_inst
+    class(topo_type)   , intent(in)    :: topo_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: p,fp,g,l,c,j,fc,jtop                            ! indices
@@ -387,7 +389,7 @@ contains
            atm2lnd_inst, waterflux_inst, waterstate_inst, aerosol_inst)
 
       call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
-           aerosol_inst, waterflux_inst, waterstate_inst)
+           aerosol_inst, waterflux_inst, waterstate_inst, topo_inst)
 
       ! Determine soil hydrology
       ! Here this consists only of making sure that soil is saturated even as it melts and

@@ -269,13 +269,15 @@ if [ "$phys" = "clm4_5" ]; then
            "5x5min_nomask"     \
            "5x5min_IGBP-GSDP"  \
            "5x5min_ISRIC-WISE" \
+           "5x5min_ORNL-Soil" \
            "10x10min_nomask"   \
            "10x10min_IGBPmergeICESatGIS" \
            "3x3min_GLOBE-Gardner" \
            "3x3min_GLOBE-Gardner-mergeGIS" \
            "0.9x1.25_GRDC" \
            "360x720cru_cruncep" \
-           "1km-merge-10min_HYDRO1K-merge-nomask" )
+           "1km-merge-10min_HYDRO1K-merge-nomask" \
+          )
 
 else
     echo "ERROR: Unknown value for phys: $phys"
@@ -432,8 +434,8 @@ if [ "$interactive" = "NO" ]; then
       echo "Set the environment variable: MPIEXEC"
       exit 1
    fi
-   if [ ! -x `which $MPIEXEC` ]; then
-      echo "The MPIEXEC pathname given is NOT an executable: $MPIEXEC"
+   if [ ! -x `which ${MPIEXEC%% *}` ]; then
+      echo "The MPIEXEC pathname given is NOT an executable: ${MPIEXEC%% *}"
       echo "Set the environment variable: MPIEXEC or run in interactive mode without MPI"
       exit 1
    fi

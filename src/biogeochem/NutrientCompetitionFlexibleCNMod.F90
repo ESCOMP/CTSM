@@ -192,7 +192,7 @@ contains
     !
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
-    use clm_varctl            , only : use_c13, use_c14, carbon_resp_opt
+    use clm_varctl            , only : use_c13, use_c14, carbon_resp_opt,use_matrixcn
     use clm_varctl            , only : downreg_opt
     use clm_varctl            , only : CN_residual_opt
     use clm_varctl            , only : CN_partition_opt
@@ -208,6 +208,12 @@ contains
     use CNSharedParamsMod     , only : use_fun
     use CNPrecisionControlMod , only : n_min
     use clm_varcon            , only : spval
+	!index for matrixcn
+    use clm_varpar            , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                       ilivestem,ilivestem_st,ilivestem_xf,&
+                                       ideadstem,ideadstem_st,ideadstem_xf,&
+                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                       ideadcroot,ideadcroot_st,ideadcroot_xf,iout
     
     !
     ! !ARGUMENTS:
@@ -307,7 +313,7 @@ contains
     associate(                                                                                       &
          fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)
 
-         ivt                          => patch%itype                                                 , & ! Input:  [integer  (:) ]  patch vegetation type
+         ivt                          => patch%itype                                               , & ! Input:  [integer  (:) ]  patch vegetation type
 
          woody                        => pftcon%woody                                              , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          froot_leaf                   => pftcon%froot_leaf                                         , & ! Input:  allocation parameter: new fine root C per new leaf C (gC/gC)
@@ -396,8 +402,11 @@ contains
          Nnonmyc                      => cnveg_nitrogenflux_inst%Nnonmyc_patch                     , & ! Output:  [real(r8) (:) ] Non-mycorrhizal N uptake (gN/m2/s)
          Nam                          => cnveg_nitrogenflux_inst%Nam_patch                         , & ! Output:  [real(r8) (:) ]  AM uptake (gN/m2/s)
          Necm                         => cnveg_nitrogenflux_inst%Necm_patch                        , & ! Output:  [real(r8) (:) ]  ECM uptake (gN/m2/s)
-         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch            & ! Output:  [real(r8) (:) ]  Total soil N uptake of FUN (gN/m2/s)
-
+         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch          , & ! Output:  [real(r8) (:) ]  Total soil N uptake of FUN (gN/m2/s)
+         matrix_Cinput                => cnveg_carbonflux_inst%matrix_Cinput_patch                 , & ! C input of matrix 
+         matrix_Ninput                => cnveg_nitrogenflux_inst%matrix_Ninput_patch               , & ! N input of matrix
+         matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! C allocation of matrix
+         matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch                 & ! N allocation of matrix
          )
 
       ! set time steps
@@ -460,22 +469,25 @@ contains
          ! ndays_active = days/year.  This prevents the continued storage of C and N.
          ! turning off this correction (PET, 12/11/03), instead using bgtr in
          ! phenology algorithm.
-         
-         
+          
          if(use_fun)then ! if we are using FUN, we get the N available from there.
            sminn_to_npool(p) = sminn_to_plant_fun(p)
          else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition. 
            sminn_to_npool(p) = plant_ndemand(p) * fpg(c)        
-         endif
+         end if
        
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
+ 
+         matrix_Ninput(p) =  sminn_to_npool(p) + retransn_to_npool(p)
          
          if(.not.use_fun)then
-	         if (downreg_opt) then
-	            ! calculate the associated carbon allocation, and the excess
-	            ! carbon flux that must be accounted for through downregulation
-	            plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
-	            excess_cflux(p) = availc(p) - plant_calloc(p)
+              if (downreg_opt) then
+                ! calculate the associated carbon allocation, and the excess
+                ! carbon flux that must be accounted for through downregulation
+                    plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
+                    excess_cflux(p) = availc(p) - plant_calloc(p)
+
+                    matrix_Cinput(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
 
 	            ! reduce gpp fluxes due to N limitation
 	            if (gpp(p) > 0.0_r8) then
@@ -502,10 +514,12 @@ contains
 
          
          if(use_fun)then
-            plant_calloc(p) = npp_growth(p) 
+            plant_calloc(p)  = npp_growth(p) 
+            matrix_Cinput(p) = npp_growth(p)
          else
             if (.not. downreg_opt) then
-               plant_calloc(p) = availc(p)
+               plant_calloc(p)  = availc(p)
+               matrix_Cinput(p) = availc(p)
             end if         
          end if
         
@@ -545,6 +559,25 @@ contains
             cpool_to_grainc(p)             = nlc * f5 * fcur
             cpool_to_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
          end if
+         if (use_matrixcn) then
+           matrix_alloc(p,ileaf) = (1.0_r8 + g1) / c_allometry(p) * fcur
+           matrix_alloc(p,ileaf_st) = (1.0_r8 + g1) / c_allometry(p) * (1._r8 - fcur)
+           matrix_alloc(p,ifroot) = (1.0_r8 + g1) / c_allometry(p) * f1 * fcur
+           matrix_alloc(p,ifroot_st) = (1.0_r8 + g1) / c_allometry(p) * f1 * (1._r8 - fcur)
+           if (woody(ivt(p)) == 1._r8) then
+               matrix_alloc(p,ilivestem) = (1.0_r8 + g1) / c_allometry(p) * f3 * f4 * fcur 
+               matrix_alloc(p,ilivestem_st) = (1.0_r8 +g1) / c_allometry(p) * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadstem) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadstem_st) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               matrix_alloc(p,ilivecroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * fcur
+               matrix_alloc(p,ilivecroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadcroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadcroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+            end if
+!           if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+!                 print*,'crop matrixcn is not ready yet'
+!           end if
+         end if !use_matrixcn
 
          if (downreg_opt) then
             ! corresponding N fluxes
@@ -552,6 +585,11 @@ contains
             npool_to_leafn_storage(p)  = (nlc / cnl) * (1._r8 - fcur)
             npool_to_frootn(p)         = (nlc * f1 / cnfr) * fcur
             npool_to_frootn_storage(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
+!matrixcn
+            matrix_nalloc(p,ileaf)     = ((1.0_r8/cnl)          / n_allometry(p)) * fcur
+            matrix_nalloc(p,ileaf_st)  = ((1.0_r8/cnl)          / n_allometry(p))* (1._r8 - fcur)
+            matrix_nalloc(p,ifroot)    = ((f1/cnfr)             / n_allometry(p)) * fcur
+            matrix_nalloc(p,ifroot_st) = ((f1/cnfr)             / n_allometry(p)) * (1._r8 - fcur)
             if (woody(ivt(p)) == 1._r8) then
                npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
                npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
@@ -561,6 +599,15 @@ contains
                npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
                npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
                npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+!matrixcn
+               matrix_nalloc(p,ilivestem)    = (f3*f4/cnlw)                     / n_allometry(p) * fcur 
+               matrix_nalloc(p,ilivestem_st) = (f3*f4/cnlw)                     / n_allometry(p) * (1._r8 - fcur)
+               matrix_nalloc(p,ideadstem)    = (f3 * (1._r8 - f4)/cndw)         / n_allometry(p) * fcur
+               matrix_nalloc(p,ideadstem_st) = (f3 * (1._r8 - f4)/cndw)         / n_allometry(p) * (1._r8 - fcur)
+               matrix_nalloc(p,ilivecroot)   = (f2 * f3 * f4 /cnlw)             / n_allometry(p) *  fcur
+               matrix_nalloc(p,ilivecroot_st) = (f2 * f3 * f4 /cnlw)            / n_allometry(p) * (1._r8 - fcur)
+               matrix_nalloc(p,ideadcroot)   = (f2 * f3 * (1._r8 - f4)/cndw)    / n_allometry(p) * fcur
+               matrix_nalloc(p,ideadcroot_st) = (f2 * f3 * (1._r8 - f4)/cndw)   / n_allometry(p) *(1._r8 - fcur)
             end if
             if (ivt(p) >= npcropmin) then ! skip 2 generic crops
                cng = graincn(ivt(p))
@@ -595,11 +642,28 @@ contains
             npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
             npool_to_leafn_storage_supply(p)  = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p)
             npool_to_leafn_storage(p)  = max(min(npool_to_leafn_storage_supply(p),npool_to_leafn_storage_demand(p)),0.0_r8)
-
+            if ( plant_nalloc(p).ne.0) then
+               matrix_nalloc(p,ileaf)     = npool_to_leafn(p)                  / plant_nalloc(p)
+               matrix_nalloc(p,ileaf_st)  = npool_to_leafn_storage(p)          / plant_nalloc(p)
+               matrix_nalloc(p,ifroot)    = npool_to_frootn(p)                 / plant_nalloc(p)
+               matrix_nalloc(p,ifroot_st) = npool_to_frootn_storage(p)         / plant_nalloc(p)
+            else 
+               matrix_nalloc(p,ileaf)     = 0.0_r8
+               matrix_nalloc(p,ileaf_st)  = 0.0_r8
+               matrix_nalloc(p,ifroot)    = 0.0_r8
+               matrix_nalloc(p,ifroot_st) = 0.0_r8
+            end if   
             if (CN_residual_opt == 1) then
                npool_to_leafn(p)   = max(npool_to_leafn_supply(p),0.0_r8)
                npool_to_leafn_storage(p)  = max(npool_to_leafn_storage_supply(p),0.0_r8)
+            if ( plant_nalloc(p).ne.0) then
+               matrix_nalloc(p,ileaf)     = npool_to_leafn(p)                  /  plant_nalloc(p)
+               matrix_nalloc(p,ileaf_st)  = npool_to_leafn_storage(p)          /  plant_nalloc(p)
+             else 
+               matrix_nalloc(p,ileaf)     = 0.0_r8
+               matrix_nalloc(p,ileaf)     = 0.0_r8
             end if
+           end if
 
             if (woody(ivt(p)) == 1._r8) then
                npool_to_livestemn_demand(p) = (nlc * f3 * f4 / cnlw) * fcur
@@ -654,10 +718,46 @@ contains
                     npool_to_deadcrootn_storage(p)
                npool_to_leafn_storage(p)  = max(min(npool_to_leafn_storage_supply(p),&
                     npool_to_leafn_storage_demand(p)),0.0_r8)
+!matrix
+            if ( plant_nalloc(p).ne.0) then
+                matrix_nalloc(p,ilivestem)    =  npool_to_livestemn(p)                     / plant_nalloc(p)
+                matrix_nalloc(p,ilivestem_st) =  npool_to_livestemn_storage(p)              / plant_nalloc(p)
+                matrix_nalloc(p,ideadstem)    =  npool_to_deadstemn(p)         / plant_nalloc(p)
+                matrix_nalloc(p,ideadstem_st) =  npool_to_deadstemn_storage(p)  / plant_nalloc(p)
+                matrix_nalloc(p,ilivecroot)   =  npool_to_livecrootn(p)            /plant_nalloc(p)
+                matrix_nalloc(p,ilivecroot_st) = npool_to_livecrootn_storage(p)    / plant_nalloc(p)
+                matrix_nalloc(p,ideadcroot)    = npool_to_deadcrootn(p)    / plant_nalloc(p)
+                matrix_nalloc(p,ideadcroot_st) = npool_to_deadcrootn_storage(p)  / plant_nalloc(p)
+                matrix_nalloc(p,ileaf)     = npool_to_leafn(p)                  / plant_nalloc(p)
+                matrix_nalloc(p,ileaf_st)  = npool_to_leafn_storage(p)          / plant_nalloc(p)
+                matrix_nalloc(p,ifroot)    = npool_to_frootn(p)                 / plant_nalloc(p)
+                matrix_nalloc(p,ifroot_st) = npool_to_frootn_storage(p)         / plant_nalloc(p)
 
+               else 
+                matrix_nalloc(p,ilivestem)    =  0.0_r8
+                matrix_nalloc(p,ilivestem_st) =  0.0_r8
+                matrix_nalloc(p,ideadstem)    = 0.0_r8
+                matrix_nalloc(p,ideadstem_st) =  0.0_r8
+                matrix_nalloc(p,ilivecroot)   =  0.0_r8
+                matrix_nalloc(p,ilivecroot_st) = 0.0_r8
+                matrix_nalloc(p,ideadcroot)    = 0.0_r8
+                matrix_nalloc(p,ideadcroot_st) = 0.0_r8
+                matrix_nalloc(p,ileaf)     = 0.0_r8
+                matrix_nalloc(p,ileaf_st)  = 0.0_r8
+                matrix_nalloc(p,ifroot)    = 0.0_r8
+                matrix_nalloc(p,ifroot_st) = 0.0_r8					
+            end if
                if (CN_residual_opt == 1) then
                   npool_to_leafn(p)   = max(npool_to_leafn_supply(p),0.0_r8)
                   npool_to_leafn_storage(p)  = max(npool_to_leafn_storage_supply(p),0.0_r8)
+               if ( plant_nalloc(p).ne.0) then
+                   matrix_nalloc(p,ileaf)     = npool_to_leafn(p)                  /  plant_nalloc(p)
+                   matrix_nalloc(p,ileaf_st)  = npool_to_leafn_storage(p)          /  plant_nalloc(p)
+                else 
+                   matrix_nalloc(p,ileaf)     = 0.0_r8
+                   matrix_nalloc(p,ileaf)     = 0.0_r8
+                end if
+
                end if
 
             end if
@@ -761,6 +861,9 @@ contains
             gresp_storage = gresp_storage + cpool_to_grainc_storage(p)
          end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
+         if(use_matrixcn)then
+             matrix_Cinput(p) = plant_calloc(p) / (1._r8 + g1)
+         end if
 
 
          ! computing 1.) fractional N demand and 2.) N allocation after uptake for different plant parts
@@ -899,6 +1002,17 @@ contains
             npool_to_leafn_storage(p)  = frNdemand_npool_to_leafn_storage(p) * npool(p) / dt
             npool_to_frootn(p) = frNdemand_npool_to_frootn(p) * npool(p) / dt
             npool_to_frootn_storage(p) = frNdemand_npool_to_frootn_storage(p) * npool(p) / dt
+            if ( plant_nalloc(p).ne.0) then
+               matrix_nalloc(p,ileaf)     = npool_to_leafn(p)                  / plant_nalloc(p)
+               matrix_nalloc(p,ileaf_st)  = npool_to_leafn_storage(p)          / plant_nalloc(p)
+               matrix_nalloc(p,ifroot)    = npool_to_frootn(p)                 / plant_nalloc(p)
+               matrix_nalloc(p,ifroot_st) = npool_to_frootn_storage(p)         / plant_nalloc(p)
+			else 
+               matrix_nalloc(p,ileaf)     = 0.0_r8
+               matrix_nalloc(p,ileaf_st)  = 0.0_r8
+               matrix_nalloc(p,ifroot)    = 0.0_r8
+               matrix_nalloc(p,ifroot_st) = 0.0_r8
+            end if
             if (woody(ivt(p)) == 1._r8) then
                npool_to_livestemn(p) = frNdemand_npool_to_livestemn(p) * npool(p) / dt
                npool_to_livestemn_storage(p) = frNdemand_npool_to_livestemn_storage(p) * npool(p) / dt
@@ -908,6 +1022,25 @@ contains
                npool_to_livecrootn_storage(p) = frNdemand_npool_to_livecrootn_storage(p) * npool(p) / dt
                npool_to_deadcrootn(p) = frNdemand_npool_to_deadcrootn(p) * npool(p) / dt
                npool_to_deadcrootn_storage(p) = frNdemand_npool_to_deadcrootn_storage(p) * npool(p) / dt
+            if ( plant_nalloc(p).ne.0) then
+                matrix_nalloc(p,ilivestem)    =  npool_to_livestemn(p)                     / plant_nalloc(p)
+                matrix_nalloc(p,ilivestem_st) =  npool_to_livestemn_storage(p)              / plant_nalloc(p)
+                matrix_nalloc(p,ideadstem)    =  npool_to_deadstemn(p)         / plant_nalloc(p)
+                matrix_nalloc(p,ideadstem_st) =  npool_to_deadstemn_storage(p)  / plant_nalloc(p)
+                matrix_nalloc(p,ilivecroot)   =  npool_to_livecrootn(p)            /plant_nalloc(p)
+                matrix_nalloc(p,ilivecroot_st) = npool_to_livecrootn_storage(p)    / plant_nalloc(p)
+                matrix_nalloc(p,ideadcroot)    = npool_to_deadcrootn(p)    / plant_nalloc(p)
+                matrix_nalloc(p,ideadcroot_st) = npool_to_deadcrootn_storage(p)  / plant_nalloc(p)
+                else 
+                matrix_nalloc(p,ilivestem)    =  0.0_r8
+                matrix_nalloc(p,ilivestem_st) =  0.0_r8
+                matrix_nalloc(p,ideadstem)    = 0.0_r8
+                matrix_nalloc(p,ideadstem_st) =  0.0_r8
+                matrix_nalloc(p,ilivecroot)   =  0.0_r8
+                matrix_nalloc(p,ilivecroot_st) = 0.0_r8
+                matrix_nalloc(p,ideadcroot)    = 0.0_r8
+                matrix_nalloc(p,ideadcroot_st) = 0.0_r8				
+            end if 
             end if
             if (ivt(p) >= npcropmin) then ! skip 2 generic crops
                npool_to_livestemn(p) = frNdemand_npool_to_livestemn(p) * npool(p) / dt
@@ -1011,7 +1144,6 @@ contains
                
                   cpool_to_leafc_resp(p)          = frac_resp * cpool_to_leafc(p) 
                   cpool_to_leafc_storage_resp(p)  = frac_resp * cpool_to_leafc_storage(p)
-                  
                   !cpool_to_leafc(p) = cpool_to_leafc(p) - cpool_to_leafc_resp(p) 
                   !cpool_to_leafc_storage(p) = cpool_to_leafc_storage(p) - cpool_to_leafc_storage_resp(p)
                   
@@ -1077,7 +1209,7 @@ contains
                   
                      cpool_to_livecrootc_resp(p)         = frac_resp * cpool_to_livecrootc(p) 
                      cpool_to_livecrootc_storage_resp(p) = frac_resp * cpool_to_livecrootc_storage(p)
-                     
+                    
                      !cpool_to_livecrootc(p) = cpool_to_livecrootc(p) - cpool_to_livecrootc_resp(p)     
                      !cpool_to_livecrootc_storage(p) = cpool_to_livecrootc_storage(p) - cpool_to_livecrootc_storage_resp(p) 
                      
@@ -1358,9 +1490,9 @@ contains
          sminn_to_npool        => cnveg_nitrogenflux_inst%sminn_to_npool_patch      , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
          leafn_to_retransn     => cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:)   ]
          frootn_to_retransn    => cnveg_nitrogenflux_inst%frootn_to_retransn_patch  , & ! Output: [real(r8) (:)   ]
-         livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch,& ! Output: [real(r8) (:)   ]
          livestemn             => cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
          frootn                => cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N
+         livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch,& ! Output: [real(r8) (:)   ]
          sminn_vr              => soilbiogeochem_nitrogenstate_inst%sminn_vr_col    , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N
          btran                 => energyflux_inst%btran_patch                       , & ! Input: [real(r8) (:)    ]  transpiration wetness factor (0 to 1)
          t_scalar              => soilbiogeochem_carbonflux_inst%t_scalar_col        & ! Input:  [real(r8) (:,:) ]  soil temperature scalar for decomp
@@ -1536,6 +1668,7 @@ contains
                   ! of days has elapsed since planting
 
                else if (hui(p) >= huigrain(p)) then
+
                   aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
                        (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
                   if (astemi(p) > astemf(ivt(p))) then
@@ -1544,8 +1677,6 @@ contains
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
                           huigrain(p)),1._r8)**allconss(ivt(p)) )))
                   end if
-
-                  ! If crops have hit peaklai, then set leaf allocation to small value
                   if (peaklai(p) == 1) then 
                      aleaf(p) = 1.e-5_r8
                   else if (aleafi(p) > aleaff(ivt(p))) then
@@ -1601,7 +1732,6 @@ contains
                f3 = astem(p) / aleaf(p)
                f5 = arepr(p) / aleaf(p)
                g1 = 0.25_r8
-
 
             else   ! .not croplive
                f1 = 0._r8
@@ -1720,7 +1850,6 @@ contains
 
 	         end if
          end if  !FUN
-
          !if (leafn(p) < n_min ) then
             !! to set leafcn to missing value for history files
             !this%actual_leafcn(p) = spval

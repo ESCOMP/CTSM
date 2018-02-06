@@ -133,7 +133,7 @@ module atm2lndType
      real(r8) , pointer :: fsd240_patch                 (:)   => null() ! patch 240hr average of direct beam radiation 
      real(r8) , pointer :: fsi24_patch                  (:)   => null() ! patch 24hr average of diffuse beam radiation 
      real(r8) , pointer :: fsi240_patch                 (:)   => null() ! patch 240hr average of diffuse beam radiation 
-     real(r8) , pointer :: prec365_patch                (:)   => null() ! patch 365-day running mean of tot. precipitation
+     real(r8) , pointer :: prec365_col                  (:)   => null() ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
      real(r8) , pointer :: prec60_patch                 (:)   => null() ! patch 60-day running mean of tot. precipitation (mm/s) 
      real(r8) , pointer :: prec10_patch                 (:)   => null() ! patch 10-day running mean of tot. precipitation (mm/s) 
      real(r8) , pointer :: rh30_patch                   (:)   => null() ! patch 30-day running mean of relative humidity 
@@ -562,7 +562,7 @@ contains
     allocate(this%prec10_patch                  (begp:endp))        ; this%prec10_patch                  (:)   = nan
     allocate(this%prec60_patch                  (begp:endp))        ; this%prec60_patch                  (:)   = nan
     allocate(this%rh30_patch                    (begp:endp))        ; this%rh30_patch                    (:)   = nan 
-    allocate(this%prec365_patch                 (begp:endp))        ; this%prec365_patch                 (:)   = nan
+    allocate(this%prec365_col                   (begc:endc))        ; this%prec365_col                   (:)   = nan
     if (use_fates) then
        allocate(this%prec24_patch               (begp:endp))        ; this%prec24_patch                  (:)   = nan
        allocate(this%rh24_patch                 (begp:endp))        ; this%rh24_patch                    (:)   = nan
@@ -655,79 +655,70 @@ contains
     end if
 
     this%forc_t_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='Tair', units='K',  &
-         avgflag='A', long_name='atmospheric air temperature', &
+    call hist_addfld1d (fname='Tair_from_atm', units='K',  &
+         avgflag='A', long_name='atmospheric air temperature received from atmosphere (pre-downscaling)', &
          ptr_gcell=this%forc_t_not_downscaled_grc, default='inactive')
 
     this%forc_t_downscaled_col(begc:endc) = spval
-    call hist_addfld1d (fname='Tair_downscaled', units='K', &
-         avgflag='A', long_name='atmospheric air temperature downscaled to columns', &
+    call hist_addfld1d (fname='TBOT', units='K',  &
+         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_t_downscaled_col)
+    call hist_addfld1d (fname='Tair', units='K', &
+         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
          ptr_col=this%forc_t_downscaled_col, default='inactive')
 
-    this%forc_pbot_not_downscaled_grc(begg:endg) = spval
+    this%forc_pbot_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='PBOT', units='Pa',  &
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_pbot_downscaled_col)
     call hist_addfld1d (fname='PSurf', units='Pa',  &
-         avgflag='A', long_name='surface pressure', &
-         ptr_gcell=this%forc_pbot_not_downscaled_grc, default='inactive')
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_pbot_downscaled_col, default='inactive')
 
-    this%forc_rain_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='Rainf', units='mm/s',  &
-         avgflag='A', long_name='atmospheric rain', &
-         ptr_gcell=this%forc_rain_not_downscaled_grc, default='inactive')
-
-    this%forc_lwrad_not_downscaled_grc(begg:endg) = spval
+    this%forc_lwrad_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='FLDS', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_lwrad_downscaled_col)
     call hist_addfld1d (fname='LWdown', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation', &
-         ptr_gcell=this%forc_lwrad_not_downscaled_grc, default='inactive')
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_lwrad_downscaled_col, default='inactive')
 
     this%forc_rain_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='RAIN', units='mm/s',  &
-         avgflag='A', long_name='atmospheric rain', &
+    call hist_addfld1d (fname='RAIN_FROM_ATM', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain received from atmosphere (pre-repartitioning)', &
          ptr_lnd=this%forc_rain_not_downscaled_grc)
 
     this%forc_snow_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='SNOW', units='mm/s',  &
-         avgflag='A', long_name='atmospheric snow', &
+    call hist_addfld1d (fname='SNOW_FROM_ATM', units='mm/s',  &
+         avgflag='A', long_name='atmospheric snow received from atmosphere (pre-repartitioning)', &
          ptr_lnd=this%forc_snow_not_downscaled_grc)
 
     this%forc_rain_downscaled_col(begc:endc) = spval
-    call hist_addfld1d (fname='RAIN_REPARTITIONED', units='mm/s',  &
+    call hist_addfld1d (fname='RAIN', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain, after rain/snow repartitioning based on temperature', &
          ptr_col=this%forc_rain_downscaled_col)
+    call hist_addfld1d (fname='Rainf', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain, after rain/snow repartitioning based on temperature', &
+         ptr_col=this%forc_rain_downscaled_col, default='inactive')
 
     this%forc_snow_downscaled_col(begc:endc) = spval
-    call hist_addfld1d (fname='SNOW_REPARTITIONED', units='mm/s',  &
+    call hist_addfld1d (fname='SNOW', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow, after rain/snow repartitioning based on temperature', &
          ptr_col=this%forc_snow_downscaled_col)
 
-    this%forc_t_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='TBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air temperature', &
-         ptr_lnd=this%forc_t_not_downscaled_grc)
-
-    this%forc_th_not_downscaled_grc(begg:endg) = spval
+    this%forc_th_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='THBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air potential temperature', &
-         ptr_lnd=this%forc_th_not_downscaled_grc)
+         avgflag='A', long_name='atmospheric air potential temperature (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_th_downscaled_col)
 
-    this%forc_q_not_downscaled_grc(begg:endg) = spval
+    this%forc_q_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='QBOT', units='kg/kg',  &
-         avgflag='A', long_name='atmospheric specific humidity', &
-         ptr_lnd=this%forc_q_not_downscaled_grc)
-    ! Rename of QBOT for Urban intercomparision project
-    this%forc_q_not_downscaled_grc(begg:endg) = spval
+         avgflag='A', long_name='atmospheric specific humidity (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_q_downscaled_col)
+    ! Rename of QBOT for Urban intercomparison project
     call hist_addfld1d (fname='Qair', units='kg/kg',  &
-         avgflag='A', long_name='atmospheric specific humidity', &
-         ptr_lnd=this%forc_q_not_downscaled_grc, default='inactive')
-
-    this%forc_lwrad_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='FLDS', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation', &
-         ptr_lnd=this%forc_lwrad_not_downscaled_grc)
-
-    this%forc_pbot_not_downscaled_grc(begg:endg) = spval
-    call hist_addfld1d (fname='PBOT', units='Pa',  &
-         avgflag='A', long_name='atmospheric pressure', &
-         ptr_lnd=this%forc_pbot_not_downscaled_grc)
+         avgflag='A', long_name='atmospheric specific humidity (downscaled to columns in glacier regions)', &
+         ptr_col=this%forc_q_downscaled_col, default='inactive')
 
     ! Time averaged quantities
     this%fsi24_patch(begp:endp) = spval
@@ -845,7 +836,7 @@ contains
        ! The following is a running mean with the accumulation period is set to -365 for a 365-day running mean.
        call init_accum_field (name='PREC365', units='MM H2O/S', &
             desc='365-day running mean of total precipitation', accum_type='runmean', accum_period=-365, &
-            subgrid_type='pft', numlev=1, init_value=0._r8)
+            subgrid_type='column', numlev=1, init_value=0._r8)
     end if
 
     if ( use_fates ) then
@@ -902,18 +893,28 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
+    integer  :: begc, endc
     integer  :: nstep
     integer  :: ier
     real(r8), pointer :: rbufslp(:)  ! temporary
+    real(r8), pointer :: rbufslc(:)  ! temporary
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     ! Allocate needed dynamic memory for single level patch field
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)' in '
-       call endrun(msg="extract_accum_hist allocation error for rbufslp"//&
+       call endrun(msg="InitAccVars allocation error for rbufslp"//&
+            errMsg(sourcefile, __LINE__))
+    endif
+    ! Allocate needed dynamic memory for single level col field
+    allocate(rbufslc(begc:endc), stat=ier)
+    if (ier/=0) then
+       write(iulog,*)' in '
+       call endrun(msg="InitAccVars allocation error for rbufslc"//&
             errMsg(sourcefile, __LINE__))
     endif
 
@@ -944,8 +945,8 @@ contains
     end if
 
     if (use_cndv) then
-       call extract_accum_field ('PREC365' , rbufslp, nstep) 
-       this%prec365_patch(begp:endp) = rbufslp(begp:endp)
+       call extract_accum_field ('PREC365' , rbufslc, nstep) 
+       this%prec365_col(begc:endc) = rbufslc(begc:endc)
 
        call extract_accum_field ('TDA', rbufslp, nstep) 
        this%t_mo_patch(begp:endp) = rbufslp(begp:endp)
@@ -975,6 +976,7 @@ contains
     endif
 
     deallocate(rbufslp)
+    deallocate(rbufslc)
 
   end subroutine InitAccVars
 
@@ -995,18 +997,26 @@ contains
     integer :: nstep                     ! timestep number
     integer :: ier                       ! error status
     integer :: begp, endp
+    integer :: begc, endc
     real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
+    real(r8), pointer :: rbufslc(:)      ! temporary single level - column level
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     nstep = get_nstep()
 
     ! Allocate needed dynamic memory for single level patch field
-
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
-       write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
+       write(iulog,*)'UpdateAccVars allocation error for rbufslp'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    endif
+    ! Allocate needed dynamic memory for single level col field
+    allocate(rbufslc(begc:endc), stat=ier)
+    if (ier/=0) then
+       write(iulog,*)'UpdateAccVars allocation error for rbufslc'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
@@ -1030,9 +1040,18 @@ contains
     call update_accum_field  ('FSI240', rbufslp               , nstep)
     call extract_accum_field ('FSI240', this%fsi240_patch     , nstep)
 
+    ! Precipitation accumulators
+    !
+    ! For CNDV, we use a column-level accumulator. We cannot use a patch-level
+    ! accumulator for CNDV because this is used for establishment, so must be available
+    ! for inactive patches. In principle, we could/should switch to column-level for the
+    ! other precip accumulators, too; we'd just need to be careful about backwards
+    ! compatibility with old restart files.
+
     do p = begp,endp
        c = patch%column(p)
        rbufslp(p) = this%forc_rain_downscaled_col(c) + this%forc_snow_downscaled_col(c)
+       rbufslc(c) = this%forc_rain_downscaled_col(c) + this%forc_snow_downscaled_col(c)
     end do
 
     if (use_cn) then
@@ -1047,8 +1066,10 @@ contains
 
     if (use_cndv) then
        ! Accumulate and extract PREC365 (accumulates total precipitation as 365-day running mean)
-       call update_accum_field  ('PREC365', rbufslp, nstep)
-       call extract_accum_field ('PREC365', this%prec365_patch, nstep)
+       ! See above comment regarding why this is at the column-level despite other prec
+       ! accumulators being at the patch level.
+       call update_accum_field  ('PREC365', rbufslc, nstep)
+       call extract_accum_field ('PREC365', this%prec365_col, nstep)
 
        ! Accumulate and extract TDA (accumulates TBOT as 30-day average) and 
        ! also determines t_mo_min
@@ -1120,6 +1141,7 @@ contains
     endif
 
     deallocate(rbufslp)
+    deallocate(rbufslc)
 
   end subroutine UpdateAccVars
 
@@ -1249,7 +1271,7 @@ contains
     deallocate(this%fsi240_patch)
     deallocate(this%prec10_patch)
     deallocate(this%prec60_patch)
-    deallocate(this%prec365_patch)
+    deallocate(this%prec365_col)
     if (use_fates) then
        deallocate(this%prec24_patch)
        deallocate(this%rh24_patch)

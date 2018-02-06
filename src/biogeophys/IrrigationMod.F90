@@ -1033,7 +1033,7 @@ contains
   end subroutine CalcIrrigationNeeded
 
   !-----------------------------------------------------------------------
-  pure function PointNeedsCheckForIrrig(this, pft_type, elai, time_prev, londeg) &
+  function PointNeedsCheckForIrrig(this, pft_type, elai, time_prev, londeg) &
        result(check_for_irrig)
     !
     ! !DESCRIPTION:

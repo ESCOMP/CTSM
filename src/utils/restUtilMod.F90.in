@@ -8,7 +8,7 @@ module restUtilMod
   use shr_kind_mod, only: r8=>shr_kind_r8, r4 => shr_kind_r4, i4=>shr_kind_i4
   use shr_sys_mod,  only: shr_sys_abort
   use spmdMod,      only: masterproc
-  use clm_varctl,   only: iulog
+  use clm_varctl,   only: iulog, nsrest, nsrContinue, nsrBranch
   use clm_varcon,   only: spval, ispval
   use decompMod,    only: bounds_type
   use ncdio_pio
@@ -53,7 +53,7 @@ module restUtilMod
   end interface set_missing_vals_to_constant
   public :: set_missing_vals_to_constant
 
-  private :: is_restart
+  private :: missing_field_possibly_abort
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -186,7 +186,9 @@ contains
     end if
 
     if (flag == 'read') then
-       if (.not. readvar .and. is_restart()) call shr_sys_abort()
+       if (.not. readvar) then
+          call missing_field_possibly_abort(my_varname)
+       end if
     end if
 
   end subroutine restartvar_{DIMS}d_{TYPE}
@@ -338,7 +340,9 @@ contains
     end if
 
     if (flag == 'read') then
-       if (.not. readvar .and. is_restart()) call shr_sys_abort()
+       if (.not. readvar) then
+          call missing_field_possibly_abort(my_varname)
+       end if
     end if
 
   end subroutine restartvar_{DIMS}d_{TYPE}
@@ -501,7 +505,9 @@ contains
     end if
 
     if (flag == 'read') then
-       if (.not. readvar .and. is_restart()) call shr_sys_abort()
+       if (.not. readvar) then
+          call missing_field_possibly_abort(my_varname)
+       end if
     end if
 
   end subroutine restartvar_2d_{TYPE}_bounds
@@ -617,17 +623,42 @@ contains
 
   end subroutine set_missing_vals_to_constant_{DIMS}d
 
-  
-
   !-----------------------------------------------------------------------
-  logical function is_restart( )
-    ! Determine if restart run
-    use clm_varctl, only : nsrest, nsrContinue
-    if (nsrest == nsrContinue) then
-       is_restart = .true.
-    else
-       is_restart = .false.
+  subroutine missing_field_possibly_abort(varname)
+    !
+    ! !DESCRIPTION:
+    ! This should be called if a field is missing from the restart file. It aborts with a
+    ! helpful error message if this run is one where a missing field is treated as an
+    ! error (e.g., a restart run).
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: varname ! name of variable that triggered the error
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'missing_field_possibly_abort'
+    !-----------------------------------------------------------------------
+
+    if (nsrest == nsrContinue .or. &
+         nsrest == nsrBranch) then
+       if (masterproc) then
+          write(iulog,*) 'ERROR: Field missing from restart file: ', trim(varname)
+          write(iulog,*) 'Missing fields are not allowed in branch or continue (restart) runs.'
+          write(iulog,*) ' '
+          write(iulog,*) 'This can happen when the restart file is from a different'
+          write(iulog,*) 'model configuration or different code base, which did not'
+          write(iulog,*) 'contain all of the restart fields needed for the current'
+          write(iulog,*) 'code base and configuration.'
+          write(iulog,*) ' '
+          write(iulog,*) 'You can get around this problem by doing a startup or hybrid run'
+          write(iulog,*) 'that points to this initial condition file, instead of attempting'
+          write(iulog,*) 'a branch or continue run. However, note that, in many cases,'
+          write(iulog,*) 'this will result in the missing fields being filled in with'
+          write(iulog,*) 'their cold start initialization values, which may or may not'
+          write(iulog,*) 'be what you want.'
+       end if
+       call shr_sys_abort('Field missing from restart file.')
     end if
-  end function is_restart
+  end subroutine missing_field_possibly_abort
 
 end module restUtilMod

@@ -142,7 +142,7 @@ module clm_varctl
 
   ! State of the model for the accelerated decomposition (AD) spinup. 
   ! 0 (default) = normal model; 1 = AD SPINUP
-  integer, public :: spinup_state = 0 
+  integer, public :: spinup_state = 1 
 
   ! true => anoxia is applied to heterotrophic respiration also considered in CH4 model
   ! default value reset in controlMod
@@ -185,6 +185,13 @@ module clm_varctl
 
   logical, public :: use_c13 = .false.                  ! true => use C-13 model
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
+  !----------------------------------------------------------
+  ! CN matrix
+  !----------------------------------------------------------  
+  logical, public :: use_matrixcn = .true. !.false.              ! true => use cn matrix
+  logical, public :: use_soil_matrixcn = .true.      ! true => use cn matrix  
+  logical, public :: isspinup = .false.  !.false.              ! true => use acc spinup
+  logical, public :: is_outmatrix = .true.       !.false.              ! true => use acc spinup
 
   !----------------------------------------------------------
   !  fates switches
@@ -248,9 +255,6 @@ module clm_varctl
   !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   !----------------------------------------------------------
-
-  ! glacier_mec landunit is not created (set in controlMod)
-  logical , public :: create_glacier_mec_landunit = .false. 
 
   ! true => CLM glacier area & topography changes dynamically 
   logical , public :: glc_do_dynglacier = .false.           

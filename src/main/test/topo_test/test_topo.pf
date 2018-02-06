@@ -12,7 +12,7 @@ module test_topo
   use filterColMod
   use clm_instur, only : topo_glc_mec
   use clm_varpar, only : maxpatch_glcmec
-  use clm_varctl, only : create_glacier_mec_landunit, glc_do_dynglacier
+  use clm_varctl, only : glc_do_dynglacier
   use landunit_varcon, only : istice_mec
   use glc2lndMod, only : glc2lnd_type
   use glcBehaviorMod, only : glc_behavior_type
@@ -51,7 +51,6 @@ contains
   subroutine setUp(this)
     class(TestTopo), intent(inout) :: this
 
-    create_glacier_mec_landunit = .true.
     glc_do_dynglacier = .true.
     call this%setup_glc_mec()
   end subroutine setUp
@@ -103,14 +102,16 @@ contains
     this%topo_glc_mec_allocated = .true.
   end subroutine setup_glc_mec
 
-  subroutine init_glc2lnd(this, glc_behavior, icemask_grc)
+  subroutine init_glc2lnd(this, glc_behavior, topo_grc, icemask_grc)
     class(TestTopo), intent(inout) :: this
     type(glc_behavior_type), intent(in) :: glc_behavior
+    real(r8), intent(in) :: topo_grc(:, 0: )   ! [gridcell, elevclass] array of topo values
     real(r8), intent(in) :: icemask_grc(:)  ! gridcell-level array of icemask values
 
     call this%glc2lnd_inst%Init(bounds, glc_behavior)
-    this%glc2lnd_inst%icemask_grc(:) = icemask_grc(:)
     this%glc2lnd_allocated = .true.
+    call this%glc2lnd_inst%for_test_set_glc2lnd_fields_directly(bounds, &
+         topo = topo_grc, icemask = icemask_grc)
   end subroutine init_glc2lnd
 
   subroutine do_UpdateTopo(this, glc_behavior, icemask_grc, atm_topo_grc, glc_topo)
@@ -133,6 +134,8 @@ contains
     ! if glc_topo isn't given, then glc2lnd_inst%topo_grc will have this value everywhere
     real(r8), parameter :: glc_topo_default = 17._r8
 
+    real(r8), allocatable :: glc_topo_grc(:,:)  ! [gridcell, elevclass]
+
     real(r8), allocatable :: atm_topo(:)
     type(filter_col_type) :: filter_icemecc
 
@@ -140,12 +143,16 @@ contains
     this%ldomain_frac_allocated = .true.
     ldomain%frac(bounds%begg:bounds%endg) = 1._r8
 
-    call this%init_glc2lnd(glc_behavior, icemask_grc)
+    allocate(glc_topo_grc(bounds%begg:bounds%endg, 0:maxpatch_glcmec))
     if (present(glc_topo)) then
-       this%glc2lnd_inst%topo_grc(:,:) = glc_topo
+       glc_topo_grc(:,:) = glc_topo
     else
-       this%glc2lnd_inst%topo_grc(:,:) = glc_topo_default
+       glc_topo_grc(:,:) = glc_topo_default
     end if
+    call this%init_glc2lnd( &
+         glc_behavior=glc_behavior, &
+         topo_grc = glc_topo_grc, &
+         icemask_grc=icemask_grc)
 
     filter_icemecc = col_filter_from_ltypes(bounds, [istice_mec], include_inactive = .false.)
 

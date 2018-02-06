@@ -22,9 +22,9 @@ module CNPrecisionControlMod
 
   ! !PUBLIC DATA:
   real(r8), public :: ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
-  real(r8), public :: cnegcrit = -6.e+1_r8              ! critical negative carbon state value for abort (gC/m2)
+  real(r8), public :: cnegcrit = -6.e+6_r8      ! -6.e+2_r8        ! critical negative carbon state value for abort (gC/m2)
   real(r8), public :: ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
-  real(r8), public :: nnegcrit = -6.e+0_r8              ! critical negative nitrogen state value for abort (gN/m2)
+  real(r8), public :: nnegcrit = -6.e+5_r8              ! critical negative nitrogen state value for abort (gN/m2)
   real(r8), public, parameter :: n_min = 0.000000001_r8 ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
 
   ! !PRIVATE DATA:
@@ -246,17 +246,28 @@ contains
          ! grain C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
-                                   croponly=.true. )
+                                   c13=c13cs%grainc_patch, c14=c14cs%grainc_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), croponly=.true. )
 
          ! grain storage C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_storage_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                                   __LINE__, croponly=.true. )
+                                   __LINE__, c13=c13cs%grainc_storage_patch, c14=c14cs%grainc_storage_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), croponly=.true. )
 
          ! grain transfer C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_xfer_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
-                                   croponly=.true. )
+                                   c13=c13cs%grainc_xfer_patch, c14=c14cs%grainc_xfer_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), croponly=.true. )
+
+         ! grain transfer C and N
+         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
+                                   ns%cropseedn_deficit_patch(bounds%begp:bounds%endp), pc(bounds%begp:), &
+                                   pn(bounds%begp:), __LINE__, &
+                                   c13=c13cs%cropseedc_deficit_patch, c14=c14cs%cropseedc_deficit_patch, &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
+
       end if
 
       ! livestem C and N
@@ -353,7 +364,9 @@ contains
          ! xsmr is a pool to balance the budget and as such can be freely negative
          call TruncateCStates( bounds, filter_soilp, num_soilp, cs%xsmrpool_patch(bounds%begp:bounds%endp), &
                                pc(bounds%begp:), __LINE__, &
-                               allowneg=.true., croponly=.true. )
+                               c13=c13cs%xsmrpool_patch, c14=c14cs%xsmrpool_patch, &
+                               pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
+
       end if
 
       ! retransn (N only)
@@ -454,7 +467,7 @@ contains
           if ( .not. lallowneg .and. ((carbon_patch(p) < cnegcrit) .or. (nitrogen_patch(p) < nnegcrit)) ) then
              write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
-             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
+!             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))  !zgdu
           else if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
@@ -543,7 +556,7 @@ contains
           if ( .not. lallowneg .and. (carbon_patch(p) < cnegcrit) ) then
              write(iulog,*) 'ERROR: Carbon patch negative = ', carbon_patch(p)
              write(iulog,*) 'ERROR: limit = ', cnegcrit
-             call endrun(msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
+!             call endrun(msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit) then
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8

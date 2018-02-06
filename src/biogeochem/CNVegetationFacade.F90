@@ -45,6 +45,7 @@ module CNVegetationFacade
   use perf_mod                        , only : t_startf, t_stopf
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
+  use clm_varpar                      , only :nvegpool
   use abortutils                      , only : endrun
   use spmdMod                         , only : masterproc
   use clm_time_manager                , only : get_curr_date, get_ref_date
@@ -174,6 +175,7 @@ module CNVegetationFacade
      procedure, public :: get_bgnpp_patch               ! Get patch-level belowground NPP array
      procedure, public :: get_froot_carbon_patch        ! Get patch-level fine root carbon array
      procedure, public :: get_croot_carbon_patch        ! Get patch-level coarse root carbon array
+     procedure, public :: get_totvegc_col               ! Get column-level total vegetation carbon array
 
      procedure, private :: CNReadNML                    ! Read in the CN general namelist
   end type cn_vegetation_type
@@ -184,7 +186,7 @@ module CNVegetationFacade
 contains
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, NLFilename)
+  subroutine Init(this,bounds, NLFilename)
     !
     ! !DESCRIPTION:
     ! Initialize a CNVeg object.
@@ -199,6 +201,8 @@ contains
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
     character(len=*) , intent(in)    :: NLFilename ! namelist filename
+!    integer           , intent(in) :: nvegpool
+
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -217,13 +221,13 @@ contains
        ! Read in the general CN namelist
        call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
 
-       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
+       call this%cnveg_carbonstate_inst%Init(bounds,nvegpool=18,carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
        if (use_c13) then
-          call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
+          call this%c13_cnveg_carbonstate_inst%Init(bounds,nvegpool=18,carbon_type='c13', ratio=c13ratio, &
                NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
-          call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
+          call this%c14_cnveg_carbonstate_inst%Init(bounds,nvegpool=18, carbon_type='c14', ratio=c14ratio, &
                NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
@@ -233,7 +237,7 @@ contains
        if (use_c14) then
           call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
        end if
-       call this%cnveg_nitrogenstate_inst%Init(bounds,                   &
+       call this%cnveg_nitrogenstate_inst%Init(bounds,nvegpool,     &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
             this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp),  &
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
@@ -621,7 +625,7 @@ contains
        canopystate_inst, photosyns_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, ch4_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
     ! Conserve C & N with updates in subgrid weights
@@ -655,6 +659,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(ch4_type)                          , intent(inout) :: ch4_inst
     type(soilbiogeochem_state_type)         , intent(in)    :: soilbiogeochem_state_inst
     !
@@ -689,21 +694,21 @@ contains
     ! since those column states are still important in the following dyn_cnbal_col.
     call t_startf('CNUpdateDynPatch')
     call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
-         soilbiogeochem_carbonstate_inst)
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_carbonflux_inst)
     if (use_c13) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-            this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+            soilbiogeochem_carbonflux_inst)
     end if
     if (use_c14) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-            this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+            soilbiogeochem_carbonflux_inst)
     end if
     call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenstate_inst)
+         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
+         soilbiogeochem_nitrogenflux_inst)
     call t_stopf('CNUpdateDynPatch')
 
     call t_startf('dyn_cnbal_col')
@@ -870,6 +875,7 @@ contains
   subroutine EcosystemDynamicsPostDrainage(this, bounds, num_allc, filter_allc, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, doalb, crop_inst, &
        waterstate_inst, waterflux_inst, frictionvel_inst, canopystate_inst, &
+       soilstate_inst, soilbiogeochem_state_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -897,6 +903,8 @@ contains
     type(waterflux_type)                    , intent(inout) :: waterflux_inst
     type(frictionvel_type)                  , intent(in)    :: frictionvel_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
+    type(soilstate_type)                    , intent(inout) :: soilstate_inst
+    type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
@@ -917,7 +925,9 @@ contains
     call CNDriverLeaching(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
-         waterstate_inst, waterflux_inst, &
+         waterstate_inst, waterflux_inst, soilstate_inst, &
+         this%cnveg_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
 
@@ -1403,5 +1413,33 @@ contains
     end if
 
   end function get_croot_carbon_patch
+
+  !-----------------------------------------------------------------------
+  function get_totvegc_col(this, bounds) result(totvegc_col)
+    !
+    ! !DESCRIPTION:
+    ! Get column-level total vegetation carbon array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: totvegc_col(bounds%begc:bounds%endc)  ! function result: (gC/m2)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_totvegc_col'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       totvegc_col(bounds%begc:bounds%endc) = &
+            this%cnveg_carbonstate_inst%totvegc_col(bounds%begc:bounds%endc)
+    else
+       totvegc_col(bounds%begc:bounds%endc) = nan
+    end if
+
+  end function get_totvegc_col
+
 
 end module CNVegetationFacade

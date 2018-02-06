@@ -23,6 +23,12 @@ module dynHarvestMod
   use clm_varcon              , only : grlnd
   use ColumnType              , only : col                
   use PatchType               , only : patch                
+  use clm_varctl              , only : use_matrixcn  
+  use clm_varpar            , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                       ilivestem,ilivestem_st,ilivestem_xf,&
+                                       ideadstem,ideadstem_st,ideadstem_xf,&
+                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                       ideadcroot,ideadcroot_st,ideadcroot_xf,iout 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -385,6 +391,54 @@ contains
             hrv_livecrootn_xfer_to_litter(p)     = livecrootn_xfer(p)     * m
             hrv_deadcrootn_xfer_to_litter(p)     = deadcrootn_xfer(p)     * m
 
+            if (use_matrixcn) then		 
+	       cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ileaf)         = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ileaf)         + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ifroot)        = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ifroot)        + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivestem)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivestem)     + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivecroot)    = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivecroot)    + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadstem)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadstem)     + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadcroot)    = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadcroot)    + m
+
+         ! storage pools
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ileaf_st)      = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ileaf_st)      + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ifroot_st)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ifroot_st)     + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivestem_st)  = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivestem_st)  + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivecroot_st) = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivecroot_st) + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadstem_st)  = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadstem_st)  + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadcroot_st) = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadcroot_st) + m
+
+         ! transfer pools
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ileaf_xf)      = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ileaf_xf)      + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ifroot_xf)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ifroot_xf)     + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivestem_xf)  = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivestem_xf)  + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivecroot_xf) = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ilivecroot_xf) + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadstem_xf)  = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadstem_xf)  + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadcroot_xf) = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,iout,ideadcroot_xf) + m
+
+	       cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ileaf)         = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ileaf)         + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ifroot)        = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ifroot)        + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivestem)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivestem)     + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivecroot)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivecroot)    + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadstem)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadstem)     + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadcroot)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadcroot)    + m
+
+         ! storage pools
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ileaf_st)      = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ileaf_st)      + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ifroot_st)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ifroot_st)     + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivestem_st)  = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivestem_st)  + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivecroot_st) = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivecroot_st) + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadstem_st)  = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadstem_st)  + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadcroot_st) = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadcroot_st) + m
+
+         ! transfer pools
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ileaf_xf)      = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ileaf_xf)      + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ifroot_xf)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ifroot_xf)     + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivestem_xf)  = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivestem_xf)  + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivecroot_xf) = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ilivecroot_xf) + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadstem_xf)  = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadstem_xf)  + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadcroot_xf) = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iout,ideadcroot_xf) + m
+            end if
+               
          end if  ! end tree block
 
       end do ! end of pft loop

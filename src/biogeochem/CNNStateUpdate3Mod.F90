@@ -9,7 +9,7 @@ module CNNStateUpdate3Mod
   use shr_kind_mod                    , only: r8 => shr_kind_r8
   use clm_varpar                      , only: nlevdecomp, ndecomp_pools
   use clm_time_manager                , only : get_step_size
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif
+  use clm_varctl                      , only : iulog, use_nitrif_denitrif,use_matrixcn,use_soil_matrixcn
   use clm_varpar                      , only : i_cwd, i_met_lit, i_cel_lit, i_lig_lit
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
@@ -80,36 +80,52 @@ contains
 
             ! column level nitrogen fluxes from fire
             ! patch-level wood to column-level CWD (uncombusted wood)
-            ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
+            if (.not. use_soil_matrixcn)then
+               ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
                  nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
 
             ! patch-level wood to column-level litter (uncombusted wood)
-            ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
+               ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
                  nf_veg%m_n_to_litr_met_fire_col(c,j)* dt
-            ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &
+               ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &
                  nf_veg%m_n_to_litr_cel_fire_col(c,j)* dt
-            ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + &
+               ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + &
                  nf_veg%m_n_to_litr_lig_fire_col(c,j)* dt
+            else
+               nf_soil%matrix_input_col(c,j,i_cwd) = nf_soil%matrix_input_col(c,j,i_cwd) + &
+                 nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
+
+            ! patch-level wood to column-level litter (uncombusted wood)
+               nf_soil%matrix_input_col(c,j,i_met_lit) = nf_soil%matrix_input_col(c,j,i_met_lit) + &
+                 nf_veg%m_n_to_litr_met_fire_col(c,j)* dt
+               nf_soil%matrix_input_col(c,j,i_cel_lit) = nf_soil%matrix_input_col(c,j,i_cel_lit) + &
+                 nf_veg%m_n_to_litr_cel_fire_col(c,j)* dt
+               nf_soil%matrix_input_col(c,j,i_lig_lit) = nf_soil%matrix_input_col(c,j,i_lig_lit) + &
+                 nf_veg%m_n_to_litr_lig_fire_col(c,j)* dt
+            end if ! soil_matrix
          end do ! end of column loop
       end do
 
       ! litter and CWD losses to fire
-      do l = 1, ndecomp_pools
-         do j = 1, nlevdecomp
-            ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               ns_soil%decomp_npools_vr_col(c,j,l) = ns_soil%decomp_npools_vr_col(c,j,l) - &
+      if(.not. use_soil_matrixcn)then
+         do l = 1, ndecomp_pools
+            do j = 1, nlevdecomp
+               ! column loop
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  ns_soil%decomp_npools_vr_col(c,j,l) = ns_soil%decomp_npools_vr_col(c,j,l) - &
                     nf_veg%m_decomp_npools_to_fire_vr_col(c,j,l) * dt
+               end do
             end do
          end do
-      end do
+      end if
 
       ! patch-level nitrogen fluxes 
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
+!       if(.not. use_matrixcn)then 
          !from fire displayed pools
          ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &
                nf_veg%m_leafn_to_fire_patch(p) * dt
@@ -195,6 +211,7 @@ contains
               nf_veg%m_livecrootn_xfer_to_litter_fire_patch(p) * dt
          ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p) -       &
               nf_veg%m_deadcrootn_xfer_to_litter_fire_patch(p) * dt
+!       end if !use_matrixcn
 
          ! retranslocated N pool
          ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p) -                     &

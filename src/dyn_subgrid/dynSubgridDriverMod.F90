@@ -31,6 +31,7 @@ module dynSubgridDriverMod
   use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemNitrogenFluxType, only : soilbiogeochem_nitrogenflux_type
   use ch4Mod,                        only : ch4_type
   use EnergyFluxType               , only : energyflux_type
   use PhotosynthesisMod            , only : photosyns_type
@@ -158,8 +159,8 @@ contains
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
-       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-       glc_behavior)
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_carbonflux_inst, ch4_inst, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
@@ -172,7 +173,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : use_cn, create_glacier_mec_landunit, use_fates
+    use clm_varctl           , only : use_cn, use_fates
     use dynInitColumnsMod    , only : initialize_new_columns
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynEDMod             , only : dyn_ED
@@ -196,6 +197,7 @@ contains
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(ch4_type)                       , intent(inout) :: ch4_inst
     type(glc_behavior_type)              , intent(in)    :: glc_behavior
@@ -262,11 +264,8 @@ contains
           call dyn_ED(bounds_clump)
        end if
 
-       if (create_glacier_mec_landunit) then
-          call glc2lnd_inst%update_glc2lnd_non_topo( &
-               bounds = bounds_clump, &
-               glc_behavior = glc_behavior)
-       end if
+       call glc2lnd_inst%update_glc2lnd_fracs( &
+            bounds = bounds_clump)
 
        ! ========================================================================
        ! Do wrapup stuff after land cover change
@@ -307,7 +306,7 @@ contains
                canopystate_inst, photosyns_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
+               soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, ch4_inst, soilbiogeochem_state_inst)
        end if
 
     end do

@@ -1,4 +1,3827 @@
 ===============================================================
+Tag name:  clm4_5_18_r270
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Dec 20 12:04:25 MST 2017
+One-line Summary: Always use multiple elevation classes for glacier, even with stub glc
+
+Purpose of changes
+------------------
+
+Up until now, we have been using the glacier_mec (multiple elevation
+class) scheme when running with CISM, but the old non-elevation class
+scheme when running with a stub glacier model (SGLC). This is
+problematic because it means that simply switching from CISM to SGLC
+fundamentally changes CLM's glacier physics. (Note: with the current
+configuration, the multiple elevation class scheme is enabled over
+Greenland and Antarctica but not elsewhere.)
+
+There are a few use cases where this is important:
+
+- Single-point and regional runs over glacier regions: In this case, you
+  cannot use CISM. Members of the LIWG want to do runs like this so they
+  can do single-point testing with the multiple elevation class scheme.
+
+- Currently, CISM does not support a Gregorian calendar (i.e., with leap
+  years). So cases with a Gregorian calendar need to use SGLC. This
+  includes data assimilation and CAM specified dynamics runs. We want
+  the physics of these runs to match the standard CLM physics as closely
+  as is feasible.
+
+- There may be other cases where a user doesn't want to include CISM
+  because of the extra complexity this involves, such as when setting up
+  a new grid (which would require additional mapping files for
+  CISM). Again, we want the physics of these runs to match the standard
+  CLM physics as closely as is feasible.
+
+Note that runs with SGLC will still differ somewhat from runs with CISM,
+even when CISM is running in the typical NOEVOLVE mode. This is because
+there will be differences in % glacier and topographic heights over
+Greenland: in a run with CISM, this information comes from CISM at the
+start of the run so that CLM and CISM agree in this respect; in a run
+with SGLC this information comes from CLM's surface dataset.
+
+However: Running with SGLC now gives the same answers as running with
+CISM with GLC_TWO_WAY_COUPLING set to FALSE. (These both differ from the
+standard configuration that uses CISM with GLC_TWO_WAY_COUPLING TRUE
+just over Greenland.)
+
+Mostly-unrelated change: Remove tropicAtl grid
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID):
+- https://github.com/ESCOMP/ctsm/issues/158 now causes test failures for
+  ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.yellowstone_pgi.clm-monthly,
+  since we're now using a new and buggy surface dataset for that case.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- If you use an finidat file from an old run that used SGLC, you'll need
+  to run init_interp and will need to set
+  init_interp_fill_missing_with_natveg = .true. in user_nl_clm. Note
+  that this will initialize glacier_mec landunits with information from
+  vegetated landunits, which is not a very good initialization, so
+  you'll want to spin up for a while to spin up the new glacier_mec
+  landunits.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): no
+
+Changes made to namelist defaults (e.g., changed parameter values): no
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- New surface datasets for single-point and regional runs: These now
+  have the data necessary to run with the multiple elevation class
+  glacier scheme. None of our out-of-the-box single-point or regional
+  datasets have any glacier cover, so this doesn't lead to substantive
+  changes. Note, though, that the smallville datasets hadn't been
+  updated in a while, so there are bigger changes to the smallville
+  datasets. The new smallville datasets are buggy (due to
+  https://github.com/ESCOMP/ctsm/issues/158), but the old ones wouldn't
+  have worked with the new code due to missing glacier_mec
+  information. Note that I have NOT changed the landuse.timeseries
+  files, because those don't change in any substantive way with the
+  setting of -glc_nec in mksurfdata_map.
+
+- Runs with SGLC now point to different finidat files by default: they
+  now point to finidat files that were generated with glacier_mec, which
+  may differ substantially from the files that were generated without
+  glacier_mec (since I think these came from completely different
+  spinups).
+
+Substantial timing or memory changes: Expect some performance
+degradation in SGLC runs, since now we're using multiple elevation
+classes over Greenland and Antarctica, though I haven't investigated it
+carefully.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Delete tropicAtl_subset tests: these tests
+didn't provide much value, and the code they cover is also covered by
+unit tests
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    prove test_build_namelist fails as on trunk
+
+    main build-namelist tests pass, clm4_5 and clm5_0 lnd_in files
+    differ from trunk as expected
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - ok
+
+    Tests pass other than these known issues:
+
+    smfg4 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Global_clm4_5^buildtools
+      See https://github.com/ESCOMP/ctsm/issues/188
+
+    blf84 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_clm4_5^buildtools
+    blfc4 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Cycle_clm4_5^buildtools
+      See https://github.com/ESCOMP/ctsm/issues/187
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - ok
+
+     1 failure, as on the trunk
+
+     compare tests: 40 PASS, 1 Fail; on the trunk, all 41 Failed. I'm
+     not sure why my branch improves things in this respect.
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    Tests pass. Baseline comparisons fail for compsets with SGLC (both
+    global tests and single-point and regional tests). This is expected
+    and is described in detail below.
+
+CLM tag used for the baseline comparisons: clm4_5_18_r269
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All compsets with SGLC (as opposed to CISM)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Potentially new climate, though not investigated carefully
+
+      Answers change in runs with SGLC due to the use of different
+      out-of-the-box finidat files: they now point to finidat files that
+      were generated with glacier_mec, which may differ substantially
+      from the files that were generated without glacier_mec (since I
+      think these came from completely different spinups).
+
+      For global runs, even without finidat differences, answers change
+      over Greenland and Antarctica, since we're now using the
+      multiple-elevation-class scheme there. Answers are the same
+      outside of Greenland and Antarctica, where we still use a single
+      glacier elevation class. (Based on spot-checking FSH in a 3-year
+      cold start run.)
+
+      (For single-point and regional runs, differences are mainly just
+      due to changes in finidat. One exception may be smallville tests,
+      since the smallville surface datasets have changed more
+      extensively; I did not investigate the smallville answer changes
+      carefully.)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+- cime: cime5.4.0-alpha.03 -> billsacks/always_glcmec_n01
+  The changes here are:
+  - always use GLC_NEC=10, except for CLM40
+  - delete references to tropicAtl
+
+List all files eliminated:
+
+========= These glacierMEC use cases weren't accomplishing anything:
+          compared with the similar non-glacierMEC use cases, they just
+          set the glc_nec namelist variable, but this variable didn't
+          even exist! So I have switched cases to use the corresponding
+          non-glacierMEC use cases
+D       components/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+D       components/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+
+========= This use case appeared to be unused
+D       components/clm/bld/namelist_files/use_cases/glacierMEC_pd.xml
+
+========= These tropicAtl_subset tests were hard to maintain and didn't
+          provide much value: the code they covered is also covered via
+          unit tests
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset
+
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Always use -glc_nec 10, delete tropicAtl, and other minor fixes
+M       components/clm/tools/mksurfdata_map/Makefile.data
+
+========= Require glc_nec >= 1 when making surface datasets
+M       components/clm/tools/mksurfdata_map/src/mkfileMod.F90
+M       components/clm/tools/mksurfdata_map/src/mkglcmecMod.F90
+M       components/clm/tools/mksurfdata_map/src/mksurfdat.F90
+M       components/clm/tools/mksurfdata_map/mksurfdata.pl
+
+========= Require glc_nec >= 1 for clm45/clm50
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/unit_testers/build-namelist_test.pl
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/cime_config/buildnml
+
+========= Remove istice; always use glacier_mec type
+M       components/clm/src/biogeochem/DryDepVelocity.F90
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/main/LandunitType.F90
+M       components/clm/src/main/TopoMod.F90
+M       components/clm/src/main/filterMod.F90
+M       components/clm/src/main/lnd2glcMod.F90
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/subgridAveMod.F90
+M       components/clm/src/main/initGridCellsMod.F90
+M       components/clm/src/main/initVerticalMod.F90
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/surfrdMod.F90
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/main/landunit_varcon.F90
+M       components/clm/src/main/subgridWeightsMod.F90
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/subgridMod.F90
+M       components/clm/src/main/ColumnType.F90
+M       components/clm/src/main/histFileMod.F90
+M       components/clm/src/main/restFileMod.F90
+M       components/clm/src/biogeophys/WaterStateType.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/TemperatureType.F90
+M       components/clm/src/biogeophys/SurfaceAlbedoMod.F90
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90
+M       components/clm/src/biogeophys/CanopyTemperatureMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyInitTimeConstMod.F90
+M       components/clm/src/biogeophys/SurfaceResistanceMod.F90
+M       components/clm/src/biogeophys/TotalWaterAndHeatMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       components/clm/src/biogeophys/GlacierSurfaceMassBalanceMod.F90
+M       components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/dyn_subgrid/dynInitColumnsMod.F90
+M       components/clm/src/dyn_subgrid/dynLandunitAreaMod.F90
+M       components/clm/src/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights.pf
+M       components/clm/src/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights_one_gcell.pf
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/cpl/clm_cpl_indices.F90
+M       components/clm/src/cpl/lnd_import_export.F90
+M       components/clm/src/cpl/lnd_comp_mct.F90
+
+========= In addition to supporting the main changes of this tag, also
+          do a fairly major refactor: set fields internally rather than
+          letting lnd_import set the fields
+M       components/clm/src/main/glc2lndMod.F90
+
+========= Fixes to unit tests for changes in glc2lnd
+M       components/clm/src/main/test/topo_test/test_topo.pf
+
+========= Remove tropicAtl tests and references to tropicAtl grid (see
+          above for more notes on this)
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+M       components/clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml
+M       components/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+M       components/clm/bld/namelist_files/namelist_defaults_overall.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+M       components/clm/bld/namelist_files/checkmapfiles.ncl
+M       components/clm/doc/UsersGuide/adding_files.xml
+
+========= No longer use glacierMEC-specific use cases (see above for
+          more notes on this)
+M       components/clm/cime_config/config_component.xml
+
+========= Fix creation date of files pointed to by tests
+M       components/clm/test/tools/nl_files/PTCLM_USUMB_clm4_5
+M       components/clm/test/tools/nl_files/PTCLM_USUMB_Cycle_clm4_5
+M       components/clm/test/tools/nl_files/PTCLM_USUMB_Global_clm4_5
+
+========= No longer need init_interp_fill_missing_with_natveg (I think
+          this could have been removed a while ago)
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KSinkMOut/user_nl_clm
+
+========= New expected failure:
+          ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.yellowstone_pgi.clm-monthly
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_18_r269
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Sat Dec 16 19:49:41 MST 2017
+One-line Summary: Move externals to version in github
+
+Purpose of changes
+------------------
+
+Move the CLM externals to the version in github for MOSART, RTM and
+PTCLM. For PTCLM this meant updating to a version that didn't take
+advantage of subversion keywords. I also updated to a version that
+can properly compare to the files it keeps even with differences
+of user, machine, path, or date.
+
+
+Bugs fixed or introduced None
+------------------------
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,andre
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_18_r268
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): rtm, mosart, PTCLM
+
+   mosart1_0_28 to github version
+   rtm1_0_63    to github version
+   PTCLM        to PTCLM2_171216c and github version
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes: None
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_18_r268
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Dec 11 16:47:24 MST 2017
+One-line Summary: Fix calculation of stomatal resistence used in dry-deposition, increase threshold of totvegc for soil decomposition to 0.1
+
+Purpose of changes
+------------------
+
+Changes from Louisa Emmons to fix the calculation of stomatal resistence in the dry-deposition code so it's the inverse
+of the previous calculation (and the arbitrary multiplicitive factor to reduce it was removed). Add new optional history
+fields for dry-deposition.
+
+Increase the threshold of total vegetation carbon for when decomposition pools are reset from 1.e-8 to 0.1. This change comes from
+Dave Lawrence and Keith Oleson. The code was also modified to use better names for this rather than ccrit and ncrit which came in
+clm4_5_17_r264. Add some new checking for these settings at initialization. Add some changes to the default CMIP6 output from
+Keith Oleson.
+
+Add in f05 fsurdat and one landuse.timeseries datasets. Add check in SSP test that makes sure the compset used includes MOSART as
+expected.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2545, 2546
+   2526 -- Fix calculation of stomatal resistance for dry deposition
+   2545 -- SSP test assumes that MOSART is being used, and dies inexplicably if not
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   Add new optional history fields when drydeposition is on:  DRYDEPV_*, RS_DRYDEP_O3
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files) Add f05 fsurdat and one landuse.timeseries file:
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    RS_DRYDEP_O3 history field is hardcoded for Ozone. In most cases the same value would apply to other species, but it is
+    hardcoded to give values for Ozone.
+
+Changes to tests or testing: Add ciso SSP test
+
+Code reviewed by: self,tilmes,emmons,fvitt
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_18_r267
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for drydep and/or exit_spinup
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: with drydep on, or in exit_spinup mode for either clm4_5 or clm5_0
+    - what platforms/compilers: All
+    - nature of change: modest
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: Add new ciso_rtmColdSSP testmod -- includes ciso and rtmColdSSP testmods
+
+  A /clm/cime_config/testdefs/testmods_dirs/clm/ciso_rtmColdSSP/include_user_mods
+
+List all existing files that have been modified, and describe the changes:
+
+  M components/clm/bld/unit_testers/build-namelist_test.pl -- Increase test numbers as now testing f05 datasets
+  M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ---- Add f05 fsurdat files and one landuse.timeseries file
+  M components/clm/bld/namelist_files/namelist_definition_clm4_5.xml -- Add f05 to list of supported resolutions
+
+  M components/clm/cime_config/testdefs/testlist_clm.xml --------------- Add SSP ciso test
+  M components/clm/cime_config/usermods_dirs/cmip6_output/user_nl_clm -- Added FCTR, FCEV, FGEV, FIRE, FSR, and HTOP; 
+     and removed QVEGT; all from the h1 file (fincl2) (from Keith Oleson)
+  M /clm/cime_config/SystemTests/ssp.py ---------------------- Update comments, add expect that compset uses mosart
+
+  M components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90 --- Change ncrit to totvegcthresh and SetNCrit to SetTotVgCThresh
+       add abort if totvegcthresh is unset, and check that it's greater than zero
+  M components/clm/src/soilbiogeochem/SoilBiogeochemPrecisionControlMod.F90 - Set totvegcthresh to 0.1 and pass down via setTotVgCThresh methods
+  M components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90 ----- Change ccrit to totvegcthresh and SetNCrit to SetTotVgCThresh
+       add abort if totvegcthresh is unset, and check that it's greater than zero
+  M components/clm/src/biogeochem/DryDepVelocity.F90 ------------------------ Modifications from Louisa Emmons, Corrected the equation 
+      calculating stomatal resistance from rssun and rssha, add new array rs_drydep_patch, add new history 
+      output possibilities: DRYDEPV_*, RS_DRYDEP_O3, use spval instead of hardcoded magic number 1.e36
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_18_r267
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Dec  7 19:26:48 MST 2017
+One-line Summary: Fixes to accumulator fields
+
+Purpose of changes
+------------------
+
+(1) Only accumulate accumulators over active (typically,
+    non-zero-weight) patches/columns. This changes answers for transient
+    runs. Previously, accumulator fields were being accumulated even
+    when a patch/column was inactive. In many cases this was relatively
+    harmless, but in some cases it was accumulating garbage like
+    spval. Then, once the point became active, it could take a while for
+    the garbage accumulated values to be worked out.
+
+    This changes answers for transient runs. I have examined all
+    accumulator fields used in a typical BgcCrop run (this does NOT
+    include fields that are only used for CNDV or FATES). Most changes
+    only last for the first month or so that a point is active, but
+    there are larger changes for:
+
+    - PREC10 and PREC60: The changes in these are probably the most
+      extreme. In the old code, these started as spval (rather than a
+      blank slate) over newly-active patches. PREC10 is garbage for the
+      first few years after a point becomes active. I didn't look at
+      PREC60, but its logic is the same as PREC10, so I would expect it
+      to be garbage for about the first 20 years after a point becomes
+      active. PREC10 is used in the fire code and for stress deciduous
+      phenology. PREC60 is used in the fire code.
+
+    - AnnET: In the old code, this started as 0 (rather than a blank
+      slate) over newly-active points. This affects answers for the
+      first year or two. This is used in N fixation code.
+
+    - FSUN24 and FSUN240: In the old code, these started out as spval;
+      it takes a few years for the FSUN240 accumulator to come back down
+      to reasonable values (even though it's a 10-day accumulator, its
+      "exponential running average" behavior means that it takes much
+      longer for memory of a huge value like spval to disappear). These
+      are just used in VOCEmissionsMod.
+
+    I have not investigated how much these changes in accumulators
+    affect the science of the model. The biggest effects will probably
+    be in the fire code in transient runs, but I haven't looked at how
+    big of an effect these errors in PREC60 have.
+
+    There are also potentially very large changes in CNDV, due to change
+    in behavior of some patch-level accumulators which are needed for
+    PFT establishment (and thus should be available over inactive
+    patches, but no longer are valid for inactive patches). However,
+    these fields were already buggy (see bug 2537).
+
+(2) For startup/hybrid runs with non-blank finidat (including runs with
+    use_init_interp): Continue accumulating continuously from where
+    things were in the finidat file. Previously, many of the
+    accumulators were being reset in startup/hybrid runs. This appeared
+    to be an accident of the implementation details, whose fix was easy
+    as a side-effect of the fix for (1). This shouldn't have a huge
+    effect: most accumulators are order 10 days, with the longest being
+    365 days, so differences should work themselves out within the first
+    year or so. But this could be important if you expect a spinup run
+    to transition continuously into a transient run (for example).
+
+    This changes answers for any startup or hybrid case with non-blank
+    finidat, where the restart file is from this tag or later. It does
+    NOT change answers for old restart files. (These old files are
+    missing the new _NSTEPS fields associated with each accumulator
+    field, and so nsteps values are set to 0 in a startup/hybrid run,
+    similarly to the old behavior.)
+
+Also, a somewhat-unrelated change: Abort if a field is missing from the
+restart file in a branch run (just as we do for a continue run); tell
+the user to do a startup or hybrid run in this case. My reason for
+folding this change into this tag was so that I don't need to worry
+about backwards compatibility of branch runs with old restart files.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2526: Some CLM accumulated fields (via accumulMod) are incorrect with dynamic landunits
+
+Known bugs introduced in this tag (include bugzilla ID):
+- The following pre-existing bugs may be somewhat worse now:
+  - 2537: Climate accumulator fields incorrect for CNDV
+  - 2539: CNDV logic for agdd20 and tmomin20 needs to be revised to
+          account for when a given patch/column becomes active
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+- Can no longer do a branch run if some fields are missing from the
+  restart file, either due to code changes or configuration changes (need
+  to do hybrid or startup).
+
+- Cannot do a branch from restart files generated with prior tags,
+  because the _NSTEPS restart fields associated with accumulation fields
+  are missing.
+
+- Startup or hybrid runs using restart files that were generated from
+  prior tags will not take advantage of fix (2) above.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, answer changes as expected (see below)
+
+CLM tag used for the baseline comparisons: clm4_5_17_r266
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - Cases with transient vegetation (Hist, Dv)
+      - Startup / hybrid cases using restart files generated from this
+        code base. In the test suite, this just shows up as answer
+        changes in ERI and SSP tests, since other tests use old initial
+        conditions files.
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff. Not yet investigated as to whether this is
+      the same or different climate.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Cover accumulMod with unit tests
+A       components/clm/src/main/test/accumul_test/test_accumul.pf
+A       components/clm/src/main/test/accumul_test/CMakeLists.txt
+A       components/clm/src/main/test/accumul_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/main/accumulMod.F90
+M       components/clm/src/biogeophys/TemperatureType.F90
+
+========= Change PREC365 to col-level: with these changes, when it was
+          at patch-level, it would be invalid over not-yet-active
+          patches - yet it's needed there for the sake of PFT
+          establishment in CNDV. Also initialize pbot to spval now that
+          bug 2526 is resolved.
+M       components/clm/src/main/atm2lndType.F90
+M       components/clm/src/biogeochem/CNDVEstablishmentMod.F90
+
+========= Need 'active' flag in gridcell_type (always true), so that
+          gridcell_type has the same interface as other subgrid types in
+          this respect
+M       components/clm/src/main/GridcellType.F90
+
+========= Abort if a field is missing from the restart file in a branch
+          run (see above for details)
+M       components/clm/src/utils/restUtilMod.F90.in
+
+========= Cover accumulMod with unit tests
+M       components/clm/src/main/test/CMakeLists.txt
+
+========= Changes needed so that code under test can call get_proc_bounds
+M       components/clm/src/unit_test_shr/unittestSubgridMod.F90
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_17_r266
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Nov 27 19:43:39 MST 2017
+One-line Summary: Avoid negative snow densities
+
+Purpose of changes
+------------------
+
+For very low temperatures, fresh snow densities were negative. This was
+only happening at extremely low temperatures (below -100 deg C), but
+caused snow balance errors when it occurred.
+
+In exploring the LoTmpDnsSlater2017 parameterization in
+NewSnowBulkDensity, I came away with the following thoughts:
+
+   It seems like there should be a limit on the temperature-dependent
+   bifall value. I extracted this function into python and played with
+   it for a few minutes:
+
+          else if (new_snow_density == LoTmpDnsSlater2017) then 
+             ! Andrew Slater: A temp of about -15C gives the nicest
+             ! "blower" powder, but as you get colder the flake size decreases so
+             ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic
+             ! winters
+             bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
+          end if
+
+   It looks like the intention is to have snow densities that increase
+   with decreasing temperature (below -15 C), but the effect of this
+   parabolic function is to have densities start coming back down as
+   temperature decreases too low (below about -58 C). My sense is that
+   we should do one of the following in the above block of code:
+
+   (1) Limit bifall(c) to be no less than 50... my read of this code is
+   that temperature-dependent bifall is never meant to go below 50.
+
+   (2) For this cold-temperature-based bifall, use an "effective" forc_t
+   that is never colder than about -58 C – or the point at which this
+   function begins to decrease with further-decreasing temperatures. (We
+   could determine the exact temperature at which this function turns
+   over... -58 C is just an approximation.) I'm not positive that this
+   is what's intended, but my read of the comment suggests that
+   densities were never intended to start decreasing with
+   further-cooling temperatures.
+
+See comments and figures in
+http://bugs.cgd.ucar.edu/show_bug.cgi?id=2536 for more details.
+
+Leo van Kampenhout and Jan Lenaerts support limitation option 2, which
+is my preference as well. Thus, this tag implements that limitation.
+
+This change changes answers for (downscaled) atmospheric forcing
+temperatures below -57.55 deg C. These very low temperatures are rare,
+but they do sometimes occur, both in coupled runs and in offline runs.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2536: Snow balance error
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Leo van Kampenhout
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, answers change as expected
+
+CLM tag used for the baseline comparisons: clm4_5_17_r265
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff/same climate
+
+      Many (but not all) tests show answer changes. Answers should only
+      change for (downscaled) forcing temperatures below -57.55 deg C. I
+      spot-checked one test with answer changes
+      (SMS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default). I
+      checked H2OSNO and FSH in this test, in the last day's h0 file;
+      these fields differ (relative to the baseline) in only one
+      gridcell. TBOT was about -55 deg C in the daily average of the
+      last day, so it seems reasonable that this forcing temperature was
+      below -57.55 deg C at some point in the 3-day simulation.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_newSnowBulkDensity.pf
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_17_r265
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Nov 18 12:40:20 MST 2017
+One-line Summary: Update the clm50 parameter file for better behavior with prognostic crop, and fix a bug in clm50 urban model
+
+Purpose of changes
+------------------
+
+Update a few parameters to tweak prognostic crop harvest yields, adjusting FUN costs, and changing C4 crops and 
+wheat by Keith Oleson, Dave Lawrence, and Danica Lombardozzi. Danica had this to say: 
+  Overall, the wheat parameters work well (give us correct Fertilized - Unfertilized behavior 
+  and reasonable crop yields), but the C4 crop parameters are less satisfying. The 2A parameter 
+  changes still have trouble with the fertilized - unfertilized behavior in some regions and 
+  lower yields, but seems to be the best combined set of behaviors since there seems to be 
+  a direct tradeoff between the fertilized behavior and crop yields
+
+Also a fix to urban initialization of rootfr for pervious road. It had used a magic number to assuming nlevsoi
+was 10. Now we divide by the actual nlevsoi.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2434
+   2434 -- urban assumed to have 10 soil layers
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): clm50 params file
+
+Changes to the datasets (e.g., parameter, surface or initial files): clm50 parameter file
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,oleson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_17_r264
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, for CLM50
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all clm50 (except non-urban and non-crop)
+    - what platforms/compilers: all
+    - nature of change: crop behavior changes, urban working better
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- new params file
+M       components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90 ----- Divide by nlevsoi
+            rather than assume nlevsoi is 10 with a magic number.
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_17_r264
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Nov 16 13:35:59 MST 2017
+One-line Summary: Changes from Dave Lawrenece on resetting soil carbon for spinup
+
+Purpose of changes
+------------------
+
+Changes from Dave Lawrence so that total vegetation carbon (totvegc) is used for resetting soil carbon
+stocks during the AD spinup exit (to determine if you should reset both carbon and nitrogen). Also read 
+in totvegc for C13, and C14. These are then passed down into soilbiogechemistry nitrogenstate and carbonstate
+restart to determine if the decomposition pools should be reset. The resetting is only done over non-crop
+vegetation (ignoring both prognostic and generic crop types) and is only done on the exit_spinup phase
+going out of accellerated decomposition mode.
+
+Fix a couple small issues that in principle could change answers, but we didn't see answer changes in testing.
+There was an error in how rootfr was initialized if it wasn't on the restart file. Made sure the crop patch
+level restart variables are read after the enter_spinup code.
+
+Bugs fixed or introduced
+------------------------
+  2406 -- Crop patch-level restart variables read after enter_spinup code
+  2426 -- Error in rootfr for SoilStateType restart
+  2447 -- dayl_factor not just exactly zero, but small
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs introduced in this tag (include bugzilla ID): Following found
+  2534 -- rootfr_road_perv calculation now incorrect for CLM50
+  2533 -- c13/c14 isotope time-series is awkward for 1850 control (convert to streams file)
+  2531 -- FATES doesn't call SoilBiogeochemCompetitionInit
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+  SetNCrit in SoilBiogeochemNitrogenStateType.F90, should be SetCCrit, because totvegc is
+  used rather than totvegn. 
+  SoilBiogeochemPrecisionControlInit was added as a new method that could be extended to
+  set ncrit and ccrit from namelist, or to set them from the settings for CNPrecisionControl
+  that are read in by namelist
+
+Changes to tests or testing: None
+
+Code reviewed by: self,dlawren
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular (without testing on cheyenne when tag was made)
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- Ran on yellowstone OK
+    cheyenne_gnu ------ Ran on yellowstone OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_17_r263
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for spinup!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only during spinup (at exit_spinup stage)
+    - what platforms/compilers: All
+    - nature of change: minor for spinup
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+   M   components/clm/src/biogeochem/CNVegCarbonStateType.F90 --- Add totvegc_col (and cor c13/c14) to restart
+   M   components/clm/src/biogeochem/CNVegetationFacade.F90 ----- Add get_totvegc_col to get the column level totvegc
+   M   components/clm/src/main/clm_initializeMod.F90 ------------ Remove use of CNDriverInit, not needed
+   M   components/clm/src/main/clm_instMod.F90 ------------------ Add call to SoilBiogeochemCompetitionInit
+           do vegetation restart before soil bgc restart, pass totvegc down to soilbiogeochem_carbonstate restart (and nitrogenstate)
+   M   components/clm/src/biogeophys/PhotosynthesisMod.F90 ------ Fix bug 2447 checking for small dayl_factor and not just exactly zero
+   M   components/clm/src/biogeophys/SoilStateType.F90 ---------- Fix bug 2446 initialize rootfr only if rootfr not read in
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90 ---- Add SetNCrit to set new module variable ncrit
+           pass totvegc_col into restart, if it is lower than ncrit (and not crop) reset decomposition pools to zero
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemPrecisionControlMod.F90 -- Add SoilBiogeochemPrecisionControlInit, to set
+           ncrit and ccrit now module variables and pass them down to carbonstate and nitrogenstate
+   M   components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90 ------ Add SetCCrit to set new module variable ccrit
+           pass totvegc_col into restart, if it is lower than ccrit (and not crop) reset decomposition pools to zero
+           save restart_file_spinup_state and read it in with C12
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_17_r263
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Nov  8 15:36:41 MST 2017
+One-line Summary: Drydep vel. for SO2 doubled, influence of organic mater in soil calmed, max daylength not hardwired to present day
+
+Purpose of changes
+------------------
+
+Keep the hydraulic conductivity for organic soil higher than it is for mineral soil. This was found to be an issue and fixed by 
+Sean Swenson, Dave Lawrence, and Keith Oleson. Double dry deposition velocity for SO2 (Jean-Francois Lamaruque) for both clm4_5
+and clm5_0.  Fix bug for value of NACTIVE at first time-step. Partial fix so that max daylengh isn't hardwired to present day at least
+at initialization (see caveat below). Move the sample files for the mkprocdata_map tool (for mapping between unstructured grids
+and regular lat lon grids) out of CLM and into $CSMDATA. Update the c13/c14 timeseries files to the 2.0 version as per Keith Lindsay.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+ 2530 -- organic soil influence varies wildly
+ 2304 -- NACTIVE at first time step
+ 1843 -- Max daylength now uses orbital parameters at initialization rather than hardwired to present day (partial)
+
+Known bugs introduced in this tag:
+ 2529 -- SSP case that runs on cheyenne fails on hobart
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): c13/c14 time-series files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Max daylength will still be wrong in cases where variable_years is used, where the orbit
+  changes after initializaiton. It'll start out correct and begin to diverge each year.
+  Since, this feature is untested it's not worth going through the additional changes to
+  correct it during the run.
+
+  At the time the tag was made, cheyenne was down, so there are six tests that weren't confirmed to pass:
+     ERS_D_Ld3.f19_f19_mg16.IHistClm40SpCruGs.cheyenne_intel.clm-40default
+     ERS_Ly5_P60x1.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput
+     SMS_D_Ld5.f10_f10_musgs.I2000Clm50Fates.cheyenne_intel.clm-fates
+     SMS_D_Ly2.1x1_numaIA.IHistClm50BgcCropGs.cheyenne_intel.clm-ciso_bombspike1963
+     SMS_Ld1.f19_f19_mg16.IHistClm40SpCruGs.cheyenne_intel.clm-40default
+     SMS_Ld1.f19_g17.I2000Clm50Vic.cheyenne_intel.clm-default
+
+Changes to tests or testing: tools testing modified to point to files in CSMDATA
+
+Code reviewed by: self,lamar,oleson,sacks,dlawren
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r262
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5 and clm5_0
+    - what platforms/compilers: all
+    - nature of change: changes answers with bug fixes in a significant way
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: oleson/csm/clm50_r243_1deg_GSWP3V2_cropopt_nsc_hksat_hist
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+        Remove sample files, move to CSMDATA, remove sample namelist
+   D components/clm/tools/mkprocdata_map/clm4054_f19g16_I2000.clm2.h0.2000-01_c170430.nc
+   D components/clm/tools/mkprocdata_map/map_ne30np4_nomask_to_fv1.9x2.5_nomask_aave_da_c121107.nc
+   D components/clm/tools/mkprocdata_map/clm4054_ne30g16_I2000.clm2.h0.2000-01_c170430.nc
+   D components/clm/tools/mkprocdata_map/mkprocdata_map_in
+
+List all files added and what they do:
+
+   A components/clm/tools/mkprocdata_map/README.filedescriptions -- Describe the files in this directory
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/test/tools/nl_files/mkprocdata_ne30_to_f19_I2000 - Point to files in CSMDATA rather than mkprocdata_map dir.
+
+   M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- Point to new v2.0 of the c13/c14 timeseries files
+
+   M components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90 -- Fix bug 2530 for organic mater influence in soil
+   M components/clm/src/biogeochem/DryDepVelocity.F90 ------------- Double SO2 dry deposition rate
+   M components/clm/src/biogeochem/CNFUNMod.F90 ------------------- Bug, 2304 for NACTIVE on history for first time-step
+   M components/clm/src/biogeochem/ch4Mod.F90 --------------------- Bug, 2528, floating overflow for methane (doesn't change answers)
+   M components/clm/src/main/clm_initializeMod.F90 ---------------- Bug, 1843, max daylength no longer hardwired to present day at initialization
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r262
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Oct 27 10:17:54 MDT 2017
+One-line Summary: Rename atm2lnd history fields for downscaled fields, properly turn on vic for clm45, and other minor fixes
+
+Purpose of changes
+------------------
+
+(1) Rename atm2lnd history fields for downscaled fields. The downscaled
+    version is now the default. Non-downscaled history fields are now
+    noted explicitly with a "_FROM_ATM" suffix. A detailed list of
+    changes is given below.
+
+(2) Properly turn on VIC for CLM45 compsets (fixes bug 2465)
+
+(3) Use correct PE layouts for CISM1
+
+(4) Remove CWDC_HR diagnostic field, which was always 0 (fixes bug 2502)
+
+(5) Turn on U10_DUST diagnostic field by default (fixes bug 2246)
+
+(6) Fix documentation of some variables
+
+Detailed list of changes related to (1):
+
+  Rain and snow:
+
+    Old:
+    - RAIN: "atmospheric rain" - NOT downscaled
+    - Rainf: "atmospheric rain" - NOT downscaled
+    - SNOW: "atmospheric snow" - NOT downscaled
+    - RAIN_REPARTITIONED: "atmospheric rain, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - SNOW_REPARTITIONED: "atmospheric snow, after rain/snow repartitioning based on temperature" - DOWNSCALED
+
+    New:
+    - RAIN: "atmospheric rain, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - Rainf: "atmospheric rain, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - SNOW: "atmospheric snow, after rain/snow repartitioning based on temperature" - DOWNSCALED
+    - RAIN_FROM_ATM: "atmospheric rain received from atmosphere (pre-repartitioning)" - NOT downscaled
+    - SNOW_FROM_ATM: "atmospheric snow received from atmosphere (pre-repartitioning)" - NOT downscaled
+
+  Air temperature:
+
+    Old:
+    - TBOT: "atmospheric air temperature" - NOT downscaled
+    - Tair: "atmospheric air temperature" - NOT downscaled
+    - Tair_downscaled: "atmospheric air temperature downscaled to columns" - DOWNSCALED
+
+    New:
+    - TBOT: "atmospheric air temperature (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Tair: "atmospheric air temperature (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Tair_from_atm: "atmospheric air temperature received from atmosphere (pre-downscaling)" - NOT downscaled
+
+  Atmospheric pressure:
+
+    Old:
+    - PBOT: "atmospheric pressure" - NOT downscaled
+    - Psurf: "surface pressure" - NOT downscaled
+
+    New:
+    - PBOT: "atmospheric pressure at surface (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Psurf: "atmospheric pressure at surface (downscaled to columns in glacier regions)" - DOWNSCALED
+
+  Atmospheric longwave radiation:
+
+    Old:
+    - FLDS: "atmospheric longwave radiation" - NOT downscaled
+    - LWdown: "atmospheric longwave radiation" - NOT downscaled
+
+    New:
+    - FLDS: "atmospheric longwave radiation (downscaled to columns in glacier regions)" - DOWNSCALED
+    - LWdown: "atmospheric longwave radiation (downscaled to columns in glacier regions)" - DOWNSCALED
+
+  Potential temperature:
+
+    Old:
+    - THBOT: "atmospheric air potential temperature" - NOT downscaled
+
+    New
+    - THBOT: "atmospheric air potential temperature (downscaled to columns in glacier regions)" - DOWNSCALED
+
+  Specific humidity:
+
+    Old:
+    - QBOT: "atmospheric specific humidity" - NOT downscaled
+    - Qair: "atmospheric specific humidity" - NOT downscaled
+
+    New:
+    - QBOT: "atmospheric specific humidity (downscaled to columns in glacier regions)" - DOWNSCALED
+    - Qair: "atmospheric specific humidity (downscaled to columns in glacier regions)" - DOWNSCALED
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2192: wrong units in comment for variables qflx_ev_snow, qflx_ev_soil,
+  qflx_ev_h2osfc
+- 2246: Turn on U10_DUST history field variable by default
+- 2363: inline documentation is wrong in SoilTemperatureMod.F90
+- 2401: Need to put in an "override" for PE layouts for CISM1
+- 2465: ICLM45VIC compset doesn't actually turn VIC on
+- 2502: CWDC_HR is identically zero
+- 2503: Wrong units for FAREA_BURNED
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Changed meaning of some atm2lnd history fields: see above
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self; Sean Swenson did a conceptual review of the
+changes in atm2lnd diagnostic fields
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, answers change for some atm2lnd diagnostic
+    fields as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_16_r261
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      - For most configurations: Changes diagnostic fields only (see
+        below for list)
+      - Changes CLM45 compsets with VIC: actually turns on VIC (there
+        are no CLM45 tests with VIC in the test suite)
+
+      Changes the following fields: FLDS, PBOT, QBOT, RAIN, SNOW, TBOT,
+      THBOT: These now give downscaled versions of these fields.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Rename atm2lnd history fields for downscaled fields
+M       components/clm/src/main/atm2lndType.F90
+
+========= Properly turn on VIC for CLM45 compsets
+M       components/clm/cime_config/config_component.xml
+
+========= Use correct PE layouts for cism1
+M       components/clm/cime_config/config_pes.xml
+
+========= Remove CWDC_HR diagnostic field
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+
+========= Turn on U10_DUST by default
+M       components/clm/src/biogeophys/FrictionVelocityMod.F90
+
+========= Fix various documentation
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/src/biogeophys/BareGroundFluxesMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/biogeophys/SoilFluxesMod.F90
+M       components/clm/src/biogeophys/CanopyFluxesMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeochem/CNVegStateType.F90
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r261
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Oct 25 07:37:24 MDT 2017
+One-line Summary: Add option to reset snow over glacier columns
+
+Purpose of changes
+------------------
+
+We have had an option to reset snow over non-glacier columns, using the
+reset_snow namelist variable. This is useful when transitioning from a
+spinup with one set of atmospheric forcings to a run with substantially
+different atmospheric forcings. We originally did not provide an option
+to reset snow over glacier columns, because we couldn't find a
+satisfactory way to determine which glacier columns should and should
+not be reset. However, members of the LIWG have found that it's hard to
+analyze some test runs without this option.
+
+This tag, therefore, provides an option to reset snow over glacier
+columns, using a new namelist flag reset_snow_glc. You can optionally
+provide an elevation threshold for this resetting: By setting
+reset_snow_glc_ela to some elevation (in meters), only glacier columns
+below this elevation get their snow packs reset. Note that you run the
+risk of baking in answers with this (how much of the resulting spatial
+patterns are due to your choice of where to reset snow?), but this can
+still be useful in some cases. In general, this is meant for testing,
+and not for "real" scientific production runs.
+
+Original changes were from Leo van Kampenhout, with some refactoring by
+Bill Sacks.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID):
+- 2525: test_build_namelist.pl fails in clm4_5_16_r260
+  (this bug existed prior to this tag, but was first discovered here)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variables:
+  - reset_snow_glc: logical; if set to .true., resets the snow pack over
+    glacier columns
+  - reset_snow_glc_ela: elevation threshold for resetting snow pack over
+    glacier columns
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- reseedresetsnow testmod turns on snow resetting over glacier points,
+  and so changes answers. It uses the reset_snow_glc_ela threshold that
+  Leo has been using.
+
+Code reviewed by: self, Leo van Kampenhout
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok (run on yellowstone)
+    Tests in build-namelist_test.pl pass but change answers as expected
+    due to new namelist options.
+
+    NOTE: prove test_build_namelist.pl fails (see bug 2525)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok 
+    yellowstone_pgi --- ok
+    yellowstone_gnu --- ok
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, NLCOMP failures as expected. Also, expected
+    baseline failure:
+    ERS_D.f19_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-reseedresetsnow
+
+    However, there were also baseline failures in these tests, due to
+    problems with r260:
+
+    (1)
+
+    SMS_Ld5.f19_g17.IHistClm50Bgc.cheyenne_intel.clm-decStart
+    SMS_Ld5.f19_g17.IHistClm50Bgc.yellowstone_pgi.clm-decStart
+    SMS_Ld5.f19_g17.IHistClm50Bgc.yellowstone_intel.clm-decStart
+
+    These are due to problems with the baseline, in terms of which cism
+    history files are present. Baseline comparisons failed in the same
+    way when using out-of-the-box r260. The current code seems correct
+    in this respect, so this is just a problem with the baseline
+    directories.
+
+    (2)
+
+    SMS_D_Ly2.1x1_brazil.IHistClm50BgcQianGs.cheyenne_intel.clm-ciso_bombspike1963
+
+    Differences in C14 history fields. Baseline comparisons failed in
+    the same way when using out-of-the-box r260. I can't tell if the
+    baselines are correct or the trunk code is correct. I have asked
+    Erik to look into this.
+
+CLM tag used for the baseline comparisons: clm4_5_16_r260
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only tests with reseedresetsnow testmod
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      new climate for tests with this testmod
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+========= Unit tests of new changes
+M       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_SnowCappingExcess.pf
+
+========= Pass down new arguments
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+
+========= New namelist variables
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+
+========= Changes to reseedresetsnow testmod to turn on the new option
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/reseedresetsnow/user_nl_clm
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r260
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Oct 24 15:59:41 MDT 2017
+One-line Summary: Update paramater file for CLM50 as well as fates, fix a few issues
+
+Purpose of changes
+------------------
+
+Update the parameter file for CLM5.0, changing: ekc_active,ekn_active,kn_nonmyc,psi50, and stem_leaf. Dave Lawrence,
+Keith Oleson, Will Wieder, and Rosie Fischer were involved in changing these parameters to increase survivability of 
+BDT Tropical and NDT Boreal and to slightly decrease the over-productivity of BDS boreal.
+
+The version of FATES used was updated to one with the same API, but updated science (science_1.3.0 api_1.0.0).
+
+There were a couple issues fixed as well. PTCLM was updated to fix a few issues and also allow us to test running
+with an updated PTCLM user-mods-directory. So the US-UMB testing was updated to point to a freshly created directory.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2524 -- Run with decStart tests
+   2523 -- Run with cnonly
+   2522 -- PTCLMmkdata doesn't handle crop on or off well in latest CLM45/CLM50
+   2521 -- Add warning for when PTCLMmkdata sets MPILIB to mpi-serial by default
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
+    -crop option becomes a toggle for CLM_BLDNML_OPTS (so -no-crop is valid as well)
+    Same setup for mksurfdata.pl was introduced as well (and for PTCLMmkdata)
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New parameter file for CLM5.0
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: USUMB tests updated, tests for PTCLM updated
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (118 compare tests fail)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK (one expected fail)
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r259
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for CLM50 and/or with fates
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all configurations with CLM50 or CLM45 with Fates
+    - what platforms/compilers: All
+    - nature of change: Improvements in survivability of certain trees
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): PTCLM
+
+    PTCLM to PTCLM2_171024b
+
+List all files eliminated: None
+
+List all files added and what they do: Missing file from previous tag
+
+   A    components/clm/cime_config/testdefs/testmods_dirs/clm/decStart/user_nl_cism
+
+List all existing files that have been modified, and describe the changes:
+
+   M    components/clm/test/tools/TSMscript_tools.sh --------------------- Update PTCLM version of mapping data being pointed to
+   M    components/clm/test/tools/nl_files/mksrfdt_10x15_1850 ------------ Change -no_crop option to -no-crop
+   M    components/clm/test/tools/nl_files/mksrfdt_1x1_vancouverCAN_2000 - Change -no_crop option to -no-crop
+   M    components/clm/tools/mksurfdata_map/mksurfdata.pl ---------------- Change -no_crop option to -no-crop toggle
+   M    components/clm/bld/CLMBuildNamelist.pm --------------------------- Change -crop option to a toggle (so -no-crop is valid)
+             Fix bug 2523 by setting bgc_spinup
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Update parameter file for CLM50
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/user_nl_clm ---- Point to c171024 version of PTCLM data
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/shell_commands - Point to c171024 version of PTCLM data
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r259
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Oct 17 10:39:36 MDT 2017
+One-line Summary: Update to latest cime from cesm2_0_beta07 and config_components version 3
+
+Purpose of changes
+------------------
+
+Update CLM to use version 3 for config_components.xml which has additional error checking of compset names. Also
+update it for mosart, cism and rtm. And cime is updated to the version used in cesm2_0_beta07. There are a few
+new features brought in with the latest cime that are described below. CLM now requires one and only one modifier 
+for what type it is in the compset name (i.e. only one "%" as in CLM45%BGC or CLM50%SP). Will now abort when
+CLM build-namelist encounters a warning (after printing information on all warnings). To ignore the warnings
+and continue add the new "-ignore_warnings" to CLM_BLDNML_OPTS. "-irrig" is now an option to CLM_BLDNML_OPTS
+only for clm4_0, set "irrigate" namelist item in your user_nl_clm file for clm4_5 or clm5_0. By default build-namelist
+sets irrigate to true for transient or present-day configurations if crop is on and clm5_0 (unless DV on). Get PTCLMmkdata fully
+converted over to cheyenne, and create a new set of files for testing it's ability to create cases. Checking for
+.true. or .false. in CLM build-namelist is now more robust and allows for "F" or "T" as newer FORTRAN versions do.
+
+
+Fix several bugs as described below. PTCLM and CLM tools were both verified to work and pass testing.
+The PE layout for f10 on hobart was changed to a single-node so that it would compare exactly to previous versions.
+Fix a bug for NCK tests in RTM and MOSART. Get mksurfdata_map working correctly for f05. Error message when
+you set finidat=' ' is more clear on what to do. You can also now do a cold-start for a hybrid case prints a warning),
+but not allowed on a branch case.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+  2519 -- Trouble setting use_aereoxid_prog=.false./
+  2515 -- Setting finidat=' ' gives cryptic error message
+  2510 -- Mapping files from the 1km grid can only be created on geyser
+  2509 -- Bad mapping files for f05 resolution
+  2504 -- hybrid/branch cases don't allow CLM_FORCE_COLDSTART to be on
+  2494 -- MOSART test NLCOMP fails due to duplicate mosart_inparam in user_nl_mosart
+  2477 -- Multiinstance mosart with REFCASE does not initialize
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   This includes an update to cime, so some behavior is a little different than before (see section below)
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+    CLM now allows one and only one modifier for the type of configuration in the compset name 
+    (i.e. CLM50%BGC or CLM45%SP (only one "%" modifier is allowed) ). "-irrig" is now only allowed as an option
+    to CLM_BLDNML_OPTS for clm4_0, for clm4_5/clm5_0 the handling of irrigate is handled inside CLM build-namelist.
+    Remove some no longer needed forcing definitions for compsets (the year range at the beginning of the compset name).
+    Now abort on build-namelist warnings (but adding "-ignore_warnings" option to CLM_BLDNML_OPTS allow it to run without it).
+    Remove compset forcings that aren't being used: 5505, C2R6, C2R8, C2R4, C1, GEOS (start of long compset names)
+
+Changes to CIME user interface:
+- Eleminate --user-compset. Clean up caseroot directory upon failed creation. 
+- Check coupler fields for nan.
+- New xml variable, readmode, 
+- xmlquery --group has been changed go xmlquery --get-group
+- New case.qstatus tool.
+- Autodeletion of broken case dirs.
+- Add --mail-user and --mail-type to case.submit.
+- Remove --user-compset from create_newcase, allow compset longname in testname argument to create_test.
+- New argument to create_clone (--user-mods-dir to also point to user-mods directory that will be used)
+
+Changes made to namelist defaults (e.g., changed parameter values):
+    Correct SCRIP grid file for f05 and add mapping files for them
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing:
+  clm-decStarts cism history is a bit different (shown as changing answers)
+  Allow longname in tests
+- Add --pesfile option to create_test.
+- New --timeout flag for wait_for_tests
+- CLM now needs to define its own LII and SSP tests (they already were put in place, now it's actually using them)
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+          (216 compare tests fail comparing to clm4_5_16_r258 tag)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r258
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (bit for bit)
+
+    clm/decStart tests were changed though
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime, cism, rtm, mosart
+   cime   to cime5.4.0-alpha.03
+   cism   to cism2_1_40
+   rtm    to rtm1_0_63
+   mosart to mosart1_0_28
+
+List all files eliminated: Remove -irrig option for clm4_5/clm5_0 tests
+
+  D   components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_spunup/shell_commands
+  D   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/shell_commands
+  D   components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/shell_commands
+
+List all files added and what they do: 
+
+  A   components/clm/bld/namelist_files/LogMessages.pm - Log message, warning, exit and abort handling for perl
+
+List all existing files that have been modified, and describe the changes:
+
+          Update to new PTCLM directory for testing PTCLM cases
+  M   components/clm/test/tools/nl_files/PTCLM_USUMB_Cycle_clm4_5 -- Change map_gdate
+  M   components/clm/test/tools/nl_files/PTCLM_USUMB_Global_clm4_5 - Change map_gdate
+  M   components/clm/test/tools/nl_files/PTCLM_USUMB_clm4_5 --------- Change map_gdate
+  M   components/clm/test/tools/TSMscript_tools.sh -- Change user_mods directory used for PTCLM case
+
+  M   components/clm/tools/mkmapdata/regridbatch.sh -- Get working on cheyenne
+
+  M   components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Working f05 SCRIP grid file
+  M   components/clm/bld/namelist_files/namelist_definition_clm4_5.xml ----- Remove irrig
+  M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ------- Change irrig to irrigate
+           add mapping files for f05
+
+         Set irrigate for use-cases, .true. for use_crop=T, use_cndv=F and not 1850
+  M   components/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/stdurbpt_pd.xml
+  M   components/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/20thC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/glacierMEC_pd.xml
+  M   components/clm/bld/namelist_files/use_cases/2000_control.xml
+  M   components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+  M   components/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+
+  M   components/clm/bld/CLMBuildNamelist.pm -- moving warnings, logging, exit, and fatal_error to LogMessages
+        Add -ignore_warnings, -irrig is now only for clm4_0, pass $opts to add_default, not just {test},
+        use value_is_true for all logical evalutions (extend it to all T or F), warnings will all be
+        written out, and abort at the end (unless -ignore_warnings is used)
+        don't die if clm_usr_name is set and didn't find user datasets, add final_exit on completion
+  M   components/clm/bld/unit_testers/build-namelist_test.pl - Add tests for -ignore_warnings option
+        handle -irrig for clm4_5
+
+  M   components/clm/cime_config/config_compsets.xml -- Add I2000Clm50BgcCruGs compset
+  M   components/clm/cime_config/config_pes.xml ------- Set PE count for f10 on hobart to single node
+  M   components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_spunup/user_nl_clm --------------- turn irrigate on
+  M   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/user_nl_clm - turn irrigate on
+  M   components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/user_nl_clm ------- turn irrigate on
+  M   components/clm/cime_config/testdefs/testlist_clm.xml - 1x1_camdenNJ test with stub-GLC: I2000Clm50BgcCruGs
+  M   components/clm/cime_config/config_component.xml --- Update to config_component version 3. CLM must have 1 and exactly
+         one modifier, move setting of -irrig for 2000 and transient compsets to inside of CLM build-namelist
+         remove some no longer needed forcing definitions for compsets
+  M   components/clm/cime_config/buildnml - Print warning if branch and coldstart, allow colstart with hybrid
+         Add warning if doing a coldstart
+
+  M   components/clm/src/CMakeLists.txt - Add additional subdirectory for unit testing (from Bill Sacks)
+
+  M   components/clm/src/main/controlMod.F90 - Allow use_crop=F and irrigate
+
+  M   parse_cime.cs.status - Seperate out differences when baselines don't exist
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r258
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Oct  6 22:25:29 MDT 2017
+One-line Summary: Revert change to fire, set n_melt_glcmec=10, update mosart to version that doesn't accumulate water in short rivers
+
+Purpose of changes
+------------------
+
+Revert the changes to fire that came in clm4_5_16_r257. Add some notes that clarify that the code as is, is correct.
+Set n_melt_glcmec=10.0 for clm5.0 (This should have happened in the fresh snow grain size change in clm4_5_16_r256).
+Update mosart to a version that doesn't accumulate water in short rivers. This is done by explicitly making sure river length
+isn't smaller than a minimum value.
+
+Bugs fixed or introduced
+------------------------
+
+   2516 -- Mistaken bug for fire mortality calculations for some 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+     Changed n_melt_glcmec to 10.0d00 for clm5_0 (same as clm4_5, but double precision)
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): Some of the
+   fire mortality code is confusing, we added some notes to clarify that's it's correct
+
+Changes to tests or testing: None
+
+Code reviewed by: self, dlawren, oleson, swenson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (231 compare tests fail)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r257
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 and/or with mosart
+    - what platforms/compilers: all
+    - nature of change: small
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): mosart
+    mosart to rlen_min_n01_mosart1_0_26 (will bring trunk version of mosart in an upcoming tag)
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - set
+M       components/clm/src/biogeochem/CNFireBaseMod.F90 --- Revert fire changes (bug 2516) add comments 
+              use fm_droot as it's used to represent fraction of transport from livestem/livecroot to litter
+              or to represent the fraction of plant-tissue mortality for deadstem/deadcroot
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90 - Revert fire changes
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r257
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Sep 29 10:17:36 MDT 2017
+One-line Summary: Fix two bugs found by Hui Tang, one for Carbon isotopes and one in the fire model
+
+Purpose of changes
+------------------
+
+This is a fix for two bugs found by Hui Tang. One is for Carbon isotopes where a fix that came in for
+clm4_5_11_r188, used leafc for too many of the isotope flux calculation calls. This changes it so the
+correct terms are used for the particular flux.
+
+The other fix is in the fire model where fire emissions were using the wrong fire related
+mortality term for dead stem and should have been using a different type. Now it matches the
+flux type, as well as the term used in combustion completness for the particular fire emission.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+  2517 -- Bug in CNFireFluxes for some fire fluxes
+  2516 -- Leafc wrongly used in too many CIsoFluxCalc calls.
+
+Known bugs introduced in this tag (include bugzilla ID):  (new one found)
+  2518 -- --- warnings from CLM build-namelist don't get sent out of preview_namelist
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,oleson,dlawren,Hui Tang
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r256
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 with CN and fire on, and also for carbon isotopes
+    - what platforms/compilers: all
+    - nature of change: very small impact
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: /oleson/clm50_r255_fireiso_1deg_GSWP3V1_1850
+
+   URL for LMWG diagnostics output used to validate new climate:
+http://webext.cgd.ucar.edu/I1850/clm50_r255_fireiso_1deg_GSWP3V1_1850/lnd/clm50_r255_fireiso_1deg_GSWP3V1_1850_21_50-clm50_r255_coniso_1deg_GSWP3V1_1850_21_50/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/src/biogeochem/CNFireBaseMod.F90 --- Some fire emissions were using 
+        fire related mortality for dead stem and should have been using a different type
+        it should match the one used in the combustion completeness factor and the main
+        type
+   M  components/clm/src/biogeochem/CNFireLi2014Mod.F90 - Same change as above
+
+   M  components/clm/src/biogeochem/CNCIsoFluxMod.F90 -- In the fix for bug 2116 that came
+        in with clm4_5_11_r188, leafc was used in too many CNCIsoFluxCalc calls this corrects
+        it to use the correct term
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r256
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Sep 20 15:42:17 MDT 2017
+One-line Summary: Fresh snow grain radius is temperature dependent
+
+Purpose of changes
+------------------
+
+Changes from Leo VanKampenhout to have fresh snow grain size a function of air temperature for CLM50.
+Behavior is the same as before for CLM45 with fresh snow grain size a fixed parameter.  For CLM50
+it's that same value (54.526) less than -30C and linear with T up to 204.526 at 0C, and 204.526 for 
+temperatures greater than 0C.
+
+
+Bugs fixed or introduced
+------------------------
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   Added namelist item: fresh_snw_rds_max
+
+Changes made to namelist defaults (e.g., changed parameter values):
+    fresh_snw_rds_max is snw_rds_min for clm4_5
+    fresh_snw_rds_max is 204.526     for clm5_0
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes:  None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,L.vanKampenhout@uu.nl
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (343 compare tests fail since namelists change)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi -   OK
+    yellowstone_gnu -   OK
+    cheyenne_intel -    OK
+    cheyenne_gnu -      OK
+    hobart_nag -        OK
+    hobart_pgi -        PASS
+    hobart_intel -      PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r255
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, for clm5_0
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_0
+    - what platforms/compilers: All
+    - nature of change: more snow melt at expense of ice melt
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: oleson clm50_r251_SNOWGRAIN_2000
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://webext.cgd.ucar.edu/B1850/b.e20.B1850.f09_g17.pi_control.all.196/lnd/b.e20.B1850.f09_g17.pi_control.all.196.8_27-b.e20.B1850.f09_g17.pi_control.all.195.8_27/set1/set1.html
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/src/biogeophys/SnowSnicarMod.F90 -- Pass atm2lnd_inst in, make sure snw_rds isn't less than the min parameter
+        create a function for setting FreshSnowRadius, dependent on atm2lnd_inst (for air temperature), the function sets to min
+        parameter if fresh_snw_rds_max is same as min (clm45), or to min at less than -30C linear between fresh_snw_rds_max and min parameter
+        up to 0C, and then at fresh_snw_rds_max value for clm50.
+   M  components/clm/src/biogeophys/AerosolMod.F90 ----- Add InitReadNML and fresh_snw_rds_max
+   M  components/clm/src/main/clm_driver.F90 ----------- Pass atm2lnd_inst down to SnowAgeGrain
+   M  components/clm/src/main/clm_instMod.F90 ---------- Pass NLFilename to aerosol_inst%Init
+
+   M  components/clm/bld/CLMBuildNamelist.pm - Set fresh_snw_rds_max, and add aerosol namelist
+
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Set fresh_snw_rds_max for clm45 and clm50
+   M  components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Define fresh_snw_rds_max
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r255
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Sep 18 21:21:29 MDT 2017
+One-line Summary: Changes to crop and enabling Carbon isotopes for crop and some miscellaneous small changes
+
+Purpose of changes
+------------------
+
+Changes for crop on as well as enabling carbon isotopes when crop is on. Fix some small answer changing issues. 
+Also bring in new timeseries datasets for C14 as well as now C13. The C14 dataset has hardwired latitude sectors 
+it uses (so previous file can NOT be used). Properly handle and update C13/C14 variables when crop is on.
+Handle CIsoFluxCalc calls for a list of crop specific fields. Add cropseedc_deficit, to storvegc as well as totveg.
+Send livestemc to litter for prognostic crop. Ignore downreg for carbon isotopes in Fractionation subroutine.
+For dynamic roots, use rooting values on parameter dataset which is set to values from PFT=1.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+  2508 -- Incorrect landuse.timeseries datasets for f09 and hcru for rcp=8.5 in r254
+  2489 -- Set c/nnegcrit for clm45/clm50 (10X higher for clm45 than clm50)
+  2412 -- Initialize rootfr to PFT==1 value for dynamic roots -- update params files
+  2396 -- make subtraction the default behavior for clm4_5.
+  2316 -- update carbon isotopes same as C12: CNVegCarbonStateType.F90
+  2211 -- Fix time used for Ciso time series
+
+Known bugs introduced in this tag (include bugzilla ID):
+  2511 -- Overflow with Carbon isotopes
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   Change to restarts when c-isotopes on
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist items: use_c13_timeseries, atm_c13_filename
+   New history vars:   C13_GRAINC, C13_CROPSEEDC_DEFICIT, C14_GRAINC, C14_CROPSEEDC_DEFICIT
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Set cnegcrit/nnegcrit for CLM45/CLM50
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New C13 and C14 timeseries files
+   New params files, but only answer changing part is for dynamic roots 
+       (setup bare-soil on file to match what's used for PFT=1)
+   Bring in correct datasets for rcp8.5 for f09 and hcru
+   1x1_numaIA 1850 and 1850-2000 transient files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The C13/C14 timeseries should be implemented with streams for greater flexibility, robustness, and code
+   reuse. The new C14 timeseries file is hardcoded for three specific latitude sectors, and thus can't use
+   the previous file, nor a file of a different configuration. Downreg is passed down from get_downreg_patch 
+   in clm_driver, to CanopyFluxes to Fractionation, but no longer used (it should be removed).
+  
+   Note the following from Dave: While debugging crop isotope code, found that cpool_patch and frootc_patch 
+     could occasionally be very small but nonzero numbers after crop harvest, which persists 
+     through to next planting and for reasons that could not 100% isolate, caused C12/C13 ratios to occasionally 
+     go out of bounds. Zeroing out these small pools and putting them into the flux to the atmosphere solved many 
+     of the crop isotope problems
+
+Changes to tests or testing: Added some tests, two of the new tests fail due to bug 2511
+
+Code reviewed by: self, koven, dlawren, dll, oleson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (234 comparison tests fail)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi -   OK
+    yellowstone_gnu -   OK
+    cheyenne_intel -    OK
+    cheyenne_gnu -      OK
+    hobart_nag -        OK
+    hobart_pgi -        OK
+    hobart_intel -      OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r254
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Crop, Carbon-isotopes
+
+    - what platforms/compilers: All
+    - nature of change:  
+        small change to crop with missing updates, crop with carbon-isotopes are now enabled
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated:
+
+D       components/clm/src/biogeochem/C14BompbSpikeMod.F90 --- Change name to more general
+
+List all files added and what they do:
+
+A       components/clm/src/biogeochem/CNCIsoAtmTimeSeriesReadMod.F90 -- Handle time series
+             for both C13 and C14
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeochem/CNPhenologyMod.F90 -------- Remove subtract_cropseed always do when crop on, pass c13/c14
+           instances down to CNPhenology and CropPhenology. After setting C12-leafc_xfer/totvegc set the c13/c14 
+           leafc_xfer/totvegc as well
+M       components/clm/src/biogeochem/CNCStateUpdate1Mod.F90 ---- Change location of xsmrpool update. Dave added this note:
+             While debugging crop isotope code, found that cpool_patch and frootc_patch 
+             could occasionally be very small but nonzero numbers after crop harvest, which persists 
+             through to next planting and for reasons that could not 100%
+             isolate, caused C12/C13 ratios to occasionally go out of
+             bounds. Zeroing out these small pools and putting them into the flux to the
+             atmosphere solved many of the crop isotope problems
+M       components/clm/src/biogeochem/CNCIsoFluxMod.F90 --------- Add CIsoFluxCalc calls for: soilc_change, cpool_to_resp, 
+           grainc_xfer_to_|grainc|food|seed, crop_seedc_to_leaf, grain_|curmr|xsmr, cpool_|grain|grain_storage|_gr, cpool_to_|grainc|grainc_storage,
+           transfer_grain_gr, grainc_storage_to_xfer, livestemc_to_litter, and if use_grainproduct for ciso-grainc_to_cropprodc/grain_mr
+           pass iso totvegc_path for hrv_xsmrpool_to_atm CIsoFluxCalc, section adding livestemc to litter for crop
+           add additional check for ciso_state(i) /= 0 for divide by check in CIsoFluxCalc
+M       components/clm/src/biogeochem/CNPrecisionControlMod.F90 - Handle c13/c14 TruncateCandNStates for grainc/storage/xfer,
+           cropseedc_deficit_patch and xsmrpool
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90 -- Add: C13_GRAINC, C13_CROPSEEDC_DEFICIT, C14_GRAINC, C14_CROPSEEDC_DEFICIT
+           restartvar calls explicit for c12, c13, c14: grainc, grainc_storage, grainc_xfer (with c13 and c14 for ciso)
+           add cropseedc_deficit, to storvegc as well as totvegc, fix bug 2316 make cisotopes the same as C12
+M       components/clm/src/biogeochem/CNDriverMod.F90 ----------- Pass more c13/c14 instances down to CNPhenology calls
+M       components/clm/src/main/controlMod.F90 ------------------ Add namelist items: use_c13_timeseries, atm_c13_filename
+            remove abort when crop and use_c13/use_c14 is on
+M       components/clm/src/main/clm_initializeMod.F90 ----------- Add call to C13_init_TimeSeries
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90 ----- Handle C13 timeseries (call C13TimeSeries), put C14 bombspike data in 
+            hard-wired latitude sectors, ignore downreg for carbon isotopes in Fractionation subroutine
+M       components/clm/src/biogeophys/RootBiophysMod.F90 -------- Use parameters for roots from params file for bare-soil rather than
+            an explicit if statement for it
+
+M       components/clm/bld/CLMBuildNamelist.pm ------------------- Add cnegcrit/nnegcrit, allow crop and C-isotopes to be
+            on at the same time, add c13 time-series
+M       components/clm/bld/unit_testers/build-namelist_test.pl --- Change testing for time-series
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ----- New datasets for atm_c14_filename, and 
+            atm_c13_filename, new paramdata files, set cnegcrit/nnegcrit, flanduse_timeseries for f09 and hcru @ rcp=8.5
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml --- Add: use_c13_timeseries, atm_c13_filename
+            update similar documenation on c14 bombspike
+M       components/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml -- Same as changes above
+
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_bombspike1963/user_nl_clm - Set use_c13_timeseries=T
+M       components/clm/cime_config/testdefs/testlist_clm.xml - Change two ciso transient tests to include crop, add transient
+                crop ciso test
+
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml -- Add expected fails for new ciso overflow bug 2511
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r254
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Sep  1 00:09:25 MDT 2017
+One-line Summary: Update surface datasets, and point to new CMIP6 population density dataset
+
+Purpose of changes
+------------------
+
+Update all surface datasets to new versions that have updated soil albedo, and use latest PFTCFT files. Also
+get mksurdata_map fully working on cheyenne for batch mode. Point to latest CMIP6 population density dataset
+for historical case, this is with HYDE3.2 data. New fsurdat files for 16pft are with irrigation on. If ask for
+irrig=F and 16pft won't be able to find any files.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+ 2479 --- Irrigation is occurring in non-prognostic-crop runs
+
+Known bugs introduced in this tag (include bugzilla ID): (found ...)
+ 2506 --- ntree used before it's set in pftconMod.F90 2017-08-25
+ 2505 --- Set stream_year_first_urbantv/last for CLM4.5 just for consistency  2017-08-25
+ 2504 --- hybrid/branch cases don't allow CLM_FORCE_COLDSTART to be on  2017-08-18
+ 2503 --- Wrong units for FAREA_BURNED  2017-08-16
+ 2502 --- CWDC_HR is identically zero 2017-08-16
+ 2500 --- ne30 case fails on hobart_nag due to floating overflow
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): -irrig .true. is needed without -crop
+   fsurdat files without crop are all just with irrigation on.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): Datasets
+
+Changes to the datasets (e.g., parameter, surface or initial files): new fsurdat, landuse.timeseries, popdens
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi -   OK
+    yellowstone_gnu -   OK
+    cheyenne_intel -    OK
+    cheyenne_gnu -      OK
+    hobart_nag -        OK
+    hobart_pgi -        OK
+    hobart_intel -      OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r253
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:   CLM45/CLM50
+    - what platforms/compilers:   All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+       similar climate CLM4.5/CLM5.0 surface datasets change with latest soil albedo and small changes form raw PFTCFT files.
+       also an updated population-density dataset used for historical
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M   components/clm/tools/mksurfdata_map/mksurfdata.pl -- Add rundir option, if 16pfts add Irrig to filename
+   M   components/clm/tools/mksurfdata_map/Makefile.data -- Get working on cheyenne or yellowstone
+
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ------- Default resolution and sim_year,
+            set irrig to .true. when crop off, update fsurdat, flanduse_timeseries, stream_fldfilename_popdens
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Update soil-color and PFTCFT files
+
+   M   components/clm/bld/CLMBuildNamelist.pm --- check irrig for fsurdat files, fsurdat with 16pft is with irrig=T
+            make sure set only set irrigate when use_crop on
+   M   components/clm/bld/unit_testers/build-namelist_test.pl -- More tests w clm5_0, irrigate=T set without crop
+   M   components/clm/bld/unit_testers/NMLTest/CompFiles.pm ---- Add more documentation
+
+   M   components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm - Update finidat with
+            updated fsurdat file
+
+   M   components/clm/src/biogeophys/PhotosynthesisMod.F90 -- FPSN_W? variables are default off, and instant averaged
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r253
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Aug  4 20:23:25 MDT 2017
+One-line Summary: Check on reasonable import/export from CLM, check ndep units from input file
+
+Purpose of changes
+------------------
+
+Do some reasonable physical checks on the import/export state to/from CLM. Checking for NaN's and
+that solar should be greater or equal to zero, LW down, specific humidity greater than zero.
+Check the units on the input nitrogen deposition file and if per year divide by seconds per year,
+leave alone if per seconds, and die if units aren't recognized. Increase the tolerence for warnings
+for Nitrogen, Carbon, and soil energy balance. Add missing MPI broadcasts for two ndep namelist variables.
+Fix an LII test that was failing. Change the PE layout for f4x5 grids for yellowstone and cheyenne.
+Add -die_on_duplicate option to parse_cime.cs.status and have summary option add notes about expected fails.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): [If none, remove this line]
+  2498 -- missing MPI bcast
+  2499 -- Update finidat file so LII case will work
+  2484 -- Check for units of ndep only divide by seconds in a year if units are per year
+
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+  NGEET/fates-clm/#16 -- FATES changes answers at a level of at least roundoff when the PE layout changes
+  NGEET/fates-clm/#15 -- CLM-FATES can't restart when PE layout is change
+  ESMCI/cime/#1793 ----- Run time error for mpi-serial case on cheyenne_intel when created with aux_clm create_testd
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   units for ndep input files can either be g(N)/m2/yr or g(N)/m2/s, will now abort for anything else
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Added test with CMIP6 ndep file
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu - OK
+    cheyenne_intel - OK
+    cheyenne_gnu - OK
+    hobart_nag - OK
+    hobart_pgi - OK
+    hobart_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r253
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (although FATES tests change because of the PE layout change)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: Add test mods for case with CMIP6 ndep forcing that has different units/variable name
+
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/clm50CMIP6frc
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/cime_config/config_pes.xml ------------- Update f45 PE layout for yellowstone/cheyenne
+M       components/clm/cime_config/testdefs/testlist_clm.xml -- Add clm50CMIP6frc test
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm - Update finidat file so
+            LII test will pass
+
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90 - Lower amount of warnings written out for C and N by order of mag.
+M       components/clm/src/biogeochem/CropType.F90 ---------- Add if-masterproc to write statement
+M       components/clm/src/biogeophys/BalanceCheckMod.F90 --- Lower amount of warnings written out for soil energy balance 
+M       components/clm/src/cpl/lnd_import_export.F90 -------- Add checking for physically bad import or export data
+           ensuring no NaN's are exchanged, solar >= 0, LW-dn > 0, q > 0
+M       components/clm/src/main/ncdio_pio.F90.in ------------ Remove write to log file from all tasks
+M       components/clm/src/main/ndepStreamMod.F90 ----------- Do mpi_bast for ndep_varlist/ndep_taxmode, check units
+          of input ndep variable and divide by seconds in a year if g(N)/m2/yr, but leave alone for g(N)/m2/s otherwise die
+
+M       parse_cime.cs.status - Add -die_on_duplicate option, and have summarize option make notes about expected fails
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r252
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Jul 24 16:57:42 MDT 2017
+One-line Summary: Update parameter file for some crop albedo issues, and fix a bug in urban albedo for nightime
+
+Purpose of changes
+------------------
+
+Bring in a new CLM50 parameter file that updates a few fields for prognostic crop with affect on crop albedo
+(rholnir,taulnir,taulvis,xl). Bring in changes to fix urban albedo for nighttime from Keith Oleson. Rather than set 
+albedo's for the urban canyon all to 1.0, set them to the viewfactors, as that will result in combined albedo of
+one, whereas the previous way ended up with albedo's greater than one.
+
+Here's a description from Keith about the change in urban albedo. " For diffuse radiation, which is 
+independent of solar zenith angle, the road albedos appear to be exactly equal to the road-sky view 
+factor.  And the wall albedos are equal to the wall-sky view factor. So the albedos are the albedo 
+of the surface (1.0) times the appropriate view factor.  This makes sense.  All incident radiation
+entering the canyon should be reflected to the sky and the contribution of each surface is according 
+to the view factor of each surface to the sky as determined by the height to width ratio.  The view 
+factors of the two walls and the road to the sky sums to 1.0.  So setting the diffuse albedos to 
+these values when the sun is below the horizon results in a scaled diffuse albedo of 1.0.  For direct 
+radiation, it's more complicated because the solar zenith angle is involved when running the 
+radiation model.  However, it seems reasonable to assume the same albedos for direct as for diffuse."
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+ 2492 -- Urban scalings can lead to albedo values greater than 1
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files):New params file for CLM50
+   Updates rholnir,taulnir,taulvis,xl for prognostic crop fields
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,oleson
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne ---- PASS (60 clm50 tests are different as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne ---- PASS
+
+  regular tests (aux_clm): (31 Clm45 tests are different than baseline in cpl hist files for: 
+                           l2x_Sl_avsdr ("dr" and "df" and "av" and "an") as expected)
+
+    yellowstone_intel - OK
+    yellowstone_pgi --- OK
+    yellowstone_gnu --- OK
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  Tests: ERS_Ld5_Mmpi-serial.1x1_vancouverCAN.I1PtClm45SpGs.cheyenne_intel.clm-default,
+         ERS_Ld5_Mmpi-serial.1x1_vancouverCAN.I1PtClm45SpGs.yellowstone_intel.clm-default
+        show: FSR, FSRND, and FSRVD different
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r251
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for CLM50, and for CLM45 when coupled to CAM
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50 (CLM45 when coupled to CAM and albedos passed to coupler for any case)
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+       oleson/b.e20.B1850.f09_g17.pi_control.all.186.alb
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://webext.cgd.ucar.edu/B1850/b.e20.B1850.f09_g17.pi_control.all.186.alb/lnd/b.e20.B1850.f09_g17.pi_control.all.186.alb.17_36-b.e20.B1850.f09_g17.pi_control.all.186.17_36/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - Updated params file for CLM50
+   M  components/clm/src/biogeophys/UrbanAlbedoMod.F90 --------------- Fix bug 2492. Set albedo's of
+        urban surfaces to view factors, by default and for solar zenith angles below horizon.
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r251
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jul 14 01:38:38 MDT 2017
+One-line Summary: Update mksurfdata_map for soil depth/color, add new mapping files
+
+Purpose of changes
+------------------
+
+Bring in new soil color (from Peter Lawrence) dataset for mksurfdata_map. Also bring
+in a new soil depth dataset that uses a mask for when soil depth > 0. Bring in a version
+of PTCLM that's working with this cime.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values):
+    New mapping files for soil depth for mksurfdata_map
+    New soil color data for mksurfdata_map
+    New soil depth dataset on the map defined by when soil depth > 0
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - OK
+
+CLM tag used for the baseline comparisons:  none
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, bit-for-bit (CLM code wasn't changed)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): PTCLM
+
+    PTCLM to PTCLM2_170706
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M   components/clm/tools/mkmapdata/regridbatch.sh -- go back to using 8 processors
+   M   components/clm/tools/mkmapdata/mkmapdata.sh ---- add mapping for 5x5min_ORNL-Soil,
+           change check for $MPIEXEC, so ignores arguments
+   M   components/clm/tools/mksurfdata_map/mksurfdata.pl -- Remove extra "_" in "__CMIP6_"
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- New
+           5x5min-ORNL-Soil mapping files
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - SCRIP
+           grid file for 5x5min-ORNL-Soil, change soildepth mask to ORNL-Soil
+           update soil color and soil depth datasets
+   M   components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Add
+           ORNL-Soil mask
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r250
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Jul 13 13:54:13 MDT 2017
+One-line Summary: Update finundation dataset, new fsurdat files with updated soil color 
+                  and soil depth, update mosart areas, fix cheyenne_gnu
+
+Purpose of changes
+------------------
+
+Update all fsurdat datasets with updated soil color and soil depth. Soil color as modified by Peter Lawrence.
+Soil depth was modified to use a mask for soil depth>0 which makes the minimum soil depth 3cm (model still has
+a minimum of 40cm). Also updated area's for the mosart routing file (the previous areas were off by up to about 1%).
+the update to the area's will influence fluxes. Also fix a problem so that cheyenne_gnu will work (remove pure
+attribute from two functions).
+
+Also bring in the updated finundation inversion from Sean Swenson. This will change the methane output
+significantly for CLM50BGC cases. The previous inversion file was incorrect and shouldn't be used! The new file is also
+at a higher resolution 1-degree rather than 2-degree.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+  2493 (gnu6.3.0 compiler doesn't like "pure" functions that use outside modules, especially public ones)
+
+Known bugs introduced in this tag (include bugzilla ID):
+  2491 (Error in Banddiagonal in latest CESM simulation) (found in Cecile's coupled simulation)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): Just datasets see below
+
+Changes to the datasets (e.g., parameter, surface or initial files): Update all fsurdat and the
+   stream_fldfilename_ch4finundated file
+
+   fsurdat files have soil color and soil depth updated. The finundated file is now at f09 resolution
+   rather than f19, and the previous file was incorrect.
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu - OK
+    cheyenne_intel - OK
+    cheyenne_gnu - OK
+    hobart_nag - OK
+    hobart_pgi - OK
+    hobart_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_16_r249
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 or with MOSART
+    - what platforms/compilers: all
+    - nature of change: similar climate, methane outputs are substantially changed
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): mosart
+   mosart update to mosart1_0_26
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+  M components/clm/src/biogeophys/SnowHydrologyMod.F90 -- Remove pure attribute from OverburdenCompactionVionnet2012
+  M components/clm/src/biogeophys/IrrigationMod.F90 ----- Remove purse attribute from PointNeedsCheckForIrrig
+
+  M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- Update all fsurdat files and stream_fldfilename_ch4finundated
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r249
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Jul  6 14:32:40 MDT 2017
+One-line Summary: All new compsets, reworked test lists, and related fixes
+
+Purpose of changes
+------------------
+
+The changes here were a joint effort between Dave Lawrence, Ben Andre, Erik
+Kluzek, Mariana Vertenstein and Bill Sacks
+
+(1) All new compset aliases, with the following changes:
+
+    (a) Most compset aliases are now for CLM5, with fewer CLM45 compsets and
+        even fewer CLM40 compsets.
+
+    (b) Compset aliases now use capitalization of only the first letter of each
+        piece, to avoid the alphabet soup problem. For example,
+        IHistClm50BgcCrop
+
+    (c) Some other tweaks have been made to compset aliases, such as always
+        listing the time period and Sp (satellite phenology) explicitly
+
+    (d) Compsets use GSWP3 forcing unless the alias specifies otherwise
+
+    (e) Compsets use CISM2%NOEVOLVE - and so use glc_mec in CLM - unless the
+        alias has Gs (for GLC - stub)
+
+    (f) An evolving ice sheet (CISM2%EVOLVE) is now denoted by having a final
+        'G' in the compset alias
+        
+(2) Completely reworked test lists:
+
+    (a) Use new aliases
+
+    (b) Changed most tests to CLM5
+
+    (c) Merged the aux_clm45 and aux_clm40 test categories into aux_clm
+
+    (d) Removed the 'null' test category, which was used for SBN tests
+
+    (e) Some minor additional tweaks to the aux_clm test list to ensure
+        appropriate coverage and remove some redundant tests
+
+    (f) For a few testmods directories, removed some settings that had nothing
+        to do with those testmods (use_dynroot, use_hydrstress)
+
+(3) Fixed VIC:
+
+    (a) Previously, VIC compsets were not actually turning VIC on; now they are
+
+    (b) Fixed namelist defaults for VIC with CLM50
+
+(4) Updated RTM and MOSART externals: changed their test lists and fixed a
+    MOSART bug
+
+(5) Updated CISM external; this changes answers for CISM when ice evolution is
+    turned off, due to changing the lnd -> glc mapping in this case
+
+(6) Point to a CIME branch that fixes some bugs
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2473: Change order of tests run with the LII test
+- 2474: CLM50 CN compsets seem to be set up wrong
+- 2480: vichydro option doesn't work with CLM50 as it needs bedrock off and
+        lower_boundary_condition=3 (with aquifer layer)
+
+CIME Issues fixed (include issue #): I think some issues are fixed here, but I'm
+not sure which ones
+
+Known bugs introduced in this tag (include bugzilla ID):
+- 2485: CLM's 'ed' testlist still has old-style compsets
+- 2486: Failure in camdenNJ test in prebeta test list
+- 2488: Floating overflow in SoilBiogeochemNitrifDenitrifMod.F90
+        (newly-discovered, but presumably existed in previous tags)
+- 2489: Clm45BgcCrop case dies due to negative leafn
+        (newly-discovered, but presumably existed in previous tags)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- All new compset aliases
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- All new compset aliases
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- Changed some defaults when running with VIC
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- All new aliases means baseline comparisons all BFAIL
+
+Changes to tests or testing:
+- Massive overhaul - see notes elsewhere in this ChangeLog entry
+
+Code reviewed by: This was a joint effort by Dave Lawrence, Ben Andre, Erik
+Kluzek, Mariana Vertenstein and Bill Sacks. Various pieces were reviewed by
+different people in this list.
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok
+
+    pass except for 'compare file.*DNE', presumably due to new tests added
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu - ok
+    cheyenne_intel - ok
+    hobart_nag - ok
+    hobart_pgi - ok
+    hobart_intel - ok
+
+    Most tests pass; baseline comparisons BFAIL. Bugs opened (and Expected Fails
+    list updated) for remaining failures.
+
+    Ran most testing on r85975; just ran relevant tests on latest revision with
+    changed compset (changed IHistClm50BgcGs to IHistClm50BgcQianGs)
+
+CLM tag used for the baseline comparisons: N/A
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All tests BFAIL due to new compset
+  aliases. Because of this, I'm not completely sure of the answer changes, but I
+  think they are:
+        - Tests with CISM2%NOEVOLVE change answers in fields on the glc grid due
+          to new CISM external
+        - CLM50 tests with Vic change answers because now they're actually using VIC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      New climate for tests that change answers
+    
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+- cime
+- rtm
+- mosart
+- cism
+
+List all files eliminated:
+
+========= No longer need these testmods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropf10IC
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/defaultf09IC
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/shell_commands
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/user_nl_datm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12
+
+List all files added and what they do:
+
+========= Replaces af_bias_v5
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7/user_nl_datm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v7
+
+List all existing files that have been modified, and describe the changes:
+
+========= Reworked set of compsets and aliases
+M       components/clm/cime_config/config_compsets.xml
+
+========= Reworked test list as described above
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Stop setting glc_snow_persistence_max_days in glcMEC testmods. It made
+          sense to set this for testing when most of our tests used CLM45,
+          because the default snow persistence was 20 years. But for CLM50 the
+          default snow persistence is 0, so it no longer makes sense to set this
+          value specially for testing.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_long/user_nl_clm
+
+========= Apply CN and VIC for CLM50
+M       components/clm/cime_config/config_component.xml
+
+========= Use compatible settings for VIC
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/unit_testers/build-namelist_test.pl
+
+========= Fix for new glacier region
+M       components/clm/cime_config/usermods_dirs/cmip6_glaciers/user_nl_clm
+
+========= Make SSP work with mosart instead of rtm
+M       components/clm/cime_config/SystemTests/ssp.py
+
+========= Change order of LII test to support re-creating initial conditions
+          files (rather than requiring a separate SMS_Ln1 test)
+M       components/clm/cime_config/SystemTests/lii.py
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/README
+
+========= New, compatible initial conditions
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/user_nl_clm
+
+========= No longer set use_dynroot = .true., use_hydrstress = .false.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonthOutput/user_nl_clm
+
+========= No longer set use_hydrstress = .false.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm
+
+========= Update ExpectedTestFails list for new tests; new failures are:
+          SMS_Ld5_D_P24x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart
+          ERP_D_P24x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart
+          ERP_D.f10_f10_musgs.IHistClm50Bgc.yellowstone_gnu.clm-decStart
+          ERS_Ly5_P72x1.f10_f10_musgs.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+========= Update documentation of system testing
+M       .ChangeLog_template
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r248
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Jun 28 15:50:13 MDT 2017
+One-line Summary: Melt most ice runoff
+
+Purpose of changes
+------------------
+
+Up until now, excess snow in CLM (accumulated beyond the snow capping limit) has
+been sent to the ocean as an ice runoff flux. However, this caused problems in
+some regions, in that it cooled an already-cold ocean, leading to excessive sea
+ice growth. Keith Lindsay, Marika Holland and others suggested changing CLM so
+that it sends this flux as liquid rather than ice runoff - having the atmosphere
+melt the ice rather than having the ocean do so. These changes are implemented
+here.
+
+This has now been tested in many fully-coupled simulations, and it indeed solves
+the problem of excessive sea ice growth, without having any noticeable
+detrimental effects on other aspects of the simulation.
+
+Specifically, this affects ice runoff from (a) glacier_mec columns outside of
+Greenland and Antarctica, and (b) all other column types (vegetated, etc.). We
+still send ice runoff from Greenland and Antarctica to simulate the ice calving
+flux that occurs in those regions. In addition, we still send an ice runoff flux
+generated from dynamic landunit adjustments.
+
+This new behavior is used by default in CLM50, but not in CLM45.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable: melt_non_icesheet_ice_runoff
+- New namelist variable: glacier_region_ice_runoff_behavior
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok
+
+    tests pass, namelists change as expected
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    cheyenne_intel - ok
+    hobart_nag --- ok
+    hobart_pgi --- ok
+    hobart_intel - ok
+
+    ok means tests pass, answers change as expected
+
+    Ran most testing on melt_ice_runoff_n05_clm4_5_16_r247; ran hobart on latest
+    (which included a commit to split long lines)
+
+CLM tag used for the baseline comparisons: clm4_5_16_r247
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM50 cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      new climate
+
+      This changes runoff terms (liquid and ice) and the sensible heat flux sent
+      to the atmosphere. In addition, there are limited changes in some
+      methane-related terms; this is presumably due to the dependence of
+      finundated on TWS, and the fact that TWS changes due to the changes in
+      these runoff terms.
+
+      There are also diffs in x2r_Flrl_irrig for this test (and the similar
+      yellowstone test):
+      ERS_D_Ld10.T31_g37_gl4.IGHISTCLM50.cheyenne_intel.clm-glcMEC_decrease. It
+      makes sense that there would be x2r irrig diffs due to diffs in volr, but
+      I was surprised that this test had any irrigation. It turns out this is
+      due to bug #2479.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: b.e20.B1850.f09_g17.pi_control.all.149
+
+   URL for LMWG diagnostics output used to validate new climate: ???
+
+   Note that the climate tests were done on an earlier, kludgey
+   implementation. I have verified that the latest implementation is bit-for-bit
+   with that earlier implementation via a 5-year run of compset
+   1850_DATM%GSWP3_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV at
+   resolution f09_g16, producing annual-average cpl history files. (For the
+   original, used
+   https://svn-ccsm-models.cgd.ucar.edu/clm2/branch_tags/melt_ice_runoff_orig_tags/melt_ice_runoff_orig_n01_clm4_5_16_r246.)
+   There were differences in a few CLM diagnostic fields, as expected (because I
+   have tweaked some diagnostic fields in the latest version), but the cpl
+   avghist files were bit-for-bit.
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes as described above
+M       components/clm/src/main/lnd2atmMod.F90
+M       components/clm/src/main/lnd2atmType.F90
+
+========= Changed long name in some runoff terms: removed statements that they
+          do not include QSNWCPICE, because now they *do* include the *melted*
+          portion of QSNWCPICE
+M       components/clm/src/biogeophys/WaterfluxType.F90
+
+========= New glacier region-specific behavior
+M       components/clm/src/main/glcBehaviorMod.F90
+M       components/clm/src/main/test/glcBehavior_test/test_glcBehavior.pf
+M       components/clm/src/main/clm_driver.F90
+
+========= New namelist flags controlling the behavior
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/src/main/clm_instMod.F90
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_16_r247
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Jun 26 19:52:20 MDT 2017
+One-line Summary: New GLACIER_REGION field with CISM domain split in two
+
+Purpose of changes
+------------------
+
+In an upcoming tag, we'll need a separate GLACIER_REGION for the purpose of
+determining where ice runoff should be melted: we do not want this melt to
+happen over Greenland itself, but we do want it to happen in peripheral parts of
+the CISM domain (and in particular, we want it to happen over the Canadian
+archipelago, which is within the CISM domain, and thus was within the
+"Greenland" GLACIER_REGION). (We still need a GLACIER_REGION that encompasses
+areas outside Greenland itself in case ice extent grows a bit beyond the current
+boundaries. So we truly need two separate GLACIER_REGIONs for (a) Greenland
+itself, and (b) peripheral areas of the CISM domain.) This tag updates the
+surface datasets and related fields to have this extra GLACIER_REGION.
+
+In addition to updating the GLACIER_REGION raw data file, this also introduces a
+new regridding method that is applied to GLACIER_REGION: this takes the maximum
+value from any source point (NOT the dominant value). This is important for the
+new GLACIER_REGION, where we want a destination (CLM) cell to be considered in
+region 2 (Greenland itself) if ANY overlapping source points are in region
+2. This means that the ordering of regions in the GLACIER_REGION raw data file
+is important: preference will be given to higher-numbered regions.
+
+Note that I just changed surface datasets that had time stamp 170428 or
+later. This excluded some older single point datasets, for which the new glacier
+region doesn't matter anyway:
+- surfdata_0.125x0.125_simyr2000_c150114.nc
+- surfdata_0.125x0.125_mp24_simyr2000_c150114.nc
+- surfdata_1x1_smallvilleIA_78pfts_simyr2000_c160127.nc
+- surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc
+- surfdata_1x1_tropicAtl_16pfts_simyr1850_c160127.nc (used in tropicAtl_subset testmod)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- There are some additional subtleties now for setting up a run with different
+  glacier domains (e.g., a paleoclimate run)
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- New surface datasets - just differ in GLACIER_REGION
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- There are some additional subtleties now for setting up a run with different
+  glacier domains (e.g., a paleoclimate run)
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - ok
+
+    PASSed except expected failures:
+    - baseline comparisons failed for mksurfdata_map tests
+    - PTCLM tests failed as expected
+
+    Also ran mksurfdata_map unit tests:
+    - new-style (cmake / pfunit-based): pass
+    - old-style: same failures as on trunk
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    cheyenne_intel - pass
+    hobart_nag --- pass
+    hobart_pgi --- pass
+    hobart_intel - pass
+
+Ran tests on glacier_region_canada_n03_clm4_5_16_r246
+- After that, modified the default mksurfdata_map namelist used for testing:
+  pointed to updated file
+
+
+
+CLM tag used for the baseline comparisons: clm4_5_16_r246
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - bit-for-bit
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+List all files added and what they do:
+
+========= Get mkindexmapMod under some pfunit-based unit tests - required
+          stubbing out a bunch of netcdf stuff
+A       components/clm/tools/mksurfdata_map/src/unit_test_stubs
+A       components/clm/tools/mksurfdata_map/src/unit_test_stubs/mkncdio.F90
+A       components/clm/tools/mksurfdata_map/src/test/mkindexmap_test
+A       components/clm/tools/mksurfdata_map/src/test/mkindexmap_test/test_mkindexmap.pf
+A       components/clm/tools/mksurfdata_map/src/test/mkindexmap_test/CMakeLists.txt
+
+========= Add get_max_indices and associated unit tests
+A       components/clm/tools/mksurfdata_map/src/test/mkgridmap_test
+A       components/clm/tools/mksurfdata_map/src/test/mkgridmap_test/CMakeLists.txt
+A       components/clm/tools/mksurfdata_map/src/test/mkgridmap_test/test_mkgridmap.pf
+
+List all existing files that have been modified, and describe the changes:
+
+========= New raw dataset for glacier region
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+M       components/clm/tools/mksurfdata_map/mksurfdata_map.namelist
+
+========= Get mksurfdata_map pfunit-based unit tests passing with new cime
+M       components/clm/tools/mksurfdata_map/src/README.unit_testing
+M       components/clm/tools/mksurfdata_map/src/CMakeLists.txt
+
+========= Add get_max_indices and associated unit tests; use get_max_indices to
+          regrid glacier region
+M       components/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
+M       components/clm/tools/mksurfdata_map/src/mkindexmapMod.F90
+M       components/clm/tools/mksurfdata_map/src/mkglacierregionMod.F90
+M       components/clm/tools/mksurfdata_map/src/test/CMakeLists.txt
+
+========= Allow building mkindexmapMod for unit tests - required stubbing out a
+          bunch of netcdf stuff
+M       components/clm/tools/mksurfdata_map/src/mkncdio.F90
+
+========= Point to new surface datasets
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Extended namelist array for new region
+M       components/clm/cime_config/SystemTests/lvg.py
+
+========= Removed duplicate makefile rules
+M       components/clm/tools/mksurfdata_map/Makefile.data
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_16_r246
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Jun 14 12:40:31 MDT 2017

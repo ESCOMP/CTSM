@@ -18,6 +18,10 @@
 
 <rcp>8.5</rcp>
 
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false.">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
+
 <clm_demand >flanduse_timeseries</clm_demand>
 
 <clm_start_type>arb_ic</clm_start_type>

@@ -38,7 +38,7 @@ module initGridCellsMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private set_landunit_veg_compete
-  private set_landunit_wet_ice_lake
+  private set_landunit_wet_lake
   private set_landunit_ice_mec
   private set_landunit_crop_noncompete
   private set_landunit_urban
@@ -60,9 +60,9 @@ contains
     use domainMod         , only : ldomain
     use decompMod         , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
     use subgridWeightsMod , only : compute_higher_order_weights
-    use landunit_varcon   , only : istsoil, istice, istwet, istdlak, istice_mec
+    use landunit_varcon   , only : istsoil, istwet, istdlak, istice_mec
     use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
-    use clm_varctl        , only : create_glacier_mec_landunit, use_fates
+    use clm_varctl        , only : use_fates
     use shr_const_mod     , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -166,27 +166,20 @@ contains
 
        ! Determine lake, wetland and glacier landunits 
        do gdc = bounds_clump%begg,bounds_clump%endg
-          call set_landunit_wet_ice_lake(              &
+          call set_landunit_wet_lake(              &
                ltype=istdlak, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        do gdc = bounds_clump%begg,bounds_clump%endg
-          call set_landunit_wet_ice_lake(              &
+          call set_landunit_wet_lake(              &
                ltype=istwet, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        do gdc = bounds_clump%begg,bounds_clump%endg
-          call set_landunit_wet_ice_lake(              &
-               ltype=istice, gi=gdc, li=li, ci=ci, pi=pi)
+          call set_landunit_ice_mec( &
+               glc_behavior = glc_behavior, &
+               ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi)
        end do
-
-       if (create_glacier_mec_landunit) then
-          do gdc = bounds_clump%begg,bounds_clump%endg
-             call set_landunit_ice_mec( &
-                  glc_behavior = glc_behavior, &
-                  ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi)
-          end do
-       endif
 
        ! Ensure that we have set the expected number of patchs, cols and landunits for this clump
        SHR_ASSERT(li == bounds_clump%endl, errMsg(sourcefile, __LINE__))
@@ -269,16 +262,15 @@ contains
   end subroutine set_landunit_veg_compete
   
   !------------------------------------------------------------------------
-  subroutine set_landunit_wet_ice_lake (ltype, gi, li, ci, pi)
+  subroutine set_landunit_wet_lake (ltype, gi, li, ci, pi)
     !
     ! !DESCRIPTION:
-    ! Initialize weland, glacier and lake landunits
+    ! Initialize wetland and lake landunits
     !
     ! !USES
     use clm_instur      , only : wt_lunit
-    use landunit_varcon , only : istwet, istdlak, istice
+    use landunit_varcon , only : istwet, istdlak
     use subgridMod      , only : subgrid_get_info_wetland, subgrid_get_info_lake
-    use subgridMod      , only : subgrid_get_info_glacier
     use pftconMod       , only : noveg
 
     !
@@ -304,12 +296,9 @@ contains
     else if (ltype == istdlak) then
        call subgrid_get_info_lake(gi, &
             npatches=npatches, ncols=ncols, nlunits=nlunits)
-    else if (ltype == istice) then 
-       call subgrid_get_info_glacier(gi, &
-            npatches=npatches, ncols=ncols, nlunits=nlunits)
     else
-       write(iulog,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
-       write(iulog,*)' only istwet, istdlak and istice ltypes are valid'
+       write(iulog,*)' set_landunit_wet_lake: ltype of ',ltype,' not valid'
+       write(iulog,*)' only istwet and istdlak ltypes are valid'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -318,7 +307,7 @@ contains
     if (npatches > 0) then
 
        if (npatches /= 1) then
-          write(iulog,*)' set_landunit_wet_ice_lake: compete landunit must'// &
+          write(iulog,*)' set_landunit_wet_lake: compete landunit must'// &
                ' have one patch '
           write(iulog,*)' current value of npatches=',npatches
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -333,7 +322,7 @@ contains
 
     endif       ! npatches > 0       
 
-  end subroutine set_landunit_wet_ice_lake
+  end subroutine set_landunit_wet_lake
 
   !-----------------------------------------------------------------------
   subroutine set_landunit_ice_mec(glc_behavior, ltype, gi, li, ci, pi)
