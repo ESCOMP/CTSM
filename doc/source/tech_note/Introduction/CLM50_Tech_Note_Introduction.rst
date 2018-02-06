@@ -5,7 +5,7 @@
 
 ***Coordinating Lead Authors***
 
-**David Lawrence, Rosie Fisher, Charles Koven, Keith Oleson, Sean Swenson**
+**David Lawrence, Rosie Fisher, Charles Koven, Keith Oleson, Sean Swenson, Mariana Vertenstein**
 
 ***Lead Authors***
 
@@ -14,7 +14,7 @@
 ***Contributing Authors***
 
 **Ashehad Ali, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathon Buzan, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Jan Lenaerts, Sam Levis,
-L. Ruby Leung, William Lipscomb, Jon Pelletier, Daniel M. Ricciuto, Ben Sanderson, Jacqueline Shuman, Andrew Slater, Zachary Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Mariana Vertenstein, Francis Vitt, Xubin Zeng**
+L. Ruby Leung, William Lipscomb, Jon Pelletier, Daniel M. Ricciuto, Ben Sanderson, Jacqueline Shuman, Andrew Slater, Zachary Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Francis Vitt, Xubin Zeng**
 
 
 The National Center for Atmospheric Research (NCAR) is operated by the
