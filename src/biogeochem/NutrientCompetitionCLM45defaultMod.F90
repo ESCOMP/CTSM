@@ -130,7 +130,7 @@ contains
     !
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
-    use clm_varctl            , only : use_c13, use_c14
+    use clm_varctl            , only : use_c13, use_c14,use_matrixcn
     use CNVegStateType        , only : cnveg_state_type
     use CropType              , only : crop_type
     use CanopyStateType        , only : canopystate_type
@@ -139,6 +139,12 @@ contains
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
     use CNSharedParamsMod     , only : use_fun
     use shr_infnan_mod        , only : shr_infnan_isnan
+!index for matrixcn
+    use clm_varpar            , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                       ilivestem,ilivestem_st,ilivestem_xf,&
+                                       ideadstem,ideadstem_st,ideadstem_xf,&
+                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                       ideadcroot,ideadcroot_st,ideadcroot_xf,iout	
 
     !
     ! !ARGUMENTS:
@@ -250,7 +256,11 @@ contains
          Nnonmyc                      => cnveg_nitrogenflux_inst%Nnonmyc_patch                     , & ! Output:  [real(r8) (:) ]  Non-mycorrhizal N uptake (gN/m2/s)
          Nam                          => cnveg_nitrogenflux_inst%Nam_patch                         , & ! Output:  [real(r8) (:) ]  AM uptake (gN/m2/s)
          Necm                         => cnveg_nitrogenflux_inst%Necm_patch                        , & ! Output:  [real(r8) (:) ]  ECM uptake (gN/m2/s)
-         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch           & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
+         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch          , & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
+         matrix_Cinput                => cnveg_carbonflux_inst%matrix_Cinput_patch                 , & ! C input of matrix 
+         matrix_Ninput                => cnveg_nitrogenflux_inst%matrix_Ninput_patch               , & ! N input of matrix
+         matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! C allocation of matrix
+         matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch                 & ! N allocation of matrix
          )
 
       ! patch loop to distribute the available N between the competing patches 
@@ -259,7 +269,7 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
-
+!        print *, 'p',  filter_soilp(fp),ivt(p)
 
          ! set some local allocation variables
          f1 = froot_leaf(ivt(p))
@@ -305,14 +315,18 @@ contains
             sminn_to_npool(p) = sminn_to_plant_fun(p)
          else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition. 
             sminn_to_npool(p) = plant_ndemand(p) * fpg(c)        
-         endif
-         
-         plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
-         plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
-
-          
-         if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code. 
-	    excess_cflux(p) = availc(p) - plant_calloc(p)
+         end if
+!         if (.not. use_matrixcn) then
+            plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
+            plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
+         if (use_matrixcn)then 
+            matrix_Ninput(p) =  sminn_to_npool(p) + retransn_to_npool(p) 
+!            matrix_Cinput(p) =  matrix_Ninput(p) * (c_allometry(p)/n_allometry(p))
+             matrix_Cinput(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
+         end if
+  !        if(p .eq. 60000)print *,'******new00', matrix_Ninput(p), plant_nalloc(p), matrix_Ninput(p)-plant_nalloc(p)
+       if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code. 
+            excess_cflux(p) = availc(p) - plant_calloc(p)
 	    ! reduce gpp fluxes due to N limitation
 	    if (gpp(p) > 0.0_r8) then
 	       downreg(p) = excess_cflux(p)/gpp(p)
@@ -325,13 +339,13 @@ contains
 	               c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
 	          c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
 	               c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	       endif
+	       end if
 	       if ( use_c14 ) then
 	          c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
 	               c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
 	          c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
 	               c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	       endif
+	       end if
 	    end if
 	         
 	 end if !use_fun
@@ -345,62 +359,101 @@ contains
          ! transfer pools
 
          nlc = plant_calloc(p) / c_allometry(p)
+ 
+!       if (.not. use_matrixcn) then
+            cpool_to_leafc(p)          = nlc * fcur
+            cpool_to_leafc_storage(p)  = nlc * (1._r8 - fcur)
+            cpool_to_frootc(p)         = nlc * f1 * fcur
+            cpool_to_frootc_storage(p) = nlc * f1 * (1._r8 - fcur)
+!            print*,'cpool_to_frootc_storage',p,nlc,f1,(1-fcur),cpool_to_frootc_storage(p),plant_calloc(p),c_allometry(p)
+            if (woody(ivt(p)) == 1._r8) then
+               cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
+               cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
+               cpool_to_deadstemc(p)          = nlc * f3 * (1._r8 - f4) * fcur
+               cpool_to_deadstemc_storage(p)  = nlc * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               cpool_to_livecrootc(p)         = nlc * f2 * f3 * f4 * fcur
+               cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
+               cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
+               cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+            end if
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+               cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
+               cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
+               cpool_to_deadstemc(p)          = nlc * f3 * (1._r8 - f4) * fcur
+               cpool_to_deadstemc_storage(p)  = nlc * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               cpool_to_livecrootc(p)         = nlc * f2 * f3 * f4 * fcur
+               cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
+               cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
+               cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               cpool_to_grainc(p)             = nlc * f5 * fcur
+               cpool_to_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
+            end if
 
-         cpool_to_leafc(p)          = nlc * fcur
-         cpool_to_leafc_storage(p)  = nlc * (1._r8 - fcur)
-         cpool_to_frootc(p)         = nlc * f1 * fcur
-         cpool_to_frootc_storage(p) = nlc * f1 * (1._r8 - fcur)
-         if (woody(ivt(p)) == 1._r8) then
-            cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
-            cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
-            cpool_to_deadstemc(p)          = nlc * f3 * (1._r8 - f4) * fcur
-            cpool_to_deadstemc_storage(p)  = nlc * f3 * (1._r8 - f4) * (1._r8 - fcur)
-            cpool_to_livecrootc(p)         = nlc * f2 * f3 * f4 * fcur
-            cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
-            cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
-            cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
-         end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-            cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
-            cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
-            cpool_to_deadstemc(p)          = nlc * f3 * (1._r8 - f4) * fcur
-            cpool_to_deadstemc_storage(p)  = nlc * f3 * (1._r8 - f4) * (1._r8 - fcur)
-            cpool_to_livecrootc(p)         = nlc * f2 * f3 * f4 * fcur
-            cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
-            cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
-            cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
-            cpool_to_grainc(p)             = nlc * f5 * fcur
-            cpool_to_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
-         end if
-
+ !      else
+         if (use_matrixcn) then
+           matrix_alloc(p,ileaf) = (1.0_r8 + g1) / c_allometry(p) * fcur
+           matrix_alloc(p,ileaf_st) = (1.0_r8 + g1) / c_allometry(p) * (1._r8 - fcur)
+           matrix_alloc(p,ifroot) = (1.0_r8 + g1) / c_allometry(p) * f1 * fcur
+           matrix_alloc(p,ifroot_st) = (1.0_r8 + g1) / c_allometry(p) * f1 * (1._r8 - fcur)
+ 
+           matrix_nalloc(p,ileaf)     = ((1.0_r8/cnl)          / n_allometry(p)) * fcur
+           matrix_nalloc(p,ileaf_st)  = ((1.0_r8/cnl)          / n_allometry(p))* (1._r8 - fcur)
+           matrix_nalloc(p,ifroot)    = ((f1/cnfr)             / n_allometry(p)) * fcur
+           matrix_nalloc(p,ifroot_st) = ((f1/cnfr)             / n_allometry(p)) * (1._r8 - fcur)
+           if (woody(ivt(p)) == 1._r8) then
+               matrix_alloc(p,ilivestem) = (1.0_r8 + g1) / c_allometry(p) * f3 * f4 * fcur 
+               matrix_alloc(p,ilivestem_st) = (1.0_r8 +g1) / c_allometry(p) * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadstem) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadstem_st) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               matrix_alloc(p,ilivecroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * fcur
+               matrix_alloc(p,ilivecroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadcroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadcroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+ 
+               matrix_nalloc(p,ilivestem)    = (f3*f4/cnlw)                     / n_allometry(p) * fcur 
+               matrix_nalloc(p,ilivestem_st) = (f3*f4/cnlw)                     / n_allometry(p) * (1._r8 - fcur)
+               matrix_nalloc(p,ideadstem)    = (f3 * (1._r8 - f4)/cndw)         / n_allometry(p) * fcur
+               matrix_nalloc(p,ideadstem_st) = (f3 * (1._r8 - f4)/cndw)         / n_allometry(p) * (1._r8 - fcur)
+               matrix_nalloc(p,ilivecroot)   = (f2 * f3 * f4/cnlw)              / n_allometry(p) *  fcur
+               matrix_nalloc(p,ilivecroot_st) = (f2 * f3 * f4 /cnlw)            / n_allometry(p) * (1._r8 - fcur)
+               matrix_nalloc(p,ideadcroot)   = (f2 * f3 * (1._r8 - f4)/cndw)    / n_allometry(p) * fcur
+               matrix_nalloc(p,ideadcroot_st) = (f2 * f3 * (1._r8 - f4)/cndw)   / n_allometry(p) *(1._r8 - fcur)
+            end if
+           if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+                 print*,'crop matrixcn is not ready yet'
+           end if
+        end if !end use_matrixcn
          ! corresponding N fluxes
-         npool_to_leafn(p)          = (nlc / cnl) * fcur
-         npool_to_leafn_storage(p)  = (nlc / cnl) * (1._r8 - fcur)
-         npool_to_frootn(p)         = (nlc * f1 / cnfr) * fcur
-         npool_to_frootn_storage(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
-         if (woody(ivt(p)) == 1._r8) then
-            npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
-            npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-            npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-            npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-            npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-            npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-            npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-            npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-         end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-            cng = graincn(ivt(p))
-            npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
-            npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
-            npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
-            npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-            npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
-            npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
-            npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
-            npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
-            npool_to_grainn(p)             = (nlc * f5 / cng) * fcur
-            npool_to_grainn_storage(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
-         end if
+!         if (.not. use_matrixcn) then
+            npool_to_leafn(p)          = (nlc / cnl) * fcur
+            npool_to_leafn_storage(p)  = (nlc / cnl) * (1._r8 - fcur)
+            npool_to_frootn(p)         = (nlc * f1 / cnfr) * fcur
+            npool_to_frootn_storage(p) = (nlc * f1 / cnfr) * (1._r8 - fcur)
+            if (woody(ivt(p)) == 1._r8) then
+               npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
+               npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
+               npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
+               npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+               npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
+               npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
+               npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
+               npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+            end if
+!         end if  ! use_matrixcn
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+               cng = graincn(ivt(p))
+               npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
+               npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
+               npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
+               npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+               npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
+               npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
+               npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
+               npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+               npool_to_grainn(p)             = (nlc * f5 / cng) * fcur
+              npool_to_grainn_storage(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
+         end if		
+!        if(p .eq. 60000) print*, 'diff of N to livestemn', npool_to_livestemn(p)-matrix_alloc(p,ilivestem)*plant_nalloc(p)
 
          ! Calculate the amount of carbon that needs to go into growth
          ! respiration storage to satisfy all of the storage growth demands.
@@ -410,7 +463,7 @@ contains
          ! fluxes that get released on a given timestep are calculated in growth_resp(),
          ! but that the storage of C for growth resp during display of transferred
          ! growth is assigned here.
-
+!        if (.not. use_matrixcn)then
          gresp_storage = cpool_to_leafc_storage(p) + cpool_to_frootc_storage(p)
          if (woody(ivt(p)) == 1._r8) then
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
@@ -423,8 +476,24 @@ contains
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
             gresp_storage = gresp_storage + cpool_to_grainc_storage(p)
          end if
-         cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
+!         else
+!            gresp_storage = plant_calloc(p) * (matrix_alloc(p,ileaf_st) + matrix_alloc(p,ifroot_st))
+!            if (woody(ivt(p)) == 1._r8) then
+!               gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ilivestem_st)
+!               gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ideadstem_st)
 
+ !              gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ilivecroot_st)
+ !              gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ideadcroot_st)
+ !           end if
+ !           if (ivt(p) >= npcropmin) then
+ !              print*,'crop matrix is not ready yet'
+ !           end if
+ !        end if
+         cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
+         if(use_matrixcn)then
+             matrix_Cinput(p) = plant_calloc(p) / (1._r8 + g1)
+         end if
+!         print *,'******input',p, matrix_Cinput(p)
       end do ! end patch loop
 
     end associate 

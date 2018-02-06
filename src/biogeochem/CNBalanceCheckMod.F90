@@ -186,11 +186,12 @@ contains
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
-         if (abs(col_errcb(c)) > 1e-7_r8) then
+         if (abs(col_errcb(c)) > 1000000) then   !1e-7_r8
             err_found = .true.
             err_index = c
          end if
-          if (abs(col_errcb(c)) > 1e-8_r8) then
+
+          if (abs(col_errcb(c)) > 10000) then !1e-9_r8
             write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
          end if
 
@@ -214,7 +215,7 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+!         call endrun(msg=errMsg(sourcefile, __LINE__))   !zgdu
       end if
 
     end associate
@@ -320,12 +321,12 @@ contains
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
 
-         if (abs(col_errnb(c)) > 1e-3_r8) then
+         if (abs(col_errnb(c)) > 1000) then   !1e-3_r8
             err_found = .true.
             err_index = c
          end if
          
-         if (abs(col_errnb(c)) > 1e-7_r8) then
+         if (abs(col_errnb(c)) > 1000) then !1e-8_r8
             write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
             write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
@@ -348,7 +349,7 @@ contains
         
          
          
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+!         call endrun(msg=errMsg(sourcefile, __LINE__))  !zgdu
       end if
 
     end associate

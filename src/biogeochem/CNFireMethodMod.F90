@@ -134,7 +134,7 @@ module CNFireMethodMod
 
  !-----------------------------------------------------------------------
  subroutine CNFireFluxes_interface (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-      dgvs_inst, cnveg_state_inst, &
+      dgvs_inst, soilbiogeochem_carbonflux_inst, cnveg_state_inst, &
       cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
       leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
       totsomc_col, decomp_cpools_vr_col, decomp_npools_vr_col, somc_fire_col)
@@ -156,6 +156,7 @@ module CNFireMethodMod
    use CNVegStateType                     , only : cnveg_state_type
    use CNVegCarbonStateType               , only : cnveg_carbonstate_type
    use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+   use SoilbiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
    use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
    use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
    import :: cnfire_method_type
@@ -169,6 +170,7 @@ module CNFireMethodMod
    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
    type(dgvs_type)                , intent(inout) :: dgvs_inst
    type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
+   type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
    type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
    type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst

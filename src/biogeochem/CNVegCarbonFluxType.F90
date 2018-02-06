@@ -10,8 +10,8 @@ module CNVegCarbonFluxType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp
+  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools,nvegpool
+  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nvegpool
   use clm_varcon                         , only : spval, dzsoi_decomp
   use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
   use clm_varctl                         , only : use_grainproduct
@@ -360,6 +360,18 @@ module CNVegCarbonFluxType
      real(r8), pointer :: npp_growth_patch                         (:)     ! Total C u for growth in FUN      (gC/m2/s)   
      real(r8), pointer :: leafc_change_patch                        (:)     ! Total used C from leaves        (gC/m2/s)
      real(r8), pointer :: soilc_change_patch                        (:)     ! Total used C from soil          (gC/m2/s)
+     ! Matrix for C flux index
+     real(r8), pointer :: matrix_Cinput_patch          (:)      ! U-matrix for carbon input
+     real(r8), pointer :: matrix_alloc_patch          (:,:)     ! B-matrix for carbon
+ 
+     real(r8), pointer :: matrix_phtransfer_patch     (:,:,:)   ! A-matrix_phenologh
+     real(r8), pointer :: matrix_phturnover_patch     (:,:,:)   ! C-matrix_phenologh
+  
+     real(r8), pointer :: matrix_gmtransfer_patch     (:,:,:)   ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_gmturnover_patch     (:,:,:)   ! C-matrix_gap mortality
+  
+     real(r8), pointer :: matrix_fitransfer_patch     (:,:,:)   ! A-matrix_fire
+     real(r8), pointer :: matrix_fiturnover_patch     (:,:,:)   ! C-matrix_fire	 
  
 !     real(r8), pointer :: soilc_change_col                          (:)     ! Total used C from soil          (gC/m2/s)
 
@@ -727,6 +739,19 @@ contains
     allocate(this%npp_growth_patch       (begp:endp)) ; this%npp_growth_patch       (:) = nan
     allocate(this%leafc_change_patch      (begp:endp)) ; this%leafc_change_patch      (:) = nan
     allocate(this%soilc_change_patch      (begp:endp)) ; this%soilc_change_patch      (:) = nan
+! Matrix
+    allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
+    allocate(this%matrix_alloc_patch          (begp:endp,1:nvegpool))              ; this%matrix_alloc_patch       (:,:) = nan
+
+    allocate(this%matrix_phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_phtransfer_patch  (:,:,:) = nan
+    allocate(this%matrix_phturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_phturnover_patch  (:,:,:) = nan
+
+    allocate(this%matrix_gmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_gmtransfer_patch  (:,:,:) = nan
+    allocate(this%matrix_gmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_gmturnover_patch  (:,:,:) = nan
+
+    allocate(this%matrix_fitransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_fitransfer_patch  (:,:,:) = nan
+    allocate(this%matrix_fiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_fiturnover_patch  (:,:,:) = nan
+
 
     ! Construct restart field names consistently to what is done in SpeciesNonIsotope &
     ! SpeciesIsotope, to aid future migration to that infrastructure
@@ -767,7 +792,7 @@ contains
          bounds = bounds, &
          name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
          units = 'gC/m^2', &
-         allows_non_annual_delta = .false.)
+         allows_non_annual_delta = .true.)!zgdu false->true
 
   end subroutine InitAllocate
 
@@ -1470,7 +1495,7 @@ contains
        this%gpp_before_downreg_patch(begp:endp) = spval
        call hist_addfld1d (fname='INIT_GPP', units='gC/m^2/s', &
             avgflag='A', long_name='GPP flux before downregulation', &
-            ptr_patch=this%gpp_before_downreg_patch, default='inactive')
+            ptr_patch=this%gpp_before_downreg_patch)!, default='inactive')
 
        this%current_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CURRENT_GR', units='gC/m^2/s', &
@@ -1490,17 +1515,17 @@ contains
        this%availc_patch(begp:endp) = spval
        call hist_addfld1d (fname='AVAILC', units='gC/m^2/s', &
             avgflag='A', long_name='C flux available for allocation', &
-            ptr_patch=this%availc_patch, default='inactive')
+            ptr_patch=this%availc_patch)!, default='inactive')
 
        this%plant_calloc_patch(begp:endp) = spval
        call hist_addfld1d (fname='PLANT_CALLOC', units='gC/m^2/s', &
             avgflag='A', long_name='total allocated C flux', &
-            ptr_patch=this%plant_calloc_patch, default='inactive')
+            ptr_patch=this%plant_calloc_patch)!, default='inactive')
 
        this%excess_cflux_patch(begp:endp) = spval
        call hist_addfld1d (fname='EXCESS_CFLUX', units='gC/m^2/s', &
             avgflag='A', long_name='C flux not allocated due to downregulation', &
-            ptr_patch=this%excess_cflux_patch, default='inactive')
+            ptr_patch=this%excess_cflux_patch)!, default='inactive')
 
        this%prev_leafc_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='PREV_LEAFC_TO_LITTER', units='gC/m^2/s', &
@@ -3325,6 +3350,7 @@ contains
 
        if (lun%ifspecial(l)) then
           this%availc_patch(p)                = spval
+          this%matrix_Cinput_patch(p)         = spval 
           this%xsmrpool_recover_patch(p)      = spval
           this%excess_cflux_patch(p)          = spval
           this%plant_calloc_patch(p)          = spval
@@ -3337,6 +3363,7 @@ contains
        end if
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%availc_patch(p)                = 0._r8
+          this%matrix_Cinput_patch(p)         = 0._r8
           this%xsmrpool_recover_patch(p)      = 0._r8
           this%excess_cflux_patch(p)          = 0._r8
           this%prev_leafc_to_litter_patch(p)  = 0._r8
@@ -3397,7 +3424,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (&
+    call this%SetValues (nvegpool=18, &
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -3601,7 +3628,7 @@ contains
   end subroutine RestartAllIsotopes
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this, &
+  subroutine SetValues ( this, nvegpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -3610,7 +3637,7 @@ contains
     !
     ! !ARGUMENTS:
     class (cnveg_carbonflux_type) :: this
-    integer , intent(in) :: num_patch
+    integer , intent(in) :: num_patch,nvegpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -3798,6 +3825,23 @@ contains
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
+!   Matrix
+       this%matrix_Cinput_patch(i)                       = value_patch
+       do k = 1, nvegpool         
+          this%matrix_alloc_patch(i,k)              = value_patch
+          do j = 1, nvegpool+1
+               if(j .le. nvegpool)then
+                  this%matrix_phturnover_patch (i,j,k) = value_patch
+                  this%matrix_gmturnover_patch (i,j,k) = value_patch
+                  this%matrix_fiturnover_patch (i,j,k) = value_patch
+               end if
+                this%matrix_phtransfer_patch (i,j,k) = value_patch
+                this%matrix_gmtransfer_patch (i,j,k) = value_patch
+                this%matrix_fitransfer_patch (i,j,k) = value_patch
+               
+          end do
+
+       end do   
     end do
 
     if ( use_crop )then

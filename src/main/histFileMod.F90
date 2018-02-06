@@ -1424,6 +1424,8 @@ contains
        call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
             beg1d, end1d)
     else
+       !print*,'var name=',tape(t)%hlist(f)%field%name
+       !print*,'num2d',num2d
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if

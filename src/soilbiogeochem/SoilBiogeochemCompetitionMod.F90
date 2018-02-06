@@ -24,7 +24,6 @@ module SoilBiogeochemCompetitionMod
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
-  !use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   use WaterStateType                  , only : waterstate_type
   use WaterfluxType                   , only : waterflux_type
   use TemperatureType                 , only : temperature_type
@@ -282,7 +281,6 @@ contains
       sminn_to_plant_new(bounds%begc:bounds%endc)  =  0._r8
 
       local_use_fun = use_fun
-
       if (.not. use_nitrif_denitrif) then
 
          ! init sminn_tot
@@ -558,7 +556,6 @@ contains
                      smin_nh4_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
                   else
                      smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j)
-                  
                   end if
                   f_nit_vr(c,j) = pot_f_nit_vr(c,j)
 

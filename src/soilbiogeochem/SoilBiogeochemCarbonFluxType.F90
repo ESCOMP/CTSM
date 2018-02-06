@@ -30,6 +30,8 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate constant for decomposition (1./sec)
+! for soil-matrix
+     real(r8), pointer :: matrix_decomp_k_col                       (:,:,:) ! rate constant for decomposition (1./sec)
      real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
      real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
      real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
@@ -52,6 +54,12 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: FATES_c_to_litr_cel_c_col                 (:,:)   ! total cellulose    litter coming from ED. gC/m3/s
      real(r8), pointer :: FATES_c_to_litr_lig_c_col                 (:,:)   ! total lignin    litter coming from ED. gC/m3/s
 
+     ! track tradiagonal matrix  
+     real(r8), pointer :: matrix_a_tri_col                               (:,:)   ! subdiagonal coefficients
+     real(r8), pointer :: matrix_b_tri_col                               (:,:)   ! diagonal coefficients 
+     real(r8), pointer :: matrix_c_tri_col                               (:,:)   ! superdiagonal coefficients
+     real(r8), pointer :: matrix_input_col                               (:,:,:)   ! source coefficients
+     real(r8), pointer :: matrix_decomp_fire_k_col                               (:,:,:)   ! source coefficients
    contains
 
      procedure , public  :: Init   
@@ -121,6 +129,9 @@ contains
 
      allocate(this%decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
      this%decomp_k_col(:,:,:)= spval
+     ! for soil-matrix
+     allocate(this%matrix_decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
+     this%matrix_decomp_k_col(:,:,:)= spval
 
      allocate(this%decomp_cpools_leached_col(begc:endc,1:ndecomp_pools))              
      this%decomp_cpools_leached_col(:,:)= nan
@@ -133,6 +144,16 @@ contains
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
 
+! for  matrix 
+!     allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_a_tri_col(:,:,:)= nan
+!     allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
+!     allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
+!     allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+     allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp));  this%matrix_a_tri_col(:,:)= nan
+     allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp));  this%matrix_b_tri_col(:,:)= nan
+     allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp));  this%matrix_c_tri_col(:,:)= nan
+     allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+     allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:,:)= nan
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
 
@@ -227,6 +248,16 @@ contains
            data2dptr => this%decomp_k_col(:,:,k)
            fieldname = 'K_'//trim(decomp_cascade_con%decomp_pool_name_history(k))
            longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' potential loss coefficient'
+           call hist_addfld_decomp (fname=fieldname, units='1/s',  type2d='levdcmp', &
+                avgflag='A', long_name=longname, &
+                ptr_col=data2dptr, default='inactive')
+        end do
+    !for soil-matrix   
+        do k = 1, ndecomp_pools
+           ! decomposition k
+           data2dptr => this%matrix_decomp_k_col(:,:,k)
+           fieldname = 'MK_'//trim(decomp_cascade_con%decomp_pool_name_history(k))
+           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//'matrix potential loss coefficient'
            call hist_addfld_decomp (fname=fieldname, units='1/s',  type2d='levdcmp', &
                 avgflag='A', long_name=longname, &
                 ptr_col=data2dptr, default='inactive')
@@ -574,6 +605,7 @@ contains
 
     ! initialize fields for special filters
 
+    !print*,'special_col in SoilBiogeochemCarbonFluxType.F90',special_col
     call this%SetValues (num_column=num_special_col, filter_column=special_col, &
          value_column=0._r8)
 
@@ -672,9 +704,11 @@ contains
              this%decomp_cascade_ctransfer_col(i,l)      = value_column
              this%decomp_cascade_ctransfer_vr_col(i,j,l) = value_column
              this%decomp_k_col(i,j,l)                    = value_column
+             this%matrix_decomp_k_col(i,j,l)             = value_column
           end do
        end do
     end do
+
 
     do k = 1, ndecomp_pools
        do fi = 1,num_column
@@ -690,6 +724,21 @@ contains
        end do
     end do
 
+! for matrix 
+    do k = 1, ndecomp_pools
+       do j = 1, nlevdecomp
+!          do fi = 1,num_column
+!             i = filter_column(fi)
+             !print*,'before setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
+             this%matrix_a_tri_col(:,j) = value_column
+             this%matrix_b_tri_col(:,j) = value_column
+             this%matrix_c_tri_col(:,j) = value_column
+             this%matrix_input_col(:,j,k) = value_column
+             this%matrix_decomp_fire_k_col(:,j,k) = value_column
+             !print*,'after setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
+!          end do
+       end do
+    end do
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)

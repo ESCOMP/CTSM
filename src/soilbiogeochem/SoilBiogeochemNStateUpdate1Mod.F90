@@ -10,6 +10,7 @@ module SoilBiogeochemNStateUpdate1Mod
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
+  use clm_varctl                         , only : use_soil_matrixcn
   use clm_varcon                         , only : nitrif_n2o_loss_frac, dzsoi_decomp
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
@@ -119,6 +120,8 @@ contains
       end if
 
       ! decomposition fluxes
+   if (.not. use_soil_matrixcn) then
+!      print*,'before donor n transfer,source,',nf%decomp_npools_sourcesink_col(1,2,5)
       do k = 1, ndecomp_cascade_transitions
          do j = 1, nlevdecomp
             ! column loop
@@ -131,6 +134,9 @@ contains
             end do
          end do
       end do
+
+
+!      print*,'after donor n transfer,source,',nf%decomp_npools_sourcesink_col(1,2,5)
       do k = 1, ndecomp_cascade_transitions
          if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
             do j = 1, nlevdecomp
@@ -156,6 +162,8 @@ contains
             end do
          end if
       end do
+!      print*,'after receiver n transfer,source,',nf%decomp_npools_sourcesink_col(1,2,5)
+   end if  ! 
 
       if (.not. use_nitrif_denitrif) then
 

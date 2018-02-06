@@ -50,6 +50,7 @@ module clm_varpar
   integer, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer            :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, parameter :: nvariants   =   2     ! number of variants of PFT constants
+  integer, parameter :: nvegpool    =  18     ! number of vegetation matrix pool 
 
   integer :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer :: numcft      =  64     ! actual # of crops (includes unused CFTs that are merged into other CFTs)
@@ -63,9 +64,32 @@ module clm_varpar
   integer, parameter :: i_cel_lit  = i_met_lit + 1
   integer, parameter :: i_lig_lit  = i_cel_lit + 1
   integer            :: i_cwd
+   !Matrix index (when use_matrixcn)
+  integer, parameter :: ileaf         = 1
+  integer, parameter :: ileaf_st      = 2
+  integer, parameter :: ileaf_xf      = 3
+  integer, parameter :: ifroot        = 4
+  integer, parameter :: ifroot_st     = 5
+  integer, parameter :: ifroot_xf     = 6
+  integer, parameter :: ilivestem     = 7
+  integer, parameter :: ilivestem_st  = 8
+  integer, parameter :: ilivestem_xf  = 9
+  integer, parameter :: ideadstem     = 10
+  integer, parameter :: ideadstem_st  = 11
+  integer, parameter :: ideadstem_xf  = 12
+  integer, parameter :: ilivecroot    = 13
+  integer, parameter :: ilivecroot_st = 14
+  integer, parameter :: ilivecroot_xf = 15
+  integer, parameter :: ideadcroot    = 16
+  integer, parameter :: ideadcroot_st = 17
+  integer, parameter :: ideadcroot_xf = 18
+     
+  integer, parameter :: iout = 19
 
   integer :: ndecomp_pools
   integer :: ndecomp_cascade_transitions
+! for soil matrix 
+ integer :: ndecomp_pools_vr   !total number of pools ndecomp_pools*vertical levels
 
   ! Indices used in surface file read and set in clm_varpar_init
 
@@ -209,6 +233,7 @@ contains
           ndecomp_cascade_transitions = 9
        end if
     endif
+    ndecomp_pools_vr = ndecomp_pools * nlevdecomp
 
   end subroutine clm_varpar_init
 

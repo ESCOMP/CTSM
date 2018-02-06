@@ -127,6 +127,12 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: decomp_npools_sourcesink_col              (:,:,:) ! col (gN/m3) change in decomposing n pools 
                                                                             ! (sum of all additions and subtractions from stateupdate1).  
           real(r8), pointer :: sminn_to_plant_fun_vr_col                 (:,:)   ! col total layer soil N uptake of FUN  (gN/m2/s)
+
+     ! track tradiagonal matrix  
+     real(r8), pointer :: matrix_a_tri_col                               (:,:,:)   ! subdiagonal coefficients
+     real(r8), pointer :: matrix_b_tri_col                               (:,:,:)   ! diagonal coefficients 
+     real(r8), pointer :: matrix_c_tri_col                               (:,:,:)   ! superdiagonal coefficients
+     real(r8), pointer :: matrix_input_col                          (:,:,:)   ! source coefficients
    contains
 
      procedure , public  :: Init   
@@ -273,7 +279,12 @@ contains
 
     allocate(this%decomp_npools_sourcesink_col (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
     this%decomp_npools_sourcesink_col (:,:,:) = nan
+! for matrix
 
+    allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_a_tri_col(:,:,:)= nan
+    allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
+    allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
+    allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -1049,6 +1060,18 @@ contains
        do fi = 1,num_column
           i = filter_column(fi)
           this%decomp_npools_leached_col(i,k) = value_column
+       end do
+    end do
+    
+    do k = 1, ndecomp_pools
+       do j = 1, nlevdecomp
+!          do fi = 1,num_column
+!             i = filter_column(fi)
+             this%matrix_a_tri_col(:,j,k) = value_column
+             this%matrix_b_tri_col(:,j,k) = value_column
+             this%matrix_c_tri_col(:,j,k) = value_column
+             this%matrix_input_col(:,j,k) = value_column
+!          end do
        end do
     end do
 

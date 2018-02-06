@@ -14,8 +14,13 @@ module CNPhenologyMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
+  use clm_varpar                      , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                               ilivestem,ilivestem_st,ilivestem_xf,&
+                                               ideadstem,ideadstem_st,ideadstem_xf,&
+                                               ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                               ideadcroot,ideadcroot_st,ideadcroot_xf,iout
   use clm_varpar                      , only : numpft, nlevdecomp_full
-  use clm_varctl                      , only : iulog, use_cndv
+  use clm_varctl                      , only : iulog,use_cndv,use_matrixcn
   use clm_varcon                      , only : tfrz
   use abortutils                      , only : endrun
   use CanopyStateType                 , only : canopystate_type
@@ -287,7 +292,6 @@ contains
     ! each of the following phenology type routines includes a filter
     ! to operate only on the relevant patches
 
-
     if ( phase == 1 ) then
        call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
             temperature_inst, cnveg_state_inst, crop_inst)
@@ -525,7 +529,7 @@ contains
     integer :: p                          ! indices
     integer :: fp                         ! lake filter patch index
     
-    real(r8):: tranr 				      
+    real(r8):: tranr       
     real(r8):: t1                         ! temporary variable 
     !-----------------------------------------------------------------------
 
@@ -538,62 +542,64 @@ contains
          woody                               =>    pftcon%woody                                                         , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)     
          
          leafc_storage                       =>    cnveg_carbonstate_inst%leafc_storage_patch                           , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                             
-   		 frootc_storage                      =>    cnveg_carbonstate_inst%frootc_storage_patch                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                         
+         frootc_storage                      =>    cnveg_carbonstate_inst%frootc_storage_patch                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                         
          livestemc_storage                   =>    cnveg_carbonstate_inst%livestemc_storage_patch                       , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C storage                         
          deadstemc_storage                   =>    cnveg_carbonstate_inst%deadstemc_storage_patch                       , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C storage                         
-   		 livecrootc_storage                  =>    cnveg_carbonstate_inst%livecrootc_storage_patch                      , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage                  
-   		 deadcrootc_storage                  =>    cnveg_carbonstate_inst%deadcrootc_storage_patch                      , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                  
-   		 gresp_storage                       =>    cnveg_carbonstate_inst%gresp_storage_patch                           , & ! Input:  [real(r8) (:)]  (gC/m2) growth respiration storage   
-   		 leafc_xfer                          =>    cnveg_carbonstate_inst%leafc_xfer_patch                              , & ! InOut:  [real(r8) (:)]  (gC/m2) leaf C transfer                            
-   		 frootc_xfer                         =>    cnveg_carbonstate_inst%frootc_xfer_patch                             , & ! InOut:  [real(r8) (:)]  (gC/m2) fine root C transfer                       
-   		 livestemc_xfer                      =>    cnveg_carbonstate_inst%livestemc_xfer_patch                          , & ! InOut:  [real(r8) (:)]  (gC/m2) live stem C transfer                       
-   		 deadstemc_xfer                      =>    cnveg_carbonstate_inst%deadstemc_xfer_patch                          , & ! InOut:  [real(r8) (:)]  (gC/m2) dead stem C transfer                       
-   		 livecrootc_xfer                     =>    cnveg_carbonstate_inst%livecrootc_xfer_patch                         , & ! InOut:  [real(r8) (:)]  (gC/m2) live coarse root C transfer                
-   		 deadcrootc_xfer                     =>    cnveg_carbonstate_inst%deadcrootc_xfer_patch                         , & ! InOut:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer   
-   		                
-   		 leafn_storage                       =>    cnveg_nitrogenstate_inst%leafn_storage_patch                         , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N storage                              
-   		 frootn_storage                      =>    cnveg_nitrogenstate_inst%frootn_storage_patch                        , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N storage                         
-   		 livestemn_storage                   =>    cnveg_nitrogenstate_inst%livestemn_storage_patch                     , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N storage                         
-   		 deadstemn_storage                   =>    cnveg_nitrogenstate_inst%deadstemn_storage_patch                     , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N storage                         
-   		 livecrootn_storage                  =>    cnveg_nitrogenstate_inst%livecrootn_storage_patch                    , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N storage                  
-   		 deadcrootn_storage                  =>    cnveg_nitrogenstate_inst%deadcrootn_storage_patch                    , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N storage               
-   		 leafn_xfer                          =>    cnveg_nitrogenstate_inst%leafn_xfer_patch                            , & ! InOut:  [real(r8) (:)]  (gN/m2) leaf N transfer                            
-   		 frootn_xfer                         =>    cnveg_nitrogenstate_inst%frootn_xfer_patch                           , & ! InOut:  [real(r8) (:)]  (gN/m2) fine root N transfer                       
-   		 livestemn_xfer                      =>    cnveg_nitrogenstate_inst%livestemn_xfer_patch                        , & ! InOut:  [real(r8) (:)]  (gN/m2) live stem N transfer                       
-   		 deadstemn_xfer                      =>    cnveg_nitrogenstate_inst%deadstemn_xfer_patch                        , & ! InOut:  [real(r8) (:)]  (gN/m2) dead stem N transfer                       
-   		 livecrootn_xfer                     =>    cnveg_nitrogenstate_inst%livecrootn_xfer_patch                       , & ! InOut:  [real(r8) (:)]  (gN/m2) live coarse root N transfer                
-   		 deadcrootn_xfer                     =>    cnveg_nitrogenstate_inst%deadcrootn_xfer_patch                       , & ! InOut:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer     
-   		                 
-   		 leafc_storage_to_xfer               =>    cnveg_carbonflux_inst%leafc_storage_to_xfer_patch                    , & ! InOut:  [real(r8) (:)]                                                     
-   		 frootc_storage_to_xfer              =>    cnveg_carbonflux_inst%frootc_storage_to_xfer_patch                   , & ! InOut:  [real(r8) (:)]                                                     
-   		 livestemc_storage_to_xfer           =>    cnveg_carbonflux_inst%livestemc_storage_to_xfer_patch                , & ! InOut:  [real(r8) (:)]                                                     
-   		 deadstemc_storage_to_xfer           =>    cnveg_carbonflux_inst%deadstemc_storage_to_xfer_patch                , & ! InOut:  [real(r8) (:)]                                                     
-   		 livecrootc_storage_to_xfer          =>    cnveg_carbonflux_inst%livecrootc_storage_to_xfer_patch               , & ! InOut:  [real(r8) (:)]                                                     
-   		 deadcrootc_storage_to_xfer          =>    cnveg_carbonflux_inst%deadcrootc_storage_to_xfer_patch               , & ! InOut:  [real(r8) (:)]                                                     
-   		 gresp_storage_to_xfer               =>    cnveg_carbonflux_inst%gresp_storage_to_xfer_patch                    , & ! InOut:  [real(r8) (:)]  
-   		 leafc_xfer_to_leafc                 =>    cnveg_carbonflux_inst%leafc_xfer_to_leafc_patch                      , & ! InOut:  [real(r8) (:)]                                                    
-   		 frootc_xfer_to_frootc               =>    cnveg_carbonflux_inst%frootc_xfer_to_frootc_patch                    , & ! InOut:  [real(r8) (:)]                                                    
-   		 livestemc_xfer_to_livestemc         =>    cnveg_carbonflux_inst%livestemc_xfer_to_livestemc_patch              , & ! InOut:  [real(r8) (:)]                                                    
-   		 deadstemc_xfer_to_deadstemc         =>    cnveg_carbonflux_inst%deadstemc_xfer_to_deadstemc_patch              , & ! InOut:  [real(r8) (:)]                                                    
-   		 livecrootc_xfer_to_livecrootc       =>    cnveg_carbonflux_inst%livecrootc_xfer_to_livecrootc_patch            , & ! InOut:  [real(r8) (:)]                                                    
-   		 deadcrootc_xfer_to_deadcrootc       =>    cnveg_carbonflux_inst%deadcrootc_xfer_to_deadcrootc_patch            , & ! InOut:  [real(r8) (:)]   
-   		                                                    
-   		 leafn_storage_to_xfer               =>    cnveg_nitrogenflux_inst%leafn_storage_to_xfer_patch                  , & ! InOut:  [real(r8) (:)]                                                     
-   		 frootn_storage_to_xfer              =>    cnveg_nitrogenflux_inst%frootn_storage_to_xfer_patch                 , & ! InOut:  [real(r8) (:)]                                                     
-   		 livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch              , & ! InOut:  [real(r8) (:)]                                                     
-   		 deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch              , & ! InOut:  [real(r8) (:)]                                                     
-   		 livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch             , & ! InOut:  [real(r8) (:)]   
-   		 deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch             , & ! InOut:  [real(r8) (:)]                                                     
-   		 leafn_xfer_to_leafn                 =>    cnveg_nitrogenflux_inst%leafn_xfer_to_leafn_patch                    , & ! InOut:  [real(r8) (:)]                                                    
-   		 frootn_xfer_to_frootn               =>    cnveg_nitrogenflux_inst%frootn_xfer_to_frootn_patch                  , & ! InOut:  [real(r8) (:)]                                                    
-   		 livestemn_xfer_to_livestemn         =>    cnveg_nitrogenflux_inst%livestemn_xfer_to_livestemn_patch            , & ! InOut:  [real(r8) (:)]                                                    
-   		 deadstemn_xfer_to_deadstemn         =>    cnveg_nitrogenflux_inst%deadstemn_xfer_to_deadstemn_patch            , & ! InOut:  [real(r8) (:)]                                                    
-   		 livecrootn_xfer_to_livecrootn       =>    cnveg_nitrogenflux_inst%livecrootn_xfer_to_livecrootn_patch          , & ! InOut:  [real(r8) (:)]                                                    
-   		 deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch          , & ! InOut:  [real(r8) (:)]     
-   		           
+         livecrootc_storage                  =>    cnveg_carbonstate_inst%livecrootc_storage_patch                      , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage                  
+         deadcrootc_storage                  =>    cnveg_carbonstate_inst%deadcrootc_storage_patch                      , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                  
+         gresp_storage                       =>    cnveg_carbonstate_inst%gresp_storage_patch                           , & ! Input:  [real(r8) (:)]  (gC/m2) growth respiration storage   
+         leafc_xfer                          =>    cnveg_carbonstate_inst%leafc_xfer_patch                              , & ! InOut:  [real(r8) (:)]  (gC/m2) leaf C transfer                            
+         frootc_xfer                         =>    cnveg_carbonstate_inst%frootc_xfer_patch                             , & ! InOut:  [real(r8) (:)]  (gC/m2) fine root C transfer                       
+         livestemc_xfer                      =>    cnveg_carbonstate_inst%livestemc_xfer_patch                          , & ! InOut:  [real(r8) (:)]  (gC/m2) live stem C transfer                       
+         deadstemc_xfer                      =>    cnveg_carbonstate_inst%deadstemc_xfer_patch                          , & ! InOut:  [real(r8) (:)]  (gC/m2) dead stem C transfer                       
+         livecrootc_xfer                     =>    cnveg_carbonstate_inst%livecrootc_xfer_patch                         , & ! InOut:  [real(r8) (:)]  (gC/m2) live coarse root C transfer                
+         deadcrootc_xfer                     =>    cnveg_carbonstate_inst%deadcrootc_xfer_patch                         , & ! InOut:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer   
+                   
+         leafn_storage                       =>    cnveg_nitrogenstate_inst%leafn_storage_patch                         , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N storage                              
+         frootn_storage                      =>    cnveg_nitrogenstate_inst%frootn_storage_patch                        , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N storage                         
+         livestemn_storage                   =>    cnveg_nitrogenstate_inst%livestemn_storage_patch                     , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N storage                         
+         deadstemn_storage                   =>    cnveg_nitrogenstate_inst%deadstemn_storage_patch                     , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N storage                         
+         livecrootn_storage                  =>    cnveg_nitrogenstate_inst%livecrootn_storage_patch                    , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N storage                  
+         deadcrootn_storage                  =>    cnveg_nitrogenstate_inst%deadcrootn_storage_patch                    , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N storage               
+         leafn_xfer                          =>    cnveg_nitrogenstate_inst%leafn_xfer_patch                            , & ! InOut:  [real(r8) (:)]  (gN/m2) leaf N transfer                            
+         frootn_xfer                         =>    cnveg_nitrogenstate_inst%frootn_xfer_patch                           , & ! InOut:  [real(r8) (:)]  (gN/m2) fine root N transfer                       
+         livestemn_xfer                      =>    cnveg_nitrogenstate_inst%livestemn_xfer_patch                        , & ! InOut:  [real(r8) (:)]  (gN/m2) live stem N transfer                       
+         deadstemn_xfer                      =>    cnveg_nitrogenstate_inst%deadstemn_xfer_patch                        , & ! InOut:  [real(r8) (:)]  (gN/m2) dead stem N transfer                       
+         livecrootn_xfer                     =>    cnveg_nitrogenstate_inst%livecrootn_xfer_patch                       , & ! InOut:  [real(r8) (:)]  (gN/m2) live coarse root N transfer                
+         deadcrootn_xfer                     =>    cnveg_nitrogenstate_inst%deadcrootn_xfer_patch                       , & ! InOut:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer     
+                    
+         leafc_storage_to_xfer               =>    cnveg_carbonflux_inst%leafc_storage_to_xfer_patch                    , & ! InOut:  [real(r8) (:)]                                                     
+         frootc_storage_to_xfer              =>    cnveg_carbonflux_inst%frootc_storage_to_xfer_patch                   , & ! InOut:  [real(r8) (:)]                                                     
+         livestemc_storage_to_xfer           =>    cnveg_carbonflux_inst%livestemc_storage_to_xfer_patch                , & ! InOut:  [real(r8) (:)]                                                     
+         deadstemc_storage_to_xfer           =>    cnveg_carbonflux_inst%deadstemc_storage_to_xfer_patch                , & ! InOut:  [real(r8) (:)]                                                     
+         livecrootc_storage_to_xfer          =>    cnveg_carbonflux_inst%livecrootc_storage_to_xfer_patch               , & ! InOut:  [real(r8) (:)]                                                     
+         deadcrootc_storage_to_xfer          =>    cnveg_carbonflux_inst%deadcrootc_storage_to_xfer_patch               , & ! InOut:  [real(r8) (:)]                                                     
+         gresp_storage_to_xfer               =>    cnveg_carbonflux_inst%gresp_storage_to_xfer_patch                    , & ! InOut:  [real(r8) (:)]  
+         leafc_xfer_to_leafc                 =>    cnveg_carbonflux_inst%leafc_xfer_to_leafc_patch                      , & ! InOut:  [real(r8) (:)]                                                    
+         frootc_xfer_to_frootc               =>    cnveg_carbonflux_inst%frootc_xfer_to_frootc_patch                    , & ! InOut:  [real(r8) (:)]                                                    
+         livestemc_xfer_to_livestemc         =>    cnveg_carbonflux_inst%livestemc_xfer_to_livestemc_patch              , & ! InOut:  [real(r8) (:)]                                                    
+         deadstemc_xfer_to_deadstemc         =>    cnveg_carbonflux_inst%deadstemc_xfer_to_deadstemc_patch              , & ! InOut:  [real(r8) (:)]                                                    
+         livecrootc_xfer_to_livecrootc       =>    cnveg_carbonflux_inst%livecrootc_xfer_to_livecrootc_patch            , & ! InOut:  [real(r8) (:)]                                                    
+         deadcrootc_xfer_to_deadcrootc       =>    cnveg_carbonflux_inst%deadcrootc_xfer_to_deadcrootc_patch            , & ! InOut:  [real(r8) (:)]   
+                                                         
+         leafn_storage_to_xfer               =>    cnveg_nitrogenflux_inst%leafn_storage_to_xfer_patch                  , & ! InOut:  [real(r8) (:)]                                                     
+         frootn_storage_to_xfer              =>    cnveg_nitrogenflux_inst%frootn_storage_to_xfer_patch                 , & ! InOut:  [real(r8) (:)]                                                     
+         livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch              , & ! InOut:  [real(r8) (:)]                                                     
+         deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch              , & ! InOut:  [real(r8) (:)]                                                     
+         livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch             , & ! InOut:  [real(r8) (:)]   
+         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch             , & ! InOut:  [real(r8) (:)]                                                     
+         leafn_xfer_to_leafn                 =>    cnveg_nitrogenflux_inst%leafn_xfer_to_leafn_patch                    , & ! InOut:  [real(r8) (:)]                                                    
+         frootn_xfer_to_frootn               =>    cnveg_nitrogenflux_inst%frootn_xfer_to_frootn_patch                  , & ! InOut:  [real(r8) (:)]                                                    
+         livestemn_xfer_to_livestemn         =>    cnveg_nitrogenflux_inst%livestemn_xfer_to_livestemn_patch            , & ! InOut:  [real(r8) (:)]                                                    
+         deadstemn_xfer_to_deadstemn         =>    cnveg_nitrogenflux_inst%deadstemn_xfer_to_deadstemn_patch            , & ! InOut:  [real(r8) (:)]                                                    
+         livecrootn_xfer_to_livecrootn       =>    cnveg_nitrogenflux_inst%livecrootn_xfer_to_livecrootn_patch          , & ! InOut:  [real(r8) (:)]                                                    
+         deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch          , & ! InOut:  [real(r8) (:)]     
+              
          bglfr      => cnveg_state_inst%bglfr_patch , & ! Output: [real(r8) (:) ]  background litterfall rate (1/s)                  
          bgtr       => cnveg_state_inst%bgtr_patch  , & ! Output: [real(r8) (:) ]  background transfer growth rate (1/s)             
-         lgsf       => cnveg_state_inst%lgsf_patch    & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
+         lgsf       => cnveg_state_inst%lgsf_patch  , & ! Output: [real(r8) (:) ]  long growing season factor [0-1]
+         matrix_nphtransfer => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch , &!
+         matrix_phtransfer => cnveg_carbonflux_inst%matrix_phtransfer_patch  & 
          )
 
       dayspyr   = get_days_per_year()
@@ -614,35 +620,80 @@ contains
       if (evergreen(ivt(p)) == 1._r8) then    
    
          tranr=0.0002_r8   
-         ! set carbon fluxes for shifting storage pools to transfer pools    
-         leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt    
-         frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt    
-         if (woody(ivt(p)) == 1.0_r8) then    
-            livestemc_storage_to_xfer(p)  = tranr * livestemc_storage(p)/dt    
-            deadstemc_storage_to_xfer(p)  = tranr * deadstemc_storage(p)/dt    
-            livecrootc_storage_to_xfer(p) = tranr * livecrootc_storage(p)/dt   
-            deadcrootc_storage_to_xfer(p) = tranr * deadcrootc_storage(p)/dt   
-            gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt        
-         end if    
+         ! set carbon fluxes for shifting storage pools to transfer pools 
 
+         if (use_matrixcn) then    
+            matrix_phtransfer(p,ileaf_xf,ileaf_st)   =  matrix_phtransfer(p,ileaf_xf,ileaf_st) + tranr/dt
+            matrix_phtransfer(p,ifroot_xf,ifroot_st) =  matrix_phtransfer(p,ifroot_xf,ifroot_st) + tranr/dt 
+            if (woody(ivt(p)) == 1.0_r8) then   
+               matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + tranr/dt
+               matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + tranr/dt
+               matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + tranr/dt
+               matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + tranr/dt
+!               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt
+            end if
+          end if !use_matrixcn
+!         else
+            leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt    
+            frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt
+           if (woody(ivt(p)) == 1.0_r8) then
+               livestemc_storage_to_xfer(p)  = tranr * livestemc_storage(p)/dt    
+               deadstemc_storage_to_xfer(p)  = tranr * deadstemc_storage(p)/dt    
+               livecrootc_storage_to_xfer(p) = tranr * livecrootc_storage(p)/dt   
+               deadcrootc_storage_to_xfer(p) = tranr * deadcrootc_storage(p)/dt
+               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt
+            end if   
+!          end if !end of use_matrixcn
         ! set nitrogen fluxes for shifting storage pools to transfer pools    
-        leafn_storage_to_xfer(p)  = tranr * leafn_storage(p)/dt    
-        frootn_storage_to_xfer(p) = tranr * frootn_storage(p)/dt   
-        if (woody(ivt(p)) == 1.0_r8) then    
-            livestemn_storage_to_xfer(p)  = tranr * livestemn_storage(p)/dt    
-            deadstemn_storage_to_xfer(p)  = tranr * deadstemn_storage(p)/dt    
-            livecrootn_storage_to_xfer(p) = tranr * livecrootn_storage(p)/dt   
-            deadcrootn_storage_to_xfer(p) = tranr * deadcrootn_storage(p)/dt   
-        end if    
+          leafn_storage_to_xfer(p)  = tranr * leafn_storage(p)/dt    
+          frootn_storage_to_xfer(p) = tranr * frootn_storage(p)/dt   
+          if (woody(ivt(p)) == 1.0_r8) then    
+             livestemn_storage_to_xfer(p)  = tranr * livestemn_storage(p)/dt    
+             deadstemn_storage_to_xfer(p)  = tranr * deadstemn_storage(p)/dt    
+             livecrootn_storage_to_xfer(p) = tranr * livecrootn_storage(p)/dt   
+             deadcrootn_storage_to_xfer(p) = tranr * deadcrootn_storage(p)/dt   
+          end if 
+         if (use_matrixcn) then    
+            matrix_nphtransfer(p,ileaf_xf,ileaf_st)   =  matrix_nphtransfer(p,ileaf_xf,ileaf_st) + tranr/dt
+            matrix_nphtransfer(p,ifroot_xf,ifroot_st) =  matrix_nphtransfer(p,ifroot_xf,ifroot_st) + tranr/dt 
+            if (woody(ivt(p)) == 1.0_r8) then   
+               matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + tranr/dt
+               matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + tranr/dt
+               matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + tranr/dt
+               matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + tranr/dt
+!               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt
+            end if
+          end if   
+!         end if !end of use_matrixcn
                         
         t1 = 1.0_r8 / dt   
-            
-        leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)    
-        frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)   
-            
-        leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)    
-        frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)   
-        if (woody(ivt(p)) == 1.0_r8) then   
+
+        if (use_matrixcn) then
+
+           matrix_phtransfer(p,ileaf,ileaf_xf)   = matrix_phtransfer(p,ileaf,ileaf_xf) + t1
+           matrix_phtransfer(p,ifroot,ifroot_xf) = matrix_phtransfer(p,ifroot,ifroot_xf) + t1
+   
+           matrix_nphtransfer(p,ileaf,ileaf_xf)   = matrix_nphtransfer(p,ileaf,ileaf_xf) + t1
+           matrix_nphtransfer(p,ifroot,ifroot_xf) = matrix_nphtransfer(p,ifroot,ifroot_xf) + t1  
+          if (woody(ivt(p)) == 1.0_r8) then 
+            matrix_phtransfer(p,ilivestem,ilivestem_xf)   = matrix_phtransfer(p,ilivestem,ilivestem_xf) + t1
+            matrix_phtransfer(p,ideadstem,ideadstem_xf)   = matrix_phtransfer(p,ideadstem,ideadstem_xf) + t1
+            matrix_phtransfer(p,ilivecroot,ilivecroot_xf) = matrix_phtransfer(p,ilivecroot,ilivecroot_xf) + t1
+            matrix_phtransfer(p,ideadcroot,ideadcroot_xf) = matrix_phtransfer(p,ideadcroot,ideadcroot_xf) + t1
+
+            matrix_nphtransfer(p,ilivestem,ilivestem_xf)   = matrix_nphtransfer(p,ilivestem,ilivestem_xf) + t1
+            matrix_nphtransfer(p,ideadstem,ideadstem_xf)   = matrix_nphtransfer(p,ideadstem,ideadstem_xf) + t1
+            matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) = matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) + t1
+            matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) = matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) + t1
+          end if
+         end if 
+!         else
+           leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)    
+           frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
+             
+           leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)    
+           frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)
+          if (woody(ivt(p)) == 1.0_r8) then 
             livestemc_xfer_to_livestemc(p)   = t1 * livestemc_xfer(p)   
             deadstemc_xfer_to_deadstemc(p)   = t1 * deadstemc_xfer(p)   
             livecrootc_xfer_to_livecrootc(p) = t1 * livecrootc_xfer(p)  
@@ -651,15 +702,15 @@ contains
             livestemn_xfer_to_livestemn(p)   = t1 * livestemn_xfer(p)   
             deadstemn_xfer_to_deadstemn(p)   = t1 * deadstemn_xfer(p)   
             livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)  
-            deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)  
-        end if
-                
+            deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)
+          end if
+!         end if  ! use_matrixcn   
       end if ! end of if (evergreen(ivt(p)) == 1._r8) then    
      
    end do ! end of pft loop 
    
    end if ! end of if (CN_evergreen_phenology_opt == 1) then    
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     end associate
 
@@ -778,7 +829,9 @@ contains
          livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
-         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]                                                    
+         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]   
+         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & !
+         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  & 
          )
 
       ! start patch loop
@@ -787,7 +840,7 @@ contains
          c = patch%column(p)
          g = patch%gridcell(p)
 
-         if (season_decid(ivt(p)) == 1._r8) then
+         if (season_decid(ivt(p)) == 1._r8) then   !a
 
             ! set background litterfall rate, background transfer rate, and
             ! long growing season factor to 0 for seasonal deciduous types
@@ -799,20 +852,20 @@ contains
             crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
 
             ! set flag for solstice period (winter->summer = 1, summer->winter = 0)
-            if (dayl(g) >= prev_dayl(g)) then
+            if (dayl(g) >= prev_dayl(g)) then     !b
                ws_flag = 1._r8
             else
                ws_flag = 0._r8
-            end if
+            end if                                !bb
 
             ! update offset_counter and test for the end of the offset period
-            if (offset_flag(p) == 1.0_r8) then
+            if (offset_flag(p) == 1.0_r8) then                !c
                ! decrement counter for offset period
                offset_counter(p) = offset_counter(p) - dt
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0.0_r8) then
+               if (offset_counter(p) == 0.0_r8) then         !d
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
 
@@ -820,24 +873,24 @@ contains
                   offset_counter(p) = 0._r8
                   dormant_flag(p) = 1._r8
                   days_active(p) = 0._r8
-                  if (use_cndv) then
+                  if (use_cndv) then                         !e
                      pftmayexist(p) = .true.
-                  end if
+                  end if                                     !ee
 
                   ! reset the previous timestep litterfall flux memory
                   prev_leafc_to_litter(p) = 0._r8
                   prev_frootc_to_litter(p) = 0._r8
-               end if
-            end if
+               end if                                        !dd
+            end if                                           !cc
 
             ! update onset_counter and test for the end of the onset period
-            if (onset_flag(p) == 1.0_r8) then
+            if (onset_flag(p) == 1.0_r8) then                !f
                ! decrement counter for onset period
                onset_counter(p) = onset_counter(p) - dt
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then
+               if (onset_counter(p) == 0.0_r8) then          !g
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
 
@@ -848,7 +901,7 @@ contains
                   frootc_xfer_to_frootc(p) = 0.0_r8
                   leafn_xfer_to_leafn(p)   = 0.0_r8
                   frootn_xfer_to_frootn(p) = 0.0_r8
-                  if (woody(ivt(p)) == 1.0_r8) then
+                  if (woody(ivt(p)) == 1.0_r8) then          !h
                      livestemc_xfer_to_livestemc(p)   = 0.0_r8
                      deadstemc_xfer_to_deadstemc(p)   = 0.0_r8
                      livecrootc_xfer_to_livecrootc(p) = 0.0_r8
@@ -857,13 +910,13 @@ contains
                      deadstemn_xfer_to_deadstemn(p)   = 0.0_r8
                      livecrootn_xfer_to_livecrootn(p) = 0.0_r8
                      deadcrootn_xfer_to_deadcrootn(p) = 0.0_r8
-                  end if
+                  end if                                      !hh
                   ! set transfer pools to 0.0
                   leafc_xfer(p) = 0.0_r8
                   leafn_xfer(p) = 0.0_r8
                   frootc_xfer(p) = 0.0_r8
                   frootn_xfer(p) = 0.0_r8
-                  if (woody(ivt(p)) == 1.0_r8) then
+                  if (woody(ivt(p)) == 1.0_r8) then          !i
                      livestemc_xfer(p) = 0.0_r8
                      livestemn_xfer(p) = 0.0_r8
                      deadstemc_xfer(p) = 0.0_r8
@@ -872,20 +925,20 @@ contains
                      livecrootn_xfer(p) = 0.0_r8
                      deadcrootc_xfer(p) = 0.0_r8
                      deadcrootn_xfer(p) = 0.0_r8
-                  end if
-               end if
-            end if
+                  end if                                    !ii
+               end if                                       !gg
+            end if                                          !ff
 
             ! test for switching from dormant period to growth period
-            if (dormant_flag(p) == 1.0_r8) then
+            if (dormant_flag(p) == 1.0_r8) then             !j
 
                ! Test to turn on growing degree-day sum, if off.
                ! switch on the growing degree day sum on the winter solstice
 
-               if (onset_gddflag(p) == 0._r8 .and. ws_flag == 1._r8) then
+               if (onset_gddflag(p) == 0._r8 .and. ws_flag == 1._r8) then    !k
                   onset_gddflag(p) = 1._r8
-                  onset_gdd(p) = 0._r8
-               end if
+                  onset_gdd(p) = 0._r8 
+               end if                                                        !kk
 
                ! Test to turn off growing degree-day sum, if on.
                ! This test resets the growing degree day sum if it gets past
@@ -893,21 +946,21 @@ contains
                ! In that case, it will take until the next winter solstice
                ! before the growing degree-day summation starts again.
 
-               if (onset_gddflag(p) == 1._r8 .and. ws_flag == 0._r8) then
+               if (onset_gddflag(p) == 1._r8 .and. ws_flag == 0._r8) then    !l
                   onset_gddflag(p) = 0._r8
                   onset_gdd(p) = 0._r8
-               end if
+               end if                                                        !ll
 
                ! if the gdd flag is set, and if the soil is above freezing
                ! then accumulate growing degree days for onset trigger
 
                soilt = t_soisno(c,3)
-               if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
+               if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then  !m
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
-               end if
+               end if                                                              !mm
 
                ! set onset_flag if critical growing degree-day sum is exceeded
-               if (onset_gdd(p) > crit_onset_gdd) then
+               if (onset_gdd(p) > crit_onset_gdd) then                             !n
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
                   onset_gddflag(p) = 0.0_r8
@@ -920,49 +973,68 @@ contains
                   ! inlined during vectorization
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
-                  leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
-                  frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then
-                     livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
-                     deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
-                     livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
-                     deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
-                     gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                  end if
+                 if(use_matrixcn)then                                 !o
+                    matrix_phtransfer(p,ileaf_xf,ileaf_st)   = matrix_phtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
+                    matrix_phtransfer(p,ifroot_xf,ifroot_st) = matrix_phtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt
 
+                    matrix_nphtransfer(p,ileaf_xf,ileaf_st)   = matrix_nphtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
+                    matrix_nphtransfer(p,ifroot_xf,ifroot_st) = matrix_nphtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt
+                    if (woody(ivt(p)) == 1.0_r8) then                               !p
+                         matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
+                         matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
+                         matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
+                         matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt
+!                         gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                         matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
+                         matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
+                         matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
+                         matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt
+                    end if
+                  end if 
+!                  else
+                                                               !o
+                    leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
+                    frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
+                    if (woody(ivt(p)) == 1.0_r8) then                                !q
+                      livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
+                      deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
+                      livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
+                      deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
+                      gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                    end if                                                           !qq
                   ! set nitrogen fluxes for shifting storage pools to transfer pools
                   leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
                   frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then
+                  if (woody(ivt(p)) == 1.0_r8) then                                  !r
                      livestemn_storage_to_xfer(p)  = fstor2tran * livestemn_storage(p)/dt
                      deadstemn_storage_to_xfer(p)  = fstor2tran * deadstemn_storage(p)/dt
                      livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
                      deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
-                  end if
-               end if
-
+                  end if                                                             !rr
+!                 end if ! use_matrixcn		   !oo
+               end if 
                ! test for switching from growth period to offset period
-            else if (offset_flag(p) == 0.0_r8) then
-               if (use_cndv) then
+            else if (offset_flag(p) == 0.0_r8) then                                  !j
+               if (use_cndv) then                                                    !t
                   ! If days_active > 355, then remove patch in
                   ! CNDVEstablishment at the end of the year.
                   ! days_active > 355 is a symptom of seasonal decid. patches occurring in
                   ! gridcells where dayl never drops below crit_dayl.
                   ! This results in TLAI>1e4 in a few gridcells.
                   days_active(p) = days_active(p) + fracday
-                  if (days_active(p) > 355._r8) pftmayexist(p) = .false.
-               end if
+                  if (days_active(p) > 355._r8) pftmayexist(p) = .false.           
+               end if                                                              !tt
 
                ! only begin to test for offset daylength once past the summer sol
-               if (ws_flag == 0._r8 .and. dayl(g) < crit_dayl) then
+               if (ws_flag == 0._r8 .and. dayl(g) < crit_dayl) then                !u
                   offset_flag(p) = 1._r8
                   offset_counter(p) = ndays_off * secspday
                   prev_leafc_to_litter(p) = 0._r8
                   prev_frootc_to_litter(p) = 0._r8
-               end if
-            end if
+               end if                                                              !uu
+            end if                                                                  !jj
 
-         end if ! end if seasonal deciduous
+         end if ! end if seasonal deciduous                                        !aa
 
       end do ! end of patch loop
 
@@ -1019,13 +1091,15 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                                                   & 
-         ivt                                 =>    patch%itype                                                   , & ! Input:  [integer   (:)   ]  patch vegetation type                                
+         ivt                                 =>    patch%itype                                                 , & ! Input:  [integer   (:)   ]  patch vegetation type                                
          dayl                                =>    grc%dayl                                                    , & ! Input:  [real(r8)  (:)   ]  daylength (s)
          
-         prec10                              => atm2lnd_inst%prec10_patch                                     , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         prec10                              => atm2lnd_inst%prec10_patch                                      , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
          leaf_long                           =>    pftcon%leaf_long                                            , & ! Input:  leaf longevity (yrs)                              
          woody                               =>    pftcon%woody                                                , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          stress_decid                        =>    pftcon%stress_decid                                         , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
+         leafcn                              =>    pftcon%leafcn                                               , & ! Input:  leaf C:N (gC/gN)
+         frootcn                             =>    pftcon%frootcn                                              , & ! Input:  fine root C:N (gC/gN) 
          
          soilpsi                             =>    soilstate_inst%soilpsi_col                                  , & ! Input:  [real(r8)  (:,:) ]  soil water potential in each soil layer (MPa)   
          
@@ -1102,10 +1176,12 @@ contains
          livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
-         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]                                                    
+         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)		 ] 
+         matrix_nphtransfer                  => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch                 , & !
+         matrix_phtransfer                   => cnveg_carbonflux_inst%matrix_phtransfer_patch                  & !
          )
 
-      ! set time steps
+       !set time steps
       dayspyr = get_days_per_year()
 
       ! specify rain threshold for leaf onset
@@ -1270,16 +1346,36 @@ contains
                   ! inlined during vectorization
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
+
+                 if (use_matrixcn) then 
+                     matrix_phtransfer(p,ileaf_xf,ileaf_st)   = matrix_phtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
+                     matrix_phtransfer(p,ifroot_xf,ifroot_st) = matrix_phtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt  
+                     matrix_nphtransfer(p,ileaf_xf,ileaf_st)   = matrix_nphtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
+                     matrix_nphtransfer(p,ifroot_xf,ifroot_st) = matrix_nphtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt
+                    if (woody(ivt(p)) == 1.0_r8) then
+!                         gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                         matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
+                         matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
+                         matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
+                         matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt 
+!N
+                         matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
+                         matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
+                         matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
+                         matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt 
+                    end if
+                  end if
+!                 else
                   leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                   frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then
-                     livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
-                     deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
-                     livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
-                     deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
-                     gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                  end if
-
+                    if (woody(ivt(p)) == 1.0_r8) then
+                       livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
+                       deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
+                       livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
+                       deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
+                       gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt  
+                   end if
+ 
                   ! set nitrogen fluxes for shifting storage pools to transfer pools
                   leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
                   frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
@@ -1289,7 +1385,8 @@ contains
                      livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
                      deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
                   end if
-               end if
+!                 end if !end use_matrixcn
+                end if !
 
                ! test for switching from growth period to offset period
             else if (offset_flag(p) == 0._r8) then
@@ -1387,26 +1484,59 @@ contains
 
                ! reduced the amount of stored carbon flowing to display pool by only counting the delta
                ! between leafc and leafc_store in the flux. RosieF, Nov5 2015. 
-               leafc_storage_to_xfer(p)  = max(0.0_r8,(leafc_storage(p)-leafc(p))) * bgtr(p)
-               frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
+
+                  leafc_storage_to_xfer(p)  = max(0.0_r8,(leafc_storage(p)-leafc(p))) * bgtr(p)
+                  frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
+              if (use_matrixcn) then
+                  if(leafc_storage(p) .gt. 0)then
+                      matrix_phtransfer(p,ileaf_xf,ileaf_st)   = matrix_phtransfer(p,ileaf_xf,ileaf_st) &
+                                                            + leafc_storage_to_xfer(p) / leafc_storage(p) 
+                  end if
+                  if(frootc_storage(p) .gt. 0)then
+                     matrix_phtransfer(p,ifroot_xf,ifroot_st) = matrix_phtransfer(p,ifroot_xf,ifroot_st) &
+                                                            + frootc_storage_to_xfer(p) / frootc_storage(p)
+                  end if
+                if (woody(ivt(p)) == 1.0_r8) then
+!                    gresp_storage_to_xfer(p)      = gresp_storage(p) * bgtr(p)
+                    matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + bgtr(p) 
+                    matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + bgtr(p) 
+                    matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + bgtr(p) 
+                    matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + bgtr(p)
+                 end if
+              end if
+!            else
                if (woody(ivt(p)) == 1.0_r8) then
+   
                   livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
                   deadstemc_storage_to_xfer(p)  = deadstemc_storage(p) * bgtr(p)
                   livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * bgtr(p)
                   deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * bgtr(p)
                   gresp_storage_to_xfer(p)      = gresp_storage(p) * bgtr(p)
-               end if
-
+                end if
                ! set nitrogen fluxes for shifting storage pools to transfer pools
                leafn_storage_to_xfer(p)  = leafn_storage(p) * bgtr(p)
                frootn_storage_to_xfer(p) = frootn_storage(p) * bgtr(p)
+              if (use_matrixcn) then 
+                  matrix_nphtransfer(p,ileaf_xf,ileaf_st)   = matrix_nphtransfer(p,ileaf_xf,ileaf_st) &
+                                                            + bgtr(p)
+                  matrix_nphtransfer(p,ifroot_xf,ifroot_st) = matrix_nphtransfer(p,ifroot_xf,ifroot_st) &
+                                                            + bgtr(p)
+                if (woody(ivt(p)) == 1.0_r8) then
+                    matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + bgtr(p) 
+                    matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + bgtr(p) 
+                    matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + bgtr(p) 
+                    matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + bgtr(p)
+                end if
+               end if 
+
                if (woody(ivt(p)) == 1.0_r8) then
                   livestemn_storage_to_xfer(p)  = livestemn_storage(p) * bgtr(p)
                   deadstemn_storage_to_xfer(p)  = deadstemn_storage(p) * bgtr(p)
                   livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * bgtr(p)
                   deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * bgtr(p)
                end if
-            end if
+!             end if  !end use_matrixcn 
+            end if !end of onset_flag(p) == 1._r8
 
          end if ! end if stress deciduous
 
@@ -1464,10 +1594,10 @@ contains
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
     integer idpp      ! number of days past planting
-    real(r8) :: dtrad ! radiation time step delta t (seconds)
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    real(r8) :: dtrad ! radiation time step delta t (seconds)
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1498,8 +1628,9 @@ contains
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
          cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
-         vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
-         peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
+         vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor 
+         peaklai           =>    cnveg_state_inst%peaklai_patch                , & ! Output: [integer  (:) ]  1: max allowed lai; 0: not at max
+         
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
          idop              =>    cnveg_state_inst%idop_patch                   , & ! Output: [integer  (:) ]  date of planting                                   
@@ -1524,14 +1655,14 @@ contains
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch     , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer                           
          crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
-         fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
+         fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 		 
          )
 
       ! get time info
       dayspyr = get_days_per_year()
       jday    = get_curr_calday()
+      dtrad  = real(get_rad_step_size(), r8)
       call get_curr_date(kyr, kmo, kda, mcsec)
-      dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -1928,10 +2059,9 @@ contains
 
             ! enter phase 2 onset for one time step:
             ! transfer seed carbon to leaf emergence
-
-            if (peaklai(p) >= 1) then
-               hui(p) = max(hui(p),huigrain(p))
-            endif
+            if (peaklai(p)>= 1) then
+               hui(p) = max(hui(p), huigrain(p))
+            end if   
 
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
@@ -2298,7 +2428,9 @@ contains
          livestemn_xfer_to_livestemn         =>    cnveg_nitrogenflux_inst%livestemn_xfer_to_livestemn_patch   , & ! Output:  [real(r8) (:) ]                                                    
          deadstemn_xfer_to_deadstemn         =>    cnveg_nitrogenflux_inst%deadstemn_xfer_to_deadstemn_patch   , & ! Output:  [real(r8) (:) ]                                                    
          livecrootn_xfer_to_livecrootn       =>    cnveg_nitrogenflux_inst%livecrootn_xfer_to_livecrootn_patch , & ! Output:  [real(r8) (:) ]                                                    
-         deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch   & ! Output:  [real(r8) (:) ]                                                    
+         deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch , & ! Output:  [real(r8) (:) ]
+         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & !	 
+         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  &
          )
 
       ! patch loop
@@ -2316,11 +2448,31 @@ contains
             else
                t1 = 2.0_r8 / (onset_counter(p))
             end if
-            leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
-            frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
-            leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)
-            frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)
-            if (woody(ivt(p)) == 1.0_r8) then
+            if (use_matrixcn)then
+               matrix_phtransfer(p,ileaf,ileaf_xf)   = matrix_phtransfer(p,ileaf,ileaf_xf) + t1
+               matrix_phtransfer(p,ifroot,ifroot_xf) = matrix_phtransfer(p,ifroot,ifroot_xf) + t1
+               matrix_nphtransfer(p,ileaf,ileaf_xf)   = matrix_nphtransfer(p,ileaf,ileaf_xf) + t1
+               matrix_nphtransfer(p,ifroot,ifroot_xf) = matrix_nphtransfer(p,ifroot,ifroot_xf) + t1
+              if (woody(ivt(p)) == 1.0_r8) then
+
+               matrix_phtransfer(p,ilivestem,ilivestem_xf)   = matrix_phtransfer(p,ilivestem,ilivestem_xf) + t1
+               matrix_phtransfer(p,ideadstem,ideadstem_xf)   = matrix_phtransfer(p,ideadstem,ideadstem_xf) + t1
+               matrix_phtransfer(p,ilivecroot,ilivecroot_xf) = matrix_phtransfer(p,ilivecroot,ilivecroot_xf) + t1
+               matrix_phtransfer(p,ideadcroot,ideadcroot_xf) = matrix_phtransfer(p,ideadcroot,ideadcroot_xf) + t1
+
+               matrix_nphtransfer(p,ilivestem,ilivestem_xf)   = matrix_nphtransfer(p,ilivestem,ilivestem_xf) + t1
+               matrix_nphtransfer(p,ideadstem,ideadstem_xf)   = matrix_nphtransfer(p,ideadstem,ideadstem_xf) + t1
+               matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) = matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) + t1
+               matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) = matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) + t1
+              end if
+            end if
+!         if (p .eq.7)print *, '66666',  matrix_phtransfer(p,ilivestem,ilivestem_xf),matrix_nphtransfer(p,ilivestem,ilivestem_xf)
+!           else
+               leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
+               frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
+               leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)
+               frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)
+              if (woody(ivt(p)) == 1.0_r8) then
                livestemc_xfer_to_livestemc(p)   = t1 * livestemc_xfer(p)
                deadstemc_xfer_to_deadstemc(p)   = t1 * deadstemc_xfer(p)
                livecrootc_xfer_to_livecrootc(p) = t1 * livecrootc_xfer(p)
@@ -2329,8 +2481,8 @@ contains
                deadstemn_xfer_to_deadstemn(p)   = t1 * deadstemn_xfer(p)
                livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)
                deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)
-            end if
-
+              end if
+!            end if ! use_matrixcn
          end if ! end if onset period
 
          ! calculate the background rate of transfer growth (used for stress
@@ -2338,6 +2490,26 @@ contains
          ! pools should be moved to displayed growth in each timestep.
 
          if (bgtr(p) > 0._r8) then
+          if(use_matrixcn)then
+            matrix_phtransfer(p,ileaf,ileaf_xf) = matrix_phtransfer(p,ileaf,ileaf_xf) + 1.0_r8 / dt
+            matrix_phtransfer(p,ifroot,ifroot_xf) = matrix_phtransfer(p,ifroot,ifroot_xf) + 1.0_r8 / dt
+            matrix_nphtransfer(p,ileaf,ileaf_xf) = matrix_nphtransfer(p,ileaf,ileaf_xf) + 1.0_r8 / dt
+            matrix_nphtransfer(p,ifroot,ifroot_xf) = matrix_nphtransfer(p,ifroot,ifroot_xf) + 1.0_r8 / dt
+            if (woody(ivt(p)) == 1.0_r8) then
+   
+              matrix_phtransfer(p,ilivestem,ilivestem_xf)   = matrix_phtransfer(p,ilivestem,ilivestem_xf) + 1.0_r8 / dt
+              matrix_phtransfer(p,ideadstem,ideadstem_xf)   = matrix_phtransfer(p,ideadstem,ideadstem_xf) + 1.0_r8 / dt
+              matrix_phtransfer(p,ilivecroot,ilivecroot_xf) = matrix_phtransfer(p,ilivecroot,ilivecroot_xf) + 1.0_r8 / dt
+              matrix_phtransfer(p,ideadcroot,ideadcroot_xf) = matrix_phtransfer(p,ideadcroot,ideadcroot_xf) + 1.0_r8 / dt
+
+              matrix_nphtransfer(p,ilivestem,ilivestem_xf)   = matrix_nphtransfer(p,ilivestem,ilivestem_xf) + 1.0_r8 / dt
+              matrix_nphtransfer(p,ideadstem,ideadstem_xf)   = matrix_nphtransfer(p,ideadstem,ideadstem_xf) + 1.0_r8 / dt
+              matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) = matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) + 1.0_r8 / dt
+              matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) = matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) + 1.0_r8 / dt
+            end if
+          end if
+!         if (p .eq.7)print *, '77777', matrix_phtransfer(p,ilivestem,ilivestem_xf), matrix_nphtransfer(p,ilivestem,ilivestem_xf)
+!          else
             leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
             frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
             leafn_xfer_to_leafn(p)   = leafn_xfer(p) / dt
@@ -2352,8 +2524,8 @@ contains
                livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) / dt
                deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) / dt
             end if
+!          end if !use_matrixcn
          end if ! end if bgtr
-
       end do ! end patch loop
 
     end associate
@@ -2435,7 +2607,10 @@ contains
          paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch, & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
          frootn_to_litter      =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch    , & ! Output: [real(r8) (:) ]  fine root N litterfall (gN/m2/s)                  
          leafc_to_litter_fun   =>    cnveg_carbonflux_inst%leafc_to_litter_fun_patch   , & ! Output:  [real(r8) (:) ]  leaf C litterfall used by FUN (gC/m2/s)
-         leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch               & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
+         leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch              , & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
+         matrix_nphtransfer    =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch    , & ! Input: N:N ratio for vegetation parts
+!         matrix_n2phtransfer   =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch   , & !
+         matrix_phtransfer     =>    cnveg_carbonflux_inst%matrix_phtransfer_patch       &
          )
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
@@ -2451,6 +2626,16 @@ contains
                t1 = 1.0_r8 / dt
                leafc_to_litter(p)  = t1 * leafc(p)  + cpool_to_leafc(p)
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
+              if (use_matrixcn) then
+                  if(leafc(p) .gt. 0)then
+                      matrix_phtransfer(p,iout,ileaf)  = matrix_phtransfer(p,iout,ileaf) &
+                                                     + leafc_to_litter(p) / leafc(p)
+                   end if
+                   if(frootc(p) .gt. 0)then
+                      matrix_phtransfer(p,iout,ifroot) = matrix_phtransfer(p,iout,ifroot) &
+                                                     + frootc_to_litter(p) / frootc(p)
+                   end if
+              end if ! use_matrixcn
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
@@ -2470,19 +2655,39 @@ contains
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
                leafc_to_litter(p)  = prev_leafc_to_litter(p)  + t1*(leafc(p)  - prev_leafc_to_litter(p)*offset_counter(p))
                frootc_to_litter(p) = prev_frootc_to_litter(p) + t1*(frootc(p) - prev_frootc_to_litter(p)*offset_counter(p))
-
+              if (use_matrixcn) then
+                   if(leafc(p) .gt. 0)then
+                      matrix_phtransfer(p,iout,ileaf)  = matrix_phtransfer(p,iout,ileaf) &
+                                                     + leafc_to_litter(p) / leafc(p)
+                   end if
+                   if(frootc(p) .gt. 0)then
+                      matrix_phtransfer(p,iout,ifroot) = matrix_phtransfer(p,iout,ifroot) &
+                                                     + frootc_to_litter(p) / frootc(p)
+                   end if
+              end if !use_matrixcn
             end if
             
             if ( use_fun ) then
                if(leafc_to_litter(p)*dt.gt.leafc(p))then
                    leafc_to_litter(p) = leafc(p)/dt + cpool_to_leafc(p)
+                if (use_matrixcn) then
+                   if(leafc(p) .gt. 0)then
+                      matrix_phtransfer(p,iout,ileaf)  = matrix_phtransfer(p,iout,ileaf) &
+                                                     + leafc_to_litter(p) / leafc(p)
+                   end if
+                 end if 
                endif
                if(frootc_to_litter(p)*dt.gt.frootc(p))then
                    frootc_to_litter(p) = frootc(p)/dt + cpool_to_frootc(p)
+                 if (use_matrixcn) then
+                   if(frootc(p) .gt. 0)then
+                      matrix_phtransfer(p,iout,ifroot) = matrix_phtransfer(p,iout,ifroot) &
+                                                     + frootc_to_litter(p) / frootc(p)
+                   end if
+                 end if
                endif
-            end if
-            
-            
+            end if 
+                        
             if ( use_fun ) then
                leafc_to_litter_fun(p)      =  leafc_to_litter(p)
                leafn_to_retransn(p)        =  paid_retransn_to_npool(p) + free_retransn_to_npool(p)
@@ -2497,6 +2702,14 @@ contains
                end if
                leafn_to_litter(p)          =  leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
                leafn_to_litter(p)          =  max(leafn_to_litter(p),0._r8)
+!               if (use_matrixcn) then   
+!                  if(leafn(p) .gt. 0)then
+!                      matrix_nphtransfer(p,iout,ileaf)  = matrix_nphtransfer(p,iout,ileaf) &
+!                                                         + (leafc_to_litter(p)/leafcn_offset(p)) / leafn(p)
+!                      matrix_n2phtransfer(p,iout,ileaf)  = matrix_n2phtransfer(p,iout,ileaf) &
+!                                                          + leafn_to_litter(p) / leafn(p)
+!                   end if
+!              end if 
                
                denom = ( leafn_to_retransn(p) + leafn_to_litter(p) )
                if ( denom /= 0.0_r8 ) then
@@ -2514,11 +2727,24 @@ contains
                ! calculate the leaf N litterfall and retranslocation
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
-
+!               if (use_matrixcn) then   
+!                  if(leafn(p) .gt. 0)then
+!                      matrix_nphtransfer(p,iout,ileaf)  = matrix_nphtransfer(p,iout,ileaf) &
+!                                                          + (leafc_to_litter(p) / leafcn(ivt(p))) / leafn(p)
+!                      matrix_n2phtransfer(p,iout,ileaf)  =  matrix_n2phtransfer(p,iout,ileaf) &
+!                                                           + leafn_to_litter(p) / leafn(p)
+!                   end if
+!                end if
             end if    
 
             ! calculate fine root N litterfall (no retranslocation of fine root N)
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
+!            if (use_matrixcn) then   
+!               if(frootn(p) .gt. 0)then
+!                  matrix_nphtransfer(p,iout,ifroot)  = matrix_nphtransfer(p,iout,ifroot) &
+!                                                      + frootn_to_litter(p) / frootn(p)
+!                end if
+!           end if
             
             if (CNratio_floating .eqv. .true.) then    
                if (leafc(p) == 0.0_r8) then    
@@ -2529,16 +2755,36 @@ contains
            
                leafn_to_litter(p)   = fr_leafn_to_litter * ntovr_leaf
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
+!               if (use_matrixcn) then   
+!                  if(leafn(p) .gt. 0)then
+!                      matrix_nphtransfer(p,iout,ileaf)  = matrix_nphtransfer(p,iout,ileaf) &
+!                                                           + ntovr_leaf / leafn(p)
+!                      matrix_n2phtransfer(p,iout,ileaf)  = matrix_n2phtransfer(p,iout,ileaf) &
+!                                                           + leafn_to_litter(p) / leafn(p)
+!                   end if
+!                end if
                if (frootc(p) == 0.0_r8) then    
                    frootn_to_litter(p) = 0.0_r8    
                 else    
                    frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
                 end if   
+!               if (use_matrixcn) then   
+!                 if(frootn(p) .gt. 0)then
+!                    matrix_nphtransfer(p,iout,ifroot)  = matrix_nphtransfer(p,iout,ifroot) &
+!                                                        + frootn_to_litter(p) / frootn(p)
+!                 end if
+!               end if
             end if  
             
             if ( use_fun ) then
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
                    frootn_to_litter(p) = frootn(p)/dt
+ !               if (use_matrixcn) then   
+ !                 if(frootn(p) .gt. 0)then
+ !                   matrix_nphtransfer(p,iout,ifroot)  = matrix_nphtransfer(p,iout,ifroot) &
+ !                                                        + frootn_to_litter(p) / frootn(p)
+ !                 end if
+ !                end if
                endif    
             end if
 
@@ -2554,7 +2800,6 @@ contains
             prev_frootc_to_litter(p) = frootc_to_litter(p)
 
          end if ! end if offset period
-
       end do ! end patch loop
 
     end associate 
@@ -2613,7 +2858,10 @@ contains
          leafc_to_litter_fun   => cnveg_carbonflux_inst%leafc_to_litter_fun_patch, & ! Output:  [real(r8) (:) ] leaf C litterfall used by FUN (gC/m2/s)
          leafcn_offset         => cnveg_state_inst%leafcn_offset_patch           , & ! Output:  [real(r8) (:) ] Leaf C:N used by FUN
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
-         paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch   & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
+         paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch   , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)
+         matrix_nphtransfer      =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch , & !	
+!         matrix_n2phtransfer      =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch , & !		 
+         matrix_phtransfer       =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  &	 
          )
 
       ! patch loop
@@ -2625,6 +2873,10 @@ contains
             ! units for bglfr are already 1/s
             leafc_to_litter(p)  = bglfr(p) * leafc(p)
             frootc_to_litter(p) = bglfr(p) * frootc(p)
+            if (use_matrixcn) then
+              matrix_phtransfer(p,iout,ileaf) = matrix_phtransfer(p,iout,ileaf) + bglfr(p)
+              matrix_phtransfer(p,iout,ifroot) = matrix_phtransfer(p,iout,ifroot) + bglfr(p)
+            end if
             if ( use_fun ) then
                leafc_to_litter_fun(p)     = leafc_to_litter(p)
                leafn_to_retransn(p)       = paid_retransn_to_npool(p) + free_retransn_to_npool(p)
@@ -2637,8 +2889,16 @@ contains
                else
                   leafcn_offset(p)        = leafcn(ivt(p))
                end if
-               leafn_to_litter(p)         = leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
-               leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)
+                  leafn_to_litter(p)         = leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
+                  leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)  
+!                 if(leafn(p) .ne. 0._r8)then
+!                    matrix_nphtransfer(p,iout,ileaf)  = matrix_nphtransfer(p,iout,ileaf) &
+!                                                        + (leafc_to_litter(p)/leafcn_offset(p)) / leafn(p)
+!                    matrix_n2phtransfer(p,iout,ileaf)  = matrix_n2phtransfer(p,iout,ileaf) &
+!                                                        + leafn_to_litter(p) / leafn(p)
+!                end if
+!                print *, 'leaf_ph111',matrix_nphtransfer(p,iout,ileaf),matrix_n2phtransfer(p,iout,ileaf)
+
 
                denom = ( leafn_to_retransn(p) + leafn_to_litter(p) )
                if ( denom /= 0.0_r8 ) then
@@ -2657,11 +2917,24 @@ contains
                ! calculate the leaf N litterfall and retranslocation
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
-
+!               if (use_matrixcn) then   
+!                 if(leafn(p) .ne. 0)then
+!                    matrix_nphtransfer(p,iout,ileaf)  = matrix_nphtransfer(p,iout,ileaf) &
+!                                                        +(leafc_to_litter(p) / leafcn(ivt(p))) / leafn(p)
+!                    matrix_n2phtransfer(p,iout,ileaf)  = matrix_n2phtransfer(p,iout,ileaf) &
+!                                                         +leafn_to_litter(p) / leafn(p)
+!                 end if
+!               end if
             end if    
 
             ! calculate fine root N litterfall (no retranslocation of fine root N)
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
+!            if (use_matrixcn) then   
+!               if(frootn(p) .ne. 0)then
+!                 matrix_nphtransfer(p,iout,ifroot)  = matrix_nphtransfer(p,iout,ifroot) &
+!                                                    + frootn_to_litter(p) / frootn(p)
+!               end if
+!             end if
             
             if (CNratio_floating .eqv. .true.) then    
                if (leafc(p) == 0.0_r8) then    
@@ -2672,20 +2945,33 @@ contains
            
                leafn_to_litter(p)   = fr_leafn_to_litter * ntovr_leaf
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
+!               if (use_matrixcn) then   
+!                 if(leafn(p) .gt. 0)then
+!                    matrix_nphtransfer(p,iout,ileaf)  = matrix_nphtransfer(p,iout,ileaf) &
+!                                                        + ntovr_leaf / leafn(p)
+!                    matrix_n2phtransfer(p,iout,ileaf)  = matrix_n2phtransfer(p,iout,ileaf) &
+!                                                       +leafn_to_litter(p) / leafn(p)
+!                 end if
+!               end if
                if (frootc(p) == 0.0_r8) then    
                    frootn_to_litter(p) = 0.0_r8    
                 else    
-                   frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
+                   frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))
+!                    matrix_nphtransfer(p,iout,ifroot)  = matrix_nphtransfer(p,iout,ifroot) &
+!                                                         +frootc_to_litter(p)/ frootc(p)	   
                 end if   
             end if    
 
             if ( use_fun ) then
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
-                    frootn_to_litter(p) = frootn(p)/dt
+                    frootn_to_litter(p) = frootn(p)/dt  
+!                    matrix_nphtransfer(p,iout,ifroot)  = matrix_nphtransfer(p,iout,ifroot) &
+!                                                         + 1.0_r8/dt
                endif
             end if
 
          end if
+!         if (p .eq.7)print *, 'LLLLL', matrix_nphtransfer(p,iout,ileaf),matrix_n2phtransfer(p,iout,ileaf),leafn_to_litter(p) / leafn(p)
 
       end do
 
@@ -2737,7 +3023,10 @@ contains
          livestemn_to_deadstemn   =>    cnveg_nitrogenflux_inst%livestemn_to_deadstemn_patch   , & ! Output: [real(r8) (:) ]                                                    
          livestemn_to_retransn    =>    cnveg_nitrogenflux_inst%livestemn_to_retransn_patch    , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_deadcrootn =>    cnveg_nitrogenflux_inst%livecrootn_to_deadcrootn_patch , & ! Output: [real(r8) (:) ]                                                    
-         livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch     & ! Output: [real(r8) (:) ]                                                    
+         livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch   , & ! Output: [real(r8) (:) ] 
+         matrix_nphtransfer        =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch        , & !
+!         matrix_n2phtransfer       =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch   , & !
+         matrix_phtransfer        =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  & 
          )
 
 
@@ -2745,7 +3034,7 @@ contains
       ! patch loop
       do fp = 1,num_soilp
          p = filter_soilp(fp)
-
+!        print *, 'ppp',  filter_soilp(fp),ivt(p)
          ! only calculate these fluxes for woody types
          if (woody(ivt(p)) > 0._r8) then
 
@@ -2753,17 +3042,31 @@ contains
 
             ctovr = livestemc(p) * lwtop
             ntovr = ctovr / livewdcn(ivt(p))
-            livestemc_to_deadstemc(p) = ctovr
-            livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))
-            
+!            if(.not. use_matrixcn)then
+              livestemc_to_deadstemc(p) = ctovr
+              livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))  
+!            else
+              matrix_phtransfer(p,ideadstem,ilivestem) = matrix_phtransfer(p,ideadstem,ilivestem) + lwtop
+!            end if
+        
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
                    ntovr = 0.0_r8    
                 else    
-                   ntovr = ctovr * (livestemn(p) / livestemc(p))   
+                   ntovr = ctovr * (livestemn(p) / livestemc(p))  				   
                 end if   
-
-                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
+                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn
+                if (use_matrixcn)then 
+                  if (livestemc(p).ne.0.0_r8) then
+!                     matrix_nphtransfer(p,ideadstem,ilivestem) = matrix_nphtransfer(p,ideadstem,ilivestem) + lwtop!ntovr/livestemn(p)
+                     matrix_nphtransfer(p,ideadstem,ilivestem) = matrix_nphtransfer(p,ideadstem,ilivestem) + 0.5_r8*lwtop!ntovr/livestemn(p)
+                    end if
+                end if
+            else
+              if (livestemn(p).gt.0.0_r8) then
+                  matrix_nphtransfer(p,ideadstem,ilivestem) = matrix_nphtransfer(p,ideadstem,ilivestem) + livestemn_to_deadstemn(p)/livestemn(p)
+!                  matrix_n2phtransfer(p,ideadstem,ilivestem) = matrix_n2phtransfer(p,ideadstem,ilivestem) + livestemn_to_deadstemn(p)/livestemn(p)
+              end if
             end if    
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
@@ -2772,8 +3075,12 @@ contains
 
             ctovr = livecrootc(p) * lwtop
             ntovr = ctovr / livewdcn(ivt(p))
-            livecrootc_to_deadcrootc(p) = ctovr
-            livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
+!            if(.not. use_matrixcn)then
+               livecrootc_to_deadcrootc(p) = ctovr
+               livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
+            if(use_matrixcn)then
+               matrix_phtransfer(p,ideadcroot,ilivecroot) = matrix_phtransfer(p,ideadcroot,ilivecroot) + lwtop
+            end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
               if (livecrootc(p) == 0.0_r8) then    
@@ -2783,6 +3090,19 @@ contains
                end if   
 
                livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
+                if (use_matrixcn)then 
+                   if (livecrootc(p) .ne.0.0_r8 )then
+!                     matrix_nphtransfer(p,ideadcroot,ilivecroot) = matrix_nphtransfer(p,ideadcroot,ilivecroot) + lwtop!ntovr/livecrootn(p)
+                     matrix_nphtransfer(p,ideadcroot,ilivecroot) = matrix_nphtransfer(p,ideadcroot,ilivecroot) + 0.5_r8 *lwtop!ntovr/livecrootn(p)
+                    end if
+                end if
+           else
+            if(use_matrixcn)then
+               if (livecrootn(p) .gt.0.0_r8 )then
+                   matrix_nphtransfer(p,ideadcroot,ilivecroot) = matrix_nphtransfer(p,ideadcroot,ilivecroot) + livecrootn_to_deadcrootn(p)/livecrootn(p)
+!                   matrix_n2phtransfer(p,ideadcroot,ilivecroot) = matrix_n2phtransfer(p,ideadcroot,ilivecroot) + livecrootn_to_deadcrootn(p)/livecrootn(p)
+               end if
+             end if
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
@@ -2793,6 +3113,7 @@ contains
             endif
 
          end if
+!         if (p .eq.7)print *, 'TTTTT', matrix_nphtransfer(p,ideadstem,ilivestem), matrix_n2phtransfer(p,ideadstem,ilivestem) 
 
       end do
 
@@ -2933,6 +3254,7 @@ contains
                      phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
                           + leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
 
+!                     if(j .eq. 1)print*,'phenology_c_to_litr_met',phenology_c_to_litr_met_c(c,j),leafc_to_litter(p),lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                      ! leaf litter nitrogen fluxes
                      phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
                           + leafn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
@@ -3010,5 +3332,23 @@ contains
     end associate 
 
   end subroutine CNLitterToColumn
+!  subroutine vegc_phtransfer(ito,ifrom,default_transfer,matrix_transfer,vegcpool,tran_rate,p)
+  
+    ! !ARGUMENTS:
+!    integer :: ifrom
+!    integer :: ito
+	
+!    integer :: p
+!    real(r8),allocatable,dimension(:) :: default_transfer(:),vegcpool(:)
+!    real(r8),allocatable,dimension(:,:,:) :: matrix_transfer(:,:,:)
+!    real(r8) :: tran_rate
+!    logical :: use_matrixcn 
+	
+!    if(use_matrixcn)then
+!        matrix_transfer(p,ito,ifrom) = matrix_transfer(p,ito,ifrom) + tran_rate
+!     else
+ !       default_transfer(p) = tran_rate * vegcpool(p)
+ !    end if
+ ! end subroutine vegc_phtransfer  
 
 end module CNPhenologyMod
