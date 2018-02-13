@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to making participation in our project and our community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, or sexual identity and orientation.
+In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to making participation in our project and our community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, politcal affiliation, veteran status, pregnancy, genetic information, personal appearance, choice of text editor or operating system, race, religion, or sexual identity and orientation, or any other characteristic protected under applicable US federal or state law. 
 
 ## Our Standards
 
@@ -21,6 +21,9 @@ Examples of unacceptable behavior by participants include:
 * Public or private harassment
 * Publishing others' private information, such as a physical or electronic address, without explicit permission
 * Other conduct which could reasonably be considered inappropriate in a professional setting
+* Refusing to use the pronouns that someone requests
+* Intimidating, threatening, or hostile conduct; physical or verbal abuse; vandalism; arson; and sabotage
+* Alarming or threatening comments that might refer to, suggest, or promote a violent, intimidating, or threatening action
 
 ## Our Responsibilities
 
@@ -34,7 +37,7 @@ This Code of Conduct applies both within project spaces and in public spaces whe
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at ctsm-core@ucar.edu. The project team will review and investigate all complaints, and will respond in a way that it deems appropriate to the circumstances. The project team is obligated to maintain confidentiality with regard to the reporter of an incident. Further details of specific enforcement policies may be posted separately.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at ctsm-core@ucar.edu. Alternatively, this behavior can be reported to individuals on the CTSM team, who will then have the responsibility to talk about the behavior to the core team. Another alternative for NCAR employees (when all individuals involved are NCAR employees) is to use the reporting methods of NCAR for this behavior (these options include anonymous reporting methods). The project team will review and investigate all complaints, and will respond in a way that it deems appropriate to the circumstances. The project team is obligated to maintain confidentiality with regard to the reporter of an incident. Further details of specific enforcement policies may be posted separately. Retaliation against a person who initiates a complaint or an inquiry about such behaviors is equally prohibited.
 
 Project maintainers who do not follow or enforce the Code of Conduct in good faith may face temporary or permanent repercussions as determined by other members of the project's leadership.
 
