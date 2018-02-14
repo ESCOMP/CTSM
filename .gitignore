@@ -24,6 +24,10 @@ components/
 build/
 CMakeFiles/
 
+
+# unit testing directories
+src/unit_tests.*
+
 # cime_config
 buildnmlc
 buildcppc

@@ -1,129 +1,116 @@
 ===============================================================
-Tag name:  clm4_5_18_r275
+Tag name:  clm5.0.dev001
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Mon Feb  5 15:02:53 MST 2018
-One-line Summary: Update initial condition files, update fates, new CMIP6 pop-dens, more lnd_tuning_mod options, updated ndep for fully coupled
+Date:  Wed Feb 14 14:14:34 MST 2018
+One-line Summary: Fix LND_TUNING_MODE for fully coupled case, update some README files/PTCLM
 
 Purpose of changes
 ------------------
 
-Update the initial condition files for clm4_0, clm4_5, clm5_0 at f09_g16 for both CRUNCEpv7 
-forcing and GSWP3v1 forcing. Update FATES with science change to science-1.4.1_api-3.0.0.
-New CMIP6 population density file that has years beyond 1850 (the old one just had 1850, so 
-was incorrect for historical or present-day). clm4_0 compsets now use CRUNCEPv7 forcing rather than
-the CRUNCEPv4 forcing. LND_TUNING_MODE is now used for initial conditions
-for different forcing. For fully coupled 1850 cases the ndep file is updated to a preliminary CMIP6
-version. Fix the tools testing and build-namelist testing to work in the git checkout.
+Fix problem with default LND_TUNING_MODE for cases coupled to CAM. Update some of the README
+files. And also bring in a PTCLM version that will work in the new CTSM git checkout directory
+structure.
 
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #:
- #247 -- Clm40 1850 and HIST compsets are incorrect
- #246 -- New CMIP6 population density file is incorrect as it's constant in time
- #171 -- CLM is getting the mask from the clm namelist_defaults rather than from top level scripts
+Issues fixed (include CTSM Issue #): 
+#255 PTCLMmkdata doesn't work in the CLM git checkout
 
-Known bugs introduced in this tag (include github issue ID): 
- #253 -- Bad new IC file for clm4_0
- #254 -- Failing test ERS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-default (sporadic glitch?)
- #255 -- PTCLMmkdata doesn't work in the CLM git checkout
+Known bugs found in this tag (include github issue ID):
+
+#262 hirespft option for mksurfdata.pl doesn't work
+
 
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
-   LND_TUNING_MODE is set by default according to the compset the case is created with.
-  If you change the CLM physics or DATM forcing, you'll want to update the LND_TUNING_MODE.
+Caveats for users (e.g., need to interpolate initial conditions): None
 
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
-   LND_TUNING_MODE options changed to:
-    clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
 
-   Several new compset aliases added:
+Changes made to namelist defaults (e.g., changed parameter values): None
 
-      CLM50: I1850Clm50Sp, I1850Clm50SpCru, I1850Clm50BgcCropCru
-      CLM45: I1850Clm45BgcCruGs, I1850Clm45BgcGs
-      CLM40  I1850Clm40CnGswGs (fixed I2000Clm40SpCruGs, I1850Clm40SpCruGs, and IHistClm40SpCruGs)
-
-Changes made to namelist defaults (e.g., changed parameter values):
-
-Changes to the datasets (e.g., parameter, surface or initial files): New IC files for f09_g16
-    CMIP6 ndep file for fully coupled, pop-density beyond 1850
+Changes to the datasets (e.g., parameter, surface or initial files): None
 
 Substantial timing or memory changes: None
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-   Setting of ndep_taxmode/ndep_varlist should be simplified in CLMBuildNamelist.pm
-   Change name of setup_logic_lnd_tuning to setup_cmdl_lnd_tuning in CLMBuildNamelist.pm
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
 
-Changes to tests or testing: Change a few tests and add a few
-    Add I1850Clm50SpCru, I1850Clm50BgcCropCru, I1850Clm40CnGswGs and I1850Clm50Sp tests at f09_g16
-    Change I1850Clm40SpCruGs f09_f09_mg16 to f09_g16
-    Change I2000Clm50BgcCruGs f09_g17 test to I1850Clm50BgcCruGs f09_g16
+Changes to tests or testing: None
 
 Code reviewed by: self
 
 Did you follow the steps in .CLMTrunkChecklist: yes
 
-CLM testing: regular
+CLM testing: doc
 
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
 
-    cheyenne -  PASS (134 comparison tests are different than clm4_5_18_r275)
+    cheyenne -  PASS
 
   unit-tests (components/clm/src):
 
     cheyenne - PASS
 
-  tools-tests (components/clm/test/tools):
-
-    cheyenne - OK
-
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     cheyenne - FAIL
+     cheyenne -  PASS
+  
+  Extra Tests:
 
-  regular tests (aux_clm):
+ERS_Ld5.f19_g17.E1850L45TEST.cheyenne_intel.cice-default
+SMS_Ld1.f09_f09_mg17.FW1850.cheyenne_intel.cam-reduced_hist1d
+SMS_Ld7.f09_g17.B1850.cheyenne_intel.allactive-defaultio
 
-    cheyenne_intel ---- OK
-    cheyenne_gnu ------ OK
-    hobart_nag -------- OK
-    hobart_pgi -------- OK
-    hobart_intel ------ OK
-
-CLM tag used for the baseline comparisons:  clm4_5_18_r275
+CLM tag used for the baseline comparisons: clm5.0.dev000
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes!
-
-  Summarize any changes to answers:
-    - what code configurations: clm4_0 for f09_g16
-          clm4_0 updated to CRUv7 Forcing
-          all clm4_5 and clm5_0 configurations, FATES-update
-    - what platforms/compilers: All
-    - nature of change: initialization, BGC for HIST/2000 compsets
+Changes answers relative to baseline: No bit-for-bit
 
 Detailed list of changes
 ------------------------
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): FATES
-    fates to fates_s1.4.1_a3.0.0_rev3
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): PTCLM
+  PTCLM to PTCLM2_180214
 
-Pull Requests that document changes (include PR ids):
+Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
- #252 -- New IC files
- #251 -- README update
- #248 -- Documentation of SMB in namelist_definition
- #228 -- Get tools and testing working
+#297 -- README files
+#296 -- Make LND_TUNING_MODE correct and consistent when coupled with CAM
+#295 -- Bring in a working PTCLMmkdata version
+#261 -- Reorder links
 
+===============================================================
+===============================================================
+Tag name:  clm5.0.dev000
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Feb 05 2018
+One-line Summary: Initial version of CLM5.0
+
+This is the initial science version of CLM5.0.
+
+Developments for CLM5.0 build on the progress made in CLM4.5. Most major components of the model have been updated with particularly
+notable changes made to soil and plant hydrology, snow density, river modeling, carbon and nitrogen cycling and coupling, and crop
+modeling.
+The updates to CLM science are documented here:
+
+https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#clm5-0
+
+This version has production versions of CLM5.0 CMIP6 land-use change files for 1850, historical, and 2000. It has preliminary
+versions of CMIP6 forcing files for Nitrogen deposition and population density. Further updates are needed for prescribed aerosols,
+and future scenarios.
+
+Spunup initial conditions are provided for several CLM physics and forcing combinations from simulations run at 1-degree resolution
+(fv 0.9x1.25 with g1xv6 ocean mask).
 
 ===============================================================
