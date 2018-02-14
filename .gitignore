@@ -57,6 +57,9 @@ surfdata_*.namelist
 clm.input_data_list
 clm.input_data_list.previous
 
+# Tools executables
+tools/mksurfdata_map/mksurfdata_map
+tools/mkprocdata_map/mkprocdata_map
 
 # build output
 *.o
