@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm5.0.dev000      erik 02/05/2018 Double tag of clm5.0.000 with new naming convention, some updated documentation
+  clm5.0.000         erik 02/05/2018 Double tag of clm4_5_18_r275 for clm5.0 release
   clm4_5_18_r275     erik 02/05/2018 Update initial condition files, update fates, new CMIP6 pop-dens, more lnd_tuning_mod options, updated ndep for fully coupled
   clm4_5_18_r274    sacks 01/30/2018 Fix auto-detection of CIME_MODEL in a standalone checkout
   clm4_5_18_r273    sacks 01/26/2018 Support a standalone checkout from git
