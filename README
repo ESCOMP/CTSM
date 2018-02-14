@@ -5,6 +5,10 @@ offline-build and test scripts. This gives you everything you need
 to run CLM with CESM with datm8 to provide CRU NCEP or GSWP3 forcing data in 
 place of a modeled atmosphere.
 
+For lists of current bugs (issues) and current development see the CTSM github page:
+
+https://github.com/ESCOMP/ctsm
+
 General directory structure:
 
 doc --------------- Documentation of CLM.
@@ -59,35 +63,39 @@ doc/Quickstart.userdatasets - Quick guide to using your own datasets.
 doc/IMPORTANT_NOTES --------- Some important notes about this version of 
                                                  clm, configuration modes and namelist items 
                                                  that are not validated or functional.
-doc/KnownBugs --------------- List of known bugs.
-doc/KnownLimitations -------- List of known limitations and workarounds.
 doc/ChangeLog --------------- Detailed list of changes for each model version.
 doc/ChangeSum --------------- Summary one-line list of changes for each 
-                                             model version.
+                              model version.
 doc/README ------------------ Documentation similar to this file
 doc/UsersGuide -------------- CLM Users Guide
 doc/CodeReference ----------- CLM Code Reference Guide
 
+bld/README ------------------ Description of how to use the configure and
+                              build-namelist scripts.
 bld/configure --------------- Script to prepare CLM to be built.
+bld/build-namelist ---------- Script to build CLM namelists.
+
+cime_config/buildnml ------------- Build the CLM namelist for CIME
+cime_config/buildlib ------------- Build the CLM library
+cime_config/config_compsets.xml -- Define CLM compsets
+cime_config/config_component.xml - Define CLM XML settings
+cime_config/config_pes.xml ------- Define Processor layouts for various CLM grids and compsets
 
 test/tools/test_driver.sh -- Script for general software testing of 
                              CLM's offline tools.
 
-tools/clm4_5/mksurfdata_map --- Directory to build program to create surface dataset 
+tools/mksurfdata_map ---------- Directory to build program to create surface dataset 
                                 at any resolution.
-tools/clm4_5/interpinic ------- Directory to build program to interpolate initial 
-                                conditions to any resolution.
-tools/shared/mkdatadomain ----- Directory to build program to create datm7 or docn7 
+tools/mkdatadomain ------------ Directory to build program to create datm7 or docn7 
                                 domain files from clm files.
-tools/shared/mkprocdata_map --- Process history data from unstructed grids to a gridded 
+tools/mkprocdata_map ---------- Process history data from unstructed grids to a gridded 
                                 format.
-tools/shared/ncl_scripts  ----- Directory of NCL and perl scripts to do various
+tools/mkmapgrids -------------- NCL script to create a SCRIP grid file for a regular lat/lon grid
+tools/ncl_scripts  ------------ Directory of NCL and perl scripts to do various
                                 tasks. Most notably to plot perturbation error growth
                                 testing and to extract regional information from
                                 global datasets for single-point/regional simulations.
 
-bld/README ------------- Description of how to use the configure and
-                                        build-namelist scripts.
 
 =============================================================================================
 Source code directory structure:
@@ -112,7 +120,7 @@ scr_clm40 ------- CLM4.0 source code directory
 
          cd cime/scripts
          ./create_newcase            # get help on how to run create_newcase
-         ./create_newcase --case testI --res f19_g16 --compset I2000Clm50BgcCrop --mach cheyenne
+         ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm50BgcCrop --mach cheyenne
                                      # create new "I" case for cheyenne_intel at 1.9x2.5_gx1v7 res
                                      # "I2000Clm50BgcCrop" case is clm5_0 active, datm8, and inactive ice/ocn
          cd testI
