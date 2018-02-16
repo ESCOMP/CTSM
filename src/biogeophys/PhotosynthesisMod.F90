@@ -107,7 +107,10 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: tpu_z_phs_patch   (:,:,:) ! patch triose phosphate utilization rate (umol CO2/m**2/s)
      real(r8), pointer, private :: gs_mol_sun_patch  (:,:) ! patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
      real(r8), pointer, private :: gs_mol_sha_patch  (:,:) ! patch shaded leaf stomatal conductance (umol H2O/m**2/s)
-
+!KO
+     real(r8), pointer, private :: gs_mol_sun_ln_patch (:,:) ! patch sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+     real(r8), pointer, private :: gs_mol_sha_ln_patch (:,:) ! patch shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+!KO
      real(r8), pointer, private :: ac_patch          (:,:) ! patch Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: aj_patch          (:,:) ! patch RuBP-limited gross photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: ap_patch          (:,:) ! patch product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
@@ -250,6 +253,10 @@ contains
     allocate(this%kp_z_phs_patch    (begp:endp,2,1:nlevcan)) ; this%kp_z_phs_patch    (:,:,:) = nan
     allocate(this%gs_mol_sun_patch  (begp:endp,1:nlevcan))   ; this%gs_mol_sun_patch  (:,:)   = nan
     allocate(this%gs_mol_sha_patch  (begp:endp,1:nlevcan))   ; this%gs_mol_sha_patch  (:,:)   = nan
+!KO
+    allocate(this%gs_mol_sun_ln_patch (begp:endp,1:nlevcan)) ; this%gs_mol_sun_ln_patch (:,:)   = nan
+    allocate(this%gs_mol_sha_ln_patch (begp:endp,1:nlevcan)) ; this%gs_mol_sha_ln_patch (:,:)   = nan
+!KO
     allocate(this%ac_patch          (begp:endp,1:nlevcan)) ; this%ac_patch          (:,:) = nan
     allocate(this%aj_patch          (begp:endp,1:nlevcan)) ; this%aj_patch          (:,:) = nan
     allocate(this%ap_patch          (begp:endp,1:nlevcan)) ; this%ap_patch          (:,:) = nan
@@ -485,7 +492,30 @@ contains
           ptr_patch=ptr_1d)
 
     endif
+!KO
+    this%gs_mol_sun_ln_patch(begp:endp,:) = spval
+    this%gs_mol_sha_ln_patch(begp:endp,:) = spval
+    if (nlevcan>1) then
+       call hist_addfld2d (fname='GSSUNLN', units='umol H20/m2/s', type2d='nlevcan', &
+          avgflag='A', long_name='sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+          ptr_patch=this%gs_mol_sun_ln_patch, set_lake=spval, set_urb=spval)
 
+       call hist_addfld2d (fname='GSSHALN', units='umol H20/m2/s', type2d='nlevcan', &
+          avgflag='A', long_name='shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+          ptr_patch=this%gs_mol_sha_ln_patch, set_lake=spval, set_urb=spval)
+    else
+       ptr_1d => this%gs_mol_sun_ln_patch(begp:endp,1)
+       call hist_addfld1d (fname='GSSUNLN', units='umol H20/m2/s', &
+          avgflag='A', long_name='sunlit leaf stomatal conductance at local noon', &
+          ptr_patch=ptr_1d)
+
+       ptr_1d => this%gs_mol_sha_ln_patch(begp:endp,1)
+       call hist_addfld1d (fname='GSSHALN', units='umol H20/m2/s', &
+          avgflag='A', long_name='shaded leaf stomatal conductance at local noon', &
+          ptr_patch=ptr_1d)
+
+    endif
+!KO
     if(use_luna)then  
        if(nlevcan>1)then
          call hist_addfld2d (fname='Vcmx25Z', units='umol/m2/s', type2d='nlevcan', &
@@ -770,6 +800,20 @@ contains
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='shaded leaf stomatal conductance', units='umol H20/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_patch)
+
+!KO
+    call restartvar(ncid=ncid, flag=flag, varname='GSSUNLN', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', &
+         long_name='sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+         units='umol H20/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sun_ln_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GSSHALN', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', &
+         long_name='shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+         units='umol H20/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_ln_patch)
+!KO
     
     call restartvar(ncid=ncid, flag=flag, varname='lnca', xtype=ncd_double,  &
        dim1name='pft', long_name='leaf N concentration', units='gN leaf/m^2', &
@@ -2368,7 +2412,12 @@ contains
     ! method
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, rpi
+!KO    use clm_varcon        , only : rgas, tfrz, rpi
+!KO
+    use clm_varcon        , only : rgas, tfrz, rpi, spval, degpsec, isecspday
+    use GridcellType      , only : grc
+    use clm_time_manager  , only : get_curr_date, get_step_size
+!KO
     use clm_varctl        , only : cnallocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
@@ -2558,8 +2607,16 @@ contains
     real(r8) :: sum_nscaler
     real(r8) :: total_lai                
     integer  :: nptreemax                
+!KO
+    integer  :: local_secp1                     ! seconds into current date in local time
+    real(r8) :: dtime                           ! land model time step (sec)
+    integer  :: year,month,day,secs             ! calendar info for current time step
+!KO
 !scs
-    integer  :: j                       ! index
+!KO    integer  :: j                       ! index
+!KO
+    integer  :: j,g                     ! index
+!KO
     real(r8) :: rs_resis                ! combined soil-root resistance [s]
     real(r8) :: r_soil                  ! root spacing [m]
     real(r8) :: root_biomass_density    ! root biomass density [g/m3]
@@ -2578,6 +2635,9 @@ contains
     real(r8), parameter :: croot_lateral_length = 0.25_r8   ! specified lateral coarse root length [m]
     real(r8), parameter :: c_to_b = 2.0_r8           !(g biomass /g C)
 !Note that root density is for dry biomass not carbon. CLM provides root biomass as carbon. The conversion is 0.5 g C / g biomass
+!KO
+    integer, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
+!KO
 
     !------------------------------------------------------------------------------
 
@@ -2670,7 +2730,11 @@ contains
          an_sun     => photosyns_inst%an_sun_patch           , & ! Output: [real(r8) (:,:) ]  net sunlit leaf photosynthesis (umol CO2/m**2/s)
          an_sha     => photosyns_inst%an_sha_patch           , & ! Output: [real(r8) (:,:) ]  net shaded leaf photosynthesis (umol CO2/m**2/s)
          gs_mol_sun => photosyns_inst%gs_mol_sun_patch       , & ! Output: [real(r8) (:,:) ]  sunlit leaf stomatal conductance (umol H2O/m**2/s)
-         gs_mol_sha => photosyns_inst%gs_mol_sha_patch         & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sha => photosyns_inst%gs_mol_sha_patch       , & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance (umol H2O/m**2/s)
+!KO
+         gs_mol_sun_ln => photosyns_inst%gs_mol_sun_ln_patch , & ! Output: [real(r8) (:,:) ]  sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+         gs_mol_sha_ln => photosyns_inst%gs_mol_sha_ln_patch   & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+!KO
          )
 
       par_z_sun     =>    solarabs_inst%parsun_z_patch        ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)
@@ -2709,6 +2773,13 @@ contains
       ! Photosynthesis and stomatal conductance parameters, from:
       ! Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
       !==============================================================================!
+
+!KO
+      ! Determine seconds off current time step
+
+      dtime = get_step_size()
+      call get_curr_date (year, month, day, secs)
+!KO
 
       ! vcmax25 parameters, from CN
 
@@ -3146,6 +3217,9 @@ contains
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
+!KO
+         g = patch%gridcell(p)
+!KO
 
          ! Leaf boundary layer conductance, umol/m**2/s
 
@@ -3278,6 +3352,22 @@ contains
 
                if (an_sun(p,iv) < 0._r8) gs_mol_sun(p,iv) = max( bsun(p)*gsminsun, 1._r8 )
                if (an_sha(p,iv) < 0._r8) gs_mol_sha(p,iv) = max( bsha(p)*gsminsha, 1._r8 )
+!KO
+               ! Get local noon sunlit and shaded stomatal conductance
+               local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
+               local_secp1 = mod(local_secp1,isecspday)
+!KO               if (local_secp1 == isecspday/2) then
+!KO
+               ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
+               if (local_secp1 >= (isecspday/2 - 3600) .and. local_secp1 <= (isecspday/2 + 3600)) then
+!KO
+                  gs_mol_sun_ln(p,iv) = gs_mol_sun(p,iv)
+                  gs_mol_sha_ln(p,iv) = gs_mol_sha(p,iv)
+               else
+                  gs_mol_sun_ln(p,iv) = spval
+                  gs_mol_sha_ln(p,iv) = spval
+               end if
+!KO
 
                ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 

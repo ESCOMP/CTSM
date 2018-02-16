@@ -22,6 +22,9 @@ module SoilFluxesMod
   use LandunitType	, only : lun                
   use ColumnType	, only : col                
   use PatchType		, only : patch                
+!KO
+  use UrbanParamsType   , only : urbanparams_type
+!KO
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -34,10 +37,18 @@ module SoilFluxesMod
 contains
 
   !-----------------------------------------------------------------------
+!KO  subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+!KO       num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
+!KO       atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, &
+!KO       waterstate_inst, energyflux_inst, waterflux_inst)            
+!KO
   subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+       num_urbanc, filter_urbanc, &
+       num_urbanp, filter_urbanp, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
        atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, &
-       waterstate_inst, energyflux_inst, waterflux_inst)            
+       waterstate_inst, energyflux_inst, waterflux_inst, urbanparams_inst)            
+!KO
     !
     ! !DESCRIPTION:
     ! Update surface fluxes based on the new ground temperature
@@ -46,8 +57,15 @@ contains
     use clm_time_manager , only : get_step_size
     use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
     use landunit_varcon  , only : istsoil, istcrop
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
+!KO    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
+!KO
+    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
+!KO
     use subgridAveMod    , only : p2c
+!KO
+    use clm_varcon          , only : sb
+    use subgridAveMod       , only : p2l
+!KO
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -55,6 +73,12 @@ contains
     integer                , intent(in)    :: filter_nolakec(:)                ! column filter for non-lake points
     integer                , intent(in)    :: num_urbanl                       ! number of urban landunits in clump
     integer                , intent(in)    :: filter_urbanl(:)                 ! urban landunit filter
+!KO
+    integer                , intent(in)    :: num_urbanc                       ! number of urban columns in clump
+    integer                , intent(in)    :: filter_urbanc(:)                 ! urban column filter
+    integer                , intent(in)    :: num_urbanp                       ! number of urban pfts in clump
+    integer                , intent(in)    :: filter_urbanp(:)                 ! urban pft filter
+!KO
     integer                , intent(in)    :: num_nolakep                      ! number of column non-lake points in pft filter
     integer                , intent(in)    :: filter_nolakep(:)                ! patch filter for non-lake points
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -62,12 +86,18 @@ contains
     type(temperature_type) , intent(in)    :: temperature_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
     type(waterstate_type)  , intent(in)    :: waterstate_inst
+!KO
+    type(urbanparams_type) , intent(in)    :: urbanparams_inst
+!KO
     type(waterflux_type)   , intent(inout) :: waterflux_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: p,c,g,j,pi,l                                       ! indices
-    integer  :: fc,fp                                              ! lake filtered column and pft indices
+!KO    integer  :: fc,fp                                              ! lake filtered column and pft indices
+!KO
+    integer  :: fc,fp,fl                                           ! lake filtered column and pft indices
+!KO
     real(r8) :: dtime                                              ! land model time step (sec)
     real(r8) :: egsmax(bounds%begc:bounds%endc)                    ! max. evaporation which soil can provide at one time step
     real(r8) :: egirat(bounds%begc:bounds%endc)                    ! ratio of topsoil_evap_tot : egsmax
@@ -80,6 +110,17 @@ contains
     real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
     real(r8) :: lw_grnd
     real(r8) :: fsno_eff
+!KO
+    real(r8) :: eflx_lwrad_out_lun(bounds%begl:bounds%endl)        ! emitted infrared (longwave) radiation (W/m**2)
+    real(r8) :: emg_roof(bounds%begl:bounds%endl)                  ! roof emissivity
+    real(r8) :: emg_sunwall(bounds%begl:bounds%endl)               ! sunwall emissivity
+    real(r8) :: emg_shadewall(bounds%begl:bounds%endl)             ! shadewall emissivity
+    real(r8) :: emg_road_perv(bounds%begl:bounds%endl)             ! pervious road emissivity
+    real(r8) :: emg_road_imperv(bounds%begl:bounds%endl)           !  impervious road emissivity
+    real(r8) :: emg_road                                           ! road emissivity
+    real(r8) :: emg_canyon                                         ! canyon emissivity
+    real(r8) :: emg_urban                                          ! effective urban emissivity
+!KO
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
@@ -97,6 +138,19 @@ contains
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
 
          emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
+!ABT
+!         emv                     => temperature_inst%emv_patch              , & ! Input:  [real(r8) (:)   ]  vegetation emissivity
+!         t_veg                   => temperature_inst%t_veg_patch            , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin) 
+!ABT
+!KO
+         t_skin_lun              => temperature_inst%t_skin_lun             , & ! Output: [real(r8) (:)   ]  landunit skin temperature (K)
+         t_skin_patch            => temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
+         vf_sr                   => urbanparams_inst%vf_sr                  , & ! Input:  [real(r8) (:)   ]  view factor of sky for road
+         vf_sw                   => urbanparams_inst%vf_sw                  , & ! Input:  [real(r8) (:)   ]  view factor of sky for one wall
+         wtroad_perv             => lun%wtroad_perv                         , & ! Input:  [real(r8) (:)   ]  weight of pervious road wrt total road
+         wtlunit_roof            => lun%wtlunit_roof                        , & ! Input:  [real(r8) (:)   ]  weight of roof with respect to landunit
+         canyon_hwr              => lun%canyon_hwr                          , & ! Input:  [real(r8) (:)   ]  ratio of building height to street hwidth (-)
+!KO
          t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  surface water temperature               
          tssbef                  => temperature_inst%t_ssbef_col            , & ! Input:  [real(r8) (:,:) ]  soil/snow temperature before update   
          t_h2osfc_bef            => temperature_inst%t_h2osfc_bef_col       , & ! Input:  [real(r8) (:)   ]  saved surface water temperature         
@@ -403,6 +457,19 @@ contains
                  + (1-frac_veg_nosno(p))*emg(c)*sb*lw_grnd &
                  + 4._r8*emg(c)*sb*t_grnd0(c)**3*tinc(c)
 
+
+!ABT
+            ! Calculate the skin temperature as a weighted sum of all the surface contributions (surface water table, snow, etc...)
+            ! Note: This is the bare ground calculation of skin temperature
+            !       The Urban and Vegetation are done in other place.  Urban=Later in this function Veg=CanopyFluxMod
+!            t_skin_patch(p) = ((1._r8 - emv(p))*(1-frac_veg_nosno(p)) * sqrt(sqrt(lw_grnd)))  +  emv(p)*t_veg(p)
+!            if( frac_veg_nosno(p).eq.0 ) then
+!               t_skin_patch(p) = ((1._r8 - emv(p))*(1-frac_veg_nosno(p)) * sqrt(sqrt(lw_grnd)))  +  &
+!                                           emv(p) *   frac_veg_nosno(p)  * t_veg(p)
+!            end if
+             if(frac_veg_nosno(p).eq.0)  t_skin_patch(p) = sqrt(sqrt(lw_grnd))
+!ABT
+
             eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(c)
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                eflx_lwrad_net_r(p) = eflx_lwrad_out(p) - forc_lwrad(c)
@@ -422,6 +489,67 @@ contains
       call p2c(bounds, num_nolakec, filter_nolakec, &
            errsoi_patch(bounds%begp:bounds%endp), &
            errsoi_col(bounds%begc:bounds%endc))
+
+!KO
+      ! Calculate urban skin temperature.  Must be done here instead of in
+      ! UrbanFluxes because eflx_lwrad_out has been updated above.  This section
+      ! of code could be placed in a subroutine that could be called here or
+      ! called from within clm_driver after the call to SoilFluxes.     
+!KO
+    ! Assign urban surface emissivities
+
+      do fc = 1,num_urbanc
+         c = filter_urbanc(fc)
+         l = col%landunit(c)
+
+         if      (col%itype(c) == icol_roof     ) then
+            emg_roof(l)      = emg(c)
+         else if (col%itype(c) == icol_sunwall  ) then
+            emg_sunwall(l)   = emg(c)
+         else if (col%itype(c) == icol_shadewall) then
+            emg_shadewall(l) = emg(c)
+         else if (col%itype(c) == icol_road_perv) then
+            emg_road_perv(l) = emg(c)
+         else if (col%itype(c) == icol_road_imperv) then
+            emg_road_imperv(l) = emg(c)
+         end if
+
+      end do
+
+      ! Update landunit level upward longwave radiation
+
+      call p2l(bounds, &
+           eflx_lwrad_out(bounds%begp:bounds%endp), &
+           eflx_lwrad_out_lun(bounds%begl:bounds%endl), &
+           p2c_scale_type = 'unity', c2l_scale_type = 'urbanf')
+
+      ! Calculate urban effective emissivity and skin temperature
+
+      do fl = 1, num_urbanl
+         l = filter_urbanl(fl)
+
+
+         emg_road   = emg_road_perv(l)*wtroad_perv(l) + emg_road_imperv(l)*(1._r8-wtroad_perv(l))
+
+         ! The expression for vf_sw is for per unit wall area
+         ! So multiply it by canyon_hwr to convert to per unit ground area
+         ! Then the following should equal one: 2*canyon_hwr*vf_sw + vf_sr
+         emg_canyon = emg_road*vf_sr(l) + emg_sunwall(l)*vf_sw(l)*canyon_hwr(l) + emg_shadewall(l)*vf_sw(l)*canyon_hwr(l)
+
+         emg_urban  = emg_roof(l)*wtlunit_roof(l) + emg_canyon*(1._r8-wtlunit_roof(l))
+         t_skin_lun(l) = sqrt(sqrt(eflx_lwrad_out_lun(l)/(sb*emg_urban)))
+
+      end do
+
+      ! Assign landunit-level t_skin to each urban pft
+      do fp = 1, num_urbanp
+         p = filter_urbanp(fp)         
+         l = patch%landunit(p)
+         
+         t_skin_patch(p) = t_skin_lun(l)
+  
+      end do
+!KO
 
       call t_stopf('bgp2_loop_4')
 
