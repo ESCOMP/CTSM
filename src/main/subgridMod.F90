@@ -28,6 +28,7 @@ module subgridMod
 
   ! Routines to get info for each landunit:
   public :: subgrid_get_info_natveg
+  public :: subgrid_get_info_cohort
   public :: subgrid_get_info_urban_tbd
   public :: subgrid_get_info_urban_hd
   public :: subgrid_get_info_urban_md
@@ -78,7 +79,7 @@ contains
     nlunits  = 0
     ncohorts = 0
 
-    call subgrid_get_info_natveg(gi, ncohorts, npatches_temp, ncols_temp, nlunits_temp)
+    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)
@@ -103,6 +104,7 @@ contains
     call subgrid_get_info_crop(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
    
+    call subgrid_get_info_cohort(gi,ncohorts)
 
   contains
     subroutine accumulate_counters
@@ -119,7 +121,7 @@ contains
   end subroutine subgrid_get_gcellinfo
 
   !-----------------------------------------------------------------------
-  subroutine subgrid_get_info_natveg(gi, ncohorts, npatches, ncols, nlunits)
+  subroutine subgrid_get_info_natveg(gi, npatches, ncols, nlunits)
     !
     ! !DESCRIPTION:
     ! Obtain properties for natural vegetated landunit in this grid cell
@@ -129,7 +131,6 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
-    integer, intent(out) :: ncohorts  ! number of nat veg cohorts in this grid cell
     integer, intent(out) :: npatches  ! number of nat veg patches in this grid cell
     integer, intent(out) :: ncols     ! number of nat veg columns in this grid cell
     integer, intent(out) :: nlunits   ! number of nat veg landunits in this grid cell
@@ -150,18 +151,42 @@ contains
     nlunits = 1
     ncols = 1
 
+  end subroutine subgrid_get_info_natveg
+
+  ! -----------------------------------------------------------------------------
+
+  subroutine subgrid_get_info_cohort(gi, ncohorts)
+    !
+    ! !DESCRIPTION:
+    ! Obtain cohort counts per each gridcell.
+    !
+    ! !USES
+    use clm_varpar, only : natpft_size
+    !
+    ! !ARGUMENTS:
+    integer, intent(in)  :: gi        ! grid cell index
+    integer, intent(out) :: ncohorts  ! number of cohorts in this grid cell
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'subgrid_get_info_cohort'
+    !-----------------------------------------------------------------------
+
     ! -------------------------------------------------------------------------
     ! Number of cohorts is set here
-    ! fates cohorts (via FATES) populate all natural vegetation columns.
-    ! Current implementations mostly assume that only one column contains
-    ! natural vegetation, which is synonomous with the soil column. 
-    ! For restart output however, we will allocate the cohort vector space
-    ! based on all columns.
+    ! FATES cohorts populate all natural vegetation columns.
+    ! There is only one natural vegetation column per grid-cell.  So allocations
+    ! are mapped to the gridcell.  In the future we may have more than one site
+    ! per gridcell, and we just multiply that factor here.
+    ! It is possible that there may be gridcells that don't have a naturally
+    ! vegetated column.  That case should be fine, as the cohort
+    ! restart vector will just be a little sparse.
     ! -------------------------------------------------------------------------
+    
+    ncohorts = fates_maxElementsPerSite
+    
+ end subroutine subgrid_get_info_cohort
 
-    ncohorts = ncols*fates_maxElementsPerSite
-
-  end subroutine subgrid_get_info_natveg
 
   !-----------------------------------------------------------------------
   subroutine subgrid_get_info_urban_tbd(gi, npatches, ncols, nlunits)

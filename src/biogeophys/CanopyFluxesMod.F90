@@ -1265,6 +1265,7 @@ contains
       
       if ( use_fates ) then
          
+         
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
          call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
                waterstate_inst,waterflux_inst,solarabs_inst,energyflux_inst)

@@ -1065,13 +1065,13 @@ contains
     
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp
-          do fi = 1,num_column
-             i = filter_column(fi)
-             this%matrix_a_tri_col(i,j,k) = value_column
-             this%matrix_b_tri_col(i,j,k) = value_column
-             this%matrix_c_tri_col(i,j,k) = value_column
-             this%matrix_input_col(i,j,k) = value_column
-          end do
+!          do fi = 1,num_column
+!             i = filter_column(fi)
+             this%matrix_a_tri_col(:,j,k) = value_column
+             this%matrix_b_tri_col(:,j,k) = value_column
+             this%matrix_c_tri_col(:,j,k) = value_column
+             this%matrix_input_col(:,j,k) = value_column
+!          end do
        end do
     end do
 

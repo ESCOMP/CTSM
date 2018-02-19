@@ -73,7 +73,7 @@ contains
        do j = 1,nlevdecomp
           do fc = 1, num_soilc_with_inactive
              c = filter_soilc_with_inactive(fc)
-             if (.not. use_soil_matrixcn) then
+!             if (.not. use_soil_matrixcn) then
                 cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                   cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
                 cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
@@ -82,16 +82,21 @@ contains
                   cf_veg%dwt_frootc_to_litr_lig_c_col(c,j) * dt
                 cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
                   ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
-             else
-                cf_soil%matrix_input_col(c,j,i_met_lit) = cf_soil%matrix_input_col(c,j,i_met_lit) + &
-                     cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
-                cf_soil%matrix_input_col(c,j,i_cel_lit) = cf_soil%matrix_input_col(c,j,i_cel_lit) + &
-                     cf_veg%dwt_frootc_to_litr_cel_c_col(c,j) * dt
-                cf_soil%matrix_input_col(c,j,i_lig_lit) = cf_soil%matrix_input_col(c,j,i_lig_lit) + &
-                     cf_veg%dwt_frootc_to_litr_lig_c_col(c,j) * dt
-                cf_soil%matrix_input_col(c,j,i_cwd)     = cf_soil%matrix_input_col(c,j,i_cwd) + &
-                    (cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
-             end if !soil_matrix
+!             else
+                !print*,'matrix_input',c,j,i_met_lit
+                !print*,'cf_soil%matrix_input_col',cf_soil%matrix_input_col(c,j,i_met_lit)
+                !print*,'cf_veg%dwt_frootc_to_litr_met_c_col(c,j)',cf_veg%dwt_frootc_to_litr_met_c_col(c,j)
+!                if(j .eq. 1)print*,'before matrix input_DynPatch', cf_soil%matrix_input_col(c,j,i_met_lit),cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
+!                cf_soil%matrix_input_col(c,j,i_met_lit) = cf_soil%matrix_input_col(c,j,i_met_lit) + &
+!                     cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
+!                cf_soil%matrix_input_col(c,j,i_cel_lit) = cf_soil%matrix_input_col(c,j,i_cel_lit) + &
+!                     cf_veg%dwt_frootc_to_litr_cel_c_col(c,j) * dt
+!                cf_soil%matrix_input_col(c,j,i_lig_lit) = cf_soil%matrix_input_col(c,j,i_lig_lit) + &
+!                     cf_veg%dwt_frootc_to_litr_lig_c_col(c,j) * dt
+!                cf_soil%matrix_input_col(c,j,i_cwd)     = cf_soil%matrix_input_col(c,j,i_cwd) + &
+!                    (cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
+!                if(j .eq. 1)print*,'after matrix input_DynPatch', cf_soil%matrix_input_col(c,j,i_met_lit)
+!             end if !soil_matrix
           end do
        end do
 
@@ -207,27 +212,34 @@ contains
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-!            if (.not. use_soil_matrixcn) then
+            if (.not. use_soil_matrixcn) then
             ! phenology and dynamic land cover fluxes
 !            if(j .eq. 1)print*,'before phenology c to lit,source,',cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit),cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
-            cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = &
-                 cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
-            cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = &
-                 cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
-            cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = &
-                 cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = &
+                    cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = &
+                    cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = &
+                    cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
+               
 
 !            if(j .eq. 1)print*,'after phenology c to lit,source,',cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit)
             ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
             ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
             ! time step, but to be safe, I'm explicitly setting it to zero here.
-            cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
-!           else !use_soil_matrix
-!            cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = 0._r8
-!            cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = 0._r8
-!            cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = 0._r8
-!            cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
-!           end if !soil_matrix
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
+            else
+!               if(j .eq. 1)print*,'matrix_input_col(c,j,i_met_lit)',c,j,cf_soil%matrix_input_col(c,j,i_met_lit),cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
+               cf_soil%matrix_input_col(c,j,i_met_lit) = &
+                    cf_soil%matrix_input_col(c,j,i_met_lit) + cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
+               cf_soil%matrix_input_col(c,j,i_cel_lit) = &
+                    cf_soil%matrix_input_col(c,j,i_cel_lit) + cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
+               cf_soil%matrix_input_col(c,j,i_lig_lit) = &
+                    cf_soil%matrix_input_col(c,j,i_lig_lit) + cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
+               cf_soil%matrix_input_col(c,j,i_cwd) = &
+                    cf_soil%matrix_input_col(c,j,i_cwd)     + 0._r8
+!               if(j .eq. 1)print*,'after phenology(c,j,i_met_lit)',cf_soil%matrix_input_col(c,j,i_met_lit)
+            end if
          end do
       end do
       else  !use_fates
@@ -285,7 +297,7 @@ contains
          c = patch%column(p)      
          ! phenology: transfer growth fluxes
         if(abs(grc%londeg(patch%gridcell(p)) - 355._r8) .lt. 1 .and. abs(grc%latdeg(patch%gridcell(p)) - 6._r8) .lt. 1)then
-            print*,'in Phenology',p,cs_veg%deadcrootc_patch(p),patch%itype(p)
+            !print*,'in Phenology',p,cs_veg%deadcrootc_patch(p),patch%itype(p)
         end if
         if(.not. use_matrixcn)then
          cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)       + cf_veg%leafc_xfer_to_leafc_patch(p)*dt

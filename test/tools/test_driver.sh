@@ -77,72 +77,7 @@ export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
 dataroot="$CESMDATAROOT"
 export TOOLSLIBS=""
-export TOOLS_CONF_STRING=""
-
-
-echo_arg=""
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-    ##yellowstone
-     ys* | caldera* | geyser* | pronghorn*)
-    submit_script="test_driver_yellowstone${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-interactive="YES"
-input_file="tests_pretag_yellowstone_nompi"
-c_threads=16
-
-export INITMODULES="/glade/apps/opt/lmod/lmod/init/sh"
-. \$INITMODULES
-
-module purge
-module load ncarenv/1.0
-module load ncarbinlibs/1.1
-module load perlmods
-module load gmake/4.1
-
-module load intel/15.0.3
-module load ncarcompilers/1.0
-module load netcdf/4.3.3.1
-module load pnetcdf/1.6.1
-module load mkl/11.1.2
-
-module load nco
-module load ncl
-module load python
-module load all-python-libs
-
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=\$c_threads
-fi
-
-# Stop on first failed test
-if [ -z "\$CLM_SOFF" ]; then   #CLM_SOFF NOT set
-   export CLM_SOFF=FALSE
-fi
-
-export CESM_MACH="yellowstone"
-export CESM_COMP="intel"
-
-export NETCDF_DIR=\$NETCDF
-export INC_NETCDF=\$NETCDF/include
-export LIB_NETCDF=\$NETCDF/lib
-export MAKE_CMD="gmake -j "
-export CFG_STRING=""
-export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CPPDEFS=-DLINUX"
-export MACH_WORKSPACE="/glade/scratch"
-export CPRNC_EXE="$CESMDATAROOT/tools/cprnc/cprnc"
-dataroot="$CESMDATAROOT"
-export TOOLSLIBS=""
-export TOOLS_CONF_STRING=""
+export TOOLS_CONF_STRING="--mpilib mpi-serial"
 
 
 echo_arg=""

@@ -159,7 +159,7 @@ contains
 !  matrix 
 !    allocate(this%matrix_npools_col (begc:endc,1:ndecomp_pools))   ; this%matrix_npools_col    (:,:) = nan
 !    allocate(this%matrix_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
-    this%matrix_npools_vr_col(:,:,:)= nan
+!    this%matrix_npools_vr_col(:,:,:)= nan
 
   end subroutine InitAllocate
 
@@ -207,19 +207,19 @@ contains
 !    this%matrix_npools_col(begc:endc,:) = spval
     do l  = 1, ndecomp_pools
        if ( nlevdecomp_full > 1 ) then
-          data2dptr => this%decomp_npools_vr_col(:,1:nlevdecomp,l)
+          data2dptr => this%decomp_npools_vr_col(:,:,l)
           fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_vr'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr)
-          data2dptr => this%matrix_cap_decomp_npools_vr_col(:,1:nlevdecomp,l)
+          data2dptr => this%matrix_cap_decomp_npools_vr_col(:,:,l)
           fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_Cap_vr'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N capacity (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='I', long_name=longname, &
                ptr_col=data2dptr)
-          data2dptr => this%matrix_pot_decomp_npools_vr_col(:,1:nlevdecomp,l)
+          data2dptr => this%matrix_pot_decomp_npools_vr_col(:,:,l)
           fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_Pot_vr'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N potential (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
@@ -1152,18 +1152,18 @@ contains
       end do
    end do
 !!!!!matrix!!!!!!!!!!!!!!
-   do l = 1, ndecomp_pools
-      do j = 1, nlevdecomp
-         call column_state_updater%update_column_state_no_special_handling( &
-              bounds = bounds, &
-              clump_index = clump_index, &
-              var    = this%matrix_npools_vr_col(begc:endc, j, l), &
-              adjustment = adjustment_one_level(begc:endc))
-         this%dyn_nbal_adjustments_col(begc:endc) = &
-              this%dyn_nbal_adjustments_col(begc:endc) + &
-              adjustment_one_level(begc:endc) * dzsoi_decomp(j)
-      end do
-   end do
+!   do l = 1, ndecomp_pools
+!      do j = 1, nlevdecomp
+!         call column_state_updater%update_column_state_no_special_handling( &
+!              bounds = bounds, &
+!              clump_index = clump_index, &
+!              var    = this%matrix_npools_vr_col(begc:endc, j, l), &
+!              adjustment = adjustment_one_level(begc:endc))
+!         this%dyn_nbal_adjustments_col(begc:endc) = &
+!              this%dyn_nbal_adjustments_col(begc:endc) + &
+!              adjustment_one_level(begc:endc) * dzsoi_decomp(j)
+!      end do
+!   end do
 
    do j = 1, nlevdecomp
       call column_state_updater%update_column_state_no_special_handling( &

@@ -275,11 +275,19 @@ contains
           tranvert = matmul(a_ma_vr,kk_ma_vr)-tri_ma_vr-kk_fire_vr  !intermediate calculatio
           ntranvert = matmul(na_ma_vr,kk_ma_vr)-tri_ma_vr-kk_fire_vr  !intermediate calculatio
  
+!          print*,'before matrix',matrix_Cinter(1+(i_met_lit-1)*nlevdecomp,1)
+          emulator_tmp=matmul(matmul(a_ma_vr,kk_ma_vr), matrix_Cinter)*dt
+!          print*,'transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
+          emulator_tmp=matmul(-tri_ma_vr, matrix_Cinter)*dt
+!          print*,'vertical transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
+          emulator_tmp=matmul(-kk_fire_vr, matrix_Cinter)*dt
+!          print*,'fire C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
           matrix_Cinter_next(:,:) = matrix_Cinter + matrix_Cinput_vector + &
                                    matmul(tranvert, matrix_Cinter)*dt
 
           matrix_Ninter_next(:,:) = matrix_Ninter + matrix_Ninput_vector + &
                                    matmul(ntranvert,matrix_Ninter)*dt
+!          print*,'after matrix',matrix_Cinter_next(1+(i_met_lit-1)*nlevdecomp,1),matrix_Cinput_vector(1+(i_met_lit-1)*nlevdecomp,1)
  
           do j = 1,nlevdecomp
              do i=1,ndecomp_pools

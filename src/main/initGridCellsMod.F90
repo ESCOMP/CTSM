@@ -234,7 +234,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: m                                ! index
-    integer  :: ncohorts
     integer  :: npatches                         ! number of patches in landunit
     integer  :: ncols
     integer  :: nlunits
@@ -245,7 +244,7 @@ contains
     ! Set decomposition properties
 
     call subgrid_get_info_natveg(gi, &
-         ncohorts=ncohorts, npatches=npatches, ncols=ncols, nlunits=nlunits)
+          npatches=npatches, ncols=ncols, nlunits=nlunits)
     wtlunit2gcell = wt_lunit(gi, ltype)
 
     if (npatches > 0) then

@@ -636,7 +636,7 @@ contains
     end do
 
     ! initialize fields for special filters
-
+!    print*,'special_col in SoilBiogeochemCarbonStateType.F90',special_col
     call this%SetValues (num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
   end subroutine InitCold
@@ -1023,10 +1023,12 @@ contains
        do k = 1, ndecomp_pools
           do fi = 1,num_column
              i = filter_column(fi)
+             !print*,'before setvalue this%decomp_cpools_vr_col(i,j,k)',i,k,j,this%decomp_cpools_vr_col(i,j,k)
              this%decomp_cpools_vr_col(i,j,k) = value_column
              this%matrix_cap_decomp_cpools_vr_col(i,j,k) = value_column
              this%matrix_pot_decomp_cpools_vr_col(i,j,k) = value_column
              this%decomp0_cpools_vr_col(i,j,k) = value_column
+             !print*,'after setvalue this%decomp_cpools_vr_col(i,j,k)',this%decomp_cpools_vr_col(i,j,k)
           end do
        end do
     end do

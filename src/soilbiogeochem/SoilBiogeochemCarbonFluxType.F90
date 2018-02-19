@@ -605,6 +605,7 @@ contains
 
     ! initialize fields for special filters
 
+    !print*,'special_col in SoilBiogeochemCarbonFluxType.F90',special_col
     call this%SetValues (num_column=num_special_col, filter_column=special_col, &
          value_column=0._r8)
 
@@ -726,14 +727,16 @@ contains
 ! for matrix 
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp
-          do fi = 1,num_column
-             i = filter_column(fi)
-             this%matrix_a_tri_col(i,j) = value_column
-             this%matrix_b_tri_col(i,j) = value_column
-             this%matrix_c_tri_col(i,j) = value_column
-             this%matrix_input_col(i,j,k) = value_column
-             this%matrix_decomp_fire_k_col(i,j,k) = value_column
-          end do
+!          do fi = 1,num_column
+!             i = filter_column(fi)
+             !print*,'before setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
+             this%matrix_a_tri_col(:,j) = value_column
+             this%matrix_b_tri_col(:,j) = value_column
+             this%matrix_c_tri_col(:,j) = value_column
+             this%matrix_input_col(:,j,k) = value_column
+             this%matrix_decomp_fire_k_col(:,j,k) = value_column
+             !print*,'after setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
+!          end do
        end do
     end do
     do j = 1, nlevdecomp_full
