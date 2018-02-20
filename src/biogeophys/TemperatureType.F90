@@ -35,6 +35,7 @@ module TemperatureType
      real(r8), pointer :: t_soisno_col             (:,:) ! col soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd) 
      real(r8), pointer :: t_soi10cm_col            (:)   ! col soil temperature in top 10cm of soil (Kelvin)
      real(r8), pointer :: t_soi17cm_col            (:)   ! col soil temperature in top 17cm of soil (Kelvin)
+     real(r8), pointer :: t_sno_mul_mss_col        (:)   ! col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
      real(r8), pointer :: t_lake_col               (:,:) ! col lake temperature (Kelvin)  (1:nlevlak)          
      real(r8), pointer :: t_grnd_col               (:)   ! col ground temperature (Kelvin)
      real(r8), pointer :: t_grnd_r_col             (:)   ! col rural ground temperature (Kelvin)
@@ -211,6 +212,7 @@ contains
     allocate(this%dTdz_top_col             (begc:endc))                      ; this%dTdz_top_col             (:)   = nan
     allocate(this%dt_veg_patch             (begp:endp))                      ; this%dt_veg_patch             (:)   = nan
 
+    allocate(this%t_sno_mul_mss_col        (begc:endc))                      ; this%t_sno_mul_mss_col        (:)   = nan
     allocate(this%t_soi10cm_col            (begc:endc))                      ; this%t_soi10cm_col            (:)   = nan
     allocate(this%t_soi17cm_col            (begc:endc))                      ; this%t_soi17cm_col            (:)   = spval
     allocate(this%dt_grnd_col              (begc:endc))                      ; this%dt_grnd_col              (:)   = nan
@@ -409,6 +411,15 @@ contains
     call hist_addfld1d (fname='TSOI_10CM',  units='K', &
          avgflag='A', long_name='soil temperature in top 10cm of soil', &
          ptr_col=this%t_soi10cm_col, set_urb=spval)
+
+    this%t_sno_mul_mss_col(begc:endc) = spval
+    call hist_addfld1d (fname='TSNO_MUL_MASS',  units='K kg/m2', &
+         avgflag='A', long_name='snow temperature times layer mass, layer sum', &
+         ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='TSNO_MUL_MASS_ICE',  units='K kg/m2', &
+         avgflag='A', long_name='snow temperature times layer mass, layer sum (ice landunits only)', &
+         ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
     if (use_cndv .or. use_crop) then
        active = "active"
