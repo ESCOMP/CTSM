@@ -413,13 +413,14 @@ contains
          ptr_col=this%t_soi10cm_col, set_urb=spval)
 
     this%t_sno_mul_mss_col(begc:endc) = spval
-    call hist_addfld1d (fname='TSNO_MUL_MASS',  units='K kg/m2', &
+    call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
          avgflag='A', long_name='snow temperature times layer mass, layer sum', &
          ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='TSNO_MUL_MASS_ICE',  units='K kg/m2', &
+    call hist_addfld1d (fname='SNOTXMASS_ICE',  units='K kg/m2', &
          avgflag='A', long_name='snow temperature times layer mass, layer sum (ice landunits only)', &
-         ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
+         ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
 
     if (use_cndv .or. use_crop) then
        active = "active"
