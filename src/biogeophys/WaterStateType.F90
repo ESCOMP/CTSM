@@ -488,12 +488,12 @@ contains
     this%snowliq_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOWLIQ',  units='kg/m2',  &
          avgflag='A', long_name='snow liquid water', &
-         ptr_col=this%snowliq_col,c2l_scale_type='urbanf')
+         ptr_col=this%snowliq_col)
 
     this%snowice_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOWICE',  units='kg/m2', &
          avgflag='A', long_name='snow ice', &
-         ptr_col=this%snowice_col,c2l_scale_type='urbanf')
+         ptr_col=this%snowice_col)
 
     this%int_snow_col(begc:endc) = spval
     call hist_addfld1d (fname='INT_SNOW',  units='mm',  &
