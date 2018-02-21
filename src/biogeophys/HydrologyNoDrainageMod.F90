@@ -299,14 +299,13 @@ contains
          snowdp(c) = snow_depth(c) * frac_sno_eff(c)
       end do
 
-      ! Calculate total snow mass and multiply snow pack temperature by layer mass
+      ! Calculate snow internal temperature
       !
-      ! These quantities may be used to calculated the "internal snow temperature", which is
-      ! the average temperature of the entire snowpack, weighted by the mass of the snow in each layer.
-      ! In a formula this reads:
+      ! Snow internal (or: integrated) temperature is the average temperature of the entire 
+      ! snowpack, weighted by the layer mass. In a formula this reads:
       !
-      ! [ Sum_t Sum_i w(t,i) * T(t,i) ] / 
-      ! [ Sum_t Sum_i w(t,i) ]
+      ! SIT = [ Sum_t Sum_i w(t,i) * T(t,i) ] / 
+      !       [ Sum_t Sum_i w(t,i) ]
       !
       ! where
       !
@@ -315,9 +314,19 @@ contains
       ! w(t,i) = layer mass or weight (kg /m2) 
       ! T(t,i) = layer temperature (K)
       ! 
-      ! The time sum is achieved by setting avgflag='SUM' in any calls to the history output routines. 
-      ! The denominator Sum_t Sum_i w(t,i) is already output as H2OSNO.
-      ! Here, we compute the nominator, Sum_t Sum_i w(t,i) * T(t,i)
+      ! SIT can be calculated offline from two components: the nominator and denominator, which are output
+      ! separately.
+      ! 
+      ! Both the nominator and denominator are scaled with a factor 1/Nstep, the number of time samples, 
+      ! to make them independent of the number of time steps that were used in the averaging. 
+      ! This is simply implemented as avgflag='A' in any calls to the history output routines. 
+      !
+      ! Snow packs without layers are not taken into account, as they have no temperature.
+      !
+      ! The denominator Sum_t Sum_i w(t,i) is already output as SNOWICE and SNOWLIQ (mass of 
+      ! snow in layered snowpacks). Note that these != H2OSNO which does account for layerless snowpacks.
+      !
+      ! The nominator Sum_t Sum_i w(t,i) * T(t,i) is computed and stored as t_sno_mul_mss
 
       do fc = 1, num_nolakec
          c = filter_nolakec(fc)

@@ -604,6 +604,7 @@ contains
       end do
 
       ! Snow internal temperature
+      ! See description in HydrologyNoDrainageMod
 
       do fc = 1, num_lakec
          c = filter_lakec(fc)
