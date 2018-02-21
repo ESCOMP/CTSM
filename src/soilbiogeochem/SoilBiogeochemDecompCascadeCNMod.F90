@@ -270,10 +270,6 @@ contains
          cascade_donor_pool             =>    decomp_cascade_con%cascade_donor_pool                 , & ! Output:   [integer           (:)     ]  which pool is C taken from for a given decomposition step 
          cascade_receiver_pool          =>    decomp_cascade_con%cascade_receiver_pool              , & ! Output:   [integer           (:)     ]  which pool is C added to for a given decomposition step   
          floating_cn_ratio_decomp_pools =>    decomp_cascade_con%floating_cn_ratio_decomp_pools     , & ! Output:   [logical           (:)     ]  TRUE => pool has fixed C:N ratio                          
-         decomp_pool_name_restart       =>    decomp_cascade_con%decomp_pool_name_restart           , & ! Output:   [character(len=8)  (:)     ]  name of pool for restart files                   
-         decomp_pool_name_history       =>    decomp_cascade_con%decomp_pool_name_history           , & ! Output:   [character(len=8)  (:)     ]  name of pool for history files                   
-         decomp_pool_name_long          =>    decomp_cascade_con%decomp_pool_name_long              , & ! Output:   [character(len=20) (:)     ]  name of pool for netcdf long names              
-         decomp_pool_name_short         =>    decomp_cascade_con%decomp_pool_name_short             , & ! Output:   [character(len=8)  (:)     ]  name of pool for netcdf short names              
          is_litter                      =>    decomp_cascade_con%is_litter                          , & ! Output:   [logical           (:)     ]  TRUE => pool is a litter pool                             
          is_soil                        =>    decomp_cascade_con%is_soil                            , & ! Output:   [logical           (:)     ]  TRUE => pool is a soil pool                               
          is_cwd                         =>    decomp_cascade_con%is_cwd                             , & ! Output:   [logical           (:)     ]  TRUE => pool is a cwd pool                                
@@ -309,10 +305,10 @@ contains
 
       i_litr1 = i_met_lit
       floating_cn_ratio_decomp_pools(i_litr1) = .true.
-      decomp_pool_name_restart(i_litr1) = 'litr1'
-      decomp_pool_name_history(i_litr1) = 'LITR1'
-      decomp_pool_name_long(i_litr1) = 'litter 1'
-      decomp_pool_name_short(i_litr1) = 'L1'
+      decomp_cascade_con%decomp_pool_name_restart(i_litr1) = 'litr1'
+      decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
+      decomp_cascade_con%decomp_pool_name_long(i_litr1) = 'litter 1'
+      decomp_cascade_con%decomp_pool_name_short(i_litr1) = 'L1'
       is_litter(i_litr1) = .true.
       is_soil(i_litr1) = .false.
       is_cwd(i_litr1) = .false.
@@ -324,10 +320,10 @@ contains
 
       i_litr2 = i_cel_lit
       floating_cn_ratio_decomp_pools(i_litr2) = .true.
-      decomp_pool_name_restart(i_litr2) = 'litr2'
-      decomp_pool_name_history(i_litr2) = 'LITR2'
-      decomp_pool_name_long(i_litr2) = 'litter 2'
-      decomp_pool_name_short(i_litr2) = 'L2'
+      decomp_cascade_con%decomp_pool_name_restart(i_litr2) = 'litr2'
+      decomp_cascade_con%decomp_pool_name_history(i_litr2) = 'LITR2'
+      decomp_cascade_con%decomp_pool_name_long(i_litr2) = 'litter 2'
+      decomp_cascade_con%decomp_pool_name_short(i_litr2) = 'L2'
       is_litter(i_litr2) = .true.
       is_soil(i_litr2) = .false.
       is_cwd(i_litr2) = .false.
@@ -339,10 +335,10 @@ contains
 
       i_litr3 = i_lig_lit
       floating_cn_ratio_decomp_pools(i_litr3) = .true.
-      decomp_pool_name_restart(i_litr3) = 'litr3'
-      decomp_pool_name_history(i_litr3) = 'LITR3'
-      decomp_pool_name_long(i_litr3) = 'litter 3'
-      decomp_pool_name_short(i_litr3) = 'L3'
+      decomp_cascade_con%decomp_pool_name_restart(i_litr3) = 'litr3'
+      decomp_cascade_con%decomp_pool_name_history(i_litr3) = 'LITR3'
+      decomp_cascade_con%decomp_pool_name_long(i_litr3) = 'litter 3'
+      decomp_cascade_con%decomp_pool_name_short(i_litr3) = 'L3'
       is_litter(i_litr3) = .true.
       is_soil(i_litr3) = .false.
       is_cwd(i_litr3) = .false.
@@ -354,10 +350,10 @@ contains
 
       if (.not. use_fates) then
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
-         decomp_pool_name_restart(i_cwd) = 'cwd'
-         decomp_pool_name_history(i_cwd) = 'CWD'
-         decomp_pool_name_long(i_cwd) = 'coarse woody debris'
-         decomp_pool_name_short(i_cwd) = 'CWD'
+         decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
+         decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
+         decomp_cascade_con%decomp_pool_name_long(i_cwd) = 'coarse woody debris'
+         decomp_cascade_con%decomp_pool_name_short(i_cwd) = 'CWD'
          is_litter(i_cwd) = .false.
          is_soil(i_cwd) = .false.
          is_cwd(i_cwd) = .true.
@@ -374,10 +370,10 @@ contains
          i_soil1 = 4
       endif
       floating_cn_ratio_decomp_pools(i_soil1) = .false.
-      decomp_pool_name_restart(i_soil1) = 'soil1'
-      decomp_pool_name_history(i_soil1) = 'SOIL1'
-      decomp_pool_name_long(i_soil1) = 'soil 1'
-      decomp_pool_name_short(i_soil1) = 'S1'
+      decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
+      decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
+      decomp_cascade_con%decomp_pool_name_long(i_soil1) = 'soil 1'
+      decomp_cascade_con%decomp_pool_name_short(i_soil1) = 'S1'
       is_litter(i_soil1) = .false.
       is_soil(i_soil1) = .true.
       is_cwd(i_soil1) = .false.
@@ -393,10 +389,10 @@ contains
          i_soil2 = 5
       endif
       floating_cn_ratio_decomp_pools(i_soil2) = .false.
-      decomp_pool_name_restart(i_soil2) = 'soil2'
-      decomp_pool_name_history(i_soil2) = 'SOIL2'
-      decomp_pool_name_long(i_soil2) = 'soil 2'
-      decomp_pool_name_short(i_soil2) = 'S2'
+      decomp_cascade_con%decomp_pool_name_restart(i_soil2) = 'soil2'
+      decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
+      decomp_cascade_con%decomp_pool_name_long(i_soil2) = 'soil 2'
+      decomp_cascade_con%decomp_pool_name_short(i_soil2) = 'S2'
       is_litter(i_soil2) = .false.
       is_soil(i_soil2) = .true.
       is_cwd(i_soil2) = .false.
@@ -412,10 +408,10 @@ contains
          i_soil3 = 6
       endif
       floating_cn_ratio_decomp_pools(i_soil3) = .false.
-      decomp_pool_name_restart(i_soil3) = 'soil3'
-      decomp_pool_name_history(i_soil3) = 'SOIL3'
-      decomp_pool_name_long(i_soil3) = 'soil 3'
-      decomp_pool_name_short(i_soil3) = 'S3'
+      decomp_cascade_con%decomp_pool_name_restart(i_soil3) = 'soil3'
+      decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
+      decomp_cascade_con%decomp_pool_name_long(i_soil3) = 'soil 3'
+      decomp_cascade_con%decomp_pool_name_short(i_soil3) = 'S3'
       is_litter(i_soil3) = .false.
       is_soil(i_soil3) = .true.
       is_cwd(i_soil3) = .false.
