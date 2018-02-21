@@ -414,11 +414,13 @@ contains
 
     this%t_sno_mul_mss_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
-         avgflag='A', long_name='snow temperature times layer mass, layer sum', &
+         avgflag='A', long_name='snow temperature times layer mass, layer sum; '// &
+         'to get mass-weighted temperature, divide by (SNOWICE+SNOWLIQ)', &
          ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='SNOTXMASS_ICE',  units='K kg/m2', &
-         avgflag='A', long_name='snow temperature times layer mass, layer sum (ice landunits only)', &
+         avgflag='A', long_name='snow temperature times layer mass, layer sum (ice landunits only); ' // &
+         'to get mass-weighted temperature, divide by (SNOWICE_ICE+SNOWLIQ_ICE)', &
          ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
