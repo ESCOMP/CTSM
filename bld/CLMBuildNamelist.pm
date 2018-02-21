@@ -1574,7 +1574,9 @@ sub process_namelist_inline_logic {
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
+    setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  }
   setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl, $physv);
