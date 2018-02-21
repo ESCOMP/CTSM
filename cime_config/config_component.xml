@@ -100,15 +100,15 @@
     <default_value>UNSET</default_value>
     <values>
       <!-- Use rcp4.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
-      <value compset="2000.*"		>2000_control</value>
-      <value compset="1850.*_"		>1850_control</value>
-      <value compset="HIST.*_"		>20thC_transient</value>
-      <value compset="RCP6.*_"		>1850-2100_rcp6_transient</value>
-      <value compset="RCP4.*_"		>1850-2100_rcp4.5_transient</value>
-      <value compset="RCP2.*_"		>1850-2100_rcp2.6_transient</value>
-      <value compset="RCP8.*_"		>1850-2100_rcp8.5_transient</value>
-      <value compset="AMIP.*_"		>20thC_transient</value>
-      <value compset="PIPD_"           >1850-2100_rcp4.5_transient</value>
+      <value compset="^2000_"		>2000_control</value>
+      <value compset="^1850_"		>1850_control</value>
+      <value compset="^HIST_"		>20thC_transient</value>
+      <value compset="^RCP6_"		>1850-2100_rcp6_transient</value>
+      <value compset="^RCP4_"		>1850-2100_rcp4.5_transient</value>
+      <value compset="^RCP2_"		>1850-2100_rcp2.6_transient</value>
+      <value compset="^RCP8_"		>1850-2100_rcp8.5_transient</value>
+      <value compset="^AMIP_"		>20thC_transient</value>
+      <value compset="^PIPD_"           >1850-2100_rcp4.5_transient</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
