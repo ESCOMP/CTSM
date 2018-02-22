@@ -1,3 +1,11 @@
+# directories checked out by manage_externals, and other files created
+# by manage_externals
+manage_externals.log
+src/fates/
+tools/PTCLM/
+cime/
+components/
+
 # ignore svn directories
 **/.svn/**
 .svn/
@@ -25,7 +33,4 @@ CMakeFiles/
 core.*
 *.gz
 *.log !run.log
-
-
-
-
+*.pyc

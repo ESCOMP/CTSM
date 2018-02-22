@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_18_r274    sacks 01/30/2018 Fix auto-detection of CIME_MODEL in a standalone checkout
+  clm4_5_18_r273    sacks 01/26/2018 Support a standalone checkout from git
   clm4_5_18_r272     erik 01/25/2018 Bring in latest FATES release version to CLM trunk: fates_s1.4.1_a3.0.0_rev2
   clm4_5_18_r271     erik 01/20/2018 Update testlist to v2 and remove yellowstone
   clm4_5_18_r270    sacks 12/20/2017 Always use multiple elevation classes for glacier, even with stub glc

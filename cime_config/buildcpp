@@ -16,7 +16,8 @@ def buildcpp(case):
     """
 
     caseroot = case.get_value("CASEROOT")
-    srcroot = case.get_value("SRCROOT")
+    cimeroot = case.get_value("CIMEROOT")
+    lnd_root = case.get_value("COMP_ROOT_DIR_LND")
     lnd_grid = case.get_value("LND_GRID")
     mask_grid = case.get_value("MASK_GRID")
     clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
@@ -35,9 +36,9 @@ def buildcpp(case):
     if not os.path.isdir(clmconf):
         os.makedirs(clmconf)
 
-    cmd = os.path.join(srcroot,"components","clm","bld","configure") 
-    command = "%s  %s %s -usr_src %s -comp_intf mct "  \
-              %(cmd, config_opts, clm_config_opts, os.path.join(caseroot,"SourceMods","src.clm")) 
+    cmd = os.path.join(lnd_root,"bld","configure")
+    command = "%s -cimeroot %s %s %s -usr_src %s -comp_intf mct "  \
+              %(cmd, cimeroot, config_opts, clm_config_opts, os.path.join(caseroot,"SourceMods","src.clm")) 
 
     run_cmd_no_fail(command, from_dir=clmconf)
 
