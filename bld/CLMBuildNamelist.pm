@@ -59,6 +59,7 @@ SYNOPSIS
 
      Create the namelist for CLM
 REQUIRED OPTIONS
+     -cimeroot "directory"    Path to cime directory
      -config "filepath"       Read the given CLM configuration cache file.
                               Default: "config_cache.xml".
      -d "directory"           Directory where output namelist file will be written
@@ -245,7 +246,8 @@ sub process_commandline {
   # the array!
   $nl_flags->{'cmdline'} = "@ARGV";
 
-  my %opts = ( config                => "config_cache.xml",
+  my %opts = ( cimeroot              => undef,
+               config                => "config_cache.xml",
                csmdata               => undef,
                clm_usr_name          => undef,
                co2_type              => undef,
@@ -282,6 +284,7 @@ sub process_commandline {
              );
 
   GetOptions(
+             "cimeroot=s"                => \$opts{'cimeroot'},
              "clm_demand=s"              => \$opts{'clm_demand'},
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
              "co2_type=s"                => \$opts{'co2_type'},
@@ -345,9 +348,9 @@ sub check_for_perl_utils {
   my $cfgdir = shift;
   my $opts_ref = shift;
 
-  # Determine CESM root directory and perl5lib root directory
-  my $cesmroot = abs_path( "$cfgdir/../../../");
-  my $perl5lib_dir = "$cesmroot/cime/utils/perl5lib";
+  # Determine CIME root directory and perl5lib root directory
+  my $cimeroot = $opts_ref->{'cimeroot'};
+  my $perl5lib_dir = "$cimeroot/utils/perl5lib";
 
   #-----------------------------------------------------------------------------
   # Add $perl5lib_dir to the list of paths that Perl searches for modules
@@ -4397,7 +4400,6 @@ sub main {
   my $cfg = read_configure_definition($cfgdir, \%opts);
 
   my $physv      = config_files::clm_phys_vers->new( $cfg->get('phys') );
-  my $cesmroot   = abs_path( "$cfgdir/../../../");
   my $definition = read_namelist_definition($cfgdir, \%opts, \%nl_flags, $physv);
   my $defaults   = read_namelist_defaults($cfgdir, \%opts, \%nl_flags, $cfg, $physv);
 

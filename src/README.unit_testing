@@ -1,6 +1,4 @@
-# To run all CLM unit tests on caldera, run the following command:
-#
-# Note that, on yellowstone/caldera, this requires 'module load all-python-libs'
+# To run all CTSM unit tests on caldera, run the following command:
 #
 # The creation of a temporary directory ensures that you are doing a completely
 # clean build of the unit tests. (The use of the --clean flag to run_tests.py
@@ -8,5 +6,8 @@
 # rerunning the tests after an incremental change, you can instead use an
 # existing build directory.
 
-../../../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`
+# From a standalone CTSM checkout:
+../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`
 
+# If you are within a full CESM checkout, you would instead do:
+# ../../../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`

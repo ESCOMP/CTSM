@@ -28,7 +28,7 @@ def _main_func():
     with Case(caseroot) as case:
 
         casetools = case.get_value("CASETOOLS")
-        srcroot = case.get_value("SRCROOT")
+        lnd_root = case.get_value("COMP_ROOT_DIR_LND")
         gmake_j = case.get_value("GMAKE_J")
         gmake = case.get_value("GMAKE")
         mach = case.get_value("MACH")
@@ -48,7 +48,7 @@ def _main_func():
             # create Filepath file and clm_cppdefs for clm4_0
             #-------------------------------------------------------
             # the call to configure here creates BOTH the Filepath file and the clm_cppdefs
-            cmd = os.path.join(os.path.join(srcroot,"components","clm","cime_config","buildcpp"))
+            cmd = os.path.join(os.path.join(lnd_root,"cime_config","buildcpp"))
             logger.info("     ...calling clm buildcpp to set build time options")
             try:
                 mod = imp.load_source("buildcpp", cmd)
@@ -68,22 +68,21 @@ def _main_func():
             #-------------------------------------------------------
             filepath_file = os.path.join(bldroot,"Filepath")
             if not os.path.isfile(filepath_file):
-                srcroot = case.get_value("SRCROOT")
                 caseroot = case.get_value("CASEROOT")
                 paths = [os.path.join(caseroot,"SourceMods","src.clm"), 
-                         os.path.join(srcroot,"components","clm","src","main"),
-                         os.path.join(srcroot,"components","clm","src","biogeophys"),
-                         os.path.join(srcroot,"components","clm","src","biogeochem"),
-                         os.path.join(srcroot,"components","clm","src","soilbiogeochem"),
-                         os.path.join(srcroot,"components","clm","src","dyn_subgrid"),
-                         os.path.join(srcroot,"components","clm","src","init_interp"),
-                         os.path.join(srcroot,"components","clm","src","fates"),
-                         os.path.join(srcroot,"components","clm","src","fates","main"),
-                         os.path.join(srcroot,"components","clm","src","fates","biogeophys"),
-                         os.path.join(srcroot,"components","clm","src","fates","biogeochem"),
-                         os.path.join(srcroot,"components","clm","src","fates","fire"),
-                         os.path.join(srcroot,"components","clm","src","utils"),
-                         os.path.join(srcroot,"components","clm","src","cpl")]
+                         os.path.join(lnd_root,"src","main"),
+                         os.path.join(lnd_root,"src","biogeophys"),
+                         os.path.join(lnd_root,"src","biogeochem"),
+                         os.path.join(lnd_root,"src","soilbiogeochem"),
+                         os.path.join(lnd_root,"src","dyn_subgrid"),
+                         os.path.join(lnd_root,"src","init_interp"),
+                         os.path.join(lnd_root,"src","fates"),
+                         os.path.join(lnd_root,"src","fates","main"),
+                         os.path.join(lnd_root,"src","fates","biogeophys"),
+                         os.path.join(lnd_root,"src","fates","biogeochem"),
+                         os.path.join(lnd_root,"src","fates","fire"),
+                         os.path.join(lnd_root,"src","utils"),
+                         os.path.join(lnd_root,"src","cpl")]
                 with open(filepath_file, "w") as filepath:
                     filepath.write("\n".join(paths))
                     filepath.write("\n")
