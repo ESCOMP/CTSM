@@ -435,6 +435,11 @@ contains
          avgflag='A', long_name='fraction of ground covered by snow', &
          ptr_col=this%frac_sno_col, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FSNO_ICE',  units='unitless',  &
+         avgflag='A', long_name='fraction of ground covered by snow (ice landunits only)', &
+         ptr_col=this%frac_sno_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     this%frac_sno_eff_col(begc:endc) = spval
     call hist_addfld1d (fname='FSNO_EFF',  units='unitless',  &
          avgflag='A', long_name='effective fraction of ground covered by snow', &

@@ -103,6 +103,10 @@ contains
          avgflag='A', long_name='column-level topographic height', &
          ptr_col=this%topo_col, default='inactive')
 
+    call hist_addfld1d(fname='TOPO_COL_ICE', units='m', &
+         avgflag='A', long_name='column-level topographic height (ice landunits only)', &
+         ptr_col=this%topo_col, l2g_scale_type='ice', default='inactive')
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
