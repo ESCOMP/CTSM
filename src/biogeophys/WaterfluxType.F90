@@ -478,7 +478,8 @@ contains
 
     this%qflx_sub_snow_patch(begp:endp) = spval
     call hist_addfld1d (fname='QFLX_SUB_SNOW', units='mm H2O/s', &
-         avgflag='A', long_name='sublimation rate from snow pack', &
+         avgflag='A', &
+         long_name='sublimation rate from snow pack (also includes bare ice sublimation from glacier columns)', &
          ptr_patch=this%qflx_sub_snow_patch,  c2l_scale_type='urbanf')
 
     this%qflx_dew_snow_patch(begp:endp) = spval
