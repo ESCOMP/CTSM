@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 908;
+my $ntests = 903;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 573;
+   $ntests += 570;
 }
 plan( tests=>$ntests );
 
@@ -280,7 +280,6 @@ foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6",
                       "-envxml_dir . -infile myuser_nl_clm", 
                       "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
                       "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
-                      "-inst_string '_0001'",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -452,11 +451,6 @@ my %failtest = (
                                      namelst=>"use_init_interp=.true. finidat=' '",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
-                                   },
-     "bad instance string"       =>{ options=>"-bgc sp -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-inst_string 'thing'",
                                    },
      "sp and c13"                =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c13=.true.",
