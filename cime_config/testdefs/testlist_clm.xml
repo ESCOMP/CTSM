@@ -334,6 +334,7 @@
   <test name="ERP_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCrop" testmods="clm/ciso_decStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -378,7 +379,6 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="clm_short"/>
-      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
       <machine name="cheyenne" compiler="gnu" category="clm_short"/>
     </machines>
     <options>
@@ -630,6 +630,7 @@
   <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Sp" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -814,7 +815,6 @@
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="clm_short"/>
       <machine name="cheyenne" compiler="gnu" category="clm_short"/>
-      <machine name="hobart" compiler="nag" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1237,7 +1237,7 @@
       <machine name="cheyenne" compiler="intel" category="clm_short"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="clm_short"/>
-      <machine name="cheyenne" compiler="gnu" category="aux_cime_baselines"/>
+      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1594,7 +1594,6 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
-      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1675,7 +1674,6 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
