@@ -2105,7 +2105,7 @@ sub setup_logic_cnfire {
 sub setup_logic_cnprec {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  if ( $physv->as_long() >= $physv->as_long("clm5_0") && &value_is_true($nl->get_value('use_cn')) ) {
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl_flags->{'use_cn'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
                  $nl, 'ncrit', 'use_cn'=>$nl_flags->{'use_cn'});
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
