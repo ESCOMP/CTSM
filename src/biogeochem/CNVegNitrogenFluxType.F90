@@ -178,6 +178,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: ndeploy_patch                             (:)     ! patch total N deployed to growth and storage (gN/m2/s)
      real(r8), pointer :: wood_harvestn_patch                       (:)     ! patch total N losses to wood product pools (gN/m2/s)
      real(r8), pointer :: wood_harvestn_col                         (:)     ! col total N losses to wood product pools (gN/m2/s) (p2c)
+     real(r8), pointer :: litfall_n_patch                           (:)     ! total N passed from plant to litter (gN/m2/s)
 
      ! phenology: litterfall and crop fluxes
      real(r8), pointer :: phenology_n_to_litr_met_n_col             (:,:)   ! col N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
@@ -440,6 +441,8 @@ contains
     allocate(this%dwt_wood_productn_gain_patch (begp:endp))                   ; this%dwt_wood_productn_gain_patch (:)   = nan
     allocate(this%dwt_crop_productn_gain_patch (begp:endp))                   ; this%dwt_crop_productn_gain_patch (:)   = nan
     allocate(this%wood_harvestn_col            (begc:endc))                   ; this%wood_harvestn_col            (:)   = nan
+
+    allocate(this%litfall_n_patch (begp:endp))                                ; this%litfall_n_patch (:)                = nan
 
     allocate(this%dwt_frootn_to_litr_met_n_col (begc:endc,1:nlevdecomp_full)) ; this%dwt_frootn_to_litr_met_n_col (:,:) = nan
     allocate(this%dwt_frootn_to_litr_cel_n_col (begc:endc,1:nlevdecomp_full)) ; this%dwt_frootn_to_litr_cel_n_col (:,:) = nan
@@ -1033,6 +1036,11 @@ contains
          '(0 at all times except first timestep of year) ' // &
          '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
          ptr_patch=this%dwt_conv_nflux_patch, default='inactive')
+    
+    this%litfall_n_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LITFALL_N', units='gN/m^2/s', &
+         avgflag='A', long_name='N Flux from vegetation to soil', &
+         ptr_patch=this%litfall_n_patch)
     
     this%dwt_frootn_to_litr_met_n_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='DWT_FROOTN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
@@ -1819,6 +1827,49 @@ contains
             this%m_deadcrootn_storage_to_fire_patch(p)  + &
             this%m_deadcrootn_xfer_to_fire_patch(p)     + &
             this%m_retransn_to_fire_patch(p)
+
+       ! total N fluxes from veg to litter
+       this%litfall_n_patch(p) = &
+            this%m_leafn_to_litter_patch(p)     + &
+            this%m_frootn_to_litter_patch(p)     + &
+            this%m_leafn_storage_to_litter_patch(p)     + &
+            this%m_frootn_storage_to_litter_patch(p)     + &
+            this%m_livestemn_storage_to_litter_patch(p)     + &
+            this%m_deadstemn_storage_to_litter_patch(p)     + &
+            this%m_livecrootn_storage_to_litter_patch(p)     + &
+            this%m_deadcrootn_storage_to_litter_patch(p)     + &
+            this%m_leafn_xfer_to_litter_patch(p)     + &
+            this%m_frootn_xfer_to_litter_patch(p)     + &
+            this%m_livestemn_xfer_to_litter_patch(p)     + &
+            this%m_deadstemn_xfer_to_litter_patch(p)     + &
+            this%m_livecrootn_xfer_to_litter_patch(p)     + &
+            this%m_deadcrootn_xfer_to_litter_patch(p)     + &
+            this%m_livestemn_to_litter_patch(p)     + &
+            this%m_deadstemn_to_litter_patch(p)     + &
+            this%m_livecrootn_to_litter_patch(p)     + &
+            this%m_deadcrootn_to_litter_patch(p)     + &
+            this%m_retransn_to_litter_patch(p)     + &
+            this%hrv_leafn_to_litter_patch(p)     + &
+            this%hrv_frootn_to_litter_patch(p)     + &
+            this%hrv_leafn_storage_to_litter_patch(p)     + &
+            this%hrv_frootn_storage_to_litter_patch(p)     + &
+            this%hrv_livestemn_storage_to_litter_patch(p)     + &
+            this%hrv_deadstemn_storage_to_litter_patch(p)     + &
+            this%hrv_livecrootn_storage_to_litter_patch(p)     + &
+            this%hrv_deadcrootn_storage_to_litter_patch(p)     + &
+            this%hrv_leafn_xfer_to_litter_patch(p)     + &
+            this%hrv_frootn_xfer_to_litter_patch(p)     + &
+            this%hrv_livestemn_xfer_to_litter_patch(p)     + &
+            this%hrv_deadstemn_xfer_to_litter_patch(p)     + &
+            this%hrv_livecrootn_xfer_to_litter_patch(p)     + &
+            this%hrv_deadcrootn_xfer_to_litter_patch(p)     + &
+            this%hrv_livestemn_to_litter_patch(p)     + &
+            this%hrv_livecrootn_to_litter_patch(p)     + &
+            this%hrv_deadcrootn_to_litter_patch(p)     + &
+            this%hrv_retransn_to_litter_patch(p)     + &
+            this%livestemn_to_litter_patch(p)     + &
+            this%leafn_to_litter_patch(p)     + &
+            this%frootn_to_litter_patch(p)
 
     end do
 
