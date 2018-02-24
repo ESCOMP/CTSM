@@ -142,7 +142,7 @@ module clm_varctl
 
   ! State of the model for the accelerated decomposition (AD) spinup. 
   ! 0 (default) = normal model; 1 = AD SPINUP
-  integer, public :: spinup_state = 1 
+  integer, public :: spinup_state = 0 
 
   ! true => anoxia is applied to heterotrophic respiration also considered in CH4 model
   ! default value reset in controlMod
@@ -188,10 +188,10 @@ module clm_varctl
   !----------------------------------------------------------
   ! CN matrix
   !----------------------------------------------------------  
-  logical, public :: use_matrixcn = .true. !.false.              ! true => use cn matrix
-  logical, public :: use_soil_matrixcn = .true.      ! true => use cn matrix  
+  logical, public :: use_matrixcn = .false.!.false.              ! true => use cn matrix
+  logical, public :: use_soil_matrixcn = .false.     ! true => use cn matrix  
   logical, public :: isspinup = .false.  !.false.              ! true => use acc spinup
-  logical, public :: is_outmatrix = .true.       !.false.              ! true => use acc spinup
+  logical, public :: is_outmatrix = .false.      !.false.              ! true => use acc spinup
 
   !----------------------------------------------------------
   !  FATES switches

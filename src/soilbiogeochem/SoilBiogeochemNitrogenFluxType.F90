@@ -281,10 +281,10 @@ contains
     this%decomp_npools_sourcesink_col (:,:,:) = nan
 ! for matrix
 
-    allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_a_tri_col(:,:,:)= nan
-    allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
-    allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
-    allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+!    allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_a_tri_col(:,:,:)= nan
+!    allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
+!    allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
+!    allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -1063,17 +1063,14 @@ contains
        end do
     end do
     
-    do k = 1, ndecomp_pools
-       do j = 1, nlevdecomp
-!          do fi = 1,num_column
-!             i = filter_column(fi)
-             this%matrix_a_tri_col(:,j,k) = value_column
-             this%matrix_b_tri_col(:,j,k) = value_column
-             this%matrix_c_tri_col(:,j,k) = value_column
-             this%matrix_input_col(:,j,k) = value_column
-!          end do
-       end do
-    end do
+!    do k = 1, ndecomp_pools
+!       do j = 1, nlevdecomp
+!             this%matrix_a_tri_col(:,j,k) = value_column
+!             this%matrix_b_tri_col(:,j,k) = value_column
+!             this%matrix_c_tri_col(:,j,k) = value_column
+!             this%matrix_input_col(:,j,k) = value_column
+!       end do
+!    end do
 
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
