@@ -11,7 +11,7 @@ module SoilBiogeochemCarbonFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_fates
+  use clm_varctl                         , only : use_fates, use_soil_matrixcn
   
   ! 
   ! !PUBLIC TYPES:
@@ -130,8 +130,10 @@ contains
      allocate(this%decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
      this%decomp_k_col(:,:,:)= spval
      ! for soil-matrix
-     allocate(this%matrix_decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
-     this%matrix_decomp_k_col(:,:,:)= spval
+     if(use_soil_matrixcn)then
+        allocate(this%matrix_decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
+        this%matrix_decomp_k_col(:,:,:)= spval
+     end if
 
      allocate(this%decomp_cpools_leached_col(begc:endc,1:ndecomp_pools))              
      this%decomp_cpools_leached_col(:,:)= nan
@@ -143,17 +145,19 @@ contains
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
-
+  
+     if(use_soil_matrixcn)then
 ! for  matrix 
 !     allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_a_tri_col(:,:,:)= nan
 !     allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
 !     allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
 !     allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
-     allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp));  this%matrix_a_tri_col(:,:)= nan
-     allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp));  this%matrix_b_tri_col(:,:)= nan
-     allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp));  this%matrix_c_tri_col(:,:)= nan
-     allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
-     allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:,:)= nan
+        allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp));  this%matrix_a_tri_col(:,:)= nan
+        allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp));  this%matrix_b_tri_col(:,:)= nan
+        allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp));  this%matrix_c_tri_col(:,:)= nan
+        allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+        allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:,:)= nan
+     end if
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
 
@@ -253,15 +257,17 @@ contains
                 ptr_col=data2dptr, default='inactive')
         end do
     !for soil-matrix   
-        do k = 1, ndecomp_pools
+        if(use_soil_matrixcn)then
+           do k = 1, ndecomp_pools
            ! decomposition k
-           data2dptr => this%matrix_decomp_k_col(:,:,k)
-           fieldname = 'MK_'//trim(decomp_cascade_con%decomp_pool_name_history(k))
-           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//'matrix potential loss coefficient'
-           call hist_addfld_decomp (fname=fieldname, units='1/s',  type2d='levdcmp', &
-                avgflag='A', long_name=longname, &
-                ptr_col=data2dptr, default='inactive')
-        end do
+              data2dptr => this%matrix_decomp_k_col(:,:,k)
+              fieldname = 'MK_'//trim(decomp_cascade_con%decomp_pool_name_history(k))
+              longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//'matrix potential loss coefficient'
+              call hist_addfld_decomp (fname=fieldname, units='1/s',  type2d='levdcmp', &
+                   avgflag='A', long_name=longname, &
+                   ptr_col=data2dptr, default='inactive')
+           end do
+        end if
 
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
@@ -704,7 +710,9 @@ contains
              this%decomp_cascade_ctransfer_col(i,l)      = value_column
              this%decomp_cascade_ctransfer_vr_col(i,j,l) = value_column
              this%decomp_k_col(i,j,l)                    = value_column
-             this%matrix_decomp_k_col(i,j,l)             = value_column
+             if(use_soil_matrixcn)then
+                this%matrix_decomp_k_col(i,j,l)             = value_column
+             end if
           end do
        end do
     end do
@@ -725,8 +733,9 @@ contains
     end do
 
 ! for matrix 
-    do k = 1, ndecomp_pools
-       do j = 1, nlevdecomp
+    if(use_soil_matrixcn)then
+       do k = 1, ndecomp_pools
+          do j = 1, nlevdecomp
 !          do fi = 1,num_column
 !             i = filter_column(fi)
              !print*,'before setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
@@ -737,8 +746,9 @@ contains
              this%matrix_decomp_fire_k_col(:,j,k) = value_column
              !print*,'after setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
 !          end do
+          end do
        end do
-    end do
+    end if
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)
