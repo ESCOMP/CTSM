@@ -13,7 +13,7 @@ module CNVegCarbonFluxType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools,nvegpool
   use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nvegpool
   use clm_varcon                         , only : spval, dzsoi_decomp
-  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
+  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop, use_matrixcn
   use clm_varctl                         , only : use_grainproduct
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
@@ -740,17 +740,19 @@ contains
     allocate(this%leafc_change_patch      (begp:endp)) ; this%leafc_change_patch      (:) = nan
     allocate(this%soilc_change_patch      (begp:endp)) ; this%soilc_change_patch      (:) = nan
 ! Matrix
-    allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
-    allocate(this%matrix_alloc_patch          (begp:endp,1:nvegpool))              ; this%matrix_alloc_patch       (:,:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
+       allocate(this%matrix_alloc_patch          (begp:endp,1:nvegpool))              ; this%matrix_alloc_patch       (:,:) = nan
 
-    allocate(this%matrix_phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_phtransfer_patch  (:,:,:) = nan
-    allocate(this%matrix_phturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_phturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_phtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_phturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_phturnover_patch  (:,:,:) = nan
 
-    allocate(this%matrix_gmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_gmtransfer_patch  (:,:,:) = nan
-    allocate(this%matrix_gmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_gmturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_gmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_gmtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_gmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_gmturnover_patch  (:,:,:) = nan
 
-    allocate(this%matrix_fitransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_fitransfer_patch  (:,:,:) = nan
-    allocate(this%matrix_fiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_fiturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_fitransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_fitransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_fiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_fiturnover_patch  (:,:,:) = nan
+    end if
 
 
     ! Construct restart field names consistently to what is done in SpeciesNonIsotope &
@@ -3350,7 +3352,9 @@ contains
 
        if (lun%ifspecial(l)) then
           this%availc_patch(p)                = spval
-          this%matrix_Cinput_patch(p)         = spval 
+          if(use_matrixcn)then
+             this%matrix_Cinput_patch(p)         = spval 
+          end if
           this%xsmrpool_recover_patch(p)      = spval
           this%excess_cflux_patch(p)          = spval
           this%plant_calloc_patch(p)          = spval
@@ -3363,7 +3367,9 @@ contains
        end if
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%availc_patch(p)                = 0._r8
-          this%matrix_Cinput_patch(p)         = 0._r8
+          if(use_matrixcn)then
+             this%matrix_Cinput_patch(p)         = 0._r8
+          end if
           this%xsmrpool_recover_patch(p)      = 0._r8
           this%excess_cflux_patch(p)          = 0._r8
           this%prev_leafc_to_litter_patch(p)  = 0._r8
@@ -3826,22 +3832,24 @@ contains
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
 !   Matrix
-       this%matrix_Cinput_patch(i)                       = value_patch
-       do k = 1, nvegpool         
-          this%matrix_alloc_patch(i,k)              = value_patch
-          do j = 1, nvegpool+1
-               if(j .le. nvegpool)then
-                  this%matrix_phturnover_patch (i,j,k) = value_patch
-                  this%matrix_gmturnover_patch (i,j,k) = value_patch
-                  this%matrix_fiturnover_patch (i,j,k) = value_patch
-               end if
-                this%matrix_phtransfer_patch (i,j,k) = value_patch
-                this%matrix_gmtransfer_patch (i,j,k) = value_patch
-                this%matrix_fitransfer_patch (i,j,k) = value_patch
+       if(use_matrixcn)then
+          this%matrix_Cinput_patch(i)                       = value_patch
+          do k = 1, nvegpool         
+             this%matrix_alloc_patch(i,k)              = value_patch
+             do j = 1, nvegpool+1
+                if(j .le. nvegpool)then
+                   this%matrix_phturnover_patch (i,j,k) = value_patch
+                   this%matrix_gmturnover_patch (i,j,k) = value_patch
+                   this%matrix_fiturnover_patch (i,j,k) = value_patch
+                end if
+                   this%matrix_phtransfer_patch (i,j,k) = value_patch
+                   this%matrix_gmtransfer_patch (i,j,k) = value_patch
+                   this%matrix_fitransfer_patch (i,j,k) = value_patch
                
-          end do
+             end do
 
-       end do   
+          end do   
+       end if
     end do
 
     if ( use_crop )then

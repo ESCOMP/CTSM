@@ -532,17 +532,19 @@ contains
     allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
     allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
 	! Matrix
-    allocate(this%matrix_Ninput_patch          (begp:endp)) ;              this%matrix_Ninput_patch      (:) = nan
-    allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegpool)) ;   this%matrix_nalloc_patch      (:,:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_Ninput_patch          (begp:endp)) ;              this%matrix_Ninput_patch      (:) = nan
+       allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegpool)) ;   this%matrix_nalloc_patch      (:,:) = nan
 
-    allocate(this%matrix_nphtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_nphtransfer_patch  (:,:,:) = nan
-    allocate(this%matrix_nphturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nphturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_nphtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_nphtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_nphturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nphturnover_patch  (:,:,:) = nan
 
-    allocate(this%matrix_ngmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_ngmtransfer_patch  (:,:,:) = nan
-    allocate(this%matrix_ngmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_ngmturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_ngmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_ngmtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_ngmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_ngmturnover_patch  (:,:,:) = nan
 
-    allocate(this%matrix_n2phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_n2phtransfer_patch  (:,:,:) = nan
-    allocate(this%matrix_nfiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nfiturnover_patch  (:,:,:) = nan	
+       allocate(this%matrix_n2phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_n2phtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_nfiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nfiturnover_patch  (:,:,:) = nan	
+     end if
 
   end subroutine InitAllocate
 
@@ -1104,10 +1106,10 @@ contains
          avgflag='A', long_name='total allocated N flux', &
          ptr_patch=this%plant_nalloc_patch, default='inactive')
     if (use_matrixcn) then		 
-    this%matrix_Ninput_patch(begp:endp) = spval
-    call hist_addfld1d (fname='MATRIX PLANT_NALLOC', units='gN/m^2/s', &
-         avgflag='A', long_name='total allocated N flux for matrix', &
-         ptr_patch=this%matrix_Ninput_patch, default='inactive')
+       this%matrix_Ninput_patch(begp:endp) = spval
+       call hist_addfld1d (fname='MATRIX PLANT_NALLOC', units='gN/m^2/s', &
+            avgflag='A', long_name='total allocated N flux for matrix', &
+            ptr_patch=this%matrix_Ninput_patch, default='inactive')
     end if 
     
     if ( use_fun ) then
@@ -1439,10 +1441,10 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch)
 		 
-    call restartvar(ncid=ncid, flag=flag, varname='matrix_plant_nalloc', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%matrix_Ninput_patch)	 
+!    call restartvar(ncid=ncid, flag=flag, varname='matrix_plant_nalloc', xtype=ncd_double,  &
+!         dim1name='pft', &
+!         long_name='', units='', &
+!         interpinic_flag='interp', readvar=readvar, data=this%matrix_Ninput_patch)	 
 
      if ( use_fun ) then
         call restartvar(ncid=ncid, flag=flag, varname='Nactive', xtype=ncd_double,       &
@@ -1761,23 +1763,25 @@ contains
        end do
     end do
 ! Matrix
-     do k=1,nvegpool
-       do fi = 1,num_patch
-          i = filter_patch(fi)
-          this%matrix_nalloc_patch(i,k)              = value_patch
-          do j = 1, nvegpool+1
-               if(j .le. nvegpool)then
-                  this%matrix_nphturnover_patch (i,j,k) = value_patch
-                  this%matrix_ngmturnover_patch (i,j,k) = value_patch
-                  this%matrix_nfiturnover_patch (i,j,k) = value_patch
-               end if
-                this%matrix_nphtransfer_patch (i,j,k) = value_patch
-                this%matrix_ngmtransfer_patch (i,j,k) = value_patch
-                this%matrix_n2phtransfer_patch (i,j,k) = value_patch
+    if(use_matrixcn)then
+       do k=1,nvegpool
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_nalloc_patch(i,k)              = value_patch
+             do j = 1, nvegpool+1
+                if(j .le. nvegpool)then
+                   this%matrix_nphturnover_patch (i,j,k) = value_patch
+                   this%matrix_ngmturnover_patch (i,j,k) = value_patch
+                   this%matrix_nfiturnover_patch (i,j,k) = value_patch
+                end if
+                   this%matrix_nphtransfer_patch (i,j,k) = value_patch
+                   this%matrix_ngmtransfer_patch (i,j,k) = value_patch
+                   this%matrix_n2phtransfer_patch (i,j,k) = value_patch
                
+             end do
           end do
        end do
-    end do
+    end if
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
           do fi = 1,num_column

@@ -12,7 +12,7 @@ module CNVegCarbonStateType
   use pftconMod      , only : noveg, npcropmin, pftcon
   use clm_varpar     , only : nvegpool
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
-  use clm_varctl     , only : iulog, use_cndv, use_crop
+  use clm_varctl     , only : iulog, use_cndv, use_crop, use_matrixcn
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -279,59 +279,71 @@ contains
     allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
     allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
     allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
-    allocate(this%matrix_cap_leafc_patch              (begp:endp)) ; this%matrix_cap_leafc_patch              (:) = nan
-    allocate(this%matrix_cap_leafc_storage_patch      (begp:endp)) ; this%matrix_cap_leafc_storage_patch      (:) = nan
-    allocate(this%matrix_cap_leafc_xfer_patch         (begp:endp)) ; this%matrix_cap_leafc_xfer_patch         (:) = nan
-    allocate(this%matrix_pot_leafc_patch              (begp:endp)) ; this%matrix_pot_leafc_patch              (:) = nan
-    allocate(this%matrix_pot_leafc_storage_patch      (begp:endp)) ; this%matrix_pot_leafc_storage_patch      (:) = nan
-    allocate(this%matrix_pot_leafc_xfer_patch         (begp:endp)) ; this%matrix_pot_leafc_xfer_patch         (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_leafc_patch              (begp:endp)) ; this%matrix_cap_leafc_patch              (:) = nan
+       allocate(this%matrix_cap_leafc_storage_patch      (begp:endp)) ; this%matrix_cap_leafc_storage_patch      (:) = nan
+       allocate(this%matrix_cap_leafc_xfer_patch         (begp:endp)) ; this%matrix_cap_leafc_xfer_patch         (:) = nan
+       allocate(this%matrix_pot_leafc_patch              (begp:endp)) ; this%matrix_pot_leafc_patch              (:) = nan
+       allocate(this%matrix_pot_leafc_storage_patch      (begp:endp)) ; this%matrix_pot_leafc_storage_patch      (:) = nan
+       allocate(this%matrix_pot_leafc_xfer_patch         (begp:endp)) ; this%matrix_pot_leafc_xfer_patch         (:) = nan
+    end if
     allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
     allocate(this%storage_cdemand_patch        (begp:endp)) ; this%storage_cdemand_patch        (:) = nan
     allocate(this%frootc_patch             (begp:endp)) ; this%frootc_patch             (:) = nan
     allocate(this%frootc_storage_patch     (begp:endp)) ; this%frootc_storage_patch     (:) = nan
     allocate(this%frootc_xfer_patch        (begp:endp)) ; this%frootc_xfer_patch        (:) = nan
-    allocate(this%matrix_cap_frootc_patch             (begp:endp)) ; this%matrix_cap_frootc_patch             (:) = nan
-    allocate(this%matrix_cap_frootc_storage_patch     (begp:endp)) ; this%matrix_cap_frootc_storage_patch     (:) = nan
-    allocate(this%matrix_cap_frootc_xfer_patch        (begp:endp)) ; this%matrix_cap_frootc_xfer_patch        (:) = nan
-    allocate(this%matrix_pot_frootc_patch             (begp:endp)) ; this%matrix_pot_frootc_patch             (:) = nan
-    allocate(this%matrix_pot_frootc_storage_patch     (begp:endp)) ; this%matrix_pot_frootc_storage_patch     (:) = nan
-    allocate(this%matrix_pot_frootc_xfer_patch        (begp:endp)) ; this%matrix_pot_frootc_xfer_patch        (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_frootc_patch             (begp:endp)) ; this%matrix_cap_frootc_patch             (:) = nan
+       allocate(this%matrix_cap_frootc_storage_patch     (begp:endp)) ; this%matrix_cap_frootc_storage_patch     (:) = nan
+       allocate(this%matrix_cap_frootc_xfer_patch        (begp:endp)) ; this%matrix_cap_frootc_xfer_patch        (:) = nan
+       allocate(this%matrix_pot_frootc_patch             (begp:endp)) ; this%matrix_pot_frootc_patch             (:) = nan
+       allocate(this%matrix_pot_frootc_storage_patch     (begp:endp)) ; this%matrix_pot_frootc_storage_patch     (:) = nan
+       allocate(this%matrix_pot_frootc_xfer_patch        (begp:endp)) ; this%matrix_pot_frootc_xfer_patch        (:) = nan
+    end if
     allocate(this%livestemc_patch          (begp:endp)) ; this%livestemc_patch          (:) = nan
     allocate(this%livestemc_storage_patch  (begp:endp)) ; this%livestemc_storage_patch  (:) = nan
     allocate(this%livestemc_xfer_patch     (begp:endp)) ; this%livestemc_xfer_patch     (:) = nan
-    allocate(this%matrix_cap_livestemc_patch          (begp:endp)) ; this%matrix_cap_livestemc_patch          (:) = nan
-    allocate(this%matrix_cap_livestemc_storage_patch  (begp:endp)) ; this%matrix_cap_livestemc_storage_patch  (:) = nan
-    allocate(this%matrix_cap_livestemc_xfer_patch     (begp:endp)) ; this%matrix_cap_livestemc_xfer_patch     (:) = nan
-    allocate(this%matrix_pot_livestemc_patch          (begp:endp)) ; this%matrix_pot_livestemc_patch          (:) = nan
-    allocate(this%matrix_pot_livestemc_storage_patch  (begp:endp)) ; this%matrix_pot_livestemc_storage_patch  (:) = nan
-    allocate(this%matrix_pot_livestemc_xfer_patch     (begp:endp)) ; this%matrix_pot_livestemc_xfer_patch     (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_livestemc_patch          (begp:endp)) ; this%matrix_cap_livestemc_patch          (:) = nan
+       allocate(this%matrix_cap_livestemc_storage_patch  (begp:endp)) ; this%matrix_cap_livestemc_storage_patch  (:) = nan
+       allocate(this%matrix_cap_livestemc_xfer_patch     (begp:endp)) ; this%matrix_cap_livestemc_xfer_patch     (:) = nan
+       allocate(this%matrix_pot_livestemc_patch          (begp:endp)) ; this%matrix_pot_livestemc_patch          (:) = nan
+       allocate(this%matrix_pot_livestemc_storage_patch  (begp:endp)) ; this%matrix_pot_livestemc_storage_patch  (:) = nan
+       allocate(this%matrix_pot_livestemc_xfer_patch     (begp:endp)) ; this%matrix_pot_livestemc_xfer_patch     (:) = nan
+    end if
     allocate(this%deadstemc_patch          (begp:endp)) ; this%deadstemc_patch          (:) = nan
     allocate(this%deadstemc_storage_patch  (begp:endp)) ; this%deadstemc_storage_patch  (:) = nan
     allocate(this%deadstemc_xfer_patch     (begp:endp)) ; this%deadstemc_xfer_patch     (:) = nan
-    allocate(this%matrix_cap_deadstemc_patch          (begp:endp)) ; this%matrix_cap_deadstemc_patch          (:) = nan
-    allocate(this%matrix_cap_deadstemc_storage_patch  (begp:endp)) ; this%matrix_cap_deadstemc_storage_patch  (:) = nan
-    allocate(this%matrix_cap_deadstemc_xfer_patch     (begp:endp)) ; this%matrix_cap_deadstemc_xfer_patch     (:) = nan
-    allocate(this%matrix_pot_deadstemc_patch          (begp:endp)) ; this%matrix_pot_deadstemc_patch          (:) = nan
-    allocate(this%matrix_pot_deadstemc_storage_patch  (begp:endp)) ; this%matrix_pot_deadstemc_storage_patch  (:) = nan
-    allocate(this%matrix_pot_deadstemc_xfer_patch     (begp:endp)) ; this%matrix_pot_deadstemc_xfer_patch     (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_deadstemc_patch          (begp:endp)) ; this%matrix_cap_deadstemc_patch          (:) = nan
+       allocate(this%matrix_cap_deadstemc_storage_patch  (begp:endp)) ; this%matrix_cap_deadstemc_storage_patch  (:) = nan
+       allocate(this%matrix_cap_deadstemc_xfer_patch     (begp:endp)) ; this%matrix_cap_deadstemc_xfer_patch     (:) = nan
+       allocate(this%matrix_pot_deadstemc_patch          (begp:endp)) ; this%matrix_pot_deadstemc_patch          (:) = nan
+       allocate(this%matrix_pot_deadstemc_storage_patch  (begp:endp)) ; this%matrix_pot_deadstemc_storage_patch  (:) = nan
+       allocate(this%matrix_pot_deadstemc_xfer_patch     (begp:endp)) ; this%matrix_pot_deadstemc_xfer_patch     (:) = nan
+    end if
     allocate(this%livecrootc_patch         (begp:endp)) ; this%livecrootc_patch         (:) = nan
     allocate(this%livecrootc_storage_patch (begp:endp)) ; this%livecrootc_storage_patch (:) = nan
     allocate(this%livecrootc_xfer_patch    (begp:endp)) ; this%livecrootc_xfer_patch    (:) = nan
-    allocate(this%matrix_cap_livecrootc_patch         (begp:endp)) ; this%matrix_cap_livecrootc_patch         (:) = nan
-    allocate(this%matrix_cap_livecrootc_storage_patch (begp:endp)) ; this%matrix_cap_livecrootc_storage_patch (:) = nan
-    allocate(this%matrix_cap_livecrootc_xfer_patch    (begp:endp)) ; this%matrix_cap_livecrootc_xfer_patch    (:) = nan
-    allocate(this%matrix_pot_livecrootc_patch         (begp:endp)) ; this%matrix_pot_livecrootc_patch         (:) = nan
-    allocate(this%matrix_pot_livecrootc_storage_patch (begp:endp)) ; this%matrix_pot_livecrootc_storage_patch (:) = nan
-    allocate(this%matrix_pot_livecrootc_xfer_patch    (begp:endp)) ; this%matrix_pot_livecrootc_xfer_patch    (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_livecrootc_patch         (begp:endp)) ; this%matrix_cap_livecrootc_patch         (:) = nan
+       allocate(this%matrix_cap_livecrootc_storage_patch (begp:endp)) ; this%matrix_cap_livecrootc_storage_patch (:) = nan
+       allocate(this%matrix_cap_livecrootc_xfer_patch    (begp:endp)) ; this%matrix_cap_livecrootc_xfer_patch    (:) = nan
+       allocate(this%matrix_pot_livecrootc_patch         (begp:endp)) ; this%matrix_pot_livecrootc_patch         (:) = nan
+       allocate(this%matrix_pot_livecrootc_storage_patch (begp:endp)) ; this%matrix_pot_livecrootc_storage_patch (:) = nan
+       allocate(this%matrix_pot_livecrootc_xfer_patch    (begp:endp)) ; this%matrix_pot_livecrootc_xfer_patch    (:) = nan
+    end if
     allocate(this%deadcrootc_patch         (begp:endp)) ; this%deadcrootc_patch         (:) = nan
     allocate(this%deadcrootc_storage_patch (begp:endp)) ; this%deadcrootc_storage_patch (:) = nan
     allocate(this%deadcrootc_xfer_patch    (begp:endp)) ; this%deadcrootc_xfer_patch    (:) = nan
-    allocate(this%matrix_cap_deadcrootc_patch         (begp:endp)) ; this%matrix_cap_deadcrootc_patch         (:) = nan
-    allocate(this%matrix_cap_deadcrootc_storage_patch (begp:endp)) ; this%matrix_cap_deadcrootc_storage_patch (:) = nan
-    allocate(this%matrix_cap_deadcrootc_xfer_patch    (begp:endp)) ; this%matrix_cap_deadcrootc_xfer_patch    (:) = nan
-    allocate(this%matrix_pot_deadcrootc_patch         (begp:endp)) ; this%matrix_pot_deadcrootc_patch         (:) = nan
-    allocate(this%matrix_pot_deadcrootc_storage_patch (begp:endp)) ; this%matrix_pot_deadcrootc_storage_patch (:) = nan
-    allocate(this%matrix_pot_deadcrootc_xfer_patch    (begp:endp)) ; this%matrix_pot_deadcrootc_xfer_patch    (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_deadcrootc_patch         (begp:endp)) ; this%matrix_cap_deadcrootc_patch         (:) = nan
+       allocate(this%matrix_cap_deadcrootc_storage_patch (begp:endp)) ; this%matrix_cap_deadcrootc_storage_patch (:) = nan
+       allocate(this%matrix_cap_deadcrootc_xfer_patch    (begp:endp)) ; this%matrix_cap_deadcrootc_xfer_patch    (:) = nan
+       allocate(this%matrix_pot_deadcrootc_patch         (begp:endp)) ; this%matrix_pot_deadcrootc_patch         (:) = nan
+       allocate(this%matrix_pot_deadcrootc_storage_patch (begp:endp)) ; this%matrix_pot_deadcrootc_storage_patch (:) = nan
+       allocate(this%matrix_pot_deadcrootc_xfer_patch    (begp:endp)) ; this%matrix_pot_deadcrootc_xfer_patch    (:) = nan
+    end if
     allocate(this%gresp_storage_patch      (begp:endp)) ; this%gresp_storage_patch      (:) = nan
     allocate(this%gresp_xfer_patch         (begp:endp)) ; this%gresp_xfer_patch         (:) = nan
     allocate(this%cpool_patch              (begp:endp)) ; this%cpool_patch              (:) = nan
@@ -346,24 +358,29 @@ contains
     allocate(this%grainc_xfer_patch        (begp:endp)) ; this%grainc_xfer_patch        (:) = nan
     allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan    
 !initial pool size of year for matrix
-    allocate(this%leafc0_patch              (begp:endp)) ; this%leafc0_patch              (:) = nan
-    allocate(this%leafc0_storage_patch      (begp:endp)) ; this%leafc0_storage_patch      (:) = nan
-    allocate(this%leafc0_xfer_patch         (begp:endp)) ; this%leafc0_xfer_patch         (:) = nan
-    allocate(this%frootc0_patch             (begp:endp)) ; this%frootc0_patch             (:) = nan
-    allocate(this%frootc0_storage_patch     (begp:endp)) ; this%frootc0_storage_patch     (:) = nan
-    allocate(this%frootc0_xfer_patch        (begp:endp)) ; this%frootc0_xfer_patch        (:) = nan
-    allocate(this%livestemc0_patch          (begp:endp)) ; this%livestemc0_patch          (:) = nan
-    allocate(this%livestemc0_storage_patch  (begp:endp)) ; this%livestemc0_storage_patch  (:) = nan
-    allocate(this%livestemc0_xfer_patch     (begp:endp)) ; this%livestemc0_xfer_patch     (:) = nan
-    allocate(this%deadstemc0_patch          (begp:endp)) ; this%deadstemc0_patch          (:) = nan
-    allocate(this%deadstemc0_storage_patch  (begp:endp)) ; this%deadstemc0_storage_patch  (:) = nan
-    allocate(this%deadstemc0_xfer_patch     (begp:endp)) ; this%deadstemc0_xfer_patch     (:) = nan
-    allocate(this%livecrootc0_patch         (begp:endp)) ; this%livecrootc0_patch         (:) = nan
-    allocate(this%livecrootc0_storage_patch (begp:endp)) ; this%livecrootc0_storage_patch (:) = nan
-    allocate(this%livecrootc0_xfer_patch    (begp:endp)) ; this%livecrootc0_xfer_patch    (:) = nan
-    allocate(this%deadcrootc0_patch         (begp:endp)) ; this%deadcrootc0_patch         (:) = nan
-    allocate(this%deadcrootc0_storage_patch (begp:endp)) ; this%deadcrootc0_storage_patch (:) = nan
-    allocate(this%deadcrootc0_xfer_patch    (begp:endp)) ; this%deadcrootc0_xfer_patch    (:) = nan
+    if(use_matrixcn)then
+       allocate(this%leafc0_patch              (begp:endp)) ; this%leafc0_patch              (:) = nan
+       allocate(this%leafc0_storage_patch      (begp:endp)) ; this%leafc0_storage_patch      (:) = nan
+       allocate(this%leafc0_xfer_patch         (begp:endp)) ; this%leafc0_xfer_patch         (:) = nan
+       allocate(this%frootc0_patch             (begp:endp)) ; this%frootc0_patch             (:) = nan
+       allocate(this%frootc0_storage_patch     (begp:endp)) ; this%frootc0_storage_patch     (:) = nan
+       allocate(this%frootc0_xfer_patch        (begp:endp)) ; this%frootc0_xfer_patch        (:) = nan
+       allocate(this%livestemc0_patch          (begp:endp)) ; this%livestemc0_patch          (:) = nan
+       allocate(this%livestemc0_storage_patch  (begp:endp)) ; this%livestemc0_storage_patch  (:) = nan
+       allocate(this%livestemc0_xfer_patch     (begp:endp)) ; this%livestemc0_xfer_patch     (:) = nan
+       allocate(this%deadstemc0_patch          (begp:endp)) ; this%deadstemc0_patch          (:) = nan
+       allocate(this%deadstemc0_storage_patch  (begp:endp)) ; this%deadstemc0_storage_patch  (:) = nan
+       allocate(this%deadstemc0_xfer_patch     (begp:endp)) ; this%deadstemc0_xfer_patch     (:) = nan
+       allocate(this%livecrootc0_patch         (begp:endp)) ; this%livecrootc0_patch         (:) = nan
+       allocate(this%livecrootc0_storage_patch (begp:endp)) ; this%livecrootc0_storage_patch (:) = nan
+       allocate(this%livecrootc0_xfer_patch    (begp:endp)) ; this%livecrootc0_xfer_patch    (:) = nan
+       allocate(this%deadcrootc0_patch         (begp:endp)) ; this%deadcrootc0_patch         (:) = nan
+       allocate(this%deadcrootc0_storage_patch (begp:endp)) ; this%deadcrootc0_storage_patch (:) = nan
+       allocate(this%deadcrootc0_xfer_patch    (begp:endp)) ; this%deadcrootc0_xfer_patch    (:) = nan
+ 
+       allocate(this%matrix_alloc_acc_patch   (begp:endp,1:nvegpool)); this%matrix_alloc_acc_patch       (:,:) = nan
+       allocate(this%matrix_transfer_acc_patch(begp:endp,1:nvegpool,1:nvegpool)) ; this%matrix_transfer_acc_patch  (:,:,:) =nan
+    end if
 !!!!!!!	
 
     allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
@@ -381,8 +398,6 @@ contains
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
 !acc spinup
-    allocate(this%matrix_alloc_acc_patch   (begp:endp,1:nvegpool)); this%matrix_alloc_acc_patch       (:,:) = nan
-    allocate(this%matrix_transfer_acc_patch(begp:endp,1:nvegpool,1:nvegpool)) ; this%matrix_transfer_acc_patch  (:,:,:) =nan
 
   end subroutine InitAllocate
 
@@ -393,7 +408,7 @@ contains
     ! add history fields for all CN variables, always set as default='inactive'
     !
     ! !USES:
-    use clm_varctl , only : use_c13, use_c14
+    use clm_varctl , only : use_c13, use_c14, use_matrixcn
     use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     !
     ! !ARGUMENTS:
@@ -454,35 +469,37 @@ contains
             avgflag='A', long_name='leaf C transfer', &
             ptr_patch=this%leafc_xfer_patch)!, default='inactive')    
 
-       this%matrix_cap_leafc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC_CAP', units='gC/m^2', &
-            avgflag='I', long_name='leaf C capacity', &
-            ptr_patch=this%matrix_cap_leafc_patch)
+       if(use_matrixcn)then
+          this%matrix_cap_leafc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='leaf C capacity', &
+               ptr_patch=this%matrix_cap_leafc_patch)
 
-       this%matrix_cap_leafc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC_STORAGE_CAP', units='gC/m^2', &
-            avgflag='I', long_name='leaf C storage capacity', &
-            ptr_patch=this%matrix_cap_leafc_storage_patch)!, default='inactive')    
+          this%matrix_cap_leafc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='leaf C storage capacity', &
+               ptr_patch=this%matrix_cap_leafc_storage_patch)!, default='inactive')    
 
-       this%matrix_cap_leafc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC_XFER_CAP', units='gC/m^2', &
-            avgflag='I', long_name='leaf C transfer capacity', &
-            ptr_patch=this%matrix_cap_leafc_xfer_patch)!, default='inactive')    
+          this%matrix_cap_leafc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='leaf C transfer capacity', &
+               ptr_patch=this%matrix_cap_leafc_xfer_patch)!, default='inactive')    
 
-       this%matrix_pot_leafc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC_POT', units='gC/m^2', &
-            avgflag='I', long_name='leaf C potential', &
-            ptr_patch=this%matrix_pot_leafc_patch)
+          this%matrix_pot_leafc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_POT', units='gC/m^2', &
+               avgflag='I', long_name='leaf C potential', &
+               ptr_patch=this%matrix_pot_leafc_patch)
 
-       this%matrix_pot_leafc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC_STORAGE_POT', units='gC/m^2', &
-            avgflag='I', long_name='leaf C storage potential', &
-            ptr_patch=this%matrix_pot_leafc_storage_patch)!, default='inactive')    
+          this%matrix_pot_leafc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_STORAGE_POT', units='gC/m^2', &
+               avgflag='I', long_name='leaf C storage potential', &
+               ptr_patch=this%matrix_pot_leafc_storage_patch)!, default='inactive')    
 
-       this%matrix_pot_leafc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC_XFER_POT', units='gC/m^2', &
-            avgflag='I', long_name='leaf C transfer potential', &
-            ptr_patch=this%matrix_pot_leafc_xfer_patch)!, default='inactive')    
+          this%matrix_pot_leafc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_XFER_POT', units='gC/m^2', &
+               avgflag='I', long_name='leaf C transfer potential', &
+               ptr_patch=this%matrix_pot_leafc_xfer_patch)!, default='inactive')    
+       end if
 
        this%leafc_storage_xfer_acc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_STORAGE_XFER_ACC', units='gC/m^2', &
@@ -509,35 +526,37 @@ contains
             avgflag='A', long_name='fine root C transfer', &
             ptr_patch=this%frootc_xfer_patch)!, default='inactive')    
 
-       this%matrix_cap_frootc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC_CAP', units='gC/m^2', &
-            avgflag='I', long_name='fine root C capacity', &
-            ptr_patch=this%matrix_cap_frootc_patch)
+       if(use_matrixcn)then
+          this%matrix_cap_frootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='fine root C capacity', &
+               ptr_patch=this%matrix_cap_frootc_patch)
 
-       this%matrix_cap_frootc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC_STORAGE_CAP', units='gC/m^2', &
-            avgflag='I', long_name='fine root C storage capacity', &
-            ptr_patch=this%matrix_cap_frootc_storage_patch)!, default='inactive')   
+          this%matrix_cap_frootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='fine root C storage capacity', &
+               ptr_patch=this%matrix_cap_frootc_storage_patch)!, default='inactive')   
 
-       this%matrix_cap_frootc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC_XFER_CAP', units='gC/m^2', &
-            avgflag='I', long_name='fine root C transfer capacity', &
-            ptr_patch=this%matrix_cap_frootc_xfer_patch)!, default='inactive')    
+          this%matrix_cap_frootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='fine root C transfer capacity', &
+               ptr_patch=this%matrix_cap_frootc_xfer_patch)!, default='inactive')    
 
-       this%matrix_pot_frootc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC_POT', units='gC/m^2', &
-            avgflag='I', long_name='fine root C potential', &
-            ptr_patch=this%matrix_pot_frootc_patch)
+          this%matrix_pot_frootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_POT', units='gC/m^2', &
+               avgflag='I', long_name='fine root C potential', &
+               ptr_patch=this%matrix_pot_frootc_patch)
 
-       this%matrix_pot_frootc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC_STORAGE_POT', units='gC/m^2', &
-            avgflag='I', long_name='fine root C storage potential', &
-            ptr_patch=this%matrix_pot_frootc_storage_patch)!, default='inactive')   
+          this%matrix_pot_frootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_STORAGE_POT', units='gC/m^2', &
+               avgflag='I', long_name='fine root C storage potential', &
+               ptr_patch=this%matrix_pot_frootc_storage_patch)!, default='inactive')   
 
-       this%matrix_pot_frootc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC_XFER_POT', units='gC/m^2', &
-            avgflag='I', long_name='fine root C transfer potential', &
-            ptr_patch=this%matrix_pot_frootc_xfer_patch)!, default='inactive')    
+          this%matrix_pot_frootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_XFER_POT', units='gC/m^2', &
+               avgflag='I', long_name='fine root C transfer potential', &
+               ptr_patch=this%matrix_pot_frootc_xfer_patch)!, default='inactive')    
+       end if
 
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC', units='gC/m^2', &
@@ -554,35 +573,37 @@ contains
             avgflag='A', long_name='live stem C transfer', &
             ptr_patch=this%livestemc_xfer_patch)!, default='inactive')     
 
-       this%matrix_cap_livestemc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC_CAP', units='gC/m^2', &
-            avgflag='I', long_name='live stem C capacity', &
-            ptr_patch=this%matrix_cap_livestemc_patch)
+       if(use_matrixcn)then
+          this%matrix_cap_livestemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live stem C capacity', &
+               ptr_patch=this%matrix_cap_livestemc_patch)
 
-       this%matrix_cap_livestemc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC_STORAGE_CAP', units='gC/m^2', &
-            avgflag='I', long_name='live stem C storage capcity', &
-            ptr_patch=this%matrix_cap_livestemc_storage_patch)!, default='inactive')    
+          this%matrix_cap_livestemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live stem C storage capcity', &
+               ptr_patch=this%matrix_cap_livestemc_storage_patch)!, default='inactive')    
 
-       this%matrix_cap_livestemc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC_XFER_CAP', units='gC/m^2', &
-            avgflag='I', long_name='live stem C transfer capacity', &
-            ptr_patch=this%matrix_cap_livestemc_xfer_patch)!, default='inactive')     
+          this%matrix_cap_livestemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_livestemc_xfer_patch)!, default='inactive')     
 
-       this%matrix_pot_livestemc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC_POT', units='gC/m^2', &
-            avgflag='I', long_name='live stem C potential', &
-            ptr_patch=this%matrix_pot_livestemc_patch)
+          this%matrix_pot_livestemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_POT', units='gC/m^2', &
+               avgflag='I', long_name='live stem C potential', &
+               ptr_patch=this%matrix_pot_livestemc_patch)
 
-       this%matrix_pot_livestemc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC_STORAGE_POT', units='gC/m^2', &
-            avgflag='I', long_name='live stem C storage potential', &
-            ptr_patch=this%matrix_pot_livestemc_storage_patch)!, default='inactive')    
+          this%matrix_pot_livestemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_STORAGE_POT', units='gC/m^2', &
+               avgflag='I', long_name='live stem C storage potential', &
+               ptr_patch=this%matrix_pot_livestemc_storage_patch)!, default='inactive')    
 
-       this%matrix_pot_livestemc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC_XFER_POT', units='gC/m^2', &
-            avgflag='I', long_name='live stem C transfer potential', &
-            ptr_patch=this%matrix_pot_livestemc_xfer_patch)!, default='inactive')     
+          this%matrix_pot_livestemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_XFER_POT', units='gC/m^2', &
+               avgflag='I', long_name='live stem C transfer potential', &
+               ptr_patch=this%matrix_pot_livestemc_xfer_patch)!, default='inactive')     
+       end if
 
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC', units='gC/m^2', &
@@ -599,35 +620,37 @@ contains
             avgflag='A', long_name='dead stem C transfer', &
             ptr_patch=this%deadstemc_xfer_patch)!, default='inactive')    
 
-       this%matrix_cap_deadstemc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC_CAP', units='gC/m^2', &
-            avgflag='I', long_name='dead stem C capacity', &
-            ptr_patch=this%matrix_cap_deadstemc_patch)
+       if(use_matrixcn)then
+          this%matrix_cap_deadstemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_patch)
 
-       this%matrix_cap_deadstemc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC_STORAGE_CAP', units='gC/m^2', &
-            avgflag='I', long_name='dead stem C storage capacity', &
-            ptr_patch=this%matrix_cap_deadstemc_storage_patch)!, default='inactive')    
+          this%matrix_cap_deadstemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C storage capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_storage_patch)!, default='inactive')    
 
-       this%matrix_cap_deadstemc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC_XFER_CAP', units='gC/m^2', &
-            avgflag='I', long_name='dead stem C transfer capacity', &
-            ptr_patch=this%matrix_cap_deadstemc_xfer_patch)!, default='inactive')    
+          this%matrix_cap_deadstemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_xfer_patch)!, default='inactive')    
 
-       this%matrix_pot_deadstemc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC_POT', units='gC/m^2', &
-            avgflag='I', long_name='dead stem C potential', &
-            ptr_patch=this%matrix_pot_deadstemc_patch)
+          this%matrix_pot_deadstemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_POT', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C potential', &
+               ptr_patch=this%matrix_pot_deadstemc_patch)
 
-       this%matrix_pot_deadstemc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC_STORAGE_POT', units='gC/m^2', &
-            avgflag='I', long_name='dead stem C storage potential', &
-            ptr_patch=this%matrix_pot_deadstemc_storage_patch)!, default='inactive')    
+          this%matrix_pot_deadstemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_STORAGE_POT', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C storage potential', &
+               ptr_patch=this%matrix_pot_deadstemc_storage_patch)!, default='inactive')    
 
-       this%matrix_pot_deadstemc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC_XFER_POT', units='gC/m^2', &
-            avgflag='I', long_name='dead stem C transfer potential', &
-            ptr_patch=this%matrix_pot_deadstemc_xfer_patch)!, default='inactive')    
+          this%matrix_pot_deadstemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_XFER_POT', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C transfer potential', &
+               ptr_patch=this%matrix_pot_deadstemc_xfer_patch)!, default='inactive')    
+       end if
 
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC', units='gC/m^2', &
@@ -644,35 +667,37 @@ contains
             avgflag='A', long_name='live coarse root C transfer', &
             ptr_patch=this%livecrootc_xfer_patch)!, default='inactive')    
 
-       this%matrix_cap_livecrootc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC_CAP', units='gC/m^2', &
-            avgflag='I', long_name='live coarse root C capacity', &
-            ptr_patch=this%matrix_cap_livecrootc_patch)
+       if(use_matrixcn)then
+          this%matrix_cap_livecrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_patch)
 
-       this%matrix_cap_livecrootc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC_STORAGE_CAP', units='gC/m^2', &
-            avgflag='I', long_name='live coarse root C storage capacity', &
+          this%matrix_cap_livecrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C storage capacity', &
             ptr_patch=this%matrix_cap_livecrootc_storage_patch)!, default='inactive')     
 
-       this%matrix_cap_livecrootc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC_XFER_CAP', units='gC/m^2', &
-            avgflag='I', long_name='live coarse root C transfer capacity', &
-            ptr_patch=this%matrix_cap_livecrootc_xfer_patch)!, default='inactive')    
+          this%matrix_cap_livecrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_xfer_patch)!, default='inactive')    
 
-       this%matrix_pot_livecrootc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC_POT', units='gC/m^2', &
-            avgflag='I', long_name='live coarse root C potential', &
-            ptr_patch=this%matrix_pot_livecrootc_patch)
+          this%matrix_pot_livecrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_POT', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C potential', &
+               ptr_patch=this%matrix_pot_livecrootc_patch)
 
-       this%matrix_pot_livecrootc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC_STORAGE_POT', units='gC/m^2', &
-            avgflag='I', long_name='live coarse root C storage potential', &
-            ptr_patch=this%matrix_pot_livecrootc_storage_patch)!, default='inactive')     
+          this%matrix_pot_livecrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_STORAGE_POT', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C storage potential', &
+               ptr_patch=this%matrix_pot_livecrootc_storage_patch)!, default='inactive')     
 
-       this%matrix_pot_livecrootc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC_XFER_POT', units='gC/m^2', &
-            avgflag='I', long_name='live coarse root C transfer potential', &
-            ptr_patch=this%matrix_pot_livecrootc_xfer_patch)!, default='inactive')    
+          this%matrix_pot_livecrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_XFER_POT', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C transfer potential', &
+               ptr_patch=this%matrix_pot_livecrootc_xfer_patch)!, default='inactive')    
+       end if
 
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTC', units='gC/m^2', &
@@ -689,35 +714,37 @@ contains
             avgflag='A', long_name='dead coarse root C transfer', &
             ptr_patch=this%deadcrootc_xfer_patch)!, default='inactive')   
 
-       this%matrix_cap_deadcrootc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC_CAP', units='gC/m^2', &
-            avgflag='I', long_name='dead coarse root C capacity', &
-            ptr_patch=this%matrix_cap_deadcrootc_patch)
+       if(use_matrixcn)then
+          this%matrix_cap_deadcrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_patch)
 
-       this%matrix_cap_deadcrootc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC_STORAGE_CAP', units='gC/m^2', &
-            avgflag='I', long_name='dead coarse root C storage capacity', &
-            ptr_patch=this%matrix_cap_deadcrootc_storage_patch)!, default='inactive')   
+          this%matrix_cap_deadcrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C storage capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_storage_patch)!, default='inactive')   
 
-       this%matrix_cap_deadcrootc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC_XFER_CAP', units='gC/m^2', &
-            avgflag='I', long_name='dead coarse root C transfer capacity', &
-            ptr_patch=this%matrix_cap_deadcrootc_xfer_patch)!, default='inactive')   
+          this%matrix_cap_deadcrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_xfer_patch)!, default='inactive')   
 
-       this%matrix_pot_deadcrootc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC_POT', units='gC/m^2', &
-            avgflag='I', long_name='dead coarse root C potential', &
-            ptr_patch=this%matrix_pot_deadcrootc_patch)
+          this%matrix_pot_deadcrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_POT', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C potential', &
+               ptr_patch=this%matrix_pot_deadcrootc_patch)
 
-       this%deadcrootc_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC_STORAGE_POT', units='gC/m^2', &
-            avgflag='I', long_name='dead coarse root C storage potential', &
-            ptr_patch=this%deadcrootc_storage_patch)!, default='inactive')   
+          this%deadcrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_STORAGE_POT', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C storage potential', &
+               ptr_patch=this%deadcrootc_storage_patch)!, default='inactive')   
 
-       this%deadcrootc_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC_XFER_POT', units='gC/m^2', &
-            avgflag='I', long_name='dead coarse root C transfer potential', &
-            ptr_patch=this%deadcrootc_xfer_patch)!, default='inactive')   
+          this%deadcrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_XFER_POT', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C transfer potential', &
+               ptr_patch=this%deadcrootc_xfer_patch)!, default='inactive')   
+       end if
 
        this%gresp_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='GRESP_STORAGE', units='gC/m^2', &
@@ -783,96 +810,98 @@ contains
        call hist_addfld1d (fname='TOTECOSYSC', units='gC/m^2', &
             avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
-!!!!!matrix initial pool
-       this%leafc0_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC0', units='gC/m^2', &
-            avgflag='A', long_name='leaf C', &
-            ptr_patch=this%leafc0_patch)
+!!!!!matrix initial pool of the year for matrix spinup
+!       if(use_matrixcn)then
+!       this%leafc0_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LEAFC0', units='gC/m^2', &
+!            avgflag='I', long_name='leaf C', &
+!            ptr_patch=this%leafc0_patch)
 
-       this%leafc0_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC0_STORAGE', units='gC/m^2', &
-            avgflag='A', long_name='leaf C storage', &
-            ptr_patch=this%leafc0_storage_patch)!, default='inactive')    
+!       this%leafc0_storage_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LEAFC0_STORAGE', units='gC/m^2', &
+!            avgflag='I', long_name='leaf C storage', &
+!            ptr_patch=this%leafc0_storage_patch)!, default='inactive')    
 
-       this%leafc0_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LEAFC0_XFER', units='gC/m^2', &
-            avgflag='A', long_name='leaf C transfer', &
-            ptr_patch=this%leafc0_xfer_patch)!, default='inactive')    
+!       this%leafc0_xfer_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LEAFC0_XFER', units='gC/m^2', &
+!            avgflag='I', long_name='leaf C transfer', &
+!            ptr_patch=this%leafc0_xfer_patch)!, default='inactive')    
 
-       this%frootc0_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC0', units='gC/m^2', &
-            avgflag='A', long_name='fine root C', &
-            ptr_patch=this%frootc0_patch)
+!       this%frootc0_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='FROOTC0', units='gC/m^2', &
+!            avgflag='I', long_name='fine root C', &
+!            ptr_patch=this%frootc0_patch)
 
-       this%frootc0_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC0_STORAGE', units='gC/m^2', &
-            avgflag='A', long_name='fine root C storage', &
-            ptr_patch=this%frootc0_storage_patch)!, default='inactive')   
+!       this%frootc0_storage_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='FROOTC0_STORAGE', units='gC/m^2', &
+!            avgflag='I', long_name='fine root C storage', &
+!            ptr_patch=this%frootc0_storage_patch)!, default='inactive')   
 
-       this%frootc0_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FROOTC0_XFER', units='gC/m^2', &
-            avgflag='A', long_name='fine root C transfer', &
-            ptr_patch=this%frootc0_xfer_patch)!, default='inactive')    
+!       this%frootc0_xfer_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='FROOTC0_XFER', units='gC/m^2', &
+!            avgflag='I', long_name='fine root C transfer', &
+!            ptr_patch=this%frootc0_xfer_patch)!, default='inactive')    
 
-       this%livestemc0_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC0', units='gC/m^2', &
-            avgflag='A', long_name='live stem C', &
-            ptr_patch=this%livestemc0_patch)
+!       this%livestemc0_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LIVESTEMC0', units='gC/m^2', &
+!            avgflag='I', long_name='live stem C', &
+!            ptr_patch=this%livestemc0_patch)
 
-       this%livestemc0_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC0_STORAGE', units='gC/m^2', &
-            avgflag='A', long_name='live stem C storage', &
-            ptr_patch=this%livestemc0_storage_patch)!, default='inactive')    
+!       this%livestemc0_storage_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LIVESTEMC0_STORAGE', units='gC/m^2', &
+!            avgflag='I', long_name='live stem C storage', &
+!            ptr_patch=this%livestemc0_storage_patch)!, default='inactive')    
 
-       this%livestemc0_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVESTEMC0_XFER', units='gC/m^2', &
-            avgflag='A', long_name='live stem C transfer', &
-            ptr_patch=this%livestemc0_xfer_patch)!, default='inactive')     
+!       this%livestemc0_xfer_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LIVESTEMC0_XFER', units='gC/m^2', &
+!            avgflag='I', long_name='live stem C transfer', &
+!            ptr_patch=this%livestemc0_xfer_patch)!, default='inactive')     
 
-       this%deadstemc0_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC0', units='gC/m^2', &
-            avgflag='A', long_name='dead stem C', &
-            ptr_patch=this%deadstemc0_patch)
+!       this%deadstemc0_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='DEADSTEMC0', units='gC/m^2', &
+!            avgflag='I', long_name='dead stem C', &
+!            ptr_patch=this%deadstemc0_patch)
 
-       this%deadstemc0_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC0_STORAGE', units='gC/m^2', &
-            avgflag='A', long_name='dead stem C storage', &
-            ptr_patch=this%deadstemc0_storage_patch)!, default='inactive')    
+!       this%deadstemc0_storage_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='DEADSTEMC0_STORAGE', units='gC/m^2', &
+!            avgflag='I', long_name='dead stem C storage', &
+!            ptr_patch=this%deadstemc0_storage_patch)!, default='inactive')    
 
-       this%deadstemc0_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADSTEMC0_XFER', units='gC/m^2', &
-            avgflag='A', long_name='dead stem C transfer', &
-            ptr_patch=this%deadstemc0_xfer_patch)!, default='inactive')    
+!       this%deadstemc0_xfer_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='DEADSTEMC0_XFER', units='gC/m^2', &
+!            avgflag='I', long_name='dead stem C transfer', &
+!            ptr_patch=this%deadstemc0_xfer_patch)!, default='inactive')    
 
-       this%livecrootc0_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC0', units='gC/m^2', &
-            avgflag='A', long_name='live coarse root C', &
-            ptr_patch=this%livecrootc0_patch)
+!       this%livecrootc0_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LIVECROOTC0', units='gC/m^2', &
+!            avgflag='I', long_name='live coarse root C', &
+!            ptr_patch=this%livecrootc0_patch)
 
-       this%livecrootc0_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC0_STORAGE', units='gC/m^2', &
-            avgflag='A', long_name='live coarse root C storage', &
-            ptr_patch=this%livecrootc0_storage_patch)!, default='inactive')     
+!       this%livecrootc0_storage_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LIVECROOTC0_STORAGE', units='gC/m^2', &
+!            avgflag='I', long_name='live coarse root C storage', &
+!            ptr_patch=this%livecrootc0_storage_patch)!, default='inactive')     
 
-       this%livecrootc0_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='LIVECROOTC0_XFER', units='gC/m^2', &
-            avgflag='A', long_name='live coarse root C transfer', &
-            ptr_patch=this%livecrootc0_xfer_patch)!, default='inactive')    
+!       this%livecrootc0_xfer_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='LIVECROOTC0_XFER', units='gC/m^2', &
+!            avgflag='I', long_name='live coarse root C transfer', &
+!            ptr_patch=this%livecrootc0_xfer_patch)!, default='inactive')    
 
-       this%deadcrootc0_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC0', units='gC/m^2', &
-            avgflag='A', long_name='dead coarse root C', &
-            ptr_patch=this%deadcrootc0_patch)
+!       this%deadcrootc0_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='DEADCROOTC0', units='gC/m^2', &
+!            avgflag='I', long_name='dead coarse root C', &
+!            ptr_patch=this%deadcrootc0_patch)
 
-       this%deadcrootc0_storage_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC0_STORAGE', units='gC/m^2', &
-            avgflag='A', long_name='dead coarse root C storage', &
-            ptr_patch=this%deadcrootc0_storage_patch)!, default='inactive')   
+!       this%deadcrootc0_storage_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='DEADCROOTC0_STORAGE', units='gC/m^2', &
+!            avgflag='I', long_name='dead coarse root C storage', &
+!            ptr_patch=this%deadcrootc0_storage_patch)!, default='inactive')   
 
-       this%deadcrootc0_xfer_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEADCROOTC0_XFER', units='gC/m^2', &
-            avgflag='A', long_name='dead coarse root C transfer', &
-            ptr_patch=this%deadcrootc0_xfer_patch)!, default='inactive')   
+!       this%deadcrootc0_xfer_patch(begp:endp) = spval
+!       call hist_addfld1d (fname='DEADCROOTC0_XFER', units='gC/m^2', &
+!            avgflag='I', long_name='dead coarse root C transfer', &
+!            ptr_patch=this%deadcrootc0_xfer_patch)!, default='inactive')   
+!        end if
 
     end if
 
@@ -1237,7 +1266,7 @@ contains
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
     use clm_time_manager , only : is_restart, get_nstep
-    use clm_varctl, only : MM_Nuptake_opt    
+    use clm_varctl, only : MM_Nuptake_opt   ,use_matrixcn 
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -1301,119 +1330,145 @@ contains
              this%leafc_storage_patch(p)  = 0._r8
              this%frootc_patch(p)         = 0._r8            
              this%frootc_storage_patch(p) = 0._r8    
-             this%matrix_cap_leafc_patch(p)          = 0._r8
-             this%matrix_cap_leafc_storage_patch(p)  = 0._r8
-             this%matrix_cap_frootc_patch(p)         = 0._r8            
-             this%matrix_cap_frootc_storage_patch(p) = 0._r8    
-             this%matrix_pot_leafc_patch(p)          = 0._r8
-             this%matrix_pot_leafc_storage_patch(p)  = 0._r8
-             this%matrix_pot_frootc_patch(p)         = 0._r8            
-             this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+             if(use_matrixcn)then
+                this%matrix_cap_leafc_patch(p)          = 0._r8
+                this%matrix_cap_leafc_storage_patch(p)  = 0._r8
+                this%matrix_cap_frootc_patch(p)         = 0._r8            
+                this%matrix_cap_frootc_storage_patch(p) = 0._r8    
+                this%matrix_pot_leafc_patch(p)          = 0._r8
+                this%matrix_pot_leafc_storage_patch(p)  = 0._r8
+                this%matrix_pot_frootc_patch(p)         = 0._r8            
+                this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+             end if
           else
              if (pftcon%evergreen(patch%itype(p)) == 1._r8) then
                 this%leafc_patch(p)          = cnvegcstate_const%initial_vegC * ratio     
                 this%leafc_storage_patch(p)  = 0._r8
                 this%frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
                 this%frootc_storage_patch(p) = 0._r8    
-                this%matrix_cap_leafc_patch(p)          = cnvegcstate_const%initial_vegC * ratio     
-                this%matrix_cap_leafc_storage_patch(p)  = 0._r8
-                this%matrix_cap_frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
-                this%matrix_cap_frootc_storage_patch(p) = 0._r8    
-                this%matrix_pot_leafc_patch(p)          = 0._r8
-                this%matrix_pot_leafc_storage_patch(p)  = 0._r8
-                this%matrix_pot_frootc_patch(p)         = 0._r8            
-                this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+                if(use_matrixcn)then
+                   this%matrix_cap_leafc_patch(p)          = cnvegcstate_const%initial_vegC * ratio     
+                   this%matrix_cap_leafc_storage_patch(p)  = 0._r8
+                   this%matrix_cap_frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
+                   this%matrix_cap_frootc_storage_patch(p) = 0._r8    
+                   this%matrix_pot_leafc_patch(p)          = 0._r8
+                   this%matrix_pot_leafc_storage_patch(p)  = 0._r8
+                   this%matrix_pot_frootc_patch(p)         = 0._r8            
+                   this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+                end if
              else if (patch%itype(p) >= npcropmin) then ! prognostic crop types
                 this%leafc_patch(p)          = 0._r8
                 this%leafc_storage_patch(p)  = 0._r8
                 this%frootc_patch(p)         = 0._r8            
                 this%frootc_storage_patch(p) = 0._r8    
-                this%matrix_cap_leafc_patch(p)          = 0._r8
-                this%matrix_cap_leafc_storage_patch(p)  = 0._r8
-                this%matrix_cap_frootc_patch(p)         = 0._r8            
-                this%matrix_cap_frootc_storage_patch(p) = 0._r8    
-                this%matrix_pot_leafc_patch(p)          = 0._r8
-                this%matrix_pot_leafc_storage_patch(p)  = 0._r8
-                this%matrix_pot_frootc_patch(p)         = 0._r8            
-                this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+                if(use_matrixcn)then
+                   this%matrix_cap_leafc_patch(p)          = 0._r8
+                   this%matrix_cap_leafc_storage_patch(p)  = 0._r8
+                   this%matrix_cap_frootc_patch(p)         = 0._r8            
+                   this%matrix_cap_frootc_storage_patch(p) = 0._r8    
+                   this%matrix_pot_leafc_patch(p)          = 0._r8
+                   this%matrix_pot_leafc_storage_patch(p)  = 0._r8
+                   this%matrix_pot_frootc_patch(p)         = 0._r8            
+                   this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+                end if
              else
                 this%leafc_patch(p)          = 0._r8
                 this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
                 this%frootc_patch(p)         = 0._r8            
                 this%frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio   
-                this%matrix_cap_leafc_patch(p)          = 0._r8
-                this%matrix_cap_leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
-                this%matrix_cap_frootc_patch(p)         = 0._r8            
-                this%matrix_cap_frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio   
-                this%matrix_pot_leafc_patch(p)          = 0._r8
-                this%matrix_pot_leafc_storage_patch(p)  = 0._r8
-                this%matrix_pot_frootc_patch(p)         = 0._r8            
-                this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+                if(use_matrixcn)then
+                   this%matrix_cap_leafc_patch(p)          = 0._r8
+                   this%matrix_cap_leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
+                   this%matrix_cap_frootc_patch(p)         = 0._r8            
+                   this%matrix_cap_frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio   
+                   this%matrix_pot_leafc_patch(p)          = 0._r8
+                   this%matrix_pot_leafc_storage_patch(p)  = 0._r8
+                   this%matrix_pot_frootc_patch(p)         = 0._r8            
+                   this%matrix_pot_frootc_storage_patch(p) = 0._r8    
+                end if
              end if
           end if
           this%leafc_xfer_patch(p) = 0._r8
-          this%matrix_cap_leafc_xfer_patch(p) = 0._r8
-          this%matrix_pot_leafc_xfer_patch(p) = 0._r8
+          if(use_matrixcn)then
+             this%matrix_cap_leafc_xfer_patch(p) = 0._r8
+             this%matrix_pot_leafc_xfer_patch(p) = 0._r8
+          end if
           this%leafc_storage_xfer_acc_patch(p)  = 0._r8
           this%storage_cdemand_patch(p)         = 0._r8
 
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
              this%frootc_patch(p)            = 0._r8 
              this%frootc_storage_patch(p)    = 0._r8 
-             this%matrix_cap_frootc_patch(p)            = 0._r8 
-             this%matrix_cap_frootc_storage_patch(p)    = 0._r8 
-             this%matrix_pot_frootc_patch(p)            = 0._r8 
-             this%matrix_pot_frootc_storage_patch(p)    = 0._r8 
+             if(use_matrixcn)then
+                this%matrix_cap_frootc_patch(p)            = 0._r8 
+                this%matrix_cap_frootc_storage_patch(p)    = 0._r8 
+                this%matrix_pot_frootc_patch(p)            = 0._r8 
+                this%matrix_pot_frootc_storage_patch(p)    = 0._r8 
+             end if
           end if     
           this%frootc_xfer_patch(p)       = 0._r8 
-          this%matrix_cap_frootc_xfer_patch(p)       = 0._r8 
-          this%matrix_pot_frootc_xfer_patch(p)       = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_frootc_xfer_patch(p)       = 0._r8 
+             this%matrix_pot_frootc_xfer_patch(p)       = 0._r8 
+          end if
 
           this%livestemc_patch(p)         = 0._r8 
           this%livestemc_storage_patch(p) = 0._r8 
           this%livestemc_xfer_patch(p)    = 0._r8 
-          this%matrix_cap_livestemc_patch(p)         = 0._r8 
-          this%matrix_cap_livestemc_storage_patch(p) = 0._r8 
-          this%matrix_cap_livestemc_xfer_patch(p)    = 0._r8 
-          this%matrix_pot_livestemc_patch(p)         = 0._r8 
-          this%matrix_pot_livestemc_storage_patch(p) = 0._r8 
-          this%matrix_pot_livestemc_xfer_patch(p)    = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_livestemc_patch(p)         = 0._r8 
+             this%matrix_cap_livestemc_storage_patch(p) = 0._r8 
+             this%matrix_cap_livestemc_xfer_patch(p)    = 0._r8 
+             this%matrix_pot_livestemc_patch(p)         = 0._r8 
+             this%matrix_pot_livestemc_storage_patch(p) = 0._r8 
+             this%matrix_pot_livestemc_xfer_patch(p)    = 0._r8 
+          end if
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
              this%deadstemc_patch(p) = 0.1_r8 * ratio
-             this%matrix_cap_deadstemc_patch(p) = 0.1_r8 * ratio
-             this%matrix_pot_deadstemc_patch(p) = 0._r8 
+             if(use_matrixcn)then
+                this%matrix_cap_deadstemc_patch(p) = 0.1_r8 * ratio
+                this%matrix_pot_deadstemc_patch(p) = 0._r8 
+             end if
           else
              this%deadstemc_patch(p) = 0._r8 
-             this%matrix_cap_deadstemc_patch(p) = 0._r8 
-             this%matrix_pot_deadstemc_patch(p) = 0._r8 
+             if(use_matrixcn)then
+                this%matrix_cap_deadstemc_patch(p) = 0._r8 
+                this%matrix_pot_deadstemc_patch(p) = 0._r8 
+             end if
           end if
           this%deadstemc_storage_patch(p)  = 0._r8 
           this%deadstemc_xfer_patch(p)     = 0._r8 
-          this%matrix_cap_deadstemc_storage_patch(p)  = 0._r8 
-          this%matrix_cap_deadstemc_xfer_patch(p)     = 0._r8 
-          this%matrix_pot_deadstemc_storage_patch(p)  = 0._r8 
-          this%matrix_pot_deadstemc_xfer_patch(p)     = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_deadstemc_storage_patch(p)  = 0._r8 
+             this%matrix_cap_deadstemc_xfer_patch(p)     = 0._r8 
+             this%matrix_pot_deadstemc_storage_patch(p)  = 0._r8 
+             this%matrix_pot_deadstemc_xfer_patch(p)     = 0._r8 
+          end if
 
           this%livecrootc_patch(p)         = 0._r8 
           this%livecrootc_storage_patch(p) = 0._r8 
           this%livecrootc_xfer_patch(p)    = 0._r8 
-          this%matrix_cap_livecrootc_patch(p)         = 0._r8 
-          this%matrix_cap_livecrootc_storage_patch(p) = 0._r8 
-          this%matrix_cap_livecrootc_xfer_patch(p)    = 0._r8 
-          this%matrix_pot_livecrootc_patch(p)         = 0._r8 
-          this%matrix_pot_livecrootc_storage_patch(p) = 0._r8 
-          this%matrix_pot_livecrootc_xfer_patch(p)    = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_livecrootc_patch(p)         = 0._r8 
+             this%matrix_cap_livecrootc_storage_patch(p) = 0._r8 
+             this%matrix_cap_livecrootc_xfer_patch(p)    = 0._r8 
+             this%matrix_pot_livecrootc_patch(p)         = 0._r8 
+             this%matrix_pot_livecrootc_storage_patch(p) = 0._r8 
+             this%matrix_pot_livecrootc_xfer_patch(p)    = 0._r8 
+          end if
 
           this%deadcrootc_patch(p)         = 0._r8 
           this%deadcrootc_storage_patch(p) = 0._r8 
           this%deadcrootc_xfer_patch(p)    = 0._r8 
-          this%matrix_cap_deadcrootc_patch(p)         = 0._r8 
-          this%matrix_cap_deadcrootc_storage_patch(p) = 0._r8 
-          this%matrix_cap_deadcrootc_xfer_patch(p)    = 0._r8 
-          this%matrix_pot_deadcrootc_patch(p)         = 0._r8 
-          this%matrix_pot_deadcrootc_storage_patch(p) = 0._r8 
-          this%matrix_pot_deadcrootc_xfer_patch(p)    = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_deadcrootc_patch(p)         = 0._r8 
+             this%matrix_cap_deadcrootc_storage_patch(p) = 0._r8 
+             this%matrix_cap_deadcrootc_xfer_patch(p)    = 0._r8 
+             this%matrix_pot_deadcrootc_patch(p)         = 0._r8 
+             this%matrix_pot_deadcrootc_storage_patch(p) = 0._r8 
+             this%matrix_pot_deadcrootc_xfer_patch(p)    = 0._r8 
+          end if
 
           this%gresp_storage_patch(p)      = 0._r8 
           this%gresp_xfer_patch(p)         = 0._r8 
@@ -1426,33 +1481,35 @@ contains
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8
 !!!!initial pool size for matrix
-          this%leafc0_patch(p)          = 0._r8
-          this%leafc0_storage_patch(p)  = 0._r8
-          this%leafc0_xfer_patch(p)     = 0._r8
-          this%frootc0_patch(p)         = 0._r8            
-          this%frootc0_storage_patch(p) = 0._r8  
-          this%frootc0_xfer_patch(p)       = 0._r8 
+          if(use_matrixcn)then
+             this%leafc0_patch(p)          = 0._r8
+             this%leafc0_storage_patch(p)  = 0._r8
+             this%leafc0_xfer_patch(p)     = 0._r8
+             this%frootc0_patch(p)         = 0._r8            
+             this%frootc0_storage_patch(p) = 0._r8  
+             this%frootc0_xfer_patch(p)       = 0._r8 
 
-          this%livestemc0_patch(p)         = 0._r8 
-          this%livestemc0_storage_patch(p) = 0._r8 
-          this%livestemc0_xfer_patch(p)    = 0._r8
-          this%deadstemc0_patch(p) = 0._r8 		  
-          this%deadstemc0_storage_patch(p)  = 0._r8 
-          this%deadstemc0_xfer_patch(p)     = 0._r8 
+             this%livestemc0_patch(p)         = 0._r8 
+             this%livestemc0_storage_patch(p) = 0._r8 
+             this%livestemc0_xfer_patch(p)    = 0._r8
+             this%deadstemc0_patch(p) = 0._r8 		  
+             this%deadstemc0_storage_patch(p)  = 0._r8 
+             this%deadstemc0_xfer_patch(p)     = 0._r8 
 
-          this%livecrootc0_patch(p)         = 0._r8 
-          this%livecrootc0_storage_patch(p) = 0._r8 
-          this%livecrootc0_xfer_patch(p)    = 0._r8 
+             this%livecrootc0_patch(p)         = 0._r8 
+             this%livecrootc0_storage_patch(p) = 0._r8 
+             this%livecrootc0_xfer_patch(p)    = 0._r8 
 
-          this%deadcrootc0_patch(p)         = 0._r8 
-          this%deadcrootc0_storage_patch(p) = 0._r8 
-          this%deadcrootc0_xfer_patch(p)    = 0._r8
-         do k = 1, nvegpool
-           this%matrix_alloc_acc_patch(p,k) =  0._r8
-           do j = 1, nvegpool
-                this%matrix_transfer_acc_patch (p,j,k) = 0._r8
-           end do
-         end do
+             this%deadcrootc0_patch(p)         = 0._r8 
+             this%deadcrootc0_storage_patch(p) = 0._r8 
+             this%deadcrootc0_xfer_patch(p)    = 0._r8
+             do k = 1, nvegpool
+                this%matrix_alloc_acc_patch(p,k) =  0._r8
+                do j = 1, nvegpool
+                   this%matrix_transfer_acc_patch (p,j,k) = 0._r8
+                end do
+             end do
+          end if
   
 
           if ( use_crop )then
@@ -1531,7 +1588,7 @@ contains
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
+    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt, use_matrixcn
     use clm_time_manager , only : get_nstep, is_restart, get_nstep
     use landunit_varcon	 , only : istsoil, istcrop 
     use spmdMod          , only : mpicom
@@ -1607,29 +1664,43 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='leafc_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_patch) 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='leafc_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_leafc_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_leafc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_leafc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_leafc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_leafc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_leafc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_xfer_patch) 
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_xfer_acc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1651,29 +1722,43 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='frootc_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_patch) 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='frootc_storage_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='frootc_xfer_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='frootc_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_frootc_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_frootc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='frootc_storage_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_frootc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_storage_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_frootc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='frootc_xfer_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_frootc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_xfer_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_frootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_xfer_patch) 
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='livestemc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1687,29 +1772,43 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livestemc_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_patch) 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_patch) 
+  
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livestemc_storage_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livestemc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livestemc_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livestemc_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_storage_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livestemc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livestemc_storage_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livestemc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livestemc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livestemc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_xfer_patch) 
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='deadstemc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1723,29 +1822,43 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_patch) 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_xfer_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadstemc_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadstemc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadstemc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadstemc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadstemc_xfer_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadstemc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_xfer_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadstemc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_xfer_patch) 
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='livecrootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1759,29 +1872,43 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livecrootc_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_patch) 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livecrootc_storage_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livecrootc_xfer_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livecrootc_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livecrootc_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livecrootc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livecrootc_storage_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livecrootc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_storage_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livecrootc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='livecrootc_xfer_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livecrootc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_xfer_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_livecrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_xfer_patch) 
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1795,29 +1922,43 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_patch) 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer_cap', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_xfer_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadcrootc_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadcrootc_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadcrootc_storage_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadcrootc_storage_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer_pot', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadcrootc_xfer_patch) 
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer_pot', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_deadcrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_xfer_patch) 
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='gresp_storage', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1992,82 +2133,102 @@ contains
                          this%leafc_storage_patch(i)  = 0._r8
                          this%frootc_patch(i)         = 0._r8            
                          this%frootc_storage_patch(i) = 0._r8    
-                         this%matrix_cap_leafc_patch(i)          = 0._r8
-                         this%matrix_cap_leafc_storage_patch(i)  = 0._r8
-                         this%matrix_cap_frootc_patch(i)         = 0._r8            
-                         this%matrix_cap_frootc_storage_patch(i) = 0._r8    
-                         this%matrix_pot_leafc_patch(i)          = 0._r8
-                         this%matrix_pot_leafc_storage_patch(i)  = 0._r8
-                         this%matrix_pot_frootc_patch(i)         = 0._r8            
-                         this%matrix_pot_frootc_storage_patch(i) = 0._r8    
+                         if(use_matrixcn)then
+                            this%matrix_cap_leafc_patch(i)          = 0._r8
+                            this%matrix_cap_leafc_storage_patch(i)  = 0._r8
+                            this%matrix_cap_frootc_patch(i)         = 0._r8            
+                            this%matrix_cap_frootc_storage_patch(i) = 0._r8    
+                            this%matrix_pot_leafc_patch(i)          = 0._r8
+                            this%matrix_pot_leafc_storage_patch(i)  = 0._r8
+                            this%matrix_pot_frootc_patch(i)         = 0._r8            
+                            this%matrix_pot_frootc_storage_patch(i) = 0._r8    
+                         end if
                       else
                          if (pftcon%evergreen(patch%itype(i)) == 1._r8) then
                             this%leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
                             this%leafc_storage_patch(i)  = 0._r8
                             this%frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
                             this%frootc_storage_patch(i) = 0._r8    
-                            this%matrix_cap_leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
-                            this%matrix_cap_leafc_storage_patch(i)  = 0._r8
-                            this%matrix_cap_frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
-                            this%matrix_cap_frootc_storage_patch(i) = 0._r8    
+                            if(use_matrixcn)then
+                               this%matrix_cap_leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
+                               this%matrix_cap_leafc_storage_patch(i)  = 0._r8
+                               this%matrix_cap_frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
+                               this%matrix_cap_frootc_storage_patch(i) = 0._r8    
+                            end if
                          else
                             this%leafc_patch(i)          = 0._r8
                             this%leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
                             this%frootc_patch(i)         = 0._r8            
                             this%frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
-                            this%matrix_cap_leafc_patch(i)          = 0._r8
-                            this%matrix_cap_leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
-                            this%matrix_cap_frootc_patch(i)         = 0._r8            
-                            this%matrix_cap_frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
+                            if(use_matrixcn)then
+                               this%matrix_cap_leafc_patch(i)          = 0._r8
+                               this%matrix_cap_leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
+                               this%matrix_cap_frootc_patch(i)         = 0._r8            
+                               this%matrix_cap_frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
+                            end if
                          end if
-                         this%matrix_pot_leafc_patch(i)          = 0._r8
-                         this%matrix_pot_leafc_storage_patch(i)  = 0._r8
-                         this%matrix_pot_frootc_patch(i)         = 0._r8            
-                         this%matrix_pot_frootc_storage_patch(i) = 0._r8    
+                         if(use_matrixcn)then
+                            this%matrix_pot_leafc_patch(i)          = 0._r8
+                            this%matrix_pot_leafc_storage_patch(i)  = 0._r8
+                            this%matrix_pot_frootc_patch(i)         = 0._r8            
+                            this%matrix_pot_frootc_storage_patch(i) = 0._r8    
+                         end if
                       end if
                       this%leafc_xfer_patch(i) = 0._r8
-                      this%matrix_cap_leafc_xfer_patch(i) = 0._r8
-                      this%matrix_pot_leafc_xfer_patch(i) = 0._r8
+                      if(use_matrixcn)then
+                         this%matrix_cap_leafc_xfer_patch(i) = 0._r8
+                         this%matrix_pot_leafc_xfer_patch(i) = 0._r8
+                      end if
                       this%leafc_storage_xfer_acc_patch(i)  = 0._r8
                       this%storage_cdemand_patch(i)         = 0._r8
 
                       if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
                          this%frootc_patch(i)            = 0._r8 
                          this%frootc_storage_patch(i)    = 0._r8 
-                         this%matrix_cap_frootc_patch(i)            = 0._r8 
-                         this%matrix_cap_frootc_storage_patch(i)    = 0._r8 
-                         this%matrix_pot_frootc_patch(i)            = 0._r8 
-                         this%matrix_pot_frootc_storage_patch(i)    = 0._r8 
+                         if(use_matrixcn)then
+                            this%matrix_cap_frootc_patch(i)            = 0._r8 
+                            this%matrix_cap_frootc_storage_patch(i)    = 0._r8 
+                            this%matrix_pot_frootc_patch(i)            = 0._r8 
+                            this%matrix_pot_frootc_storage_patch(i)    = 0._r8 
+                         end if
                       end if     
                       this%frootc_xfer_patch(i)       = 0._r8 
-                      this%matrix_cap_frootc_xfer_patch(i)       = 0._r8 
-                      this%matrix_pot_frootc_xfer_patch(i)       = 0._r8 
 
                       this%livestemc_patch(i)         = 0._r8 
                       this%livestemc_storage_patch(i) = 0._r8 
                       this%livestemc_xfer_patch(i)    = 0._r8 
-                      this%matrix_cap_livestemc_patch(i)         = 0._r8 
-                      this%matrix_cap_livestemc_storage_patch(i) = 0._r8 
-                      this%matrix_cap_livestemc_xfer_patch(i)    = 0._r8 
-                      this%matrix_pot_livestemc_patch(i)         = 0._r8 
-                      this%matrix_pot_livestemc_storage_patch(i) = 0._r8 
-                      this%matrix_pot_livestemc_xfer_patch(i)    = 0._r8 
+                      if(use_matrixcn)then
+                         this%matrix_cap_frootc_xfer_patch(i)       = 0._r8 
+                         this%matrix_pot_frootc_xfer_patch(i)       = 0._r8 
+                         this%matrix_cap_livestemc_patch(i)         = 0._r8 
+                         this%matrix_cap_livestemc_storage_patch(i) = 0._r8 
+                         this%matrix_cap_livestemc_xfer_patch(i)    = 0._r8 
+                         this%matrix_pot_livestemc_patch(i)         = 0._r8 
+                         this%matrix_pot_livestemc_storage_patch(i) = 0._r8 
+                         this%matrix_pot_livestemc_xfer_patch(i)    = 0._r8 
+                      end if
 
                       if (pftcon%woody(patch%itype(i)) == 1._r8) then
                          this%deadstemc_patch(i) = 0.1_r8 * ratio
-                         this%matrix_cap_deadstemc_patch(i) = 0.1_r8 * ratio
-                         this%matrix_pot_deadstemc_patch(i) = 0._r8 
+                         if(use_matrixcn)then
+                            this%matrix_cap_deadstemc_patch(i) = 0.1_r8 * ratio
+                            this%matrix_pot_deadstemc_patch(i) = 0._r8 
+                         end if
                       else
                          this%deadstemc_patch(i) = 0._r8 
-                         this%matrix_cap_deadstemc_patch(i) = 0._r8 
-                         this%matrix_pot_deadstemc_patch(i) = 0._r8 
+                         if(use_matrixcn)then
+                            this%matrix_cap_deadstemc_patch(i) = 0._r8 
+                            this%matrix_pot_deadstemc_patch(i) = 0._r8 
+                         end if
                       end if
                       this%deadstemc_storage_patch(i)  = 0._r8 
                       this%deadstemc_xfer_patch(i)     = 0._r8 
-                      this%matrix_cap_deadstemc_storage_patch(i)  = 0._r8 
-                      this%matrix_cap_deadstemc_xfer_patch(i)     = 0._r8 
-                      this%matrix_pot_deadstemc_storage_patch(i)  = 0._r8 
-                      this%matrix_pot_deadstemc_xfer_patch(i)     = 0._r8 
+                      if(use_matrixcn)then
+                         this%matrix_cap_deadstemc_storage_patch(i)  = 0._r8 
+                         this%matrix_cap_deadstemc_xfer_patch(i)     = 0._r8 
+                         this%matrix_pot_deadstemc_storage_patch(i)  = 0._r8 
+                         this%matrix_pot_deadstemc_xfer_patch(i)     = 0._r8 
+                      end if
 
                       this%livecrootc_patch(i)         = 0._r8 
                       this%livecrootc_storage_patch(i) = 0._r8 
@@ -2077,21 +2238,23 @@ contains
                       this%deadcrootc_storage_patch(i) = 0._r8 
                       this%deadcrootc_xfer_patch(i)    = 0._r8 
 
-                      this%matrix_cap_livecrootc_patch(i)         = 0._r8 
-                      this%matrix_cap_livecrootc_storage_patch(i) = 0._r8 
-                      this%matrix_cap_livecrootc_xfer_patch(i)    = 0._r8 
-
-                      this%matrix_cap_deadcrootc_patch(i)         = 0._r8 
-                      this%matrix_cap_deadcrootc_storage_patch(i) = 0._r8 
-                      this%matrix_cap_deadcrootc_xfer_patch(i)    = 0._r8 
-
-                      this%matrix_pot_livecrootc_patch(i)         = 0._r8 
-                      this%matrix_pot_livecrootc_storage_patch(i) = 0._r8 
-                      this%matrix_pot_livecrootc_xfer_patch(i)    = 0._r8 
-
-                      this%matrix_pot_deadcrootc_patch(i)         = 0._r8 
-                      this%matrix_pot_deadcrootc_storage_patch(i) = 0._r8 
-                      this%matrix_pot_deadcrootc_xfer_patch(i)    = 0._r8 
+                      if(use_matrixcn)then
+                         this%matrix_cap_livecrootc_patch(i)         = 0._r8 
+                         this%matrix_cap_livecrootc_storage_patch(i) = 0._r8 
+                         this%matrix_cap_livecrootc_xfer_patch(i)    = 0._r8 
+ 
+                         this%matrix_cap_deadcrootc_patch(i)         = 0._r8 
+                         this%matrix_cap_deadcrootc_storage_patch(i) = 0._r8 
+                         this%matrix_cap_deadcrootc_xfer_patch(i)    = 0._r8 
+ 
+                         this%matrix_pot_livecrootc_patch(i)         = 0._r8 
+                         this%matrix_pot_livecrootc_storage_patch(i) = 0._r8 
+                         this%matrix_pot_livecrootc_xfer_patch(i)    = 0._r8 
+ 
+                         this%matrix_pot_deadcrootc_patch(i)         = 0._r8 
+                         this%matrix_pot_deadcrootc_storage_patch(i) = 0._r8 
+                         this%matrix_pot_deadcrootc_xfer_patch(i)    = 0._r8 
+                      end if
 
                       this%gresp_storage_patch(i)      = 0._r8 
                       this%gresp_xfer_patch(i)         = 0._r8 
@@ -2987,23 +3150,11 @@ contains
        this%leafc_patch(i)              = value_patch
        this%leafc_storage_patch(i)      = value_patch
        this%leafc_xfer_patch(i)         = value_patch
-       this%matrix_cap_leafc_patch(i)              = value_patch
-       this%matrix_cap_leafc_storage_patch(i)      = value_patch
-       this%matrix_cap_leafc_xfer_patch(i)         = value_patch
-       this%matrix_pot_leafc_patch(i)              = value_patch
-       this%matrix_pot_leafc_storage_patch(i)      = value_patch
-       this%matrix_pot_leafc_xfer_patch(i)         = value_patch
        this%leafc_storage_xfer_acc_patch(i) = value_patch
        this%storage_cdemand_patch(i)        = value_patch        
        this%frootc_patch(i)             = value_patch
        this%frootc_storage_patch(i)     = value_patch
        this%frootc_xfer_patch(i)        = value_patch
-       this%matrix_cap_frootc_patch(i)             = value_patch
-       this%matrix_cap_frootc_storage_patch(i)     = value_patch
-       this%matrix_cap_frootc_xfer_patch(i)        = value_patch
-       this%matrix_pot_frootc_patch(i)             = value_patch
-       this%matrix_pot_frootc_storage_patch(i)     = value_patch
-       this%matrix_pot_frootc_xfer_patch(i)        = value_patch
        this%livestemc_patch(i)          = value_patch
        this%livestemc_storage_patch(i)  = value_patch
        this%livestemc_xfer_patch(i)     = value_patch
@@ -3016,30 +3167,73 @@ contains
        this%deadcrootc_patch(i)         = value_patch
        this%deadcrootc_storage_patch(i) = value_patch
        this%deadcrootc_xfer_patch(i)    = value_patch
-       this%matrix_cap_livestemc_patch(i)          = value_patch
-       this%matrix_cap_livestemc_storage_patch(i)  = value_patch
-       this%matrix_cap_livestemc_xfer_patch(i)     = value_patch
-       this%matrix_cap_deadstemc_patch(i)          = value_patch
-       this%matrix_cap_deadstemc_storage_patch(i)  = value_patch
-       this%matrix_cap_deadstemc_xfer_patch(i)     = value_patch
-       this%matrix_cap_livecrootc_patch(i)         = value_patch
-       this%matrix_cap_livecrootc_storage_patch(i) = value_patch
-       this%matrix_cap_livecrootc_xfer_patch(i)    = value_patch
-       this%matrix_cap_deadcrootc_patch(i)         = value_patch
-       this%matrix_cap_deadcrootc_storage_patch(i) = value_patch
-       this%matrix_cap_deadcrootc_xfer_patch(i)    = value_patch
-       this%matrix_pot_livestemc_patch(i)          = value_patch
-       this%matrix_pot_livestemc_storage_patch(i)  = value_patch
-       this%matrix_pot_livestemc_xfer_patch(i)     = value_patch
-       this%matrix_pot_deadstemc_patch(i)          = value_patch
-       this%matrix_pot_deadstemc_storage_patch(i)  = value_patch
-       this%matrix_pot_deadstemc_xfer_patch(i)     = value_patch
-       this%matrix_pot_livecrootc_patch(i)         = value_patch
-       this%matrix_pot_livecrootc_storage_patch(i) = value_patch
-       this%matrix_pot_livecrootc_xfer_patch(i)    = value_patch
-       this%matrix_pot_deadcrootc_patch(i)         = value_patch
-       this%matrix_pot_deadcrootc_storage_patch(i) = value_patch
-       this%matrix_pot_deadcrootc_xfer_patch(i)    = value_patch
+       if(use_matrixcn)then
+          this%matrix_cap_leafc_patch(i)              = value_patch
+          this%matrix_cap_leafc_storage_patch(i)      = value_patch
+          this%matrix_cap_leafc_xfer_patch(i)         = value_patch
+          this%matrix_pot_leafc_patch(i)              = value_patch
+          this%matrix_pot_leafc_storage_patch(i)      = value_patch
+          this%matrix_pot_leafc_xfer_patch(i)         = value_patch
+          this%matrix_cap_frootc_patch(i)             = value_patch
+          this%matrix_cap_frootc_storage_patch(i)     = value_patch
+          this%matrix_cap_frootc_xfer_patch(i)        = value_patch
+          this%matrix_pot_frootc_patch(i)             = value_patch
+          this%matrix_pot_frootc_storage_patch(i)     = value_patch
+          this%matrix_pot_frootc_xfer_patch(i)        = value_patch
+          this%matrix_cap_livestemc_patch(i)          = value_patch
+          this%matrix_cap_livestemc_storage_patch(i)  = value_patch
+          this%matrix_cap_livestemc_xfer_patch(i)     = value_patch
+          this%matrix_cap_deadstemc_patch(i)          = value_patch
+          this%matrix_cap_deadstemc_storage_patch(i)  = value_patch
+          this%matrix_cap_deadstemc_xfer_patch(i)     = value_patch
+          this%matrix_cap_livecrootc_patch(i)         = value_patch
+          this%matrix_cap_livecrootc_storage_patch(i) = value_patch
+          this%matrix_cap_livecrootc_xfer_patch(i)    = value_patch
+          this%matrix_cap_deadcrootc_patch(i)         = value_patch
+          this%matrix_cap_deadcrootc_storage_patch(i) = value_patch
+          this%matrix_cap_deadcrootc_xfer_patch(i)    = value_patch
+          this%matrix_pot_livestemc_patch(i)          = value_patch
+          this%matrix_pot_livestemc_storage_patch(i)  = value_patch
+          this%matrix_pot_livestemc_xfer_patch(i)     = value_patch
+          this%matrix_pot_deadstemc_patch(i)          = value_patch
+          this%matrix_pot_deadstemc_storage_patch(i)  = value_patch
+          this%matrix_pot_deadstemc_xfer_patch(i)     = value_patch
+          this%matrix_pot_livecrootc_patch(i)         = value_patch
+          this%matrix_pot_livecrootc_storage_patch(i) = value_patch
+          this%matrix_pot_livecrootc_xfer_patch(i)    = value_patch
+          this%matrix_pot_deadcrootc_patch(i)         = value_patch
+          this%matrix_pot_deadcrootc_storage_patch(i) = value_patch
+          this%matrix_pot_deadcrootc_xfer_patch(i)    = value_patch
+
+          this%leafc0_patch(i)              = value_patch
+          this%leafc0_storage_patch(i)      = value_patch
+          this%leafc0_xfer_patch(i)         = value_patch   
+          this%frootc0_patch(i)             = value_patch
+          this%frootc0_storage_patch(i)     = value_patch
+          this%frootc0_xfer_patch(i)        = value_patch
+          this%livestemc0_patch(i)          = value_patch
+          this%livestemc0_storage_patch(i)  = value_patch
+          this%livestemc0_xfer_patch(i)     = value_patch
+          this%deadstemc0_patch(i)          = value_patch
+          this%deadstemc0_storage_patch(i)  = value_patch
+          this%deadstemc0_xfer_patch(i)     = value_patch
+          this%livecrootc0_patch(i)         = value_patch
+          this%livecrootc0_storage_patch(i) = value_patch
+          this%livecrootc0_xfer_patch(i)    = value_patch
+          this%deadcrootc0_patch(i)         = value_patch
+          this%deadcrootc0_storage_patch(i) = value_patch
+          this%deadcrootc0_xfer_patch(i)    = value_patch
+!!!!matrix
+          do k = 1, nvegpool
+             this%matrix_alloc_acc_patch(i,k)              = value_patch
+             do j = 1, nvegpool+1
+                if(j .le. nvegpool)then
+                   this%matrix_transfer_acc_patch (i,j,k) = value_patch
+                end if
+             end do 
+          end do
+!!!!!!
+       end if
        this%gresp_storage_patch(i)      = value_patch
        this%gresp_xfer_patch(i)         = value_patch
        this%cpool_patch(i)              = value_patch
@@ -3050,34 +3244,6 @@ contains
        this%woodc_patch(i)              = value_patch
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
-!!!!matrix
-       this%leafc0_patch(i)              = value_patch
-       this%leafc0_storage_patch(i)      = value_patch
-       this%leafc0_xfer_patch(i)         = value_patch   
-       this%frootc0_patch(i)             = value_patch
-       this%frootc0_storage_patch(i)     = value_patch
-       this%frootc0_xfer_patch(i)        = value_patch
-       this%livestemc0_patch(i)          = value_patch
-       this%livestemc0_storage_patch(i)  = value_patch
-       this%livestemc0_xfer_patch(i)     = value_patch
-       this%deadstemc0_patch(i)          = value_patch
-       this%deadstemc0_storage_patch(i)  = value_patch
-       this%deadstemc0_xfer_patch(i)     = value_patch
-       this%livecrootc0_patch(i)         = value_patch
-       this%livecrootc0_storage_patch(i) = value_patch
-       this%livecrootc0_xfer_patch(i)    = value_patch
-       this%deadcrootc0_patch(i)         = value_patch
-       this%deadcrootc0_storage_patch(i) = value_patch
-       this%deadcrootc0_xfer_patch(i)    = value_patch
-       do k = 1, nvegpool
-          this%matrix_alloc_acc_patch(i,k)              = value_patch
-          do j = 1, nvegpool+1
-               if(j .le. nvegpool)then
-                 this%matrix_transfer_acc_patch (i,j,k) = value_patch
-              end if
-         end do 
-end do
-!!!!!!
        if ( use_crop ) then
           this%grainc_patch(i)          = value_patch
           this%grainc_storage_patch(i)  = value_patch
