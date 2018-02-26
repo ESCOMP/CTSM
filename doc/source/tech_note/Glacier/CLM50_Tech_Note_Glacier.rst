@@ -144,9 +144,12 @@ different regions (four by default) that differ in three respects:
 #. Treatment of glacial melt water:
 
    a. Glacial melt water runs off and is replaced by ice, thus keeping
-      the column always frozen. This behavior is discussed in more
-      detail in section :numref:`Computation of the surface mass
-      balance`.
+      the column always frozen. In the absence of a dynamic ice sheet
+      model, this behavior implicitly assumes an infinite store of
+      glacial ice that can be melted (with appropriate adjustments made
+      to ensure mass and energy conservation). This behavior is
+      discussed in more detail in section :numref:`Computation of the
+      surface mass balance`.
 
    b. Glacial melt water remains in place until it refreezes - possibly
       remaining in place indefinitely if the glacier column is in a warm
@@ -243,7 +246,7 @@ mean grid cell elevation to the *glacier\_mec* column elevation using a
 specified lapse rate (typically 6.0 deg/km) and an assumption of uniform
 relative humidity. Longwave radiation is downscaled by assuming a linear
 decrease in downwelling longwave radiation with increasing elevation
-(0.032 W m :sup:`-2` m :sup:`-1`, limited to 0.5 - 1.5 times the
+(0.032 W m\ :sup:`-2` m\ :sup:`-1`, limited to 0.5 - 1.5 times the
 gridcell mean value, then normalized to conserve gridcell total energy)
 :ref:`(Van Tricht et al., 2016)<VanTrichtetal2016>`. Total precipitation
 is partitioned into rain vs. snow as described in Chapter
