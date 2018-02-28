@@ -142,7 +142,7 @@ Following Bauerle et al. (2012), :math:`f\left(\text{day length} \right)` is sim
 
   f\left(\text{day length} \right) = \left(\frac{\text{day length}}{12} \right)^{2}.
 
-:math:`f\left(\text{humidity} \right)` represents the impact of air humitidy on
+:math:`f\left(\text{humidity} \right)` represents the impact of air humidity on
 :math:`J_{\text{{max}}}`. We assume that higher humidity leads to higher
 :math:`J_{\text{{max}}}` with less water limiation on stomta opening and that low
 relative humidity has a stronger impact on nitrogen allocation due to greater
