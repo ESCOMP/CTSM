@@ -14,7 +14,7 @@ CLM5 includes the following new changes to photosynthesis and stomatal conductan
 
 - Default stomatal conductance calculation uses the Medlyn conductance model
 
-- :math:`J_{max}` is predicted by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
+- :math:`V_{c,max}` and :math:`J_{max}` at 25 :sup:`\o`\ C: are now prognostic, and predicted via optimality by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
 - Leaf N concentration and the fraction of leaf N in Rubisco used to calculate :math:`V_{cmax25}` are determined by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
@@ -255,20 +255,21 @@ depend on temperature. Values at 25 :sup:`o` \ C are
 :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and
 :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`,
-and :math:`R_{d}` also vary with temperature. Parameter values at 25
-[verify with Rosie that LUNA doesn't do this otherwise]
-:sup:`o`\ C are calculated from :math:`V_{c\max }` \ at 25
-:sup:`\o`\ C: :math:`J_{\max 25} =1.97V_{c\max 25}`,
+and :math:`R_{d}` also vary with temperature. 
+
+:math:`J_{\max 25}`  at 25 :sup:`\o`\ C: is calculated by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)  
+
+Parameter values at 25 :sup:`\o`\ C are calculated from :math:`V_{c\max }` \ at 25
+:sup:`\o`\ C:, including: 
 :math:`T_{p25} =0.167V_{c\max 25}`, and
 :math:`R_{d25} =0.015V_{c\max 25}` (C\ :sub:`3`) and
-:math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`). For
-C\ :sub:`4` plants, :math:`k_{p25} =20000\; V_{c\max 25}`.
-However, when the biogeochemistry is active, :math:`R_{d25}`  is
-calculated from leaf nitrogen as :math:`R_{d25} = 0.2577LNC_{a}`,
-where :math:`LNC_{a}` is the area-based leaf nitrogen concentration
-(g N m\ :sup:`-2` leaf area, Chapter :numref:`rst_Photosynthetic Capacity`), 
-and 0.2577 :math:`\mu`\ mol CO\ :sub:`2` g\ :sup:`-1` N s\ :sup:`-1` is the base respiration rate.
-[this doesn't look correct based on the code, which lists two options; verify with Rosie] 
+:math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`). 
+
+For C\ :sub:`4` plants, :math:`k_{p25} =20000\; V_{c\max 25}`.
+
+However, when the biogeochemistry is active (the default mode), :math:`R_{d25}`  is
+calculated from leaf nitrogen as described in (Chapter :numref:`rst_Plant Respiration`) 
+
 The parameters :math:`V_{c\max 25}`,
 :math:`J_{\max 25}`, :math:`T_{p25}`, :math:`k_{p25}`, and
 :math:`R_{d25}` are scaled over the canopy for sunlit and shaded leaves
@@ -279,8 +280,6 @@ The parameters :math:`V_{c\max 25}`,
    :label: 9.10
 
    \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma } & {=} & {\Gamma _{25} \; f\left(T_{v} \right)} \end{array}
-
-[check with Rosie about Rd equation above and below (eq. 14)] with
 
 .. math::
    :label: 9.11
@@ -384,64 +383,30 @@ range :math:`T_{10} -T_{f} \ge 11`\ :sup:`o`\ C and :math:`T_{10} -T_{f} \le 35`
 Canopy scaling
 --------------------------------------------
 
-:math:`V_{c\max 25}`  is calculated separately for sunlit and shaded
-leaves using an exponential profile to area-based leaf nitrogen
-(:math:`LNC_{a}`, see Chapter :numref:`rst_Photosynthetic Capacity` ), 
-as in :ref:`Bonan et al. (2011)<Bonanetal2011>`. :math:`V_{c\max 25}`  at
-cumulative leaf area index :math:`x` from the canopy top scales directly
-with :math:`LNC_{a}` , which decreases exponentially with greater
-cumulative leaf area, so that [Verify with Rosie- different based on Vcmax option 0, 3, & 4]
-
-.. math::
-   :label: 9.18 
-
-   V_{c\; \max 25}^{} \left(x\right)=V_{c\; \max 25}^{} \left(0\right)e^{-K_{n} x}
-
-where :math:`V_{c\; \max 25}^{} \left(0\right)` is defined at the top of
-the canopy using :math:`SLA_{0}`, which is the specific leaf area at
-the canopy top and :math:`K_{n}`  is the decay
-coefficient for nitrogen. The canopy integrated value for sunlit and
-shaded leaves is
-
-.. math::
-   :label: 9.20
-
-   \begin{array}{rcl} {V_{c\; \max 25}^{sun} } & {=} & {\int _{0}^{L}V_{c\; \max 25}^{} \left(x\right)f_{sun} \left(x\right)\,  dx} \\ {} & {=} & {V_{c\; \max 25}^{} \left(0\right)\left[1-e^{-\left(K_{n} +K\right)L} \right]\frac{1}{K_{n} +K} } \end{array}
-
-.. math::
-   :label: 9.21
-
-   \begin{array}{rcl} {V_{c\; \max 25}^{sha} } & {=} & {\int _{0}^{L}V_{c\; \max 25}^{} \left(x\right)\left[1-f_{sun} \left(x\right)\right] \, dx} \\ {} & {=} & {V_{c\; \max 25}^{} \left(0\right)\left\{\left[1-e^{-K_{n} L} \right]\frac{1}{K_{n} } -\left[1-e^{-\left(K_{n} +K\right)L} \right]\frac{1}{K_{n} +K} \right\}} \end{array}
-
-and the average value for the sunlit and shaded leaves is
-
-.. math::
-   :label: 9.22
-
-   \bar{V}_{c\; \max 25}^{sun} ={V_{c\; \max 25}^{sun} \mathord{\left/ {\vphantom {V_{c\; \max 25}^{sun}  L^{sun} }} \right. \kern-\nulldelimiterspace} L^{sun} }
-
-.. math::
-   :label: 9.23
-
-   \bar{V}_{c\; \max 25}^{sha} ={V_{c\; \max 25}^{sha} \mathord{\left/ {\vphantom {V_{c\; \max 25}^{sha}  L^{sha} }} \right. \kern-\nulldelimiterspace} L^{sha} } .
-
-This integration is over all leaf area (:math:`L`) with
-:math:`f_{sun} (x)=\exp \left(-Kx\right)` and :math:`K` the direct beam
-extinction coefficient (equation :eq:`4.8` in chapter :numref:`rst_Radiative Fluxes`). Photosynthetic parameters
+When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded leaves 
 :math:`J_{\max 25}` , :math:`T_{p25}` , :math:`k_{p25}`, and
 :math:`R_{d25}`  scale similarly.
 
-The model uses :math:`K_{n} =0.30` to match an explicit multi-layer canopy, as in
-:ref:`Bonan et al. (2012)<Bonanetal2012>`.
-The value :math:`K_{n} = 0.11` chosen by :ref:`Bonan et al. (2011)<Bonanetal2011>` is
-consistent with observationally-derived estimates for forests, mostly
-tropical, and provides a gradient in V\ :sub:`cmax` similar to
-the original CLM4 specific leaf area scaling. However, 
-:ref:`Bonan et al. (2012)<Bonanetal2012>` showed that the sunlit/shaded canopy parameterization does not
-match an explicit multi-layer canopy parameterization. The discrepancy
-arises from absorption of scattered radiation by shaded leaves and can
-be tuned out with higher :math:`K_{n}`.
 
+.. math::
+   :label: 9.18
+
+   \begin{array}{rcl} 
+   {V_{c\max 25 sha}} & {=} & {V_{c\max 25 sha} \frac{i_{v,sha}}{i_{v,sun}}}  \\ 
+   {J_{\max 25 sha}}  & {=} & {J_{\max 25 sun}  \frac{i_{v,sha}}{i_{v,sun}}}  \\
+   {T_{p sha}}        & {=} & {T_{p sun}        \frac{i_{v,sha}}{i_{v,sun}}}  \end{array}  
+
+Where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coefficients of the twostream radiation model, calculated as 
+
+.. math::
+   :label: 9.19
+
+   i_{v,sun} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{f_{sun}*lai_e}\\
+   i_{v,sha} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{(1 - f_{sun})*lai_e}
+
+k_{n,ext} is the extinction coefficient for N through the canopy (0.3).  k_{b,ext} is the direct beam extinction coefficient calculated in the surface albedo routine, and :math:`f_{sun}` is the fraction of sunlit leaves, both derived from Chapter :numref:`rst_Surface Albedos`. 
+
+When LUNA is off, scaling defaults to the mechanism used in CLM4.5.  
 
 .. _Numerical implementation photosynthesis:
 
