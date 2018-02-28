@@ -967,7 +967,7 @@ contains
                   c1=frac_sno(c)*(dtime/fact(c,0) - dhsdT(c)*dtime)
                   if ( frac_h2osfc(c) /= 0.0_r8 )then
 !                     c2=frac_h2osfc(c)*(-cpliq*xm(c))
-                     c2=(-cpliq*xm(c))
+                     c2=(-cpliq*xm(c) - frac_h2osfc(c)*dhsdT(c)*dtime)
                   else
                      c2=0.0_r8
                   end if
@@ -978,8 +978,7 @@ contains
                else
                   c1=frac_sno(c)/fact(c,0)*dtime
                   if ( frac_h2osfc(c) /= 0.0_r8 )then
-!                     c2=frac_h2osfc(c)*(-cpliq*xm(c))
-                     c2=(-cpliq*xm(c))
+                     c2=(-cpliq*xm(c) - frac_h2osfc(c)*dhsdT(c)*dtime)
                   else
                      c2=0.0_r8
                   end if
