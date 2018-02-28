@@ -974,7 +974,7 @@ thus
     \delta_{vai} \cdot f_{leaf,coh} \frac{A_{canopy,coh}}{A_{canopy,patch}}\cdot r_{vai}& \textrm{for $i=n_{z,coh}$}\\
    \end{array} \right.
 
- and the stem area index is
+and the stem area index is
 
 .. math::
 
@@ -3127,7 +3127,7 @@ Nesterov Index
 Dead fuel moisture (:math:`\emph{moist}_{df,fc}`), and several other
 properties of fire behaviour, are a function of the ‘Nesterov Index’
 (:math:`N_{I}`) which is an accumulation over time of a function of
-temperature and humidity (Eqn 5, :ref:`Thonicke et al. 2010<Thonickeetal2010>`).
+temperature and humidity (Eqn 5, :ref:`Thonicke et al. 2010<Thonickeetal2010>`),
 
 .. math:: N_{I}=\sum{\textrm{max}(T_{d}(T_{d}-D),0)}
 
@@ -3142,6 +3142,7 @@ where :math:`T_{d}` is the daily mean temperature in :math:`^{o}`\ C and
 
 where :math:`RH` is the relative humidity (%).
 
+On days when the total precipitation exceeds 3.0mm, the Nesterov index accumulator is reset back to zero.
 
 Fuel properties
 ---------------
@@ -3239,7 +3240,7 @@ Forward rate of spread
 For each patch and each day, we calculate the rate of forward spread of
 the fire *ros*\ :math:`_{f}` (nominally in the direction of the wind).
 
-.. math:: \emph{ros}_{f}=\frac{i_{r}x_{i}(1-\phi_{w})}{F_{bd,patch}e_{ps}q_{ig}}
+.. math:: \emph{ros}_{f}=\frac{i_{r}x_{i}(1+\phi_{w})}{F_{bd,patch}e_{ps}q_{ig}}
 
 :math:`e_{ps}` is the effective heating number
 (:math:`e^{\frac{-4.528}{F_{\sigma,patch}}}`). :math:`q_{ig}` is the
@@ -3249,10 +3250,7 @@ Appendix A).
 
 .. math::
 
-   x_{i}= \left\{ \begin{array}{ll}
-   0.0& \textrm{for $F_{\sigma,patch}<0.00001$}\\
-   \frac{e^{0.792+3.7597F_{\sigma,patch}^{0.5}(\frac{F_{bd,patch}}{p_{d}}+0.1)}}{192+7.9095F_{\sigma,patch}} & \textrm{for $F_{\sigma,patch}\geq 0.00001$}\\
-   \end{array} \right.
+   x_{i}= \frac{e^{0.792+3.7597F_{\sigma,patch}^{0.5}(\frac{F_{bd,patch}}{p_{d}}+0.1)}}{192+7.9095F_{\sigma,patch}}
 
 :math:`\phi_{w}` is the influence of windspeed on rate of spread.
 
@@ -3331,9 +3329,9 @@ fire, :math:`\mathit{ros}_{f}` (m min\ :math:`^{-1}`) (Eqn 15
 
 .. math:: I_{surface}=\frac{0.001}{60}f_{energy} f_{ctot,patch}\mathit{ros}_{f}
 
-where :math:`f_{energy}` is the energy content of fuel (kJ/kG - the
-same for alll fuel classes). Fire intensity is used to define whether an
-ignition is successful. If the fire intensity is greater than 50kw/m
+where :math:`f_{energy}` is the energy content of fuel (Kj/Kg - the
+same, 18000 Kj/Kg for all fuel classes). Fire intensity is used to define whether an
+ignition is successful. If the fire intensity is greater than 50Kw/m
 then the ignition is successful.
 
 Fire Duration
@@ -3372,7 +3370,7 @@ respectively).
 :math:`ros_{b}` is a function of :math:`ros_{f}` and windspeed (Eqn 10
 :ref:`Thonicke et al. 2010<Thonickeetal2010>`)
 
-.. math:: ros_{b}=ros_{f}e^{-0.72W}
+.. math:: ros_{b}=ros_{f}e^{-0.012W}
 
 The minor axis to major axis ratio :math:`l_{b}` of the ellipse is
 determined by the windspeed. If the windspeed (:math:`W`) is less than
