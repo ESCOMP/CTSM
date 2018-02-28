@@ -345,7 +345,9 @@ The hydrologically and biogeochemically active portion of the soil column can be
 restricted to a thickness less than that of the maximum soil depth.  By providing 
 a depth-to-bedrock dataset, which may vary spatially, the number of layers used 
 in the hydrologic and biogeochemical calculations, :math:`N_{bedrock}`, may be 
-specified, subject to the constraint :math:`N_{bedrock} \le N_{levsoi}` 
+specified, subject to the constraint :math:`N_{bedrock} \le N_{levsoi}`.
+The default depth-to-bedrock values are from 
+:ref:`Pelletier et al. [2016]<Pelletieretal2016>`.
 
 .. _Model Input Requirements:
 
