@@ -527,13 +527,13 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
-    wtlunit2gcell = wt_lunit(gi, ltype)
-
-    n = ltype - isturb_MIN + 1
-    wtlunit_roof = urbinp%wtlunit_roof(gi,n)
-    wtroad_perv  = urbinp%wtroad_perv(gi,n)
-
     if (npatches > 0) then
+
+       wtlunit2gcell = wt_lunit(gi, ltype)
+
+       n = ltype - isturb_MIN + 1
+       wtlunit_roof = urbinp%wtlunit_roof(gi,n)
+       wtroad_perv  = urbinp%wtroad_perv(gi,n)
 
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
 
