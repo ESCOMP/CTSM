@@ -6,7 +6,15 @@ module lilac
    implicit none
    private
 
-   type, abstract :: lilac_t
+   type :: lilac_init_data_t
+      integer :: mpicom_lilac
+      integer :: mpicom_component
+      integer :: output_unit_lilac ! for lilac and 'shr' output
+      integer :: output_unit_component
+
+   end type lilac_init_data_t
+
+   type :: lilac_t
       private
    contains
       ! Public API
@@ -85,7 +93,9 @@ contains
 
       class(lilac_t), intent(inout) :: this
 
+      ! should be safe if previously initialized
       call MPI_Init(ierr)
+      ! Don't really want to dup comp_world, should be
       call MPI_Comm_Dup(MPI_COMM_WORLD, mpicom_comp, ierr)
       call MPI_COMM_RANK(mpicom_comp, mytask, ierr)
       call MPI_COMM_SIZE(mpicom_comp, ntasks, ierr)
@@ -145,11 +155,11 @@ contains
 
       class(lilac_t), intent(inout) :: this
 
-   type(ESMF_Clock) :: EClock           ! Input synchronization clock
-   type(ESMF_Time)  :: CurrTime, StartTime, StopTime
-   type(ESMF_TimeInterval) :: TimeStep
-   type(ESMF_Alarm) :: EAlarm_stop, EAlarm_rest
-   type(ESMF_Calendar), target :: Calendar
+      type(ESMF_Clock) :: EClock           ! Input synchronization clock
+      type(ESMF_Time)  :: CurrTime, StartTime, StopTime
+      type(ESMF_TimeInterval) :: TimeStep
+      type(ESMF_Alarm) :: EAlarm_stop, EAlarm_rest
+      type(ESMF_Calendar), target :: Calendar
 
       call ESMF_Initialize(rc=rc)
       Calendar = ESMF_CalendarCreate( name='lilac_NOLEAP', &

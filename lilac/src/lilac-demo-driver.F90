@@ -72,13 +72,21 @@ program lilac_demo_driver
    character(len=*), parameter :: subname = 'lilac_demo_driver'
 
    !----------------------------------------------
+   type(lilac_init_data_t) :: lilac_init_data
    class(lilac_t) :: lilac
 
-   !----------------------------------------------
-   !--- MPI/MCT ---
-   !----------------------------------------------
+   !
+   ! Initialize lilac
+   !
 
-   lilac%Init()
+   ! Where should these come from in general? namelist?
+   call MPI_Comm_Dup(MPI_COMM_WORLD, lilac_init_data%mpicom_lilac, ierr)
+   call MPI_Comm_Dup(MPI_COMM_WORLD, lilac_init_data%mpicom_component, ierr)
+   lilac_init_data%output_unit_lilac = 250
+   lilac_init_data%output_unit_component = 249
+
+
+   lilac%Init(lilac_init_data)
 
    ! FIXME(bja, 2018-02) don't want to use the cdata structure, but we still
    ! need to provide this information to the component?!
@@ -94,7 +102,7 @@ program lilac_demo_driver
    !--- set case information
    case_name = 'lilac'
    case_desc = 'lilac with clm'
-   model_version = 'lilac0.1'
+   model_version = 'lilac-v0.1'
    hostname = 'undefined'
    username = 'undefined'
    start_type = 'startup'
