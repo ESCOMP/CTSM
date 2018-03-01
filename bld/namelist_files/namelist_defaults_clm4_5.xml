@@ -1113,6 +1113,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <create_crop_landunit     use_fates=".false.">.true.</create_crop_landunit>
 <create_crop_landunit     use_fates=".true." >.false.</create_crop_landunit>
 
+<run_all_urban>.false.</run_all_urban>
 
 <!-- =========================================  -->
 <!-- Performance issues                         -->

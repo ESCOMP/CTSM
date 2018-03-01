@@ -16,6 +16,7 @@ module subgridMod
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
   use clm_instur     , only : wt_lunit, urban_valid, wt_cft
+  use landunit_varcon, only : istcrop, istdlak, istwet, isturb_tbd, isturb_hd, isturb_md
   use glcBehaviorMod , only : glc_behavior_type
   use FatesInterfaceMod, only : fates_maxElementsPerSite
 
@@ -205,7 +206,7 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_urban_tbd'
     !-----------------------------------------------------------------------
 
-    call subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+    call subgrid_get_info_urban(gi, isturb_tbd, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_urban_tbd
 
@@ -226,7 +227,7 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_urban_hd'
     !-----------------------------------------------------------------------
 
-    call subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+    call subgrid_get_info_urban(gi, isturb_hd, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_urban_hd
 
@@ -247,12 +248,12 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_urban_md'
     !-----------------------------------------------------------------------
 
-    call subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+    call subgrid_get_info_urban(gi, isturb_md, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_urban_md
 
   !-----------------------------------------------------------------------
-  subroutine subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+  subroutine subgrid_get_info_urban(gi, ltype, npatches, ncols, nlunits)
     !
     ! !DESCRIPTION:
     ! Obtain properties for one of the urban landunits in this grid cell
@@ -261,24 +262,46 @@ contains
     !
     ! !USES
     use clm_varpar, only : maxpatch_urb
+    use clm_varctl, only : run_all_urban
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
+    integer, intent(in)  :: ltype     ! landunit type (isturb_tbd, etc.)
     integer, intent(out) :: npatches  ! number of urban patches in this grid cell, for one urban landunit
     integer, intent(out) :: ncols     ! number of urban columns in this grid cell, for one urban landunit
     integer, intent(out) :: nlunits   ! number of urban landunits in this grid cell, for one urban landunit
     !
     ! !LOCAL VARIABLES:
+    logical :: this_landunit_exists
 
     character(len=*), parameter :: subname = 'subgrid_get_info_urban'
     !-----------------------------------------------------------------------
 
-    ! To support dynamic landunits, we have all urban landunits in every grid cell that
-    ! has valid urban parameters, because they might need to come into existence even if
-    ! their weight is 0 at the start of the run. And for simplicity, we always allocate
-    ! space for ALL columns on the urban landunits.
+    ! In general, only allocate memory for urban landunits that have non-zero weight.
+    !
+    ! However, if run_all_urban is .true., then allocate memory for all urban landunits in
+    ! every grid cell that has valid urban parameters. (This is useful if you want to
+    ! know urban behavior for all potential urban areas, or - in the future - to support
+    ! transient urban areas via dynamic landunits.)
+    !
+    ! In either case, for simplicity, we always allocate space for all columns on any
+    ! allocated urban landunits.
 
-    if (urban_valid(gi)) then
+    if (run_all_urban) then
+       if (urban_valid(gi)) then
+          this_landunit_exists = .true.
+       else
+          this_landunit_exists = .false.
+       end if
+    else
+       if (wt_lunit(gi, ltype) > 0.0_r8) then
+          this_landunit_exists = .true.
+       else
+          this_landunit_exists = .false.
+       end if
+    end if
+
+    if (this_landunit_exists) then
        npatches = maxpatch_urb
        ncols = npatches
        nlunits = 1
@@ -288,6 +311,7 @@ contains
        nlunits = 0
     end if
 
+
   end subroutine subgrid_get_info_urban
 
   !-----------------------------------------------------------------------
@@ -295,9 +319,6 @@ contains
     !
     ! !DESCRIPTION:
     ! Obtain properties for lake landunit in this grid cell
-    !
-    ! !USES:
-    use landunit_varcon, only : istdlak
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -330,9 +351,6 @@ contains
     !
     ! !DESCRIPTION:
     ! Obtain properties for wetland landunit in this grid cell
-    !
-    ! !USES:
-    use landunit_varcon, only : istwet
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -436,7 +454,6 @@ contains
     use clm_varpar           , only : cft_lb, cft_ub
     use clm_varctl           , only : create_crop_landunit
     use pftconmod            , only : pftcon
-    use landunit_varcon      , only : istcrop
     use dynSubgridControlMod , only : get_do_transient_crops
     !
     ! !ARGUMENTS:
