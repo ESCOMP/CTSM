@@ -186,7 +186,7 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
 !scs
-    allocate( this%eflx_h2osfc_to_snow_col        (begc:endc))             ; this%eflx_snomelt_col        (:)   = nan
+    allocate( this%eflx_h2osfc_to_snow_col        (begc:endc))             ; this%eflx_h2osfc_to_snow_col        (:)   = nan
 !scs
     allocate( this%eflx_sh_snow_patch      (begp:endp))             ; this%eflx_sh_snow_patch      (:)   = nan
     allocate( this%eflx_sh_soil_patch      (begp:endp))             ; this%eflx_sh_soil_patch      (:)   = nan
