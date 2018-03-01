@@ -1,4 +1,4 @@
-PROGRAM clmdrv
+program lilac_demo_driver
 
    use lnd_comp_mct , only: lnd_init_mct, lnd_run_mct, lnd_final_mct
    use seq_flds_mod , only:  &
@@ -9,7 +9,6 @@ PROGRAM clmdrv
    use seq_infodata_mod, only: seq_infodata_type, seq_infodata_putdata, seq_infodata_getdata
    use shr_sys_mod  , only: shr_sys_flush, shr_sys_abort
    use shr_orb_mod  , only: shr_orb_params
-   use shr_file_mod , only: shr_file_setlogunit, shr_file_setloglevel
    use shr_pio_mod  , only: shr_pio_init1, shr_pio_init2
    use mct_mod
    use ESMF
@@ -23,26 +22,26 @@ PROGRAM clmdrv
    type(ESMF_Time)  :: CurrTime, StartTime, StopTime
    type(ESMF_TimeInterval) :: TimeStep
    type(ESMF_Alarm) :: EAlarm_stop, EAlarm_rest
-   type(ESMF_Calendar),target :: Calendar
-   integer :: yy,mm,dd,sec
+   type(ESMF_Calendar), target :: Calendar
+   integer :: yy, mm, dd, sec
 
    !----- MPI/MCT -----
-   integer :: mpicom_clmdrv             ! local mpicom
-   integer :: ID_clmdrv                 ! mct ID
+   integer :: mpicom_lilac             ! local mpicom
+   integer :: ID_lilac                 ! mct ID
    integer :: ncomps                    ! number of separate components for MCT
-   integer :: ntasks,mytask             ! mpicom size and rank
+   integer :: ntasks, mytask             ! mpicom size and rank
    integer :: global_comm               ! copy of mpi_comm_world for pio
-   integer,allocatable :: comp_id(:)    ! for pio init2
-   logical,allocatable :: comp_iamin(:) ! for pio init2
-   character(len=64),allocatable :: comp_name(:)  ! for pio init2
-   integer,allocatable ::  comp_comm(:), comp_comm_iam(:) ! for pio_init2
+   integer, allocatable :: comp_id(:)    ! for pio init2
+   logical, allocatable :: comp_iamin(:) ! for pio init2
+   character(len=64), allocatable :: comp_name(:)  ! for pio init2
+   integer, allocatable ::  comp_comm(:), comp_comm_iam(:) ! for pio_init2
 
    !----- Land Coupling Data -----
    type(seq_cdata)  :: cdata            ! Input land-model driver data
-   type(seq_infodata_type),target :: infodata  ! infodata type
+   type(seq_infodata_type), target :: infodata  ! infodata type
    type(mct_aVect)  :: x2l, l2x         ! land model import and export states
-   type(mct_gGrid),target  :: dom_lnd   ! domain data for clm
-   type(mct_gsMap),target  :: gsmap_lnd ! gsmap data for clm
+   type(mct_gGrid), target  :: dom_lnd   ! domain data for clm
+   type(mct_gsMap), target  :: gsmap_lnd ! gsmap data for clm
    integer :: orb_iyear                 ! Orbital
    real*8 :: orb_eccen, orb_obliq, orb_mvelp, orb_obliqr, orb_lambm0, orb_mvelpp
    character(len=128) :: case_name, case_desc, model_version, hostname, username
@@ -65,12 +64,12 @@ PROGRAM clmdrv
    type(mct_rearr)    :: rearr_lnd2atm     ! rearranger for land to atm
 
    !----- Other -----
-   integer :: n,m                       ! counter
+   integer :: n, m                       ! counter
    character(len=128) :: string         ! temporary string
    integer :: ierr, rc                  ! local error status
-   integer :: iunit = 250               ! clmdrv log unit number
+   integer :: iunit = 250               ! lilac log unit number
    integer :: sunit = 249               ! share log unit number
-   character(len=*),parameter :: subname = 'clmdrv'
+   character(len=*), parameter :: subname = 'lilac_demo_driver'
 
    !----------------------------------------------
    class(lilac_t) :: lilac
@@ -85,17 +84,17 @@ PROGRAM clmdrv
    ! need to provide this information to the component?!
 
    !--- set mpicom and cdata memory
-   cdata%name     =  'cdata_clmdrv'
-   cdata%ID       =  ID_clmdrv
-   cdata%mpicom   =  mpicom_clmdrv
+   cdata%name     =  'cdata_lilac'
+   cdata%ID       =  ID_lilac
+   cdata%mpicom   =  mpicom_lilac
    cdata%dom      => dom_lnd
    cdata%gsmap    => gsmap_lnd
    cdata%infodata => infodata
 
    !--- set case information
-   case_name = 'clmdrv'
-   case_desc = 'clmdrv with clm'
-   model_version = 'clmdrv0.1'
+   case_name = 'lilac'
+   case_desc = 'lilac with clm'
+   model_version = 'lilac0.1'
    hostname = 'undefined'
    username = 'undefined'
    start_type = 'startup'
@@ -129,12 +128,12 @@ PROGRAM clmdrv
       call ESMF_ClockAdvance(EClock, rc=rc)
       call ESMF_ClockGet(EClock, currTime=CurrTime, rc=rc)
       call ESMF_TimeGet( CurrTime, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
-      write(iunit,'(1x,2a,4i6)') subname,' clmdrv ymds=',yy,mm,dd,sec
+      write(iunit,'(1x,2a,4i6)') subname,' lilac ymds=', yy, mm, dd, sec
       call shr_sys_flush(iunit)
 
       ! can manually override the alarms as needed
       call ESMF_AlarmRingerOff(EAlarm_rest, rc=rc)
-      if (mod(dd,5)==0 .and. sec==0) call ESMF_AlarmRingerOn(EAlarm_rest,rc)
+      if (mod(dd, 5)==0 .and. sec==0) call ESMF_AlarmRingerOn(EAlarm_rest, rc)
 
       ! set the coupling data that is sent to the land model, this is on atm decomp
       ! this is just sample test data
@@ -160,21 +159,21 @@ PROGRAM clmdrv
       call mct_rearr_rearrange(x2l_a, x2l, rearr_atm2lnd)
 
       ! diagnose
-      write(iunit,*) subname,' x2l fields: ',yy,mm,dd,sec
-      !       call diag_avect(x2l_a,mpicom_clmdrv,'x2l_a')
-      call diag_avect(x2l,mpicom_clmdrv,'x2l')
+      write(iunit,*) subname,' x2l fields: ', yy, mm, dd, sec
+      !       call diag_avect(x2l_a, mpicom_lilac,'x2l_a')
+      call diag_avect(x2l, mpicom_lilac,'x2l')
 
       ! run clm
-      write(iunit,*) subname,' call lnd_run_mct',yy,mm,dd,sec
+      write(iunit,*) subname,' call lnd_run_mct', yy, mm, dd, sec
       call lnd_run_mct(Eclock, cdata, x2l, l2x)
 
       ! rearrange data from land decomposition
       call mct_rearr_rearrange(l2x, l2x_a, rearr_lnd2atm)
 
       ! diagnose
-      write(iunit,*) subname,' l2x fields: ',yy,mm,dd,sec
-      call diag_avect(l2x,mpicom_clmdrv,'l2x')
-      !       call diag_avect(l2x_a,mpicom_clmdrv,'l2x_a')
+      write(iunit,*) subname,' l2x fields: ', yy, mm, dd, sec
+      call diag_avect(l2x, mpicom_lilac,'l2x')
+      !       call diag_avect(l2x_a, mpicom_lilac,'l2x_a')
    enddo
 
    lilac%Shutdown()
@@ -195,8 +194,8 @@ contains
       character(len=*), intent(in) :: comment
 
       !--- local ---
-      integer           :: n,k         ! counters
-      integer           :: npts,nptsg  ! number of local/global pts in AV
+      integer           :: n, k         ! counters
+      integer           :: npts, nptsg  ! number of local/global pts in AV
       integer           :: kflds       ! number of fields in AV
       real*8, pointer   :: sumbuf (:)  ! sum buffer
       real*8, pointer   :: sumbufg(:)  ! sum buffer reduced
@@ -205,41 +204,41 @@ contains
       character(len=128):: itemc       ! string converted to char
 
       !----- formats -----
-      character(*),parameter :: subName = '(diag_avect) '
+      character(*), parameter :: subName = '(diag_avect) '
 
       !----------------------------------------------------------------
 
       npts  = mct_aVect_lsize(AV)
       kflds = mct_aVect_nRattr(AV)
-      allocate(sumbuf(kflds),sumbufg(kflds))
+      allocate(sumbuf(kflds), sumbufg(kflds))
 
       sumbuf = 0.0
 
-      do k = 1,kflds
-         do n = 1,npts
-            sumbuf(k) = sumbuf(k) + (AV%rAttr(k,n))
+      do k = 1, kflds
+         do n = 1, npts
+            sumbuf(k) = sumbuf(k) + (AV%rAttr(k, n))
          enddo
       enddo
 
-      call MPI_REDUCE(sumbuf,sumbufg,kflds,MPI_REAL8,MPI_SUM,0,mpicom,ierr)
-      call MPI_COMM_RANK(mpicom,iam,ierr)
+      call MPI_REDUCE(sumbuf, sumbufg, kflds, MPI_REAL8, MPI_SUM, 0, mpicom, ierr)
+      call MPI_COMM_RANK(mpicom, iam, ierr)
 
       if (iam == 0) then
-         do k = 1,kflds
-            call mct_aVect_getRList(mstring,k,AV)
+         do k = 1, kflds
+            call mct_aVect_getRList(mstring, k, AV)
             itemc = mct_string_toChar(mstring)
             call mct_string_clean(mstring)
-            write(iunit,101) trim(comment),k,sumbufg(k),trim(itemc)
+            write(iunit, 101) trim(comment), k, sumbufg(k), trim(itemc)
          enddo
          call shr_sys_flush(iunit)
       endif
 
-      deallocate(sumbuf,sumbufg)
+      deallocate(sumbuf, sumbufg)
 
-101   format('comm_diag ',a,1x,i3,es26.19,1x,a)
+101   format('comm_diag ', a, 1x, i3, es26.19, 1x, a)
 
    end subroutine diag_avect
 
    !======================================================================
-end PROGRAM clmdrv
+end program lilac_demo_driver
 
