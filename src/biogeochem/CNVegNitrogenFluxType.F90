@@ -205,6 +205,37 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: dwt_livecrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) live coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_deadcrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) dead coarse root to CWD due to landcover change
 
+     ! gross unrepresented landcover fluxes
+     real(r8), pointer :: gru_leafn_to_litter_patch                 (:)     ! patch leaf N gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_leafn_storage_to_atm_patch            (:)     ! patch leaf N storage gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_leafn_xfer_to_atm_patch               (:)     ! patch leaf N transfer gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_frootn_to_litter_patch                (:)     ! patch fine root N gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_frootn_storage_to_atm_patch           (:)     ! patch fine root N storage gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_frootn_xfer_to_atm_patch              (:)     ! patch fine root N transfer gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_livestemn_to_atm_patch                (:)     ! patch live stem N gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_livestemn_storage_to_atm_patch        (:)     ! patch live stem N storage gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_livestemn_xfer_to_atm_patch           (:)     ! patch live stem N transfer gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_deadstemn_to_atm_patch                (:)     ! patch dead stem N gross unrepresented landcover change mortality to the atmosphere (gC/m2/s)
+     real(r8), pointer :: gru_deadstemn_storage_to_atm_patch        (:)     ! patch dead stem N storage gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_deadstemn_xfer_to_atm_patch           (:)     ! patch dead stem N transfer gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_livecrootn_to_litter_patch            (:)     ! patch live coarse root N gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_livecrootn_storage_to_atm_patch       (:)     ! patch live coarse root N storage gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_livecrootn_xfer_to_atm_patch          (:)     ! patch live coarse root N transfer gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_deadcrootn_to_litter_patch            (:)     ! patch dead coarse root N gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_deadcrootn_storage_to_atm_patch       (:)     ! patch dead coarse root N storage gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_deadcrootn_xfer_to_atm_patch          (:)     ! patch dead coarse root N transfer gross unrepresented landcover change mortality (gN/m2/s)
+     real(r8), pointer :: gru_retransn_to_litter_patch              (:)     ! patch retranslocated N pool gross unrepresented landcover change mortality (gN/m2/s)
+
+     real(r8), pointer :: gru_conv_nflux_patch                      (:)     ! (gN/m2/s) conversion N flux (immediate loss to atm)
+     real(r8), pointer :: gru_conv_nflux_col                        (:)     ! (gN/m2/s) conversion N flux (immediate loss to atm)
+     real(r8), pointer :: gru_conv_nflux_grc                        (:)     ! (gN/m2/s) gru_conv_nflux_patch summed to the gridcell-level
+     real(r8), pointer :: gru_wood_productn_gain_patch              (:)     ! patch (gN/m2/s) addition to wood product pools from gross unrepresented landcover change
+     real(r8), pointer :: gru_wood_productn_gain_col                (:)     ! patch (gN/m2/s) addition to wood product pools from gross unrepresented landcover change
+     real(r8), pointer :: gru_n_to_litr_met_n_col                   (:,:)   ! col (gN/m3/s) N to litter due to gross unrepresented landcover change
+     real(r8), pointer :: gru_n_to_litr_cel_n_col                   (:,:)   ! col (gN/m3/s) N to litter due to gross unrepresented landcover change
+     real(r8), pointer :: gru_n_to_litr_lig_n_col                   (:,:)   ! col (gN/m3/s) N to litter due to gross unrepresented landcover change
+     real(r8), pointer :: gru_n_to_cwdn_col                         (:,:)   ! col (gN/m3/s) N to CWD due to gross unrepresented landcover change
+
      ! crop fluxes
      real(r8), pointer :: crop_seedn_to_leaf_patch                  (:)     ! patch (gN/m2/s) seed source to leaf, for crops
      
@@ -249,6 +280,7 @@ module CNVegNitrogenFluxType
      procedure , public  :: Restart
      procedure , public  :: SetValues
      procedure , public  :: ZeroDWT
+     procedure , public  :: ZeroGRU
      procedure , public  :: Summary => Summary_nitrogenflux
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory
@@ -446,6 +478,36 @@ contains
     allocate(this%dwt_frootn_to_litr_lig_n_col (begc:endc,1:nlevdecomp_full)) ; this%dwt_frootn_to_litr_lig_n_col (:,:) = nan
     allocate(this%dwt_livecrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_livecrootn_to_cwdn_col   (:,:) = nan
     allocate(this%dwt_deadcrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_deadcrootn_to_cwdn_col   (:,:) = nan
+
+    allocate(this%gru_leafn_to_litter_patch                 (begp:endp)) ; this%gru_leafn_to_litter_patch                 (:) = nan
+    allocate(this%gru_leafn_storage_to_atm_patch            (begp:endp)) ; this%gru_leafn_storage_to_atm_patch            (:) = nan
+    allocate(this%gru_leafn_xfer_to_atm_patch               (begp:endp)) ; this%gru_leafn_xfer_to_atm_patch               (:) = nan
+    allocate(this%gru_frootn_to_litter_patch                (begp:endp)) ; this%gru_frootn_to_litter_patch                (:) = nan
+    allocate(this%gru_frootn_storage_to_atm_patch           (begp:endp)) ; this%gru_frootn_storage_to_atm_patch           (:) = nan
+    allocate(this%gru_frootn_xfer_to_atm_patch              (begp:endp)) ; this%gru_frootn_xfer_to_atm_patch              (:) = nan
+    allocate(this%gru_livestemn_to_atm_patch                (begp:endp)) ; this%gru_livestemn_to_atm_patch                (:) = nan
+    allocate(this%gru_livestemn_storage_to_atm_patch        (begp:endp)) ; this%gru_livestemn_storage_to_atm_patch        (:) = nan
+    allocate(this%gru_livestemn_xfer_to_atm_patch           (begp:endp)) ; this%gru_livestemn_xfer_to_atm_patch           (:) = nan
+    allocate(this%gru_deadstemn_to_atm_patch                (begp:endp)) ; this%gru_deadstemn_storage_to_atm_patch        (:) = nan
+    allocate(this%gru_deadstemn_storage_to_atm_patch        (begp:endp)) ; this%gru_deadstemn_storage_to_atm_patch        (:) = nan
+    allocate(this%gru_deadstemn_xfer_to_atm_patch           (begp:endp)) ; this%gru_deadstemn_xfer_to_atm_patch           (:) = nan
+    allocate(this%gru_livecrootn_storage_to_atm_patch       (begp:endp)) ; this%gru_livecrootn_storage_to_atm_patch       (:) = nan
+    allocate(this%gru_livecrootn_xfer_to_atm_patch          (begp:endp)) ; this%gru_livecrootn_xfer_to_atm_patch          (:) = nan
+    allocate(this%gru_livecrootn_to_litter_patch            (begp:endp)) ; this%gru_livecrootn_to_litter_patch            (:) = nan
+    allocate(this%gru_deadcrootn_storage_to_atm_patch       (begp:endp)) ; this%gru_deadcrootn_storage_to_atm_patch       (:) = nan
+    allocate(this%gru_deadcrootn_xfer_to_atm_patch          (begp:endp)) ; this%gru_deadcrootn_xfer_to_atm_patch          (:) = nan
+    allocate(this%gru_deadcrootn_to_litter_patch            (begp:endp)) ; this%gru_deadcrootn_to_litter_patch            (:) = nan
+    allocate(this%gru_retransn_to_litter_patch              (begp:endp)) ; this%gru_retransn_to_litter_patch              (:) = nan
+
+    allocate(this%gru_conv_nflux_patch                      (begp:endp))                  ; this%gru_conv_nflux_patch         (:)  =nan
+    allocate(this%gru_conv_nflux_col                        (begc:endc))                  ; this%gru_conv_nflux_col           (:)  =nan
+    allocate(this%gru_conv_nflux_grc                        (begg:endg))                  ; this%gru_conv_nflux_grc           (:)  =nan
+    allocate(this%gru_wood_productn_gain_patch              (begp:endp))                  ; this%gru_wood_productn_gain_patch (:)  =nan
+    allocate(this%gru_wood_productn_gain_col                (begc:endc))                  ; this%gru_wood_productn_gain_col   (:)  =nan
+    allocate(this%gru_n_to_litr_met_n_col                   (begc:endc,1:nlevdecomp_full)); this%gru_n_to_litr_met_n_col      (:,:)=nan
+    allocate(this%gru_n_to_litr_cel_n_col                   (begc:endc,1:nlevdecomp_full)); this%gru_n_to_litr_cel_n_col      (:,:)=nan
+    allocate(this%gru_n_to_litr_lig_n_col                   (begc:endc,1:nlevdecomp_full)); this%gru_n_to_litr_lig_n_col      (:,:)=nan
+    allocate(this%gru_n_to_cwdn_col                         (begc:endc,1:nlevdecomp_full)); this%gru_n_to_cwdn_col            (:,:)=nan
 
     allocate(this%crop_seedn_to_leaf_patch     (begp:endp))                   ; this%crop_seedn_to_leaf_patch     (:)   = nan
 
@@ -1059,6 +1121,16 @@ contains
          avgflag='A', long_name='dead coarse root to CWD due to landcover change', &
          ptr_col=this%dwt_deadcrootn_to_cwdn_col, default='inactive')
 
+    this%gru_conv_nflux_patch(begp:endp) = spval
+    call hist_addfld1d (fname='GRU_CONV_NFLUX', units='gN/m^2/s', &
+         avgflag='A', long_name='gross unrepresented conversion N flux (immediate loss to atm) (0 at all times except first timestep of year)', &
+         ptr_patch=this%gru_conv_nflux_patch)
+
+    this%gru_wood_productn_gain_patch(begp:endp) = spval
+    call hist_addfld1d (fname='GRU_WOODPRODN_GAIN', units='gN/m^2/s', &
+         avgflag='A', long_name='gross unrepresented landcover change driven addition to wood product nitrogen pools (0 at all times except first timestep of year)', &
+         ptr_patch=this%gru_wood_productn_gain_patch)
+
     this%crop_seedn_to_leaf_patch(begp:endp) = spval
     call hist_addfld1d (fname='CROP_SEEDN_TO_LEAF', units='gN/m^2/s', &
          avgflag='A', long_name='crop seed source to leaf', &
@@ -1577,6 +1649,26 @@ contains
        this%hrv_deadcrootn_to_litter_patch(i)            = value_patch        
        this%hrv_retransn_to_litter_patch(i)              = value_patch    
 
+       this%gru_leafn_to_litter_patch(i)                 = value_patch             
+       this%gru_leafn_storage_to_atm_patch(i)            = value_patch     
+       this%gru_leafn_xfer_to_atm_patch(i)               = value_patch        
+       this%gru_frootn_to_litter_patch(i)                = value_patch            
+       this%gru_frootn_storage_to_atm_patch(i)           = value_patch    
+       this%gru_frootn_xfer_to_atm_patch(i)              = value_patch       
+       this%gru_livestemn_to_atm_patch(i)                = value_patch         
+       this%gru_livestemn_storage_to_atm_patch(i)        = value_patch 
+       this%gru_livestemn_xfer_to_atm_patch(i)           = value_patch    
+       this%gru_deadstemn_to_atm_patch(i)                = value_patch 
+       this%gru_deadstemn_storage_to_atm_patch(i)        = value_patch 
+       this%gru_deadstemn_xfer_to_atm_patch(i)           = value_patch    
+       this%gru_livecrootn_to_litter_patch(i)            = value_patch        
+       this%gru_livecrootn_storage_to_atm_patch(i)       = value_patch
+       this%gru_livecrootn_xfer_to_atm_patch(i)          = value_patch   
+       this%gru_deadcrootn_storage_to_atm_patch(i)       = value_patch
+       this%gru_deadcrootn_xfer_to_atm_patch(i)          = value_patch   
+       this%gru_deadcrootn_to_litter_patch(i)            = value_patch        
+       this%gru_retransn_to_litter_patch(i)              = value_patch    
+
        this%m_leafn_to_fire_patch(i)                     = value_patch
        this%m_leafn_storage_to_fire_patch(i)             = value_patch
        this%m_leafn_xfer_to_fire_patch(i)                = value_patch
@@ -1597,6 +1689,8 @@ contains
        this%m_deadcrootn_xfer_to_fire_patch(i)           = value_patch
        this%m_retransn_to_fire_patch(i)                  = value_patch
 
+       this%gru_conv_nflux_patch(i)                      = value_patch
+       this%gru_wood_productn_gain_patch(i)              = value_patch
 
        this%m_leafn_to_litter_fire_patch(i)              = value_patch
        this%m_leafn_storage_to_litter_fire_patch(i)      = value_patch
@@ -1703,6 +1797,12 @@ contains
           this%harvest_n_to_litr_cel_n_col(i,j)          = value_column             
           this%harvest_n_to_litr_lig_n_col(i,j)          = value_column             
           this%harvest_n_to_cwdn_col(i,j)                = value_column  
+
+          ! gross unrepresented landcover change
+          this%gru_n_to_litr_met_n_col(i,j)              = value_column             
+          this%gru_n_to_litr_cel_n_col(i,j)              = value_column             
+          this%gru_n_to_litr_lig_n_col(i,j)              = value_column             
+          this%gru_n_to_cwdn_col(i,j)                    = value_column  
        end do
     end do
 
@@ -1715,6 +1815,8 @@ contains
        ! Zero p2c column fluxes
        this%fire_nloss_col(i) = value_column
        this%wood_harvestn_col(i) = value_column
+       this%gru_conv_nflux_col(i) = value_column 
+       this%gru_wood_productn_gain_col(i) = value_column
     end do
 
     do k = 1, ndecomp_pools
@@ -1767,13 +1869,33 @@ contains
 
   end subroutine ZeroDwt
 
+  !-----------------------------------------------------------------------
+  subroutine ZeroGru( this, bounds )
+    !
+    ! !DESCRIPTION
+    ! Initialize flux variables needed for dynamic land use.
+    !
+    ! !ARGUMENTS:
+    class(cnveg_nitrogenflux_type) :: this
+    type(bounds_type), intent(in)  :: bounds 
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: c, g, j          ! indices
+    !-----------------------------------------------------------------------
+
+    do g = bounds%begg, bounds%endg
+       this%gru_conv_nflux_grc(g)        = 0._r8
+    end do
+
+  end subroutine ZeroGru
+
  !-----------------------------------------------------------------------
   subroutine Summary_nitrogenflux(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
     !
     ! !USES:
     use clm_varpar    , only: nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools
     use clm_varctl    , only: use_nitrif_denitrif
-    use subgridAveMod , only: p2c 
+    use subgridAveMod , only: p2c, c2g 
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
@@ -1820,11 +1942,38 @@ contains
             this%m_deadcrootn_xfer_to_fire_patch(p)     + &
             this%m_retransn_to_fire_patch(p)
 
+       ! (Gross Unrepresented Landcover Change Conversion Flux) - Direct Veg N Loss to Atmosphere
+       this%gru_conv_nflux_patch(p) = &
+            this%gru_livestemn_to_atm_patch(p)          + &
+            this%gru_deadstemn_to_atm_patch(p)          + &
+            this%gru_leafn_storage_to_atm_patch(p)      + &
+            this%gru_frootn_storage_to_atm_patch(p)     + &
+            this%gru_livestemn_storage_to_atm_patch(p)  + &
+            this%gru_deadstemn_storage_to_atm_patch(p)  + &
+            this%gru_livecrootn_storage_to_atm_patch(p) + &
+            this%gru_deadcrootn_storage_to_atm_patch(p) + &
+            this%gru_leafn_xfer_to_atm_patch(p)         + &
+            this%gru_frootn_xfer_to_atm_patch(p)        + &
+            this%gru_livestemn_xfer_to_atm_patch(p)     + &
+            this%gru_deadstemn_xfer_to_atm_patch(p)     + &
+            this%gru_livecrootn_xfer_to_atm_patch(p)    + &
+            this%gru_deadcrootn_xfer_to_atm_patch(p)
+
     end do
 
     call p2c(bounds, num_soilc, filter_soilc, &
          this%fire_nloss_patch(bounds%begp:bounds%endp), &
          this%fire_nloss_p2c_col(bounds%begc:bounds%endc))
+
+    call p2c(bounds, num_soilc, filter_soilc, &
+         this%gru_conv_nflux_patch(bounds%begp:bounds%endp), &
+         this%gru_conv_nflux_col(bounds%begc:bounds%endc))
+
+    call c2g( bounds = bounds, &
+         carr = this%gru_conv_nflux_col(bounds%begc:bounds%endc), &
+         garr = this%gru_conv_nflux_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
     ! vertically integrate column-level fire N losses
     do k = 1, ndecomp_pools

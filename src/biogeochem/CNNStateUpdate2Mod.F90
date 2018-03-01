@@ -20,6 +20,7 @@ module CNNStateUpdate2Mod
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: NStateUpdate2
   public:: NStateUpdate2h
+  public:: NStateUpdate2g
   !-----------------------------------------------------------------------
 
 contains
@@ -234,5 +235,112 @@ contains
     end associate
 
   end subroutine NStateUpdate2h
+
+  !-----------------------------------------------------------------------
+  subroutine NStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Update all the prognostic nitrogen state
+    ! variables affected by gross unrepresented landcover change mortality fluxes
+    ! NOTE - associate statements have been removed where there are
+    ! no science equations. This increases readability and maintainability
+    !
+    ! !ARGUMENTS:
+    integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                                 , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
+    type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c,p,j,l ! indices
+    integer :: fp,fc   ! lake filter indices
+    real(r8):: dt      ! radiation time step (seconds)
+    !-----------------------------------------------------------------------
+
+    associate(                                 & 
+         nf_veg  => cnveg_nitrogenflux_inst  , &
+         ns_veg  => cnveg_nitrogenstate_inst , &
+         ns_soil => soilbiogeochem_nitrogenstate_inst   &
+         )
+
+      ! set time steps
+      dt = real( get_step_size(), r8 )
+
+      ! column-level nitrogen fluxes from gross unrepresented landcover change mortality
+
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + nf_veg%gru_n_to_litr_met_n_col(c,j) * dt
+            ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + nf_veg%gru_n_to_litr_cel_n_col(c,j) * dt
+            ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + nf_veg%gru_n_to_litr_lig_n_col(c,j) * dt
+            ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gru_n_to_cwdn_col(c,j)       * dt
+         end do
+      end do
+
+      ! patch-level nitrogen fluxes from gross unrepresented landcover change mortality
+
+      do fp = 1,num_soilp
+         p = filter_soilp(fp)
+
+         ! displayed pools
+         ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
+              - nf_veg%gru_leafn_to_litter_patch(p) * dt
+         ns_veg%frootn_patch(p) = ns_veg%frootn_patch(p)                         &
+              - nf_veg%gru_frootn_to_litter_patch(p) * dt
+         ns_veg%livestemn_patch(p) = ns_veg%livestemn_patch(p)                   &
+              - nf_veg%gru_livestemn_to_atm_patch(p) * dt
+         ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
+              - nf_veg%gru_deadstemn_to_atm_patch(p) * dt
+         ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
+              - nf_veg%gru_wood_productn_gain_patch(p) * dt
+         ns_veg%livecrootn_patch(p) = ns_veg%livecrootn_patch(p)                 &
+              - nf_veg%gru_livecrootn_to_litter_patch(p) * dt
+         ns_veg%deadcrootn_patch(p) = ns_veg%deadcrootn_patch(p)                 &
+              - nf_veg%gru_deadcrootn_to_litter_patch(p) * dt
+         ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p)                     &
+              - nf_veg%gru_retransn_to_litter_patch(p) * dt
+
+         ! storage pools
+         ns_veg%leafn_storage_patch(p) = ns_veg%leafn_storage_patch(p)           &
+              - nf_veg%gru_leafn_storage_to_atm_patch(p) * dt
+         ns_veg%frootn_storage_patch(p) = ns_veg%frootn_storage_patch(p)         &
+              - nf_veg%gru_frootn_storage_to_atm_patch(p) * dt
+         ns_veg%livestemn_storage_patch(p) = ns_veg%livestemn_storage_patch(p)   &
+              - nf_veg%gru_livestemn_storage_to_atm_patch(p) * dt
+         ns_veg%deadstemn_storage_patch(p) = ns_veg%deadstemn_storage_patch(p)   &
+              - nf_veg%gru_deadstemn_storage_to_atm_patch(p) * dt
+         ns_veg%livecrootn_storage_patch(p) = ns_veg%livecrootn_storage_patch(p) &
+              - nf_veg%gru_livecrootn_storage_to_atm_patch(p) * dt
+         ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) &
+              - nf_veg%gru_deadcrootn_storage_to_atm_patch(p) * dt
+
+         ! transfer pools
+         ns_veg%leafn_xfer_patch(p) = ns_veg%leafn_xfer_patch(p)                 &
+              - nf_veg%gru_leafn_xfer_to_atm_patch(p) *dt
+         ns_veg%frootn_xfer_patch(p) = ns_veg%frootn_xfer_patch(p)               &
+              - nf_veg%gru_frootn_xfer_to_atm_patch(p) *dt
+         ns_veg%livestemn_xfer_patch(p) = ns_veg%livestemn_xfer_patch(p)         &
+              - nf_veg%gru_livestemn_xfer_to_atm_patch(p) *dt
+         ns_veg%deadstemn_xfer_patch(p) = ns_veg%deadstemn_xfer_patch(p)         &
+              - nf_veg%gru_deadstemn_xfer_to_atm_patch(p) *dt
+         ns_veg%livecrootn_xfer_patch(p) = ns_veg%livecrootn_xfer_patch(p)       &
+              - nf_veg%gru_livecrootn_xfer_to_atm_patch(p) *dt
+         ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p)       &
+              - nf_veg%gru_deadcrootn_xfer_to_atm_patch(p) *dt
+
+      end do
+
+    end associate
+
+  end subroutine NStateUpdate2g
 
 end module CNNStateUpdate2Mod

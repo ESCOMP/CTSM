@@ -141,6 +141,8 @@ contains
          col_begcb               =>    this%begcb_col                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
          col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
          wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         gru_conv_cflux          =>    cnveg_carbonflux_inst%gru_conv_cflux_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         gru_wood_productc_gain  =>    cnveg_carbonflux_inst%gru_wood_productc_gain_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          grainc_to_cropprodc     =>    cnveg_carbonflux_inst%grainc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) grain C to 1-year crop product pool
          gpp                     =>    cnveg_carbonflux_inst%gpp_col                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) gross primary production
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
@@ -167,7 +169,7 @@ contains
 
          ! calculate total column-level outputs
          ! er = ar + hr, col_fire_closs includes patch-level fire losses
-         col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c)
+         col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + gru_conv_cflux(c)
 
          ! Fluxes to product pools are included in column-level outputs: the product
          ! pools are not included in totcolc, so are outside the system with respect to
@@ -176,6 +178,7 @@ contains
          ! after the dwt term has already been taken out.)
          col_coutputs = col_coutputs + &
               wood_harvestc(c) + &
+              gru_wood_productc_gain(c) + &
               grainc_to_cropprodc(c)
 
          ! subtract leaching flux
@@ -268,6 +271,8 @@ contains
 
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
+         gru_conv_nflux      => cnveg_nitrogenflux_inst%gru_conv_nflux_col               , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         gru_wood_productn_gain => cnveg_nitrogenflux_inst%gru_wood_productn_gain_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
 
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
@@ -295,7 +300,7 @@ contains
          end if
 
          ! calculate total column-level outputs
-         col_noutputs(c) = denit(c) + col_fire_nloss(c)
+         col_noutputs(c) = denit(c) + col_fire_nloss(c) + gru_conv_nflux(c)
 
          ! Fluxes to product pools are included in column-level outputs: the product
          ! pools are not included in totcoln, so are outside the system with respect to
@@ -304,6 +309,7 @@ contains
          ! after the dwt term has already been taken out.)
          col_noutputs(c) = col_noutputs(c) + &
               wood_harvestn(c) + &
+              gru_wood_productn_gain(c) + &
               grainn_to_cropprodn(c)
 
          if (.not. use_nitrif_denitrif) then

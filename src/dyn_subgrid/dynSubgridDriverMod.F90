@@ -14,12 +14,14 @@ module dynSubgridDriverMod
   use dynSubgridControlMod         , only : get_flanduse_timeseries
   use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
   use dynSubgridControlMod         , only : get_do_harvest
+  use dynSubgridControlMod         , only : get_do_grossunrep
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
   use dynColumnStateUpdaterMod     , only : column_state_updater_type
   use dynpftFileMod                , only : dynpft_init, dynpft_interp
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
+  use dynGrossUnrepMod             , only : dynGrossUnrep_init, dynGrossUnrep_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
   use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
   use reweightMod                  , only : reweight_wrapup
@@ -119,6 +121,11 @@ contains
     ! years over which they apply.
     if (get_do_harvest()) then
        call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
+    end if
+
+    ! Initialize stuff for gross unrepresented landuse data. 
+    if (get_do_grossunrep()) then
+       call dynGrossUnrep_init(bounds_proc, grossunrep_filename=get_flanduse_timeseries())
     end if
 
     ! ------------------------------------------------------------------------
@@ -246,6 +253,10 @@ contains
 
     if (get_do_harvest()) then
        call dynHarvest_interp(bounds_proc)
+    end if
+
+    if (get_do_grossunrep()) then
+       call dynGrossUnrep_interp(bounds_proc)
     end if
 
     ! ==========================================================================
