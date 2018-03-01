@@ -301,7 +301,7 @@ contains
     ! Determine whether the given landunit is active
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istice_mec
+    use landunit_varcon, only : istsoil, istice_mec, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     implicit none
@@ -332,6 +332,11 @@ contains
 
        if (lun%itype(l) == istice_mec .and. &
             glc_behavior%has_virtual_columns_grc(g)) then
+          is_active_l = .true.
+       end if
+
+       if ((lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) .and. &
+            run_all_urban) then
           is_active_l = .true.
        end if
 
