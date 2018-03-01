@@ -73,6 +73,7 @@ PROGRAM clmdrv
    character(len=*),parameter :: subname = 'clmdrv'
 
    !----------------------------------------------
+   class(lilac_t) :: lilac
 
    !----------------------------------------------
    !--- MPI/MCT ---
@@ -82,7 +83,7 @@ PROGRAM clmdrv
 
    ! FIXME(bja, 2018-02) don't want to use the cdata structure, but we still
    ! need to provide this information to the component?!
-   
+
    !--- set mpicom and cdata memory
    cdata%name     =  'cdata_clmdrv'
    cdata%ID       =  ID_clmdrv
@@ -177,7 +178,7 @@ PROGRAM clmdrv
    enddo
 
    lilac%Shutdown()
-   
+
 contains
    !======================================================================
 
