@@ -18,7 +18,7 @@ program lilac_demo_driver
 #include <mpif.h>         ! mpi library include file
 
    !----- Clocks -----
-   type(ESMF_Clock) :: EClock           ! Input synchronization clock
+   type(ESMF_Clock) :: driver_clock
    type(ESMF_Time)  :: CurrTime, StartTime, StopTime
    type(ESMF_TimeInterval) :: TimeStep
    type(ESMF_Alarm) :: EAlarm_stop, EAlarm_rest
@@ -71,22 +71,42 @@ program lilac_demo_driver
    integer :: sunit = 249               ! share log unit number
    character(len=*), parameter :: subname = 'lilac_demo_driver'
 
+   logical :: debug = true
    !----------------------------------------------
    type(lilac_init_data_t) :: lilac_init_data
+   type(lilac_clock_data_t) :: lilac_clock_data
    class(lilac_t) :: lilac
+
+   !
+   ! Initialize the driver
+   !
+
+   call setup_demo_driver_clock(driver_clock)
 
    !
    ! Initialize lilac
    !
 
-   ! Where should these come from in general? namelist?
+   ! Hard code values normally supplied by the driver
    call MPI_Comm_Dup(MPI_COMM_WORLD, lilac_init_data%mpicom_lilac, ierr)
    call MPI_Comm_Dup(MPI_COMM_WORLD, lilac_init_data%mpicom_component, ierr)
-   lilac_init_data%output_unit_lilac = 250
-   lilac_init_data%output_unit_component = 249
+   lilac_init_data%output_unit_global_shared = 250
+   lilac_init_data%output_unit_lilac = 251
+   lilac_init_data%output_unit_component = 252
 
+   ! FIXME(bja, 2018-02) use namelist so the demo driver can serve as a test driver
+   lilac_clock_data%calendar_is_leap = .false.
+   lilac_clock_data%start_year = 2000
+   lilac_clock_data%start_month = 1
+   lilac_clock_data%start_day = 1
+   lilac_clock_data%start_seconds = 0
+   lilac_clock_data%stop_year = 2000
+   lilac_clock_data%stop_month = 1
+   lilac_clock_data%stop_day = 5
+   lilac_clock_data%stop_seconds = 0
+   lilac_clock_data%timestep_seconds = 3600
 
-   lilac%Init(lilac_init_data)
+   call lilac%Init(lilac_init_data, lilac_clock_data, debug)
 
    ! FIXME(bja, 2018-02) don't want to use the cdata structure, but we still
    ! need to provide this information to the component?!
@@ -131,12 +151,12 @@ program lilac_demo_driver
    !--- Time Loop ---
    !----------------------------------------------
 
-   call ESMF_ClockGet(Eclock, currTime=CurrTime, rc=rc)
-   do while (CurrTime < StopTime)
-      call ESMF_ClockAdvance(EClock, rc=rc)
-      call ESMF_ClockGet(EClock, currTime=CurrTime, rc=rc)
-      call ESMF_TimeGet( CurrTime, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
-      write(iunit,'(1x,2a,4i6)') subname,' lilac ymds=', yy, mm, dd, sec
+   call ESMF_ClockGet(driver_clock, currTime=driver_current_time, rc=rc)
+   do while (driver_current_time < driver_stop_time)
+      call ESMF_ClockAdvance(driver_clock, rc=rc)
+      call ESMF_ClockGet(driver_clock, currTime=driver_current_time, rc=rc)
+      call ESMF_TimeGet(driver_current_time, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
+      write(iunit,'(1x,2a,4i6)') subname,'lilac demo driver ymds=', yy, mm, dd, sec
       call shr_sys_flush(iunit)
 
       ! can manually override the alarms as needed
@@ -248,5 +268,14 @@ contains
    end subroutine diag_avect
 
    !======================================================================
+
+   subroutine setup_demo_driver_clocks()
+
+      implicit none
+
+
+
+   end subroutine setup_demo_driver_clocks
+
 end program lilac_demo_driver
 
