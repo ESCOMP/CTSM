@@ -180,6 +180,8 @@ contains
     !
     ! !ARGUMENTS:
     logical :: exists  ! function result
+    integer, intent(in) :: gi  ! grid cell index
+    integer, intent(in) :: pft ! plant functional type
     !
     ! !LOCAL VARIABLES:
 
