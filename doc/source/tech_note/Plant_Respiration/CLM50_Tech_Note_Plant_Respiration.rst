@@ -2,7 +2,9 @@
 
 Plant Respiration
 =================
-
+CLM5 includes changes to plant respiration including
+ - A new leaf respiration algorithm based on Atkin et al. (2016)
+ - A lower growth respiration coefficient, based on Atkin et al. (2017)
 
 Autotrophic Respiration
 ----------------------------
@@ -17,7 +19,7 @@ carbon cost for the synthesis of new growth.
 Maintenance Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Atkin et al. (2016) propose a model for respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` (gN m :sup:`2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius. 
+Atkin et al. (2016) propose a model for leaf respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` (gN m :sup:`2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius. 
 
 .. math::
    :label: 17.46)
@@ -89,8 +91,9 @@ Growth Respiration
 
 Growth respiration is calculated as a factor of 0.11 times the total
 carbon allocation to new growth (:math:`CF_{growth}`, after allocating carbon for N acquisition, 
-Chapter :numref:`rst_FUN`.)on a given timestep, based on construction costs
-for a range of woody and non-woody tissues (Atkin et al. in prep). For new
+Chapter :numref:`rst_FUN`.) on a given timestep, based on construction costs
+for a range of woody and non-woody tissues, with estimates of the growth
+respiration flux revised downswards following  (Atkin et al. 2017). For new
 carbon and nitrogen allocation that enters storage pools for subsequent
 display, it is not clear what fraction of the associated growth
 respiration should occur at the time of initial allocation, and what
