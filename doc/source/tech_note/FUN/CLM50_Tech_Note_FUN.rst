@@ -175,7 +175,7 @@ First we calculate the cost of extraction (:math:`cost_{retrans}`, gC/gN) for th
 
   cost_{retrans}= k_{retrans} / (1/CN_{fallingleaf})^{1.3}
 
-where :math:`k_{retrans}`  is a parameter controlling the overall cost of resorption, which also increases exponentially as the C:N ratio increases **Say something about 1.3 exponent**). 
+where :math:`k_{retrans}`  is a parameter controlling the overall cost of resorption, which also increases exponentially as the C:N ratio increases
 
 Next, we calculate the amount of C needed to be spent to increase the falling leaf C:N ratio by 1.0 in this iteration :math:`i` (:math:`C_{retrans_spent,i}`,  gC m\ :sup:`-2`) as:
  .. math::
@@ -274,12 +274,12 @@ and the other C and N fluxes can be determined following the logic above.
 
 Modifications to allow variation in C:N ratios
 --------------------------------------------------------
-The original FUN model as developed by :ref:`Fisher et al. (2010)<Fisheretal2010>` and :ref:`Brzostek et al. (2014)<Brzosteketal2014>` assumes a fixed plant tissue C:N ratio. This means that in the case where N is especially limiting, all excess carbon will be utilized in an attempt to take up more Nitrogen. It has been repeatedly observed, however, that in these circumstances in real life, plants have some flexibility in the C:N stoichiometry of their tissues, and therefore, this assumption may not be realistic. **lit review on CN ratios**
+The original FUN model as developed by :ref:`Fisher et al. (2010)<Fisheretal2010>` and :ref:`Brzostek et al. (2014)<Brzosteketal2014>` assumes a fixed plant tissue C:N ratio. This means that in the case where N is especially limiting, all excess carbon will be utilized in an attempt to take up more Nitrogen. It has been repeatedly observed, however, that in these circumstances in real life, plants have some flexibility in the C:N stoichiometry of their tissues, and therefore, this assumption may not be realistic. However, the degree to which the C:N ratio varies with N availability is poorly documented, and existing global nitrogen models use a variety of heuristic methods by which to incorporate changing C:N ratios (Zaehle and Friend 2010; Ghimire et al. 2016). This algorithm exists as a placeholder to allow variable C:N ratios to occur, and to allow exploration of how much the parameters controlling their flexibility has on model outcomes. Incorporation of emerging understanding of the controls on tissue stoichiometry should ultimately replace this scheme.  
 
 Thus, in CLM5, we introduce the capacity for tissue C:N ratios to be prognostic, rather than static. Overall N and C availability (:math:`N_{uptake}` and :math:`C_{growth}`) and hence tissue C:N ratios, are both determined by FUN.  Allocation to individual tissues is discussed in the allocation chapter
 
 Here we introduce an algorithm which adjusts the C expenditure on uptake to allow varying tissue C:N ratios. Increasing C spent on uptake will directly reduce the C:N ratio, and reducing C spent on uptake (retaining more for tissue growth) will increase it. C spent on uptake is impacted by both the N cost in the environment, and the existing tissue C:N ratio of the plant.    The output of this algorithm is :math:`\gamma_{FUN}`, the fraction of the ideal :math:`C_{nuptake}` calculated from 
-the FUN equation above (**link equation**). 
+the FUN equation above
 
  .. math::                         
    C_{nuptake} = C_{nuptake}.\gamma_{FUN}
@@ -297,7 +297,7 @@ where :math:`a_{cnflex}` and :math:`b_{cnflex}` are parameters fitted to give fl
 
 Response of C expenditure to plant C:N ratios
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We first calculate a :math:`\delta_{CN}`, which is the difference between the target C:N (:math:`target_{CN}`) a model parameter, and the existing C:N ratio (:math:`CN_{plant}`) **This isn't strictly how it is worked out. Need to remember why we use c_allometry instead**.  
+We first calculate a :math:`\delta_{CN}`, which is the difference between the target C:N (:math:`target_{CN}`) a model parameter, and the existing C:N ratio (:math:`CN_{plant}`)
 
  .. math::                         
    

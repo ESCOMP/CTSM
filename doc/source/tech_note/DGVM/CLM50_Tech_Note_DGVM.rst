@@ -223,7 +223,7 @@ individual-based approach). A signature feature of the ED model is the
 system by which `functionally equivalent` patches and cohorts are fused
 into single model entities to save memory and computational time.
 
-[1]_ This functionality requires that criteria are established for the
+This functionality requires that criteria are established for the
 meaning of `functional equivalence`, which are by necessity slightly
 subjective, as they represent ways of abstracting reality into a more
 tractable mathematical representation. As an example of this, for
@@ -242,7 +242,7 @@ adjust the trade-off between simulation accuracy and computational load.
 There is no theoretical optimal value for this threshold but it may be
 altered to have finer or coarser model resolutions as needed.
 
-[2]_ Similarly, for common-disturbance-history patches, we again assign
+Similarly, for common-disturbance-history patches, we again assign
 a threshold criteria, which is then compared to the difference between
 patches :math:`m` and :math:`n`, and if the difference is less than some
 threshold value (:math:`t_{p}`) then patches are merged together,
@@ -287,7 +287,7 @@ similar patches reach their fusion threshold. This approach maintains an
 even discretization along the biomass gradient, in contrast to, for
 example, simply fusing the oldest or youngest patches together.
 
-[3]_ The area of the new patch (:math:`A_{patch,o}`, m\ :math:`^{2}`)
+The area of the new patch (:math:`A_{patch,o}`, m\ :math:`^{2}`)
 is the sum of the area of the two existing patches,
 
 .. math:: A_{patch,o}  = A_{patch,n}  + A_{patch,m}
@@ -300,7 +300,7 @@ with mass conservation .
 Linked Lists: the general code structure of FATES
 ---------------------------------------------------
 
-[4]_ The number of patches in each natural vegetation column and the
+The number of patches in each natural vegetation column and the
 number of cohorts in any given patch are variable through time because
 they are re-calculated for each daily timestep of the model. The more
 complex an ecosystem, the larger the number of patches and cohorts. For
@@ -513,7 +513,7 @@ and passed into the ED code as the major driver of vegetation dynamics.
 Initialization of vegetation from bare ground
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-[5]_If the model is restarted from a bare ground state (as opposed to a
+If the model is restarted from a bare ground state (as opposed to a
 pre-existing vegetation state), the state variables above are
 initialized as follows. First, the number of plants per PFT is allocated
 according to the initial seeding density (:math:`S_{init}`, individuals
@@ -584,7 +584,7 @@ biomass, assigned per PFT
 Allocation of biomass
 ^^^^^^^^^^^^^^^^^^^^^
 
-[6]_Total live biomass :math:`b_{alive}` is the state variable of the model
+Total live biomass :math:`b_{alive}` is the state variable of the model
 that describes the sum of the three live biomass pools leaf
 :math:`b_{leaf}`, root :math:`b_{root}` and sapwood :math:`b_{sw}` (all
 in kGC individual\ :math:`^{-1}`). The quantities are constrained by the
@@ -693,7 +693,7 @@ To calculated the sapwood biomass, we use
 Canopy Structure and the Perfect Plasticity Approximation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-[7]_During initialization and every subsequent daily ED timestep, the canopy
+During initialization and every subsequent daily ED timestep, the canopy
 structure model is called to determine how the leaf area of the
 different cohorts is arranged relative to the incoming radiation, which
 will then be used to drive the radiation and photosynthesis
@@ -824,7 +824,7 @@ found in the code references in the footnote.
 Horizontal Canopy Spread
 -------------------------
 
-[8]_:ref:`Purves et al. 2008<purves2008>` estimated the ratio between canopy and
+:ref:`Purves et al. 2008<purves2008>` estimated the ratio between canopy and
 stem diameter :math:`c_{p}` as 0.1 m cm\ :math:`^{-1}` for canopy trees
 in North American forests, but this estimate was made on trees in closed
 canopies, whose shape is subject to space competition from other
@@ -885,7 +885,7 @@ However, the model is relatively insensitive to the choice of either
 Definition of Leaf and Stem Area Profile
 ----------------------------------------
 
-[9]_Within each patch, the model defines and tracks cohorts of multiple
+Within each patch, the model defines and tracks cohorts of multiple
 plant functional types that exist either in the canopy or understorey.
 Light on the top leaf surface of each cohort in the canopy is the same,
 and the rate of decay through the canopy is also the same for each PFT.
@@ -932,7 +932,7 @@ is complex and not particularly amenable to the use of, for example,
 assumptions of random distribution in space that are typically used to
 calculate leaf area from light interception.
 :ref:`Kucharik et al. 1998<kucharik1998>` estimated that SAI visible from an
-LAI2000 sensor was around 0.5 m^2 m^-2. :ref:`Low et al. 2001<low2001>`
+LAI2000 sensor was around 0.5 m^2 m^-2. Low et al. 2001
 estimate that the wood area index for Ponderosa Pine forest is
 0.27-0.33. The existing CLM(CN) algorithm sets the minimum SAI at 0.25
 to match MODIS observations, but then allows SAI to rise as a function
@@ -1127,7 +1127,7 @@ Radiation Transfer
 Fundamental Radiation Transfer Theory
 -------------------------------------
 
-[10]_The first interaction of the land surface with the properties of
+The first interaction of the land surface with the properties of
 vegetation concerns the partitioning of energy into that which is
 absorbed by vegetation, reflected back into the atmosphere, and absorbed
 by the ground surface. Older versions of the CLM have utilized a
@@ -1518,7 +1518,7 @@ Photosynthesis
 Fundamental photosynthetic physiology theory
 --------------------------------------------
 
-[11]_In this section we describe the physiological basis of the
+In this section we describe the physiological basis of the
 photosynthesis model before describing its application to the FATES
 canopy structure. This description in this section is largely repeated
 from the Oleson et al. CLM4.5 technical note but included here for
@@ -1762,7 +1762,7 @@ m\ :math:`^{-2}` s\ :math:`^{-1}`.
 Water Stress on gas exchange
 ----------------------------
 
-[12]_ The top of canopy leaf photosynthetic capacity, :math:`V_{c,max0}`, is
+The top of canopy leaf photosynthetic capacity, :math:`V_{c,max0}`, is
 also adjusted for the availability of water to plants as
 
 .. math:: V_{c,max0,25} = V_{c,max0,25}  \beta_{sw},
@@ -1918,7 +1918,7 @@ timestep to give KgC cohort\ :math:`^{-1}` day\ :math:`^{-1}`
 Plant respiration
 ^^^^^^^^^^^^^^^^^^
 
-[13]_Plant respiration per individual :math:`R_{plant,coh}` (KgC individual
+Plant respiration per individual :math:`R_{plant,coh}` (KgC individual
 :math:`^{-1}` s\ :math:`^{-1}`) is the sum of two terms, growth and
 maintenance respiration :math:`R_{g,coh}` and :math:`R_{m,coh}`
 
@@ -2057,7 +2057,7 @@ Stomatal Conductance
 Fundamental stomatal conductance theory
 ---------------------------------------
 
-[14]_Stomatal conductance is unchanged in concept from the CLM4.5 approach.
+Stomatal conductance is unchanged in concept from the CLM4.5 approach.
 Leaf stomatal resistance is calculated from the Ball-Berry conductance
 model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in
 a global climate model by :ref:`Sellers et al. 1996<sellers1996>`. The model
@@ -2142,7 +2142,7 @@ cohort.
 Allocation and Growth
 ^^^^^^^^^^^^^^^^^^^^^
 
-[15]_Total assimilation carbon enters the ED model each day as a
+Total assimilation carbon enters the ED model each day as a
 cohort-specific Net Primary Productivity :math:`\mathit{NPP}_{coh}`,
 which is calculated as
 
@@ -2296,7 +2296,7 @@ KgC individual :math:`^{-1}` y\ :math:`^{-1}`) is thus
 Allocation to growing pools
 ---------------------------
 
-[16]_ The carbon is then partitioned into carbon available to grow the
+The carbon is then partitioned into carbon available to grow the
 :math:`b_{alive}` and :math:`b_{struc}` pools. A fraction :math:`v_{a}`
 is available to live biomass pools, and a fraction :math:`v_{s}` is
 available to structural pools.
@@ -2449,7 +2449,7 @@ In this case, :math:`\delta t` is set to be one day
 Control of Leaf Area Index
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-[17]_The leaf area :math:`A_{leaf}` (m:math:`^{-2}`) of each cohort is
+The leaf area :math:`A_{leaf}` (m:math:`^{-2}`) of each cohort is
 calculated from leaf biomass :math:`b_{leaf,coh}` (kgC
 individual\ :math:`^{-1}`) and specific leaf area (SLA, m\ :math:`^2` kg
 C\ :math:`^{-1}`)
@@ -2548,7 +2548,7 @@ Cold Deciduous Phenology
 Cold Leaf-out timing
 ~~~~~~~~~~~~~~~~~~~~
 
-[18]_. The phenology model of :ref:`Botta et al. 2000<botta2000>` is used in
+The phenology model of :ref:`Botta et al. 2000<botta2000>` is used in
 FATES to determine the leaf-on timing. The Botta et al. model was
 verified against satellite data and is one of the only globally verified
 and published models of leaf-out phenology. This model differs from the
@@ -2639,7 +2639,7 @@ the science tag is released.
 Carbon Dynamics of deciduous plants
 ----------------------------------- 
 
-[19]_In the present version, leaf expansion and senescence happen over the
+In the present version, leaf expansion and senescence happen over the
 course of a single day. This is clearly not an empirically robust
 representation of leaf behaviour, whereby leaf expansion occurs over a
 period of 10-14 days, and senescence over a similar period. This will be
@@ -2718,7 +2718,7 @@ Seed Dynamics and Recruitment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-[20]_The production of seeds and their subsequent germination is a process
+The production of seeds and their subsequent germination is a process
 that must be captured explicitly or implicitly in vegetation models. FATES contains a seed bank model designed to allow the dynamics of
 seed production and germination to be simulated independently. In the
 ED1.0 model, seed recruitment occurs in the same timestep as allocation
@@ -2841,7 +2841,7 @@ year\ :math:`^{-1}`, are calculated as
 Litter Inputs
 -------------
 
-[21]_Inputs into the litter pools come from tissue turnover, mortality of
+Inputs into the litter pools come from tissue turnover, mortality of
 canopy trees, mortality of understorey trees, mortality of seeds, and
 leaf senescence of deciduous plants.
 
@@ -2870,7 +2870,7 @@ assigned to each (:math:`f_{lsc}` and :math:`f_{ag}`)
 Litter Outputs
 --------------
 
-[22]_The fragmenting litter pool is available for burning but not for
+The fragmenting litter pool is available for burning but not for
 respiration or decomposition. Fragmentation rates are calculated
 according to a maximum fragmentation rate (:math:`\alpha_{cwd,lsc}` or
 :math:`\alpha_{litter}`) which is ameliorated by a temperature and water
@@ -2898,7 +2898,7 @@ sensitivity analyses of the model outputs.
 Flux into decompsition cascade
 ------------------------------
 
-[23]_Upon fragmentation and release from the litter pool, carbon is
+Upon fragmentation and release from the litter pool, carbon is
 transferred into the labile, lignin and cellulose decomposition pools.
 These pools are vertically resolved in the biogeochemistry model. The
 movement of carbon into each vertical layer is obviously different for
@@ -3063,7 +3063,7 @@ fire modelling section.
 Fire (SPITFIRE)
 ^^^^^^^^^^^^^^^^^
 
-[24]_The influence of fire on vegetation is estimated using the SPITFIRE
+The influence of fire on vegetation is estimated using the SPITFIRE
 model, which has been modified for use in ED following it’s original
 implementation in the LPJ-SPITFIRE model
 (:ref:`Thonicke et al. 2010<thonickeetal2010>`, :ref:`Pfeiffer et al. 2013<pfeiffer2013>`). This model as
@@ -3501,99 +3501,5 @@ within the area affected by fire is a function of the ratio between
 | s}`             | parameter       |                 |                 |
 +-----------------+-----------------+-----------------+-----------------+
 
-.. raw:: latex
-
-   \bigskip 
-
-| 
-
-.. raw:: latex
 
 
-.. [1]
-   This description covers algorithms in the ‘fuse_cohorts’ subroutine.
-
-.. [2]
-   This description covers algorithms in the ‘fuse_patches’ subroutine.
-
-.. [3]
-   This description covers algorithms in the ‘fuse_2_patches’
-   subroutine.
-
-.. [4]
-   This description covers the structure of code in all modules in
-   clm4_5 that are located in ‘ED’ subdirectories
-
-.. [5]
-   This description covers algorithms in the ‘init_cohorts’ subroutine
-
-.. [6]
-   This description relates to algorithms in the allocate_live_biomass
-   subroutine
-
-.. [7]
-   This description relates to algorithms in the EDCanopyStructure
-   subroutine
-
-.. [8]
-   This description relates to algorithms in the canopy_spread
-   subroutine
-
-.. [9]
-   This description relates to algorithms in the
-   canopy_leaf_area_profile subroutine
-
-.. [10]
-   This description relates to algorithms in the ED_norman_radiation
-   subroutine
-
-.. [11]
-   This description relates to algorithms in the ED_photosynthesis
-   subroutine
-
-.. [12]
-   This description relates to algorithms in the ED_btran subroutine
-
-.. [13]
-   This description relates to algorithms in the ED_photosynthesis
-   subroutine
-
-.. [14]
-   This description relates to algorithms in the ED_photosynthesis
-   subroutine
-
-.. [15]
-   This description relates to algorithms in the Growth_Derivatives
-   subroutine
-
-.. [16]
-   This description relates to algorithms in the ED_GrowthFunctions
-   subroutine
-
-.. [17]
-   This description relates to algorithms in the trim_canopy subroutine
-
-.. [18]
-   This description relates to algorithms in the phenology subroutine
-
-.. [19]
-   This description relates to algorithms in the phenology_leafoff
-   subroutine
-
-.. [20]
-   This description relates to algorithms in the seed_in, seed_decay and
-   seed_germination subroutines
-
-.. [21]
-   This description relates to algorithms in the CWD_input,
-   mortality_litter_fluxes and fire_litter_fluxes subroutines
-
-.. [22]
-   This description relates to algorithms in the CWD_out subroutine
-
-.. [23]
-   This description relates to algorithms in the flux_into_litter_pools
-   subroutine
-
-.. [24]
-   This description relates to algorithms in the ’SFMainMod’ subroutines
