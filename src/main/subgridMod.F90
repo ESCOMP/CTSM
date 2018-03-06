@@ -324,7 +324,7 @@ contains
     !
     ! !USES
     use clm_varpar, only : maxpatch_urb
-    use clm_varctl, only : run_all_urban
+    use clm_varctl, only : run_zero_weight_urban
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -341,7 +341,7 @@ contains
 
     ! In general, only allocate memory for urban landunits that have non-zero weight.
     !
-    ! However, if run_all_urban is .true., then allocate memory for all urban landunits in
+    ! However, if run_zero_weight_urban is .true., then allocate memory for all urban landunits in
     ! every grid cell that has valid urban parameters. (This is useful if you want to
     ! know urban behavior for all potential urban areas, or - in the future - to support
     ! transient urban areas via dynamic landunits.)
@@ -349,7 +349,7 @@ contains
     ! In either case, for simplicity, we always allocate space for all columns on any
     ! allocated urban landunits.
 
-    if (run_all_urban) then
+    if (run_zero_weight_urban) then
        if (urban_valid(gi)) then
           this_landunit_exists = .true.
        else

@@ -195,7 +195,7 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, soil_layerstruct, subgridflag, &
-         irrigate, run_all_urban, all_active
+         irrigate, run_zero_weight_urban, all_active
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -600,7 +600,7 @@ contains
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Other subgrid logic
-    call mpi_bcast(run_all_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! max number of plant functional types in naturally vegetated landunit

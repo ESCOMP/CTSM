@@ -2076,7 +2076,7 @@ sub setup_logic_create_crop_landunit {
 sub setup_logic_subgrid {
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-   my $var = 'run_all_urban';
+   my $var = 'run_zero_weight_urban';
    if ($physv->as_long() >= $physv->as_long("clm4_5")) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
    }

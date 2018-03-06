@@ -92,7 +92,7 @@ over-productive.
 If TRUE, separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
-<entry id="run_all_urban" type="logical" category="clm_physics"
+<entry id="run_zero_weight_urban" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, run all urban landunits everywhere where we have valid urban data.
 This forces memory to be allocated and calculations to be run even for 0-weight urban points.

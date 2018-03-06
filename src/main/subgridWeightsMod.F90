@@ -92,7 +92,7 @@ module subgridWeightsMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, all_active, run_all_urban, use_fates
+  use clm_varctl   , only : iulog, all_active, run_zero_weight_urban, use_fates
   use clm_varcon   , only : nameg, namel, namec, namep
   use decompMod    , only : bounds_type
   use GridcellType , only : grc                
@@ -336,7 +336,7 @@ contains
        end if
 
        if ((lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) .and. &
-            run_all_urban) then
+            run_zero_weight_urban) then
           is_active_l = .true.
        end if
 

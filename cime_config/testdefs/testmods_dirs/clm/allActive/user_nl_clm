@@ -12,4 +12,4 @@ all_active = .true.
 ! Also run urban landunits everywhere possible; while a bit different
 ! from all_active, this is a related idea, so we test it as part of the
 ! same test mod.
-run_all_urban = .true.
+run_zero_weight_urban = .true.
