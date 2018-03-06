@@ -342,7 +342,7 @@ contains
 !         dz_h2osfc(c) = max(1.0e-6_r8,1.0e-3*h2osfc(c))
 !         c_h2osfc(c)  = cpliq*denh2o*dz_h2osfc(c) !"areametric" heat capacity [J/K/m^2]
 !scs
-         if (h2osfc(c) > 0._r8) then 
+         if ( (h2osfc(c) > 1.0e-6_r8) .and. (frac_h2osfc(c) > 1.e-6_r8) ) then 
             c_h2osfc(c)  = max(1.0e-6_r8,cpliq*h2osfc(c)/frac_h2osfc(c))
             dz_h2osfc(c) = max(1.0e-6_r8,1.0e-3*h2osfc(c)/frac_h2osfc(c))
          else
