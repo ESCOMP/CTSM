@@ -944,19 +944,12 @@ contains
                   !initialize for next time step
                   t_soisno(c,0) = t_h2osfc(c)
                   eflx_h2osfc_to_snow_col(c) = 0.
-               else if (snl(c) == -1) then
-                  c1=frac_sno(c)*(dtime/fact(c,0) - dhsdT(c)*dtime)
-                  if ( frac_h2osfc(c) /= 0.0_r8 )then
-                     c2=(-cpliq*xm(c) - frac_h2osfc(c)*dhsdT(c)*dtime)
-                  else
-                     c2=0.0_r8
-                  end if
-                  t_soisno(c,0) = (c1*t_soisno(c,0)+ c2*t_h2osfc(c)) &
-                       /(c1 + c2)             
-
-                  eflx_h2osfc_to_snow_col(c) =(t_h2osfc(c)-t_soisno(c,0))*c2/dtime
                else
-                  c1=frac_sno(c)/fact(c,0)*dtime
+                  if (snl(c) == -1)then
+                     c1=frac_sno(c)*(dtime/fact(c,0) - dhsdT(c)*dtime)
+                  else
+                     c1=frac_sno(c)/fact(c,0)*dtime
+                  end if
                   if ( frac_h2osfc(c) /= 0.0_r8 )then
                      c2=(-cpliq*xm(c) - frac_h2osfc(c)*dhsdT(c)*dtime)
                   else
