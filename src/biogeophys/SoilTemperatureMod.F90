@@ -844,12 +844,10 @@ contains
     real(r8) :: xm(bounds%begc:bounds%endc) !melting or freezing within a time step [kg/m2 ]
     real(r8) :: tinc                        !t(n+1)-t(n) (K)
     real(r8) :: smp                         !frozen water potential (mm)
-    real(r8) :: rho_avg
-    real(r8) :: z_avg
-    real(r8) :: dcv(bounds%begc:bounds%endc)!change in cv due to additional ice
-    real(r8) :: c1
-    real(r8) :: c2
-    real(r8) :: pfrac
+    real(r8) :: rho_avg                     !average density
+    real(r8) :: z_avg                       !average of snow depth 
+    real(r8) :: c1                          !weight to use for lowest snow layer
+    real(r8) :: c2                          !weight to use for surface water layer
     !-----------------------------------------------------------------------
 
     call t_startf( 'PhaseChangeH2osfc' )
@@ -940,7 +938,7 @@ contains
                   snow_depth(c)=h2osno(c)/denice
                endif
 
-! adjust temperature of lowest snow layer to account for addition of ice
+               ! adjust temperature of lowest snow layer to account for addition of ice
                if (snl(c) == 0) then
                   !initialize for next time step
                   t_soisno(c,0) = t_h2osfc(c)
@@ -948,7 +946,6 @@ contains
                else if (snl(c) == -1) then
                   c1=frac_sno(c)*(dtime/fact(c,0) - dhsdT(c)*dtime)
                   if ( frac_h2osfc(c) /= 0.0_r8 )then
-!                     c2=frac_h2osfc(c)*(-cpliq*xm(c))
                      c2=(-cpliq*xm(c) - frac_h2osfc(c)*dhsdT(c)*dtime)
                   else
                      c2=0.0_r8
