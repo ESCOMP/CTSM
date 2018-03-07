@@ -19,8 +19,6 @@ module SurfaceRadiationMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch
-
-  !scs
   use landunit_varcon   , only : istdlak
 
   ! !PRIVATE TYPES:
@@ -666,8 +664,6 @@ contains
                 sabg_soil(p) = sabg(p)
              endif
              ! if no subgrid fluxes, make sure to set both components equal to weighted average
-!             if (subgridflag == 0) then
-!scs
              if (subgridflag == 0 .or. lun%itype(l) == istdlak) then
                 sabg_snow(p) = sabg(p)
                 sabg_soil(p) = sabg(p)
