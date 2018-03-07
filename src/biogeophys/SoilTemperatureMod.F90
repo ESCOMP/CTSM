@@ -109,6 +109,7 @@ module SoilTemperatureMod
   private :: PhaseChange_beta    ! Calculation of the phase change within snow and soil layers
   private :: BuildingHAC         ! Building Heating and Cooling for simpler method (introduced in CLM4.5)
 
+  real(r8), private, parameter :: thin_sfclayer = 1.0e-6_r8   ! Threshold for thin surface layer
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -339,12 +340,12 @@ contains
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
-         if ( (h2osfc(c) > 1.0e-6_r8) .and. (frac_h2osfc(c) > 1.e-6_r8) ) then 
-            c_h2osfc(c)  = max(1.0e-6_r8,cpliq*h2osfc(c)/frac_h2osfc(c))
-            dz_h2osfc(c) = max(1.0e-6_r8,1.0e-3*h2osfc(c)/frac_h2osfc(c))
+         if ( (h2osfc(c) > thin_sfclayer) .and. (frac_h2osfc(c) > thin_sfclayer) ) then 
+            c_h2osfc(c)  = max(thin_sfclayer, cpliq*h2osfc(c)/frac_h2osfc(c)  )
+            dz_h2osfc(c) = max(thin_sfclayer, 1.0e-3*h2osfc(c)/frac_h2osfc(c) )
          else
-            c_h2osfc(c)  = 1.0e-6_r8
-            dz_h2osfc(c) = 1.0e-6_r8
+            c_h2osfc(c)  = thin_sfclayer
+            dz_h2osfc(c) = thin_sfclayer
          endif
       enddo
 
@@ -799,9 +800,9 @@ contains
             c = filter_nolakec(fc)
             if (snl(c)+1 < 1 .and. j >= snl(c)+1) then
                if (frac_sno(c) > 0._r8) then
-                  cv(c,j) = max(1.0e-6_r8,(cpliq*h2osoi_liq(c,j) + cpice*h2osoi_ice(c,j))/frac_sno(c))
+                  cv(c,j) = max(thin_sfclayer,(cpliq*h2osoi_liq(c,j) + cpice*h2osoi_ice(c,j))/frac_sno(c))
                else
-                  cv(c,j) = 1.0e-6_r8
+                  cv(c,j) = thin_sfclayer
                endif
             end if
          end do
