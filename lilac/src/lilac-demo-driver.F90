@@ -80,7 +80,6 @@ program lilac_demo_driver
    !
    ! Initialize the driver
    !
-
    call setup_demo_driver_clock(driver_clock)
 
    !
@@ -90,9 +89,12 @@ program lilac_demo_driver
    ! Hard code values normally supplied by the driver
    call MPI_Comm_Dup(MPI_COMM_WORLD, lilac_init_data%mpicom_lilac, ierr)
    call MPI_Comm_Dup(MPI_COMM_WORLD, lilac_init_data%mpicom_component, ierr)
-   lilac_init_data%output_unit_global_shared = 250
-   lilac_init_data%output_unit_lilac = 251
-   lilac_init_data%output_unit_component = 252
+   call MPI_Comm_Dup(MPI_COMM_WORLD, lilac_init_data%mpicom_global_shared, ierr)
+   lilac_init_data%output_unit_lilac = 250
+   lilac_init_data%output_unit_component = 251
+   lilac_init_data%output_unit_global_shared = 252
+
+   lilac_init_data%component_name = MODEL_NAME_CTSM
 
    ! FIXME(bja, 2018-02) use namelist so the demo driver can serve as a test driver
    lilac_clock_data%calendar_is_leap = .false.

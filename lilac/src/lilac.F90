@@ -4,45 +4,34 @@ module lilac
    !
 
    implicit none
+
    private
 
-   integer, parameter :: lilac_master_proc = 0
+   integer, parameter :: LILAC_MASTER_PROC = 0
+   integer, parameter :: LILAC_NUM_COMPONENTS = 1
 
-   type :: lilac_clock_data_t
-      logical :: calendar_is_leap
-      integer :: start_year
-      integer :: start_month
-      integer :: start_day
-      integer :: start_second ! seconds since midnight
-
-      integer :: stop_year
-      integer :: stop_month
-      integer :: stop_day
-      integer :: stop_second ! seconds since midnight
-
-      integer :: time_step_seconds
-   end type lilac_clock_data_t
-
-   type :: lilac_init_data_t
-      integer :: mpicom_lilac
-      integer :: mpicom_component
-      integer :: output_unit_lilac
-      integer :: output_unit_global_shared ! this should be the same for all instances of lilac!
-      integer :: output_unit_component
-
-   end type lilac_init_data_t
-
-   type :: lilac_t
+   type, public :: lilac_t
       private
-      type(ESMF_Clock) :: driver_clock
-      integer :: my_mpi_rank
-      integer :: num_mpi_tasks
+      character(len=STRING_32) :: component_name
+      logical :: debug
+
+      integer :: mpicom_lilac
+      integer :: my_mpi_rank_lilac
+      integer :: num_mpi_tasks_lilac
       integer :: mct_comp_id
+
+      type(ESMF_Clock) :: lilac_clock
+      type(ESMF_Time) :: start_time
+      type(ESMF_Time) :: stop_time
+      type(ESMF_TimeInterval) :: time_step
+      type(ESMF_Alarm) :: alarm_stop
+      type(ESMF_Alarm) :: alarm_restart
+      
    contains
       ! Public API
-      procedure :: Init => lilac_init
-      procedure :: Shutdown => lilac_shutdown
-      procudure :: AdvanceTime => lilac_advance_time
+      procedure, public :: Init => lilac_init
+      procedure, public :: Shutdown => lilac_shutdown
+      procudure, public :: AdvanceTime => lilac_advance_time
 
       ! private initialization routines
       procedure, private :: lilac_init_parallel
@@ -69,6 +58,7 @@ contains
    !
    subroutine lilac_init(this, init_data, clock_data, debug)
 
+      use lilac_api_types, only : lilac_clock_data_t
       use mct_mod, only : mct_world_init
 
       implicit none
@@ -76,11 +66,24 @@ contains
       class(lilac_t), intent(inout) :: this
       type(lilac_init_data_t), intent(in) :: init_data
       type(lilac_clock_data_t), intent(in) :: clock_data
-
       logical, intent(in) :: debug
 
-      call this%lilac_init_parallel(init_data%mpicom_lilac, init_data%mpicom_component)
+      this%debug = debug
+      this%component_name = init_data%component_name
+
+      call this%lilac_init_parallel(init_data%mpicom_lilac, &
+           init_data%mpicom_component, init_data%mpicom_global_shared)
+
       call this%lilac_init_logging(init_data%output_unit_lilac, init_data%output_unit_component)
+      call this%lilac_init_io()
+      call this%lilac_init_clocks(clock_data)
+      ! TODO(bja, 2018-03) use init_data%component_name to do some model
+      ! specific setup, including getting a list of hard coded input and output
+      ! exchange fields.
+      call this%lilac_init_fields()
+      call this%lilac_init_orbit()
+      call this%lilac_init_land()
+      call this%lilac_init_coupling()
 
    end subroutine lilac_init
 
@@ -98,15 +101,18 @@ contains
 
       class(lilac_t), intent(inout) :: this
 
-      ! FIXME(bja, 2018-02) master proc only!
-      write(this%output_unit, *) 'lilac shutting down...'
+      if (this%my_mpi_rank_lilac == LILAC_MASTER_PROC) then
+         write(this%output_unit, *) 'Shutting down lilac interface for component ', this%component_name, ' ...'
+      end if
+
       call shr_sys_flush(this%output_unit)
 
       call this%lilac_shutdown_land()
       call this%lilac_shutdown_parallel()
 
-      ! FIXME(bja, 2018-02) master proc only!
-      write(this%output_unit, *) 'lilac shut down complete.'
+      if (this%my_mpi_rank_lilac == LILAC_MASTER_PROC) then
+         write(this%output_unit, *) 'lilac shut down for component ', this%component_name, ' complete.'
+      end if
 
    end subroutine lilac_shutdown
 
@@ -123,14 +129,18 @@ contains
       ! should be safe if previously initialized
       call MPI_Init(ierr)
 
-      call MPI_COMM_RANK(mpicom_lilac, this%my_mpi_rank, ierr)
-      call MPI_COMM_SIZE(mpicom_lilac, this%num_mpi_tasks, ierr)
+      this%mpicom_lilac = mpicom_lilac
+      this%mpicom_component = mpicom_component
+      
+      call MPI_COMM_RANK(this%mpicom_lilac, this%my_lilac_mpi_rank, ierr)
+      call MPI_COMM_SIZE(this%mpicom_lilac, this%num_lilac_mpi_tasks, ierr)
 
+      ! FIXME(bja, 2018-03) 1 (component | lilac) or two (component & lilac)?
       this%mct_num_comps = 1
       this%mct_comp_id = 1
-      ! NOTE(bja, 2018-02) this should eventually be initialized on the union of
-      ! the lilac and component communicators!
-      call mct_world_init(num_comps, MPI_COMM_WORLD, mpicom_lilac, ID_comp)
+      ! NOTE(bja, 2018-02) MPI_COMM_WORLD should eventually be initialized on
+      ! the union of the lilac and component communicators! If 2, then need arrays?!
+      call mct_world_init(this%mct_num_comps, MPI_COMM_WORLD, this%mpicom_lilac, this%mct_comp_id)
 
    end subroutine lilac_init_parallel
 
@@ -140,43 +150,66 @@ contains
 
       class(lilac_t), intent(inout) :: this
 
+      character(len=*), parameter :: subname = 'lilac_init_logging'
       ! open logfile for lilac
 
       this%output_unit = output_unit_lilac
 
-      write(log_file_name,'(a,i4.4)') 'lilac.log.', this%my_mpi_rank
+      ! FIXME(bja, 2018-03) do we want a single shared log file, or one per rank?
+      write(log_file_name,'(a,i4.4)') 'lilac.log.', this%my_mpi_rank_lilac
       open(this%output_unit, file=trim(log_file_name))
-      if (this%my_mpi_rank == lilac_master_proc) then
-         write(this%output_unit, *) subname,' starting lilac'
-         write(this%output_unit, *) subname, ' num lilac tasks = ', this%num_mpi_tasks
-         write(this%output_unit, *) subname, ' my_mpi_rank = ', this%my_mpi_rank
-         write(this%output_unit, *) subname, ' mct component ID = ', this%mct_comp_id
+      if (this%my_mpi_rank_lilac == LILAC_MASTER_PROC) then
+         write(this%output_unit, *) subname, ': Starting lilac interface for component: ', this%component_name
+         write(this%output_unit, *) subname, ':   num lilac tasks = ', this%num_mpi_tasks_lilac
+         write(this%output_unit, *) subname, ':   my mpi rank = ', this%my_mpi_rank_lilac
+         write(this%output_unit, *) subname, ':   mct component ID = ', this%mct_comp_id_lilac
          call shr_sys_flush(this%output_unit)
       end if
 
-      ! NOTE(bja, 2018-02) these are setting global variables!
-      call shr_file_setLogUnit(mpicom_global_shared)
+      ! NOTE(bja, 2018-02) these are setting global variables within the shr code!
+      call shr_file_setLogUnit(output_unit_global_shared)
       call shr_file_setLogLevel(1)
 
    end subroutine lilac_init_logging
 
    subroutine lilac_init_io(this)
+      ! NOTE(bja, 2018-02) There is only a *single science component* in each
+      ! lilac instance. For now assuming just the science component interacts
+      ! with pio, but lilac may have some parallel data I/O needs. If so it
+      ! needs to be added to these data structures!
 
       implicit none
 
       class(lilac_t), intent(inout) :: this
 
-      global_comm = MPI_COMM_WORLD
-      call shr_pio_init1(ncomps, 'pio_in', global_comm)
-      allocate(comp_id(ncomps), comp_name(ncomps), comp_iamin(ncomps), comp_comm(ncomps), comp_comm_iam(ncomps))
-      do n = 1, ncomps
-         comp_id(n) = ID_lilac
-         comp_name(n) = 'LND'
-         comp_iamin(n) = .true.
-         comp_comm(n) = mpicom_lilac
-         comp_comm_iam(n) = mytask
+      !
+      call shr_pio_init1(LILAC_NUM_COMPONENTS, 'pio_in', this%mpicom_lilac)
+      allocate( &
+           comp_id(LILAC_NUM_COMPONENTS), &
+           comp_name(LILAC_NUM_COMPONENTS), &
+           comp_iamin(LILAC_NUM_COMPONENTS), &
+           comp_comm(LILAC_NUM_COMPONENTS), &
+           comp_comm_iam(LILAC_NUM_COMPONENTS))
+
+      index = 1
+      comp_id(index) = 1
+      comp_name(index) = MODEL_NAME_LILAC // '_' // trim(this%component_name)
+      comp_iamin(index) = .true.
+      comp_comm(index) = this%mpicom_lilac
+      comp_comm_iam(index) = this%my_mpi_rank_lilac
+
+      ! TODO(bja, 2018-03) Never have more than one science component, remove loop?
+      do n = 1, LILAC_NUM_COMPONENTS
+         index = index + n
+         comp_id(index) = ID_component
+         comp_name(index) = this%component_name
+         comp_iamin(index) = .true.
+         comp_comm(index) = this%mpicom_component
+         comp_comm_iam(index) = mytask ! FIXME(bja, 2018-02) when land and lilac are on different comms??
       enddo
+
       call shr_pio_init2(comp_id, comp_name, comp_iamin, comp_comm, comp_comm_iam)
+
       deallocate(comp_id, comp_name, comp_iamin, comp_comm, comp_comm_iam)
 
    end subroutine lilac_init_io
@@ -190,45 +223,44 @@ contains
       class(lilac_t), intent(inout) :: this
       type(lilac_clock_data_t), intent(in) :: clock_data
 
-      type(ESMF_Time)  :: current_time, start_time, stop_time
-      type(ESMF_TimeInterval) :: time_step
-      type(ESMF_Alarm) :: EAlarm_stop, EAlarm_rest
-      type(ESMF_Calendar), target :: calendar ! FIXME(bja, 2018-02) does this need to be freed?
+      type(ESMF_Calendar), target :: calendar ! FIXME(bja, 2018-02) does not need to be freed?!
       integer :: cal_kind_flag
+      integer :: year, month, day, sec
 
-      if (clock_data%calendar_is_leap) then
-         cal_kind_flag = ?
-      else
+      if (clock_data%calendar_is_leap == .false.) then
          cal_kind_flag = ESMF_CALKIND_NOLEAP
+      else
+         ! FIXME(bja, 2018-03) not implemented error! ESMF_CALKIND_GREGORIAN?
       end if
 
-      ! FIXME(bja, 2018-02) verify it is to call multiple times if driver uses
-      ! esmf or there are multiple lilac instances...?
-      call ESMF_Initialize(rc=rc)
+      if (ESMF_IsInitialized() /= .true.) then
+         ! NOTE(bja, 2018-03) allocates and operates on global data!
+         call ESMF_Initialize(rc=rc)
+      end if
 
       calendar = ESMF_CalendarCreate( name='lilac', calkindflag=cal_kind_flag, rc=rc )
-      call ESMF_TimeSet(start_time, yy=clock_data%start_year, mm=clock_data%start_month, &
+      call ESMF_TimeSet(this%start_time, yy=clock_data%start_year, mm=clock_data%start_month, &
            dd=clock_data%start_day, s=clock_data%start_seconds, calendar=calendar, rc=rc)
 
-      call ESMF_TimeSet(stop_time , yy=clock_data%stop_year, mm=clock_data%stop_month, &
-           dd=clock_data%stop_day, s=clock_data%stop_seconds, calendar=Calendar, rc=rc)
+      call ESMF_TimeSet(this%stop_time , yy=clock_data%stop_year, mm=clock_data%stop_month, &
+           dd=clock_data%stop_day, s=clock_data%stop_seconds, calendar=calendar, rc=rc)
 
-      call ESMF_TimeIntervalSet(time_step, s=clock_data%time_step_seconds, rc=rc)
+      call ESMF_TimeIntervalSet(this%time_step, s=clock_data%time_step_seconds, rc=rc)
 
       this%lilac_clock = ESMF_ClockCreate(name='lilac_clock', &
-           TimeStep=time_step, startTime=start_time, &
-           RefTime=start_time, stopTime=stop_time, rc=rc)
+           TimeStep=this%time_step, startTime=this%start_time, &
+           RefTime=this%start_time, stopTime=this%stop_time, rc=rc)
 
-      EAlarm_stop = ESMF_AlarmCreate(name='alarm_stop'   , &
-           clock=EClock, ringTime=StopTime, rc=rc)
-      EAlarm_rest = ESMF_AlarmCreate(name='alarm_restart', &
-           clock=EClock, ringTime=StopTime, rc=rc)
+      this%alarm_stop = ESMF_AlarmCreate(name='alarm_stop'   , &
+           clock=this%lilac_clock, ringTime=this%stop_time, rc=rc)
+      this%alarm_rest = ESMF_AlarmCreate(name='alarm_restart', &
+           clock=this%lilac_clock, ringTime=this%stop_time, rc=rc)
 
-      if (this%debug) then
-         call ESMF_TimeGet( start_time, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
-         write(this%output_unit,'(1x,2a,4i6)') subname,' start time ymds=', yy, mm, dd, sec
-         call ESMF_TimeGet( stop_time, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
-         write(this%output_unit,'(1x,2a,4i6)') subname,' stop time  ymds=', yy, mm, dd, sec
+      if (this%debug .and. this%my_mpi_rank_lilac == LILAC_MASTER_PROC) then
+         call ESMF_TimeGet( start_time, yy=year, mm=month, dd=day, s=sec, rc=rc )
+         write(this%output_unit, '(1x,2a,4i6)') subname,': start time ymds=', year, month, day, sec
+         call ESMF_TimeGet( stop_time, yy=year, mm=month, dd=day, s=sec, rc=rc )
+         write(this%output_unit, '(1x,2a,4i6)') subname,': stop time  ymds=', year, month, day, sec
          call shr_sys_flush(this%output_unit)
       end if
 
