@@ -83,7 +83,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
-          eflx_h2osfc_to_snow_col  => energyflux_inst%eflx_h2osfc_to_snow_col, &
+         eflx_h2osfc_to_snow_col => energyflux_inst%eflx_h2osfc_to_snow_col , & ! Input:  [real(r8) (:)   ]  col snow melt to h2osfc heat flux (W/m**2)
 
          forc_lwrad              => atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
