@@ -391,19 +391,3 @@ Following this, we determine how much carbon is accounted for for each soil laye
    
    
 
-Types of N uptake streams
---------------------------------------------------------
-Arbuscular mycorrhizal fungi: 
-Ectomycorrhizal fungi: 
-Nonmycorrhizal plants.
-
-
-ECK_active (step 1) sets active components for Ectomycorrhizal fungi
-ACK_active (step 2) sets active components for Arbuscular fungi
-
-kc_nonmyc (step 1) sets nonmyc components for Ectomycorrhizal fungi
-kc_nonmyc (step 2) sets active components for Arbuscular fungi
-
-ACTIVE vs NONMYC
-ECTO vs ARBU for ACTIVE.
-
