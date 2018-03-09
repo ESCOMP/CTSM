@@ -57,7 +57,7 @@ contains
     real(r8), intent(out) :: rc14_atm(nsectors_c14)  ! Ratio of C14 to C12
     !
     ! !LOCAL VARIABLES:
-    integer  :: yr, mon, day, tod, offset    ! year, month, day, time-of-day, offset in secons
+    integer  :: yr, mon, day, tod            ! year, month, day, time-of-day
     real(r8) :: dateyear                     ! Date converted to year
     real(r8) :: delc14o2_atm(nsectors_c14)   ! C14 delta units
     integer  :: fp, p, nt                    ! Indices
@@ -68,7 +68,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! get current date
-    call get_curr_date(yr, mon, day, tod, offset)
+    !
+    ! NOTE(wjs, 2018-03-08) It's possible that we should use get_prev_date and
+    ! get_prev_yearfrac here so that we use date info from the start of the timestep
+    ! rather than the end of the timestep.
+    call get_curr_date(yr, mon, day, tod)
     dateyear = real(yr) + get_curr_yearfrac()
 
     ! find points in atm timeseries to interpolate between
@@ -179,7 +183,7 @@ contains
     real(r8), intent(out) :: rc13_atm    ! Ratio of C13 to C12
     !
     ! !LOCAL VARIABLES:
-    integer  :: yr, mon, day, tod, offset  ! year, month, day, time-of-day, and offset in seconds
+    integer  :: yr, mon, day, tod          ! year, month, day, time-of-day
     real(r8) :: dateyear                   ! date translated to year
     real(r8) :: delc13o2_atm               ! Delta C13
     integer  :: fp, p, nt                  ! Indices
@@ -189,7 +193,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! get current date
-    call get_curr_date(yr, mon, day, tod, offset)
+    !
+    ! NOTE(wjs, 2018-03-08) It's possible that we should use get_prev_date and
+    ! get_prev_yearfrac here so that we use date info from the start of the timestep
+    ! rather than the end of the timestep.
+    call get_curr_date(yr, mon, day, tod)
     dateyear = real(yr) + get_curr_yearfrac()
 
     ! find points in atm timeseries to interpolate between
