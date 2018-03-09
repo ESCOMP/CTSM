@@ -142,6 +142,7 @@ contains
          t_soisno             =>  temperature_inst%t_soisno_col         , & ! Output: [real(r8) (:,:) ]  snow temperature (Kelvin)             
          dTdz_top             =>  temperature_inst%dTdz_top_col         , & ! Output: [real(r8) (:)   ]  temperature gradient in top layer K m-1] !TOD 
          snot_top             =>  temperature_inst%snot_top_col         , & ! Output: [real(r8) (:)   ]  snow temperature in top layer [K]  !TODO
+         t_sno_mul_mss        => temperature_inst%t_sno_mul_mss_col     , & ! Output: [real(r8) (:)   ]  col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
 
          begwb                =>  waterstate_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
          endwb                =>  waterstate_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
@@ -598,6 +599,24 @@ contains
             if (j >= snl(c)+1) then
                snowice(c) = snowice(c) + h2osoi_ice(c,j)
                snowliq(c) = snowliq(c) + h2osoi_liq(c,j)
+            end if
+         end do
+      end do
+
+      ! Snow internal temperature
+      ! See description in HydrologyNoDrainageMod
+
+      do fc = 1, num_lakec
+         c = filter_lakec(fc)
+         t_sno_mul_mss(c) = 0._r8
+      end do
+
+      do j = -nlevsno+1, 0
+         do fc = 1, num_shlakesnowc
+            c = filter_shlakesnowc(fc)
+            if (j >= snl(c)+1) then
+               t_sno_mul_mss(c) = t_sno_mul_mss(c) + h2osoi_ice(c,j) * t_soisno(c,j)
+               t_sno_mul_mss(c) = t_sno_mul_mss(c) + h2osoi_liq(c,j) * tfrz
             end if
          end do
       end do

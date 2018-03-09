@@ -1,4 +1,246 @@
 ===============================================================
+Tag name:  clm5.0.dev003
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Mar  9 00:34:04 MST 2018
+One-line Summary: Bug fixes for energy imbalance associated with surface water and lakes
+
+Purpose of changes
+------------------
+
+These are bug fixes for the land energy imbalance over land as determined by coupler diagnostics. 
+They include bug fixes for surface water phase change and lake/snow interactions developed by 
+Sean Swenson and Keith Oleson.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #304
+    #304 -- Energy imbalance over land per coupler diagnostics
+
+Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
+   #317 -- c14 bombspike and c13 timeseries code can use the wrong year, with irreproducible behavior
+   #313 -- Problems with CLM5 initial conditions files
+   #310 -- With FUN on soil nitrification flux is not subtracted out of plant uptake of of soil NH4 or NO3
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  There is some dupliciation in calculations by level that could be consolidated
+  For example, the calculation of c1.
+  There is a check for ffrac_sno(c) > 0, that probably should be greater than a small value
+
+Changes to tests or testing: none
+
+Code reviewed by: self, sacks, swensosc
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm5.0.dev002
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5 and clm5_0
+    - what platforms/compilers: all
+    - nature of change: climate similar
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: clm50_r272_1deg_GSWP3V1_iso_h2osfclakefix_1850.1443_1461
+       - username: oleson
+       - machine: cheyenne
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://webext.cgd.ucar.edu/I1850/clm50_r272_1deg_GSWP3V1_iso_h2osfclakefix_1850/lnd/clm50_r272_1deg_GSWP3V1_iso_h2osfclakefix_1850.1443_1461-clm50_r272_1deg_GSWP3V1_iso_1850.1443_1461/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #307 -- Bug fixes for energy imbalance associated with surface water and lakes
+
+===============================================================
+===============================================================
+Tag name:  clm5.0.dev002
+Originator(s):  sacks (Bill Sacks)
+Date:  Sun Feb 25 06:53:36 MST 2018
+One-line Summary: Add some land ice diagnostic vars needed for CMIP6
+
+Purpose of changes
+------------------
+
+Add some diagnostic variables needed for analyzing land ice that have
+been requested by some of the MIPs in CMIP6 (especially ISMIP).
+
+Also, fixes c2l_scale_type to fix urban scaling for SNOWICE, SNOWLIQ
+
+Some changes from Leo van Kampenhout.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- https://github.com/ESCOMP/ctsm/issues/271 Add some land ice fields for cmip6
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self, Erik Kluzek
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, answer changes as expected, as noted below
+
+CLM tag used for the baseline comparisons: clm5.0.dev001
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES - just in SNOWICE, SNOWLIQ
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      - just changes the diagnostic fields SNOWICE, SNOWLIQ, due to
+        fixed c2l_scale_type for these fields
+
+
+      The test
+      ERP_P72x2_Ly3.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-irrig_o3_reduceOutput
+      also showed small answer changes just in the cpl field
+      l2x_Sl_tsrf00, for a single grid cell in Antarctica
+      (221.485144932008 vs. 221.485144910486). However, I reran it 10
+      times, and it was bit-for-bit (other than SNOWICE and SNOWLIQ) in
+      all 10 of those re-runs. So I'm chalking this up to a machine
+      fluke. (The restart file from the problematic run showed diffs in
+      a bunch of fields; from spot-checking one - SNOW_DEPTH - diffs
+      were just in one point. But since this is a reduceOutput run,
+      diffs didn't show up in CLM history files. I confirmed that there
+      were no diffs in finidat_interp_dest or in namelists.) I
+      regenerated baselines for this test using one of the cases without
+      this machine fluke.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#303 - Snow integrated temperature
+#306 - Add some land ice diagnostic variables needed for cmip6
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev001
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date:  Wed Feb 14 14:14:34 MST 2018
