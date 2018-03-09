@@ -68,10 +68,6 @@ contains
     !-----------------------------------------------------------------------
 
     ! get current date
-    !
-    ! NOTE(wjs, 2018-03-08) It's possible that we should use get_prev_date and
-    ! get_prev_yearfrac here so that we use date info from the start of the timestep
-    ! rather than the end of the timestep.
     call get_curr_date(yr, mon, day, tod)
     dateyear = real(yr) + get_curr_yearfrac()
 
@@ -193,10 +189,6 @@ contains
     !-----------------------------------------------------------------------
 
     ! get current date
-    !
-    ! NOTE(wjs, 2018-03-08) It's possible that we should use get_prev_date and
-    ! get_prev_yearfrac here so that we use date info from the start of the timestep
-    ! rather than the end of the timestep.
     call get_curr_date(yr, mon, day, tod)
     dateyear = real(yr) + get_curr_yearfrac()
 
