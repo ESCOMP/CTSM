@@ -1,13 +1,15 @@
 ===============================================================
 Tag name:  clm5.0.dev003
 Originator(s):  erik (Erik Kluzek)
-Date: Thu Mar  8 23:35:50 MST 2018
+Date: Fri Mar  9 00:34:04 MST 2018
 One-line Summary: Bug fixes for energy imbalance associated with surface water and lakes
 
 Purpose of changes
 ------------------
 
-
+These are bug fixes for the land energy imbalance over land as determined by coupler diagnostics. 
+They include bug fixes for surface water phase change and lake/snow interactions developed by 
+Sean Swenson and Keith Oleson.
 
 Bugs fixed or introduced
 ------------------------
