@@ -274,7 +274,6 @@ contains
     override_nsrest = nsrest
 
     use_init_interp = .false.
-
     if (masterproc) then
 
        ! ----------------------------------------------------------------------
@@ -393,6 +392,7 @@ contains
              call endrun(msg=' ERROR: ozone is not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
+
        end if
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
@@ -433,6 +433,12 @@ contains
 
     endif   ! end of if-masterproc if-block
 
+    if(use_fates)then
+       use_matrixcn = .false.
+       use_soil_matrixcn = .false.    ! true => use cn matrix  
+       is_outmatrix = .false.     !.false.              ! true => use acc spinup
+       print*,'when use_fates, use_matrixcn,use_soil_matrixcn and is_outmatrix are automatically FALSE'
+    end if
     ! ----------------------------------------------------------------------
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
@@ -656,6 +662,10 @@ contains
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
+    print*,'use_matrixcn',use_matrixcn,use_soil_matrixcn,is_outmatrix
+    call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (is_outmatrix, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables

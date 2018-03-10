@@ -93,6 +93,7 @@ contains
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
+         if(p .eq. 8)print*,'ns_veg%deadstemn_patch in gap',ns_veg%deadstemn_patch(p),nf_veg%m_deadstemn_to_litter_patch(p) * dt
         if(.not.  use_matrixcn)then
          ! displayed pools
          ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p)                           &
@@ -212,6 +213,7 @@ contains
          p = filter_soilp(fp)
 
          ! displayed pools
+         if(p .eq. 8)print*,'deadstemn_patch in harvest',ns_veg%deadstemn_patch(p),nf_veg%wood_harvestn_patch(p) * dt
          if(.not. use_matrixcn)then
             ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
               - nf_veg%hrv_leafn_to_litter_patch(p) * dt

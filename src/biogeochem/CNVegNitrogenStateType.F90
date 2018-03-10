@@ -6,7 +6,7 @@ module CNVegNitrogenStateType
   use shr_infnan_mod                     , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full,nlevdecomp,nvegpool
+  use clm_varpar                         , only : nlevdecomp_full,nlevdecomp,nvegnpool
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
@@ -37,6 +37,12 @@ module CNVegNitrogenStateType
      real(r8), pointer :: grainn_patch             (:) ! (gN/m2) grain N (crop)
      real(r8), pointer :: grainn_storage_patch     (:) ! (gN/m2) grain N storage (crop)
      real(r8), pointer :: grainn_xfer_patch        (:) ! (gN/m2) grain N transfer (crop)
+     real(r8), pointer :: matrix_cap_grainn_patch             (:) ! (gN/m2) grain N
+     real(r8), pointer :: matrix_cap_grainn_storage_patch     (:) ! (gN/m2) grain N storage
+     real(r8), pointer :: matrix_cap_grainn_xfer_patch        (:) ! (gN/m2) grain N transfer
+     real(r8), pointer :: matrix_pot_grainn_patch             (:) ! (gN/m2) grain N
+     real(r8), pointer :: matrix_pot_grainn_storage_patch     (:) ! (gN/m2) grain N storage
+     real(r8), pointer :: matrix_pot_grainn_xfer_patch        (:) ! (gN/m2) grain N transfer
      real(r8), pointer :: leafn_patch              (:) ! (gN/m2) leaf N 
      real(r8), pointer :: leafn_storage_patch      (:) ! (gN/m2) leaf N storage
      real(r8), pointer :: leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
@@ -117,6 +123,9 @@ module CNVegNitrogenStateType
      real(r8), pointer :: deadcrootn0_patch         (:) ! (gN/m2) dead coarse root N
      real(r8), pointer :: deadcrootn0_storage_patch (:) ! (gN/m2) dead coarse root N storage
      real(r8), pointer :: deadcrootn0_xfer_patch    (:) ! (gN/m2) dead coarse root N transfer
+     real(r8), pointer :: grainn0_patch             (:) ! (gN/m2) grain N
+     real(r8), pointer :: grainn0_storage_patch     (:) ! (gN/m2) grain N storage
+     real(r8), pointer :: grainn0_xfer_patch        (:) ! (gN/m2) grain N transfer
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegn_patch           (:) ! (gN/m2) displayed veg nitrogen, excluding storage
@@ -152,7 +161,7 @@ module CNVegNitrogenStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds,  nvegpool,                      &
+  subroutine Init(this, bounds,  nvegnpool,                      &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
 
     class(cnveg_nitrogenstate_type)   :: this
@@ -162,11 +171,11 @@ contains
     real(r8)          , intent(in)    :: frootc_patch         (bounds%begp:)     
     real(r8)          , intent(in)    :: frootc_storage_patch (bounds%begp:)     
     real(r8)          , intent(in)    :: deadstemc_patch      (bounds%begp:)
-    integer , intent(in) :: nvegpool
+    integer , intent(in) :: nvegnpool
 
     call this%InitAllocate (bounds )
     call this%InitHistory (bounds)
-    call this%InitCold ( bounds,nvegpool, &
+    call this%InitCold ( bounds,nvegnpool, &
          leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
 
   end subroutine Init
@@ -191,6 +200,14 @@ contains
     allocate(this%grainn_patch             (begp:endp)) ; this%grainn_patch             (:) = nan     
     allocate(this%grainn_storage_patch     (begp:endp)) ; this%grainn_storage_patch     (:) = nan
     allocate(this%grainn_xfer_patch        (begp:endp)) ; this%grainn_xfer_patch        (:) = nan     
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_grainn_patch             (begp:endp)) ; this%matrix_cap_grainn_patch             (:) = nan
+       allocate(this%matrix_cap_grainn_storage_patch     (begp:endp)) ; this%matrix_cap_grainn_storage_patch     (:) = nan     
+       allocate(this%matrix_cap_grainn_xfer_patch        (begp:endp)) ; this%matrix_cap_grainn_xfer_patch        (:) = nan     
+       allocate(this%matrix_pot_grainn_patch             (begp:endp)) ; this%matrix_pot_grainn_patch             (:) = nan
+       allocate(this%matrix_pot_grainn_storage_patch     (begp:endp)) ; this%matrix_pot_grainn_storage_patch     (:) = nan     
+       allocate(this%matrix_pot_grainn_xfer_patch        (begp:endp)) ; this%matrix_pot_grainn_xfer_patch        (:) = nan     
+    end if
     allocate(this%leafn_patch              (begp:endp)) ; this%leafn_patch              (:) = nan
     allocate(this%leafn_storage_patch      (begp:endp)) ; this%leafn_storage_patch      (:) = nan     
     allocate(this%leafn_xfer_patch         (begp:endp)) ; this%leafn_xfer_patch         (:) = nan     
@@ -287,9 +304,12 @@ contains
        allocate(this%deadcrootn0_patch         (begp:endp)) ; this%deadcrootn0_patch         (:) = nan
        allocate(this%deadcrootn0_storage_patch (begp:endp)) ; this%deadcrootn0_storage_patch (:) = nan
        allocate(this%deadcrootn0_xfer_patch    (begp:endp)) ; this%deadcrootn0_xfer_patch    (:) = nan
+       allocate(this%grainn0_patch             (begp:endp)) ; this%grainn0_patch             (:) = nan
+       allocate(this%grainn0_storage_patch     (begp:endp)) ; this%grainn0_storage_patch     (:) = nan     
+       allocate(this%grainn0_xfer_patch        (begp:endp)) ; this%grainn0_xfer_patch        (:) = nan     
 !!
-       allocate(this%matrix_nalloc_acc_patch   (begp:endp,1:nvegpool)) ; this%matrix_nalloc_acc_patch (:,:) = nan
-       allocate(this%matrix_ntransfer_acc_patch(begp:endp,1:nvegpool,1:nvegpool)) ; this%matrix_ntransfer_acc_patch  (:,:,:) =nan
+       allocate(this%matrix_nalloc_acc_patch   (begp:endp,1:nvegnpool)) ; this%matrix_nalloc_acc_patch (:,:) = nan
+       allocate(this%matrix_ntransfer_acc_patch(begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_ntransfer_acc_patch  (:,:,:) =nan
     end if
   end subroutine InitAllocate
 
@@ -329,6 +349,16 @@ contains
        call hist_addfld1d (fname='GRAINN', units='gN/m^2', &
             avgflag='A', long_name='grain N', &
             ptr_patch=this%grainn_patch)
+       if(use_matrixcn)then
+          this%matrix_cap_grainn_patch(begp:endp) = spval
+          call hist_addfld1d (fname='GRAINN_CAP', units='gN/m^2', &
+               avgflag='I', long_name='grain N capacity', &
+               ptr_patch=this%matrix_cap_grainn_patch)
+          this%matrix_pot_grainn_patch(begp:endp) = spval
+          call hist_addfld1d (fname='GRAINN_POT', units='gN/m^2', &
+               avgflag='I', long_name='grain N potential', &
+               ptr_patch=this%matrix_pot_grainn_patch)
+       end if
        call hist_addfld1d (fname='CROPSEEDN_DEFICIT', units='gN/m^2', &
             avgflag='A', long_name='N used for crop seed that needs to be repaid', &
             ptr_patch=this%cropseedn_deficit_patch, default='inactive')
@@ -685,7 +715,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds,nvegpool, &
+  subroutine InitCold(this, bounds,nvegnpool, &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
     !
     ! !DESCRIPTION:
@@ -700,7 +730,7 @@ contains
     real(r8)          , intent(in) :: frootc_patch(bounds%begp:)            
     real(r8)          , intent(in) :: frootc_storage_patch(bounds%begp:)    
     real(r8)          , intent(in) :: deadstemc_patch(bounds%begp:)
-    integer           , intent(in) :: nvegpool
+    integer           , intent(in) :: nvegnpool
     !
     ! !LOCAL VARIABLES:
     integer :: fc,fp,g,l,c,p,j,k                       ! indices
@@ -800,6 +830,11 @@ contains
              this%grainn_patch(p)         = 0._r8
              this%grainn_storage_patch(p) = 0._r8
              this%grainn_xfer_patch(p)    = 0._r8
+             if(use_matrixcn)then
+                this%matrix_cap_grainn_patch(p) = 0._r8
+                this%matrix_cap_grainn_storage_patch(p) = 0._r8
+                this%matrix_cap_grainn_xfer_patch(p) = 0._r8
+             end if
              this%cropseedn_deficit_patch(p)  = 0._r8
           end if
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
@@ -901,9 +936,9 @@ contains
              this%deadcrootn0_patch(p)         = 0._r8
              this%deadcrootn0_storage_patch(p) = 0._r8
              this%deadcrootn0_xfer_patch(p)    = 0._r8
-             do k = 1, nvegpool 
+             do k = 1, nvegnpool 
                 this%matrix_nalloc_acc_patch(p,k) =  0._r8
-                do j = 1, nvegpool
+                do j = 1, nvegnpool + 1
                    this%matrix_ntransfer_acc_patch (p,j,k) = 0._r8
                end do
              end do
@@ -935,7 +970,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (nvegpool=18,&
+    call this%SetValues (nvegnpool=nvegnpool,&
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -1139,6 +1174,7 @@ contains
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%deadcrootn_patch) 
 
+    !print*,'deadcrootn',this%deadcrootn_patch
     call restartvar(ncid=ncid, flag=flag, varname='deadcrootn_storage', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%deadcrootn_storage_patch) 
@@ -1146,6 +1182,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='deadcrootn_xfer', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%deadcrootn_xfer_patch) 
+    !print*,'restart_use_matrixcn',use_matrixcn
 
     if(use_matrixcn)then
        call restartvar(ncid=ncid, flag=flag, varname='livestemn_cap', xtype=ncd_double,  &
@@ -1304,6 +1341,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='pft_ntrunc', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch)
+    !print*,'before crop'
 
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainn', xtype=ncd_double,  &
@@ -1317,6 +1355,44 @@ contains
        call restartvar(ncid=ncid, flag=flag,  varname='grainn_xfer', xtype=ncd_double,  &
             dim1name='pft',    long_name='grain N transfer', units='gN/m2', &
             interpinic_flag='interp', readvar=readvar, data=this%grainn_xfer_patch)
+        
+       if(use_matrixcn)then
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn_cap', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N capacity', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_grainn_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn_storage_cap', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N storage capacity', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_grainn_storage_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn_xfer_cap', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N transfer capacity', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_grainn_xfer_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn_pot', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N potential', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_grainn_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn_storage_pot', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N storage potential', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_grainn_storage_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn_xfer_pot', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N transfer potential', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%matrix_pot_grainn_xfer_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn0', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N0', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%grainn0_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn0_storage', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N0 storage', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%grainn0_storage_patch)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='grainn0_xfer', xtype=ncd_double,  &
+            dim1name='pft',    long_name='grain N0 transfer', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%grainn0_xfer_patch)
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='cropseedn_deficit', xtype=ncd_double,  &
             dim1name='pft', long_name='pool for seeding new crop growth', units='gN/m2', &
@@ -1326,7 +1402,7 @@ contains
     !--------------------------------
     ! gridcell nitrogen state variables
     !--------------------------------
-
+!print*,'grid n state variable'
     ! BACKWARDS_COMPATIBILITY(wjs, 2017-01-12) Naming this with a _g suffix in order to
     ! distinguish it from the old column-level seedn restart variable
     call restartvar(ncid=ncid, flag=flag, varname='seedn_g', xtype=ncd_double,  &
@@ -1373,6 +1449,7 @@ contains
 
     end if
     ! Reseed dead plants
+    !print*,'reseed dead'
     if ( flag == 'read' .and. num_reseed_patch > 0 )then
        if ( masterproc ) write(iulog, *) 'Reseed dead plants for CNVegNitrogenState'
        do i = 1, num_reseed_patch
@@ -1433,6 +1510,14 @@ contains
                 this%grainn_patch(p)         = 0._r8
                 this%grainn_storage_patch(p) = 0._r8
                 this%grainn_xfer_patch(p)    = 0._r8
+                if(use_matrixcn)then
+                   this%matrix_cap_grainn_patch(p)            = 0._r8
+                   this%matrix_cap_grainn_storage_patch(p)    = 0._r8
+                   this%matrix_cap_grainn_xfer_patch(p)       = 0._r8
+                   this%matrix_pot_grainn_patch(p)            = 0._r8
+                   this%matrix_pot_grainn_storage_patch(p)    = 0._r8
+                   this%matrix_pot_grainn_xfer_patch(p)       = 0._r8
+                end if
                 this%cropseedn_deficit_patch(p)  = 0._r8
              end if
              if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
@@ -1548,11 +1633,11 @@ contains
              end if
        end do
      end if
-
+!print*,'end of restart'
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this,nvegpool, &
+  subroutine SetValues ( this,nvegnpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -1567,7 +1652,7 @@ contains
     integer , intent(in) :: num_column
     integer , intent(in) :: filter_column(:)
     real(r8), intent(in) :: value_column
-    integer , intent(in) :: nvegpool
+    integer , intent(in) :: nvegnpool
     !
     ! !LOCAL VARIABLES:
     integer :: fi,i     ! loop index
@@ -1653,9 +1738,9 @@ contains
           this%deadcrootn0_storage_patch(i) = value_patch
           this%deadcrootn0_xfer_patch(i)    = value_patch
 
-          do k=1,nvegpool
+          do k=1,nvegnpool 
              this%matrix_nalloc_acc_patch(i,k)              = value_patch
-             do j = 1, nvegpool
+             do j = 1, nvegnpool + 1
                 this%matrix_ntransfer_acc_patch (i,j,k) = value_patch
              end do
           end do

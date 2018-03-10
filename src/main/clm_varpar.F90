@@ -50,7 +50,11 @@ module clm_varpar
   integer, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer            :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, parameter :: nvariants   =   2     ! number of variants of PFT constants
-  integer, parameter :: nvegpool    =  18     ! number of vegetation matrix pool 
+  integer, parameter :: nvegpool_natveg = 18  ! number of vegetation matrix pool without crop
+  integer, parameter :: nvegpool_crop   =  3  ! number of vegetation matrix pool with crop
+  integer, parameter :: nveg_retransn   =  1
+  integer            :: nvegcpool        
+  integer            :: nvegnpool        
 
   integer :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer :: numcft      =  64     ! actual # of crops (includes unused CFTs that are merged into other CFTs)
@@ -83,8 +87,13 @@ module clm_varpar
   integer, parameter :: ideadcroot    = 16
   integer, parameter :: ideadcroot_st = 17
   integer, parameter :: ideadcroot_xf = 18
+  integer, parameter :: igrain        = 19
+  integer, parameter :: igrain_st     = 20
+  integer, parameter :: igrain_xf     = 21
+  integer            :: iretransn     
      
-  integer, parameter :: iout = 19
+  integer            :: ioutc 
+  integer            :: ioutn 
 
   integer :: ndecomp_pools
   integer :: ndecomp_cascade_transitions
@@ -234,6 +243,16 @@ contains
        end if
     endif
     ndecomp_pools_vr = ndecomp_pools * nlevdecomp
+    
+    if (use_crop)then
+       nvegcpool = nvegpool_natveg + nvegpool_crop
+    else
+       nvegcpool = nvegpool_natveg
+    end if
+    nvegnpool = nvegcpool + 1
+    iretransn = nvegnpool
+    ioutc = nvegcpool + 1
+    ioutn = nvegnpool + 1
 
   end subroutine clm_varpar_init
 

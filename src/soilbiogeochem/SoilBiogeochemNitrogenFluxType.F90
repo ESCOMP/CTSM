@@ -7,7 +7,7 @@ module SoilBiogeochemNitrogenFluxType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
+  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop, use_soil_matrixcn
   use CNSharedParamsMod                  , only : use_fun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use abortutils                         , only : endrun
@@ -284,7 +284,9 @@ contains
 !    allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_a_tri_col(:,:,:)= nan
 !    allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
 !    allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
-!    allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+    if(use_soil_matrixcn)then
+       allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+    end if
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -1063,14 +1065,16 @@ contains
        end do
     end do
     
-!    do k = 1, ndecomp_pools
-!       do j = 1, nlevdecomp
+    if(use_soil_matrixcn)then
+       do k = 1, ndecomp_pools
+          do j = 1, nlevdecomp
 !             this%matrix_a_tri_col(:,j,k) = value_column
 !             this%matrix_b_tri_col(:,j,k) = value_column
 !             this%matrix_c_tri_col(:,j,k) = value_column
-!             this%matrix_input_col(:,j,k) = value_column
-!       end do
-!    end do
+             this%matrix_input_col(:,j,k) = value_column
+          end do
+       end do
+    end if
 
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
