@@ -1,0 +1,422 @@
+2018-02-22 09:55:11: case.build starting 
+ ---------------------------------------------------
+2018-02-22 09:55:11: case.build error 
+ERROR: ERROR: must invoke case.setup script before calling build script 
+ ---------------------------------------------------
+2018-02-22 09:55:15: case.setup starting 
+ ---------------------------------------------------
+2018-02-22 09:55:17: case.setup success 
+ ---------------------------------------------------
+2018-02-22 09:55:24: case.build starting 
+ ---------------------------------------------------
+2018-02-22 10:00:58: case.build success 
+ ---------------------------------------------------
+2018-02-22 10:13:19: case.submit starting 
+ ---------------------------------------------------
+2018-02-22 10:13:28: case.submit success 
+ ---------------------------------------------------
+2018-02-22 10:13:34: case.run starting 
+ ---------------------------------------------------
+2018-02-22 10:14:15: case.run success 
+ ---------------------------------------------------
+2018-02-22 10:14:20: st_archive starting 
+ ---------------------------------------------------
+2018-02-22 10:14:20: st_archive success 
+ ---------------------------------------------------
+2018-02-22 10:17:37: case.submit starting 
+ ---------------------------------------------------
+2018-02-22 10:17:45: case.submit success 
+ ---------------------------------------------------
+2018-02-22 10:17:50: case.run starting 
+ ---------------------------------------------------
+2018-02-22 10:34:58: case.run success 
+ ---------------------------------------------------
+2018-02-22 10:35:40: st_archive starting 
+ ---------------------------------------------------
+2018-02-22 10:35:41: st_archive success 
+ ---------------------------------------------------
+2018-02-24 02:53:19: case.build starting 
+ ---------------------------------------------------
+2018-02-24 02:55:35: case.build success 
+ ---------------------------------------------------
+2018-02-24 02:55:57: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 02:56:05: case.submit success 
+ ---------------------------------------------------
+2018-02-24 02:56:19: case.run starting 
+ ---------------------------------------------------
+2018-02-24 03:02:21: case.run success 
+ ---------------------------------------------------
+2018-02-24 03:02:27: st_archive starting 
+ ---------------------------------------------------
+2018-02-24 03:02:27: st_archive success 
+ ---------------------------------------------------
+2018-02-24 09:16:08: case.build starting 
+ ---------------------------------------------------
+2018-02-24 09:16:45: case.build error 
+ERROR: BUILD FAIL: clm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/lnd.bldlog.180224-091609
+ ---------------------------------------------------
+2018-02-24 09:21:05: case.build starting 
+ ---------------------------------------------------
+2018-02-24 09:21:06: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-24 09:21:25: build.clean starting 
+ ---------------------------------------------------
+2018-02-24 09:21:26: build.clean success 
+ ---------------------------------------------------
+2018-02-24 09:21:28: case.build starting 
+ ---------------------------------------------------
+2018-02-24 09:23:03: case.build error 
+ERROR: BUILD FAIL: buildlib.pio failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/pio.bldlog.180224-092128
+ ---------------------------------------------------
+2018-02-24 09:23:18: case.build starting 
+ ---------------------------------------------------
+2018-02-24 09:23:26: case.build error 
+ERROR: BUILD FAIL: buildlib.pio failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/pio.bldlog.180224-092318
+ ---------------------------------------------------
+2018-02-24 09:26:58: case.build starting 
+ ---------------------------------------------------
+2018-02-24 09:27:11: case.build error 
+ERROR: BUILD FAIL: buildlib.pio failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/pio.bldlog.180224-092658
+ ---------------------------------------------------
+2018-02-24 13:14:14: case.build starting 
+ ---------------------------------------------------
+2018-02-24 13:17:11: case.build error 
+ERROR: BUILD FAIL: sesp.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/esp.bldlog.180224-131414
+BUILD FAIL: mosart.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/rof.bldlog.180224-131414
+BUILD FAIL: sglc.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/glc.bldlog.180224-131414
+ ---------------------------------------------------
+2018-02-24 14:13:15: case.build starting 
+ ---------------------------------------------------
+2018-02-24 14:14:08: case.build success 
+ ---------------------------------------------------
+2018-02-24 14:14:16: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 14:14:22: case.submit success 
+ ---------------------------------------------------
+2018-02-24 14:14:27: case.run starting 
+ ---------------------------------------------------
+2018-02-24 14:15:20: case.run error 
+ERROR: RUN FAIL: Command 'mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptBra_test/bld/cesm.exe  >> cesm.log.$LID 2>&1 ' failed
+See log file for details: /glade/scratch/lfjiang/1x1ptBra_test/run/cesm.log.180224-141427
+ ---------------------------------------------------
+2018-02-24 14:59:22: case.build starting 
+ ---------------------------------------------------
+2018-02-24 14:59:35: case.build error 
+ERROR: BUILD FAIL: clm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/lnd.bldlog.180224-145922
+ ---------------------------------------------------
+2018-02-24 15:00:23: case.build starting 
+ ---------------------------------------------------
+2018-02-24 15:00:25: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-24 15:00:35: build.clean starting 
+ ---------------------------------------------------
+2018-02-24 15:00:36: build.clean success 
+ ---------------------------------------------------
+2018-02-24 15:00:39: case.build starting 
+ ---------------------------------------------------
+2018-02-24 15:02:13: case.build error 
+ERROR: BUILD FAIL: buildlib.pio failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/pio.bldlog.180224-150039
+ ---------------------------------------------------
+2018-02-24 15:08:04: case.build starting 
+ ---------------------------------------------------
+2018-02-24 15:08:18: case.build error 
+ERROR: BUILD FAIL: buildlib.pio failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/pio.bldlog.180224-150804
+ ---------------------------------------------------
+2018-02-24 15:09:36: case.build starting 
+ ---------------------------------------------------
+2018-02-24 15:11:44: case.build error 
+ERROR: BUILD FAIL: clm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/lnd.bldlog.180224-150936
+ ---------------------------------------------------
+2018-02-24 15:31:23: case.build starting 
+ ---------------------------------------------------
+2018-02-24 15:32:26: case.build error 
+ERROR: BUILD FAIL: socn.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/ocn.bldlog.180224-153123
+BUILD FAIL: sice.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/ice.bldlog.180224-153123
+BUILD FAIL: mosart.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/rof.bldlog.180224-153123
+ ---------------------------------------------------
+2018-02-24 15:32:30: case.build starting 
+ ---------------------------------------------------
+2018-02-24 15:33:23: case.build success 
+ ---------------------------------------------------
+2018-02-24 15:33:28: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 15:33:36: case.submit success 
+ ---------------------------------------------------
+2018-02-24 15:55:17: case.run starting 
+ ---------------------------------------------------
+2018-02-24 15:56:11: case.run error 
+ERROR: RUN FAIL: Command 'mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptBra_test/bld/cesm.exe  >> cesm.log.$LID 2>&1 ' failed
+See log file for details: /glade/scratch/lfjiang/1x1ptBra_test/run/cesm.log.180224-155517
+ ---------------------------------------------------
+2018-02-24 16:31:55: case.build starting 
+ ---------------------------------------------------
+2018-02-24 16:32:42: case.build success 
+ ---------------------------------------------------
+2018-02-24 16:36:04: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 16:36:10: case.submit success 
+ ---------------------------------------------------
+2018-02-24 16:37:09: case.run starting 
+ ---------------------------------------------------
+2018-02-24 16:38:02: case.run error 
+ERROR: RUN FAIL: Command 'mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptBra_test/bld/cesm.exe  >> cesm.log.$LID 2>&1 ' failed
+See log file for details: /glade/scratch/lfjiang/1x1ptBra_test/run/cesm.log.180224-163708
+ ---------------------------------------------------
+2018-02-24 17:41:52: case.build starting 
+ ---------------------------------------------------
+2018-02-24 17:42:28: case.build success 
+ ---------------------------------------------------
+2018-02-24 17:42:33: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 17:42:39: case.submit success 
+ ---------------------------------------------------
+2018-02-24 17:53:00: case.run starting 
+ ---------------------------------------------------
+2018-02-24 17:53:53: case.run error 
+ERROR: RUN FAIL: Command 'mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptBra_test/bld/cesm.exe  >> cesm.log.$LID 2>&1 ' failed
+See log file for details: /glade/scratch/lfjiang/1x1ptBra_test/run/cesm.log.180224-175300
+ ---------------------------------------------------
+2018-02-24 21:31:07: case.build starting 
+ ---------------------------------------------------
+2018-02-24 21:32:02: case.build success 
+ ---------------------------------------------------
+2018-02-24 21:32:06: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 21:32:12: case.submit success 
+ ---------------------------------------------------
+2018-02-24 21:33:36: case.run starting 
+ ---------------------------------------------------
+2018-02-24 21:34:18: case.run error 
+ERROR: RUN FAIL: Command 'mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptBra_test/bld/cesm.exe  >> cesm.log.$LID 2>&1 ' failed
+See log file for details: /glade/scratch/lfjiang/1x1ptBra_test/run/cesm.log.180224-213336
+ ---------------------------------------------------
+2018-02-24 21:39:31: case.build starting 
+ ---------------------------------------------------
+2018-02-24 21:40:35: case.build success 
+ ---------------------------------------------------
+2018-02-24 21:41:02: case.build starting 
+ ---------------------------------------------------
+2018-02-24 21:41:03: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-24 21:41:12: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 21:41:17: case.submit error 
+ERROR: Build complete is not True please rebuild the model by calling case.build
+ ---------------------------------------------------
+2018-02-24 21:41:27: build.clean starting 
+ ---------------------------------------------------
+2018-02-24 21:41:29: build.clean success 
+ ---------------------------------------------------
+2018-02-24 21:41:33: case.build starting 
+ ---------------------------------------------------
+2018-02-24 21:44:36: case.build success 
+ ---------------------------------------------------
+2018-02-24 21:56:17: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 21:56:21: case.submit success 
+ ---------------------------------------------------
+2018-02-24 21:58:06: case.run starting 
+ ---------------------------------------------------
+2018-02-24 22:30:38: case.run success 
+ ---------------------------------------------------
+2018-02-24 22:31:50: case.build starting 
+ ---------------------------------------------------
+2018-02-24 22:31:51: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-24 22:31:55: build.clean starting 
+ ---------------------------------------------------
+2018-02-24 22:31:56: build.clean success 
+ ---------------------------------------------------
+2018-02-24 22:31:59: case.build starting 
+ ---------------------------------------------------
+2018-02-24 22:37:12: case.build success 
+ ---------------------------------------------------
+2018-02-24 23:01:14: case.submit starting 
+ ---------------------------------------------------
+2018-02-24 23:01:21: case.submit success 
+ ---------------------------------------------------
+2018-02-24 23:01:33: case.run starting 
+ ---------------------------------------------------
+2018-02-24 23:07:33: case.run success 
+ ---------------------------------------------------
+2018-02-24 23:07:38: st_archive starting 
+ ---------------------------------------------------
+2018-02-24 23:07:38: st_archive success 
+ ---------------------------------------------------
+2018-02-25 11:37:53: case.build starting 
+ ---------------------------------------------------
+2018-02-25 11:40:11: case.build success 
+ ---------------------------------------------------
+2018-02-25 11:40:15: case.submit starting 
+ ---------------------------------------------------
+2018-02-25 11:40:21: case.submit success 
+ ---------------------------------------------------
+2018-02-25 11:40:25: case.run starting 
+ ---------------------------------------------------
+2018-02-25 11:41:10: case.run error 
+ERROR: RUN FAIL: Command 'mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptBra_test/bld/cesm.exe  >> cesm.log.$LID 2>&1 ' failed
+See log file for details: /glade/scratch/lfjiang/1x1ptBra_test/run/cesm.log.180225-114025
+ ---------------------------------------------------
+2018-02-25 12:49:50: case.build starting 
+ ---------------------------------------------------
+2018-02-25 12:50:04: case.build error 
+ERROR: BUILD FAIL: clm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/lnd.bldlog.180225-124950
+ ---------------------------------------------------
+2018-02-25 12:50:49: case.build starting 
+ ---------------------------------------------------
+2018-02-25 12:50:50: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-25 12:50:54: build.clean starting 
+ ---------------------------------------------------
+2018-02-25 12:50:56: build.clean success 
+ ---------------------------------------------------
+2018-02-25 12:50:57: case.build starting 
+ ---------------------------------------------------
+2018-02-25 12:53:41: case.build success 
+ ---------------------------------------------------
+2018-02-25 12:53:47: case.submit starting 
+ ---------------------------------------------------
+2018-02-25 12:53:53: case.submit success 
+ ---------------------------------------------------
+2018-02-25 12:54:01: case.run starting 
+ ---------------------------------------------------
+2018-02-25 13:08:27: case.build starting 
+ ---------------------------------------------------
+2018-02-25 13:08:28: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-25 13:08:57: case.build starting 
+ ---------------------------------------------------
+2018-02-25 13:08:58: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-25 13:09:03: build.clean starting 
+ ---------------------------------------------------
+2018-02-25 13:09:06: build.clean success 
+ ---------------------------------------------------
+2018-02-25 13:09:10: case.build starting 
+ ---------------------------------------------------
+2018-02-25 13:14:22: case.build success 
+ ---------------------------------------------------
+2018-02-25 13:14:27: case.submit starting 
+ ---------------------------------------------------
+2018-02-25 13:14:32: case.submit success 
+ ---------------------------------------------------
+2018-02-25 13:14:35: case.run starting 
+ ---------------------------------------------------
+2018-02-25 13:15:46: build.clean starting 
+ ---------------------------------------------------
+2018-02-25 13:15:46: build.clean success 
+ ---------------------------------------------------
+2018-02-25 13:16:00: case.build starting 
+ ---------------------------------------------------
+2018-02-25 13:21:06: case.build success 
+ ---------------------------------------------------
+2018-02-25 13:21:07: case.submit starting 
+ ---------------------------------------------------
+2018-02-25 13:21:11: case.submit success 
+ ---------------------------------------------------
+2018-02-25 13:21:15: case.run starting 
+ ---------------------------------------------------
+2018-02-25 13:38:19: case.run success 
+ ---------------------------------------------------
+2018-02-25 13:38:32: st_archive starting 
+ ---------------------------------------------------
+2018-02-25 13:38:33: st_archive success 
+ ---------------------------------------------------
+2018-02-27 10:29:59: case.build starting 
+ ---------------------------------------------------
+2018-02-27 10:31:26: case.build error 
+ERROR: BUILD FAIL: clm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/lnd.bldlog.180227-102959
+ ---------------------------------------------------
+2018-02-27 11:18:42: case.build starting 
+ ---------------------------------------------------
+2018-02-27 11:18:43: case.build error 
+ERROR: 
+ERROR env_build HAS CHANGED
+  A manual clean of your obj directories is required
+  You should execute the following:
+    ./case.build --clean-all
+
+ ---------------------------------------------------
+2018-02-27 11:18:49: build.clean starting 
+ ---------------------------------------------------
+2018-02-27 11:19:00: build.clean success 
+ ---------------------------------------------------
+2018-02-27 11:19:07: case.build starting 
+ ---------------------------------------------------
+2018-02-27 11:21:10: case.build error 
+ERROR: BUILD FAIL: buildlib.pio failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/pio.bldlog.180227-111907
+ ---------------------------------------------------
+2018-02-27 11:24:21: case.build starting 
+ ---------------------------------------------------
+2018-02-27 11:26:54: case.build error 
+ERROR: BUILD FAIL: clm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/lnd.bldlog.180227-112421
+ ---------------------------------------------------
+2018-02-27 11:29:08: case.build starting 
+ ---------------------------------------------------
+2018-02-27 11:29:40: case.build error 
+ERROR: BUILD FAIL: clm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/lnd.bldlog.180227-112909
+ ---------------------------------------------------
+2018-02-27 11:31:24: case.build starting 
+ ---------------------------------------------------
+2018-02-27 11:32:48: case.build error 
+ERROR: BUILD FAIL: datm.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/atm.bldlog.180227-113124
+BUILD FAIL: socn.buildlib failed, cat /glade/scratch/lfjiang/1x1ptBra_test/bld/ocn.bldlog.180227-113124
+ ---------------------------------------------------
+2018-02-27 11:33:31: case.build starting 
+ ---------------------------------------------------
+2018-02-27 11:34:16: case.build success 
+ ---------------------------------------------------
+2018-02-27 11:42:48: case.build starting 
+ ---------------------------------------------------
+2018-02-27 11:43:42: case.build success 
+ ---------------------------------------------------
+2018-02-27 11:44:32: case.submit starting 
+ ---------------------------------------------------
+2018-02-27 11:44:34: case.submit error 
+ERROR: Command /glade/u/home/lfjiang/ctsm/bld/build-namelist failed rc=255
+out=
+err=ERROR : CLM build-namelist::CLMBuildNamelist::setup_cmdl_crop() : Namelist item use_crop contradicts the command-line option -crop, use the command line option
+ ---------------------------------------------------

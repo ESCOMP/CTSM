@@ -69,8 +69,8 @@ contains
             c = filter_soilc(fc)
 
             ! column gap mortality fluxes
+!            if(j .eq. 1)print*,'before gapmortality',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit),cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
             if (.not. use_soil_matrixcn)then
-!               if(j .eq. 1 .and. c .eq. 1)print*,'before gapmortality',cs_soil%decomp_cpools_vr_col(c,j,i_cwd),cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
                cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
                cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = &
@@ -79,9 +79,9 @@ contains
                  cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + cf_veg%gap_mortality_c_to_litr_lig_c_col(c,j) * dt
                cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
-!               if(j .eq. 1 .and. c .eq. 1)print*,'after gapmortality',cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
+!               if(j .eq. 1)print*,'after gapmortality',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
             else
-!               if(j .eq. 1 .and. c .eq. 1)print*,'before gapmortality,matrix',cf_soil%matrix_input_col(c,j,i_met_lit),cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
+!               if(j .eq. 1)print*,'before gapmortality,matrix',c,cf_soil%matrix_input_col(c,j,i_met_lit),cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
                cf_soil%matrix_input_col(c,j,i_met_lit) = &    
                  cf_soil%matrix_input_col(c,j,i_met_lit) + cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
                cf_soil%matrix_input_col(c,j,i_cel_lit) = &
@@ -90,13 +90,14 @@ contains
                  cf_soil%matrix_input_col(c,j,i_lig_lit) + cf_veg%gap_mortality_c_to_litr_lig_c_col(c,j) * dt
                cf_soil%matrix_input_col(c,j,i_cwd) =     &
                  cf_soil%matrix_input_col(c,j,i_cwd)     + cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
-!               if(j .eq. 1 .and. c .eq. 1)print*,'after gapmortality,matrix',cf_soil%matrix_input_col(c,j,i_met_lit)
+!               if(j .eq. 1)print*,'after gapmortality,matrix',c,cf_soil%matrix_input_col(c,j,i_met_lit)
             end if !soil_matrix
          end do
       end do 
       ! patch loop
        do fp = 1,num_soilp
          p = filter_soilp(fp)
+!         if(p .eq. 8)print*,'before gap mort',cs_veg%leafc_storage_patch(p),cf_veg%m_leafc_storage_to_litter_patch(p) * dt
         if(.not.  use_matrixcn)then
          ! patch-level carbon fluxes from gap-phase mortality
          ! displayed pools
@@ -150,6 +151,7 @@ contains
          cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
               - cf_veg%m_gresp_xfer_to_litter_patch(p) * dt
        end if !use_matrixcn
+!         if(p .eq. 8)print*,'after gap mort',cs_veg%leafc_storage_patch(p)
       end do ! end of patch loop
 
     end associate
@@ -198,7 +200,7 @@ contains
 
             ! column harvest fluxes
             if (.not. use_soil_matrixcn)then
-!               if(j .eq. 1 .and. c .eq. 1)print*,'before harvest',cs_soil%decomp_cpools_vr_col(c,j,i_met_lit),cf_veg%harvest_c_to_cwdc_col(c,j) * dt
+!               if(j .eq. 1)print*,'before harvest',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit),cf_veg%harvest_c_to_cwdc_col(c,j) * dt
                cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + cf_veg%harvest_c_to_litr_met_c_col(c,j) * dt
                cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = &
@@ -207,9 +209,9 @@ contains
                  cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + cf_veg%harvest_c_to_litr_lig_c_col(c,j) * dt
                cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%harvest_c_to_cwdc_col(c,j)  * dt
-!               if(j .eq. 1 .and. c .eq. 1)print*,'after harvest',cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
+!               if(j .eq. 1)print*,'after harvest',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
             else
-!               if(j .eq. 1 .and. c .eq. 1)print*,'before harvest,matrix',cf_soil%matrix_input_col(c,j,i_cwd),cf_veg%harvest_c_to_cwdc_col(c,j) * dt
+!               if(j .eq. 1)print*,'before harvest,matrix',c,cf_soil%matrix_input_col(c,j,i_cwd),cf_veg%harvest_c_to_cwdc_col(c,j) * dt
                cf_soil%matrix_input_col(c,j,i_met_lit) = &
                  cf_soil%matrix_input_col(c,j,i_met_lit) + cf_veg%harvest_c_to_litr_met_c_col(c,j) * dt
                cf_soil%matrix_input_col(c,j,i_cel_lit) = &
@@ -218,7 +220,7 @@ contains
                  cf_soil%matrix_input_col(c,j,i_lig_lit) + cf_veg%harvest_c_to_litr_lig_c_col(c,j) * dt
                cf_soil%matrix_input_col(c,j,i_cwd) = &
                  cf_soil%matrix_input_col(c,j,i_cwd) + cf_veg%harvest_c_to_cwdc_col(c,j)  * dt
-!               if(j .eq. 1 .and. c .eq. 1)print*,'before harvest',cf_soil%matrix_input_col(c,j,i_cwd)
+!               if(j .eq. 1)print*,'after harvest',c,cf_soil%matrix_input_col(c,j,i_cwd)
             end if
 
             ! wood to product pools - states updated in CNProducts
@@ -229,6 +231,7 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
+!         if(p .eq. 8)print*,'before harv',cs_veg%leafc_storage_patch(p),cf_veg%hrv_leafc_storage_to_litter_patch(p) * dt
          ! patch-level carbon fluxes from harvest mortality
          ! displayed pools
          if(.not. use_matrixcn)then
@@ -289,6 +292,7 @@ contains
               - cf_veg%hrv_gresp_xfer_to_litter_patch(p) * dt
          end if
 
+!         if(p .eq. 8)print*,'after harv',cs_veg%leafc_storage_patch(p)
         
       end do ! end of patch loop
 

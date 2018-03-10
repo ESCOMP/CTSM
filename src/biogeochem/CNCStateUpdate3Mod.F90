@@ -65,8 +65,8 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             ! patch-level wood to column-level CWD (uncombusted wood)
+!            if(j .eq. 1)print*,'before fire_mortality add to litter',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit), cf_veg%m_c_to_litr_met_fire_col(c,j)* dt 
             if (.not. use_soil_matrixcn) then
-!               if(j .eq. 1 .and. c .eq. 1)print*,'before fire_mortality',cs_soil%decomp_cpools_vr_col(c,j,i_met_lit), cf_veg%m_c_to_litr_met_fire_col(c,j)* dt 
                cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
                  cf_veg%fire_mortality_c_to_cwdc_col(c,j) * dt
 
@@ -77,7 +77,7 @@ contains
                  cf_veg%m_c_to_litr_cel_fire_col(c,j)* dt
                cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
                  cf_veg%m_c_to_litr_lig_fire_col(c,j)* dt
-!               if(j .eq. 1 .and. c .eq. 1)print*,'after fire_mortality',cs_soil%decomp_cpools_vr_col(c,j,i_met_lit), cf_veg%m_c_to_litr_met_fire_col(c,j)* dt 
+!               if(j .eq. 1)print*,'after fire_mortality',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit), cf_veg%m_c_to_litr_met_fire_col(c,j)* dt 
             else
             ! patch-level wood to column-level CWD (uncombusted wood)
                cf_soil%matrix_input_col(c,j,i_cwd) = cf_soil%matrix_input_col(c,j,i_cwd) + &
@@ -95,25 +95,27 @@ contains
       end do
 
       ! litter and CWD losses to fire
-!      print*,'before fire',cs_soil%decomp_cpools_vr_col(1,1,i_cwd),cf_veg%m_decomp_cpools_to_fire_vr_col(1,1,i_cwd) * dt
       if(.not. use_soil_matrixcn)then
          do l = 1, ndecomp_pools
             do j = 1, nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
+!                  if(j .eq. 1)print*,'before fire from litter',c,cs_soil%decomp_cpools_vr_col(c,1,i_met_lit),cf_veg%m_decomp_cpools_to_fire_vr_col(c,1,i_met_lit) * dt
 !               if (.not. use_soil_matrixcn)then
                   cs_soil%decomp_cpools_vr_col(c,j,l) = cs_soil%decomp_cpools_vr_col(c,j,l) - &
                     cf_veg%m_decomp_cpools_to_fire_vr_col(c,j,l) * dt
 !               end if
+!                  if(j .eq. 1)print*,'after fire',c,cs_soil%decomp_cpools_vr_col(c,1,i_met_lit)
                end do
             end do
          end do
       end if
-!      print*,'after fire',cs_soil%decomp_cpools_vr_col(1,1,i_cwd),cf_veg%m_decomp_cpools_to_fire_vr_col(1,1,i_cwd) * dt
 
       ! patch-level carbon fluxes from fire
        do fp = 1,num_soilp
           p = filter_soilp(fp)
+!          if(p .eq. 8)print*,'before fire',cs_veg%leafc_storage_patch(p),cf_veg%m_leafc_storage_to_fire_patch(p) * dt, cf_veg%m_leafc_storage_to_litter_fire_patch(p)* dt
+          !if(p .eq. 8)print*,'before fire',cs_veg%deadcrootc_patch(p),cf_veg%m_deadcrootc_to_fire_patch(p) * dt, cf_veg%m_deadcrootc_to_litter_fire_patch(p)* dt,cf_veg%m_livecrootc_to_deadcrootc_fire_patch(p) * dt
           if(.not. use_matrixcn)then 
           ! displayed pools
             cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
@@ -216,7 +218,8 @@ contains
          cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
               cf_veg%m_gresp_xfer_to_litter_fire_patch(p) * dt  
         end if !end use_matrixcn
- 
+!        if(p .eq. 8)print*,'after fire',cs_veg%leafc_storage_patch(p)
+        !if(p .eq. 8)print*,'after fire',cs_veg%deadcrootc_patch(p)
        end do ! end of patch loop
 
 

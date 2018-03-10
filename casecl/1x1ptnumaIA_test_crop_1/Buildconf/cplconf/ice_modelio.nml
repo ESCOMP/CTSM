@@ -1,0 +1,13 @@
+&modelio
+  diri = "/glade/scratch/lfjiang/1x1ptnumaIA_test_crop_1/bld/ice"
+  diro = "/glade/scratch/lfjiang/1x1ptnumaIA_test_crop_1/run"
+  logfile = "ice.log.180310-020839"
+/
+&pio_inparm
+  pio_netcdf_format = "64bit_offset"
+  pio_numiotasks = -99
+  pio_rearranger = 1
+  pio_root = 1
+  pio_stride = 36
+  pio_typename = "netcdf"
+/

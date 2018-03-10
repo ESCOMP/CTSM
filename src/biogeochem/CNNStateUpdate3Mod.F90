@@ -125,93 +125,96 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
-!       if(.not. use_matrixcn)then 
+         if(p .eq. 8)print*,'deadstemn_to_fire',ns_veg%deadstemn_patch(p),nf_veg%m_deadstemn_to_fire_patch(p) * dt
+         if(p .eq. 8)print*,'livestemn_to_deadstemn',nf_veg%m_livestemn_to_deadstemn_fire_patch(p) * dt
+         if(p .eq. 8)print*,'deadstemn_to_litter_fire',nf_veg%m_deadstemn_to_litter_fire_patch(p) * dt
+         if(.not. use_matrixcn)then 
          !from fire displayed pools
-         ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &
+            ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &
                nf_veg%m_leafn_to_fire_patch(p) * dt
-         ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p) -                         &
-              nf_veg%m_frootn_to_fire_patch(p) * dt
-         ns_veg%livestemn_patch(p) =  ns_veg%livestemn_patch(p) -                   &
-              nf_veg%m_livestemn_to_fire_patch(p) * dt
-         ns_veg%deadstemn_patch(p) =  ns_veg%deadstemn_patch(p) -                   &
-              nf_veg%m_deadstemn_to_fire_patch(p) * dt
-         ns_veg%livecrootn_patch(p) =  ns_veg%livecrootn_patch(p) -                 &
-              nf_veg%m_livecrootn_to_fire_patch(p) * dt
-         ns_veg%deadcrootn_patch(p) =  ns_veg%deadcrootn_patch(p) -                 &
-              nf_veg%m_deadcrootn_to_fire_patch(p) * dt
+            ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p) -                         &
+               nf_veg%m_frootn_to_fire_patch(p) * dt
+            ns_veg%livestemn_patch(p) =  ns_veg%livestemn_patch(p) -                   &
+               nf_veg%m_livestemn_to_fire_patch(p) * dt
+            ns_veg%deadstemn_patch(p) =  ns_veg%deadstemn_patch(p) -                   &
+               nf_veg%m_deadstemn_to_fire_patch(p) * dt
+            ns_veg%livecrootn_patch(p) =  ns_veg%livecrootn_patch(p) -                 &
+               nf_veg%m_livecrootn_to_fire_patch(p) * dt
+            ns_veg%deadcrootn_patch(p) =  ns_veg%deadcrootn_patch(p) -                 &
+               nf_veg%m_deadcrootn_to_fire_patch(p) * dt
 
-         ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &
-              nf_veg%m_leafn_to_litter_fire_patch(p) * dt
-         ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p) -                         &
-              nf_veg%m_frootn_to_litter_fire_patch(p) * dt
-         ns_veg%livestemn_patch(p) =  ns_veg%livestemn_patch(p) -                   &
-              nf_veg%m_livestemn_to_litter_fire_patch(p) * dt   -                   &
-              nf_veg%m_livestemn_to_deadstemn_fire_patch(p) * dt
-         ns_veg%deadstemn_patch(p) =  ns_veg%deadstemn_patch(p) -                   &
-              nf_veg%m_deadstemn_to_litter_fire_patch(p) * dt +                     &
-              nf_veg%m_livestemn_to_deadstemn_fire_patch(p) * dt
-         ns_veg%livecrootn_patch(p) =  ns_veg%livecrootn_patch(p) -                 &
-              nf_veg%m_livecrootn_to_litter_fire_patch(p) * dt -                    &
-              nf_veg%m_livecrootn_to_deadcrootn_fire_patch(p) * dt
-         ns_veg%deadcrootn_patch(p) =  ns_veg%deadcrootn_patch(p) -                 &
-              nf_veg%m_deadcrootn_to_litter_fire_patch(p) * dt +                    &
-              nf_veg%m_livecrootn_to_deadcrootn_fire_patch(p) * dt 
+            ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &
+               nf_veg%m_leafn_to_litter_fire_patch(p) * dt
+            ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p) -                         &
+               nf_veg%m_frootn_to_litter_fire_patch(p) * dt
+            ns_veg%livestemn_patch(p) =  ns_veg%livestemn_patch(p) -                   &
+               nf_veg%m_livestemn_to_litter_fire_patch(p) * dt   -                   &
+               nf_veg%m_livestemn_to_deadstemn_fire_patch(p) * dt
+            ns_veg%deadstemn_patch(p) =  ns_veg%deadstemn_patch(p) -                   &
+               nf_veg%m_deadstemn_to_litter_fire_patch(p) * dt +                     &
+               nf_veg%m_livestemn_to_deadstemn_fire_patch(p) * dt
+            ns_veg%livecrootn_patch(p) =  ns_veg%livecrootn_patch(p) -                 &
+               nf_veg%m_livecrootn_to_litter_fire_patch(p) * dt -                    &
+               nf_veg%m_livecrootn_to_deadcrootn_fire_patch(p) * dt
+            ns_veg%deadcrootn_patch(p) =  ns_veg%deadcrootn_patch(p) -                 &
+               nf_veg%m_deadcrootn_to_litter_fire_patch(p) * dt +                    &
+               nf_veg%m_livecrootn_to_deadcrootn_fire_patch(p) * dt 
 
          ! storage pools
-         ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p) -           &
-              nf_veg%m_leafn_storage_to_fire_patch(p) * dt
-         ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p) -         &
-              nf_veg%m_frootn_storage_to_fire_patch(p) * dt
-         ns_veg%livestemn_storage_patch(p) =  ns_veg%livestemn_storage_patch(p) -   &
-              nf_veg%m_livestemn_storage_to_fire_patch(p) * dt
-         ns_veg%deadstemn_storage_patch(p) =  ns_veg%deadstemn_storage_patch(p) -   &
-              nf_veg%m_deadstemn_storage_to_fire_patch(p) * dt
-         ns_veg%livecrootn_storage_patch(p) =  ns_veg%livecrootn_storage_patch(p) - &
-              nf_veg%m_livecrootn_storage_to_fire_patch(p) * dt
-         ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) - &
-              nf_veg%m_deadcrootn_storage_to_fire_patch(p) * dt
+            ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p) -           &
+               nf_veg%m_leafn_storage_to_fire_patch(p) * dt
+            ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p) -         &
+               nf_veg%m_frootn_storage_to_fire_patch(p) * dt
+            ns_veg%livestemn_storage_patch(p) =  ns_veg%livestemn_storage_patch(p) -   &
+               nf_veg%m_livestemn_storage_to_fire_patch(p) * dt
+            ns_veg%deadstemn_storage_patch(p) =  ns_veg%deadstemn_storage_patch(p) -   &
+               nf_veg%m_deadstemn_storage_to_fire_patch(p) * dt
+            ns_veg%livecrootn_storage_patch(p) =  ns_veg%livecrootn_storage_patch(p) - &
+               nf_veg%m_livecrootn_storage_to_fire_patch(p) * dt
+            ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) - &
+               nf_veg%m_deadcrootn_storage_to_fire_patch(p) * dt
 
-         ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p) -           &
-              nf_veg%m_leafn_storage_to_litter_fire_patch(p) * dt
-         ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p) -         &
-              nf_veg%m_frootn_storage_to_litter_fire_patch(p) * dt
-         ns_veg%livestemn_storage_patch(p) =  ns_veg%livestemn_storage_patch(p) -   &
-              nf_veg%m_livestemn_storage_to_litter_fire_patch(p) * dt
-         ns_veg%deadstemn_storage_patch(p) =  ns_veg%deadstemn_storage_patch(p) -   &
-              nf_veg%m_deadstemn_storage_to_litter_fire_patch(p) * dt
-         ns_veg%livecrootn_storage_patch(p) =  ns_veg%livecrootn_storage_patch(p) - &
-              nf_veg%m_livecrootn_storage_to_litter_fire_patch(p) * dt
-         ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) - &
-              nf_veg%m_deadcrootn_storage_to_litter_fire_patch(p) * dt
+            ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p) -           &
+               nf_veg%m_leafn_storage_to_litter_fire_patch(p) * dt
+            ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p) -         &
+               nf_veg%m_frootn_storage_to_litter_fire_patch(p) * dt
+            ns_veg%livestemn_storage_patch(p) =  ns_veg%livestemn_storage_patch(p) -   &
+               nf_veg%m_livestemn_storage_to_litter_fire_patch(p) * dt
+            ns_veg%deadstemn_storage_patch(p) =  ns_veg%deadstemn_storage_patch(p) -   &
+               nf_veg%m_deadstemn_storage_to_litter_fire_patch(p) * dt
+            ns_veg%livecrootn_storage_patch(p) =  ns_veg%livecrootn_storage_patch(p) - &
+               nf_veg%m_livecrootn_storage_to_litter_fire_patch(p) * dt
+            ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) - &
+               nf_veg%m_deadcrootn_storage_to_litter_fire_patch(p) * dt
 
 
          ! transfer pools
-         ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p) -                 &
-              nf_veg%m_leafn_xfer_to_fire_patch(p) * dt
-         ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p) -               &
-              nf_veg%m_frootn_xfer_to_fire_patch(p) * dt
-         ns_veg%livestemn_xfer_patch(p) =  ns_veg%livestemn_xfer_patch(p) -         &
-              nf_veg%m_livestemn_xfer_to_fire_patch(p) * dt
-         ns_veg%deadstemn_xfer_patch(p) =  ns_veg%deadstemn_xfer_patch(p) -         &
-              nf_veg%m_deadstemn_xfer_to_fire_patch(p) * dt
-         ns_veg%livecrootn_xfer_patch(p) =  ns_veg%livecrootn_xfer_patch(p) -       &
-              nf_veg%m_livecrootn_xfer_to_fire_patch(p) * dt
-         ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p) -       &
-              nf_veg%m_deadcrootn_xfer_to_fire_patch(p) * dt
+            ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p) -                 &
+               nf_veg%m_leafn_xfer_to_fire_patch(p) * dt
+            ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p) -               &
+               nf_veg%m_frootn_xfer_to_fire_patch(p) * dt
+            ns_veg%livestemn_xfer_patch(p) =  ns_veg%livestemn_xfer_patch(p) -         &
+               nf_veg%m_livestemn_xfer_to_fire_patch(p) * dt
+            ns_veg%deadstemn_xfer_patch(p) =  ns_veg%deadstemn_xfer_patch(p) -         &
+               nf_veg%m_deadstemn_xfer_to_fire_patch(p) * dt
+            ns_veg%livecrootn_xfer_patch(p) =  ns_veg%livecrootn_xfer_patch(p) -       &
+               nf_veg%m_livecrootn_xfer_to_fire_patch(p) * dt
+            ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p) -       &
+               nf_veg%m_deadcrootn_xfer_to_fire_patch(p) * dt
 
-         ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p) -                 &
-              nf_veg%m_leafn_xfer_to_litter_fire_patch(p) * dt
-         ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p) -               &
-              nf_veg%m_frootn_xfer_to_litter_fire_patch(p) * dt
-         ns_veg%livestemn_xfer_patch(p) =  ns_veg%livestemn_xfer_patch(p) -         &
-              nf_veg%m_livestemn_xfer_to_litter_fire_patch(p) * dt
-         ns_veg%deadstemn_xfer_patch(p) =  ns_veg%deadstemn_xfer_patch(p) -         &
-              nf_veg%m_deadstemn_xfer_to_litter_fire_patch(p) * dt
-         ns_veg%livecrootn_xfer_patch(p) =  ns_veg%livecrootn_xfer_patch(p) -       &
-              nf_veg%m_livecrootn_xfer_to_litter_fire_patch(p) * dt
-         ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p) -       &
-              nf_veg%m_deadcrootn_xfer_to_litter_fire_patch(p) * dt
-!       end if !use_matrixcn
+            ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p) -                 &
+               nf_veg%m_leafn_xfer_to_litter_fire_patch(p) * dt
+            ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p) -               &
+               nf_veg%m_frootn_xfer_to_litter_fire_patch(p) * dt
+            ns_veg%livestemn_xfer_patch(p) =  ns_veg%livestemn_xfer_patch(p) -         &
+               nf_veg%m_livestemn_xfer_to_litter_fire_patch(p) * dt
+            ns_veg%deadstemn_xfer_patch(p) =  ns_veg%deadstemn_xfer_patch(p) -         &
+               nf_veg%m_deadstemn_xfer_to_litter_fire_patch(p) * dt
+            ns_veg%livecrootn_xfer_patch(p) =  ns_veg%livecrootn_xfer_patch(p) -       &
+               nf_veg%m_livecrootn_xfer_to_litter_fire_patch(p) * dt
+            ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p) -       &
+               nf_veg%m_deadcrootn_xfer_to_litter_fire_patch(p) * dt
+         end if !use_matrixcn
 
          ! retranslocated N pool
          ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p) -                     &

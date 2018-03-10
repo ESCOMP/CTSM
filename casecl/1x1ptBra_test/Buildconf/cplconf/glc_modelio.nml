@@ -1,0 +1,13 @@
+&modelio
+  diri = "/glade/scratch/lfjiang/1x1ptBra_test/bld/glc"
+  diro = "/glade/scratch/lfjiang/1x1ptBra_test/run"
+  logfile = "glc.log.180227-114248"
+/
+&pio_inparm
+  pio_netcdf_format = "64bit_offset"
+  pio_numiotasks = -99
+  pio_rearranger = 1
+  pio_root = 1
+  pio_stride = 36
+  pio_typename = "netcdf"
+/

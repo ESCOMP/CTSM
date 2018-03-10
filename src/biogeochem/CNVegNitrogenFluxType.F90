@@ -4,7 +4,7 @@ module CNVegNitrogenFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp,nvegpool
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp,nvegnpool
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop, use_matrixcn
   use CNSharedParamsMod                  , only : use_fun
@@ -252,7 +252,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: matrix_ngmtransfer_patch     (:,:,:)   ! A-matrix_gap mortality
      real(r8), pointer :: matrix_ngmturnover_patch     (:,:,:)   ! C-matrix_gap mortality
   
-     real(r8), pointer :: matrix_n2phtransfer_patch     (:,:,:)   ! matrix_phenologh for N transfer
+     real(r8), pointer :: matrix_nfitransfer_patch     (:,:,:)   ! matrix_phenologh for N transfer
 
      real(r8), pointer :: matrix_nfiturnover_patch     (:,:,:)   ! C-matrix_fire	 
 
@@ -534,16 +534,16 @@ contains
 	! Matrix
     if(use_matrixcn)then
        allocate(this%matrix_Ninput_patch          (begp:endp)) ;              this%matrix_Ninput_patch      (:) = nan
-       allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegpool)) ;   this%matrix_nalloc_patch      (:,:) = nan
+       allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegnpool)) ;   this%matrix_nalloc_patch      (:,:) = nan
 
-       allocate(this%matrix_nphtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_nphtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_nphturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nphturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_nphtransfer_patch     (begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_nphtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_nphturnover_patch     (begp:endp,1:nvegnpool  ,1:nvegnpool))   ; this%matrix_nphturnover_patch  (:,:,:) = nan
 
-       allocate(this%matrix_ngmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_ngmtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_ngmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_ngmturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_ngmtransfer_patch     (begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_ngmtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_ngmturnover_patch     (begp:endp,1:nvegnpool  ,1:nvegnpool))   ; this%matrix_ngmturnover_patch  (:,:,:) = nan
 
-       allocate(this%matrix_n2phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_n2phtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_nfiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_nfiturnover_patch  (:,:,:) = nan	
+       allocate(this%matrix_nfitransfer_patch     (begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_nfitransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_nfiturnover_patch     (begp:endp,1:nvegnpool  ,1:nvegnpool))   ; this%matrix_nfiturnover_patch  (:,:,:) = nan	
      end if
 
   end subroutine InitAllocate
@@ -1343,7 +1343,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (nvegpool=18, &
+    call this%SetValues (nvegnpool=nvegnpool, &
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -1553,7 +1553,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this,nvegpool, &
+  subroutine SetValues ( this,nvegnpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -1563,7 +1563,7 @@ contains
     ! !ARGUMENTS:
     ! !ARGUMENTS:
     class (cnveg_nitrogenflux_type) :: this
-    integer , intent(in) :: num_patch,nvegpool
+    integer , intent(in) :: num_patch,nvegnpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -1764,19 +1764,19 @@ contains
     end do
 ! Matrix
     if(use_matrixcn)then
-       do k=1,nvegpool
+       do k=1,nvegnpool 
           do fi = 1,num_patch
              i = filter_patch(fi)
              this%matrix_nalloc_patch(i,k)              = value_patch
-             do j = 1, nvegpool+1
-                if(j .le. nvegpool)then
+             do j = 1, nvegnpool+1
+                if(j .le. nvegnpool)then
                    this%matrix_nphturnover_patch (i,j,k) = value_patch
                    this%matrix_ngmturnover_patch (i,j,k) = value_patch
                    this%matrix_nfiturnover_patch (i,j,k) = value_patch
                 end if
                    this%matrix_nphtransfer_patch (i,j,k) = value_patch
                    this%matrix_ngmtransfer_patch (i,j,k) = value_patch
-                   this%matrix_n2phtransfer_patch (i,j,k) = value_patch
+                   this%matrix_nfitransfer_patch (i,j,k) = value_patch
                
              end do
           end do

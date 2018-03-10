@@ -1,0 +1,24 @@
+Setting resource.RLIMIT_STACK to -1 from (-1, -1)
+Creating component namelists
+   Calling /glade/u/home/lfjiang/ctsm/cime/src/components/data_comps/datm/cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/cime/src/components/stub_comps/sice/cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/cime/src/components/stub_comps/socn/cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/components/mosart//cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/cime/src/components/stub_comps/sglc/cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/cime/src/components/stub_comps/swav/cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/cime/src/components/stub_comps/sesp/cime_config/buildnml
+   Calling /glade/u/home/lfjiang/ctsm/cime/src/drivers/mct/cime_config/buildnml
+Finished creating component namelists
+-------------------------------------------------------------------------
+ - Prestage required restarts into /glade/scratch/lfjiang/1x1ptnumaIA_test_crop/run
+ - Case input data directory (DIN_LOC_ROOT) is /glade/p/cesmdata/cseg/inputdata 
+ - Checking for required input datasets in DIN_LOC_ROOT
+-------------------------------------------------------------------------
+2018-03-07 11:18:28 MODEL EXECUTION BEGINS HERE
+run command is mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptnumaIA_test_crop/bld/cesm.exe  >> cesm.log.$LID 2>&1  
+2018-03-07 11:59:31 MODEL EXECUTION HAS FINISHED
+check for resubmit
+dout_s True 
+mach cheyenne 
+resubmit_num 0

@@ -176,6 +176,7 @@ contains
                     decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
                   p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                        * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+!               if(k .eq. 1 .and. j .eq. 1)print*,'p_decomp_cpool_loss2',p_decomp_cpool_loss(c,j,k),decomp_k(c,j,cascade_donor_pool(k)),pathfrac_decomp_cascade(c,j,k),decomp_cpools_vr(c,j,cascade_donor_pool(k))
                   if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
 
                      if (cascade_receiver_pool(k) /= i_atm ) then  ! not 100% respiration
@@ -237,6 +238,7 @@ contains
                !
                p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                     * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+!               if(k .eq. 1 .and. j .eq. 1)print*,'p_decomp_cpool_loss1',p_decomp_cpool_loss(c,j,k),decomp_k(c,j,cascade_donor_pool(k)),pathfrac_decomp_cascade(c,j,k),decomp_cpools_vr(c,j,cascade_donor_pool(k))
                !
             end do
          end do

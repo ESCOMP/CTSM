@@ -1,0 +1,24 @@
+2018-02-24 13:13:40: case.build starting 
+ ---------------------------------------------------
+2018-02-24 13:13:40: case.build error 
+ERROR: ERROR: must invoke case.setup script before calling build script 
+ ---------------------------------------------------
+2018-02-24 13:13:48: case.setup starting 
+ ---------------------------------------------------
+2018-02-24 13:13:50: case.setup success 
+ ---------------------------------------------------
+2018-02-24 13:13:55: case.build starting 
+ ---------------------------------------------------
+2018-02-24 13:13:58: case.build error 
+ERROR: Command /glade/u/home/lfjiang/ctsm_cn_matrix/bld/build-namelist failed rc=255
+out=CLM adding use_case 2000_control defaults for var 'sim_year' with val '2000'
+CLM adding use_case 2000_control defaults for var 'sim_year_range' with val 'constant'
+CLM adding use_case 2000_control defaults for var 'stream_year_first_ndep' with val '2000'
+CLM adding use_case 2000_control defaults for var 'stream_year_first_popdens' with val '2000'
+CLM adding use_case 2000_control defaults for var 'stream_year_first_urbantv' with val '2000'
+CLM adding use_case 2000_control defaults for var 'stream_year_last_ndep' with val '2000'
+CLM adding use_case 2000_control defaults for var 'stream_year_last_popdens' with val '2000'
+CLM adding use_case 2000_control defaults for var 'stream_year_last_urbantv' with val '2000'
+CLM adding use_case 2000_control defaults for var 'use_case_desc' with val 'Conditions to simulate 2000 land-use'
+err=ERROR : CLM build-namelist::CLMBuildNamelist::setup_logic_lnd_tuning() : lnd_tuning_mode has a value (clm5_0_CRUv7) that is NOT valid. Valid values are: 'clm4_5_CRUNCEP' 'clm5_0_cam5.5' 'clm5_0_GSW3P'
+ ---------------------------------------------------

@@ -1,0 +1,13 @@
+&modelio
+  diri = "/glade/scratch/lfjiang/1x1ptBra_test/bld/esp"
+  diro = "/glade/scratch/lfjiang/1x1ptBra_test/run"
+  logfile = "esp.log.180227-114248"
+/
+&pio_inparm
+  pio_netcdf_format = ""
+  pio_numiotasks = -99
+  pio_rearranger = -99
+  pio_root = -99
+  pio_stride = -99
+  pio_typename = "nothing"
+/

@@ -1,0 +1,17 @@
+&drydep_inparm
+/
+&megan_emis_nl
+ megan_factors_file = '/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc'
+ megan_specifier = 'ISOP = isoprene', 'C10H16 = pinene_a + carene_3 + thujene_a', 'CH3OH = methanol', 'C2H5OH = ethanol',
+         'CH2O = formaldehyde', 'CH3CHO = acetaldehyde', 'CH3COOH = acetic_acid', 'CH3COCH3 = acetone'
+/
+&fire_emis_nl
+/
+&carma_inparm
+/
+!#--------------------------------------------------------------------------------------------------------------------------
+!# drv_flds_in:: Comment:
+!# This namelist was created using the following command-line:
+!#     /glade/u/home/lfjiang/ctsm/bld/CLM build-namelist -cimeroot /glade/u/home/lfjiang/ctsm/cime/scripts/Tools/../.. -infile /glade/u/home/lfjiang/ctsm/casecl/1x1ptnumaIA_test_crop/Buildconf/clmconf/namelist -csmdata /glade/p/cesmdata/cseg/inputdata -inputdata /glade/u/home/lfjiang/ctsm/casecl/1x1ptnumaIA_test_crop/Buildconf/clm.input_data_list -ignore_ic_year -namelist &clm_inparm  start_ymd=00010101 /  -use_case 2000_control -res 1x1_numaIA -clm_start_type default -envxml_dir /glade/u/home/lfjiang/ctsm/casecl/1x1ptnumaIA_test_crop -l_ncpl 48 -lnd_frac /glade/p/cesmdata/cseg/inputdata/share/domains/domain.clm/domain.lnd.1x1pt-numaIA_navy.110106.nc -glc_nec 10 -co2_ppmv 367.0 -co2_type constant -config /glade/u/home/lfjiang/ctsm/casecl/1x1ptnumaIA_test_crop/Buildconf/clmconf/config_cache.xml -bgc bgc -crop -clm_accelerated_spinup off -lnd_tuning_mode clm5_0_GSW3P
+!# For help on options use: /glade/u/home/lfjiang/ctsm/bld/CLM build-namelist -help
+!#--------------------------------------------------------------------------------------------------------------------------

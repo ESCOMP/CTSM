@@ -264,6 +264,7 @@ contains
 
              do k = 1, ndecomp_cascade_transitions
                 a_ma_vr((cascade_receiver_pool(k)-1)*nlevdecomp+j,(cascade_donor_pool(k)-1)*nlevdecomp+j) = (1.0-rf_decomp_cascade(c,j,k))*pathfrac_decomp_cascade(c,j,k)
+!                if(cascade_donor_pool(k) .eq. i_met_lit .and. j .eq. 1)print*,'a_ma*k*C',k,a_ma_vr((cascade_receiver_pool(k)-1)*nlevdecomp+j,(cascade_donor_pool(k)-1)*nlevdecomp+j)*kk_ma_vr((cascade_donor_pool(k)-1)*nlevdecomp+j,(cascade_donor_pool(k)-1)*nlevdecomp+j)*matrix_Cinter(1+(i_met_lit-1)*nlevdecomp,1)
                 if( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)))then
                    na_ma_vr((cascade_receiver_pool(k)-1)*nlevdecomp+j,(cascade_donor_pool(k)-1)*nlevdecomp+j) = (1.0-rf_decomp_cascade(c,j,k))* &
                             (cn_decomp_pools(c,j,cascade_donor_pool(k))/cn_decomp_pools(c,j,cascade_receiver_pool(k)))*pathfrac_decomp_cascade(c,j,k)
@@ -275,13 +276,18 @@ contains
           tranvert = matmul(a_ma_vr,kk_ma_vr)-tri_ma_vr-kk_fire_vr  !intermediate calculatio
           ntranvert = matmul(na_ma_vr,kk_ma_vr)-tri_ma_vr-kk_fire_vr  !intermediate calculatio
  
-!          print*,'before matrix',matrix_Cinter(1+(i_met_lit-1)*nlevdecomp,1)
+          !print*,'before matrix',c,matrix_Cinter(1+(i_met_lit-1)*nlevdecomp,1)
           emulator_tmp=matmul(matmul(a_ma_vr,kk_ma_vr), matrix_Cinter)*dt
-!          print*,'transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
+          !print*,'Cinput to met',matrix_Cinput_vector(1+(i_met_lit-1)*nlevdecomp,1)
+          !print*,'transfer C,k met',kk_ma_vr((cascade_donor_pool(1)-1)*nlevdecomp+1,(cascade_donor_pool(1)-1)*nlevdecomp+1)
+          !print*,'matrix_k',matrix_decomp_k(c,1,i_met_lit)
+          !print*,'fpi_vr',fpi_vr(c,1)
+          !print*,'C flux leaving met',kk_ma_vr((cascade_donor_pool(1)-1)*nlevdecomp+1,(cascade_donor_pool(1)-1)*nlevdecomp+1)*matrix_Cinter(1+(i_met_lit-1)*nlevdecomp,1)*dt
+          !print*,'transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
           emulator_tmp=matmul(-tri_ma_vr, matrix_Cinter)*dt
-!          print*,'vertical transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
+          !print*,'vertical transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
           emulator_tmp=matmul(-kk_fire_vr, matrix_Cinter)*dt
-!          print*,'fire C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
+          !print*,'fire C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
           matrix_Cinter_next(:,:) = matrix_Cinter + matrix_Cinput_vector + &
                                    matmul(tranvert, matrix_Cinter)*dt
 

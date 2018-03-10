@@ -1,0 +1,18 @@
+2018-03-10 01:58:36: case.setup starting 
+ ---------------------------------------------------
+2018-03-10 01:58:38: case.setup success 
+ ---------------------------------------------------
+2018-03-10 01:59:36: case.build starting 
+ ---------------------------------------------------
+2018-03-10 02:04:29: case.build success 
+ ---------------------------------------------------
+2018-03-10 02:08:28: case.submit starting 
+ ---------------------------------------------------
+2018-03-10 02:08:34: case.submit success 
+ ---------------------------------------------------
+2018-03-10 02:08:39: case.run starting 
+ ---------------------------------------------------
+2018-03-10 02:09:50: case.run error 
+ERROR: RUN FAIL: Command 'mpiexec_mpt  -np 1 -p "%g:"  omplace -tm open64  /glade/scratch/lfjiang/1x1ptnumaIA_test_crop_1/bld/cesm.exe  >> cesm.log.$LID 2>&1 ' failed
+See log file for details: /glade/scratch/lfjiang/1x1ptnumaIA_test_crop_1/run/cesm.log.180310-020839
+ ---------------------------------------------------

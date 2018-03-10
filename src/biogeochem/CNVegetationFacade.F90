@@ -45,7 +45,7 @@ module CNVegetationFacade
   use perf_mod                        , only : t_startf, t_stopf
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
-  use clm_varpar                      , only :nvegpool
+  use clm_varpar                      , only :nvegcpool,nvegnpool
   use abortutils                      , only : endrun
   use spmdMod                         , only : masterproc
   use clm_time_manager                , only : get_curr_date, get_ref_date
@@ -201,7 +201,6 @@ contains
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
     character(len=*) , intent(in)    :: NLFilename ! namelist filename
-!    integer           , intent(in) :: nvegpool
 
     !
     ! !LOCAL VARIABLES:
@@ -221,13 +220,13 @@ contains
        ! Read in the general CN namelist
        call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
 
-       call this%cnveg_carbonstate_inst%Init(bounds,nvegpool=18,carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
+       call this%cnveg_carbonstate_inst%Init(bounds,nvegcpool=nvegcpool,carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
        if (use_c13) then
-          call this%c13_cnveg_carbonstate_inst%Init(bounds,nvegpool=18,carbon_type='c13', ratio=c13ratio, &
+          call this%c13_cnveg_carbonstate_inst%Init(bounds,nvegcpool=nvegcpool,carbon_type='c13', ratio=c13ratio, &
                NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
-          call this%c14_cnveg_carbonstate_inst%Init(bounds,nvegpool=18, carbon_type='c14', ratio=c14ratio, &
+          call this%c14_cnveg_carbonstate_inst%Init(bounds,nvegcpool=nvegcpool, carbon_type='c14', ratio=c14ratio, &
                NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
@@ -237,7 +236,7 @@ contains
        if (use_c14) then
           call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
        end if
-       call this%cnveg_nitrogenstate_inst%Init(bounds,nvegpool,     &
+       call this%cnveg_nitrogenstate_inst%Init(bounds,nvegnpool,     &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
             this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp),  &
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
@@ -925,8 +924,8 @@ contains
     call CNDriverLeaching(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
-         waterstate_inst, waterflux_inst, soilstate_inst, &
-         this%cnveg_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+         waterstate_inst, waterflux_inst, soilstate_inst, this%cnveg_state_inst, &
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)

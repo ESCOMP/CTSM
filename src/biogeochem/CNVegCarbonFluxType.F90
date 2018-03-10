@@ -10,8 +10,8 @@ module CNVegCarbonFluxType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools,nvegpool
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nvegpool
+  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools,nvegcpool
+  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp
   use clm_varcon                         , only : spval, dzsoi_decomp
   use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop, use_matrixcn
   use clm_varctl                         , only : use_grainproduct
@@ -742,16 +742,16 @@ contains
 ! Matrix
     if(use_matrixcn)then
        allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
-       allocate(this%matrix_alloc_patch          (begp:endp,1:nvegpool))              ; this%matrix_alloc_patch       (:,:) = nan
+       allocate(this%matrix_alloc_patch          (begp:endp,1:nvegcpool))              ; this%matrix_alloc_patch       (:,:) = nan
 
-       allocate(this%matrix_phtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_phtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_phturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_phturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_phtransfer_patch     (begp:endp,1:nvegcpool+1,1:nvegcpool)) ; this%matrix_phtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_phturnover_patch     (begp:endp,1:nvegcpool,1:nvegcpool))   ; this%matrix_phturnover_patch  (:,:,:) = nan
 
-       allocate(this%matrix_gmtransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_gmtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_gmturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_gmturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_gmtransfer_patch     (begp:endp,1:nvegcpool+1,1:nvegcpool)) ; this%matrix_gmtransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_gmturnover_patch     (begp:endp,1:nvegcpool,1:nvegcpool))   ; this%matrix_gmturnover_patch  (:,:,:) = nan
 
-       allocate(this%matrix_fitransfer_patch     (begp:endp,1:nvegpool+1,1:nvegpool)) ; this%matrix_fitransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_fiturnover_patch     (begp:endp,1:nvegpool,1:nvegpool))   ; this%matrix_fiturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_fitransfer_patch     (begp:endp,1:nvegcpool+1,1:nvegcpool)) ; this%matrix_fitransfer_patch  (:,:,:) = nan
+       allocate(this%matrix_fiturnover_patch     (begp:endp,1:nvegcpool,1:nvegcpool))   ; this%matrix_fiturnover_patch  (:,:,:) = nan
     end if
 
 
@@ -3430,7 +3430,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (nvegpool=18, &
+    call this%SetValues (nvegcpool=nvegcpool, &
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -3634,7 +3634,7 @@ contains
   end subroutine RestartAllIsotopes
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this, nvegpool, &
+  subroutine SetValues ( this, nvegcpool, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -3643,7 +3643,7 @@ contains
     !
     ! !ARGUMENTS:
     class (cnveg_carbonflux_type) :: this
-    integer , intent(in) :: num_patch,nvegpool
+    integer , intent(in) :: num_patch,nvegcpool
     integer , intent(in) :: filter_patch(:)
     real(r8), intent(in) :: value_patch
     integer , intent(in) :: num_column
@@ -3834,10 +3834,10 @@ contains
 !   Matrix
        if(use_matrixcn)then
           this%matrix_Cinput_patch(i)                       = value_patch
-          do k = 1, nvegpool         
+          do k = 1, nvegcpool         
              this%matrix_alloc_patch(i,k)              = value_patch
-             do j = 1, nvegpool+1
-                if(j .le. nvegpool)then
+             do j = 1, nvegcpool+1
+                if(j .le. nvegcpool)then
                    this%matrix_phturnover_patch (i,j,k) = value_patch
                    this%matrix_gmturnover_patch (i,j,k) = value_patch
                    this%matrix_fiturnover_patch (i,j,k) = value_patch

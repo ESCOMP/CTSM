@@ -175,6 +175,7 @@ contains
                   if ( pmnf_decomp_cascade(c,j,k) > 0._r8 ) then
                      p_decomp_cpool_loss(c,j,k) = p_decomp_cpool_loss(c,j,k) * fpi_vr(c,j)
                      pmnf_decomp_cascade(c,j,k) = pmnf_decomp_cascade(c,j,k) * fpi_vr(c,j)
+!                     if(j .eq. 1 .and. k .eq. 1)print*,'fpi_vr',c,fpi_vr(c,j),p_decomp_cpool_loss(c,j,k)
                      if (.not. use_nitrif_denitrif) then
                         sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8
                      end if

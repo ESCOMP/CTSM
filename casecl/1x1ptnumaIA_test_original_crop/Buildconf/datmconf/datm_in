@@ -1,0 +1,32 @@
+&datm_nml
+  decomp = "1d"
+  factorfn = "null"
+  force_prognostic_true = .false.
+  iradsw = 1
+  presaero = .true.
+  restfilm = "undefined"
+  restfils = "undefined"
+  wiso_datm = .false.
+/
+&shr_strdata_nml
+  datamode = "CLMNCEP"
+  domainfile = "/glade/p/cesmdata/cseg/inputdata/share/domains/domain.clm/domain.lnd.1x1pt-numaIA_navy.110106.nc"
+  dtlimit = 1.5, 1.5, 1.5, 1.5, 1.5
+  fillalgo = "nn", "nn", "nn", "nn", "nn"
+  fillmask = "nomask", "nomask", "nomask", "nomask", "nomask"
+  fillread = "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET"
+  fillwrite = "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET"
+  mapalgo = "bilinear", "bilinear", "bilinear", "bilinear", "bilinear"
+  mapmask = "nomask", "nomask", "nomask", "nomask", "nomask"
+  mapread = "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET"
+  mapwrite = "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET", "NOT_SET"
+  readmode = "single", "single", "single", "single", "single"
+  streams = "datm.streams.txt.CLMGSWP3v1.Solar 1 1991 2010",
+      "datm.streams.txt.CLMGSWP3v1.Precip 1 1991 2010",
+      "datm.streams.txt.CLMGSWP3v1.TPQW 1 1991 2010",
+      "datm.streams.txt.presaero.clim_2000 1 1 1",
+      "datm.streams.txt.topo.observed 1 1 1"
+  taxmode = "cycle", "cycle", "cycle", "cycle", "cycle"
+  tintalgo = "coszen", "nearest", "linear", "linear", "lower"
+  vectors = "null"
+/

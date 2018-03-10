@@ -1,0 +1,100 @@
+2018-02-22 09:54:37: ./create_newcase --case /glade/u/home/lfjiang/ctsm/casecl/1x1ptBra_test --res 1x1_brazil --compset I2000Clm50BgcCruGs --mach cheyenne --project UOKL0018 --run-unsupported
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Compset longname is 2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Compset specification file is /glade/u/home/lfjiang/ctsm/cime_config/config_compsets.xml
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Pes     specification file is /glade/u/home/lfjiang/ctsm/cime_config/config_pes.xml
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Forcing is 1972-2004
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Using None coupler instances
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Component ATM is  Data driven ATM 
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: ATM_GRID is 1x1_brazil
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Component LND is clm5.0:
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: LND_GRID is 1x1_brazil
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Component ICE is Stub ice component
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: ICE_GRID is null
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Component OCN is Stub ocn component
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: OCN_GRID is null
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Component ROF is MOSART: MOdel for Scale Adaptive River Transport
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: ROF_GRID is null
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Component GLC is Stub glacier (land ice) component
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: GLC_GRID is null
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: Component WAV is Stub wave component
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: WAV_GRID is null
+
+ ---------------------------------------------------
+
+2018-02-22 09:54:37: ESP_GRID is None
+
+ ---------------------------------------------------
+
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
+CESM version is unknown
