@@ -40,6 +40,7 @@ contains
     use controlMod                       , only : NLFilename
     use clm_varctl                       , only : use_hillslope, fsurdat
     use HillslopeHydrologyBaseMod        , only : hillslope_geomorphology_type
+    use HillslopeHydrologySurfaceDataMod , only : hillslope_geomorphology_surfacedata_type
     use HillslopeHydrologyIndependentMod , only : hillslope_geomorphology_independent_type
     use HillslopeHydrologyTroch02Mod     , only : hillslope_geomorphology_troch02_type
 
@@ -53,6 +54,8 @@ contains
     call hillslope_geomorphology_readNL(NLFilename)
 
     select case (trim(hillslope_geomorphology))
+    case ('surfacedata')
+       allocate(hg, source = hillslope_geomorphology_surfacedata_type())
     case ('independent')
        allocate(hg, source = hillslope_geomorphology_independent_type())
     case ('troch02')
@@ -93,7 +96,7 @@ contains
 
     ! Default values for namelist
 
-   hillslope_geomorphology = 'independent'
+   hillslope_geomorphology = 'surfacedata'
 
     ! Read soil_resis namelist
     if (masterproc) then

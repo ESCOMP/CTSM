@@ -131,7 +131,7 @@ contains
     ! !USES
     use clm_varpar, only : natpft_size
     use clm_instur, only : nhillcol
-    use clm_varctl, only : nhillslope, use_hillslope
+    use clm_varctl, only : use_hillslope
 
 
     !
@@ -156,7 +156,7 @@ contains
 
     nlunits = 1
     if(use_hillslope) then 
-       ncols = nhillslope * nhillcol(gi)
+       ncols = nhillcol(gi)
     else
        ncols = 1
     endif

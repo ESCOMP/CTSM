@@ -829,7 +829,7 @@ contains
     !
     ! !USES:
     use clm_instur, only : nhillcol
-    use clm_varctl, only : nhillslope
+    use clm_varctl, only : nhillslope,nmaxhillcol
     use ncdio_pio       , only : ncd_inqdid, ncd_inqdlen
     !
     ! !ARGUMENTS:
@@ -849,7 +849,7 @@ contains
     ! This temporary array is needed because ncd_io expects a pointer, 
     !so we can't directly pass 
 
-    allocate(arrayl(begg:endg))
+    ! number of hillslopes per landunit
     call ncd_inqdid(ncid,'nhillslope',dimid,readvar) 
     if (.not. readvar) then
        write(iulog,*)'surfrd error: nhillslope not on surface data file'
@@ -858,8 +858,18 @@ contains
        call ncd_inqdlen(ncid,dimid,nh)
        nhillslope = nh
     endif
-    
-    call ncd_io(ncid=ncid, varname='nhillcol', flag='read', data=arrayl, &
+    ! maximum number of columns per landunit
+    call ncd_inqdid(ncid,'nmaxhillcol',dimid,readvar) 
+    if (.not. readvar) then
+       write(iulog,*)'surfrd error: nmaxhillcol not on surface data file'
+       nmaxhillcol = 1
+    else
+       call ncd_inqdlen(ncid,dimid,nh)
+       nmaxhillcol = nh
+    endif
+    ! actual number of columns per landunit
+    allocate(arrayl(begg:endg))
+    call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=arrayl, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        write(iulog,*)'surfrd error: nhillcol not on surface data file'
