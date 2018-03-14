@@ -668,6 +668,9 @@ contains
 
     this%qflx_h2osfc_surf_col(bounds%begc:bounds%endc) = 0._r8
     this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8
+!KO
+    this%qflx_runoff_col(bounds%begc:bounds%endc)  = 0._r8
+!KO
 
     ! This variable only gets set in the hydrology filter; need to initialize it to 0 for
     ! the sake of columns outside this filter
@@ -731,6 +734,17 @@ contains
        ! initial run, not restart: initialize qflx_snow_drain to zero
        this%AnnET(bounds%begc:bounds%endc) = 0._r8
     endif
+
+!KO
+    call restartvar(ncid=ncid, flag=flag, varname='qflx_runoff', xtype=ncd_double,  &
+         dim1name='column', &
+         long_name='total runoff (qflx_drain+qflx_surf+qflx_qrgwl)', units='mm/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%qflx_runoff_col)
+    if (flag == 'read' .and. .not. readvar) then
+       ! initial run, not restart: initialize qflx_runoff to zero
+       this%qflx_runoff_col(bounds%begc:bounds%endc) = 0._r8
+    endif
+!KO
    
     call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
     call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)

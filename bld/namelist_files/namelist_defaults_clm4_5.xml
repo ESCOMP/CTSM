@@ -439,6 +439,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hydrstress phys="clm4_5"                 >.false.</use_hydrstress>
 <use_hydrstress phys="clm5_0" use_fates=".true." >.false.</use_hydrstress>
 <use_hydrstress phys="clm5_0" use_fates=".false.">.true.</use_hydrstress>
+
+<!-- flow of agricultural nitrogen (fan) model -->
+<use_fan phys="clm4_5" use_cn=".true.">.true.</use_fan>
+<use_fan phys="clm4_5" use_cn=".false.">.false.</use_fan>
+<use_fan phys="clm5_0" use_cn=".true.">.true.</use_fan>
+<use_fan phys="clm5_0" use_cn=".false.">.false.</use_fan>
+<use_fan phys="clm5_0" use_ed=".true." >.false.</use_fan>
+
 <!--
 
      Initial condition files to use and or interpolate from
@@ -889,6 +897,84 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <ndepmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
+
+<!--KO-->
+<!-- FAN Nitrogen (manure) deposition streams namelist defaults -->
+<stream_year_first_ndep2 use_cn=".true."   sim_year="2000" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="2000" >2000</stream_year_last_ndep2>
+
+<stream_year_first_ndep2 use_cn=".true."   sim_year="1850" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="1850" >2000</stream_year_last_ndep2>
+
+<stream_year_first_ndep2 use_cn=".true."   sim_year="1000" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="1000" >2000</stream_year_last_ndep2>
+
+<stream_year_first_ndep2 use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_ndep2>
+
+<stream_year_first_ndep2 use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_ndep2>
+
+<stream_year_first_ndep2 use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2000</stream_year_last_ndep2>
+
+<stream_year_first_ndep2 use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2000</stream_year_last_ndep2>
+
+<stream_year_first_ndep2 use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2000</stream_year_first_ndep2>
+<stream_year_last_ndep2  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2000</stream_year_last_ndep2>
+
+<stream_fldfilename_ndep2 hgrid="360x720cru"   use_cn=".true."   >/glade/p/cgd/tss/people/oleson/nitrogen/Nmanure.nc</stream_fldfilename_ndep2>
+
+<ndep2mapalgo use_cn=".true."                               >bilinear</ndep2mapalgo>
+
+<ndep2mapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</ndep2mapalgo>
+<ndep2mapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</ndep2mapalgo>
+<ndep2mapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</ndep2mapalgo>
+<ndep2mapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</ndep2mapalgo>
+<ndep2mapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</ndep2mapalgo>
+<ndep2mapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndep2mapalgo>
+<ndep2mapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</ndep2mapalgo>
+<ndep2mapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndep2mapalgo>
+
+<!-- FAN Nitrogen (fertilizer) deposition streams namelist defaults -->
+<stream_year_first_ndep3 use_cn=".true."   sim_year="2000" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="2000" >2000</stream_year_last_ndep3>
+
+<stream_year_first_ndep3 use_cn=".true."   sim_year="1850" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="1850" >2000</stream_year_last_ndep3>
+
+<stream_year_first_ndep3 use_cn=".true."   sim_year="1000" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="1000" >2000</stream_year_last_ndep3>
+
+<stream_year_first_ndep3 use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_ndep3>
+
+<stream_year_first_ndep3 use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_ndep3>
+
+<stream_year_first_ndep3 use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2000</stream_year_last_ndep3>
+
+<stream_year_first_ndep3 use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2000</stream_year_last_ndep3>
+
+<stream_year_first_ndep3 use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2000</stream_year_first_ndep3>
+<stream_year_last_ndep3  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2000</stream_year_last_ndep3>
+
+<stream_fldfilename_ndep3 hgrid="360x720cru"   use_cn=".true."   >/glade/p/cgd/tss/people/oleson/nitrogen/Nfert.nc</stream_fldfilename_ndep3>
+
+<ndep3mapalgo use_cn=".true."                               >bilinear</ndep3mapalgo>
+
+<ndep3mapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</ndep3mapalgo>
+<ndep3mapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</ndep3mapalgo>
+<ndep3mapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</ndep3mapalgo>
+<ndep3mapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</ndep3mapalgo>
+<ndep3mapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</ndep3mapalgo>
+<ndep3mapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndep3mapalgo>
+<ndep3mapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</ndep3mapalgo>
+<ndep3mapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndep3mapalgo>
+<!--KO-->
 
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>

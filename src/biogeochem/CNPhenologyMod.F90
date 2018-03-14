@@ -25,6 +25,7 @@ module CNPhenologyMod
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
+  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use CropType                        , only : crop_type
   use pftconMod                       , only : pftcon
   use SoilStateType                   , only : soilstate_type
@@ -244,6 +245,7 @@ contains
        canopystate_inst, soilstate_inst, dgvs_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+       soilbiogeochem_nitrogenstate_inst, &
        c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        leaf_prof_patch, froot_prof_patch, phase)
     ! !USES:
@@ -276,6 +278,7 @@ contains
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
     real(r8)                       , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
     real(r8)                       , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     integer                        , intent(in)    :: phase
@@ -307,6 +310,7 @@ contains
           call CropPhenology(num_pcropp, filter_pcropp, &
                waterstate_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
                cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+               soilbiogeochem_nitrogenstate_inst, &
                c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
        end if
     else if ( phase == 2 ) then
@@ -1420,6 +1424,7 @@ contains
   subroutine CropPhenology(num_pcropp, filter_pcropp                     , &
        waterstate_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst , &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,&
+       soilbiogeochem_nitrogenstate_inst, &
        c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
     ! !DESCRIPTION:
@@ -1434,9 +1439,11 @@ contains
     use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
     use pftconMod        , only : nirrig_cotton, nirrig_rice
     use clm_varcon       , only : spval, secspday
-    use clm_varctl       , only : use_fertilizer 
+    use clm_varctl       , only : use_fertilizer, use_fan
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
+    use LandunitType     , only: lun
+
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1450,6 +1457,7 @@ contains
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
+    type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     !
@@ -1468,6 +1476,7 @@ contains
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    real(r8) manure_avail ! manure nitrogen available in the beginning of fertilization
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1524,7 +1533,9 @@ contains
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch     , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer                           
          crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
-         fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
+         fert              =>    cnveg_nitrogenflux_inst%fert_patch            , & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
+         manu              =>    cnveg_nitrogenflux_inst%manu_patch            , & ! Output: [real(r8) (:) ]  (gN/m2/s) manure applied each timestep 
+         manurestore       =>    soilbiogeochem_nitrogenstate_inst%man_n_stored_col & ! Input:  [real(r8) (:) ]  manure nitrogen available for fertilization
          )
 
       ! get time info
@@ -1933,17 +1944,25 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
+            !write(iulog,*) 'cropmodel, manu', manure_avail, manu(p) 
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
-                    fert_counter(p)  = ndays_on * secspday
-                    if (ndays_on .gt. 0) then
-                       fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
-                    else
-                       fert(p) = 0._r8
-                    end if
+                  fert_counter(p)  = ndays_on * secspday
+                  if (ndays_on .gt. 0) then
+                     if (use_fan) then
+                        fert(p) = fertnitro(p) / fert_counter(p)
+                        manu(p) = manurestore(c) / fert_counter(p)
+                        ! manurestore(c) not changed here but in FAN code
+                     else
+                        fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
+                     end if
+                  else
+                     fert(p) = 0._r8
+                     if (use_fan) manu(p) = 0._r8
+                  end if
                else
                   ! this ensures no re-entry to onset of phase2
                   ! b/c onset_counter(p) = onset_counter(p) - dt
@@ -2001,6 +2020,7 @@ contains
 
               if (fert_counter(p) <= 0._r8) then
                  fert(p) = 0._r8
+                 if (use_fan) manu(p) = 0._r8
               else ! continue same fert application every timestep
                  fert_counter(p) = fert_counter(p) - dtrad
               end if

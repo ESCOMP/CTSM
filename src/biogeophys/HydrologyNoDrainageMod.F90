@@ -7,7 +7,10 @@ Module HydrologyNoDrainageMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro, use_fates
+!KO  use clm_varctl        , only : iulog, use_vichydro, use_fates
+!KO
+  use clm_varctl        , only : iulog, use_vichydro, use_fan, use_fates
+!KO
   use clm_varcon        , only : e_ice, denh2o, denice, rpi, spval
   use CLMFatesInterfaceMod, only : hlm_fates_interface_type
   use atm2lndType       , only : atm2lnd_type
@@ -146,6 +149,9 @@ contains
          snowliq            => waterstate_inst%snowliq_col            , & ! Output: [real(r8) (:)   ]  average snow liquid water               
          snow_persistence   => waterstate_inst%snow_persistence_col   , & ! Output: [real(r8) (:)   ]  counter for length of time snow-covered
          h2osoi_liqice_10cm => waterstate_inst%h2osoi_liqice_10cm_col , & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
+!KO
+!        h2osoi_liqice_5cm  => waterstate_inst%h2osoi_liqice_5cm_col  , & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 5cm of soil (kg/m2)
+!KO
          h2osoi_ice         => waterstate_inst%h2osoi_ice_col         , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => waterstate_inst%h2osoi_liq_col         , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
          h2osoi_ice_tot     => waterstate_inst%h2osoi_ice_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
@@ -301,6 +307,9 @@ contains
       ! Determine ground temperature, ending water balance and volumetric soil water
       ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
       ! Calculate soil temperature and total water (liq+ice) in top 17cm of soil
+!KO
+      ! Calculate total water (liq+ice) in top 5cm of soil
+!KO
       do fc = 1, num_nolakec
          c = filter_nolakec(fc)
          l = col%landunit(c)
@@ -308,6 +317,11 @@ contains
             t_soi_10cm(c) = 0._r8
             tsoi17(c) = 0._r8
             h2osoi_liqice_10cm(c) = 0._r8
+!KO
+            if ( use_fan ) then
+               waterstate_inst%h2osoi_liqice_5cm_col(c) = 0._r8
+            end if
+!KO
             h2osoi_liq_tot(c) = 0._r8
             h2osoi_ice_tot(c) = 0._r8
          end if
@@ -328,12 +342,30 @@ contains
                   end if
                end if
 
+               !JV
+               if ( use_fan ) then
+                  if (zi(c,j-1) < 0.05_r8) then
+                     if (zi(c,j) < 0.05_r8) then
+                        fracl = 1.0_r8
+                     else
+                        fracl = (0.05_r8 - zi(c,j-1)) / dz(c,j)   
+                     end if
+                     waterstate_inst%h2osoi_liqice_5cm_col(c) = &
+                          waterstate_inst%h2osoi_liqice_5cm_col(c) + &
+                          (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
+                          fracl                     
+                  end if
+               end if
+               !JV
+
                if (zi(c,j) <= 0.1_r8) then
                   fracl = 1._r8
                   t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
                   h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
                        (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
                        fracl
+                  !KO
+                  !KO
                else
                   if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) < 0.1_r8) then
                      fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)

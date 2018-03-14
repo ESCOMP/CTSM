@@ -37,6 +37,9 @@ module CNDriverMod
   use ch4Mod                          , only : ch4_type
   use EnergyFluxType                  , only : energyflux_type
   use SoilHydrologyType               , only : soilhydrology_type
+!KO
+  use FrictionVelocityMod             , only : frictionvel_type
+!KO
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -92,7 +95,10 @@ contains
        atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,                     &
-       nutrient_competition_method, cnfire_method)
+!KO       nutrient_competition_method, cnfire_method)
+!KO
+       nutrient_competition_method, cnfire_method, frictionvel_inst)
+!KO
     !
     ! !DESCRIPTION:
     ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -166,7 +172,10 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+!KO    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+!KO
+    type(waterstate_type)                   , intent(inout) :: waterstate_inst
+!KO
     type(waterflux_type)                    , intent(inout)    :: waterflux_inst
     type(canopystate_type)                  , intent(inout)    :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
@@ -177,6 +186,9 @@ contains
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
     type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
+!KO
+    type(frictionvel_type)                  , intent(inout) :: frictionvel_inst
+!KO
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     class(cnfire_method_type)               , intent(inout) :: cnfire_method
     !
@@ -261,8 +273,16 @@ contains
     ! --------------------------------------------------
 
     call t_startf('CNDeposition')
-    call CNNDeposition(bounds, &
-         atm2lnd_inst, soilbiogeochem_nitrogenflux_inst)
+!KO    call CNNDeposition(bounds, &
+!KO         atm2lnd_inst, soilbiogeochem_nitrogenflux_inst)
+!KO
+    call CNNDeposition(bounds, num_soilc, filter_soilc, &
+         atm2lnd_inst, soilbiogeochem_nitrogenflux_inst, cnveg_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, &
+         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+         waterstate_inst, soilstate_inst, temperature_inst, &
+         waterflux_inst, frictionvel_inst)
+!KO
     call t_stopf('CNDeposition')
     
     if(use_fun)then
@@ -353,6 +373,7 @@ contains
             crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+            soilbiogeochem_nitrogenstate_inst, &
             c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
             leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
             froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
@@ -448,6 +469,7 @@ contains
             crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+            soilbiogeochem_nitrogenstate_inst, &
             c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
             leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
             froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &
@@ -459,6 +481,7 @@ contains
          crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
          c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), &

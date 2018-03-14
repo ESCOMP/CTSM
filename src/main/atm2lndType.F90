@@ -10,7 +10,10 @@ module atm2lndType
   use shr_log_mod   , only : errMsg => shr_log_errMsg
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna
+!KO  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna
+!KO
+  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna, use_fan
+!KO
   use decompMod     , only : bounds_type
   use abortutils    , only : endrun
   use PatchType     , only : patch
@@ -86,6 +89,10 @@ module atm2lndType
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
      real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
+!KO
+     real(r8), pointer :: forc_ndep2_grc                (:)   => null() ! FAN nitrogen deposition (manure) rate (gN/m2/s)
+     real(r8), pointer :: forc_ndep3_grc                (:)   => null() ! FAN nitrogen deposition (fertilizer) rate (gN/m2/s)
+!KO
      real(r8), pointer :: forc_pc13o2_grc               (:)   => null() ! C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_grc                  (:)   => null() ! O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_240_patch            (:)   => null() ! 10-day mean O2 partial pressure (Pa)
@@ -509,6 +516,12 @@ contains
     allocate(this%forc_solai_grc                (begg:endg,numrad)) ; this%forc_solai_grc                (:,:) = ival
     allocate(this%forc_solar_grc                (begg:endg))        ; this%forc_solar_grc                (:)   = ival
     allocate(this%forc_ndep_grc                 (begg:endg))        ; this%forc_ndep_grc                 (:)   = ival
+!KO
+    if ( use_fan ) then
+       allocate(this%forc_ndep2_grc             (begg:endg))        ; this%forc_ndep2_grc                (:)   = ival
+       allocate(this%forc_ndep3_grc             (begg:endg))        ; this%forc_ndep3_grc                (:)   = ival
+    end if
+!KO
     allocate(this%forc_pc13o2_grc               (begg:endg))        ; this%forc_pc13o2_grc               (:)   = ival
     allocate(this%forc_po2_grc                  (begg:endg))        ; this%forc_po2_grc                  (:)   = ival
     allocate(this%forc_aer_grc                  (begg:endg,14))     ; this%forc_aer_grc                  (:,:) = ival
@@ -1224,6 +1237,10 @@ contains
     deallocate(this%forc_solai_grc)
     deallocate(this%forc_solar_grc)
     deallocate(this%forc_ndep_grc)
+!KO
+    deallocate(this%forc_ndep2_grc)
+    deallocate(this%forc_ndep3_grc)
+!KO
     deallocate(this%forc_pc13o2_grc)
     deallocate(this%forc_po2_grc)
     deallocate(this%forc_aer_grc)

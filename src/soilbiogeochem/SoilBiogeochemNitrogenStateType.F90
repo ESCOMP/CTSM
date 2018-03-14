@@ -11,7 +11,10 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+!KO  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+!KO
+  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp, use_fan
+!KO
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -35,6 +38,71 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: smin_no3_col                 (:)     ! col (gN/m2) soil mineral NO3 pool
      real(r8), pointer :: smin_nh4_vr_col              (:,:)   ! col (gN/m3) vertically-resolved soil mineral NH4
      real(r8), pointer :: smin_nh4_col                 (:)     ! col (gN/m2) soil mineral NH4 pool
+
+     !JV, FAN
+     real(r8), pointer :: tan_g1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G1
+     real(r8), pointer :: tan_g2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G2
+     real(r8), pointer :: tan_s0_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S0
+     real(r8), pointer :: tan_s1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S1
+     real(r8), pointer :: tan_s2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S2
+
+     real(r8), pointer :: tan_f0_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F0
+     real(r8), pointer :: tan_f1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F1
+     real(r8), pointer :: tan_f2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F2
+     real(r8), pointer :: tan_f3_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F3
+     
+     real(r8), pointer :: fert_u0_col(:)                      ! col (gN/m2) total urea N in FAN pool U0
+     real(r8), pointer :: fert_u1_col(:)                      ! col (gN/m2) total urea N in FAN pool U1
+     
+     real(r8), pointer :: man_u_grz_col(:)                     ! col (gN/m2) unavailable organic N, grazing
+     real(r8), pointer :: man_a_grz_col(:)                     ! col (gN/m2) available organic N, grazing
+     real(r8), pointer :: man_r_grz_col(:)                     ! col (gN/m2) resistant organic N, grazing
+
+     real(r8), pointer :: man_u_app_col(:)                     ! col (gN/m2) unavailable organic N, application
+     real(r8), pointer :: man_a_app_col(:)                     ! col (gN/m2) available organic N, application
+     real(r8), pointer :: man_r_app_col(:)                     ! col (gN/m2) resistant organic N, application
+
+     real(r8), pointer :: man_n_stored_col(:)                  ! col (gN/m2) manure N in storage
+     real(r8), pointer :: man_tan_stored_col(:)                ! col (gN/m2) manure TAN in storage
+!KO
+     ! FAN
+     real(r8), pointer :: smin_no3_monthly_col         (:)     ! col (gN/m2) soil mineral NO3 pool
+     real(r8), pointer :: smin_nh4_monthly_col         (:)     ! col (gN/m2) soil mineral NH4 pool
+     real(r8), pointer :: TAN_manu_col                 (:)     ! col (gN/m2) total ammoniacal nitrogen in manure
+     real(r8), pointer :: no3_manure_col               (:)     ! col (gN/m2) NO3 pool in manure
+     real(r8), pointer :: manure_u_col                 (:)     ! col (gN/m2) urine pool in manure
+     real(r8), pointer :: manure_n_col                 (:)     ! col (gN/m2) non-mineralizable N pool in manure
+     real(r8), pointer :: manure_a_col                 (:)     ! col (gN/m2) available N pool in manure
+     real(r8), pointer :: manure_r_col                 (:)     ! col (gN/m2) resistant N pool in manure
+     real(r8), pointer :: n2o_manure_total_col         (:)     ! col (gN/m2) total atmospheric N emission of N2O from manure
+     real(r8), pointer :: nox_manure_total_col         (:)     ! col (gN/m2) total atmospheric N emission of NOx from manure
+     real(r8), pointer :: nh3_manure_total_col         (:)     ! col (gN/m2) total atmospheric N emission of NH3 from manure
+     real(r8), pointer :: N_Run_Off_manure_total_col   (:)     ! col (gN/m2) total N washed from N manure
+     real(r8), pointer :: nh4_manure_total_col         (:)     ! col (gN/m2) total NH4 emission from manure
+     real(r8), pointer :: no3_manure_total_col         (:)     ! col (gN/m2) total NO3 emission from manure
+     real(r8), pointer :: ndep_total_col               (:)     ! col (gN/m2) total ndep from manure and fertilizer
+     real(r8), pointer :: fert_u_col                   (:)     ! col (gN/m2) N pool in fertilizer
+     real(r8), pointer :: no3_fert_col                 (:)     ! col (gN/m2) NO3 pool in fertilizer
+     real(r8), pointer :: nh3_fert_total_col           (:)     ! col (gN/m2) total atmospheric N emission of NH3 from fertilizer
+     real(r8), pointer :: N_Run_Off_fert_total_col     (:)     ! col (gN/m2) total N washed from N fertilizer
+     real(r8), pointer :: nh4_fert_total_col           (:)     ! col (gN/m2) total NH4 emission from fertilizer
+     real(r8), pointer :: no3_fert_total_col           (:)     ! col (gN/m2) total NO3 emission from fertilizer
+     real(r8), pointer :: ndep_fert_total_col          (:)     ! col (gN/m2) total ndep from fertilizer
+     real(r8), pointer :: total_nh3_col                (:)     ! col (gN/m2) total atmospheric N emission of NH3 from Nr
+     real(r8), pointer :: total_N_Run_Off_col          (:)     ! col (gN/m2) total N washed from N Nr
+     real(r8), pointer :: total_nh4_col                (:)     ! col (gN/m2) total NH4 emission from Nr
+     real(r8), pointer :: total_no3_col                (:)     ! col (gN/m2) total NO3 emission from Nr
+     real(r8), pointer :: total_ndep_col               (:)     ! col (gN/m2) total ndep from Nr
+     real(r8), pointer :: TAN_fert_col                 (:)     ! col (gN/m2) total ammoniacal nitrogen in fertilizer
+     real(r8), pointer :: man_water_pool_col           (:)     ! col (m3/m2) volume of water in manure/water solution
+     real(r8), pointer :: fert_water_pool_col          (:)     ! col (m3/m2) volume of water in fert/water solution
+     real(r8), pointer :: ra_col                       (:)     ! col (s/m)   aerodynamic resistance for grass pfts
+     real(r8), pointer :: rb_col                       (:)     ! col (s/m)   leaf boundary layer resistance for grass pfts
+     real(r8), pointer :: gdd8_col                     (:)     ! col (ddays) growing degree-days base 8C from planting
+     real(r8), pointer :: t_a10_col                    (:)     ! col (K)     10-day running mean of the 2 m temperature
+     real(r8), pointer :: t_a10min_col                 (:)     ! col (K)     10-day running mean of min 2-m temperature
+     real(r8), pointer :: fert_app_jday_col            (:)     ! col (day)   julian day of the first fertilizer application
+!KO
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: decomp_npools_col            (:,:)   ! col (gN/m2)  decomposing (litter, cwd, soil) N pools
@@ -128,6 +196,75 @@ contains
 
     allocate(this%decomp_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
     this%decomp_npools_vr_col(:,:,:)= nan
+
+    !JV
+    if (use_fan) then
+       allocate(this%tan_g1_col(begc:endc)) ; this%tan_g1_col(:) = nan
+       allocate(this%tan_g2_col(begc:endc)) ; this%tan_g2_col(:) = nan
+       allocate(this%tan_s0_col(begc:endc)) ; this%tan_s0_col(:) = nan
+       allocate(this%tan_s1_col(begc:endc)) ; this%tan_s1_col(:) = nan
+       allocate(this%tan_s2_col(begc:endc)) ; this%tan_s2_col(:) = nan
+       allocate(this%tan_f0_col(begc:endc)) ; this%tan_f0_col(:) = nan
+       allocate(this%tan_f1_col(begc:endc)) ; this%tan_f1_col(:) = nan
+       allocate(this%tan_f2_col(begc:endc)) ; this%tan_f2_col(:) = nan
+       allocate(this%tan_f3_col(begc:endc)) ; this%tan_f3_col(:) = nan
+       allocate(this%fert_u0_col(begc:endc)) ; this%fert_u0_col(:) = nan
+       allocate(this%fert_u1_col(begc:endc)) ; this%fert_u1_col(:) = nan
+
+       allocate(this%man_u_grz_col(begc:endc)) ; this%man_u_grz_col(:) = nan
+       allocate(this%man_a_grz_col(begc:endc)) ; this%man_a_grz_col(:) = nan
+       allocate(this%man_r_grz_col(begc:endc)) ; this%man_r_grz_col(:) = nan
+
+       allocate(this%man_u_app_col(begc:endc)) ; this%man_u_app_col(:) = nan
+       allocate(this%man_a_app_col(begc:endc)) ; this%man_a_app_col(:) = nan
+       allocate(this%man_r_app_col(begc:endc)) ; this%man_r_app_col(:) = nan
+
+       allocate(this%man_n_stored_col(begc:endc)) ; this%man_n_stored_col(:) = nan
+       allocate(this%man_tan_stored_col(begc:endc)) ; this%man_tan_stored_col(:) = nan
+
+    end if
+    !KO
+
+    
+    if ( use_fan ) then
+       allocate(this%smin_no3_monthly_col       (begc:endc)) ; this%smin_no3_monthly_col       (:) = nan
+       allocate(this%smin_nh4_monthly_col       (begc:endc)) ; this%smin_nh4_monthly_col       (:) = nan
+       allocate(this%TAN_manu_col               (begc:endc)) ; this%TAN_manu_col               (:) = nan
+       allocate(this%no3_manure_col             (begc:endc)) ; this%no3_manure_col             (:) = nan
+       allocate(this%manure_u_col               (begc:endc)) ; this%manure_u_col               (:) = nan
+       allocate(this%manure_n_col               (begc:endc)) ; this%manure_n_col               (:) = nan
+       allocate(this%manure_a_col               (begc:endc)) ; this%manure_a_col               (:) = nan
+       allocate(this%manure_r_col               (begc:endc)) ; this%manure_r_col               (:) = nan
+       allocate(this%n2o_manure_total_col       (begc:endc)) ; this%n2o_manure_total_col       (:) = nan
+       allocate(this%nox_manure_total_col       (begc:endc)) ; this%nox_manure_total_col       (:) = nan
+       allocate(this%nh3_manure_total_col       (begc:endc)) ; this%nh3_manure_total_col       (:) = nan
+       allocate(this%N_Run_Off_manure_total_col (begc:endc)) ; this%N_Run_Off_manure_total_col (:) = nan
+       allocate(this%nh4_manure_total_col       (begc:endc)) ; this%nh4_manure_total_col       (:) = nan
+       allocate(this%no3_manure_total_col       (begc:endc)) ; this%no3_manure_total_col       (:) = nan
+       allocate(this%ndep_total_col             (begc:endc)) ; this%ndep_total_col             (:) = nan
+       allocate(this%fert_u_col                 (begc:endc)) ; this%fert_u_col                 (:) = nan
+       allocate(this%no3_fert_col               (begc:endc)) ; this%no3_fert_col               (:) = nan
+       allocate(this%nh3_fert_total_col         (begc:endc)) ; this%nh3_fert_total_col         (:) = nan
+       allocate(this%N_Run_Off_fert_total_col   (begc:endc)) ; this%N_Run_Off_fert_total_col   (:) = nan
+       allocate(this%nh4_fert_total_col         (begc:endc)) ; this%nh4_fert_total_col         (:) = nan
+       allocate(this%no3_fert_total_col         (begc:endc)) ; this%no3_fert_total_col         (:) = nan
+       allocate(this%ndep_fert_total_col        (begc:endc)) ; this%ndep_fert_total_col        (:) = nan
+       allocate(this%total_nh3_col              (begc:endc)) ; this%total_nh3_col              (:) = nan
+       allocate(this%total_N_Run_Off_col        (begc:endc)) ; this%total_N_Run_Off_col        (:) = nan
+       allocate(this%total_nh4_col              (begc:endc)) ; this%total_nh4_col              (:) = nan
+       allocate(this%total_no3_col              (begc:endc)) ; this%total_no3_col              (:) = nan
+       allocate(this%total_ndep_col             (begc:endc)) ; this%total_ndep_col             (:) = nan
+       allocate(this%TAN_fert_col               (begc:endc)) ; this%TAN_fert_col               (:) = nan
+       allocate(this%man_water_pool_col         (begc:endc)) ; this%man_water_pool_col         (:) = nan
+       allocate(this%fert_water_pool_col        (begc:endc)) ; this%fert_water_pool_col        (:) = nan
+       allocate(this%ra_col                     (begc:endc)) ; this%ra_col                     (:) = nan
+       allocate(this%rb_col                     (begc:endc)) ; this%rb_col                     (:) = nan
+       allocate(this%gdd8_col                   (begc:endc)) ; this%gdd8_col                   (:) = nan
+       allocate(this%fert_app_jday_col          (begc:endc)) ; this%fert_app_jday_col          (:) = nan
+       allocate(this%t_a10_col                  (begc:endc)) ; this%t_a10_col                  (:) = nan
+       allocate(this%t_a10min_col               (begc:endc)) ; this%t_a10min_col               (:) = nan
+    end if
+!KO
 
   end subroutine InitAllocate
 
@@ -249,6 +386,19 @@ contains
           call hist_addfld1d (fname='SMIN_NH4', units='gN/m^2', &
                avgflag='A', long_name='soil mineral NH4', &
                ptr_col=this%smin_nh4_col)
+!KO
+          if ( use_fan ) then
+             this%smin_no3_monthly_col(begc:endc) = spval
+             call hist_addfld1d (fname='SMIN_NO3_MONTHLY', units='gN/m^2/month', &
+                  avgflag='A', long_name='soil mineral NO3 monthly', &
+                  ptr_col=this%smin_no3_monthly_col)
+
+             this%smin_nh4_monthly_col(begc:endc) = spval
+             call hist_addfld1d (fname='SMIN_NH4_MONTHLY', units='gN/m^2/month', &
+                  avgflag='A', long_name='soil mineral NH4 monthly', &
+                  ptr_col=this%smin_nh4_monthly_col)
+           end if
+!KO
        endif
     else
        if ( nlevdecomp_full > 1 ) then
@@ -277,6 +427,263 @@ contains
          &only makes sense at the column level: should not be averaged to gridcell', &
          ptr_col=this%dyn_nbal_adjustments_col, default='inactive')
 
+!KO
+    if ( use_fan ) then
+
+       this%TAN_manu_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_MANU', units='gN/m^2', &
+            avgflag='A', long_name='Manure TAN pool', &
+            ptr_col=this%TAN_manu_col)
+
+       this%TAN_fert_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_FERT', units='gN/m^2', &
+            avgflag='A', long_name='Fertilizer TAN pool', &
+            ptr_col=this%TAN_fert_col)
+
+       this%fert_u_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_FERT_U', units='gN/m^2', &
+            avgflag='A', long_name='Fertilizer N pool', &
+            ptr_col=this%fert_u_col)
+
+       this%manure_n_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_MANU_N', units='gN/m^2', &
+            avgflag='A', long_name='Non-minerizable manure TAN pool', &
+            ptr_col=this%manure_n_col)
+
+       this%manure_u_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_MANU_U', units='gN/m^2', &
+            avgflag='A', long_name='Urine manure TAN pool', &
+            ptr_col=this%manure_u_col)
+
+       this%manure_a_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_MANU_A', units='gN/m^2', &
+            avgflag='A', long_name='Available manure TAN pool', &
+            ptr_col=this%manure_a_col)
+
+       this%manure_r_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_MANU_R', units='gN/m^2', &
+            avgflag='A', long_name='Resistant manure TAN pool', &
+            ptr_col=this%manure_r_col)
+
+       this%man_water_pool_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_WATER_POOL', units='m^3/m^2', &
+            avgflag='A', long_name='Manure water pool', &
+            ptr_col=this%man_water_pool_col)
+
+       this%fert_water_pool_col(begc:endc) = spval
+       call hist_addfld1d (fname='FERT_WATER_POOL', units='m^3/m^2', &
+            avgflag='A', long_name='Fertilizer water pool', &
+            ptr_col=this%fert_water_pool_col)
+
+       this%ra_col(begc:endc) = spval
+       call hist_addfld1d (fname='RA_COL', units='s/m', &
+            avgflag='A', long_name='Column aerodynamic resistance for grass pft', &
+            ptr_col=this%ra_col)
+
+       this%rb_col(begc:endc) = spval
+       call hist_addfld1d (fname='RB_COL', units='s/m', &
+            avgflag='A', long_name='Column boundary layer resistance for grass pft', &
+            ptr_col=this%rb_col)
+
+       this%fert_app_jday_col(begc:endc) = spval
+       call hist_addfld1d (fname='FERT_APP_JDAY', units='', &
+            avgflag='A', long_name='Fertilizer application julian day', &
+            ptr_col=this%fert_app_jday_col)
+
+       this%no3_manure_col(begc:endc) = spval
+       call hist_addfld1d (fname='NO3_MANURE', units='gN/m^2', &
+            avgflag='A', long_name='NO3 Pool in Manure', &
+            ptr_col=this%no3_manure_col)
+        
+       this%n2o_manure_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='N2O_MANURE_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL N2O emission from manure', &
+            ptr_col=this%n2o_manure_total_col)
+        
+       this%nox_manure_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NOx_MANURE_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL NOx emission from manure', &
+            ptr_col=this%nox_manure_total_col)
+
+       this%nh3_manure_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NH3_MANURE_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL NH3 emission from manure', &
+            ptr_col=this%nh3_manure_total_col)
+
+       this%ndep_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NDEP_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL N DEP from manure and fertilizer', &
+            ptr_col=this%ndep_total_col)
+        
+       this%N_Run_Off_manure_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='N_RUN_OFF_MANURE_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='Total N run off from manure', &
+            ptr_col=this%N_Run_Off_manure_total_col)
+        
+       this%nh4_manure_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NH4_MANURE_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='Total NH4 from manure', &
+            ptr_col=this%nh4_manure_total_col)
+
+       this%no3_manure_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NO3_MANURE_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='Total NO3 from manure', &
+            ptr_col=this%no3_manure_total_col)
+        
+       this%nh3_fert_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NH3_FERT_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL NH3 emission from fertilizer', &
+            ptr_col=this%nh3_fert_total_col)
+
+       this%ndep_fert_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NDEP_FERT_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL N DEP from FERTILIZER', &
+            ptr_col=this%ndep_fert_total_col)
+        
+       this%N_Run_Off_fert_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='N_RUN_OFF_FERT_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='Total N run off from fertilizer', &
+            ptr_col=this%N_Run_Off_fert_total_col)
+        
+       this%nh4_fert_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NH4_FERT_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='Total NH4 from fertilizer', &
+            ptr_col=this%nh4_fert_total_col)
+
+       this%no3_fert_total_col(begc:endc) = spval
+       call hist_addfld1d (fname='NO3_FERT_TOTAL', units='gN/m^2/yr', &
+            avgflag='A', long_name='Total NO3 from fertilizer', &
+            ptr_col=this%no3_fert_total_col)
+
+       this%total_nh3_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTAL_NH3', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL NH3 emission from Nr', &
+            ptr_col=this%total_nh3_col)
+
+       this%total_ndep_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTAL_NDEP', units='gN/m^2/yr', &
+            avgflag='A', long_name='TOTAL N DEP from Nr', &
+            ptr_col=this%total_ndep_col)
+        
+       this%total_N_Run_Off_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTAL_N_RUN_OFF', units='gN/m^2/yr', &
+            avgflag='A', long_name='Total N run off from Nr', &
+            ptr_col=this%total_N_Run_Off_col)
+        
+       this%total_nh4_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTAL_NH4', units='gN/m^2', &
+            avgflag='A', long_name='Total NH4 from Nr', &
+            ptr_col=this%total_nh4_col)
+
+       this%total_no3_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTAL_NO3', units='gN/m^2', &
+            avgflag='A', long_name='Total NO3 from Nr', &
+            ptr_col=this%total_no3_col)
+
+    end if
+!KO
+
+    !JV
+    if (use_fan) then
+       this%tan_g1_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_G1', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool G1', &
+            ptr_col=this%tan_g1_col)
+
+       this%tan_g2_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_G2', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool G2', &
+            ptr_col=this%tan_g2_col)
+
+       this%tan_f0_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_F0', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F0', &
+            ptr_col=this%tan_f0_col)
+
+       this%tan_f1_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_F1', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F1', &
+            ptr_col=this%tan_f1_col)
+
+       this%tan_f2_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_F2', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F2', &
+            ptr_col=this%tan_f2_col)
+
+       this%tan_f3_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_F3', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F3', &
+            ptr_col=this%tan_f3_col)
+
+       this%tan_f0_col(begc:endc) = spval
+       call hist_addfld1d (fname='FERT_U0', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F0', &
+            ptr_col=this%fert_u0_col)
+
+       this%tan_f1_col(begc:endc) = spval
+       call hist_addfld1d (fname='FERT_U1', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F1', &
+            ptr_col=this%fert_u1_col)
+
+       
+       this%tan_s0_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_S0', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S0', &
+            ptr_col=this%tan_s0_col)
+
+       this%tan_s1_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_S1', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S1', &
+            ptr_col=this%tan_s1_col)
+
+       this%tan_s1_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_S2', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S2', &
+            ptr_col=this%tan_s2_col)
+
+       this%man_u_grz_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_U_GRZ', units='gN/m^2', &
+            avgflag='A', long_name='Unavailable manure nitrogen, grazing', &
+            ptr_col=this%man_u_grz_col)
+
+       this%man_a_grz_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_A_GRZ', units='gN/m^2', &
+            avgflag='A', long_name='Available manure nitrogen, grazing', &
+            ptr_col=this%man_a_grz_col)
+       
+       this%man_r_grz_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_R_GRZ', units='gN/m^2', &
+            avgflag='A', long_name='Resistant manure nitrogen, grazing', &
+            ptr_col=this%man_r_grz_col)
+
+       this%man_u_grz_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_U_APP', units='gN/m^2', &
+            avgflag='A', long_name='Unavailable manure nitrogen, application', &
+            ptr_col=this%man_u_app_col)
+
+       this%man_a_app_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_A_APP', units='gN/m^2', &
+            avgflag='A', long_name='Available manure nitrogen, application', &
+            ptr_col=this%man_a_app_col)
+       
+       this%man_r_app_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_R_APP', units='gN/m^2', &
+            avgflag='A', long_name='Resistant manure nitrogen, application', &
+            ptr_col=this%man_r_app_col)
+
+       this%man_n_stored_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_N_STORED', units='gN/m^2', &
+            avgflag='A', long_name='Manure nitrogen in storage', &
+            ptr_col=this%man_n_stored_col)
+       
+       this%man_tan_stored_col(begc:endc) = spval
+       call hist_addfld1d (fname='MAN_TAN_STORED', units='gN/m^2', &
+            avgflag='A', long_name='Manure ammoniacal nitrogen in storage', &
+            ptr_col=this%man_tan_stored_col)
+
+    end if
+    
+    
     if (use_nitrif_denitrif) then
        call hist_addfld1d (fname='DYN_COL_SOIL_ADJUSTMENTS_NO3', units='gN/m^2', &
             avgflag='SUM', &
@@ -360,6 +767,70 @@ contains
           this%totlitn_1m_col(c) = 0._r8
           this%totsomn_1m_col(c) = 0._r8
           this%cwdn_col(c)       = 0._r8
+!KO
+          if ( use_fan ) then
+             !JV
+             this%tan_g1_col(c) = 0.0_r8
+             this%tan_g2_col(c) = 0.0_r8
+             this%tan_s0_col(c) = 0.0_r8
+             this%tan_s1_col(c) = 0.0_r8
+             this%tan_s2_col(c) = 0.0_r8
+             this%tan_f0_col(c) = 0.0_r8
+             this%tan_f1_col(c) = 0.0_r8
+             this%tan_f2_col(c) = 0.0_r8
+             this%tan_f3_col(c) = 0.0_r8
+             this%fert_u1_col(c) = 0.0_r8
+             this%fert_u0_col(c) = 0.0_r8
+
+             this%man_u_grz_col(c) = 0.0_r8
+             this%man_a_grz_col(c) = 0.0_r8
+             this%man_r_grz_col(c) = 0.0_r8
+             
+             this%man_u_app_col(c) = 0.0_r8
+             this%man_a_app_col(c) = 0.0_r8
+             this%man_r_app_col(c) = 0.0_r8
+
+             this%man_tan_stored_col(c) = 0.0_r8
+             this%man_n_stored_col(c) = 0.0_r8
+             
+             this%TAN_manu_col(c)               = 0._r8
+             this%no3_manure_col(c)             = 0._r8
+             this%manure_u_col(c)               = 0._r8
+             this%manure_n_col(c)               = 0._r8
+             this%manure_a_col(c)               = 0._r8
+             this%manure_r_col(c)               = 0._r8
+             this%n2o_manure_total_col(c)       = 0._r8
+             this%nox_manure_total_col(c)       = 0._r8
+             this%nh3_manure_total_col(c)       = 0._r8
+             this%N_Run_Off_manure_total_col(c) = 0._r8
+             this%no3_manure_total_col(c)       = 0._r8
+             this%nh4_manure_total_col(c)       = 0._r8
+             this%ndep_total_col(c)             = 0._r8
+             this%smin_nh4_monthly_col(c)       = 0._r8
+             this%smin_no3_monthly_col(c)       = 0._r8
+             this%TAN_fert_col(c)               = 0._r8
+             this%no3_fert_col(c)               = 0._r8
+             this%man_water_pool_col(c)         = 0._r8
+             this%fert_water_pool_col(c)        = 0._r8
+             this%ra_col(c)                     = 0._r8
+             this%rb_col(c)                     = 0._r8
+             this%t_a10_col(c)                  = 0._r8
+             this%gdd8_col(c)                   = 0._r8
+             this%t_a10min_col(c)               = 0._r8
+             this%fert_app_jday_col(c)          = 0._r8
+             this%fert_u_col(c)                 = 0._r8
+             this%nh3_fert_total_col(c)         = 0._r8
+             this%no3_fert_total_col(c)         = 0._r8
+             this%nh4_fert_total_col(c)         = 0._r8
+             this%ndep_fert_total_col(c)        = 0._r8
+             this%N_Run_Off_fert_total_col(c)   = 0._r8
+             this%total_nh3_col(c)              = 0._r8
+             this%total_N_Run_Off_col(c)        = 0._r8
+             this%total_no3_col(c)              = 0._r8
+             this%total_nh4_col(c)              = 0._r8
+             this%total_ndep_col(c)             = 0._r8
+          end if
+!KO
 
        end if
     end do
@@ -486,11 +957,232 @@ contains
                dim1name='column', &
                long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d)
+!KO
+          ! I don't think these have to be on the restart file since they are
+          ! computed at each time step and it doesn't depend on the previous
+          ! time step.  Plus it should be outside the if/else use_vertsoilc
+          ! structure (just within the use_nitrif_denitrif structure)
+          if ( use_fan ) then
+             call restartvar(ncid=ncid, flag=flag, varname='smin_nh4_monthly', xtype=ncd_double,  &
+                  dim1name='column', long_name='', units='', &
+                  interpinic_flag='interp', readvar=readvar, data=this%smin_nh4_monthly_col)
+
+             call restartvar(ncid=ncid, flag=flag, varname='smin_no3_monthly', xtype=ncd_double,  &
+                  dim1name='column', long_name='', units='', &
+                  interpinic_flag='interp', readvar=readvar, data=this%smin_no3_monthly_col)
+           end if
+!KO
        end if
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg= 'ERROR:: smin_no3_vr'//' is required on an initialization dataset' )
        end if
     end if
+
+!KO
+    if ( use_fan ) then
+
+       call restartvar(ncid=ncid, flag=flag, varname='TAN_manu', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%TAN_manu_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='TAN_fert', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%TAN_fert_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='man_water_pool', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%man_water_pool_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='fert_water_pool', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%fert_water_pool_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='ra', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%ra_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='rb', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%rb_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='gdd8', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%gdd8_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='t_a10', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_a10_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='t_a10min', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_a10min_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='fert_app_jday', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%fert_app_jday_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='no3_manure', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%no3_manure_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='no3_fert', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%no3_fert_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='n2o_manure_total', xtype=ncd_double,  &
+           dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%n2o_manure_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='nox_manure_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%nox_manure_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='nh3_manure_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%nh3_manure_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='nh3_fert_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%nh3_fert_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='total_nh3', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_nh3_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='manure_u', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%manure_u_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='fert_u', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%fert_u_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='manure_n', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%manure_n_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='manure_a', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%manure_a_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='manure_r', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%manure_r_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='ndep_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%ndep_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='ndep_fert_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%ndep_fert_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='total_ndep', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_ndep_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='N_Run_Off_manure_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%N_Run_Off_manure_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='N_Run_Off_fert_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%N_Run_Off_fert_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='total_N_Run_Off', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_N_Run_Off_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='no3_manure_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%no3_manure_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='no3_fert_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%no3_fert_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='total_no3', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_no3_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='nh4_manure_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%nh4_manure_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='nh4_fert_total', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%nh4_fert_total_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='total_nh4', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_nh4_col)
+
+       !JV
+       call restartvar(ncid=ncid, flag=flag, varname='tan_g1', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_g1_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_g2', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_g2_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_s0', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_s0_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_s1', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_s1_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_s2', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_s2_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_f0', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_f0_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_f1', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_f1_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_f2', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_f2_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_f3', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_f3_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='fert_u0', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%fert_u0_col)
+       call restartvar(ncid=ncid, flag=flag, varname='fert_u1', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%fert_u1_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='man_u_grz', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_u_grz_col)
+       call restartvar(ncid=ncid, flag=flag, varname='man_a_grz', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_a_grz_col)
+       call restartvar(ncid=ncid, flag=flag, varname='man_r_grz', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_r_grz_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='man_u_app', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_u_app_col)
+       call restartvar(ncid=ncid, flag=flag, varname='man_a_app', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_a_app_col)
+       call restartvar(ncid=ncid, flag=flag, varname='man_r_app', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_r_app_col)
+
+       call restartvar(ncid=ncid, flag=flag, varname='man_tan_stored', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_tan_stored_col)
+       call restartvar(ncid=ncid, flag=flag, varname='man_n_stored', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%man_n_stored_col)
+
+       !JV
+    end if
+!KO
 
     if (use_nitrif_denitrif) then
        ! smin_nh4
@@ -684,6 +1376,60 @@ contains
        this%totlitn_1m_col(i)  = value_column
     end do
 
+!KO
+    if ( use_fan ) then
+       do fi = 1,num_column
+          i = filter_column(fi)
+          if (use_nitrif_denitrif) then
+             this%smin_no3_monthly_col(i) = value_column
+             this%smin_nh4_monthly_col(i) = value_column
+          end if
+       end do
+    end if
+!KO
+
+!KO
+    if ( use_fan ) then
+       do fi = 1,num_column
+          i = filter_column(fi)
+          this%TAN_manu_col(i)               = value_column
+          this%no3_manure_col(i)             = value_column
+          this%manure_u_col(i)               = value_column
+          this%manure_n_col(i)               = value_column
+          this%manure_a_col(i)               = value_column
+          this%manure_r_col(i)               = value_column
+          this%n2o_manure_total_col(i)       = value_column
+          this%nox_manure_total_col(i)       = value_column
+          this%nh3_manure_total_col(i)       = value_column
+          this%N_Run_Off_manure_total_col(i) = value_column
+          this%nh4_manure_total_col(i)       = value_column
+          this%no3_manure_total_col(i)       = value_column
+          this%ndep_total_col(i)             = value_column
+          this%fert_u_col(i)                 = value_column
+          this%no3_fert_col(i)               = value_column
+          this%nh3_fert_total_col(i)         = value_column
+          this%N_Run_Off_fert_total_col(i)   = value_column
+          this%nh4_fert_total_col(i)         = value_column
+          this%no3_fert_total_col(i)         = value_column
+          this%ndep_fert_total_col(i)        = value_column
+          this%total_nh3_col(i)              = value_column
+          this%total_N_Run_Off_col(i)        = value_column
+          this%total_nh4_col(i)              = value_column
+          this%total_no3_col(i)              = value_column
+          this%total_ndep_col(i)             = value_column
+          this%TAN_fert_col(i)               = value_column
+          this%man_water_pool_col(i)         = value_column
+          this%fert_water_pool_col(i)        = value_column
+          this%ra_col(i)                     = value_column
+          this%rb_col(i)                     = value_column
+          this%gdd8_col(i)                   = value_column
+          this%t_a10_col(i)                  = value_column
+          this%t_a10min_col(i)               = value_column
+          this%fert_app_jday_col(i)          = value_column
+       end do
+    end if
+!KO
+
     do j = 1,nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)
@@ -720,6 +1466,11 @@ contains
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, num_allc, filter_allc)
     !
+!KO
+    ! !USES:
+    use clm_time_manager    , only : get_curr_date
+    !
+!KO
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenstate_type) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -730,7 +1481,18 @@ contains
     integer  :: c,j,k,l     ! indices
     integer  :: fc          ! lake filter indices
     real(r8) :: maxdepth    ! depth to integrate soil variables
+!KO
+    ! !LOCAL VARIABLES:
+    integer kyr             ! current year
+    integer kmo             ! month of year  (1, ..., 12)
+    integer kda             ! day of month   (1, ..., 31)
+    integer mcsec           ! seconds of day (0, ..., seconds/day)
+!KO
     !-----------------------------------------------------------------------
+
+!KO
+   call get_curr_date (kyr, kmo, kda, mcsec)
+!KO
 
    ! vertically integrate NO3 NH4 N2O pools
    if (use_nitrif_denitrif) then
@@ -749,8 +1511,23 @@ contains
             this%smin_nh4_col(c) = &
                  this%smin_nh4_col(c) + &
                  this%smin_nh4_vr_col(c,j) * dzsoi_decomp(j)
-          end do 
-       end do
+
+         end do 
+      end do
+!KO
+      if ( use_fan ) then
+         do fc = 1,num_allc 
+            c = filter_allc(fc)
+            if (kda == 1 .and. mcsec == 0) then
+               this%smin_no3_monthly_col(c) = 0._r8
+               this%smin_nh4_monthly_col(c) = 0._r8
+            endif
+
+            this%smin_no3_monthly_col(c) = this%smin_no3_col(c)
+            this%smin_nh4_monthly_col(c) = this%smin_nh4_col(c)
+         end do
+      end if
+!KO
 
     end if
 

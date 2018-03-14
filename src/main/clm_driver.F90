@@ -10,7 +10,10 @@ module clm_driver
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : wrtdia, iulog, use_fates
-  use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
+!KO  use clm_varctl             , only : use_cn, use_lch4, use_voc, use_noio, use_c13, use_c14
+!KO
+  use clm_varctl             , only : use_fan, use_cn, use_lch4, use_noio, use_c13, use_c14
+!KO
   use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_varctl             , only : is_cold_start, is_interpolated_start
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
@@ -54,6 +57,10 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
+!KO
+  use ndep2StreamMod         , only : ndep2_interp
+  use ndep3StreamMod         , only : ndep3_interp
+!KO
   use ActiveLayerMod         , only : alt_calc
   use ch4Mod                 , only : ch4, ch4_init_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
@@ -377,6 +384,12 @@ contains
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
     end if
+!KO
+    if (use_cn .and. use_fan) then
+       call ndep2_interp(bounds_proc, atm2lnd_inst)
+       call ndep3_interp(bounds_proc, atm2lnd_inst)
+    end if
+!KO
 
     ! Get time varying urban data
     call urbantv_inst%urbantv_interp(bounds_proc)
@@ -813,7 +826,10 @@ contains
                atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
                photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-               nutrient_competition_method, fireemis_inst)
+!KO               nutrient_competition_method, fireemis_inst)
+!KO
+               nutrient_competition_method, fireemis_inst, frictionvel_inst)
+!KO
 
           call t_stopf('ecosysdyn')
 

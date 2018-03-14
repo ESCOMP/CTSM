@@ -11,7 +11,10 @@ module CNVegNitrogenStateType
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump
-  use clm_varctl                         , only : use_crop
+!KO  use clm_varctl                         , only : use_crop
+!KO
+  use clm_varctl                         , only : use_crop, use_fan
+!KO
   use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin, noveg, pftcon
@@ -38,6 +41,10 @@ module CNVegNitrogenStateType
      real(r8), pointer :: grainn_storage_patch     (:) ! (gN/m2) grain N storage (crop)
      real(r8), pointer :: grainn_xfer_patch        (:) ! (gN/m2) grain N transfer (crop)
      real(r8), pointer :: leafn_patch              (:) ! (gN/m2) leaf N 
+!KO
+     real(r8), pointer :: leafn_manure_patch       (:) ! (gN/m2) leaf N eaten by cows
+     real(r8), pointer :: deadstemn_manure_patch   (:) ! (gN/m2) dead stem N eaten by cows
+!KO
      real(r8), pointer :: leafn_storage_patch      (:) ! (gN/m2) leaf N storage
      real(r8), pointer :: leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
      real(r8), pointer :: leafn_storage_xfer_acc_patch (:) ! (gN/m2) Accmulated leaf N transfer
@@ -134,6 +141,12 @@ contains
     allocate(this%grainn_storage_patch     (begp:endp)) ; this%grainn_storage_patch     (:) = nan
     allocate(this%grainn_xfer_patch        (begp:endp)) ; this%grainn_xfer_patch        (:) = nan     
     allocate(this%leafn_patch              (begp:endp)) ; this%leafn_patch              (:) = nan
+!KO
+    if ( use_fan ) then
+       allocate(this%leafn_manure_patch    (begp:endp)) ; this%leafn_manure_patch       (:) = nan
+       allocate(this%deadstemn_manure_patch(begp:endp)) ; this%deadstemn_manure_patch   (:) = nan
+    end if
+!KO
     allocate(this%leafn_storage_patch      (begp:endp)) ; this%leafn_storage_patch      (:) = nan     
     allocate(this%leafn_xfer_patch         (begp:endp)) ; this%leafn_xfer_patch         (:) = nan     
     allocate(this%leafn_storage_xfer_acc_patch  (begp:endp)) ; this%leafn_storage_xfer_acc_patch         (:) = nan
@@ -890,6 +903,16 @@ contains
        this%totvegn_patch(i)            = value_patch
        this%totn_patch(i)               = value_patch
     end do
+
+!KO
+    if ( use_fan ) then
+       do fi = 1,num_patch
+          i = filter_patch(fi)
+          this%leafn_manure_patch(i)    = value_patch
+          this%deadstemn_manure_patch(i)= value_patch
+       end do
+    end if
+!KO
 
     if ( use_crop )then
        do fi = 1,num_patch

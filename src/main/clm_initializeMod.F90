@@ -266,7 +266,10 @@ contains
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
-    use clm_varctl            , only : use_crop, ndep_from_cpl
+!KO    use clm_varctl            , only : use_crop
+!KO
+    use clm_varctl            , only : use_crop, use_fan, ndep_from_cpl
+!KO
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
@@ -282,6 +285,10 @@ contains
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod           , only : restFile_read, restFile_write 
     use ndepStreamMod         , only : ndep_init, ndep_interp
+!KO
+    use ndep2StreamMod        , only : ndep2_init, ndep2_interp
+    use ndep3StreamMod        , only : ndep3_init, ndep3_interp
+!KO
     use LakeCon               , only : LakeConInit 
     use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
@@ -571,6 +578,19 @@ contains
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
        call t_stopf('init_ndep')
+!KO
+       if ( use_fan ) then
+          call t_startf('init_ndep2')
+          call ndep2_init(bounds_proc, NLFilename)
+          call ndep2_interp(bounds_proc, atm2lnd_inst)
+          call t_stopf('init_ndep2')
+
+          call t_startf('init_ndep3')
+          call ndep3_init(bounds_proc, NLFilename)
+          call ndep3_interp(bounds_proc, atm2lnd_inst)
+          call t_stopf('init_ndep3')
+       end if
+!KO
     end if
 
     ! ------------------------------------------------------------------------

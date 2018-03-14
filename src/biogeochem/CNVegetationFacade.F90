@@ -785,7 +785,10 @@ contains
        atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
        photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-       nutrient_competition_method, fireemis_inst)
+!KO       nutrient_competition_method, fireemis_inst)
+!KO
+       nutrient_competition_method, fireemis_inst, frictionvel_inst)
+!KO
     !
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done before hydrology-drainage
@@ -815,7 +818,10 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+!KO    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+!KO
+    type(waterstate_type)                   , intent(inout) :: waterstate_inst
+!KO
     type(waterflux_type)                    , intent(inout) :: waterflux_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
@@ -825,6 +831,9 @@ contains
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
     type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
+!KO
+    type(frictionvel_type)                  , intent(inout) :: frictionvel_inst
+!KO
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
     !
@@ -854,7 +863,10 @@ contains
          atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
          canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-         nutrient_competition_method, this%cnfire_method)
+!KO         nutrient_competition_method, this%cnfire_method)
+!KO
+         nutrient_competition_method, this%cnfire_method, frictionvel_inst)
+!KO
 
     ! fire carbon emissions 
     call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &

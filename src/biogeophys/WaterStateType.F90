@@ -10,7 +10,10 @@ module WaterstateType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : use_vancouver, use_mexicocity, use_cn, iulog, use_luna
+!KO  use clm_varctl     , only : use_vancouver, use_mexicocity, use_cn, iulog, use_luna
+!KO
+  use clm_varctl     , only : use_vancouver, use_mexicocity, use_cn, iulog, use_luna, use_fan
+!KO
   use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -39,6 +42,9 @@ module WaterstateType
      real(r8), pointer :: h2osoi_liq_tot_col     (:)   ! vertically summed col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_tot_col     (:)   ! vertically summed col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
+!KO
+     real(r8), pointer :: h2osoi_liqice_5cm_col  (:)   ! col liquid water + ice lens in top 5cm of soil (kg/m2)
+!KO
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
@@ -183,6 +189,11 @@ contains
     allocate(this%h2osno_col             (begc:endc))                     ; this%h2osno_col             (:)   = nan   
     allocate(this%h2osno_old_col         (begc:endc))                     ; this%h2osno_old_col         (:)   = nan   
     allocate(this%h2osoi_liqice_10cm_col (begc:endc))                     ; this%h2osoi_liqice_10cm_col (:)   = nan   
+!KO
+    if ( use_fan ) then
+       allocate(this%h2osoi_liqice_5cm_col (begc:endc))                   ; this%h2osoi_liqice_5cm_col  (:)   = nan   
+    end if
+!KO
     allocate(this%h2osoi_vol_col         (begc:endc, 1:nlevgrnd))         ; this%h2osoi_vol_col         (:,:) = nan
     allocate(this%air_vol_col            (begc:endc, 1:nlevgrnd))         ; this%air_vol_col            (:,:) = nan
     allocate(this%h2osoi_liqvol_col      (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liqvol_col      (:,:) = nan
@@ -307,6 +318,14 @@ contains
          avgflag='A', long_name='soil liquid water + ice in top 10cm of soil (veg landunits only)', &
          ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
 
+!KO
+    if ( use_fan ) then
+       this%h2osoi_liqice_5cm_col(begc:endc) = spval
+       call hist_addfld1d (fname='SOILWATER_5CM',  units='kg/m2', &
+            avgflag='A', long_name='soil liquid water + ice in top 5cm of soil (veg landunits only)', &
+            ptr_col=this%h2osoi_liqice_5cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+    end if
+!KO
     this%h2osoi_liq_tot_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTSOILLIQ',  units='kg/m2', &
          avgflag='A', long_name='vertically summed soil liquid water (veg landunits only)', &

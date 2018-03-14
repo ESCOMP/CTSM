@@ -174,7 +174,10 @@ contains
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst)
     !
     ! !USES:
-    use clm_varctl       , only: cnallocate_carbon_only, iulog
+!KO    use clm_varctl       , only: cnallocate_carbon_only, iulog
+!KO
+    use clm_varctl       , only: cnallocate_carbon_only, iulog, use_fan
+!KO
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varcon       , only: nitrif_n2o_loss_frac
     use CNSharedParamsMod, only: use_fun
@@ -234,6 +237,9 @@ contains
     real(r8) :: residual_smin_no3(bounds%begc:bounds%endc)
     real(r8) :: residual_plant_ndemand(bounds%begc:bounds%endc)
     real(r8) :: sminn_to_plant_new(bounds%begc:bounds%endc)
+!KO
+    real(r8) :: smin_nh4_vr_factor                                    ! factor to reduce smin_nh4_nr if use_fan is true
+!KO
     !-----------------------------------------------------------------------
 
     associate(                                                                                           &
@@ -278,6 +284,16 @@ contains
       !     sminn_vr, dzsoi_decomp, nfixation_prof, nuptake_prof)
 
       ! column loops to resolve plant/heterotroph competition for mineral N
+
+!KO   The following implements code that was in clm4_0_60.  However, per Peter
+!     Hess, this code is not part of FAN per se and so we comment it out for now.
+!     If uncommented, this changes CLM answers in certain cases.
+!     if ( use_fan ) then
+!        smin_nh4_vr_factor = 0.1_r8
+!     else
+!        smin_nh4_vr_factor = 1.0_r8
+!     end if
+!KO
 
       sminn_to_plant_new(bounds%begc:bounds%endc)  =  0._r8
 
@@ -547,6 +563,12 @@ contains
                     potential_immob_vr(c,j)*compet_decomp_nh4 + pot_f_nit_vr(c,j)*compet_nit
 
                if (sum_nh4_demand(c,j)*dt < smin_nh4_vr(c,j)) then
+!KO
+!              The following implements code that was in clm4_0_60.  However, per Peter
+!              Hess, this code is not part of FAN per se and so we comment it out for now.
+!              If uncommented, this changes CLM answers in certain cases.
+!              if (sum_nh4_demand(c,j)*dt < smin_nh4_vr_factor * smin_nh4_vr(c,j)) then
+!KO
 
                   ! NH4 availability is not limiting immobilization or plant
                   ! uptake, and all can proceed at their potential rates
