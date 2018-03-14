@@ -85,6 +85,7 @@ module atm2lndType
      real(r8), pointer :: forc_solad_grc                (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
      real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
+     real(r8), pointer :: forc_solar_col                (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
      real(r8), pointer :: forc_pc13o2_grc               (:)   => null() ! C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_grc                  (:)   => null() ! O2 partial pressure (Pa)
@@ -111,6 +112,8 @@ module atm2lndType
      real(r8), pointer :: forc_rain_downscaled_col      (:)   => null() ! downscaled atm rain rate [mm/s]
      real(r8), pointer :: forc_snow_downscaled_col      (:)   => null() ! downscaled atm snow rate [mm/s]
      real(r8), pointer :: forc_lwrad_downscaled_col     (:)   => null() ! downscaled atm downwrd IR longwave radiation (W/m**2)
+
+     real(r8), pointer :: forc_solad_col                (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
 
      !  rof->lnd
      real(r8), pointer :: forc_flood_grc                (:)   => null() ! rof flood (mm/s)
@@ -539,6 +542,9 @@ contains
     allocate(this%forc_rain_downscaled_col      (begc:endc))        ; this%forc_rain_downscaled_col      (:)   = ival
     allocate(this%forc_snow_downscaled_col      (begc:endc))        ; this%forc_snow_downscaled_col      (:)   = ival
 
+    allocate(this%forc_solad_col                (begc:endc,numrad)) ; this%forc_solad_col                (:,:) = ival
+    allocate(this%forc_solar_col                (begc:endc))        ; this%forc_solar_col                (:)   = ival
+
     ! rof->lnd
     allocate(this%forc_flood_grc                (begg:endg))        ; this%forc_flood_grc                (:)   = ival
     allocate(this%volr_grc                      (begg:endg))        ; this%volr_grc                      (:)   = ival
@@ -659,6 +665,11 @@ contains
          avgflag='A', long_name='atmospheric air temperature received from atmosphere (pre-downscaling)', &
          ptr_gcell=this%forc_t_not_downscaled_grc, default='inactive')
 
+    this%forc_solar_col(begc:endc) = spval
+    call hist_addfld1d (fname='FSDS_COL', units='W/m^2',  &
+         avgflag='A', long_name='column atmospheric incident solar radiation', &
+         ptr_col=this%forc_solar_col, default='inactive')
+
     this%forc_t_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='TBOT', units='K',  &
          avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
@@ -686,14 +697,12 @@ contains
     this%forc_rain_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='RAIN_FROM_ATM', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain received from atmosphere (pre-repartitioning)', &
-!scs         ptr_lnd=this%forc_rain_not_downscaled_grc)
-         ptr_col=this%forc_rain_downscaled_col)
+         ptr_lnd=this%forc_rain_not_downscaled_grc)
 
     this%forc_snow_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='SNOW_FROM_ATM', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow received from atmosphere (pre-repartitioning)', &
-!scs         ptr_lnd=this%forc_snow_not_downscaled_grc)
-         ptr_col=this%forc_snow_downscaled_col)
+         ptr_lnd=this%forc_snow_not_downscaled_grc)
 
     this%forc_rain_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='RAIN', units='mm/s',  &
@@ -1250,6 +1259,9 @@ contains
     deallocate(this%forc_lwrad_downscaled_col)
     deallocate(this%forc_rain_downscaled_col)
     deallocate(this%forc_snow_downscaled_col)
+
+    deallocate(this%forc_solad_col)
+    deallocate(this%forc_solar_col)
 
     ! rof->lnd
     deallocate(this%forc_flood_grc)

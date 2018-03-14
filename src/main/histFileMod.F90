@@ -2530,6 +2530,9 @@ contains
              call ncd_defvar(varname='hslp_slope', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column slope', &
                   units='m', ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_aspect', xtype=ncd_double, &
+                  dim1name=namec, long_name='hillslope column aspect', &
+                  units='m', ncid=nfid(t))             
              call ncd_defvar(varname='hslp_index', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope index', &
                   ncid=nfid(t))             
@@ -2590,6 +2593,7 @@ contains
              call ncd_io(varname='hslp_area' , data=col%hill_area, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_elev' , data=col%hill_elev, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_aspect' , data=col%hill_aspect, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_cold' , data=col%cold, dim1name=namec, ncid=nfid(t), flag='write')
           endif

@@ -317,6 +317,12 @@ contains
          avgflag='A', long_name='vertically summed soil cie (veg landunits only)', &
          ptr_col=this%h2osoi_ice_tot_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
 
+    this%endwb_col(begc:endc) = spval
+    call hist_addfld1d (fname='H2OWB', units='mm',  &
+         avgflag='A', long_name='end water balance', &
+         ptr_col=this%endwb_col, l2g_scale_type='veg',&
+         default='inactive')
+
     this%h2ocan_patch(begp:endp) = spval 
     call hist_addfld1d (fname='H2OCAN', units='mm',  &
          avgflag='A', long_name='intercepted water', &

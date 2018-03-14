@@ -31,6 +31,7 @@ module BalanceCheckMod
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varcon         , only : aquifer_water_baseline
+  use clm_varctl         , only : use_hillslope
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -143,6 +144,7 @@ contains
 
      associate(                                                                   & 
           volr                    =>    atm2lnd_inst%volr_grc                   , & ! Input:  [real(r8) (:)   ]  river water storage (m3)                 
+          forc_solad_col          =>    atm2lnd_inst%forc_solad_col             , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
           forc_solad              =>    atm2lnd_inst%forc_solad_grc             , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
           forc_solai              =>    atm2lnd_inst%forc_solai_grc             , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
           forc_rain               =>    atm2lnd_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]
@@ -477,8 +479,15 @@ contains
              ! level because of interactions between columns and since a separate check is done
              ! in the urban radiation module
              if (.not. lun%urbpoi(l)) then
-                errsol(p) = fsa(p) + fsr(p) &
-                     - (forc_solad(g,1) + forc_solad(g,2) + forc_solai(g,1) + forc_solai(g,2))
+                ! patch radiation will no longer balance gridcell values 
+!scs: should add a check that columns add to gridcell
+                if(use_hillslope .and. lun%itype(l) == istsoil) then
+                   errsol(p) = fsa(p) + fsr(p) &
+                        - (forc_solad_col(c,1) + forc_solad_col(c,2) + forc_solai(g,1) + forc_solai(g,2))
+                else
+                   errsol(p) = fsa(p) + fsr(p) &
+                        - (forc_solad(g,1) + forc_solad(g,2) + forc_solai(g,1) + forc_solai(g,2))
+                endif
              else
                 errsol(p) = spval
              end if
@@ -529,6 +538,11 @@ contains
           write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsol        = ',errsol(indexp)
+          c = patch%column(indexp)
+          write(iulog,*)'index p,c        = ',indexp,c
+          write(iulog,*)' col%itype= ',col%itype(c), &
+               ' lun%itype= ',lun%itype(col%landunit(c))
+          
           if (abs(errsol(indexp)) > 1.e-5_r8 ) then
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
              write(iulog,*)'fsa           = ',fsa(indexp)

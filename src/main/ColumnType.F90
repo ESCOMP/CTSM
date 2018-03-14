@@ -73,6 +73,7 @@ module ColumnType
      real(r8), pointer :: hill_area            (:)   ! mean surface area
      real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column 
      real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope
+     real(r8), pointer :: hill_aspect          (:)   ! azimuth angle of column wrt to north, positive to east
 ! for init_interp, add information on relative position
 !     real(r8), pointer :: relative_position        (:)   ! relative position of column along hillslope
 
@@ -141,6 +142,7 @@ contains
     allocate(this%hill_area(begc:endc))                        ; this%hill_area     (:) = spval  
     allocate(this%hill_width(begc:endc))                       ; this%hill_width    (:) = spval  
     allocate(this%hill_distance(begc:endc))                    ; this%hill_distance (:) = spval  
+    allocate(this%hill_aspect(begc:endc))                      ; this%hill_aspect (:) = spval  
     allocate(this%nbedrock   (begc:endc))                      ; this%nbedrock   (:)   = ispval  
     allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan

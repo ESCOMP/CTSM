@@ -413,7 +413,7 @@ contains
             atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
 
        call downscale_forcings(bounds_clump, &
-            topo_inst, atm2lnd_inst, &
+            topo_inst, atm2lnd_inst, surfalb_inst, &
             eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
        ! Update filters that depend on variables set in clm_drv_init

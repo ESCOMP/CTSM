@@ -206,6 +206,7 @@ contains
     integer,  allocatable :: col_ndx(:,:)       ! column index
     integer,  allocatable :: col_dndx(:,:)      ! downhill column index
     real(r8), allocatable :: hill_slope(:,:)    ! hillslope slope  [m/m]
+    real(r8), allocatable :: hill_aspect(:,:)   ! hillslope azimuth [radians]
     real(r8), allocatable :: hill_area(:,:)     ! hillslope area   [m2]
     real(r8), allocatable :: hill_length(:,:)   ! hillslope length [m]
     real(r8), allocatable :: hill_width(:,:)    ! hillslope width  [m]
@@ -233,14 +234,15 @@ contains
     call ncd_pio_openfile (ncid, locfn, 0)
 
     allocate(pct_hillslope(bounds%begl:bounds%endl,nhillslope),    &
-         hill_ndx(bounds%begl:bounds%endl,nmaxhillcol),    &
-         col_ndx(bounds%begl:bounds%endl,nmaxhillcol),    &
-         col_dndx(bounds%begl:bounds%endl,nmaxhillcol),    &
-         hill_slope(bounds%begl:bounds%endl,nmaxhillcol),    &
-         hill_area(bounds%begl:bounds%endl,nmaxhillcol),   &
-         hill_length(bounds%begl:bounds%endl,nmaxhillcol),   &
-         hill_width(bounds%begl:bounds%endl,nmaxhillcol), &
-         hill_height(bounds%begl:bounds%endl,nmaxhillcol), &
+         hill_ndx(bounds%begl:bounds%endl,nmaxhillcol),     &
+         col_ndx(bounds%begl:bounds%endl,nmaxhillcol),      &
+         col_dndx(bounds%begl:bounds%endl,nmaxhillcol),     &
+         hill_slope(bounds%begl:bounds%endl,nmaxhillcol),   &
+         hill_aspect(bounds%begl:bounds%endl,nmaxhillcol),  &
+         hill_area(bounds%begl:bounds%endl,nmaxhillcol),    &
+         hill_length(bounds%begl:bounds%endl,nmaxhillcol),  &
+         hill_width(bounds%begl:bounds%endl,nmaxhillcol),   &
+         hill_height(bounds%begl:bounds%endl,nmaxhillcol),  &
          stat=ierr)
        
        allocate(ihillslope_in(bounds%begg:bounds%endg,nhillslope))
@@ -304,6 +306,18 @@ contains
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
           hill_slope(l,:) = fhillslope_in(g,:)
+       enddo
+       
+       call ncd_io(ncid=ncid, varname='h_aspect', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: h_aspect not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
+       
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          hill_aspect(l,:) = fhillslope_in(g,:)
        enddo
        
        call ncd_io(ncid=ncid, varname='h_area', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
@@ -398,6 +412,8 @@ contains
                 col%hill_slope(c) = hill_slope(l,ci)
 ! area of column
                 col%hill_area(c) = hill_area(l,ci)
+! azimuth of column
+                col%hill_aspect(c) = hill_aspect(l,ci)
 
              enddo
 
@@ -443,7 +459,7 @@ endif
        
        deallocate(pct_hillslope,hill_ndx,col_ndx,col_dndx, &
             hill_slope,hill_area,hill_length, &
-            hill_width,hill_height)
+            hill_width,hill_height,hill_aspect)
 
        call ncd_pio_closefile(ncid)
 
