@@ -1827,7 +1827,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="f19_g16" compset="I2000Clm45BgcCruGs" testmods="clm/default">
+  <test name="ERS_D_Ld5" grid="f19_g16" compset="I2000Clm45BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
