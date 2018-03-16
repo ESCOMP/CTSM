@@ -1,4 +1,424 @@
 ===============================================================
+Tag name:  clm4_5_18_r275
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Feb  5 15:02:53 MST 2018
+One-line Summary: Update initial condition files, update fates, new CMIP6 pop-dens, more lnd_tuning_mod options, updated ndep for fully coupled
+
+Purpose of changes
+------------------
+
+Update the initial condition files for clm4_0, clm4_5, clm5_0 at f09_g16 for both CRUNCEpv7 
+forcing and GSWP3v1 forcing. Update FATES with science change to science-1.4.1_api-3.0.0.
+New CMIP6 population density file that has years beyond 1850 (the old one just had 1850, so 
+was incorrect for historical or present-day). clm4_0 compsets now use CRUNCEPv7 forcing rather than
+the CRUNCEPv4 forcing. LND_TUNING_MODE is now used for initial conditions
+for different forcing. For fully coupled 1850 cases the ndep file is updated to a preliminary CMIP6
+version. Fix the tools testing and build-namelist testing to work in the git checkout.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #:
+ #247 -- Clm40 1850 and HIST compsets are incorrect
+ #246 -- New CMIP6 population density file is incorrect as it's constant in time
+ #171 -- CLM is getting the mask from the clm namelist_defaults rather than from top level scripts
+
+Known bugs introduced in this tag (include github issue ID): 
+ #253 -- Bad new IC file for clm4_0
+ #254 -- Failing test ERS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-default (sporadic glitch?)
+ #255 -- PTCLMmkdata doesn't work in the CLM git checkout
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   LND_TUNING_MODE is set by default according to the compset the case is created with.
+  If you change the CLM physics or DATM forcing, you'll want to update the LND_TUNING_MODE.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
+   LND_TUNING_MODE options changed to:
+    clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1
+
+   Several new compset aliases added:
+
+      CLM50: I1850Clm50Sp, I1850Clm50SpCru, I1850Clm50BgcCropCru
+      CLM45: I1850Clm45BgcCruGs, I1850Clm45BgcGs
+      CLM40  I1850Clm40CnGswGs (fixed I2000Clm40SpCruGs, I1850Clm40SpCruGs, and IHistClm40SpCruGs)
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files): New IC files for f09_g16
+    CMIP6 ndep file for fully coupled, pop-density beyond 1850
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Setting of ndep_taxmode/ndep_varlist should be simplified in CLMBuildNamelist.pm
+   Change name of setup_logic_lnd_tuning to setup_cmdl_lnd_tuning in CLMBuildNamelist.pm
+
+Changes to tests or testing: Change a few tests and add a few
+    Add I1850Clm50SpCru, I1850Clm50BgcCropCru, I1850Clm40CnGswGs and I1850Clm50Sp tests at f09_g16
+    Change I1850Clm40SpCruGs f09_f09_mg16 to f09_g16
+    Change I2000Clm50BgcCruGs f09_g17 test to I1850Clm50BgcCruGs f09_g16
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne -  PASS (134 comparison tests are different than clm4_5_18_r275)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - FAIL
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm4_5_18_r275
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers:
+    - what code configurations: clm4_0 for f09_g16
+          clm4_0 updated to CRUv7 Forcing
+          all clm4_5 and clm5_0 configurations, FATES-update
+    - what platforms/compilers: All
+    - nature of change: initialization, BGC for HIST/2000 compsets
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): FATES
+    fates to fates_s1.4.1_a3.0.0_rev3
+
+Pull Requests that document changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #252 -- New IC files
+ #251 -- README update
+ #248 -- Documentation of SMB in namelist_definition
+ #228 -- Get tools and testing working
+
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_18_r274
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Jan 30 05:55:53 MST 2018
+One-line Summary: Fix auto-detection of CIME_MODEL in a standalone checkout
+
+Purpose of changes
+------------------
+
+The auto-detection of whether CIME_MODEL is acme or cesm is broken in
+standalone checkouts of clm4_5_18_r273. (This auto-detection relied on
+whether there was an SVN_EXTERNAL_DIRECTORIES file present at the top
+level.)
+
+This tag points to a new cime version that fixes this issue.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- #238 - clm4_5_18_r273 requires setting CIME_MODEL
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    Note: I ran the cheyenne tests with CIME_MODEL=cesm defined in my
+    environment, and the hobart tests without this setting.
+
+CLM tag used for the baseline comparisons: clm4_5_18_r273
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+- cime: clm4518/n03/cime5.4.0-alpha.03 -> clm4518/n04/cime5.4.0-alpha.03
+  Fix to auto-detect that CIME_MODEL=cesm based on presence of
+  manage_externals rather than SVN_EXTERNAL_DIRECTORIES
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Fix the documentation of some expected fails
+M       cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_18_r273
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jan 26 15:26:06 MST 2018
+One-line Summary: Support a standalone checkout from git
+
+Purpose of changes
+------------------
+
+This PR allows a standalone git-based checkout to work. Starting with
+this tag, we'll be using git rather than svn for CLM/CTSM development.
+
+The biggest changes here are pulling in manage_externals, which serves
+the role of svn externals. After cloning the repository, you can get all
+of the necessary externals by running:
+
+./manage_externals/checkout_externals
+
+See the file README_EXTERNALS.rst at the top level of the repository for
+more details on using this tool.
+
+Other than that, this PR mostly involves changes to allow you to run
+from the new directory structure of a standalone checkout: Now all of
+the CLM/CTSM directories appear at the top level of the checkout, rather
+than nested under components/clm.
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include github issue ID):
+
+- https://github.com/ESCOMP/ctsm/issues/220 For new standalone
+  organization, need to generalize paths for tools and testing
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+- The svn trunk is now frozen. All future development will occur in the
+  master branch of https://github.com/ESCOMP/ctsm
+
+- A standalone git checkout will have all CLM directories (src, bld,
+  etc.) at the top level, rather than under components/clm.
+
+- To get all externals after cloning the git repository, run
+  ./manage_externals/checkout_externals
+
+  See the file README_EXTERNALS.rst at the top level of the repository
+  for more details on using this tool.
+
+- More details on working with the git repository will be coming soon
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+- build-namelist unit tests currently do not run (#220)
+
+- tools tests, and the tools builds themselves, are expected not to work (#220)
+
+Changes to tests or testing: none
+
+Code reviewed by: Ben Andre, Erik Kluzek
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - FAIL (#220)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - NOT RUN; EXPECTED TO FAIL (#220)
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - NOT RUN; MAY FAIL DUE TO #220
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+CLM tag used for the baseline comparisons: clm4_5_18_r272
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+- cime: clm4518/n02/cime5.4.0-alpha.03 -> clm4518/n03/cime5.4.0-alpha.03
+  Has some changes needed for new standalone directory structure to work
+  (these changes are now on cime master, though see #225 before updating
+  to cime master)
+
+- cism: cism2_1_40 -> cism2_1_46
+  Points to cism in git
+  cism2_1_41, 42, 43 and 44 contained very minor changes
+  cism2_1_45 and 46 are the git migration
+
+List all files eliminated:
+
+========= Handle externals via manage_externals rather than svn externals
+D	README_EXTERNALS
+D	SVN_EXTERNAL_DIRECTORIES
+D	SVN_EXTERNAL_DIRECTORIES.standalone
+
+List all files added and what they do:
+
+========= Added this directory and everything below it. Pulled in via
+          git subtree from
+          https://github.com/NCAR/manage_externals/. This is the new
+          tool for pulling in and updating externals (replacing svn
+          externals).
+A	manage_externals/
+
+========= Handle externals via manage_externals rather than svn externals
+A	Externals.cfg
+A	Externals_CLM.cfg
+A	README_EXTERNALS.rst
+
+========= Handle new directory structure of standalone checkouts
+A	.config_files.xml
+
+========= Add some .gitignore files
+A	src/dyn_subgrid/.gitignore
+A	src/unit_test_shr/.gitignore
+A	src/unit_test_stubs/main/.gitignore
+A	src/unit_test_stubs/utils/.gitignore
+A	src/utils/.gitignore
+A	cime_config/.gitignore
+
+List all existing files that have been modified, and describe the changes:
+
+========= Handle new directory structure of standalone checkouts
+M	bld/CLMBuildNamelist.pm
+M	bld/configure
+M	cime_config/buildcpp
+M	cime_config/buildlib
+M	cime_config/buildnml
+M	src/CMakeLists.txt
+
+========= Documentation updates for move to git
+M	.CLMTrunkChecklist
+M	.gitignore
+M	LICENSE
+M	README.rst
+M	src/README.unit_testing
+
+========= Separately document expected fails for aux_clm vs fates test
+          lists
+M	cime_config/testdefs/ExpectedTestFails.xml
+
+========= ChangeLog now only stored in doc directory, not in top-level
+          directory
+R095	.ChangeLog_template	doc/.ChangeLog_template
+R070	UpDateChangeLog.pl	doc/UpdateChangelog.pl
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_18_r272
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Jan 25 01:17:01 MST 2018
