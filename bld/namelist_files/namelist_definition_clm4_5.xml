@@ -456,8 +456,7 @@ Allowed values are:
    but no virtual columns
 'virtual': grid cells have virtual columns: values are computed for every glacier
    elevation class, even those with 0 area (in order to provide surface mass
-   balance for every glacier elevation class). In addition, surface mass balance is
-   computed for the vegetated column in this region.
+   balance for every glacier elevation class).
 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
    whose elevation matches the atmosphere's topographic height (so that there is no
    adjustment due to downscaling)
@@ -476,8 +475,11 @@ Allowed values are:
 'remains_in_place': any melted ice remains in place as liquid until it refreezes;
    thus, ice melt does not result in any runoff
 IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not
-generate generate SMB (because negative SMB would be pretty much meaningless in
-those regions). Thus, you cannot use this behavior where GLC is operating.
+compute SMB (because negative SMB would be pretty much meaningless in
+those regions). Thus, you cannot use this behavior where GLC is
+operating.
+Regions with the 'replaced_by_ice' behavior also compute SMB for the
+vegetated column.
 </entry>
 
 <entry id="glacier_region_ice_runoff_behavior" type="char*32(10)" category="clm_physics"
@@ -1708,16 +1710,16 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,cruncep">
+       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
 Land mask description
 </entry> 
 
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUNCEP,clm5_0_cam5.5,clm5_0_GSW3P">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1">
 General configuration of model version and atmospheric forcing to tune the model to run under.
-This sets the model to run with constants that were set to run well under the configuration
-of model version and atmospheric forcing. To run well constants would need to be changed
+This sets the model to run with constants and initial conditions that were set to run well under 
+the configuration of model version and atmospheric forcing. To run well constants would need to be changed
 to run with a different type of atmospheric forcing.
 </entry> 
 
