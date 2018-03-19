@@ -200,7 +200,7 @@ contains
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
-       imissing_value, ifill_value, flag_values, nvalid_range )
+       imissing_value, ifill_value, flag_values, nvalid_range, is_spatial )
 
     ! Note that varname can be a colon-delimited list of possible variable names (with no
     ! spaces around the colons). In this case, when flag = 'read', the input file is
@@ -231,16 +231,24 @@ contains
     integer           , intent(in), optional :: ifill_value      ! attribute for int
     integer           , intent(in), optional :: flag_values(:)   ! attribute for int
     integer           , intent(in), optional :: nvalid_range(2)  ! attribute for int
+    logical           , intent(in), optional :: is_spatial       ! is this a spatial variable (with a dimension of gridcell, column, etc.)? If not present, assumed true.
     ! 
     ! Local variables
     character(len=len(varname)) :: primary_varname ! first name in the varname list
     character(len=len(varname)) :: my_varname      ! actual varname to read/write
+    logical          :: l_is_spatial               ! local version of is_spatial
     integer          :: ivalue
     type(var_desc_t) :: vardesc  ! local vardesc
     integer          :: status   ! return error code 
     integer          :: varid
     integer          :: lxtype   ! local external type (in case logical variable)
     !----------------------------------------------------
+
+    if (present(is_spatial)) then
+       l_is_spatial = is_spatial
+    else
+       l_is_spatial = .true.
+    end if
 
     call shr_string_listGetName(varname, 1, primary_varname)
     if (flag == 'read') then
@@ -329,7 +337,7 @@ contains
     else if (flag == 'read' .or. flag == 'write') then
 
 #if ({ITYPE}!=TYPETEXT) 
-       if (.not. present(dim1name)) then
+       if (.not. present(dim1name) .or. .not. l_is_spatial) then
           call ncd_io(varname=trim(my_varname), data=data, &
                ncid=ncid, flag=flag, readvar=readvar)
        else 
