@@ -450,7 +450,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_fan phys="clm5_0" use_cn=".true.">.true.</use_fan>
 <use_fan phys="clm5_0" use_cn=".false.">.false.</use_fan>
 <use_fan phys="clm5_0" use_ed=".true." >.false.</use_fan>
-
+<use_fan fan_mode='disable'>.false.</use_fan>
 <!--
 
      Initial condition files to use and or interpolate from

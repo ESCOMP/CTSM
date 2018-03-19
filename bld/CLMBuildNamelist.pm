@@ -267,6 +267,7 @@ sub process_commandline {
                chk_res               => undef,
                note                  => undef,
                drydep                => 0,
+	       fan                   => "default",
                output_reals_filename => undef,
                fire_emis             => 0,
                megan                 => "default",
@@ -512,7 +513,8 @@ sub read_namelist_defaults {
                             "$cfgdir/namelist_files/namelist_defaults_$phys.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                             "$cfgdir/namelist_files/namelist_defaults_fire_emis.xml",
-                            "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
+                            "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
+			    "$cfgdir/namelist_files/namelist_defaults_fan.xml" );
 
   # Add the location of the use case defaults files to the options hash
   $opts->{'use_case_dir'} = "$cfgdir/namelist_files/use_cases";
@@ -3055,11 +3057,17 @@ sub setup_logic_fan {
   # Flags to control FAN (Flow of Agricultural Nitrogen) nitrogen deposition (manure and fertilizer)
   #
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-
+   print "FAN MODE: $opts->{'fan'}\n";
    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
-                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
-     $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
+       if ( $opts->{'fan'} ) {
+	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
+		       'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
+	   $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
+	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
+		       'fan_mode'=>$opts->{'fan'});
+	   $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
+	   
+       }
      if ( value_is_true( $nl_flags->{'use_ed'} ) && value_is_true( $nl_flags->{'use_fan'} ) ) {
         fatal_error("Cannot turn use_fan on when use_ed is on\n" );
      }
@@ -3970,7 +3978,8 @@ sub write_output_files {
   $log->verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm fan_inparm);
+  print "GROUPS: @groups \n";
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");
@@ -4590,6 +4599,7 @@ sub version {
 
 sub main {
   my %nl_flags;
+    
   $nl_flags{'cfgdir'} = dirname(abs_path($0));
 
   my %opts = process_commandline(\%nl_flags);
@@ -4604,6 +4614,7 @@ sub main {
   my $definition = read_namelist_definition($cfgdir, \%opts, \%nl_flags, $physv);
   my $defaults   = read_namelist_defaults($cfgdir, \%opts, \%nl_flags, $cfg, $physv);
 
+  
   # List valid values if asked for
   list_options(\%opts, $definition, $defaults);
 
