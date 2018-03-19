@@ -295,6 +295,7 @@ sub process_commandline {
              "clm_usr_name=s"            => \$opts{'clm_usr_name'},
              "envxml_dir=s"              => \$opts{'envxml_dir'},
              "drydep!"                   => \$opts{'drydep'},
+             "fan=s"                     => \$opts{'fan'},
              "fire_emis!"                => \$opts{'fire_emis'},
              "ignore_warnings!"          => \$opts{'ignore_warnings'},
              "chk_res!"                  => \$opts{'chk_res'},
