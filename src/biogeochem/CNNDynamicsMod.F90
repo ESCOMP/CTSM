@@ -253,7 +253,7 @@ contains
        if (.not. col%active(c) .or. col%wtgcell(c) < 1e-6) cycle
        g = col%gridcell(c)
        if (lun%itype(l) == istsoil) then
-          ngrz(c) = atm2lnd_inst%forc_ndep3_grc(g) / col%wtgcell(c) * 1e-3 ! kg to g 
+          ngrz(c) = atm2lnd_inst%forc_ndep3_grc(g) / col%wtgcell(c) * 1e3 ! kg to g 
           if (debug_fan) then
              if (ngrz(c) > 1e12 .or. (isnan(ngrz(c)))) then
                 write(iulog, *) 'bad ngrz', atm2lnd_inst%forc_ndep3_grc(g), col%wtgcell(c)
