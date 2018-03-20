@@ -12,6 +12,7 @@ module initInterpMod
   use initInterp2dvar, only: interp_2dvar_type
   use initInterpMultilevelBase, only : interp_multilevel_type
   use initInterpMultilevelContainer, only : interp_multilevel_container_type
+  use initInterpUtils, only: glc_elevclasses_are_same
   use shr_kind_mod   , only: r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
   use shr_sys_mod    , only: shr_sys_flush
@@ -158,7 +159,8 @@ contains
     integer            :: decomp_cascade_state_i, decomp_cascade_state_o 
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
     integer            :: npftso, ncolso, nlunso, ngrcso 
-    integer , pointer  :: pftindx(:)     
+    logical            :: glc_elevclasses_same
+    integer , pointer  :: pftindx(:)
     integer , pointer  :: colindx(:)     
     integer , pointer  :: lunindx(:)     
     integer , pointer  :: grcindx(:) 
@@ -213,6 +215,8 @@ contains
     call check_dim_level(ncidi, ncido, dimname='levtot' , must_be_same=.false.)
     call check_dim_level(ncidi, ncido, dimname='levgrnd', must_be_same=.false.)
     call check_dim_level(ncidi, ncido, dimname='numrad' , must_be_same=.true.)
+
+    glc_elevclasses_same = glc_elevclasses_are_same(ncidi, ncido)
 
     ! --------------------------------------------
     ! Determine input file global attributes that are needed 
