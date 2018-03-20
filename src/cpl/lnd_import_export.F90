@@ -374,6 +374,10 @@ contains
           l2x(index_l2x_Fall_methane,i) = -lnd2atm_inst%flux_ch4_grc(g) 
        endif
 
+       if (index_l2x_Fall_flxnh3 /= 0) then
+          l2x(index_l2x_Fall_flxnh3,i) = -lnd2atm_inst%flux_nh3_grc(g)
+       end if
+       
        ! sign convention is positive downward with 
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  
        ! I.e. water sent from land to rof is positive

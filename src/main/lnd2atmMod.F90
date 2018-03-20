@@ -13,7 +13,7 @@ module lnd2atmMod
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
   use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl           , only : iulog, use_lch4
+  use clm_varctl           , only : iulog, use_lch4, use_fan
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
   use decompMod            , only : bounds_type
   use subgridAveMod        , only : p2g, c2g 
@@ -38,6 +38,7 @@ module lnd2atmMod
   use LandunitType         , only : lun
   use GridcellType         , only : grc                
   use landunit_varcon      , only : istice_mec
+  use SoilBiogeochemNitrogenFluxType, only : SoilBiogeochem_nitrogenflux_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -126,6 +127,7 @@ contains
        waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
        solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
+       sbgc_nf_inst, &
        lnd2atm_inst, &
        net_carbon_exchange_grc) 
     !
@@ -152,6 +154,7 @@ contains
     type(dust_type)             , intent(in)    :: dust_inst
     type(ch4_type)              , intent(in)    :: ch4_inst
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
+    type(SoilBiogeochem_nitrogenflux_type), intent(in) :: sbgc_nf_inst
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst 
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
     !
@@ -312,6 +315,14 @@ contains
             ch4_inst%ch4_surf_flux_tot_col (bounds%begc:bounds%endc), &
             lnd2atm_inst%flux_ch4_grc      (bounds%begg:bounds%endg), &
             c2l_scale_type= 'unity', l2g_scale_type='unity' )
+    end if
+
+    ! nh3 flux
+    if (use_fan) then
+       call c2g(bounds,     &
+            sbgc_nf_inst%nh3_total_col (bounds%begc:bounds%endc), &
+            lnd2atm_inst%flux_nh3_grc  (bounds%begg:bounds%endg), &
+            c2l_scale_type= 'unity', l2g_scale_type='unity')
     end if
 
     !----------------------------------------------------

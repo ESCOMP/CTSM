@@ -557,7 +557,7 @@ contains
        ns%tan_f0_col(c) = tanpools3(1)
        ns%tan_f1_col(c) = tanpools3(2)
        ns%tan_f2_col(c) = tanpools3(3)
-       ! tan_f3_col already updated by update_npool!
+       ! !!tan_f3_col already updated above by update_npool!!
 
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
        nf%fert_runoff_col(c) = fluxes_tmp(iflx_roff)
@@ -565,6 +565,11 @@ contains
        nf%fert_nh4_to_soil_col(c) &
             = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + fert_to_soil + garbage_total/dt 
 
+       ! Total flux
+       ! 
+       nf%nh3_total_col(c) = nf%nh3_fert_col(c) + nf%nh3_man_app_col(c) &
+            + nf%nh3_grz_col(c) + nf%nh3_stores_col(c) +  nf%nh3_barns_col(c)
+       
     end do
 
     if (do_balance_checks) then

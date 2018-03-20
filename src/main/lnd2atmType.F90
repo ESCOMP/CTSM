@@ -12,7 +12,7 @@ module lnd2atmType
   use decompMod     , only : bounds_type
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : spval
-  use clm_varctl    , only : iulog, use_lch4
+  use clm_varctl    , only : iulog, use_lch4, use_fan
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod,only : shr_fire_emis_mechcomps_n
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
@@ -61,6 +61,8 @@ module lnd2atmType
      real(r8), pointer :: fireflx_grc        (:,:) => null() ! Wild Fire Emissions
      real(r8), pointer :: fireztop_grc       (:)   => null() ! Wild Fire Emissions vertical distribution top
      real(r8), pointer :: flux_ch4_grc       (:)   => null() ! net CH4 flux (kg C/m**2/s) [+ to atm]
+     real(r8), pointer :: flux_nh3_grc       (:)   => null() ! gross NH3 emission (gN/m2/s) [+ to atm]
+     
      ! lnd->rof
      real(r8), pointer :: qflx_rofliq_grc         (:)   => null() ! rof liq forcing
      real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   => null() ! rof liq -- surface runoff component
@@ -168,6 +170,7 @@ contains
     allocate(this%fv_grc             (begg:endg))            ; this%fv_grc             (:)   =ival
     allocate(this%flxdst_grc         (begg:endg,1:ndst))     ; this%flxdst_grc         (:,:) =ival
     allocate(this%flux_ch4_grc       (begg:endg))            ; this%flux_ch4_grc       (:)   =ival
+    allocate(this%flux_nh3_grc       (begg:endg))            ; this%flux_nh3_grc       (:)   =ival
     allocate(this%qflx_rofliq_grc    (begg:endg))            ; this%qflx_rofliq_grc    (:)   =ival
     allocate(this%qflx_rofliq_qsur_grc    (begg:endg))       ; this%qflx_rofliq_qsur_grc    (:)   =ival
     allocate(this%qflx_rofliq_qsub_grc    (begg:endg))       ; this%qflx_rofliq_qsub_grc    (:)   =ival
@@ -324,6 +327,12 @@ contains
             ptr_lnd=this%nem_grc)
     end if
 
+    if (use_fan) then
+       this%flux_nh3_grc(begg:endg) = 0.0_r8
+       call hist_addfld1d (fname='NH3_TO_COUPLER', units='gN/m2/s', &
+            avgflag='A', long_name='Gridcell gross NH3 emission passed to coupler', &
+            ptr_lnd=this%flux_nh3_grc)
+    end if
   end subroutine InitHistory
 
 end module lnd2atmType

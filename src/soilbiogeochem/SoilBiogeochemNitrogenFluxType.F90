@@ -108,7 +108,8 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: fert_nh4_to_soil_col                       (:)   ! NH4 flux to soil mineral N pools from fertilizer (gN/m2/s)
      real(r8), pointer :: manure_runoff_col                          (:)   ! NH4 runoff flux from manure, gN/m2/s
      real(r8), pointer :: fert_runoff_col                            (:)   ! NH4 runoff flux from fertilizer, gN/m2/s
-     
+
+     real(r8), pointer :: nh3_total_col                              (:)   ! Total NH3 emission from agriculture
      
      ! decomposition fluxes
      real(r8), pointer :: decomp_cascade_ntransfer_vr_col           (:,:,:) ! col vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
@@ -318,6 +319,7 @@ contains
        allocate(this%nh3_grz_col                    (begc:endc))                   ; this%nh3_grz_col                (:)   = spval
        allocate(this%nh3_man_app_col                (begc:endc))                   ; this%nh3_man_app_col            (:)   = spval
        allocate(this%nh3_fert_col                   (begc:endc))                   ; this%nh3_fert_col               (:)   = spval
+       allocate(this%nh3_total_col                  (begc:endc))                   ; this%nh3_total_col              (:)   = spval
 
        allocate(this%manure_no3_prod_col            (begc:endc))                   ; this%manure_no3_prod_col        (:)   = spval
        allocate(this%fert_no3_prod_col              (begc:endc))                   ; this%fert_no3_prod_col          (:)   = spval
@@ -635,6 +637,12 @@ contains
              avgflag='A', long_name='NH3 emitted from fertilizer applied on crops', &
              ptr_col=this%nh3_fert_col)
 
+        this%nh3_fert_col(begc:endc) = spval
+        call hist_addfld1d( fname='NH3_total', units='gN/m^2/s', &
+             avgflag='A', long_name='Total NH3 emitted from fertilizers and manure', &
+             ptr_col=this%nh3_total_col)
+
+        
         this%manure_no3_prod_col(begc:endc) = spval
         call hist_addfld1d( fname='MANURE_NO3_PROD', units='gN/m^2/s', &
              avgflag='A', long_name='Manure nitrification flux', &
@@ -1463,6 +1471,7 @@ contains
           this%nh3_grz_col(i)            = value_column
           this%nh3_man_app_col(i)        = value_column
           this%nh3_fert_col(i)           = value_column
+          this%nh3_total_col(i)          = value_column
           this%manure_no3_prod_col(i)    = value_column
           this%fert_no3_prod_col(i)      = value_column
           this%manure_nh4_to_soil_col(i) = value_column
