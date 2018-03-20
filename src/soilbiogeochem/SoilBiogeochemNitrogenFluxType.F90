@@ -638,7 +638,7 @@ contains
              ptr_col=this%nh3_fert_col)
 
         this%nh3_fert_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_total', units='gN/m^2/s', &
+        call hist_addfld1d( fname='NH3_TOTAL', units='gN/m^2/s', &
              avgflag='A', long_name='Total NH3 emitted from fertilizers and manure', &
              ptr_col=this%nh3_total_col)
 
