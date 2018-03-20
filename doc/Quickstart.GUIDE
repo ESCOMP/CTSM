@@ -1,10 +1,10 @@
-          Quick-Start to Using cpl7 Scripts for clm4_5
+          Quick-Start to Using cpl7 Scripts for clm5_0
           ============================================
 
-Assumptions: You want to use yellowstone with clm4_5 BGC
+Assumptions: You want to use cheyenne with clm5_0 BGC
              to do a clm simulation with data atmosphere and the
-             latest CRUNCEP atm forcing files and settings. You also want to cycle
-             the CRUNCEP atm data between 1950 to 2010 and you want to run at
+             latest GSWP3v1 atm forcing files and settings. You also want to cycle
+             the GSWP3v1 atm data between 1950 to 2010 and you want to run at
              0.9x1.25 degree resolution.
 
 Process:
@@ -13,15 +13,15 @@ Process:
 
    cd cime/scripts
 
-   ./create_newcase -case <testcase> -mach yellowstone_intel -res f09_g16 -compset I4804 
+   ./create_newcase --case <testcase> --mach cheyenne --res f09_g16_gl4 -compset I2000Clm50BgcCrop
    (./create_newcase -help -- to get help on the script)
 
    # Setup the case
 
    cd <testcase>
    ./xmlchange id1=val1,id2=val2  # to make changes to any settings in the env_*.xml files
-   ./cesm_setup
-   (./cesm_setup -help -- to get help on the script, this creates the ./<testcase>.run script)
+   ./case.setup
+   (./case.setup -help -- to get help on the script)
 
    # Add any namelist changes to the user_nl_* files
 
@@ -29,16 +29,16 @@ Process:
 
    # Compile the code
 
-   ./<testcase>.build
+   ./case.build
 
    # Submit the run
 
-   ./<testcase>.submit
+   ./casesubmit
 
 Information on Compsets:
 
      "I" compsets are the ones with clm and datm7 without ice and ocean.
-     Most of the "I" compsets for CLM4.0 use the CLM_QIAN data with solar following
+     Most of the "I" compsets for CLM5.0 use the GSWP3v1 data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
      the date). 
@@ -69,4 +69,4 @@ Automatically resubmitting jobs:
 
    # Change RESUBMIT to number greater than 0, and CONTINUE_RUN to TRUE...
 
-   ./<testcase>.submit
+   ./case.submit

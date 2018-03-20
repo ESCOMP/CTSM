@@ -14,7 +14,7 @@
 <font size=1>
 (what's scientifically validated or not, what's expected to be functional or not and what's experimental or not)
 </font>
-<li><a href="README">README</a> -- description of CLM directory structure
+<li><a href="../README">README</a> -- description of CLM directory structure
 <li><a href="ChangeLog">ChangeLog</a> -- Description of Changes
 <li><a href="ChangeSum">ChangeSum</a> -- One Line Summary of Changes
 <li><a href="KnownBugs">KnownBugs</a> -- Known bugs in CLM

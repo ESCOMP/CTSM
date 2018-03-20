@@ -21,6 +21,10 @@
 hist_fexcl1 = 'PCT_CFT', 'PCT_GLC_MEC', 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr', 'CWDC_vr',
 'LITR1C_vr', 'LITR2C_vr', 'LITR3C_vr', 'LITR1N_vr', 'LITR2N_vr', 'LITR3N_vr','CWDN_vr'
 
+hist_fincl1 = 'EFLX_LH_TOT_ICE', 'FIRE_ICE', 'FLDS_ICE', 'FSH_ICE', 'FSNO_ICE', 'FSR_ICE',
+'QFLX_SUB_SNOW_ICE', 'QRUNOFF_ICE', 'QSNOFRZ_ICE', 'QSNOMELT_ICE', 'RAIN_ICE', 'SNOW_ICE',
+'SNOWICE_ICE', 'SNOWLIQ_ICE', 'SNOTXMASS_ICE', 'TG_ICE', 'TOPO_COL_ICE', 'TSA_ICE', 'TSOI_ICE'
+
 hist_fincl2 = 'GPP', 'NPP', 'AGNPP', 'TLAI', 'TOTVEGC', 'TSA','TREFMNAV','TREFMXAV', 'BTRANMN', 'NPP_NUPTAKE', 'GRAINC_TO_FOOD',
 'Vcmx25Z', 'FSH', 'NFERTILIZATION', 'AR', 'VEGWP', 'FCTR', 'FCEV', 'FGEV', 'FIRE', 'FSR', 'HTOP'
 
@@ -31,7 +35,7 @@ hist_fincl3 = 'FSR', 'H2OSNO', 'Q2M', 'SNOWDP', 'TSA', 'TREFMNAV', 'TREFMXAV', '
 'FROOTC:I'
 
 hist_fincl4 = 'PCT_CFT', 'PCT_GLC_MEC', 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr', 'CWDC_vr',
-'LITR1C_vr', 'LITR2C_vr', 'LITR3C_vr', 'LITR1N_vr', 'LITR2N_vr', 'LITR3N_vr','CWDN_vr','QICE_FORC', 'TSRF_FORC', 'TOPO_FORC'
+'LITR1C_vr', 'LITR2C_vr', 'LITR3C_vr', 'LITR1N_vr', 'LITR2N_vr', 'LITR3N_vr','CWDN_vr', 'FSNO_ICE', 'QICE_FORC', 'TSRF_FORC', 'TOPO_FORC'
 
 hist_mfilt = 1,1,1,1
 hist_dov2xy = .true.,.false.,.false.,.true.
