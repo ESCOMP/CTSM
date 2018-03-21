@@ -704,7 +704,7 @@ contains
     real(r8) :: cumflux, totalinput
     real(r8) :: fluxes_nitr(4), fluxes_tan(4)
     ! The fraction of manure applied continuously on grasslands (if present in the gridcell)
-    real(r8), parameter :: fract_continuous = 0.1_r8, kg_to_g = 0.001_r8, max_grazing_fract = 0.3_r8, &
+    real(r8), parameter :: fract_continuous = 0.1_r8, kg_to_g = 1e6_r8, max_grazing_fract = 0.3_r8, &
          tan_fract_excr = 0.5_r8, volat_coef_barns = 0.02_r8, volat_coef_stores = 0.01_r8, &
          tempr_min_grazing = 283.0_r8!!!!
 
