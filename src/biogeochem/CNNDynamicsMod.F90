@@ -569,7 +569,7 @@ contains
        ! 
        nf%nh3_total_col(c) = nf%nh3_fert_col(c) + nf%nh3_man_app_col(c) &
             + nf%nh3_grz_col(c) + nf%nh3_stores_col(c) +  nf%nh3_barns_col(c)
-       if (nh%nh3_total_col(c) < -1e15) then
+       if (nf%nh3_total_col(c) < -1e15) then
           call endrun(msg='ERROR: FAN, negative total emission')
        end if
     end do
