@@ -569,7 +569,9 @@ contains
        ! 
        nf%nh3_total_col(c) = nf%nh3_fert_col(c) + nf%nh3_man_app_col(c) &
             + nf%nh3_grz_col(c) + nf%nh3_stores_col(c) +  nf%nh3_barns_col(c)
-       
+       if (nh%nh3_total_col(c) < -1e15) then
+          call endrun(msg='ERROR: FAN, negative total emission')
+       end if
     end do
 
     if (do_balance_checks) then
@@ -814,7 +816,7 @@ contains
                 
                 if (n_stored_col(c) > 0_r8) then
                    tan_manure_spread_col(c) = n_manure_spread_col(c) * tan_stored_col(c)/n_stored_col(c)
-                else if (n_manure_spread_col(c) > 0) then
+                else if (n_manure_spread_col(c) > 1e-15_r8) then
                    write(iulog, *) 'stored, spread', n_stored_col(c), n_manure_spread_col(c)
                    call endrun(msg='Inconsistent manure application')
                 else
