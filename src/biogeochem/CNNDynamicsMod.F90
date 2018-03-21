@@ -563,7 +563,7 @@ contains
        nf%fert_runoff_col(c) = fluxes_tmp(iflx_roff)
        nf%fert_no3_prod_col(c) = fluxes_tmp(iflx_no3) + fert_no3
        nf%fert_nh4_to_soil_col(c) &
-            = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + fert_to_soil + garbage_total/dt 
+            = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + garbage_total/dt 
 
        ! Total flux
        ! 
@@ -835,7 +835,7 @@ contains
                 n_stored_col(c) = n_stored_col(c) + (fluxes_nitr(iflx_to_store) - n_manure_spread_col(c)) * dt
                 tan_stored_col(c) = tan_stored_col(c) &
                      + (fluxes_tan(iflx_to_store) - tan_manure_spread_col(c)) * dt
-                if (n_stored_col(c) > 1e6) then
+                if (n_stored_col(c) > 1e12) then
                    call endrun(msg='ERROR bad n_stored_col')
                 end if
                 if (n_stored_col(c) < 0) then
