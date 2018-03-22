@@ -549,7 +549,7 @@ contains
     mtan(1) = mtan(1) + ndep * dt
     ! transfer nitrogen from fresh to old pools
     mtan = mtan - flux_out * dt
-    mtan(2:) = mtan(2:) + flux_out(:size(mtan)-1) * dt
+    if (size(mtan) > 1) mtan(2:) = mtan(2:) + flux_out(:size(mtan)-1) * dt
     ! provided that the oldest pool has wide enough age range, the amount transferred out
     ! should be small.
     garbage = flux_out(size(mtan)) * dt
@@ -924,6 +924,7 @@ contains
           return
        end if
        age_prev = age_prev + poolranges(indpl)
+       fluxes = 0
     end do
     
     call update_pools(tanpools, fluxes, dt, numpools, 5, fixed)
