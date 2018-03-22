@@ -304,7 +304,7 @@ contains
        c = filter_soilc(fc)
        l = col%landunit(c)
        if (.not. (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop)) cycle
-       if (.not. col%active(c) .or. col%wtgcell(c) < 1e-6) cycle
+       if (.not. col%active(c) .or. col%wtgcell(c) < 1e-15) cycle
 
        if (nf%man_n_appl_col(c) > 1e12 .or. ngrz(c) > 1e12) then
           write(iulog, *) c, nf%man_n_appl_col(c), ngrz(c), cnv_nf%fert_patch(col%patchi(c):col%patchf(c)), &
@@ -346,8 +346,8 @@ contains
        end if
 
        ! Calculation of the water fluxes should include the background soil moisture
-       ! tendency. However, it's unclear how to do this in a numerically consistent
-       ! way. Following a naive finite differencing approach led to poorer agreement in
+       ! tendency. However, it is unclear how to do this in a numerically consistent
+       ! way. Following a naive finite differencing approach led to worse agreement in
        ! stand-alone simulations so the term is currenltly neglected here.
        watertend = 0.0_r8 
        tg = temperature_inst%t_grnd_col(c)
@@ -704,7 +704,7 @@ contains
     real(r8) :: cumflux, totalinput
     real(r8) :: fluxes_nitr(4), fluxes_tan(4)
     ! The fraction of manure applied continuously on grasslands (if present in the gridcell)
-    real(r8), parameter :: fract_continuous = 0.1_r8, kg_to_g = 1e6_r8, max_grazing_fract = 0.3_r8, &
+    real(r8), parameter :: fract_continuous = 0.1_r8, kg_to_g = 1e3_r8, max_grazing_fract = 0.3_r8, &
          tan_fract_excr = 0.5_r8, volat_coef_barns = 0.02_r8, volat_coef_stores = 0.01_r8, &
          tempr_min_grazing = 283.0_r8!!!!
 
@@ -823,13 +823,22 @@ contains
                    tan_manure_spread_col(c) = 0_r8
                 end if
 
-                if (tan_manure_spread_col(c) > 1) then
-                   write(iulog, *) 'bad tan_manure', tan_manure_spread_col(c), tan_stored_col(c), n_stored_col(c), n_manure_spread_col(c)
+                if (tan_manure_spread_col(c) > 1e6) then
+                   write(iulog, *) 'bad tan_manure', tan_manure_spread_col(c), tan_stored_col(c), &
+                        n_stored_col(c), n_manure_spread_col(c)
                 end if
                 
 
-                if (n_manure_spread_col(c) > 1) then
-                   write(iulog, *) 'bad n_manure', tan_manure_spread_col(c), tan_stored_col(c), n_stored_col(c), n_manure_spread_col(c)
+                if (n_manure_spread_col(c) > 1e6) then
+                   write(iulog, *) 'bad n_manure', tan_manure_spread_col(c), tan_stored_col(c), &
+                        n_stored_col(c), n_manure_spread_col(c)
+                end if
+
+                if (n_manure_spread_col(c)*dt > n_stored_col(c)) then
+                   ! Might happen because the crop phenology runs at radiation timestep
+                   ! and might not have yet ended the fertilization. Quick fix:
+                   n_manure_spread_col(c) = 0
+                   tan_manure_spread_col(c) = 0
                 end if
 
                 n_stored_col(c) = n_stored_col(c) + (fluxes_nitr(iflx_to_store) - n_manure_spread_col(c)) * dt
