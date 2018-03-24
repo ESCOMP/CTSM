@@ -25,7 +25,7 @@ module unittestSimpleSubgridSetupsMod
   public :: setup_n_veg_patches
 
   ! Create a grid that has a single gridcell with one landunit of a given type with N
-  ! columns, each with a single patch of type noveg
+  ! columns, each with a single patch of a given type (default patch type = noveg)
   public :: setup_landunit_ncols
 
   ! Create a grid that has N grid cells, each with a single vegetated patch
@@ -45,7 +45,8 @@ module unittestSimpleSubgridSetupsMod
   ! These assume that unittest_add_gridcell has already been called.
   ! ------------------------------------------------------------------------
 
-  ! Create a landunit of a given type with N columns, each with a single patch of type noveg
+  ! Create a landunit of a given type with N columns, each with M patches (default=1) of
+  ! a given type (default=noveg)
   public :: create_landunit_ncols
 
   ! Create a vegetated landunit with N patches
@@ -111,11 +112,11 @@ contains
   end subroutine setup_n_veg_patches
 
   !-----------------------------------------------------------------------
-  subroutine setup_landunit_ncols(ltype, ctypes, cweights)
+  subroutine setup_landunit_ncols(ltype, ctypes, cweights, ptype)
     !
     ! !DESCRIPTION:
     ! Create a grid that has a single gridcell with one landunit of a given type with N
-    ! columns, each with a single patch of type noveg
+    ! columns, each with a single patch of type ptype (or noveg if ptype is not given)
     !
     ! !USES:
     !
@@ -123,6 +124,7 @@ contains
     integer, intent(in) :: ltype ! landunit type
     integer, intent(in) :: ctypes(:)  ! array of column types; one column is created for each element in the array
     real(r8), intent(in) :: cweights(:) ! array of column weights on the landunit
+    integer, intent(in), optional :: ptype ! patch type (if not given, defaults to noveg)
     !
     ! !LOCAL VARIABLES:
 
@@ -132,7 +134,7 @@ contains
     call unittest_subgrid_setup_start()
     call unittest_add_gridcell()
     call create_landunit_ncols(ltype = ltype, lweight = 1._r8, &
-         ctypes = ctypes, cweights = cweights)
+         ctypes = ctypes, cweights = cweights, ptype = ptype)
     call unittest_subgrid_setup_end()
 
   end subroutine setup_landunit_ncols
@@ -202,11 +204,11 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine create_landunit_ncols(ltype, lweight, ctypes, cweights)
+  subroutine create_landunit_ncols(ltype, lweight, ctypes, cweights, npatches, ptype)
     !
     ! !DESCRIPTION:
-    ! Create a landunit of a given type with N columns, each with a single patch of type
-    ! noveg.
+    ! Create a landunit of a given type with N columns, each with M patches (default=1) of
+    ! type noveg.
     !
     ! Assumes that unittest_add_gridcell has already been called.
     !
@@ -217,10 +219,21 @@ contains
     real(r8), intent(in) :: lweight ! landunit weight on the grid cell
     integer, intent(in) :: ctypes(:)  ! array of column types; one column is created for each element in the array
     real(r8), intent(in) :: cweights(:) ! array of column weights on the landunit
+
+    ! If npatches is provided, it gives the number of patches on each column. Each patch
+    ! has equal weight, and is of the same type (ptype). If not provided, the default is 1
+    ! patch per column.
+    integer, intent(in), optional :: npatches
+
+    ! If ptype is provided, it gives the pft type of every patch. If not provided, the
+    ! default is noveg.
+    integer, intent(in), optional :: ptype
     !
     ! !LOCAL VARIABLES:
     integer :: ncols
-    integer :: c
+    integer :: l_npatches ! local version of npatches
+    integer :: l_ptype    ! local version of ptype
+    integer :: c, p
 
     character(len=*), parameter :: subname = 'create_landunit_ncols'
     !-----------------------------------------------------------------------
@@ -229,10 +242,24 @@ contains
     SHR_ASSERT((size(cweights) == ncols), errMsg(sourcefile, __LINE__))
     SHR_ASSERT(gi >= begg, 'must call unittest_add_gridcell first: ' // errMsg(sourcefile, __LINE__))
 
+    if (present(npatches)) then
+       l_npatches = npatches
+    else
+       l_npatches = 1
+    end if
+
+    if (present(ptype)) then
+       l_ptype = ptype
+    else
+       l_ptype = noveg
+    end if
+
     call unittest_add_landunit(my_gi=gi, ltype=ltype, wtgcell=lweight)
     do c = 1, ncols
        call unittest_add_column(my_li=li, ctype=ctypes(c), wtlunit=cweights(c))
-       call unittest_add_patch(my_ci=ci, ptype=noveg, wtcol=1.0_r8)
+       do p = 1, l_npatches
+          call unittest_add_patch(my_ci=ci, ptype=l_ptype, wtcol=1.0_r8/l_npatches)
+       end do
     end do
 
   end subroutine create_landunit_ncols

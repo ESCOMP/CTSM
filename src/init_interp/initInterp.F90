@@ -22,6 +22,7 @@ module initInterpMod
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip
+  use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
   use ncdio_pio
   use pio
@@ -118,7 +119,7 @@ contains
   end subroutine initInterp_readnl
 
 
-  subroutine initInterp (filei, fileo, bounds)
+  subroutine initInterp (filei, fileo, bounds, glc_behavior)
 
     !----------------------------------------------------------------------- 
     ! Read initial data from netCDF instantaneous initial data history file 
@@ -131,6 +132,7 @@ contains
     character(len=*)  , intent(in) :: filei     !input  initial dataset
     character(len=*)  , intent(in) :: fileo    !output initial dataset
     type(bounds_type) , intent(in) :: bounds
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! local variables
     integer            :: i,j,k,l,m,n     ! loop indices    
@@ -266,6 +268,10 @@ contains
          begl = 1, endl = nlunsi, &
          begg = 1, endg = ngrcsi)
 
+    ! It is important for bounds_o to match the passed-in bounds - i.e., for the
+    ! decomposition within init_interp to match the model's decomposition. This way we
+    ! can access other information for the output configuration that is not contained in
+    ! the restart file.
     bounds_o = interp_bounds_type( &
          begp = bounds%begp, endp = bounds%endp, &
          begc = bounds%begc, endc = bounds%endc, &
@@ -295,7 +301,8 @@ contains
     vec_dimname = 'pft'
     call findMinDist(vec_dimname, bounds_i%get_begp(), bounds_i%get_endp(), &
          bounds_o%get_begp(), bounds_o%get_endp(), ncidi, ncido, &
-         subgrid_special_indices, pft_activei, pft_activeo, pftindx )
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         pft_activei, pft_activeo, pftindx )
 
     ! For each output column, find the input column, colindx, that is closest
 
@@ -305,7 +312,8 @@ contains
     vec_dimname = 'column'
     call findMinDist(vec_dimname, bounds_i%get_begc(), bounds_i%get_endc(), &
          bounds_o%get_begc(), bounds_o%get_endc(), ncidi, ncido, &
-         subgrid_special_indices, col_activei, col_activeo, colindx )
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         col_activei, col_activeo, colindx )
 
     ! For each output landunit, find the input landunit, lunindx, that is closest
 
@@ -315,7 +323,8 @@ contains
     vec_dimname = 'landunit'
     call findMinDist(vec_dimname, bounds_i%get_begl(), bounds_i%get_endl(), &
          bounds_o%get_begl(), bounds_o%get_endl(), ncidi, ncido, &
-         subgrid_special_indices, lun_activei, lun_activeo, lunindx )
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         lun_activei, lun_activeo, lunindx )
 
     ! For each output gridcell, find the input gridcell, grcindx, that is closest
 
@@ -325,7 +334,8 @@ contains
     vec_dimname = 'gridcell'
     call findMinDist(vec_dimname, bounds_i%get_begg(), bounds_i%get_endg(), &
          bounds_o%get_begg(), bounds_o%get_endg(), ncidi, ncido, &
-         subgrid_special_indices, grc_activei, grc_activeo, grcindx)
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         grc_activei, grc_activeo, grcindx)
 
     ! ------------------------------------------------------------------------
     ! Set up interpolators for multi-level variables
@@ -629,7 +639,8 @@ contains
   !=======================================================================
 
   subroutine findMinDist( dimname, begi, endi, bego, endo, ncidi, ncido, &
-       subgrid_special_indices, activei, activeo, minindx)
+       subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+       activei, activeo, minindx)
 
     ! --------------------------------------------------------------------
     !
@@ -642,13 +653,15 @@ contains
     type(file_desc_t) , intent(inout) :: ncidi         
     type(file_desc_t) , intent(inout) :: ncido         
     type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
+    type(glc_behavior_type), intent(in) :: glc_behavior
+    logical           , intent(in)    :: glc_elevclasses_same
     logical           , intent(out)   :: activei(begi:endi)
     logical           , intent(out)   :: activeo(bego:endo)
     integer           , intent(out)   :: minindx(bego:endo)         
     !
     ! local variables 
     type(subgrid_type)   :: subgridi 
-    type(subgrid_type)   :: subgrido 
+    type(subgrid_type)   :: subgrido
     ! --------------------------------------------------------------------
 
     if (masterproc) then
@@ -666,8 +679,13 @@ contains
     if (masterproc) then
        write(iulog,*)'calling set_mindist for ',trim(dimname)
     end if
-    call set_mindist(begi, endi, bego, endo, activei, activeo, subgridi, subgrido, &
-         subgrid_special_indices, init_interp_fill_missing_with_natveg, minindx)
+    call set_mindist(begi=begi, endi=endi, bego=bego, endo=endo, &
+         activei=activei, activeo=activeo, subgridi=subgridi, subgrido=subgrido, &
+         subgrid_special_indices=subgrid_special_indices, &
+         glc_behavior=glc_behavior, &
+         glc_elevclasses_same=glc_elevclasses_same, &
+         fill_missing_with_natveg=init_interp_fill_missing_with_natveg, &
+         mindist_index=minindx)
 
     deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
     deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)
