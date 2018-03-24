@@ -157,7 +157,7 @@ contains
     call set_icemec_adjustable_type(bego=bego, endo=endo, dimname=subgrido%name, &
          glc_behavior=glc_behavior, icemec_adjustable_type_o=icemec_adjustable_type_o)
 
-!$OMP PARALLEL DO PRIVATE (ni,no,n,nmin,distmin,dx,dy,dist,closest,hgtdiffmin,hgtdiff)
+!$OMP PARALLEL DO PRIVATE (ni,no,n,nmin,distmin,dx,dy,dist,closest,hgtdiffmin,hgtdiff,glcmec_must_be_same_type)
     do no = bego,endo
 
        ! Only interpolate onto active points. Otherwise, the mere act of running
