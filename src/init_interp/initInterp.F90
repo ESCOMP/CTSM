@@ -219,6 +219,10 @@ contains
     call check_dim_level(ncidi, ncido, dimname='numrad' , must_be_same=.true.)
 
     glc_elevclasses_same = glc_elevclasses_are_same(ncidi, ncido)
+    if (masterproc) then
+       write(iulog,*) 'Glacier elevation classes same in input and output?: ', &
+            glc_elevclasses_same
+    end if
 
     ! --------------------------------------------
     ! Determine input file global attributes that are needed 
