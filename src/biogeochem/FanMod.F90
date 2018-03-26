@@ -924,7 +924,6 @@ contains
           return
        end if
        age_prev = age_prev + poolranges(indpl)
-       fluxes = 0
     end do
     
     call update_pools(tanpools, fluxes, dt, numpools, 5, fixed)
