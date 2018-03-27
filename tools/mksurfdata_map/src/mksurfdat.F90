@@ -15,7 +15,7 @@ program mksurfdat
     use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4
     use fileutils          , only : opnfil, getavu
     use mklaiMod           , only : mklai
-    use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array
+    use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, set_max_p2l_array
     use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
     use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
     use mksoilMod          , only : soil_sand, soil_clay, mksoiltex, mksoilInit, &
@@ -90,9 +90,11 @@ program mksurfdat
     real(r8), allocatable  :: pctlnd_pft(:)      ! PFT data: % of gridcell for PFTs
     real(r8), allocatable  :: pctlnd_pft_dyn(:)  ! PFT data: % of gridcell for dyn landuse PFTs
     integer , allocatable  :: pftdata_mask(:)    ! mask indicating real or fake land type
-    type(pct_pft_type), allocatable :: pctnatpft(:) ! % of grid cell that is nat veg, and breakdown into PFTs
-    type(pct_pft_type), allocatable :: pctcft(:)    ! % of grid cell that is crop, and breakdown into CFTs
-    type(pct_pft_type), allocatable :: pctcft_saved(:) ! version of pctcft saved from the initial call to mkpft
+    type(pct_pft_type), allocatable :: pctnatpft(:)     ! % of grid cell that is nat veg, and breakdown into PFTs
+    type(pct_pft_type), allocatable :: pctnatpft_max(:) ! % of grid cell maximum PFTs of the time series
+    type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
+    type(pct_pft_type), allocatable :: pctcft_max(:)    ! % of grid cell maximum CFTs of the time series
+    type(pct_pft_type), allocatable :: pctcft_saved(:)  ! version of pctcft saved from the initial call to mkpft
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
@@ -414,7 +416,9 @@ program mksurfdat
                pctlnd_pft(ns_o)                   , & 
                pftdata_mask(ns_o)                 , & 
                pctnatpft(ns_o)                    , &
+               pctnatpft_max(ns_o)                , &
                pctcft(ns_o)                       , &
+               pctcft_max(ns_o)                   , &
                pctcft_saved(ns_o)                 , &
                pctgla(ns_o)                       , & 
                pctlak(ns_o)                       , & 
@@ -802,6 +806,9 @@ program mksurfdat
        landfrac_pft(n) = pctlnd_pft(n)/100._r8
     end do
 
+    pctnatpft_max = pctnatpft
+    pctcft_max = pctcft
+
     ! ----------------------------------------------------------------------
     ! Create surface dataset
     ! ----------------------------------------------------------------------
@@ -1156,6 +1163,9 @@ program mksurfdat
           call change_landuse(ldomain, dynpft=.true.)
 
           call normalizencheck_landuse(ldomain)
+	  
+          call set_max_p2l_array(pctnatpft_max,pctnatpft)
+          call set_max_p2l_array(pctcft_max,pctcft)
 
           ! Output time-varying data for current year
 
@@ -1197,6 +1207,12 @@ program mksurfdat
 	  call check_ret(nf_sync(ncid), subname)
 
        end do   ! end of read loop
+
+       call check_ret(nf_inq_varid(ncid, 'PCT_NAT_PFT_MAX', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctnatpft_max)), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'PCT_CFT_MAX', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctcft_max)), subname)
 
        call check_ret(nf_close(ncid), subname)
 

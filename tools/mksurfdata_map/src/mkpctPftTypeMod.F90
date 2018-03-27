@@ -46,6 +46,7 @@ module mkpctPftTypeMod
   end type pct_pft_type
 
   ! !PUBLIC MEMBER FUNCTIONS
+  public :: set_max_p2l_array ! given an array of pct_pft_type variables update the max_p2l values from pct_p2l
   public :: get_pct_p2l_array ! given an array of pct_pft_type variables, return a 2-d array of pct_p2l
   public :: get_pct_l2g_array ! given an array of pct_pft_type variables, return an array of pct_l2g
 
@@ -409,8 +410,6 @@ contains
     deallocate(pct_p2g, is_small, is_zero)
   end subroutine remove_small_cover
 
-
-
   ! ========================================================================
   ! Private member functions
   ! ========================================================================
@@ -510,6 +509,49 @@ contains
   ! ========================================================================
   ! Module-level routines (not member functions)
   ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine set_max_p2l_array(pct_pft_max_arr,pct_pft_arr)
+    !
+    ! !DESCRIPTION:
+    ! Given an array of pct_pft_type variables, set all max_p2l.
+    !
+    ! Assumes that all elements of pct_pft_arr have the same size and lower bound for
+    ! their pct_p2l array.
+    !
+    ! !ARGUMENTS:
+    ! workaround for gfortran bug (58043): declare this 'type' rather than 'class':
+    type(pct_pft_type), intent(inout) :: pct_pft_max_arr(:)
+    type(pct_pft_type), intent(in) :: pct_pft_arr(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: pft_lbound
+    integer :: pft_ubound
+    integer :: arr_index
+    integer :: pft_index
+    
+    character(len=*), parameter :: subname = 'get_pct_p2l_array'
+    !-----------------------------------------------------------------------
+    
+    pft_lbound = lbound(pct_pft_arr(1)%pct_p2l, 1)
+    pft_ubound = ubound(pct_pft_arr(1)%pct_p2l, 1)
+
+    do arr_index = 1, size(pct_pft_arr)
+       if (lbound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_lbound .or. &
+            ubound(pct_pft_arr(arr_index)%pct_p2l, 1) /= pft_ubound) then
+          write(6,*) subname//' ERROR: all elements of pct_pft_arr must have'
+          write(6,*) 'the same size and lower bound for their pct_p2l array'
+          call abort()
+       end if
+          
+       do pft_index = pft_lbound, pft_ubound
+          if (pct_pft_arr(arr_index)%pct_p2l(pft_index) > pct_pft_max_arr(arr_index)%pct_p2l(pft_index)) then
+             pct_pft_max_arr(arr_index)%pct_p2l(pft_index) = pct_pft_arr(arr_index)%pct_p2l(pft_index)
+	  end if
+       end do
+    end do
+
+  end subroutine set_max_p2l_array
 
   !-----------------------------------------------------------------------
   function get_pct_p2l_array(pct_pft_arr) result(pct_p2l)
