@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm5.0.dev003     erik 03/09/2018 Bug fixes for energy imbalance associated with surface water and lakes
    clm5.0.dev002    sacks 02/25/2018 Add some land ice diagnostic vars needed for CMIP6
    clm5.0.dev001     erik 02/14/2018 Fix LND_TUNING_MODE for fully coupled case, update some README files/PTCLM
    clm5.0.dev000     erik 02/05/2018 Double tag of clm5.0.000 with new naming convention, some updated documentation

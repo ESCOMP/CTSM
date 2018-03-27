@@ -10,7 +10,7 @@ module SurfaceAlbedoMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
-  use landunit_varcon   , only : istsoil, istcrop
+  use landunit_varcon   , only : istsoil, istcrop, istdlak
   use clm_varcon        , only : grlnd, namep
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
   use clm_varctl        , only : fsurdat, iulog, use_snicar_frc
@@ -677,8 +677,8 @@ contains
              !  weight snow layer radiative absorption factors based on snow fraction and soil albedo
              !  (NEEDED FOR ENERGY CONSERVATION)
              do i = -nlevsno+1,1,1
-              if (subgridflag == 0) then
-                if (ib == 1) then
+              if (subgridflag == 0 .or. lun%itype(col%landunit(c)) == istdlak) then 
+                 if (ib == 1) then
                    flx_absdv(c,i) = flx_absd_snw(c,i,ib)*frac_sno(c) + &
                         ((1.-frac_sno(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))
                    flx_absiv(c,i) = flx_absi_snw(c,i,ib)*frac_sno(c) + &
