@@ -180,6 +180,18 @@ my %cfg = ();           # build configuration
 # Look for them in the directory that contains the configure script.
 
 my $cimeroot   = $opts{'cimeroot'};
+if ( ! defined($cimeroot) ) {
+  $cimeroot = "$cfgdir/../cime";
+  if (      -d $cimeroot ) {
+  } elsif ( -d "$cfgdir/../../../cime" ) {
+    $cimeroot = "$cfgdir/../../../cime";
+  } else {
+    die <<"EOF";
+** Cannot find the root of the cime directory  enter it using the -cimeroot option
+   Did you run the checkout_externals scripts?
+EOF
+  }
+}
 my $casecfgdir = "$cimeroot/scripts/Tools";
 my $perl5lib   = "$cimeroot/utils/perl5lib/";
 

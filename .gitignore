@@ -24,8 +24,46 @@ components/
 build/
 CMakeFiles/
 
+
+# unit testing directories
+src/unit_tests.*
+
+# cime_config
+buildnmlc
+buildcppc
+
 # don't ignore cism build utilities directory
 !components/cism/**/build
+
+# configure / build files
+bld/**/CESM_cppdefs
+bld/**/Filepath
+bld/**/config_cache.xml
+bld/**/lnd_in
+bld/**/drv_flds_in
+
+# build-naemlist testing
+bld/unit_testers/lnd_in*
+bld/unit_testers/drv_flds_in*
+bld/unit_testers/temp_file.txt*
+bld/unit_testers/user_nl_clm_real_parameters*
+bld/unit_testers/env_run.xml
+
+# tools testing output
+td.*.status
+td.*.log
+td.*.status.xFail
+test_driver_*.sh
+
+# mksurfdata output
+surfdata_*.log
+surfdata_*.namelist
+clm.input_data_list
+clm.input_data_list.previous
+
+# Tools executables
+tools/mksurfdata_map/mksurfdata_map
+tools/mkprocdata_map/mkprocdata_map
 
 # build output
 *.o

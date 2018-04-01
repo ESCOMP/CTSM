@@ -134,6 +134,7 @@ contains
          t_grnd_r           => temperature_inst%t_grnd_r_col          , & ! Output: [real(r8) (:)   ]  Rural ground temperature (Kelvin)       
          t_soi_10cm         => temperature_inst%t_soi10cm_col         , & ! Output: [real(r8) (:)   ]  soil temperature in top 10cm of soil (Kelvin)
          tsoi17             => temperature_inst%t_soi17cm_col         , & ! Output: [real(r8) (:)   ]  soil temperature in top 17cm of soil (Kelvin) 
+         t_sno_mul_mss      => temperature_inst%t_sno_mul_mss_col     , & ! Output: [real(r8) (:)   ]  col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
 
          snow_depth         => waterstate_inst%snow_depth_col         , & ! Input:  [real(r8) (:)   ]  snow height of snow covered area (m)     
          snowdp             => waterstate_inst%snowdp_col             , & ! Input:  [real(r8) (:)   ]  area-averaged snow height (m)       
@@ -296,6 +297,50 @@ contains
       ! Calculate column average snow depth
       do c = bounds%begc,bounds%endc
          snowdp(c) = snow_depth(c) * frac_sno_eff(c)
+      end do
+
+      ! Calculate snow internal temperature
+      !
+      ! Snow internal (or: integrated) temperature is the average temperature of the entire 
+      ! snowpack, weighted by the layer mass. In a formula this reads:
+      !
+      ! SIT = [ Sum_t Sum_i w(t,i) * T(t,i) ] / 
+      !       [ Sum_t Sum_i w(t,i) ]
+      !
+      ! where
+      !
+      ! t = time
+      ! i = layer index
+      ! w(t,i) = layer mass or weight (kg /m2) 
+      ! T(t,i) = layer temperature (K)
+      ! 
+      ! SIT can be calculated offline from two components: the nominator and denominator, which are output
+      ! separately.
+      ! 
+      ! Both the nominator and denominator are scaled with a factor 1/Nstep, the number of time samples, 
+      ! to make them independent of the number of time steps that were used in the averaging. 
+      ! This is simply implemented as avgflag='A' in any calls to the history output routines. 
+      !
+      ! Snow packs without layers are not taken into account, as they have no temperature.
+      !
+      ! The denominator Sum_t Sum_i w(t,i) is already output as SNOWICE and SNOWLIQ (mass of 
+      ! snow in layered snowpacks). Note that these != H2OSNO which does account for layerless snowpacks.
+      !
+      ! The nominator Sum_t Sum_i w(t,i) * T(t,i) is computed and stored as t_sno_mul_mss
+
+      do fc = 1, num_nolakec
+         c = filter_nolakec(fc)
+         t_sno_mul_mss(c) = 0._r8
+      end do
+
+      do j = -nlevsno+1, 0
+         do fc = 1, num_snowc
+            c = filter_snowc(fc)
+            if (j >= snl(c)+1) then
+               t_sno_mul_mss(c) = t_sno_mul_mss(c) + h2osoi_ice(c,j) * t_soisno(c,j)
+               t_sno_mul_mss(c) = t_sno_mul_mss(c) + h2osoi_liq(c,j) * tfrz
+            end if
+         end do
       end do
 
       ! Determine ground temperature, ending water balance and volumetric soil water
