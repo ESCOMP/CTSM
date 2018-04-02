@@ -946,7 +946,6 @@ contains
     ! Spinup state
     !--------------------------------
 
-       
         if (carbon_type == 'c12') then
            if (flag == 'write') idata = spinup_state
            call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int,  &
