@@ -1,1 +1,0 @@
-/glade/u/home/lfjiang/ctsm/cime/config/cesm/machines/Makefile
