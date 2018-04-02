@@ -95,7 +95,8 @@ contains
     gru_inst = dyn_var_time_uninterp_type( &
             dyn_file=dyngrossunrep_file, varname=grossunrep_varname, &
             dim1name=grlnd, conversion_factor=1.0_r8, &
-            do_check_sums_equal_1=.false., data_shape=[num_points,natpft_size])
+            do_check_sums_equal_1=.false., data_shape=[num_points,natpft_size], &
+	    allow_nodata=.true.)
        
   end subroutine dynGrossUnrep_init
 

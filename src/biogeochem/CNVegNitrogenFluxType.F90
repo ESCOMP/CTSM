@@ -488,7 +488,7 @@ contains
     allocate(this%gru_livestemn_to_atm_patch                (begp:endp)) ; this%gru_livestemn_to_atm_patch                (:) = nan
     allocate(this%gru_livestemn_storage_to_atm_patch        (begp:endp)) ; this%gru_livestemn_storage_to_atm_patch        (:) = nan
     allocate(this%gru_livestemn_xfer_to_atm_patch           (begp:endp)) ; this%gru_livestemn_xfer_to_atm_patch           (:) = nan
-    allocate(this%gru_deadstemn_to_atm_patch                (begp:endp)) ; this%gru_deadstemn_storage_to_atm_patch        (:) = nan
+    allocate(this%gru_deadstemn_to_atm_patch                (begp:endp)) ; this%gru_deadstemn_to_atm_patch                (:) = nan
     allocate(this%gru_deadstemn_storage_to_atm_patch        (begp:endp)) ; this%gru_deadstemn_storage_to_atm_patch        (:) = nan
     allocate(this%gru_deadstemn_xfer_to_atm_patch           (begp:endp)) ; this%gru_deadstemn_xfer_to_atm_patch           (:) = nan
     allocate(this%gru_livecrootn_storage_to_atm_patch       (begp:endp)) ; this%gru_livecrootn_storage_to_atm_patch       (:) = nan
