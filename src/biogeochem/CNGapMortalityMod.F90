@@ -256,6 +256,7 @@ contains
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ilivecroot_xf) = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ideadstem_xf)  = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ideadcroot_xf) = m
+!            if(p .eq. 8)write(511,*),'gap_mortality',m
          end if
 
          !------------------------------------------------------
@@ -281,7 +282,7 @@ contains
            if (use_matrixcn) then  		   
              cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadstem)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadstem)     + m
              cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadcroot)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadcroot)    + m
-             if(p .eq. 8)print*,'after update ngmtransfer',cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadstem),m
+!             if(p .eq. 8)print*,'after update ngmtransfer',cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadstem),m
            end if
          end if
 
@@ -343,8 +344,8 @@ contains
                end if
             end if
          end if
-
-         if(p .eq. 8)print*,'after update ngmtransfer 1',cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadstem),m
+        
+ !        if(p .eq. 16 .and. use_matrixcn)print*,'after update ngmtransfer 1',cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ifroot)*cnveg_nitrogenstate_inst%frootn_patch(p)*1800,m
       end do ! end of patch loop
 
       ! gather all patch-level litterfall fluxes to the column

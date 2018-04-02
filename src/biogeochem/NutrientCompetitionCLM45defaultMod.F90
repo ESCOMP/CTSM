@@ -404,24 +404,24 @@ contains
 
  !      else
          if (use_matrixcn) then
-           matrix_alloc(p,ileaf) = (1.0_r8 + g1) / c_allometry(p) * fcur
-           matrix_alloc(p,ileaf_st) = (1.0_r8 + g1) / c_allometry(p) * (1._r8 - fcur)
-           matrix_alloc(p,ifroot) = (1.0_r8 + g1) / c_allometry(p) * f1 * fcur
-           matrix_alloc(p,ifroot_st) = (1.0_r8 + g1) / c_allometry(p) * f1 * (1._r8 - fcur)
+           matrix_alloc(p,ileaf) = (1.0_r8) / c_allometry(p) * fcur
+           matrix_alloc(p,ileaf_st) = (1.0_r8) / c_allometry(p) * (1._r8 - fcur)
+           matrix_alloc(p,ifroot) = (1.0_r8) / c_allometry(p) * f1 * fcur
+           matrix_alloc(p,ifroot_st) = (1.0_r8) / c_allometry(p) * f1 * (1._r8 - fcur)
  
            matrix_nalloc(p,ileaf)     = ((1.0_r8/cnl)          / n_allometry(p)) * fcur
            matrix_nalloc(p,ileaf_st)  = ((1.0_r8/cnl)          / n_allometry(p))* (1._r8 - fcur)
            matrix_nalloc(p,ifroot)    = ((f1/cnfr)             / n_allometry(p)) * fcur
            matrix_nalloc(p,ifroot_st) = ((f1/cnfr)             / n_allometry(p)) * (1._r8 - fcur)
            if (woody(ivt(p)) == 1._r8) then
-               matrix_alloc(p,ilivestem) = (1.0_r8 + g1) / c_allometry(p) * f3 * f4 * fcur 
-               matrix_alloc(p,ilivestem_st) = (1.0_r8 +g1) / c_allometry(p) * f3 * f4 * (1._r8 - fcur)
-               matrix_alloc(p,ideadstem) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * fcur
-               matrix_alloc(p,ideadstem_st) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * (1._r8 - fcur)
-               matrix_alloc(p,ilivecroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * fcur
-               matrix_alloc(p,ilivecroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * (1._r8 - fcur)
-               matrix_alloc(p,ideadcroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * fcur
-               matrix_alloc(p,ideadcroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               matrix_alloc(p,ilivestem) = (1.0_r8) / c_allometry(p) * f3 * f4 * fcur 
+               matrix_alloc(p,ilivestem_st) = (1.0_r8) / c_allometry(p) * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadstem) = (1.0_r8) / c_allometry(p) * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadstem_st) = (1.0_r8) / c_allometry(p) * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               matrix_alloc(p,ilivecroot) = (1.0_r8) / c_allometry(p) * f2 * f3 * f4 * fcur
+               matrix_alloc(p,ilivecroot_st) = (1.0_r8) / c_allometry(p) * f2 * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadcroot) = (1.0_r8) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadcroot_st) = (1.0_r8) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
  
                matrix_nalloc(p,ilivestem)    = (f3*f4/cnlw)                     / n_allometry(p) * fcur 
                matrix_nalloc(p,ilivestem_st) = (f3*f4/cnlw)                     / n_allometry(p) * (1._r8 - fcur)
@@ -433,16 +433,16 @@ contains
                matrix_nalloc(p,ideadcroot_st) = (f2 * f3 * (1._r8 - f4)/cndw)   / n_allometry(p) *(1._r8 - fcur)
             end if
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-               matrix_alloc(p,ilivestem) = (1.0_r8 + g1) / c_allometry(p) * f3 * f4 * fcur 
-               matrix_alloc(p,ilivestem_st) = (1.0_r8 +g1) / c_allometry(p) * f3 * f4 * (1._r8 - fcur)
-               matrix_alloc(p,ideadstem) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * fcur
-               matrix_alloc(p,ideadstem_st) = (1.0_r8 + g1) / c_allometry(p) * f3 * (1._r8 - f4) * (1._r8 - fcur)
-               matrix_alloc(p,ilivecroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * fcur
-               matrix_alloc(p,ilivecroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * f4 * (1._r8 - fcur)
-               matrix_alloc(p,ideadcroot) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * fcur
-               matrix_alloc(p,ideadcroot_st) = (1.0_r8 + g1) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
-               matrix_alloc(p,igrain) = (1.0_r8 + g1) / c_allometry(p) * f5 * fcur
-               matrix_alloc(p,igrain_st) = (1.0_r8 + g1) / c_allometry(p) * f5 * (1._r8 - fcur)
+               matrix_alloc(p,ilivestem) = (1.0_r8) / c_allometry(p) * f3 * f4 * fcur 
+               matrix_alloc(p,ilivestem_st) = (1.0_r8) / c_allometry(p) * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadstem) = (1.0_r8) / c_allometry(p) * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadstem_st) = (1.0_r8) / c_allometry(p) * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               matrix_alloc(p,ilivecroot) = (1.0_r8) / c_allometry(p) * f2 * f3 * f4 * fcur
+               matrix_alloc(p,ilivecroot_st) = (1.0_r8) / c_allometry(p) * f2 * f3 * f4 * (1._r8 - fcur)
+               matrix_alloc(p,ideadcroot) = (1.0_r8) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * fcur
+               matrix_alloc(p,ideadcroot_st) = (1.0_r8) / c_allometry(p) * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+               matrix_alloc(p,igrain) = (1.0_r8) / c_allometry(p) * f5 * fcur
+               matrix_alloc(p,igrain_st) = (1.0_r8) / c_allometry(p) * f5 * (1._r8 - fcur)
  
                matrix_nalloc(p,ilivestem)     = (f3*f4/cnlw)                     / n_allometry(p) * fcur 
                matrix_nalloc(p,ilivestem_st)  = (f3*f4/cnlw)                     / n_allometry(p) * (1._r8 - fcur)
@@ -524,7 +524,7 @@ contains
  !        end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
          if(use_matrixcn)then
-            matrix_Cinput(p) = plant_calloc(p) / (1._r8 + g1)
+            matrix_Cinput(p) = plant_calloc(p)
             if(retransn(p) .ne. 0)then
                matrix_nphtransfer(p,ileaf        ,iretransn)      = matrix_nphtransfer(p,ileaf        ,iretransn) &
                                                                   + matrix_nalloc(p,ileaf    )     * retransn_to_npool(p) / retransn(p)

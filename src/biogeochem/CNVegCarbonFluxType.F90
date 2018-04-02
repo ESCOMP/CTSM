@@ -4171,6 +4171,7 @@ contains
        this%gpp_patch(p) = &
             this%psnsun_to_cpool_patch(p) + &
             this%psnshade_to_cpool_patch(p)
+!       if(p .eq. 16)print*,'gpp_patch(p)',this%gpp_patch(p),this%psnsun_to_cpool_patch(p),this%psnshade_to_cpool_patch(p),this%ar_patch(p),this%xsmrpool_to_atm_patch(p),this%mr_patch(p),this%gr_patch(p)
 
        ! net primary production (NPP)      
        this%npp_patch(p) =      &

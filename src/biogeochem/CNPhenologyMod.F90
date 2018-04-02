@@ -962,7 +962,7 @@ contains
                end if                                                              !mm
 
                ! set onset_flag if critical growing degree-day sum is exceeded
-               if(p .eq. 8)print*,'onset_gdd',onset_gdd(p),crit_onset_gdd,soilt,fracday
+!               if(p .eq. 8)print*,'onset_gdd',onset_gdd(p),crit_onset_gdd,soilt,fracday
                if (onset_gdd(p) > crit_onset_gdd) then                             !n
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
@@ -996,7 +996,7 @@ contains
                   end if 
 !                  else
                                                                !o
-                    if(p .eq. 8)print*,'leafc_storage_to_xfer in CNSeasonDecidPhenology',leafc_storage_to_xfer(p),fstor2tran,leafc_storage(p),dt
+!                    if(p .eq. 8)print*,'leafc_storage_to_xfer in CNSeasonDecidPhenology',leafc_storage_to_xfer(p),fstor2tran,leafc_storage(p),dt
                     leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                     frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
                     if (woody(ivt(p)) == 1.0_r8) then                                !q
@@ -1315,7 +1315,7 @@ contains
                ! then test for soil temperature criteria
 
                ! Adding in Kyla's rainfall trigger when fun on. RF. prec10 (mm/s) needs to be higher than 8mm over 10 days. 
-               if(p .eq. 8)print*,'onset_swi',onset_swi(p),crit_onset_swi,additional_onset_condition
+!               if(p .eq. 8)print*,'onset_swi',onset_swi(p),crit_onset_swi,additional_onset_condition
                if (onset_swi(p) > crit_onset_swi.and. additional_onset_condition)  then
                   onset_flag(p) = 1._r8
               
@@ -1370,7 +1370,7 @@ contains
                      end if
                   end if
 !                 else
-                  if(p .eq. 8)print*,' leafc_storage_to_xfer in CNStressDecidPhenology',leafc_storage_to_xfer(p),fstor2tran,leafc_storage(p),dt
+!                  if(p .eq. 8)print*,' leafc_storage_to_xfer in CNStressDecidPhenology',leafc_storage_to_xfer(p),fstor2tran,leafc_storage(p),dt
                   leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                   frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
                   if (woody(ivt(p)) == 1.0_r8) then
@@ -1489,7 +1489,7 @@ contains
 
                ! reduced the amount of stored carbon flowing to display pool by only counting the delta
                ! between leafc and leafc_store in the flux. RosieF, Nov5 2015. 
-               if(p .eq. 8)print*,'leafc_storage_to_xfer in CNStreesDeci when onsetflag .ne.1',leafc_storage_to_xfer(p),bgtr(p),leafc_storage(p),leafc(p)
+!               if(p .eq. 8)print*,'leafc_storage_to_xfer in CNStreesDeci when onsetflag .ne.1',leafc_storage_to_xfer(p),bgtr(p),leafc_storage(p),leafc(p)
                leafc_storage_to_xfer(p)  = max(0.0_r8,(leafc_storage(p)-leafc(p))) * bgtr(p)
                frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
                if (use_matrixcn) then
@@ -2445,7 +2445,7 @@ contains
          ! only calculate these fluxes during onset period
          if (onset_flag(p) == 1._r8) then
 
-            if(p .eq. 8)print*,'onset'
+!            if(p .eq. 8)print*,'onset'
             ! The transfer rate is a linearly decreasing function of time,
             ! going to zero on the last timestep of the onset period
 
@@ -2742,7 +2742,7 @@ contains
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
                       matrix_nphtransfer(p,ioutn,ileaf)       = (leafn_to_litter(p))/ leafn(p)
-                      matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
+                      matrix_nphtransfer(p,iretransn,ileaf)   = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
             end if    
@@ -2767,7 +2767,7 @@ contains
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
                       matrix_nphtransfer(p,ioutn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
-                      matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
+                      matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
                if (frootc(p) == 0.0_r8) then    
@@ -2786,7 +2786,7 @@ contains
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
                   frootn_to_litter(p) = frootn(p)/dt
                   if (use_matrixcn) then   
-                     matrix_nphtransfer(p,ioutn,ifroot) = matrix_nphtransfer(p,ioutn,ifroot) + 1.0_r8 / dt
+                     matrix_nphtransfer(p,ioutn,ifroot) = 1.0_r8 / dt
                   end if
                end if    
             end if
@@ -2797,7 +2797,7 @@ contains
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
                livestemn_to_litter(p) = livestemn(p) / dt
                if(use_matrixcn)then
-                  matrix_nphtransfer(p,ioutn,ilivestem) = matrix_nphtransfer(p,ioutn,ilivestem) + 1.0_r8 / dt
+                  matrix_nphtransfer(p,ioutn,ilivestem) = 1.0_r8 / dt
                end if
             end if
 
@@ -2900,8 +2900,8 @@ contains
                leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)  
                if(use_matrixcn)then
                   if(leafn(p) .ne. 0._r8)then
-                     matrix_nphtransfer(p,ioutn,ileaf) = (leafn_to_litter(p))/ leafn(p)
-                      matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
+                     matrix_nphtransfer(p,ioutn,ileaf)      = (leafn_to_litter(p))/ leafn(p)
+                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
 
@@ -2924,8 +2924,8 @@ contains
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .ne. 0)then
-                     matrix_nphtransfer(p,ioutn,ileaf) = (leafn_to_litter(p)) / leafn(p)
-                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
+                     matrix_nphtransfer(p,ioutn,ileaf)      = (leafn_to_litter(p)) / leafn(p)
+                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
             end if    
@@ -2944,8 +2944,8 @@ contains
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                     matrix_nphtransfer(p,ioutn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
-                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
+                     matrix_nphtransfer(p,ioutn,ileaf)      = (leafn_to_litter(p))/ leafn(p)
+                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
                if (frootc(p) == 0.0_r8) then    

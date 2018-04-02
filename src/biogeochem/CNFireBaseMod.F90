@@ -918,7 +918,8 @@ contains
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
            matrix_nfitransfer(p,ioutn,iretransn)          = matrix_nfitransfer(p,ioutn,iretransn) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
-           if(p .eq. 8)write(512,*),'fire',f,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
+!           if(p .eq. 8)write(512,*),'fire',f,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
+!           if(p .eq. 16)print*,'after fire nfitransfer 1',matrix_nfitransfer(p,ioutn,ifroot) * frootn(p) * 1800
         end if	 			 
 
         if (use_cndv) then
