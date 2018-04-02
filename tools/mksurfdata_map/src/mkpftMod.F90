@@ -1008,6 +1008,8 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
      call ncd_def_spatial_var(ncid=ncid, varname='PCT_CROP', xtype=xtype, &
           lev1name='time', &
           long_name='total percent crop landunit', units='unitless')
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_CROP_MAX', xtype=xtype, &
+          long_name='maximum total percent crop landunit during time period', units='unitless')
   end if
 
   ! PCT_NAT_PFT
