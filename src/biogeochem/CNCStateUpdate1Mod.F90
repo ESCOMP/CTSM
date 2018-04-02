@@ -573,13 +573,14 @@ contains
                ! isolate, caused C12/C13 ratios to occasionally go out of
                ! bounds. Zeroing out these small pools and putting them into the flux to the
                ! atmosphere solved many of the crop isotope problems
-
+!               if(p .eq. 16)print*,'xsmrpool before update1',cf_veg%xsmrpool_to_atm_patch(p),cs_veg%xsmrpool_patch(p)/dt, cs_veg%cpool_patch(p)/dt,cs_veg%frootc_patch(p)/dt,cf_veg%livestem_xsmr_patch(p)*dt,cf_veg%grain_xsmr_patch(p)*dt
                cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
                cs_veg%xsmrpool_patch(p)        = 0._r8
                cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
                cs_veg%cpool_patch(p)           = 0._r8
                cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
                cs_veg%frootc_patch(p)          = 0._r8
+!               if(p .eq. 16)print*,'xsmrpool after update1',cf_veg%xsmrpool_to_atm_patch(p)
             end if
          end if
 

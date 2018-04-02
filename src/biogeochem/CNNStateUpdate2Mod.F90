@@ -93,7 +93,7 @@ contains
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
-         if(p .eq. 8)print*,'ns_veg%deadstemn_patch in gap',ns_veg%deadstemn_patch(p),nf_veg%m_deadstemn_to_litter_patch(p) * dt
+!         if(p .eq. 8)print*,'ns_veg%deadstemn_patch in gap',ns_veg%deadstemn_patch(p),nf_veg%m_deadstemn_to_litter_patch(p) * dt
         if(.not.  use_matrixcn)then
          ! displayed pools
          ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p)                           &
@@ -136,9 +136,9 @@ contains
               - nf_veg%m_livecrootn_xfer_to_litter_patch(p) * dt
          ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%m_deadcrootn_xfer_to_litter_patch(p) * dt
-        end if !use_matrixcn
          ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p)                     &
               - nf_veg%m_retransn_to_litter_patch(p) * dt
+        end if !use_matrixcn
       end do
 
     end associate
@@ -213,7 +213,7 @@ contains
          p = filter_soilp(fp)
 
          ! displayed pools
-         if(p .eq. 8)print*,'deadstemn_patch in harvest',ns_veg%deadstemn_patch(p),nf_veg%wood_harvestn_patch(p) * dt
+!         if(p .eq. 8)print*,'deadstemn_patch in harvest',ns_veg%deadstemn_patch(p),nf_veg%wood_harvestn_patch(p) * dt
          if(.not. use_matrixcn)then
             ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
               - nf_veg%hrv_leafn_to_litter_patch(p) * dt
@@ -257,9 +257,6 @@ contains
               - nf_veg%hrv_livecrootn_xfer_to_litter_patch(p) *dt
             ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%hrv_deadcrootn_xfer_to_litter_patch(p) *dt
-         else
-            ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p)                     &
-              - nf_veg%hrv_retransn_to_litter_patch(p) * dt
          end if
       
 

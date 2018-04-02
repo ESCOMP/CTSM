@@ -277,16 +277,16 @@ contains
           ntranvert = matmul(na_ma_vr,kk_ma_vr)-tri_ma_vr-kk_fire_vr  !intermediate calculatio
  
           !print*,'before matrix',c,matrix_Cinter(1+(i_met_lit-1)*nlevdecomp,1)
-          emulator_tmp=matmul(matmul(a_ma_vr,kk_ma_vr), matrix_Cinter)*dt
+!          emulator_tmp=matmul(matmul(a_ma_vr,kk_ma_vr), matrix_Cinter)*dt
           !print*,'Cinput to met',matrix_Cinput_vector(1+(i_met_lit-1)*nlevdecomp,1)
           !print*,'transfer C,k met',kk_ma_vr((cascade_donor_pool(1)-1)*nlevdecomp+1,(cascade_donor_pool(1)-1)*nlevdecomp+1)
           !print*,'matrix_k',matrix_decomp_k(c,1,i_met_lit)
           !print*,'fpi_vr',fpi_vr(c,1)
           !print*,'C flux leaving met',kk_ma_vr((cascade_donor_pool(1)-1)*nlevdecomp+1,(cascade_donor_pool(1)-1)*nlevdecomp+1)*matrix_Cinter(1+(i_met_lit-1)*nlevdecomp,1)*dt
           !print*,'transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
-          emulator_tmp=matmul(-tri_ma_vr, matrix_Cinter)*dt
+!          emulator_tmp=matmul(-tri_ma_vr, matrix_Cinter)*dt
           !print*,'vertical transfer C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
-          emulator_tmp=matmul(-kk_fire_vr, matrix_Cinter)*dt
+!          emulator_tmp=matmul(-kk_fire_vr, matrix_Cinter)*dt
           !print*,'fire C',emulator_tmp(1+(i_met_lit-1)*nlevdecomp,1)
           matrix_Cinter_next(:,:) = matrix_Cinter + matrix_Cinput_vector + &
                                    matmul(tranvert, matrix_Cinter)*dt
