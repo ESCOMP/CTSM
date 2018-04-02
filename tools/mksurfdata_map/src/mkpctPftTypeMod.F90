@@ -46,7 +46,7 @@ module mkpctPftTypeMod
   end type pct_pft_type
 
   ! !PUBLIC MEMBER FUNCTIONS
-  public :: set_max_p2l_array ! given an array of pct_pft_type variables update the max_p2l values from pct_p2l
+  public :: update_max_array ! given an array of pct_pft_type variables update the max_p2l values from pct_p2l
   public :: get_pct_p2l_array ! given an array of pct_pft_type variables, return a 2-d array of pct_p2l
   public :: get_pct_l2g_array ! given an array of pct_pft_type variables, return an array of pct_l2g
 
@@ -511,13 +511,13 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine set_max_p2l_array(pct_pft_max_arr,pct_pft_arr)
+  subroutine update_max_array(pct_pft_max_arr,pct_pft_arr)
     !
     ! !DESCRIPTION:
-    ! Given an array of pct_pft_type variables, set all max_p2l.
+    ! Given an array of pct_pft_type variables, update all the max_p2l variables.
     !
-    ! Assumes that all elements of pct_pft_arr have the same size and lower bound for
-    ! their pct_p2l array.
+    ! Assumes that all elements of pct_pft_max_arr and pct_pft_arr have the same 
+    ! size and lower bound for their pct_p2l array.
     !
     ! !ARGUMENTS:
     ! workaround for gfortran bug (58043): declare this 'type' rather than 'class':
@@ -530,9 +530,10 @@ contains
     integer :: arr_index
     integer :: pft_index
     
-    character(len=*), parameter :: subname = 'get_pct_p2l_array'
+    character(len=*), parameter :: subname = 'update_max_array'
     !-----------------------------------------------------------------------
-    
+ 
+       
     pft_lbound = lbound(pct_pft_arr(1)%pct_p2l, 1)
     pft_ubound = ubound(pct_pft_arr(1)%pct_p2l, 1)
 
@@ -544,6 +545,10 @@ contains
           call abort()
        end if
           
+       if (pct_pft_arr(arr_index)%pct_l2g > pct_pft_max_arr(arr_index)%pct_l2g) then
+          pct_pft_max_arr(arr_index)%pct_l2g = pct_pft_arr(arr_index)%pct_l2g
+       end if
+
        do pft_index = pft_lbound, pft_ubound
           if (pct_pft_arr(arr_index)%pct_p2l(pft_index) > pct_pft_max_arr(arr_index)%pct_p2l(pft_index)) then
              pct_pft_max_arr(arr_index)%pct_p2l(pft_index) = pct_pft_arr(arr_index)%pct_p2l(pft_index)
@@ -551,7 +556,7 @@ contains
        end do
     end do
 
-  end subroutine set_max_p2l_array
+  end subroutine update_max_array
 
   !-----------------------------------------------------------------------
   function get_pct_p2l_array(pct_pft_arr) result(pct_p2l)
