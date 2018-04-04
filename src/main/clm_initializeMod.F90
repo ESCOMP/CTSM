@@ -286,9 +286,10 @@ contains
     use restFileMod           , only : restFile_read, restFile_write 
     use ndepStreamMod         , only : ndep_init, ndep_interp
 !KO
-    use ndep2StreamMod        , only : ndep2_init, ndep2_interp
-    use ndep3StreamMod        , only : ndep3_init, ndep3_interp
-!KO
+    !use ndep2StreamMod        , only : ndep2_init, ndep2_interp
+    !use ndep3StreamMod        , only : ndep3_init, ndep3_interp
+    !KO
+    use FanStreamMod          , only : fanstream_init, fanstream_interp
     use LakeCon               , only : LakeConInit 
     use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
@@ -581,14 +582,14 @@ contains
 !KO
        if ( use_fan ) then
           call t_startf('init_ndep2')
-          call ndep2_init(bounds_proc, NLFilename)
-          call ndep2_interp(bounds_proc, atm2lnd_inst)
+          call fanstream_init(bounds_proc, NLFilename)
+          call fanstream_interp(bounds_proc, atm2lnd_inst)
           call t_stopf('init_ndep2')
 
-          call t_startf('init_ndep3')
-          call ndep3_init(bounds_proc, NLFilename)
-          call ndep3_interp(bounds_proc, atm2lnd_inst)
-          call t_stopf('init_ndep3')
+!!$          call t_startf('init_ndep3')
+!!$          call ndep3_init(bounds_proc, NLFilename)
+!!$          call ndep3_interp(bounds_proc, atm2lnd_inst)
+!!$          call t_stopf('init_ndep3')
        end if
 !KO
     end if

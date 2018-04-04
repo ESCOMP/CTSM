@@ -58,9 +58,11 @@ module clm_driver
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
 !KO
-  use ndep2StreamMod         , only : ndep2_interp
-  use ndep3StreamMod         , only : ndep3_interp
-!KO
+  !use ndep2StreamMod         , only : ndep2_interp
+  !use ndep3StreamMod         , only : ndep3_interp
+  
+  !KO
+  use FanStreamMod           , only : fanstream_interp
   use ActiveLayerMod         , only : alt_calc
   use ch4Mod                 , only : ch4, ch4_init_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
@@ -386,8 +388,8 @@ contains
     end if
 !KO
     if (use_cn .and. use_fan) then
-       call ndep2_interp(bounds_proc, atm2lnd_inst)
-       call ndep3_interp(bounds_proc, atm2lnd_inst)
+       call fanstream_interp(bounds_proc, atm2lnd_inst)
+       !call ndep3_interp(bounds_proc, atm2lnd_inst)
     end if
 !KO
 
