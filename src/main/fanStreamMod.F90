@@ -271,26 +271,39 @@ contains
 
    call get_curr_date(year, mon, day, sec)
    mcdate = year*10000 + mon*100 + day
+   dayspyr = get_days_per_year( )
 
    call shr_strdata_advance(sdat_past, mcdate, sec, mpicom, 'clmndep2pasture')
 
    ig = 0
-   dayspyr = get_days_per_year( )
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      atm2lnd_inst%forc_ndep2_grc(g) = sdat_past%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      atm2lnd_inst%forc_ndep3_grc(g) = sdat_past%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
 
    call shr_strdata_advance(sdat_mix, mcdate, sec, mpicom, 'clmndep2mixed')
 
    ig = 0
-   dayspyr = get_days_per_year( )
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      atm2lnd_inst%forc_ndep3_grc(g) = sdat_mix%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      atm2lnd_inst%forc_ndep2_grc(g) = sdat_mix%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
 
-   write(iulog, *) 'NCDPINTERP', sdat_past%avs(1)%rAttr(1,ig), sdat_mix%avs(1)%rAttr(1,ig)
+   call shr_strdata_advance(sdat_urea, mcdate, sec, mpicom, 'clmndep2urea')
+
+   ig = 0
+   do g = bounds%begg,bounds%endg
+      ig = ig+1
+      atm2lnd_inst%forc_ndep_urea_grc(g) = sdat_urea%avs(1)%rAttr(1,ig)
+   end do
+
+   call shr_strdata_advance(sdat_nitr, mcdate, sec, mpicom, 'clmndep2nitr')
+
+   ig = 0
+   do g = bounds%begg,bounds%endg
+      ig = ig+1
+      atm2lnd_inst%forc_ndep_nitr_grc(g) = sdat_nitr%avs(1)%rAttr(1,ig)
+   end do
    
  end subroutine fanstream_interp
     

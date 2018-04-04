@@ -192,7 +192,8 @@ contains
          nstored_old, nsoilman_old, nsoilfert_old, fert_to_air, fert_to_soil, fert_total, fert_urea, fert_tan, &
          soilflux_org, urea_resid
     real(r8) :: tanprod_from_urea(3), ureapools(2), fert_no3, fert_generic
-    real(r8), parameter :: fract_urea=0.545, fract_no3=0.048
+    !real(r8), parameter :: fract_urea=0.545, fract_no3=0.048
+    real(r8) :: fract_urea, fract_no3
     integer, parameter :: ind_region = 1
     
     dt = real( get_step_size(), r8 )
@@ -303,6 +304,7 @@ contains
     do fc = 1, num_soilc
        c = filter_soilc(fc)
        l = col%landunit(c)
+       g = col%gridcell(c)
        if (.not. (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop)) cycle
        if (.not. col%active(c) .or. col%wtgcell(c) < 1e-15) cycle
 
@@ -493,7 +495,13 @@ contains
        !
 
        fert_total = nf%fert_n_appl_col(c)
+       fract_urea = atm2lnd_inst%forc_ndep_urea_grc(g)
+       fract_no3 = atm2lnd_inst%forc_ndep_nitr_grc(g)
 
+       if (fract_urea < 0 .or. fract_no3 < 0 .or. fract_urea + fract_no3 > 1) then
+          call endrun('bad fertilizer fractions')
+       end if
+       
        fert_urea = fert_total * fract_urea
        fert_no3 = fert_total * fract_no3
        fert_generic = fert_total - fert_urea - fert_no3
@@ -565,8 +573,7 @@ contains
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
        nf%fert_runoff_col(c) = fluxes_tmp(iflx_roff)
        nf%fert_no3_prod_col(c) = fluxes_tmp(iflx_no3) + fert_no3
-       nf%fert_nh4_to_soil_col(c) &
-            = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + garbage_total/dt 
+       nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + garbage_total/dt 
 
        ! Total flux
        ! 
