@@ -497,7 +497,8 @@ contains
        fert_urea = fert_total * fract_urea
        fert_no3 = fert_total * fract_no3
        fert_generic = fert_total - fert_urea - fert_no3
-
+       nf%otherfert_n_appl_col(c) = fert_no3 + fert_generic
+       
        ! Urea decomposition 
        ! 
        ureapools(1) = ns%fert_u0_col(c)
@@ -526,6 +527,7 @@ contains
        tanpools3(3) = ns%tan_f2_col(c)         
        garbage_total = 0.0
        fluxes3 = 0.0
+       nf%nh3_otherfert_col(c) = 0.0
        do ind_substep = 1, num_substeps
           ! Fertilizer pools f0...f2
           call update_npool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
@@ -552,6 +554,7 @@ contains
           end if
           fluxes_tmp = fluxes_tmp + fluxes3(:, 1) / num_substeps
           garbage_total = garbage_total + garbage
+          nf%nh3_otherfert_col(c) = nf%nh3_otherfert_col(c) + fluxes3(iflx_air, 1) / num_substeps
        end do
 
        ns%tan_f0_col(c) = tanpools3(1)
