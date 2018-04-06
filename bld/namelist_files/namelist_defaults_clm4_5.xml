@@ -355,7 +355,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_2troppftclones.c171018.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_2troppftclones_f0.c180220.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -584,13 +584,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="4x5"  maxpft="17"  mask="gx3v7" use_cn=".false." use_fates=".true."
          ic_ymd="20000101"  use_nitrif_denitrif=".false." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
->lnd/clm2/initdata_map/clmi.I2000Clm45Fates.0121-01-01.4x5_mgx3v7_simyr2000_c180122.nc
-</finidat>
-
-<finidat hgrid="1x1_brazil"  maxpft="17"  mask="navy" use_cn=".false." use_fates=".true."
-         ic_ymd="20000101"  use_nitrif_denitrif=".false." use_vertsoilc=".true." sim_year="2000"
-         ic_tod="0" glc_nec="0" use_crop=".false." irrigate=".true."
->lnd/clm2/initdata_map/clmi.I2000Clm45Fates.0101-01-01.1x1_brazil_simyr2000_c180120.nc
+>lnd/clm2/initdata_map/clmi.I2000CLM50FATESCRUGS.0006-01-01.f45_f45_mg37_s1.4.1_a3.0.0_rev3_c180316.nc
 </finidat>
 
 
