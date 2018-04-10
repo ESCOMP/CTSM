@@ -305,6 +305,12 @@ module clm_varctl
   ! FATES
   !----------------------------------------------------------
   character(len=fname_len), public :: fates_paramfile  = ' '
+! JP add
+  !----------------------------------------------------------
+  ! SSRE diagnostic
+  !----------------------------------------------------------
+  logical, public :: use_SSRE = .false.   ! flag for SSRE diagnostic
+! JP end
 
   !----------------------------------------------------------
   ! Migration of CPP variables
