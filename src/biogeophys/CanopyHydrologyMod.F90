@@ -507,8 +507,8 @@ contains
              swe_old(c,j)=h2osoi_liq(c,j)+h2osoi_ice(c,j)
           enddo
 
-          ! newsnow is all snow that doesn't fall on h2osfc
-          newsnow(c) = (1._r8 - frac_h2osfc(c)) * qflx_snow_grnd_col(c) * dtime
+          ! all snow falls on ground, no snow on h2osfc
+          newsnow(c) = qflx_snow_grnd_col(c) * dtime
 
           ! update int_snow
           int_snow(c) = max(int_snow(c),h2osno(c)) !h2osno could be larger due to frost
@@ -604,8 +604,8 @@ contains
              endif
           endif ! end of h2osno > 0
 
-          ! snow directly falling on surface water melts, increases h2osfc
-          qflx_snow_h2osfc(c) = frac_h2osfc(c)*qflx_snow_grnd_col(c)
+          ! no snow on surface water
+          qflx_snow_h2osfc(c) = 0._r8
 
           ! update h2osno for new snow
           h2osno(c) = h2osno(c) + newsnow(c) 

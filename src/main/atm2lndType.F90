@@ -683,6 +683,12 @@ contains
          avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
          ptr_col=this%forc_lwrad_downscaled_col, default='inactive')
 
+    call hist_addfld1d (fname='FLDS_ICE', units='W/m^2',  &
+         avgflag='A', &
+         long_name='atmospheric longwave radiation (downscaled to columns in glacier regions) (ice landunits only)', &
+         ptr_col=this%forc_lwrad_downscaled_col, l2g_scale_type='ice', &
+         default='inactive')
+
     this%forc_rain_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='RAIN_FROM_ATM', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain received from atmosphere (pre-repartitioning)', &
@@ -701,10 +707,22 @@ contains
          avgflag='A', long_name='atmospheric rain, after rain/snow repartitioning based on temperature', &
          ptr_col=this%forc_rain_downscaled_col, default='inactive')
 
+    call hist_addfld1d (fname='RAIN_ICE', units='mm/s',  &
+         avgflag='A', &
+         long_name='atmospheric rain, after rain/snow repartitioning based on temperature (ice landunits only)', &
+         ptr_col=this%forc_rain_downscaled_col, l2g_scale_type='ice', &
+         default='inactive')
+
     this%forc_snow_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOW', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow, after rain/snow repartitioning based on temperature', &
          ptr_col=this%forc_snow_downscaled_col)
+
+    call hist_addfld1d (fname='SNOW_ICE', units='mm/s',  &
+         avgflag='A', &
+         long_name='atmospheric snow, after rain/snow repartitioning based on temperature (ice landunits only)', &
+         ptr_col=this%forc_snow_downscaled_col, l2g_scale_type='ice', &
+         default='inactive')
 
     this%forc_th_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='THBOT', units='K',  &

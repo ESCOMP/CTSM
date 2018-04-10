@@ -105,14 +105,14 @@ irrig=".false." crop="off" lnd_tuning_mode="clm4_0_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I1850Clm40CnGswGs.1441-01-01.0.9x1.25_gx1v6_simyr1850_c170823.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25" maxpft="17" mask="gx1v6" bgc="none" ic_ymd="06010101" ic_tod="0" sim_year="1850" glc_nec="0"
+<finidat hgrid="0.9x1.25" maxpft="17" mask="gx1v6" bgc="none" ic_ymd="33620101" ic_tod="0" sim_year="1850" glc_nec="0"
 irrig=".false." crop="off" lnd_tuning_mode="clm4_0_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm40CnCruGs.0601-01-01.0.9x1.25_gx1v6_simyr1850_c171224.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm40CnCruGs.3362-01-01.0.9x1.25_gx1v6_simyr1850_c171222.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25" maxpft="17" mask="gx1v6" bgc="cn"   ic_ymd="06010101" ic_tod="0" sim_year="1850" glc_nec="0"
+<finidat hgrid="0.9x1.25" maxpft="17" mask="gx1v6" bgc="cn"   ic_ymd="33620101" ic_tod="0" sim_year="1850" glc_nec="0"
 irrig=".false." crop="off" lnd_tuning_mode="clm4_0_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm40CnCruGs.0601-01-01.0.9x1.25_gx1v6_simyr1850_c171224.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm40CnCruGs.3362-01-01.0.9x1.25_gx1v6_simyr1850_c171222.nc
 </finidat>
 
 <!-- Initial files at 0.9x1.25 or 1.9x2.5 native resolution -->
