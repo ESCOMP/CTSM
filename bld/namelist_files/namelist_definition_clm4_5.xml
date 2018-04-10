@@ -1051,6 +1051,12 @@ Max number of plant functional types in naturally vegetated landunit.
 Toggle to turn on the dynamic root model
 </entry>
 
+<entry id="use_SSRE" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on on diagnostic Snow Radiative Effect
+</entry>
+
+
 <!--                                                   -->
 <!-- mkmapdata  namelist                               -->
 <!--                                                   -->
