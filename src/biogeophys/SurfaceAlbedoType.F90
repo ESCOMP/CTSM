@@ -8,6 +8,9 @@ module SurfaceAlbedoType
   use decompMod      , only : bounds_type
   use clm_varpar     , only : numrad, nlevcan, nlevsno
   use abortutils     , only : endrun
+! JP add
+    use clm_varctl , only : use_SSRE
+! JP end
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -19,6 +22,10 @@ module SurfaceAlbedoType
      real(r8), pointer :: coszen_col           (:)   ! col cosine of solar zenith angle
      real(r8), pointer :: albd_patch           (:,:) ! patch surface albedo (direct)   (numrad)                    
      real(r8), pointer :: albi_patch           (:,:) ! patch surface albedo (diffuse)  (numrad)                    
+! JP add
+     real(r8), pointer :: albdSF_patch           (:,:) ! patch snow-free surface albedo (direct)   (numrad)  
+     real(r8), pointer :: albiSF_patch           (:,:) ! patch snow-free surface albedo (diffuse)  (numrad)
+! JP end
      real(r8), pointer :: albgrd_pur_col       (:,:) ! col pure snow ground direct albedo     (numrad)             
      real(r8), pointer :: albgri_pur_col       (:,:) ! col pure snow ground diffuse albedo    (numrad)             
      real(r8), pointer :: albgrd_bc_col        (:,:) ! col ground direct  albedo without BC   (numrad)             
@@ -96,6 +103,9 @@ contains
     ! !USES:
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
     use clm_varcon    , only: spval, ispval
+! JP add
+    use clm_varctl , only : use_SSRE
+! JP end
     !
     ! !ARGUMENTS:
     class(surfalb_type) :: this
@@ -126,7 +136,11 @@ contains
     allocate(this%albgri_dst_col     (begc:endc,numrad))       ; this%albgri_dst_col     (:,:) = nan
     allocate(this%albd_patch         (begp:endp,numrad))       ; this%albd_patch         (:,:) = nan
     allocate(this%albi_patch         (begp:endp,numrad))       ; this%albi_patch         (:,:) = nan
-
+! JP add
+    if (use_SSRE) then
+       allocate(this%albdSF_patch    (begp:endp,numrad))       ; this%albdSF_patch       (:,:) = nan
+       allocate(this%albiSF_patch    (begp:endp,numrad))       ; this%albiSF_patch       (:,:) = nan
+    end if
     allocate(this%ftdd_patch         (begp:endp,numrad))       ; this%ftdd_patch         (:,:) = nan
     allocate(this%ftid_patch         (begp:endp,numrad))       ; this%ftid_patch         (:,:) = nan
     allocate(this%ftii_patch         (begp:endp,numrad))       ; this%ftii_patch         (:,:) = nan
@@ -192,16 +206,36 @@ contains
          avgflag='A', long_name='ground albedo (indirect)', &
          ptr_col=this%albgri_col, default='inactive')
 
-    this%albd_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='ALBD', units='proportion', type2d='numrad', &
-         avgflag='A', long_name='surface albedo (direct)', &
-         ptr_patch=this%albd_patch, default='inactive', c2l_scale_type='urbanf')
+! JP changed 
+    if (use_SSRE) then
+       this%albd_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBD', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='surface albedo (direct)', &
+            ptr_patch=this%albd_patch, default='active', c2l_scale_type='urbanf')
+       this%albi_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBI', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='surface albedo (indirect)', &
+            ptr_patch=this%albi_patch, default='active', c2l_scale_type='urbanf')
+       this%albdSF_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBDSF', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='diagnostic snow-free surface albedo (direct)', &
+            ptr_patch=this%albdSF_patch, default='active', c2l_scale_type='urbanf')
+       this%albiSF_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBISF', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='diagnostic snow-free surface albedo (indirect)', &
+            ptr_patch=this%albiSF_patch, default='active', c2l_scale_type='urbanf')
+    else
+       this%albd_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBD', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='surface albedo (direct)', &
+            ptr_patch=this%albd_patch, default='inactive', c2l_scale_type='urbanf')
 
-    this%albi_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='ALBI', units='proportion', type2d='numrad', &
-         avgflag='A', long_name='surface albedo (indirect)', &
-         ptr_patch=this%albi_patch, default='inactive', c2l_scale_type='urbanf')
-
+       this%albi_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ALBI', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='surface albedo (indirect)', &
+            ptr_patch=this%albi_patch, default='inactive', c2l_scale_type='urbanf')
+    end if
+! JP end
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -229,7 +263,12 @@ contains
     this%albsni_hst_col (begc:endc, :) = 0.6_r8
     this%albd_patch     (begp:endp, :) = 0.2_r8
     this%albi_patch     (begp:endp, :) = 0.2_r8
-
+! JP add
+    if (use_SSRE) then
+       this%albdSF_patch     (begp:endp, :) = 0.2_r8
+       this%albiSF_patch     (begp:endp, :) = 0.2_r8
+    end if
+! JP end
     this%albgrd_pur_col (begc:endc, :) = 0.2_r8
     this%albgri_pur_col (begc:endc, :) = 0.2_r8
     this%albgrd_bc_col  (begc:endc, :) = 0.2_r8
@@ -301,7 +340,19 @@ contains
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='surface albedo (diffuse) (0 to 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%albi_patch)
+! JP add
+    if (use_SSRE) then
+       call restartvar(ncid=ncid, flag=flag, varname='albdSF', xtype=ncd_double,  & 
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
+            long_name='diagnostic snow-free surface albedo (direct) (0 to 1)', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%albdSF_patch)
 
+       call restartvar(ncid=ncid, flag=flag, varname='albiSF', xtype=ncd_double,  & 
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
+            long_name='diagnostic snow-free surface albedo (diffuse) (0 to 1)', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%albiSF_patch)
+    end if
+! JP end
     call restartvar(ncid=ncid, flag=flag, varname='albgrd', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='ground albedo (direct) (0 to 1)', units='', &
