@@ -30,6 +30,16 @@ Two fixes for init_interp:
 
     Fixes #325
 
+The new behavior is covered by unit tests. This tag also expands some
+unit testing infrastructure to facilitate the addition of some of these
+unit tests.
+
+I have confirmed that this test passes:
+LII_D_Ld9.f09_g16.I1850Clm50SpCru.hobart_intel.clm-default, when I point
+to an initial conditions file that I generated from the dev 002 tag
+(because I wasn't sure if the current default initial conditions file
+was exactly compatible with the latest master). Before the changes in
+this tag, that test was failing.
 
 Bugs fixed or introduced
 ------------------------
