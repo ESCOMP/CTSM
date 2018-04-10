@@ -39,6 +39,8 @@ Issues fixed (include CTSM Issue #):
   non-existent snow layers
 - #325: init_interp can change answers over the CISM domain
 
+Known bugs introduced in this tag (include github issue ID):
+- #339: cheyenne_gnu restart test fails exact restart comparison sporadically
 
 Notes of particular relevance for users
 ---------------------------------------
