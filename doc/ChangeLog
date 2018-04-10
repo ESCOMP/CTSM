@@ -1,4 +1,153 @@
 ===============================================================
+Tag name:  clm5.0.dev005
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Apr 10 14:15:52 MDT 2018
+One-line Summary: Two fixes for init_interp
+
+Purpose of changes
+------------------
+
+Two fixes for init_interp:
+
+(1) Copy as many snow layers as possible in init_interp
+
+    In most cases, we only need data from the existing snow layers. But in a
+    few cases - in particular, the flx_abs* variables - we need data even
+    from non-existing snow layers in order for interpolation to be
+    bit-for-bit. The change here reworks snow interpolation so that, in
+    addition to copying the existing snow layers, we also copy as many
+    non-existing snow layers as will fit in the destination layer structure.
+
+    Fixes #326
+
+(2) For glcmec, match col/patch types in some cases
+
+    If glcmec used the same elevation class definitions in input and output,
+    then match classes as we do for most landunit types, rather than just
+    using topographic heights. (An exception is output cells with the
+    single_at_atm_topo behavior, because their types could change once we
+    enter the run loop.)
+
+    Fixes #325
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- #326: init_interp can change answers for absorbed radiation in
+  non-existent snow layers
+- #325: init_interp can change answers over the CISM domain
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, baselines fail as expected (baseline failures
+    just for tests that use init_interp)
+
+CLM tag used for the baseline comparisons: clm5.0.dev004
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all configurations with use_init_interp = .true.
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated carefully, but expected to be larger than roundoff / same climate
+
+      Differences arise due to both fixes listed above.
+
+      (1) Copy as many snow layers as possible in init_interp: It
+          appears that this only changes answers for some radiation
+          terms in the first time step after initialization when a snow
+          layer had just melted before the restart file was written. In
+          this case, the flx_abs* variables are set differently for this
+          just-disappeared layer. This can affect a lot of grid cells,
+          but I expect differences from this change to be very small and
+          not scientifically important.
+
+      (2) For glcmec, match col/patch types in some cases: This seems to
+          only affect a small number of grid cells in Greenland. So I do
+          not expect the overall effect on a simulation to be significant.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+- #328: fixes for init_interp
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev004
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Apr  9 00:20:03 MDT 2018
