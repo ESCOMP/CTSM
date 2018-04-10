@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm5.0.dev005    sacks 04/10/2018 Two fixes for init_interp
    clm5.0.dev004     erik 04/09/2018 List of important bug fixes
    clm5.0.dev003     erik 03/09/2018 Bug fixes for energy imbalance associated with surface water and lakes
    clm5.0.dev002    sacks 02/25/2018 Add some land ice diagnostic vars needed for CMIP6
