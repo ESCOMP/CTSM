@@ -362,6 +362,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: soilc_change_patch                        (:)     ! Total used C from soil          (gC/m2/s)
      ! Matrix for C flux index
      real(r8), pointer :: matrix_Cinput_patch          (:)      ! U-matrix for carbon input
+     real(r8), pointer :: matrix_C13input_patch        (:)      ! U-matrix for carbon input
+     real(r8), pointer :: matrix_C14input_patch        (:)      ! U-matrix for carbon input
      real(r8), pointer :: matrix_alloc_patch          (:,:)     ! B-matrix for carbon
  
      real(r8), pointer :: matrix_phtransfer_patch     (:,:,:)   ! A-matrix_phenologh
@@ -742,6 +744,8 @@ contains
 ! Matrix
     if(use_matrixcn)then
        allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
+       allocate(this%matrix_C13input_patch         (begp:endp))                         ; this%matrix_C13input_patch      (:) = nan    !for isotop
+       allocate(this%matrix_C14input_patch         (begp:endp))                         ; this%matrix_C14input_patch      (:) = nan
        allocate(this%matrix_alloc_patch          (begp:endp,1:nvegcpool))              ; this%matrix_alloc_patch       (:,:) = nan
 
        allocate(this%matrix_phtransfer_patch     (begp:endp,1:nvegcpool+1,1:nvegcpool)) ; this%matrix_phtransfer_patch  (:,:,:) = nan
@@ -3354,6 +3358,8 @@ contains
           this%availc_patch(p)                = spval
           if(use_matrixcn)then
              this%matrix_Cinput_patch(p)         = spval 
+             this%matrix_C13input_patch(p)         = spval
+             this%matrix_C14input_patch(p)         = spval
           end if
           this%xsmrpool_recover_patch(p)      = spval
           this%excess_cflux_patch(p)          = spval
@@ -3369,7 +3375,9 @@ contains
           this%availc_patch(p)                = 0._r8
           if(use_matrixcn)then
              this%matrix_Cinput_patch(p)         = 0._r8
-          end if
+             this%matrix_C13input_patch(p)         = 0._r8
+             this%matrix_C14input_patch(p)         = 0._r8      
+         end if
           this%xsmrpool_recover_patch(p)      = 0._r8
           this%excess_cflux_patch(p)          = 0._r8
           this%prev_leafc_to_litter_patch(p)  = 0._r8
@@ -3834,6 +3842,8 @@ contains
 !   Matrix
        if(use_matrixcn)then
           this%matrix_Cinput_patch(i)                       = value_patch
+          this%matrix_C13input_patch(i)                       = value_patch
+          this%matrix_C14input_patch(i)                       = value_patch
           do k = 1, nvegcpool         
              this%matrix_alloc_patch(i,k)              = value_patch
              do j = 1, nvegcpool+1

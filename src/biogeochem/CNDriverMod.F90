@@ -855,7 +855,11 @@ contains
        cnveg_carbonflux_inst,cnveg_carbonstate_inst,soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
-       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, &
+       c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst, &
+       c13_cnveg_carbonflux_inst,c14_cnveg_carbonflux_inst, &
+       c13_soilbiogeochem_carbonstate_inst,c13_soilbiogeochem_carbonflux_inst,&
+       c14_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! Update the nitrogen leaching rate as a function of soluble mineral N and total soil water outflow.
@@ -886,6 +890,15 @@ contains
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+
+    type(cnveg_carbonstate_type)           , intent(inout) :: c13_cnveg_carbonstate_inst
+    type(cnveg_carbonstate_type)           , intent(inout) :: c14_cnveg_carbonstate_inst
+    type(cnveg_carbonflux_type)            , intent(inout) :: c13_cnveg_carbonflux_inst
+    type(cnveg_carbonflux_type)            , intent(inout) :: c14_cnveg_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)    , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)     , intent(inout)    :: c13_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)    , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)     , intent(inout)    :: c14_soilbiogeochem_carbonflux_inst
     !-----------------------------------------------------------------------
   
     ! Mineral nitrogen dynamics (deposition, fixation, leaching)
@@ -907,10 +920,11 @@ contains
     call t_stopf('NUpdate3')
 
     if(use_matrixcn)then
-    call t_startf('CNVMatrix')
-        call CNVegMatrix(bounds,num_soilp,filter_soilp,&
-                         cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
-                         cnveg_carbonflux_inst,  cnveg_nitrogenflux_inst,cnveg_state_inst)
+        call t_startf('CNVMatrix')
+        call CNVegMatrix(bounds,num_soilp,filter_soilp,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
+                          cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,cnveg_state_inst, &
+                          c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst,c13_cnveg_carbonflux_inst,&
+                          c14_cnveg_carbonflux_inst)
         call t_stopf('CNVMatrix')
     end if
 
@@ -920,7 +934,9 @@ contains
        cnveg_carbonflux_inst,soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
        cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst, &
-       soilbiogeochem_nitrogenstate_inst,soilstate_inst)  
+       soilbiogeochem_nitrogenstate_inst,c13_soilbiogeochem_carbonstate_inst,&
+       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonstate_inst,&
+       c14_soilbiogeochem_carbonflux_inst)  
     call t_stopf('CNSoilMatrix')
     end if
     
