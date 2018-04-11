@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  clm5.0.dev004
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Apr  9 00:20:03 MDT 2018
+One-line Summary: List of important bug fixes
+
+Purpose of changes
+------------------
+
+A list of important bug and usability fixes. One of those changes makes it easier for the user to end up with
+initial condition files that don't match the start date of their simulation. This is problematic because of the 
+saved counters for prognostic crop. For sure a mismatched date will end up with bad results for the first season,
+but this will also affect subsequent years running averages. So we don't recommend that you do that.
+
+Jim Edwards also brought in some changes for PIO for 64bit_data, and to fix fill values for integer data. And we updated
+manage_externals to the newest version.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+#213 -- usability issue for CPLHIST that Keith found.
+#210 -- Recent request to increase number of tapes to 10.
+#169 -- usability issue for running hybrid or branch cases with crop that keeps biting Mike Mills.
+#68 --- workaround for gnu compiler bug
+#46 --- needed for multi-instance
+#66 --– need to relax tolerance for negative C/N values in order for CLM45 Crop to work
+#65 --– need to change a check from "> 0" to "> [small val]"
+#240 -- from Jim
+#255 -- get PTCLM working
+#253 -- bad clm40 IC file
+
+Known bugs introduced in this tag (include github issue ID):
+ #329 -- init_interp doesn't work if finidat points to finidat_interp_dest from a different case
+ #326 -- init_interp can change answers for absorbed radiation in non-existent snow layers
+ #325 -- init_interp can change answers over the CISM domain
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   You can bypass the ignore_ic_date error when crop is being used
+   Matching for initial conditions for crop simulations are allowed to ignore the month/day
+   When crop is on and the start date doesn't match the date for the initial conditions file,
+   the counters for the crop model will be incorrect -- and hence the first season will be screwed
+   up, and the screwed up results will affect the running averages for the future. This was a condition
+   that we didn't allow you to easily do -- we've made it easier for this to happen now.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   Allow ten streams of history tapes rather than just six.
+   Correct the I1850Clm50BgcSpinup compset
+   You can bypass the ignore_ic_date error when crop is being used (may affect results)
+   Matching for initial conditions for crop simulations are allowed to ignore the month/day
+   The precision control settings for Nitrogen and Carbon are now making it to the namelist
+
+Changes made to namelist defaults (e.g., changed parameter values): ncrit=1.d-8 (10X looser)
+
+Changes to the datasets (e.g., parameter, surface or initial files): Correct to a few finidat files (clm4_0_CRUv7)
+
+Substantial timing or memory changes: Maybe 3% to memory
+
+ There is a 3% increase to memory, but memory high water mark seems to double
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: 
+   Added aux_cime_baseline tests
+   add cplhist test
+   Add edison to fates testlist
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons: clm5.0.dev003
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no  but, there are some specific potential or small apparant change to answers
+   in terms of the test suite
+   3 fields have a different missing value pattern: landmask, pftmask, nbedrock
+   roundoff difference in F_N2O_DENIT due to #65
+      LVG_Ld5_D.f10_f10.I1850Clm50Bgc.cheyenne_intel.clm-no_vector_output
+   landmask was different for two cases:
+      ERP_P36x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.cheyenne_intel.clm-monthly
+      ERP_P72x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.cheyenne_intel.clm-monthly
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): manic
+   manage_externals to manicv1.0.2
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #337 Update manage_externals to manicv1.0.2
+   #333 Important fixes
+   #241 Add support for 64bit_data, fix fillvalues
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev003
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Mar  9 00:34:04 MST 2018

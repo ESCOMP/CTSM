@@ -335,6 +335,7 @@
   <test name="ERP_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCrop" testmods="clm/ciso_decStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -630,6 +631,7 @@
   <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Sp" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1122,6 +1124,14 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="SMS_D" grid="f10_f10_musgs" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
   <test name="SMS" grid="f19_g17" compset="I2000Clm50Cn" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1236,6 +1246,7 @@
       <machine name="cheyenne" compiler="intel" category="clm_short"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="clm_short"/>
+      <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1808,6 +1819,7 @@
   <test name="ERP_Ld9" grid="f45_f45" compset="I2000Clm45Fates" testmods="clm/FatesAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
     </machines>
     <options>
@@ -1817,6 +1829,7 @@
   <test name="ERS_D_Ld3" grid="f19_g16" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
     </machines>
     <options>
@@ -1842,6 +1855,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
     </machines>
     <options>
@@ -1859,6 +1873,7 @@
   <test name="ERS_Ld60" grid="f45_f45" compset="I2000Clm45Fates" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
     </machines>

@@ -183,7 +183,7 @@
 
   <compset>
     <alias>I1850Clm50BgcSpinup</alias>
-    <lname>1850_DATM%S1850_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%CPLHIST_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
 

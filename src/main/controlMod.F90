@@ -258,6 +258,7 @@ contains
        write(iulog,*) 'Attempting to initialize run control settings .....'
     endif
 
+    finidat_interp_dest = 'finidat_interp_dest'//trim(inst_suffix)//'.nc'
     runtyp(:)               = 'missing'
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
