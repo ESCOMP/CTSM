@@ -912,6 +912,11 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+
+!     type(cnveg_carbonstate_type)           , intent(inout) :: c13_cnveg_carbonstate_inst
+!     type(cnveg_carbonstate_type)           , intent(inout) :: c14_cnveg_carbonstate_inst
+!     type(cnveg_carbonflux_type)            , intent(inout) :: c13_cnveg_carbonflux_inst
+!     type(cnveg_carbonflux_type)            , intent(inout) :: c14_cnveg_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
 
@@ -928,7 +933,11 @@ contains
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,&
+         this%c13_cnveg_carbonstate_inst,this%c14_cnveg_carbonstate_inst, &
+         this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
+         c13_soilbiogeochem_carbonstate_inst,c13_soilbiogeochem_carbonflux_inst,&
+         c14_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonflux_inst)
 
     ! Set controls on very low values in critical state variables 
 

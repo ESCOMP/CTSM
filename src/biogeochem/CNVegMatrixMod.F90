@@ -20,7 +20,7 @@ module CNVegMatrixMod
                                               igrain,igrain_st,igrain_xf,iretransn,ioutc,ioutn
 
   use PatchType                      , only : patch
-    use clm_varcon                   , only: secspday
+  use clm_varcon                   , only: secspday
   use pftconMod                      , only : pftcon,npcropmin
   use CNVegCarbonStateType           , only : cnveg_carbonstate_type
   use CNVegNitrogenStateType         , only : cnveg_nitrogenstate_type
@@ -28,6 +28,7 @@ module CNVegMatrixMod
   use CNVegNitrogenFluxType          , only : cnveg_nitrogenflux_type
   use CNVegStateType                 , only : cnveg_state_type
   use clm_varctl                     , only : isspinup, is_outmatrix
+  use clm_varctl                     , only : use_c13, use_c14 
   !
   implicit none
   private
@@ -40,24 +41,28 @@ contains
 
   !-----------------------------------------------------------------------
    subroutine CNVegMatrix(bounds,num_soilp,filter_soilp,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
-                        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,cnveg_state_inst)
+                          cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,cnveg_state_inst, &
+                          c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst,c13_cnveg_carbonflux_inst,&
+                          c14_cnveg_carbonflux_inst)
     ! !DESCRIPTION:
     ! !ARGUMENTS:
      type(bounds_type)                      , intent(in)    :: bounds
      integer                                , intent(in)    :: num_soilp       ! number of soil patches in filter
      integer                                , intent(in)    :: filter_soilp(:) ! filter for soil patches
      type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst  
-     type(cnveg_nitrogenstate_type)           , intent(inout) :: cnveg_nitrogenstate_inst
-     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
-     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
- 
-     type(cnveg_state_type)    , intent(in) :: cnveg_state_inst
-!	
-    ! !LOCAL VARIABLES:
+     type(cnveg_nitrogenstate_type)         , intent(inout) :: cnveg_nitrogenstate_inst
+     type(cnveg_carbonflux_type)            , intent(inout) :: cnveg_carbonflux_inst
+     type(cnveg_nitrogenflux_type)          , intent(inout) :: cnveg_nitrogenflux_inst
+     type(cnveg_carbonstate_type)           , intent(inout) :: c13_cnveg_carbonstate_inst
+     type(cnveg_carbonstate_type)           , intent(inout) :: c14_cnveg_carbonstate_inst
+     type(cnveg_carbonflux_type)            , intent(inout) :: c13_cnveg_carbonflux_inst
+     type(cnveg_carbonflux_type)            , intent(inout) :: c14_cnveg_carbonflux_inst
+     type(cnveg_state_type)                 , intent(in)    :: cnveg_state_inst
+!    ! !LOCAL VARIABLES:
      integer :: fc,fp,j,i    ! indices
      integer :: p,c         !  
-     real(r8),allocatable,dimension(:,:) :: vegmatrixc_old(:,:)
-     real(r8),allocatable,dimension(:,:) :: vegmatrixc_new(:,:)
+     real(r8),allocatable,dimension(:,:) :: vegmatrixc_old(:,:),vegmatrixc13_old(:,:),vegmatrixc14_old(:,:)
+     real(r8),allocatable,dimension(:,:) :: vegmatrixc_new(:,:),vegmatrixc13_new(:,:),vegmatrixc14_new(:,:)
      real(r8),allocatable,dimension(:,:) :: vegmatrixn_old(:,:)
      real(r8),allocatable,dimension(:,:) :: vegmatrixn_new(:,:)
 !     real(r8),allocatable,dimension(:,:) :: vegmatrixc_rt(:,:),vegmatrixn_rt(:,:)
@@ -70,6 +75,8 @@ contains
      real(r8),allocatable,dimension(:,:) :: vegmatrix_2d(:,:),AKinv,vegmatrixn_2d(:,:),AKinvn
      logical  ::  end_of_year
      integer, save :: counter=0
+     real(r8):: epsi 
+     real(r8):: days_per_year,decay_const,half_life
 
      real(r8):: dt        ! time step (seconds)
      real(r8):: secspyear        ! time step (seconds)
@@ -77,17 +84,12 @@ contains
 !	
 !
     associate(                          &                                                                        
-         ivt                          => patch%itype                                               , & ! Input:  [integer  (:) ]  patch vegetation type
-         woody                        => pftcon%woody                                              , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
-         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)                        
-         frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)                   
-         livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
-         deadwdcn                     => pftcon%deadwdcn                                           , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
-         c_allometry                  => cnveg_state_inst%c_allometry_patch                        , & ! Output: [real(r8) (:)   ]  C allocation index (DIM) 
-         n_allometry                  => cnveg_state_inst%n_allometry_patch                        , & ! Output: [real(r8) (:)   ]  N allocation index (DIM)  
-         retransn_to_npool            => cnveg_nitrogenflux_inst%retransn_to_npool_patch           , & !
-         plant_nalloc                 => cnveg_nitrogenflux_inst%plant_nalloc_patch                , & ! Output: 
-         retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
+          ivt                   => patch%itype                                               , & !     
+          cf13_veg              => c13_cnveg_carbonflux_inst                         , & ! In
+          cf14_veg              => c14_cnveg_carbonflux_inst                         , & ! In
+          cs13_veg              => c13_cnveg_carbonstate_inst                        , & ! In/Output
+          cs14_veg              => c14_cnveg_carbonstate_inst                        , & ! In/Output  
+          retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
   !
  
          leafc                 => cnveg_carbonstate_inst%leafc_patch                 , & ! In/Output:  [real(r8) (:) ]    (gC/m2) leaf C for matrix calculation                                    
@@ -260,6 +262,7 @@ contains
          grainn0                => cnveg_nitrogenstate_inst%grainn0_patch                , & ! In/Output:  [real(r8) (:) ]    (gC/m2) fine root N for matrix calculation
          grainn0_storage        => cnveg_nitrogenstate_inst%grainn0_storage_patch        , & ! In/Output:  [real(r8) (:) ]    (gC/m2) fine root storage N for matrix calculation
          grainn0_xfer           => cnveg_nitrogenstate_inst%grainn0_xfer_patch           , & ! In/Output:  [real(r8) (:) ]    (gC/m2) fine root transfer N for matrix calculation
+         retransn0               => cnveg_nitrogenstate_inst%retransn0_patch                , & !
          matrix_alloc_acc       => cnveg_carbonstate_inst%matrix_alloc_acc_patch             , & !
          matrix_transfer_acc    => cnveg_carbonstate_inst%matrix_transfer_acc_patch          , & !
          matrix_nalloc_acc      => cnveg_nitrogenstate_inst%matrix_nalloc_acc_patch             , & !
@@ -283,24 +286,26 @@ contains
          matrix_nfiturnover             => cnveg_nitrogenflux_inst%matrix_nfiturnover_patch              , & ! Output: 
 
          matrix_Cinput                  => cnveg_carbonflux_inst%matrix_Cinput_patch                  , & !
+         matrix_C13input                  => cnveg_carbonflux_inst%matrix_C13input_patch                  , & !
+         matrix_C14input                  => cnveg_carbonflux_inst%matrix_C14input_patch                  , & !
 
          matrix_Ninput                  => cnveg_nitrogenflux_inst%matrix_Ninput_patch                  & ! Input:      [real(r8) (:) ]    (gN/m2/s) Input N
          )
     !-----------------------------------------------------------------------
      ! set time steps
       dt = real( get_step_size(), r8 )
-      secspyear = get_days_per_year() * secspday
+      days_per_year = get_days_per_year()
+      secspyear = days_per_year * secspday
 
       allocate(vegmatrixc_old(bounds%begp:bounds%endp,nvegcpool))
       allocate(vegmatrixc_new(bounds%begp:bounds%endp,nvegcpool))
       allocate(vegmatrixn_old(bounds%begp:bounds%endp,nvegnpool))
       allocate(vegmatrixn_new(bounds%begp:bounds%endp,nvegnpool))
-!      allocate(vegmatrixc_rt(bounds%begp:bounds%endp,nvegpool))
-!      allocate(vegmatrixn_rt(bounds%begp:bounds%endp,nvegpool))
-  
-!     allocate(matrix_nphturnover(bounds%begp:bounds%endp,nvegpool,nvegpool))
-!     allocate(matrix_ngmturnover(bounds%begp:bounds%endp,nvegpool,nvegpool))
-!     allocate(matrix_nfitransfer(bounds%begp:bounds%endp,nvegpool+1,nvegpool))
+
+      allocate(vegmatrixc13_old(bounds%begp:bounds%endp,nvegcpool))
+      allocate(vegmatrixc13_new(bounds%begp:bounds%endp,nvegcpool))
+      allocate(vegmatrixc14_old(bounds%begp:bounds%endp,nvegcpool))
+      allocate(vegmatrixc14_new(bounds%begp:bounds%endp,nvegcpool))
 
       allocate(vegmatrix_2d(nvegcpool,nvegcpool))
       allocate(AKinv(nvegcpool,nvegcpool))
@@ -308,13 +313,16 @@ contains
       allocate(vegmatrixn_2d(nvegnpool,nvegnpool))
       allocate(AKinvn(nvegnpool,nvegnpool))
 
+      epsi = 1.e-30_r8    ! small number
       counter = counter + dt
-     if (counter >=1.0 * secspyear) then ! link to the recycling span of climate forcing
+     if (counter >= 1.0 * secspyear) then ! link to the recycling span of climate forcing
           end_of_year = .true.
           counter = 0._r8
        else
           end_of_year = .false.
        end if
+      half_life = 5730._r8 * secspyear
+      decay_const = - log(0.5_r8) / half_life
 
       do fp = 1,num_soilp
          vegmatrix_2d(:,:)=0._r8
@@ -346,7 +354,56 @@ contains
          vegmatrixc_old(p,igrain_st)     = grainc_storage(p)
          vegmatrixc_old(p,igrain_xf)     = grainc_xfer(p)
          end if
- 
+        if ( use_c13 )then
+         vegmatrixc13_old(p,ileaf)         = cs13_veg%leafc_patch (p)
+         vegmatrixc13_old(p,ileaf_st)      = cs13_veg%leafc_storage_patch (p)
+         vegmatrixc13_old(p,ileaf_xf)      = cs13_veg%leafc_xfer_patch (p)
+         vegmatrixc13_old(p,ifroot)        = cs13_veg%frootc_patch (p)
+         vegmatrixc13_old(p,ifroot_st)     = cs13_veg%frootc_storage_patch (p)
+         vegmatrixc13_old(p,ifroot_xf)     = cs13_veg%frootc_xfer_patch (p)
+         vegmatrixc13_old(p,ilivestem)     = cs13_veg%livestemc_patch(p)
+         vegmatrixc13_old(p,ilivestem_st)  = cs13_veg%livestemc_storage_patch (p)
+         vegmatrixc13_old(p,ilivestem_xf)  = cs13_veg%livestemc_xfer_patch (p)
+         vegmatrixc13_old(p,ideadstem)     = cs13_veg%deadstemc_patch (p)
+         vegmatrixc13_old(p,ideadstem_st)  = cs13_veg%deadstemc_storage_patch (p)
+         vegmatrixc13_old(p,ideadstem_xf)  = cs13_veg%deadstemc_xfer_patch (p)
+         vegmatrixc13_old(p,ilivecroot)    = cs13_veg%livecrootc_patch (p)
+         vegmatrixc13_old(p,ilivecroot_st) = cs13_veg%livecrootc_storage_patch (p)
+         vegmatrixc13_old(p,ilivecroot_xf) = cs13_veg%livecrootc_xfer_patch (p)
+         vegmatrixc13_old(p,ideadcroot)    = cs13_veg%deadcrootc_patch (p)
+         vegmatrixc13_old(p,ideadcroot_st) = cs13_veg%deadcrootc_storage_patch (p)
+         vegmatrixc13_old(p,ideadcroot_xf) = cs13_veg%deadcrootc_xfer_patch (p)
+         if(ivt(p) >= npcropmin)then
+           vegmatrixc13_old(p,igrain)        = cs13_veg%grainc_patch(p)
+           vegmatrixc13_old(p,igrain_st)     = cs13_veg%grainc_storage_patch(p)
+           vegmatrixc13_old(p,igrain_xf)     = cs13_veg%grainc_xfer_patch(p)
+         end if
+       end if 
+       if ( use_c14 )then
+         vegmatrixc14_old(p,ileaf)         = cs14_veg%leafc_patch(p)
+         vegmatrixc14_old(p,ileaf_st)      = cs14_veg%leafc_storage_patch(p)
+         vegmatrixc14_old(p,ileaf_xf)      = cs14_veg%leafc_xfer_patch(p)
+         vegmatrixc14_old(p,ifroot)        = cs14_veg%frootc_patch(p)
+         vegmatrixc14_old(p,ifroot_st)     = cs14_veg%frootc_storage_patch(p)
+         vegmatrixc14_old(p,ifroot_xf)     = cs14_veg%frootc_xfer_patch(p)
+         vegmatrixc14_old(p,ilivestem)     = cs14_veg%livestemc_patch(p)
+         vegmatrixc14_old(p,ilivestem_st)  = cs14_veg%livestemc_storage_patch(p)
+         vegmatrixc14_old(p,ilivestem_xf)  = cs14_veg%livestemc_xfer_patch(p)
+         vegmatrixc14_old(p,ideadstem)     = cs14_veg%deadstemc_patch(p)
+         vegmatrixc14_old(p,ideadstem_st)  = cs14_veg%deadstemc_storage_patch(p)
+         vegmatrixc14_old(p,ideadstem_xf)  = cs14_veg%deadstemc_xfer_patch(p)
+         vegmatrixc14_old(p,ilivecroot)    = cs14_veg%livecrootc_patch(p)
+         vegmatrixc14_old(p,ilivecroot_st) = cs14_veg%livecrootc_storage_patch(p)
+         vegmatrixc14_old(p,ilivecroot_xf) = cs14_veg%livecrootc_xfer_patch(p)
+         vegmatrixc14_old(p,ideadcroot)    = cs14_veg%deadcrootc_patch(p)
+         vegmatrixc14_old(p,ideadcroot_st) = cs14_veg%deadcrootc_storage_patch(p)
+         vegmatrixc14_old(p,ideadcroot_xf) = cs14_veg%deadcrootc_xfer_patch(p)
+         if(ivt(p) >= npcropmin)then
+           vegmatrixc14_old(p,igrain)        = cs14_veg%grainc_patch(p)
+           vegmatrixc14_old(p,igrain_st)     = cs14_veg%grainc_storage_patch(p)
+           vegmatrixc14_old(p,igrain_xf)     = cs14_veg%grainc_xfer_patch(p)
+         end if
+       end if
          vegmatrixn_old(p,ileaf)         = leafn(p)
          vegmatrixn_old(p,ileaf_st)      = leafn_storage(p)
          vegmatrixn_old(p,ileaf_xf)      = leafn_xfer(p)
@@ -371,53 +428,63 @@ contains
          vegmatrixn_old(p,igrain_xf)     = grainn_xfer(p)
          end if
          vegmatrixn_old(p,iretransn)     = retransn(p)
-         if (is_beg_curr_year() .or. is_first_step_of_this_run_segment() )then
-            leafc0(p)                = max(leafc(p),1.e-15_r8)
-            leafc0_storage(p)        = max(leafc_storage(p), 1.e-15_r8)
-            leafc0_xfer(p)           = max(leafc_xfer(p), 1.e-15_r8)
-            frootc0(p)               = max(frootc(p), 1.e-15_r8)
-            frootc0_storage(p)       = max(frootc_storage(p), 1.e-15_r8)
-            frootc0_xfer(p)          = max(frootc_xfer(p), 1.e-15_r8)
-            livestemc0(p)            = max(livestemc(p), 1.e-15_r8)
-            livestemc0_storage(p)    = max(livestemc_storage(p), 1.e-15_r8)
-            livestemc0_xfer(p)       = max(livestemc_xfer(p), 1.e-15_r8)
-            deadstemc0(p)            = max(deadstemc(p), 1.e-15_r8)
-            deadstemc0_storage(p)    = max(deadstemc_storage(p), 1.e-15_r8)
-            deadstemc0_xfer(p)       = max(deadstemc_xfer(p), 1.e-15_r8)
-            livecrootc0(p)           = max(livecrootc(p), 1.e-15_r8)
-            livecrootc0_storage(p)   = max(livecrootc_storage(p), 1.e-15_r8)
-            livecrootc0_xfer(p)      = max(livecrootc_xfer(p), 1.e-15_r8)
-            deadcrootc0(p)           = max(deadcrootc(p), 1.e-15_r8)
-            deadcrootc0_storage(p)   = max(deadcrootc_storage(p), 1.e-15_r8)
-            deadcrootc0_xfer(p)      = max(deadcrootc_xfer(p), 1.e-15_r8)
+         if(isspinup .or. is_outmatrix)then
+           if (is_beg_curr_year() .or. is_first_step_of_this_run_segment() )then
+!            if (all(vegmatrixc_old(p,:).le.epsi))then
+!                 vegmatrixc_rt(:) = 0.0_r8
+!            else
+            leafc0(p)                = max(leafc(p),epsi)
+            leafc0_storage(p)        = max(leafc_storage(p), epsi)
+            leafc0_xfer(p)           = max(leafc_xfer(p), epsi)
+            frootc0(p)               = max(frootc(p), epsi)
+            frootc0_storage(p)       = max(frootc_storage(p), epsi)
+            frootc0_xfer(p)          = max(frootc_xfer(p), epsi)
+            livestemc0(p)            = max(livestemc(p), epsi)
+            livestemc0_storage(p)    = max(livestemc_storage(p), epsi)
+            livestemc0_xfer(p)       = max(livestemc_xfer(p), epsi)
+            deadstemc0(p)            = max(deadstemc(p), epsi)
+            deadstemc0_storage(p)    = max(deadstemc_storage(p), epsi)
+            deadstemc0_xfer(p)       = max(deadstemc_xfer(p), epsi)
+            livecrootc0(p)           = max(livecrootc(p), epsi)
+            livecrootc0_storage(p)   = max(livecrootc_storage(p), epsi)
+            livecrootc0_xfer(p)      = max(livecrootc_xfer(p), epsi)
+            deadcrootc0(p)           = max(deadcrootc(p), epsi)
+            deadcrootc0_storage(p)   = max(deadcrootc_storage(p), epsi)
+            deadcrootc0_xfer(p)      = max(deadcrootc_xfer(p), epsi)
             if(ivt(p) >= npcropmin)then
-            grainc0(p)               = max(grainc(p), 1.e-15_r8)
-            grainc0_storage(p)       = max(grainc_storage(p), 1.e-15_r8)
-            grainc0_xfer(p)          = max(grainc_xfer(p), 1.e-15_r8)
+            grainc0(p)               = max(grainc(p), epsi)
+            grainc0_storage(p)       = max(grainc_storage(p), epsi)
+            grainc0_xfer(p)          = max(grainc_xfer(p), epsi)
             end if
-            leafn0(p)                = max(leafn(p),1.e-15_r8)
-            leafn0_storage(p)        = max(leafn_storage(p), 1.e-15_r8)
-            leafn0_xfer(p)           = max(leafn_xfer(p), 1.e-15_r8)
-            frootn0(p)               = max(frootn(p), 1.e-15_r8)
-            frootn0_storage(p)       = max(frootn_storage(p), 1.e-15_r8)
-            frootn0_xfer(p)          = max(frootn_xfer(p), 1.e-15_r8)
-            livestemn0(p)            = max(livestemn(p), 1.e-15_r8)
-            livestemn0_storage(p)    = max(livestemn_storage(p), 1.e-15_r8)
-            livestemn0_xfer(p)       = max(livestemn_xfer(p), 1.e-15_r8)
-            deadstemn0(p)            = max(deadstemn(p), 1.e-15_r8)
-            deadstemn0_storage(p)    = max(deadstemn_storage(p), 1.e-15_r8)
-            deadstemn0_xfer(p)       = max(deadstemn_xfer(p), 1.e-15_r8)
-            livecrootn0(p)           = max(livecrootn(p), 1.e-15_r8)
-            livecrootn0_storage(p)   = max(livecrootn_storage(p), 1.e-15_r8)
-            livecrootn0_xfer(p)      = max(livecrootn_xfer(p), 1.e-15_r8)
-            deadcrootn0(p)           = max(deadcrootn(p), 1.e-15_r8)
-            deadcrootn0_storage(p)   = max(deadcrootn_storage(p), 1.e-15_r8)
-            deadcrootn0_xfer(p)      = max(deadcrootn_xfer(p), 1.e-15_r8)
+!           end if
+!            if (all(vegmatrixn_old(p,:).le.epsi))then
+!                 vegmatrixn_rt(:) = 0.0_r8
+!            else
+            leafn0(p)                = max(leafn(p),epsi)
+            leafn0_storage(p)        = max(leafn_storage(p), epsi)
+            leafn0_xfer(p)           = max(leafn_xfer(p), epsi)
+            frootn0(p)               = max(frootn(p), epsi)
+            frootn0_storage(p)       = max(frootn_storage(p), epsi)
+            frootn0_xfer(p)          = max(frootn_xfer(p), epsi)
+            livestemn0(p)            = max(livestemn(p), epsi)
+            livestemn0_storage(p)    = max(livestemn_storage(p), epsi)
+            livestemn0_xfer(p)       = max(livestemn_xfer(p), epsi)
+            deadstemn0(p)            = max(deadstemn(p), epsi)
+            deadstemn0_storage(p)    = max(deadstemn_storage(p), epsi)
+            deadstemn0_xfer(p)       = max(deadstemn_xfer(p), epsi)
+            livecrootn0(p)           = max(livecrootn(p), epsi)
+            livecrootn0_storage(p)   = max(livecrootn_storage(p), epsi)
+            livecrootn0_xfer(p)      = max(livecrootn_xfer(p), epsi)
+            deadcrootn0(p)           = max(deadcrootn(p), epsi)
+            deadcrootn0_storage(p)   = max(deadcrootn_storage(p), epsi)
+            deadcrootn0_xfer(p)      = max(deadcrootn_xfer(p), epsi)
+            retransn0(p)             = max(retransn(p), epsi)
             if(ivt(p) >= npcropmin)then
-            grainn0(p)               = max(grainn(p), 1.e-15_r8)
-            grainn0_storage(p)       = max(grainn_storage(p), 1.e-15_r8)
-            grainn0_xfer(p)          = max(grainn_xfer(p), 1.e-15_r8)
+            grainn0(p)               = max(grainn(p), epsi)
+            grainn0_storage(p)       = max(grainn_storage(p), epsi)
+            grainn0_xfer(p)          = max(grainn_xfer(p), epsi)
             end if
+!          end if 
          end if
 !
           vegmatrix_2d(ileaf,ileaf)               = leafc(p)         / leafc0(p)
@@ -467,6 +534,8 @@ contains
              vegmatrixn_2d(igrain_st,igrain_st)       = grainn_storage(p)/ grainn0_storage(p)
              vegmatrixn_2d(igrain_xf,igrain_xf)       = grainn_xfer(p)   / grainn0_xfer(p)
           end if
+          vegmatrixn_2d(iretransn,iretransn) = retransn(p)/retransn0(p)
+       end if !isspinup
 !
          matrix_phturnover(p,:,:) = 0._r8
          matrix_gmturnover(p,:,:) = 0._r8
@@ -474,16 +543,6 @@ contains
          matrix_nphturnover(p,:,:) = 0._r8
          matrix_ngmturnover(p,:,:) = 0._r8
          matrix_nfiturnover(p,:,:) = 0._r8
-
-!         matrix_nphtransfer_curr(p,:,:) = matrix_phtransfer(p,:,:)
-!         matrix_nphtransfer_curr(p,ileaf_xf,ileaf_st)     = matrix_nphtransfer(p,ileaf_xf,ileaf_st)
-!         matrix_nphtransfer_curr(p,ifroot_xf,ifroot_st)   = matrix_nphtransfer(p,ifroot_xf,ifroot_st)
-   
-!         matrix_nphtransfer_curr(p,ideadstem,ilivestem)    =  matrix_nphtransfer(p,ideadstem,ilivestem)
-!         matrix_nphtransfer_curr(p,ideadcroot,ilivecroot)  =  matrix_nphtransfer(p,ideadcroot,ilivecroot)
-
-!         if(p .eq. 8)write(517,"(A,324F10.2)"),'tranfer matrix',matrix_phtransfer(p,1:nvegcpool,1:nvegcpool) * dt
-!         if(p .eq. 8)write(518,"(A,18F10.2)"),'pool sizes',vegmatrixc_old(p,1:nvegcpool)
 
          do j=1,nvegcpool
             do i=1,nvegcpool+1
@@ -504,7 +563,6 @@ contains
                end if
             end do
          end do
-!         if( p .eq. 2)print*,'phtransfer',matrix_phtransfer(p,ideadcroot,:)
 
          do j=1,nvegcpool
             if(matrix_phturnover(p,j,j) .ne. 0)then
@@ -529,7 +587,6 @@ contains
             matrix_fitransfer(p,j,j) = -1._r8
          end do
 !N
-!         if(p .eq. 8)print*,'before generate turnover',matrix_ngmturnover(p,ideadstem,ideadstem),matrix_ngmtransfer(p,ioutn,ideadstem)
          do j=1,nvegnpool
             if(matrix_nphturnover(p,j,j) .ne. 0)then
                matrix_nphtransfer(p,:,j) = matrix_nphtransfer(p,:,j) / matrix_nphturnover(p,j,j)
@@ -552,118 +609,90 @@ contains
             end if
             matrix_nfitransfer(p,j,j) = -1._r8
          end do
-!          if(p.eq.5)print *, 'before1NNN',matrix_alloc(p,:) * matrix_Cinput(p) * dt
-!         if(p .eq. 8428)then
-!             tmp=(matmul(matmul(matrix_phtransfer(p,1:nvegpool,:),matrix_phturnover(p,:,:)),vegmatrixc_old(p,:))) * dt
-!             print*,'before matrix_new,phenology',cnveg_carbonstate_inst%deadcrootc_patch(8428),tmp(ideadcroot)
-!             print*,'before matrix_new,gap mortality',cnveg_carbonstate_inst%deadcrootc_patch(8428),tmp(ideadcroot)
-!             tmp=(matmul(matmul(matrix_fitransfer(p,1:nvegpool,:),matrix_fiturnover(p,:,:)),vegmatrixc_old(p,:))) * dt
-!             print*,'before matrix_new,fire',cnveg_carbonstate_inst%deadcrootc_patch(8428),tmp(ideadcroot)
-!         end if
-!         if(p .eq. 8428)then
-!            print*,'before matrix_new',vegmatrixc_new(p,ideadcroot)
-!         end if
-         vegmatrixc_new(p,:) = vegmatrixc_old(p,:)  +  matrix_alloc(p,:) * matrix_Cinput(p) * dt &
+
+         
+           vegmatrixc_new(p,:) = vegmatrixc_old(p,:)  +  matrix_alloc(p,:) * matrix_Cinput(p) * dt &
                             +(matmul(matmul(matrix_phtransfer(p,1:nvegcpool,:),matrix_phturnover(p,:,:)),vegmatrixc_old(p,:))   &
                             + matmul(matmul(matrix_gmtransfer(p,1:nvegcpool,:),matrix_gmturnover(p,:,:)),vegmatrixc_old(p,:))   &
                             + matmul(matmul(matrix_fitransfer(p,1:nvegcpool,:),matrix_fiturnover(p,:,:)),vegmatrixc_old(p,:))) * dt 
-                            
-         if(p .eq. -9999)then
-            !print*,'before matrix_old deadcrootc',p,vegmatrixc_old(p,ideadcroot)
-             print*,'before matrix_old retransn',p,vegmatrixn_old(p,iretransn)
-             print*,'before matrix_old frootn',p,vegmatrixn_old(p,ifroot)
-!            print*,'before matrix_old leafn',p,vegmatrixn_old(p,ileaf)
-!         print*,'before matrix_old',p,vegmatrixn_old(p,:)
-!         end if
-!N matrix
-!            print*,'Cinput to deadcrootn',matrix_Cinput(p)*matrix_alloc(p,ideadcroot)*dt
-!            print*,'Ninput to grainn',matrix_Ninput(p)*matrix_nalloc(p,ileaf)*dt,matrix_Ninput(p),matrix_nalloc(p,ileaf)*dt
-!            print*,'Ninput to deadstemn',matrix_Ninput(p)*matrix_nalloc(p,ideadstem)*dt,matrix_Ninput(p),matrix_nalloc(p,ideadstem)*dt
-!            print*,'Transfer to deadcrootc phenology from livecroot',matrix_phtransfer(p,ideadcroot,ilivecroot)*matrix_phturnover(p,ilivecroot,ilivecroot) &
-!                                                                 * vegmatrixc_old(p,ilivecroot) * dt
-!            print*,'Transfer to deadcrootc phenology from transfer pool',matrix_phtransfer(p,ideadcroot,ideadcroot_xf)*matrix_phturnover(p,ideadcroot_xf,ideadcroot_xf) &
-!  * vegmatrixc_old(p,ideadcroot_xf) * dt,vegmatrixc_old(p,ideadcroot_xf),matrix_phturnover(p,ideadcroot_xf,ideadcroot_xf),matrix_phtransfer(p,ideadcroot,ideadcroot_xf) 
-!            print*,'Transfer to leafc phenology from transfer pool',matrix_phtransfer(p,ileaf,ileaf_xf)*matrix_phturnover(p,ileaf_xf,ileaf_xf) &
-!  * vegmatrixc_old(p,ileaf_xf) * dt,vegmatrixc_old(p,ileaf_xf),matrix_phturnover(p,ileaf_xf,ileaf_xf),matrix_phtransfer(p,ileaf,ileaf_xf) 
-!            print*,'Transfer from deadcrootn phenology',matrix_phtransfer(p,ideadcroot,ideadcroot) * matrix_phturnover(p,ideadcroot,ideadcroot) &
-!                                                                    * vegmatrixc_old(p,ideadcroot) * dt
-!            print*,'Transfer from deadstemn_xfer phenology',matrix_nphtransfer(p,ideadstem,ideadstem_xf) * matrix_nphturnover(p,ideadstem_xf,ideadstem_xf) &
-!                                                                    * vegmatrixn_old(p,ideadstem_xf) * dt
-!            print*,'Transfer from livestemn phenology',matrix_nphtransfer(p,ideadstem,ilivestem) * matrix_nphturnover(p,ilivestem,ilivestem) &
-!                                                                    * vegmatrixn_old(p,ilivestem) * dt
-            print*,'Transfer from leafn to retransn phenology',matrix_nphtransfer(p,iretransn,ileaf) * matrix_nphturnover(p,ileaf,ileaf) &
-                                                                    * vegmatrixn_old(p,ileaf) * dt
-            print*,'Transfer from frootn_xfer to frootn phenology',matrix_nphtransfer(p,ifroot,ifroot_xf) * matrix_nphturnover(p,ifroot_xf,ifroot_xf) &
-                                                                    * vegmatrixn_old(p,ifroot_xf) * dt
-            print*,'Transfer from npool to frootn phenology',matrix_Ninput(p)*matrix_nalloc(p,ifroot)*dt
-            print*,'Transfer from retransn to frootn phenology',matrix_nphtransfer(p,ifroot,iretransn) * matrix_nphturnover(p,iretransn,iretransn) &
-                                                                    * vegmatrixn_old(p,iretransn) * dt
-            print*,'Transfer from frootn to retransn phenology',matrix_nphtransfer(p,iretransn,ifroot) * matrix_nphturnover(p,ifroot,ifroot) &
-                                                                    * vegmatrixn_old(p,ifroot) * dt
-            print*,'Transfer from frootn to litter phenology',sum(matrix_nphtransfer(p,1:nvegnpool,ifroot)) * matrix_nphturnover(p,ifroot,ifroot) &
-                                                                    * vegmatrixn_old(p,ifroot) * dt 
-            print*,'Transfer from livestemn to retransn phenology',matrix_nphtransfer(p,iretransn,ilivestem) * matrix_nphturnover(p,ilivestem,ilivestem) &
-                                                                    * vegmatrixn_old(p,ilivestem) * dt
-            print*,'Transfer from livecrootn to retransn phenology',matrix_nphtransfer(p,iretransn,ilivecroot) * matrix_nphturnover(p,ilivecroot,ilivecroot) &
-                                                                    * vegmatrixn_old(p,ilivecroot) * dt
-            print*,'Transfer from retransn to free',matrix_nphtransfer(p,ioutn,iretransn) * matrix_nphturnover(p,iretransn,iretransn) &
-                                                                    * vegmatrixn_old(p,iretransn) * dt
-            print*,'Transfer from retransn to veg',sum(matrix_nphtransfer(p,1:nvegnpool-1,iretransn)) * matrix_nphturnover(p,iretransn,iretransn) &
-                                                                    * vegmatrixn_old(p,iretransn) * dt
-            print*,'Transfer from retransn to out',sum(matrix_nphtransfer(p,1:nvegnpool,iretransn)) * matrix_nphturnover(p,iretransn,iretransn) &
-                                                                    * vegmatrixn_old(p,iretransn) * dt
-            
-!            print*,'Transfer from deadcrootn gap mort',matrix_gmtransfer(p,ideadcroot,ideadcroot) * matrix_gmturnover(p,ideadcroot,ideadcroot) &
-!                                                                    * vegmatrixc_old(p,ideadcroot) * dt
-!            print*,'Transfer from deadcrootn fire',matrix_fitransfer(p,ideadcroot,ideadcroot) * matrix_fiturnover(p,ideadcroot,ideadcroot) &
-!                                                                    * vegmatrixc_old(p,ideadcroot) * dt
-!            print*,'Transfer to deadcrootn fire',matrix_fitransfer(p,ideadcroot,ilivecroot) * matrix_fiturnover(p,ideadcroot,ilivecroot) &
-!                                                                    * vegmatrixc_old(p,ilivecroot) * dt
-!            print*,'Transfer from leafn gap mort',matrix_ngmtransfer(p,ileaf,ileaf) * matrix_ngmturnover(p,ileaf,ileaf) &
-!                                                                    * vegmatrixn_old(p,ileaf) * dt
-!            print*,'Transfer from leafn fire',matrix_fitransfer(p,ileaf,ileaf) * matrix_fiturnover(p,ileaf,ileaf) &
-!                                                                    * vegmatrixn_old(p,ileaf) * dt
-!            print*,'Transfer from deadstemn gap mort',matrix_ngmtransfer(p,ioutn,ideadstem) * matrix_ngmturnover(p,ideadstem,ideadstem) &
-!                                                                    * vegmatrixn_old(p,ideadstem) * dt, matrix_ngmtransfer(p,ioutn,ideadstem)
-!            print*,'Transfer from deadstemn fire',matrix_nfitransfer(p,ideadstem,ideadstem) * matrix_nfiturnover(p,ideadstem,ideadstem) &
-!                                                                    * vegmatrixn_old(p,ideadstem) * dt
-!            print*,'Transfer from livestemn fire',matrix_nfitransfer(p,ideadstem,ilivestem) * matrix_nfiturnover(p,ideadstem,ilivestem) &
-!                                                                    * vegmatrixn_old(p,ilivestem) * dt
-            !write(517,"(A,441F10.2)"),'tranfer matrix',matrix_phtransfer(p,1:nvegcpool,1:nvegcpool)
+        if ( use_c13 ) then
+
+           vegmatrixc13_new(p,:) = vegmatrixc13_old(p,:)  +  matrix_alloc(p,:) * matrix_C13input(p) * dt &
+                            +(matmul(matmul(matrix_phtransfer(p,1:nvegcpool,:),matrix_phturnover(p,:,:)),vegmatrixc13_old(p,:))   &
+                            + matmul(matmul(matrix_gmtransfer(p,1:nvegcpool,:),matrix_gmturnover(p,:,:)),vegmatrixc13_old(p,:))   &
+                            + matmul(matmul(matrix_fitransfer(p,1:nvegcpool,:),matrix_fiturnover(p,:,:)),vegmatrixc13_old(p,:))) * dt
+
+         cs13_veg%leafc_patch(p)               = vegmatrixc13_new(p,ileaf)
+         cs13_veg%leafc_storage_patch(p)       = vegmatrixc13_new(p,ileaf_st)
+         cs13_veg%leafc_xfer_patch(p)          = vegmatrixc13_new(p,ileaf_xf)
+         cs13_veg%frootc_patch(p)              = vegmatrixc13_new(p,ifroot)
+         cs13_veg%frootc_storage_patch(p)      = vegmatrixc13_new(p,ifroot_st)
+         cs13_veg%frootc_xfer_patch(p)         = vegmatrixc13_new(p,ifroot_xf)
+         cs13_veg%livestemc_patch(p)           = vegmatrixc13_new(p,ilivestem)
+         cs13_veg%livestemc_storage_patch(p)   = vegmatrixc13_new(p,ilivestem_st)
+         cs13_veg%livestemc_xfer_patch(p)      = vegmatrixc13_new(p,ilivestem_xf)
+         cs13_veg%deadstemc_patch(p)           = vegmatrixc13_new(p,ideadstem)
+         cs13_veg%deadstemc_storage_patch(p)   = vegmatrixc13_new(p,ideadstem_st)
+         cs13_veg%deadstemc_xfer_patch(p)      = vegmatrixc13_new(p,ideadstem_xf)
+         cs13_veg%livecrootc_patch(p)          = vegmatrixc13_new(p,ilivecroot)
+         cs13_veg%livecrootc_storage_patch(p)  = vegmatrixc13_new(p,ilivecroot_st)
+         cs13_veg%livecrootc_xfer_patch(p)     = vegmatrixc13_new(p,ilivecroot_xf)
+         cs13_veg%deadcrootc_patch(p)          = vegmatrixc13_new(p,ideadcroot)
+         cs13_veg%deadcrootc_storage_patch(p)  = vegmatrixc13_new(p,ideadcroot_st)
+         cs13_veg%deadcrootc_xfer_patch(p)     = vegmatrixc13_new(p,ideadcroot_xf)
+         if(ivt(p) >= npcropmin)then
+           cs13_veg%grainc_patch(p)              = vegmatrixc13_new(p,igrain)
+           cs13_veg%grainc_storage_patch(p)      = vegmatrixc13_new(p,igrain_st)
+           cs13_veg%grainc_xfer_patch(p)         = vegmatrixc13_new(p,igrain_xf)
          end if
-!         if(p .eq. 16)print*,'input retransn',matrix_nalloc(p,iretransn) * matrix_Ninput(p) * dt
-!         tmp=(matmul(matmul(matrix_nphtransfer(p,1:nvegnpool,:),matrix_nphturnover(p,:,:)),vegmatrixc_old(p,:))) * dt
-!         if(p .eq. 16)print*,'nphtrans retransn',tmp(iretransn)
-!         if(p .eq. 16)print*,'nphtrans frootn',tmp(ifroot)
-!         tmp=(matmul(matmul(matrix_ngmtransfer(p,1:nvegnpool,:),matrix_ngmturnover(p,:,:)),vegmatrixc_old(p,:))) * dt
-!         if(p .eq. 16)print*,'ngmtrans retransn',tmp(iretransn)
-!         if(p .eq. 16)print*,'ngmtrans frootn',tmp(ifroot)
-!         tmp=(matmul(matmul(matrix_nfitransfer(p,1:nvegnpool,:),matrix_nfiturnover(p,:,:)),vegmatrixc_old(p,:))) * dt
-!         if(p .eq. 16)print*,'nfitrans retransn',tmp(iretransn)
-!         if(p .eq. 16)print*,'nfitrans frootn',tmp(ifroot)
-         vegmatrixn_new(p,:) = vegmatrixn_old(p,:)  +  matrix_nalloc(p,:) * matrix_Ninput(p) * dt &
+      end if        
+     if ( use_c14 ) then
+         vegmatrixc14_new(p,:) = vegmatrixc14_old(p,:)  +  matrix_alloc(p,:) * matrix_C14input(p) * dt &
+                            +(matmul(matmul(matrix_phtransfer(p,1:nvegcpool,:),matrix_phturnover(p,:,:)),vegmatrixc14_old(p,:))   &
+                            + matmul(matmul(matrix_gmtransfer(p,1:nvegcpool,:),matrix_gmturnover(p,:,:)),vegmatrixc14_old(p,:))   &
+                            + matmul(matmul(matrix_fitransfer(p,1:nvegcpool,:),matrix_fiturnover(p,:,:)),vegmatrixc14_old(p,:))) * dt
+
+         cs14_veg%leafc_patch(p)               = vegmatrixc14_new(p,ileaf)* (1._r8 - decay_const)
+         cs14_veg%leafc_storage_patch(p)       = vegmatrixc14_new(p,ileaf_st)* (1._r8 - decay_const)
+         cs14_veg%leafc_xfer_patch(p)          = vegmatrixc14_new(p,ileaf_xf)* (1._r8 - decay_const)
+         cs14_veg%frootc_patch(p)              = vegmatrixc14_new(p,ifroot)* (1._r8 - decay_const)
+         cs14_veg%frootc_storage_patch(p)      = vegmatrixc14_new(p,ifroot_st)* (1._r8 - decay_const)
+         cs14_veg%frootc_xfer_patch(p)         = vegmatrixc14_new(p,ifroot_xf)* (1._r8 - decay_const)
+         cs14_veg%livestemc_patch(p)           = vegmatrixc14_new(p,ilivestem)* (1._r8 - decay_const)
+         cs14_veg%livestemc_storage_patch(p)   = vegmatrixc14_new(p,ilivestem_st)* (1._r8 - decay_const)
+         cs14_veg%livestemc_xfer_patch(p)      = vegmatrixc14_new(p,ilivestem_xf)* (1._r8 - decay_const)
+         cs14_veg%deadstemc_patch(p)           = vegmatrixc14_new(p,ideadstem)* (1._r8 - decay_const)
+         cs14_veg%deadstemc_storage_patch(p)   = vegmatrixc14_new(p,ideadstem_st)* (1._r8 - decay_const)
+         cs14_veg%deadstemc_xfer_patch(p)      = vegmatrixc14_new(p,ideadstem_xf)* (1._r8 - decay_const)
+         cs14_veg%livecrootc_patch(p)          = vegmatrixc14_new(p,ilivecroot)* (1._r8 - decay_const)
+         cs14_veg%livecrootc_storage_patch(p)  = vegmatrixc14_new(p,ilivecroot_st)* (1._r8 - decay_const)
+         cs14_veg%livecrootc_xfer_patch(p)     = vegmatrixc14_new(p,ilivecroot_xf)* (1._r8 - decay_const)
+         cs14_veg%deadcrootc_patch(p)          = vegmatrixc14_new(p,ideadcroot)* (1._r8 - decay_const)
+         cs14_veg%deadcrootc_storage_patch(p)  = vegmatrixc14_new(p,ideadcroot_st)* (1._r8 - decay_const)
+         cs14_veg%deadcrootc_xfer_patch(p)     = vegmatrixc14_new(p,ideadcroot_xf)* (1._r8 - decay_const)
+         if(ivt(p) >= npcropmin)then
+           cs14_veg%grainc_patch(p)              = vegmatrixc14_new(p,igrain)* (1._r8 - decay_const)
+           cs14_veg%grainc_storage_patch(p)      = vegmatrixc14_new(p,igrain_st)* (1._r8 - decay_const)
+           cs14_veg%grainc_xfer_patch(p)         = vegmatrixc14_new(p,igrain_xf)* (1._r8 - decay_const)
+         end if
+     end if 
+
+           vegmatrixn_new(p,:) = vegmatrixn_old(p,:)  +  matrix_nalloc(p,:) * matrix_Ninput(p) * dt &
                             + (matmul(matmul(matrix_nphtransfer(p,1:nvegnpool,:),matrix_nphturnover(p,:,:)),vegmatrixn_old(p,:)) &
                             +  matmul(matmul(matrix_ngmtransfer(p,1:nvegnpool,:),matrix_ngmturnover(p,:,:)),vegmatrixn_old(p,:)) &
-                            +  matmul(matmul(matrix_nfitransfer(p,1:nvegnpool,:),matrix_nfiturnover(p,:,:)),vegmatrixn_old(p,:))) * dt!&
-!         if(p .eq. 16)then
-!            print*,'after matrix_new',p,vegmatrixn_new(p,iretransn)
-!            print*,'after matrix_new',p,vegmatrixn_new(p,ifroot)
-!         end if
- 
-! 
-
-         if(isspinup .or. is_outmatrix)then
-            matrix_alloc_acc(p,1:nvegcpool) = matrix_alloc_acc(p,1:nvegcpool) + matrix_alloc(p,:) * matrix_Cinput(p) * dt!*(dt/secspyear)
+                            +  matmul(matmul(matrix_nfitransfer(p,1:nvegnpool,:),matrix_nfiturnover(p,:,:)),vegmatrixn_old(p,:))) * dt 
+         if(isspinup .or. is_outmatrix)then !
+            matrix_alloc_acc(p,:) = matrix_alloc_acc(p,:) + matrix_alloc(p,:) * matrix_Cinput(p) * dt
             matrix_transfer_acc(p,1:nvegcpool,:) = matrix_transfer_acc(p,1:nvegcpool,:) &
-                               + (matmul(matmul(matrix_phtransfer(p,1:nvegcpool,:),matrix_phturnover(p,:,:)),vegmatrix_2d(:,:))& !) * dt
+                               + (matmul(matmul(matrix_phtransfer(p,1:nvegcpool,:),matrix_phturnover(p,:,:)),vegmatrix_2d(:,:))& 
                                + matmul(matmul(matrix_gmtransfer(p,1:nvegcpool,:),matrix_gmturnover(p,:,:)),vegmatrix_2d(:,:)) &
                                + matmul(matmul(matrix_fitransfer(p,1:nvegcpool,:),matrix_fiturnover(p,:,:)),vegmatrix_2d(:,:)))*dt
 
-            matrix_nalloc_acc(p,1:nvegnpool) = matrix_nalloc_acc(p,1:nvegnpool) + matrix_nalloc(p,:) * matrix_Ninput(p)* dt
+            matrix_nalloc_acc(p,:) = matrix_nalloc_acc(p,:) + matrix_nalloc(p,:) * matrix_Ninput(p)* dt
             matrix_ntransfer_acc(p,1:nvegnpool,:) = matrix_ntransfer_acc(p,1:nvegnpool,:) &
-                               + (matmul(matmul(matrix_nphtransfer(p,1:nvegnpool,:),matrix_nphturnover(p,:,:)),vegmatrixn_2d(:,:))& !) * dt
-                               + matmul(matmul(matrix_gmtransfer(p,1:nvegnpool,:),matrix_gmturnover(p,:,:)),vegmatrixn_2d(:,:))) * dt
-
+                               + (matmul(matmul(matrix_nphtransfer(p,1:nvegnpool,:),matrix_nphturnover(p,:,:)),vegmatrixn_2d(:,:))& 
+                               + matmul(matmul(matrix_ngmtransfer(p,1:nvegnpool,:),matrix_ngmturnover(p,:,:)),vegmatrixn_2d(:,:)) &
+                               + matmul(matmul(matrix_nfitransfer(p,1:nvegnpool,:),matrix_nfiturnover(p,:,:)),vegmatrixn_2d(:,:)))*dt
          end if 
 
          leafc(p)               = vegmatrixc_new(p,ileaf)
@@ -713,34 +742,26 @@ contains
             grainn_storage(p)      = vegmatrixn_new(p,igrain_st)
             grainn_xfer(p)         = vegmatrixn_new(p,igrain_xf)
          end if
-         retransn(p)            = vegmatrixn_new(p,iretransn)
+         retransn(p)               = vegmatrixn_new(p,iretransn)
          if(isspinup .or. is_outmatrix)then
-!print *, 'count',counter, end_of_year
             if(end_of_year)then
                do i=1,nvegcpool
-                 if(matrix_transfer_acc(p,i,i) .eq. 0)then
+                 if(abs(matrix_transfer_acc(p,i,i)) .le. epsi)then
                     matrix_transfer_acc(p,i,i) = 1.e+36
                  end if
                end do
                do i=1,nvegnpool
-                 if(matrix_ntransfer_acc(p,i,i) .eq. 0)then
+                 if(abs(matrix_ntransfer_acc(p,i,i)) .le. epsi)then
                     matrix_ntransfer_acc(p,i,i) = 1.e+36
                  end if
                end do
 !              end if
                call inverse(matrix_transfer_acc(p,1:nvegcpool,:),AKinv(1:nvegcpool,1:nvegcpool),nvegcpool)
                vegmatrixc_rt(:) = -matmul(AKinv(1:nvegcpool,1:nvegcpool),matrix_alloc_acc(p,:))
-! N  
+! N 
                call inverse(matrix_ntransfer_acc(p,1:nvegnpool,:),AKinvn(1:nvegnpool,1:nvegnpool),nvegnpool)
                vegmatrixn_rt(:) = -matmul(AKinvn(1:nvegnpool,1:nvegnpool),matrix_nalloc_acc(p,:))
-!            do i=1,nvegpool
-!               print*,'AKinv',i, AKinv(i,i), AKinvn(i,i)
-!            end do
-!          if(p .eq.7) print*,'input', matrix_alloc(p,ideadstem)* matrix_Cinput(p) * dt, livestemc(p)*((matrix_phtransfer(p,ideadstem,ilivestem)*matrix_phturnover(p,ilivestem,ilivestem)) &
-!                                                                                             + (matrix_fitransfer(p,ideadstem,ilivestem)*matrix_fiturnover(p,ilivestem,ilivestem)))   
- 
-!          if(p .eq.7)print*,'output',deadstemc(p)*((matrix_phtransfer(p,iout,ideadstem)*matrix_phturnover(p,ideadstem,ideadstem))+ (matrix_fitransfer(p,iout,ideadstem)*matrix_fiturnover(p,ideadstem,ideadstem)))
-               if(isspinup)then
+             if(isspinup)then
                leafc(p)                  = vegmatrixc_rt(ileaf)
 !               leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
 !               leafc_xfer(p)             = vegmatrixc_rt(ileaf_xf)
@@ -760,9 +781,10 @@ contains
 !               deadcrootc_storage(p)      = vegmatrixc_rt(ideadcroot_st)
 !               deadcrootc_xfer(p)         = vegmatrixc_rt(ideadcroot_xf) 
                if(ivt(p) >= npcropmin)then
-               grainc(p)                 = vegmatrixc_rt(igrain)
+                  grainc(p)                 = vegmatrixc_rt(igrain)
+!                  grainc_storage(p)          = vegmatrixc_rt(igrain_st)
+!                  grainc_xfer(p)             = vegmatrixc_rt(igrain_xf)
                end if
-!               print *, 'leafacc',p,vegmatrixc_rt(:),vegmatrixn_rt(:)
                leafn(p)                  = vegmatrixn_rt(ileaf)
 !               leafn_storage(p)          = vegmatrixn_rt(ileaf_st)
 !               leafn_xfer(p)             = vegmatrixn_rt(ileaf_xf)
@@ -782,8 +804,11 @@ contains
 !               deadcrootn_storage(p)      = vegmatrixn_rt(ideadcroot_st)
 !               deadcrootn_xfer(p)         = vegmatrixn_rt(ideadcroot_xf)
                if(ivt(p) >= npcropmin)then
-               grainn(p)                  = vegmatrixn_rt(igrain)
+                  grainn(p)                  = vegmatrixn_rt(igrain)
+!                  grainn_storage(p)          = vegmatrixn_rt(igrain_st)
+!                  grainn_xfer(p)             = vegmatrixn_rt(igrain_xf)
                end if
+!                retransn(p)                = vegmatrixn_rt(iretransn)
                end if
                if(is_outmatrix)then
                   matrix_cap_leafc(p)                  = vegmatrixc_rt(ileaf)
@@ -878,7 +903,6 @@ contains
                      matrix_pot_grainn_xfer(p)            = matrix_cap_grainn_storage(p) - grainn_xfer(p)
                   end if
                end if
-                 
 !
                matrix_alloc_acc(p,:) = 0._r8
                matrix_transfer_acc(p,:,:) = 0._r8
@@ -889,11 +913,14 @@ contains
          end if
 
          matrix_Cinput(p) = 0._r8
+         matrix_C13input(p) = 0._r8
+         matrix_C14input(p) = 0._r8       
          matrix_phtransfer(p,:,:) = 0._r8
          matrix_gmtransfer(p,:,:) = 0._r8
          matrix_fitransfer(p,:,:) = 0._r8
          matrix_nphtransfer(p,:,:) = 0._r8
          matrix_ngmtransfer(p,:,:) = 0._r8
+         matrix_nfitransfer(p,:,:) = 0._r8
          matrix_Ninput(p) = 0._r8
          
       end do 

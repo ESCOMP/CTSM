@@ -126,6 +126,7 @@ module CNVegNitrogenStateType
      real(r8), pointer :: grainn0_patch             (:) ! (gN/m2) grain N
      real(r8), pointer :: grainn0_storage_patch     (:) ! (gN/m2) grain N storage
      real(r8), pointer :: grainn0_xfer_patch        (:) ! (gN/m2) grain N transfer
+     real(r8), pointer :: retransn0_patch           (:) ! (gN/m2) plant pool of retranslocated N
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegn_patch           (:) ! (gN/m2) displayed veg nitrogen, excluding storage
@@ -307,6 +308,7 @@ contains
        allocate(this%grainn0_patch             (begp:endp)) ; this%grainn0_patch             (:) = nan
        allocate(this%grainn0_storage_patch     (begp:endp)) ; this%grainn0_storage_patch     (:) = nan     
        allocate(this%grainn0_xfer_patch        (begp:endp)) ; this%grainn0_xfer_patch        (:) = nan     
+       allocate(this%retransn0_patch           (begp:endp)) ; this%retransn0_patch           (:) = nan
 !!
        allocate(this%matrix_nalloc_acc_patch   (begp:endp,1:nvegnpool)) ; this%matrix_nalloc_acc_patch (:,:) = nan
        allocate(this%matrix_ntransfer_acc_patch(begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_ntransfer_acc_patch  (:,:,:) =nan
@@ -936,6 +938,7 @@ contains
              this%deadcrootn0_patch(p)         = 0._r8
              this%deadcrootn0_storage_patch(p) = 0._r8
              this%deadcrootn0_xfer_patch(p)    = 0._r8
+             this%retransn0_patch(p)           = 0._r8
              do k = 1, nvegnpool 
                 this%matrix_nalloc_acc_patch(p,k) =  0._r8
                 do j = 1, nvegnpool + 1
@@ -1328,6 +1331,9 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootn0_xfer', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootn0_xfer_patch) 
+    call restartvar(ncid=ncid, flag=flag, varname='retransn0', xtype=ncd_double,  &
+         dim1name='pft', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%retransn0_patch)    
     end if
  
     call restartvar(ncid=ncid, flag=flag, varname='retransn', xtype=ncd_double,  &
@@ -1737,7 +1743,7 @@ contains
           this%deadcrootn0_patch(i)         = value_patch
           this%deadcrootn0_storage_patch(i) = value_patch
           this%deadcrootn0_xfer_patch(i)    = value_patch
-
+          this%retransn0_patch(i)           = value_patch
           do k=1,nvegnpool 
              this%matrix_nalloc_acc_patch(i,k)              = value_patch
              do j = 1, nvegnpool + 1
