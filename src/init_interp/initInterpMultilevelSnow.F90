@@ -128,12 +128,26 @@ contains
     ! Interpolates a multi-level field from source to dest, for a single point.
     !
     ! This version does an "interpolation" (really a copy with offsets) appropriate for
-    ! snow variables. This is based on the number of EXISTING snow layers in each source
-    ! point. If the destination has at least as many levels as the number of existing snow
-    ! layers in the source, then all existing snow layers are copied to the destination,
-    ! with non-existing levels set to 0. If the destination has fewer levels than the
-    ! number of existing snow layers, then the top N levels of the source are copied to
-    ! the destination (where N is the number of levels in the destination).
+    ! snow variables.
+    !
+    ! For most snow variables, we only need to copy data from EXISTING snow layers.
+    ! However, there are a few variables (specifically, absorbed radiation fluxes) where
+    ! we need to copy data even from non-existing snow layers in order to get bit-for-bit
+    ! behavior upon interpolation. Thus, to be safe, we copy as many levels as possible.
+    ! The algorithm is as follows:
+    !
+    ! - If (number of destination levels) >= (number of source levels), then copy all
+    !   source levels to the destination. If there are more destination levels than
+    !   source levels, then the lowest-index destination levels will be set to 0.
+    !
+    ! - If (number of destination levels) < (number of source levels), but (number of
+    !   destination levels) >= (number of EXISTING snow levels in source), then copy all
+    !   existing snow levels to the destination, plus as many non-existing levels as will
+    !   fit.
+    !
+    ! - If (number of destination levels) < (number of EXISTING snow levels in source),
+    !   then copy the top N existing snow levels to the destination, where N is the
+    !   number of destination levels.
     !
     ! index_dest is used in this version, in order to match each point with its number
     ! of existing snow layers; index_dest should be 1-based.
@@ -145,38 +159,44 @@ contains
     integer  , intent(in)    :: index_dest
     !
     ! !LOCAL VARIABLES:
-    integer :: num_snow_layers_source  ! number of existing snow layers at this source point
-    integer :: top_snow_layer_source
-    integer :: top_snow_layer_dest
-    integer :: dest_layer
-    integer :: source_layer
+    integer :: num_source         ! total number of source layers
+    integer :: num_dest           ! total number of dest layers
+    integer :: num_snow_layers_source  ! number of EXISTING snow layers at this source point
+    integer :: top_layer_source   ! top source layer copied to dest
+    integer :: top_layer_dest     ! top dest layer receiving data from source
+    integer :: source_layer       ! current source layer in copy
+    integer :: dest_layer         ! current dest layer in copy
 
     character(len=*), parameter :: subname = 'interp_multilevel'
     !-----------------------------------------------------------------------
 
+    num_source = size(data_source)
+    num_dest = size(data_dest)
     num_snow_layers_source = this%num_snow_layers_source(index_dest)
     SHR_ASSERT(num_snow_layers_source >= 0, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(num_snow_layers_source <= size(data_source), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(num_snow_layers_source <= num_source, errMsg(sourcefile, __LINE__))
 
-    ! Determine the index in the source for the top layer that has snow. If there is snow
-    ! in every layer, then top_snow_layer_source will be 1. If there is no snow,
-    ! top_snow_layer_source will be size(data_source) + 1.
-    top_snow_layer_source = size(data_source) - num_snow_layers_source + 1
+    if (num_dest >= num_source) then
+       ! Copy all source layers to dest (even non-existent snow layers)
+       top_layer_source = 1
+       top_layer_dest = 1 + (num_dest - num_source)
+    else if (num_dest >= num_snow_layers_source) then
+       ! Copy all existing source layers to dest, plus as many non-existing layers as will fit
+       top_layer_dest = 1
+       top_layer_source = 1 + (num_source - num_dest)
+    else
+       ! num_dest < num_snow_layers_source. Copy as many existing layers from source as
+       ! will fit in dest, starting at the top of the snow pack.
+       top_layer_dest = 1
+       top_layer_source = num_source - num_snow_layers_source + 1
+    end if
 
-    ! If there are N snow layers in the source, there will be N snow layers in the dest...
-    top_snow_layer_dest = top_snow_layer_source + (size(data_dest) - size(data_source))
-
-    ! ... but there cannot be more snow layers than the size allows; if we cannot fit all
-    ! snow layers from the source in the dest, we will copy the *top* snow layers from the
-    ! source into the dest
-    top_snow_layer_dest = max(top_snow_layer_dest, 1)
-
-    do dest_layer = 1, (top_snow_layer_dest - 1)
+    do dest_layer = 1, (top_layer_dest - 1)
        data_dest(dest_layer) = 0._r8
     end do
 
-    source_layer = top_snow_layer_source
-    do dest_layer = top_snow_layer_dest, size(data_dest)
+    source_layer = top_layer_source
+    do dest_layer = top_layer_dest, num_dest
        data_dest(dest_layer) = data_source(source_layer)
        source_layer = source_layer + 1
     end do

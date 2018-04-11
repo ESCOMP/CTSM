@@ -529,6 +529,7 @@ contains
     end if
     call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
     call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
+    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glcmec+1, dimid)
 
     ! Define global attributes
 
