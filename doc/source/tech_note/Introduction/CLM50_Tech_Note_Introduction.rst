@@ -13,7 +13,7 @@
 
 ***Contributing Authors***
 
-**Ashehad Ali, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathon Buzan, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Jan Lenaerts, Sam Levis,
+**Ashehad Ali, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathan Buzan, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Jan Lenaerts, Sam Levis,
 L. Ruby Leung, William Lipscomb, Jon Pelletier, Daniel M. Ricciuto, Ben Sanderson, Jacqueline Shuman, Andrew Slater, Zachary Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Francis Vitt, Xubin Zeng**
 
 
