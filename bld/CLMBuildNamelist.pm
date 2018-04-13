@@ -1569,6 +1569,7 @@ sub process_namelist_inline_logic {
   setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_fertilizer($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_grainproduct($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
@@ -2071,6 +2072,18 @@ sub setup_logic_create_crop_landunit {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_subgrid {
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   my $var = 'run_zero_weight_urban';
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+}
+
 #-------------------------------------------------------------------------------
 
 sub setup_logic_cnfire {
