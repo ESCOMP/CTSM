@@ -19,8 +19,8 @@ module SurfaceRadiationMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch
+  use landunit_varcon   , only : istdlak
 
-  !
   ! !PRIVATE TYPES:
   implicit none
   private
@@ -664,7 +664,7 @@ contains
                 sabg_soil(p) = sabg(p)
              endif
              ! if no subgrid fluxes, make sure to set both components equal to weighted average
-             if (subgridflag == 0) then 
+             if (subgridflag == 0 .or. lun%itype(l) == istdlak) then
                 sabg_snow(p) = sabg(p)
                 sabg_soil(p) = sabg(p)
              endif
@@ -756,7 +756,7 @@ contains
 
              ! If shallow snow depth, all solar radiation absorbed in top or top two snow layers
              ! to prevent unrealistic timestep soil warming 
-             if (subgridflag == 0) then 
+             if (subgridflag == 0 .or. lun%itype(l) == istdlak) then 
                 if (snow_depth(c) < 0.10_r8) then
                    if (snl(c) == 0) then
                       sabg_lyr(p,-nlevsno+1:0) = 0._r8

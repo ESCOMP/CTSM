@@ -35,8 +35,8 @@ module unittestSubgridMod
   ! 
   ! (1) call unittest_subgrid_teardown
   !
-  !    Note: This can be done conditionally based on whether unittest_subgrid_needs_teardown
-  !    is true.
+  !    Note: This can safely be done even if subgrid stuff was never set up for some
+  !    tests (it will only do anything if the subgrid setup was done).
 
   use shr_kind_mod , only : r8 => shr_kind_r8
   use decompMod    , only : bounds_type, procinfo, get_proc_bounds
@@ -69,10 +69,6 @@ module unittestSubgridMod
   ! of the allocated arrays.
   type(bounds_type), public, protected :: bounds
 
-  ! Whether subgrid stuff has been initialized. A teardown method can test against this
-  ! to determine whether unittest_subgrid_teardown is needed.
-  logical, public, protected :: unittest_subgrid_needs_teardown = .false.
-  
   ! Indices of last grid cell / landunit / column / patch added
   integer, public, protected :: gi
   integer, public, protected :: li
@@ -108,6 +104,7 @@ module unittestSubgridMod
 
   integer, private :: nlevsno_orig ! original value of nlevsno, saved so we can restore it later
   logical, private :: nlevsno_set  ! whether we set nlevsno here
+  logical, private :: unittest_subgrid_needs_teardown = .false. ! whether subgrid stuff has been initialized
 
 contains
   
@@ -285,15 +282,17 @@ contains
     
     character(len=*), parameter :: subname = 'unittest_subgrid_teardown'
     !-----------------------------------------------------------------------
-    
-    call grc%clean
-    call lun%clean
-    call col%clean
-    call patch%clean
 
-    call reset_nlevsno()
+    if (unittest_subgrid_needs_teardown) then
+       call grc%clean
+       call lun%clean
+       call col%clean
+       call patch%clean
 
-    unittest_subgrid_needs_teardown = .false.
+       call reset_nlevsno()
+
+       unittest_subgrid_needs_teardown = .false.
+    end if
 
   end subroutine unittest_subgrid_teardown
 
