@@ -16,7 +16,9 @@ Bugs fixed or introduced
 Issues fixed (include CTSM Issue #): [If none, remove this line]
 CIME Issues fixed (include issue #): [If none, remove this line]
 
-Known bugs introduced (or found) in this tag (include github issue ID): [If none, remove this line]
+Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
+
+Known bugs found since the previous tag (include github issue ID): [If none, remove this line]
 
 
 Notes of particular relevance for users
