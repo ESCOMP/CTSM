@@ -85,6 +85,7 @@ contains
 
     write(unit,*) 'subgrid level, index = ',&
          this%name, index
+    write(unit,*) 'lat, lon = ', this%lat(index), ', ', this%lon(index)
     if (associated(this%ltype)) then
        write(unit,*) 'ltype: ', this%ltype(index)
     end if
@@ -338,7 +339,9 @@ contains
                 if (found) then
                    write(iulog,*) subname// &
                         ' ERROR: found multiple input points matching output point'
-                   write(iulog,*) 'For this init_interp mode: for a given output point,'
+                   call subgrido%print_point(no, iulog)
+                   write(iulog,*) ' '
+                   write(iulog,*) 'For this init_interp_method: for a given output point,'
                    write(iulog,*) 'we expect to find exactly one input point at the same'
                    write(iulog,*) 'location with the same type.'
                    write(iulog,*) '(This most likely indicates a problem in CTSM, such as'
@@ -362,9 +365,14 @@ contains
           if (activeo(no)) then
              write(iulog,*) subname// &
                   ' ERROR: cannot find any input points matching output point'
-             write(iulog,*) 'For this init_interp mode: for a given active output point,'
+             call subgrido%print_point(no, iulog)
+             write(iulog,*) ' '
+             write(iulog,*) 'For this init_interp_method: for a given active output point,'
              write(iulog,*) 'we expect to find exactly one input point at the same'
              write(iulog,*) 'location with the same type.'
+             write(iulog,*) 'Note that this requires the input and output grids to be identical.'
+             write(iulog,*) '(If you need to interpolate to a different resolution, then'
+             write(iulog,*) 'you need to use a different init_interp_method.)'
              call endrun(msg=subname//' ERROR: cannot find any input points matching output point')
           end if
        end if
