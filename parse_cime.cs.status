@@ -328,21 +328,13 @@ sub print_categories {
    print( "================================================================================\n" );
    print( "Test summary\n" );
    printf( "%d Total tests\n",   $#keys+1 );
-   printf( "%d Tests pending\n", $#pendings+1 );
    printf( "%d Tests passed\n",  $#passes+1 );
    printf( "%d Tests compare different to baseline\n",  $#compares_diff+1 );
    printf( "%d Tests are new where there is no baseline\n",  $#compares_diff_nobase+1 );
+   printf( "%d Tests pending\n", $#pendings+1 );
    printf( "%d Tests failed\n",  $#fails+1 );
    print( "================================================================================\n" );
 
-   if ( $#pendings >= 0 ) {
-      print( "================================================================================\n" );
-      print( "These tests are pending\n" );
-      print( "================================================================================\n" );
-      foreach my $key ( @pendings ) {
-         print( "$key\n" );
-      }
-   }
    if ( $#passes >= 0 ) {
       print( "================================================================================\n" );
       print( "These tests passed\n" );
@@ -368,6 +360,17 @@ sub print_categories {
       print( "================================================================================\n" );
       foreach my $key ( @compares_diff_nobase ) {
          print( "$key\n" );
+      }
+   }
+   if ( $#pendings >= 0 ) {
+      print( "================================================================================\n" );
+      print( "These tests are pending (some tests may fail in the pending state)\n" );
+      print( "================================================================================\n" );
+      foreach my $key ( @pendings ) {
+         my $expect = ""; 
+         `grep $key $expectedfailfile > /dev/null`;
+         if ( $? == 0 ) { $expect = "EXPECTED"; }
+         print( "$key\t\t$expect\n" );
       }
    }
    if ( $#fails >= 0 ) {
