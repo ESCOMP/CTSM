@@ -2416,4 +2416,12 @@ always fill with the closest natural veg patch / column, regardless of the value
 flag. So interpolation from non-crop to crop cases can be done without setting this flag.
 </entry>
 
+<entry id="init_interp_method" type="char*64" category="datasets"
+       group="clm_initinterp_inparm"
+       valid_values="general,use_finidat_areas" >
+Method to use for init_interp
+
+Only applies when use_init_interp = .true.
+</entry>
+
 </namelist_definition>
