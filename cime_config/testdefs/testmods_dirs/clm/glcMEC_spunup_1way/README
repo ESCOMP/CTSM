@@ -3,7 +3,7 @@ initial condition interpolation is on (use_init_interp=T) to a case with it's of
 they are exact. For the interpolated result to match uninterpolation, it needs to be a case that 
 essentially needs no interpolation so it's at the same resolution as the initial condition 
 file (finidat file). When surface datasets are changed, or the land-mask is changed, or an 
-imporant change is made to model physics (for example where new fields are added to the restart 
+important change is made to model physics (for example where new fields are added to the restart
 file) -- you'll need to update the initial conditions file in this test (finidat file in 
 the user_nl_clm file). 
 
