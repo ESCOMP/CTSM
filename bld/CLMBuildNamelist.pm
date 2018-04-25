@@ -3734,6 +3734,11 @@ sub setup_logic_initinterp {
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
    if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      # Ideally we would only let this be added to the namelist if
+      # use_init_interp = .true. (e.g., as is done for variables that
+      # can only be set if repartition_rain_snow is true in
+      # setup_logic_atm_forcing). However, that doesn't work with the
+      # way we have set up the LII test that tests this option.
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'init_interp_method');
    }
 }
