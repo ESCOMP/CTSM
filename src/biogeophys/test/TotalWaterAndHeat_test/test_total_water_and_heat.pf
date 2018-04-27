@@ -30,9 +30,7 @@ contains
   subroutine tearDown(this)
     class(TestTWAH), intent(inout) :: this
 
-    if (unittest_subgrid_needs_teardown) then
-       call unittest_subgrid_teardown()
-    end if
+    call unittest_subgrid_teardown()
   end subroutine tearDown
 
   ! ------------------------------------------------------------------------

@@ -111,7 +111,7 @@ module clm_varctl
   ! from finidat if use_init_interp is .true.
 
   character(len=fname_len), public :: finidat_interp_source = ' '
-  character(len=fname_len), public :: finidat_interp_dest   = 'finidat_interp_dest.nc'     
+  character(len=fname_len), public :: finidat_interp_dest   = ''
 
   !----------------------------------------------------------
   ! Crop & Irrigation logic
@@ -129,6 +129,9 @@ module clm_varctl
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
+
+  ! true => allocate and run urban landunits everywhere where we have valid urban data
+  logical, public :: run_zero_weight_urban = .false.
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          

@@ -16,6 +16,7 @@ module glcBehaviorMod
   use decompMod      , only : bounds_type
   use filterColMod   , only : filter_col_type
   use ColumnType     , only : col
+  use PatchType      , only : patch
 
   ! !PUBLIC TYPES:
   implicit none
@@ -119,6 +120,14 @@ module glcBehaviorMod
      ! Sets a column-level logical array to true for any ice_mec column that needs
      ! downscaling, false for any ice_mec column that does not need downscaling
      procedure, public  :: icemec_cols_need_downscaling
+
+     ! Sets a column-level logical array to true for any ice_mec column that has
+     ! dynamic type, false for any ice_mec column that does not have dynamic type
+     procedure, public :: cols_have_dynamic_type_array
+
+     ! Sets a patch-level logical array to true for any ice_mec column that has
+     ! dynamic type, false for any ice_mec column that does not have dynamic type
+     procedure, public :: patches_have_dynamic_type_array
 
      ! update the column class types of any glc_mec columns that need to be updated
      procedure, public  :: update_glc_classes
@@ -842,6 +851,80 @@ contains
     end do
 
   end subroutine icemec_cols_need_downscaling
+
+  !-----------------------------------------------------------------------
+  subroutine cols_have_dynamic_type_array(this, begc, endc, has_dynamic_type_col)
+    !
+    ! !DESCRIPTION:
+    ! Sets a column-level logical array to true for any ice_mec column that has
+    ! dynamic type, false for any ice_mec column that does not have dynamic type.
+    !
+    ! The value is undefined for non-ice_mec columns.
+    !
+    ! !ARGUMENTS:
+    class(glc_behavior_type) , intent(in) :: this
+    integer, intent(in) :: begc  ! beginning column index
+    integer, intent(in) :: endc  ! ending column index
+    logical, intent(inout) :: has_dynamic_type_col( begc: )
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c
+    integer :: g
+
+    character(len=*), parameter :: subname = 'cols_have_dynamic_type_array'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(has_dynamic_type_col) == (/endc/)), errMsg(sourcefile, __LINE__))
+
+    do c = begc, endc
+       g = col%gridcell(c)
+       ! Users shouldn't rely on the values set for non-ice_mec columns, but it's simpler
+       ! just to set this for all column types.
+       if (this%collapse_to_atm_topo_grc(g)) then
+          has_dynamic_type_col(c) = .true.
+       else
+          has_dynamic_type_col(c) = .false.
+       end if
+    end do
+
+  end subroutine cols_have_dynamic_type_array
+
+  !-----------------------------------------------------------------------
+  subroutine patches_have_dynamic_type_array(this, begp, endp, has_dynamic_type_patch)
+    !
+    ! !DESCRIPTION:
+    ! Sets a patch-level logical array to true for any ice_mec patch that has
+    ! dynamic type, false for any ice_mec patch that does not have dynamic type.
+    !
+    ! The value is undefined for non-ice_mec patches.
+    !
+    ! !ARGUMENTS:
+    class(glc_behavior_type) , intent(in) :: this
+    integer, intent(in) :: begp  ! beginning patch index
+    integer, intent(in) :: endp  ! ending patch index
+    logical, intent(inout) :: has_dynamic_type_patch( begp: )
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p
+    integer :: g
+
+    character(len=*), parameter :: subname = 'patches_have_dynamic_type_array'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(has_dynamic_type_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+
+    do p = begp, endp
+       g = patch%gridcell(p)
+       ! Users shouldn't rely on the values set for non-ice_mec patches, but it's simpler
+       ! just to set this for all patch types.
+       if (this%collapse_to_atm_topo_grc(g)) then
+          has_dynamic_type_patch(p) = .true.
+       else
+          has_dynamic_type_patch(p) = .false.
+       end if
+    end do
+
+  end subroutine patches_have_dynamic_type_array
 
   !-----------------------------------------------------------------------
   subroutine update_glc_classes(this, bounds, topo_col)

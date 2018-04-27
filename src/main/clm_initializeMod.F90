@@ -549,7 +549,8 @@ contains
 
        ! Interpolate finidat onto new template file
        call getfil( finidat_interp_source, fnamer,  0 )
-       call initInterp(filei=fnamer, fileo=finidat_interp_dest, bounds=bounds_proc)
+       call initInterp(filei=fnamer, fileo=finidat_interp_dest, bounds=bounds_proc, &
+            glc_behavior=glc_behavior)
 
        ! Read new interpolated conditions file back in
        call restFile_read(bounds_proc, finidat_interp_dest, glc_behavior)
