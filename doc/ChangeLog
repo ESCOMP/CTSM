@@ -1,4 +1,193 @@
 ===============================================================
+Tag name:  clm5.0.dev008
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Apr 27 13:28:41 MDT 2018
+One-line Summary: With FUN subtract out soil nitrification flux of plant uptake of soil NH3 and NO3
+
+Purpose of changes
+------------------
+
+Soil nitrification flux wasn't taken out of plant uptake of either soil NH3 or NO3, with FUN on, and now it is.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+  #351 -- FATES external to https
+  #310 -- With FUN on soil nitrification flux is not subtracted out of plant uptake of of soil NH4 or NO3
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+
+Code reviewed by: wweider, rfischer
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm5.0.dev007
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM50 BGC with FUN on
+    - what platforms/compilers: All
+    - nature of change: climate very nearly the same
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+                    rfisher case -- clm5_nbug_test_case ----- short f45 resolution
+                    oleson case --- clm5_nbug_test_case ----- AD spinup f45 resolution
+                    oleson case --- clm5_nbug_test_casepAD -- Post AD spinup f45 resolution
+
+   URL for LMWG diagnostics output used to validate new climate:
+     http://webext.cgd.ucar.edu/I1850/clm5_nbug_test_casepAD/lnd/clm5_nbug_test_casepAD.281_300-clm5_nbug_control_casepAD.281_300/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates changed to https form rather than ssh
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #344
+
+===============================================================
+===============================================================
+Tag name:  clm5.0.dev007
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Apr 24 14:50:19 MDT 2018
+One-line Summary: Bring in a few answer changing things: FATES, cism updates, IC file fix, testing 1850 compset use 1850 orbit
+
+Purpose of changes
+------------------
+
+Important updates in land-ice model (CISM) version used that changes answers. Fix some initial condition problems
+with CLM5.0 cases. Update the FATES version to a new updated science version that hence changes answers.
+Change the default orbit for testing of 1850 cases to use 1850 orbit rather than 1990.
+Make sure to use f45_f45_g37 and not f45_f45 in test lists.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   #313 -- Issues with initial condition files
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New IC file for clm5_0_CRUv7
+   CLM5.0 finidat files choosen will be different for both GSWP3.1 and CRUNCEPv7 forcing
+
+Substantial timing or memory changes: No
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  When the cime version is updated the changes that make the 1850 orbit explicit in testing can be removed
+
+Changes to tests or testing: 1850 tests explicitly set a 1850 orbit, f45_f45 tests changed to include mask (f45_f45_mg37)
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons:  clm5.0.dev006
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers:
+    - what code configurations: All 1850 tests, all FATES, all with CISM, CLM50 initial conditions
+    - what platforms/compilers: All
+    - nature of change: Significant
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates, cism
+    FATES to SCI_1.8.1_API_3.0.0
+    cism  to cism2_1_49
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #349 -- Update manage externals to manic_v1.1.3
+   #348 -- Update FATES science version to 1.8.1, and bring in some answer changes
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev006
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Apr 12 06:16:16 MDT 2018

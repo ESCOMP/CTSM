@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm5.0.dev008     erik 04/27/2018 With FUN subtract out soil nitrification flux of plant uptake of soil NH3 and NO3
+   clm5.0.dev007     erik 04/24/2018 Bring in a few answer changing things: FATES, cism updates, IC file fix, 
+                                     testing 1850 compset use 1850 orbit
    clm5.0.dev006    sacks 04/12/2018 Don't allocate memory for zero-weight natveg patches and urban
    clm5.0.dev005    sacks 04/10/2018 Two fixes for init_interp
    clm5.0.dev004     erik 04/09/2018 List of important bug fixes
