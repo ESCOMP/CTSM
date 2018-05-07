@@ -22,6 +22,7 @@ module TemperatureType
   type, public :: temperature_type
 
      ! Temperatures
+     real(r8), pointer :: t_stem_patch             (:)   ! patch stem temperatu\re (Kelvin)
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
      real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
      real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
@@ -186,6 +187,7 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     ! Temperatures
+    allocate(this%t_stem_patch             (begp:endp))                      ; this%t_stem_patch             (:)   = nan
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
     if(use_luna) then
      allocate(this%t_veg_day_patch         (begp:endp))                      ; this%t_veg_day_patch          (:)   = spval
@@ -377,6 +379,11 @@ contains
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
          ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
+
+    this%t_stem_patch(begp:endp) = spval
+    call hist_addfld1d (fname='TSTEM', units='K',  &
+         avgflag='A', long_name='stem temperature', &
+         ptr_patch=this%t_stem_patch, default='inactive')
 
     this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV', units='K',  &
@@ -769,6 +776,8 @@ contains
          else
             this%t_veg_patch(p)   = 283._r8
          end if
+
+         this%t_stem_patch(p)   = this%t_veg_patch(p)
 
          if (use_vancouver) then
             this%t_ref2m_patch(p) = 297.56
