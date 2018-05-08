@@ -279,8 +279,15 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
                         help='DEVELOPER: output additional debugging '
                         'information to the screen and log file.')
 
-    parser.add_argument('--no-logging', action='store_true',
-                        help='DEVELOPER: disable logging.')
+    logging_group = parser.add_mutually_exclusive_group()
+
+    logging_group.add_argument('--logging', dest='do_logging',
+                               action='store_true',
+                               help='DEVELOPER: enable logging.')
+    logging_group.add_argument('--no-logging', dest='do_logging',
+                               action='store_false', default=False,
+                               help='DEVELOPER: disable logging '
+                               '(this is the default)')
 
     if args:
         options = parser.parse_args(args)
@@ -305,7 +312,7 @@ def main(args):
     *before* executing the checkout command - i.e., the status that it
     used to determine if it's safe to proceed with the checkout.
     """
-    if not args.no_logging:
+    if args.do_logging:
         logging.basicConfig(filename=LOG_FILE_NAME,
                             format='%(levelname)s : %(asctime)s : %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S',
@@ -320,12 +327,14 @@ def main(args):
 
     root_dir = os.path.abspath(os.getcwd())
     external_data = read_externals_description_file(root_dir, args.externals)
-    external = create_externals_description(external_data, components=args.components)
+    external = create_externals_description(
+        external_data, components=args.components)
 
     for comp in args.components:
         if comp not in external.keys():
-            fatal_error("No component {} found in {}".format(comp, args.externals))
-
+            fatal_error(
+                "No component {} found in {}".format(
+                    comp, args.externals))
 
     source_tree = SourceTree(root_dir, external)
     printlog('Checking status of externals: ', end='')
@@ -357,6 +366,13 @@ The following are two options for how to proceed:
 (2) Alternatively, you do not have to rely on {program_name}. Instead, you
     can manually update out-of-sync externals (labeled with 's' above)
     as described in the configuration file {config_file}.
+
+
+The external repositories labeled with '?' above are not under version
+control using the expected protocol. If you are sure you want to switch
+protocols, and you don't have any work you need to save from this
+directory, then run "rm -rf [directory]" before re-running the
+checkout_externals tool.
 """.format(program_name=program_name, config_file=args.externals)
 
             printlog('-' * 70)
