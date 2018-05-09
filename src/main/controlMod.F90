@@ -438,7 +438,9 @@ contains
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
 
-    call initInterp_readnl( NLFilename )
+    if (use_init_interp) then
+       call initInterp_readnl( NLFilename )
+    end if
 
     !I call init_hydrology to set up default hydrology sub-module methods.
     !For future version, I suggest to  put the following two calls inside their
