@@ -15,7 +15,8 @@ module controlMod
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
   use abortutils                       , only: endrun
-  use spmdMod                          , only: masterproc
+  use spmdMod                          , only: masterproc, mpicom
+  use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
@@ -438,7 +439,10 @@ contains
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
 
-    call initInterp_readnl( NLFilename )
+    call mpi_bcast (use_init_interp, 1, MPI_LOGICAL, 0, mpicom, ierr)
+    if (use_init_interp) then
+       call initInterp_readnl( NLFilename )
+    end if
 
     !I call init_hydrology to set up default hydrology sub-module methods.
     !For future version, I suggest to  put the following two calls inside their
@@ -547,9 +551,6 @@ contains
     ! reads restart/history data from the disk and distributes 
     ! it to all processors, or collects data from
     ! all processors and writes it to disk.
-    !
-    ! !USES:
-    use spmdMod,    only : mpicom, MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
     !
     ! !ARGUMENTS:
     !

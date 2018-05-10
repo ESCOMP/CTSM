@@ -1,4 +1,157 @@
 ===============================================================
+Tag name:  clm5.0.dev009
+Originator(s):  sacks (Bill Sacks)
+Date: Thu May 10 13:48:32 MDT 2018
+One-line Summary: New init_interp method
+
+Purpose of changes
+------------------
+
+The main change in this tag is to introduce a new method for
+init_interp. This is needed in order for subgrid areas to be the same in
+initialization in runs with and without init_interp.
+
+The choice of init_interp method is controlled by a new namelist
+variable, init_interp_method, whose documentation appears below:
+
+   Method to use for init_interp. Only applies when use_init_interp = .true.
+
+   'general': The general-purpose method that can be used when changing
+   grids, configurations, etc. This starts off with subgrid areas taken
+   from the surface dataset.
+
+   'use_finidat_areas': This starts off with subgrid areas taken from the
+   input finidat file. This is needed to achieve bit-for-bit results in a
+   coupled case (where areas in initialization impact initial fields sent
+   to the atmosphere) (but using the 'general' method will typically have
+   only a very minor impact on results in this case). For this method to
+   work, the input finidat file needs to be at the same resolution as the
+   current configuration. So this is a less general form of
+   init_interp. However, it can be used when transitioning from a spinup
+   run to a transient run, or in other cases where the only difference is
+   in internal memory allocation. In order to catch possible problems, this
+   uses a different algorithm for finding the input point for each output
+   point, which ensures that each active output point is associated with
+   exactly one input point with the same latitude, longitude and type. This
+   method requires (a) the same grid for input and output, within roundoff;
+   (b) any non-zero-weight point in the input must have memory allocated
+   for it in this grid cell in the output (this will be satisfied if the
+   point is non-zero-weight on the surface dataset or if it's a point for
+   which we allocate memory even for zero-weight points); (c) any active
+   point in the output (based on the surface dataset and rules for
+   determining active points) must have a matching point in this grid cell
+   in the input.
+
+This tag also has some other changes:
+
+- Fixes #347 - endrun message behavior: needed for some of the new unit
+  tests
+
+- Fixes #345 - Add a cmip6_evolving_icesheet usermods directory:
+  unrelated, but folded in here for convenience of testing)
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- #346: New mode of operation for init_interp: Copy subgrid areas, too
+- #347: endrun message behavior
+- #345: Add a cmip6_evolving_icesheet usermods directory
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable - init_interp_method - documented above. Default
+  behavior is the same as before ('general')
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Added a new test type, similar to LII, that covers the new init_interp behavior
+- Removed some no-longer-needed tests with 'interp' testmods
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    tests pass, namelists differ as expected
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    Unexpected baseline failures for these two tests that are in the
+    expected fail list for other reasons:
+    <entry issue="mosart/#3">FAIL ERP_Ld5.f10_f10_musgs.I2000Clm50Vic.cheyenne_gnu.clm-decStart COMPARE_base_rest</entry>
+    <entry issue="mosart/#3">FAIL ERP_D.f10_f10_musgs.IHistClm50Bgc.cheyenne_gnu.clm-decStart COMPARE_base_rest</entry>
+
+    Differences are just in some cism fields that I’m not concerned
+    about: roundoff-level differences in internal_time; big differences
+    in tempstag, uvel and vvel, but those fields don’t really make sense
+    in this configuration (and I have removed them in the latest CISM
+    tag). (Note that I did two runs of each of these tests from my
+    branch, and for both tests, the two runs had identical cism hist
+    files, so I don’t think this is a reproducibility problem.)
+
+
+CLM tag used for the baseline comparisons: clm5.0.dev008
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+- #352
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev008
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Apr 27 13:28:41 MDT 2018
