@@ -108,7 +108,7 @@ module CLMFatesInterfaceMod
    use ChecksBalancesMod     , only : SummarizeNetFluxes, FATES_BGC_Carbon_BalanceCheck
    use EDTypesMod            , only : ed_patch_type
    use FatesHydraulicsMemMod , only : nlevsoi_hyd
-   use FatesInterfaceMod     , only : hlm_numlevgrnd, hlm_numlevsoil, hlm_numlevdecomp_full
+   use FatesInterfaceMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -253,6 +253,7 @@ contains
       integer, allocatable                           :: collist (:)
       type(bounds_type)                              :: bounds_clump
       integer                                        :: nmaxcol
+      integer                                        :: ndecomp
 
       ! Initialize the FATES communicators with the HLM
       ! This involves to stages
@@ -285,8 +286,6 @@ contains
       call set_fates_ctrlparms('nir_sw_index',ival=inir)
       
       call set_fates_ctrlparms('num_lev_ground',ival=nlevgrnd)
-      call set_fates_ctrlparms('num_levdecomp',ival=nlevdecomp)
-      call set_fates_ctrlparms('num_levdecomp_full',ival=nlevdecomp_full)
       call set_fates_ctrlparms('hlm_name',cval='CLM')
       call set_fates_ctrlparms('hio_ignore_val',rval=spval)
       call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
@@ -443,8 +442,14 @@ contains
             
             c = this%f2hmap(nc)%fcolumn(s)
             
-            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c))
-            call allocate_bcout(this%fates(nc)%bc_out(s))
+            if (use_vertsoilc) then
+               ndecomp = col%nbedrock(c)
+            else
+               ndecomp = 1
+            end if
+
+            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp)
+            call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
             call this%fates(nc)%zero_bcs(s)
 
             ! Pass any grid-cell derived attributes to the site
@@ -565,6 +570,7 @@ contains
       integer  :: day                      ! day of month (1, ..., 31)
       integer  :: sec                      ! seconds of the day
       integer  :: nlevsoil                 ! number of soil layers at the site
+      integer  :: nld_si                   ! site specific number of decomposition layers
       integer  :: current_year             
       integer  :: current_month
       integer  :: current_day
@@ -681,12 +687,19 @@ contains
 
       do s = 1, this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,:) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lab_c_col(:)
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,:) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_cel_c_col(:)
-         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,:) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lig_c_col(:)
+
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nlevdecomp) = 0.0_r8
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nlevdecomp) = 0.0_r8
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nlevdecomp) = 0.0_r8
+
+         nld_si = this%fates(nc)%bc_in(s)%nlevdecomp
+
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si) = &
+               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lab_c_col(1:nld_si)
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si) = &
+               this%fates(nc)%bc_out(s)%FATES_c_to_litr_cel_c_col(1:nld_si)
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
+               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lig_c_col(1:nld_si)
       end do
 
 
@@ -1516,7 +1529,7 @@ contains
                  
                  rresis(p,j) = -999.9  ! We do not calculate this correctly
                  ! it should not thought of as valid output until we decide to.
-                 rootr(p,j)  = this%fates(nc)%bc_out(s)%rootr_pagl(ifp,j)
+                 rootr(p,j)  = this%fates(nc)%bc_out(s)%rootr_pasl(ifp,j)
                  btran(p)    = this%fates(nc)%bc_out(s)%btran_pa(ifp)
                  btran2(p)   = -999.9  ! Not available, force to nonsense
                  
@@ -2149,17 +2162,20 @@ contains
     integer :: s  ! site index
     integer :: c  ! column index
     integer :: j  ! Depth index
+    integer :: nlevsoil
+    integer :: nlevdecomp
 
 
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
        nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
-       
+       nlevdecomp = this%fates(nc)%bc_in(s)%nlevdecomp
+
        this%fates(nc)%bc_in(s)%zi_sisl(0:nlevsoil)    = col%zi(c,0:nlevsoil)
        this%fates(nc)%bc_in(s)%dz_sisl(1:nlevsoil)    = col%dz(c,1:nlevsoil)
        this%fates(nc)%bc_in(s)%z_sisl(1:nlevsoil)     = col%z(c,1:nlevsoil)
-       this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:hlm_numlevdecomp_full) = &
-             dzsoi_decomp(1:hlm_numlevdecomp_full)
+       this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp) = &
+             dzsoi_decomp(1:nlevdecomp)
     end do
 
     return
