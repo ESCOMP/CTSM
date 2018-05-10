@@ -1875,6 +1875,7 @@ contains
    use FatesIOVariableKindMod, only : site_fuel_r8, site_cwdsc_r8, site_scag_r8
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
+   use FatesIOVariableKindMod, only : site_height_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2051,6 +2052,15 @@ contains
                               default=trim(vdefault),                       &
                               set_lake=0._r8,set_urb=0._r8)
         case(site_age_r8)
+           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
+           dim2name = this%fates_hist%dim_bounds(d_index)%name
+           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
+                              type2d=trim(dim2name),                        &
+                              avgflag=trim(vavgflag),long_name=trim(vlong), &
+                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
+                              default=trim(vdefault),                       &
+                              set_lake=0._r8,set_urb=0._r8)
+        case(site_height_r8)
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
            dim2name = this%fates_hist%dim_bounds(d_index)%name
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
@@ -2340,6 +2350,7 @@ contains
 
    use FatesIODimensionsMod, only : fates_bounds_type
    use FatesInterfaceMod, only : nlevsclass, nlevage
+   use FatesInterfaceMod, only : nlevheight
    use EDtypesMod, only : nfsc, ncwd
    use EDtypesMod, only : nlevleaf, nclmax
    use FatesInterfaceMod, only : numpft_ed => numpft
@@ -2373,6 +2384,9 @@ contains
 
    fates%age_class_begin = 1
    fates%age_class_end = nlevage
+
+   fates%height_begin = 1
+   fates%height_end = nlevheight
 
    fates%sizeage_class_begin = 1
    fates%sizeage_class_end   = nlevsclass * nlevage
