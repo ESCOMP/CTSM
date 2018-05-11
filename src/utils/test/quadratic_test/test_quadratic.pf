@@ -1,0 +1,59 @@
+module test_quadratic
+
+  ! Tests of quadratic
+
+  use pfunit_mod
+  use quadraticMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestQuadratic
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestQuadratic
+
+  real(r8), parameter :: tol = 1.e-15_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestQuadratic), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestQuadratic), intent(inout) :: this
+
+  end subroutine tearDown
+
+  subroutine check_root(a,b,c,root)
+     real(r8), intent(IN):: a, b, c, root
+     real(r8) :: result
+
+     result = a*root*root + b*root + c
+     @AssertEqual( result, 0.0_r8, tolerance=tol)
+     
+  end subroutine check_root
+
+  ! ------------------------------------------------------------------------
+  ! Tests of equals method
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine zero_root(this)
+    class(TestQuadratic), intent(inout) :: this
+    real(r8) :: a, b, c, r1, r2
+    
+    a = 1000.0_r8
+    b = 0.0_r8
+    c = 0.0_r8
+    call quadratic (a, b, c, r1, r2)
+    call check_root(a, b, c, r1)
+    @assertEqual(r1, 0.0_r8, tolerance=tol)
+    @assertEqual(r2, 1.e+36_r8, tolerance=tol)
+
+  end subroutine zero_root
+
+end module test_quadratic
