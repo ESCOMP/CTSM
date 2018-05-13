@@ -954,7 +954,7 @@ contains
 
     character(len=*), parameter :: sub = 'clm::get_nstep_since_rest_mod'
 
-    get_nstep_since_rest_mod  = get_nstep() - DA_nstep
+    get_nstep_since_startup_or_lastDA_restart_or_pause = get_nstep() - DA_nstep
 
   end function get_nstep_since_startup_or_lastDA_restart_or_pause
 
