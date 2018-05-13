@@ -5,6 +5,7 @@ module test_quadratic
   use pfunit_mod
   use quadraticMod
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils, only : endrun_msg
 
   implicit none
 
@@ -125,5 +126,27 @@ contains
     end do
 
   end subroutine near_zero_sqrts
+
+  ! ------------------------------------------------------------------------
+  ! Tests of error conditions
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine check_errorconds(this)
+    class(TestQuadratic), intent(inout) :: this
+
+    character(len=:), allocatable :: expected_msg
+    real(r8) :: r1, r2
+    real(r8) :: a, b, c
+
+    a = 0.0_r8
+    b = a
+    c = a
+    call quadratic (a, b, c, r1, r2)
+    expected_msg = endrun_msg( &
+         'quadratic ERROR: Quadratic solution error')
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine check_errorconds
 
 end module test_quadratic
