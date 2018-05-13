@@ -24,8 +24,9 @@ module lnd_comp_mct
   public :: lnd_final_mct     ! clm finalization/cleanup
   !
   ! !private member functions:
-  private :: lnd_setgsmap_mct ! set the land model mct gs map
-  private :: lnd_domain_mct   ! set the land model domain information
+  private :: lnd_setgsmap_mct  ! set the land model mct gs map
+  private :: lnd_domain_mct    ! set the land model domain information
+  private :: lnd_handle_resume ! handle pause/resume signals from the coupler
   !---------------------------------------------------------------------------
 
 contains
@@ -258,6 +259,7 @@ contains
 
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
     call set_nextsw_cday(nextsw_cday)
+    call lnd_handle_resume( infodata )
 
     ! Reset shr logging to original values
 
@@ -373,6 +375,9 @@ contains
 
     call set_nextsw_cday( nextsw_cday )
     dtime = get_step_size()
+
+    ! Handle pause/resume signals from coupler
+    call lnd_handle_resume( infodata )
 
     write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
@@ -653,5 +658,25 @@ contains
     deallocate(idata)
 
   end subroutine lnd_domain_mct
+
+  subroutine lnd_handle_resume( infodata )
+    use shr_kind_mod     , only : shr_kind_cl
+    use seq_infodata_mod , only : seq_infodata_type
+    use clm_time_manager , only : update_DA_nstep
+    type(seq_infodata_type), intent(IN) :: infodata     ! CESM driver level info data
+
+    character(len=SHR_KIND_CL) :: lnd_resume         ! land resume file (for data assimulation)
+    logical :: resume_from_data_assim                ! flag if we are resuming after data assimulation was done
+    call seq_infodata_GetData(infodata, lnd_resume=lnd_resume )
+    ! If lnd_resume is blank, restart file wasn't modified
+    if ( len_trim(lnd_resume) == 0 )then
+       resume_from_data_assim = .false.
+    ! Otherwise restart was modified and we are resuming from data assimulation
+    else
+       resume_from_data_assim = .true.
+    end if
+    if ( resume_from_data_assim ) call update_DA_nstep()
+ 
+  end subroutine lnd_handle_resume
 
 end module lnd_comp_mct
