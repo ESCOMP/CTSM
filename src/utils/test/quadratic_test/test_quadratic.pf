@@ -35,6 +35,10 @@ contains
      real(r8) :: result
 
      result = a*root*root + b*root + c
+     if ( abs(result) > 1.e-12 )then
+        print *, 'result = ', result
+        print *, 'a, b, c = ', a, b, c
+     end if
      @AssertEqual( result, 0.0_r8, tolerance=tol)
      
   end subroutine check_root
@@ -107,17 +111,13 @@ contains
     c = (/ 4.0_r8 /)
     expectedr1 = (/ -2.0_r8 /)
     do i = 1, size(a)
-       pert = (/ 0.0_r8, epsilon(a(i)), 1000.0_r8*epsilon(a(i)) /)
-       print *, "i:", i
-       print *, "coeffs:", a(i), b(i), c(i)
+       pert = (/ 0.0_r8, 0.5_r8*epsilon(b(i)), 2.0_r8*epsilon(b(i)) /)
        ! Check that b2 - 4ac is zero, which is what this test is about
        @assertEqual( 0.0_r8, b*b - 4.0_r8*a(i)*c(i) )
        do j = 1, size(pert)
-          c_coef = c(i)-pert(j)
-          print *, 'j', j
-          print *, 'c:', c_coef
+          c_coef = c(i)+pert(j)
+          print *, 'a, b, c_ = ', a(i), b(i), c_coef
           call quadratic (a(i), b(i), c_coef, r1, r2)
-          print *, "roots:", r1, r2
           call check_root(a(i), b(i), c_coef, r1)
           call check_root(a(i), b(i), c_coef, r2)
           @assertEqual(expectedr1(i), r1, tolerance=tol_big)
@@ -132,7 +132,7 @@ contains
   ! ------------------------------------------------------------------------
 
   @Test
-  subroutine check_errorconds(this)
+  subroutine check_errorcondsazero(this)
     class(TestQuadratic), intent(inout) :: this
 
     character(len=:), allocatable :: expected_msg
@@ -146,7 +146,42 @@ contains
     expected_msg = endrun_msg( &
          'quadratic ERROR: Quadratic solution error')
     @assertExceptionRaised(expected_msg)
+  end subroutine check_errorcondsazero
 
-  end subroutine check_errorconds
+  @Test
+  subroutine check_errorcondsimaginary(this)
+    class(TestQuadratic), intent(inout) :: this
+
+    character(len=:), allocatable :: expected_msg
+    real(r8) :: r1, r2
+    real(r8) :: a, b, c
+
+    a = 1.0_r8
+    b = 2.0_r8
+    c = 5.0_r8
+    call quadratic (a, b, c, r1, r2)
+    expected_msg = endrun_msg( &
+         'quadratic ERROR: Quadratic solution error: b^2 - 4ac is negative')
+    @assertExceptionRaised(expected_msg)
+  end subroutine check_errorcondsimaginary
+
+  @Test
+  subroutine check_errorcondsbarelyimaginary(this)
+    class(TestQuadratic), intent(inout) :: this
+
+    character(len=:), allocatable :: expected_msg
+    real(r8) :: r1, r2
+    real(r8) :: a, b, c
+    a = 1.0_r8
+    b = 4.0_r8
+    c = 4.0_r8 + 100.0_r8*epsilon(b)
+    call quadratic (a, b, c, r1, r2)
+    call check_root(a, b, c, r1)
+    call check_root(a, b, c, r2)
+    expected_msg = endrun_msg( &
+         'quadratic ERROR: Quadratic solution error: b^2 - 4ac is negative')
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine check_errorcondsbarelyimaginary
 
 end module test_quadratic

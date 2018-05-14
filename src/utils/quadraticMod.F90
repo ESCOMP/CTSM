@@ -48,12 +48,12 @@ contains
 
      root = b*b - 4._r8*a*c
      if ( root < 0.0 )then
-        if ( sqrt(-root) > epsilon(b) )then
+        if ( -root < 3.0_r8*epsilon(b) )then
            root = 0.0_r8
         else
-           write (iulog,*) subname//'ERROR: Quadratic solution error: b^2 - 4ac is negative = ', root
+           write (iulog,*) subname//' ERROR: Quadratic solution error: b^2 - 4ac is negative = ', root
            write (iulog,*) errmsg(sourcefile, __LINE__)
-           call endrun( msg=subname//'ERROR: Quadratic solution error: b^2 - 4ac is negative' )
+           call endrun( msg=subname//' ERROR: Quadratic solution error: b^2 - 4ac is negative' )
            return
         end if
      end if
