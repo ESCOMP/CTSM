@@ -659,26 +659,37 @@ contains
 
   end subroutine lnd_domain_mct
 
+  !====================================================================================
+
   subroutine lnd_handle_resume( infodata )
+    !
+    ! !DESCRIPTION:
+    ! Handle resume signals for Data Assimilation (DA)
+    !
+    ! !USES:
     use shr_kind_mod     , only : shr_kind_cl
     use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData
     use clm_time_manager , only : update_DA_nstep
     use seq_comm_mct     , only : num_inst_lnd
     use clm_varctl       , only : iulog
+    use clm_varctl       , only : inst_index
+    implicit none
+    ! !ARGUMENTS:
     type(seq_infodata_type), intent(IN) :: infodata     ! CESM driver level info data
-
+    ! !LOCAL VARIABLES:
     character(len=SHR_KIND_CL) :: lnd_resume(num_inst_lnd) ! land resume file (for data assimulation)
     logical :: resume_from_data_assim                      ! flag if we are resuming after data assimulation was done
+    !---------------------------------------------------------------------------
+
     call seq_infodata_GetData(infodata, lnd_resume=lnd_resume )
     ! If lnd_resume is blank, restart file wasn't modified
-    write(iulog,*) 'lnd_resume ', lnd_resume
-    if ( any(len_trim(lnd_resume(:)) == 0) )then
+    if ( len_trim(lnd_resume(inst_index)) == 0 )then
        resume_from_data_assim = .false.
     ! Otherwise restart was modified and we are resuming from data assimulation
     else
        resume_from_data_assim = .true.
+       write(iulog,*) 'resume_from_DA ', resume_from_data_assim
     end if
-    write(iulog,*) 'resume_from_DA ', resume_from_data_assim
     if ( resume_from_data_assim ) call update_DA_nstep()
  
   end subroutine lnd_handle_resume
