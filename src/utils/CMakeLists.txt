@@ -16,6 +16,7 @@ list(APPEND clm_sources
   domainMod.F90
   clm_nlUtilsMod.F90
   clm_time_manager.F90
+  quadraticMod.F90
   fileutils.F90
   )
 

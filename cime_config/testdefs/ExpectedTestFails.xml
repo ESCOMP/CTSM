@@ -6,6 +6,7 @@
     <entry issue="#177"     >FAIL SMS_D_Lm13.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_monthly RUN</entry>
     <entry issue="#169"     >FAIL ERP_D_Ld10.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_decStart SHAREDLIB_BUILD</entry>
     <entry issue="#158"     >FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-monthly RUN</entry>
+    <entry issue="#158"     >FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.cheyenne_intel.clm-monthly RUN</entry>
     <entry issue="#339"     >FAIL ERS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-default COMPARE_base_rest</entry>
     <entry issue="mosart/#3">FAIL ERP_Ld5.f10_f10_musgs.I2000Clm50Vic.cheyenne_gnu.clm-decStart COMPARE_base_rest</entry>
     <entry issue="mosart/#3">FAIL ERP_D.f10_f10_musgs.IHistClm50Bgc.cheyenne_gnu.clm-decStart COMPARE_base_rest</entry>
