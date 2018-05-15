@@ -1,38 +1,27 @@
-module test_init_interp_mindist
+module test_set_mindist
 
-  ! Tests of initInterpMindist
+  ! Tests of initInterpMindist: set_mindist
 
   use pfunit_mod
   use initInterpMindist
+  use initInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
+  use initInterpMindistTestUtils, only : subgrid_special_indices, ilun_special
   use shr_kind_mod , only : r8 => shr_kind_r8
   use clm_varcon   , only: spval
   use unittestSimpleSubgridSetupsMod
   use unittestSubgridMod
-  use unittestArrayMod, only: grc_array
   use glcBehaviorMod, only: glc_behavior_type
 
   implicit none
 
   @TestCase
-  type, extends(TestCase) :: TestInitInterpMindist
+  type, extends(TestCase) :: TestSetMindist
    contains
      procedure :: setUp
      procedure :: tearDown
-  end type TestInitInterpMindist
+  end type TestSetMindist
 
   real(r8), parameter :: tol = 1.e-13_r8
-
-  type(subgrid_special_indices_type), parameter :: subgrid_special_indices = &
-       subgrid_special_indices_type( &
-       ipft_not_vegetated = 0, &
-       icol_vegetated_or_bare_soil = 10, &
-       ilun_vegetated_or_bare_soil = 3, &
-       ilun_crop = 4, &
-       ilun_landice_multiple_elevation_classes = 5)
-
-  ! value we can use for a special landunit; note that this just needs to differ from
-  ! ilun_vegetated_or_bare_soil and from ilun_crop
-  integer, parameter :: ilun_special = 6
 
 contains
 
@@ -42,118 +31,14 @@ contains
 
 
   subroutine setUp(this)
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
   end subroutine setUp
 
   subroutine tearDown(this)
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
 
     call unittest_subgrid_teardown()
   end subroutine tearDown
-
-  !-----------------------------------------------------------------------
-  function create_subgrid_info(npts, name, lat, lon, &
-       beg, ptype, ctype, ltype, topoglc) &
-       result(subgrid_info)
-    !
-    ! !ARGUMENTS:
-    type(subgrid_type) :: subgrid_info  ! function result
-    integer, intent(in) :: npts
-    character(len=*), intent(in) :: name
-    real(r8), intent(in) :: lat(:)
-    real(r8), intent(in) :: lon(:)
-    integer, intent(in), optional :: beg  ! beginning index; if not provided, assumed to be 1 (should be provided for output, not needed for input)
-    integer, intent(in), optional :: ptype(:)
-    integer, intent(in), optional :: ctype(:)
-    integer, intent(in), optional :: ltype(:)
-    real(r8), intent(in), optional :: topoglc(:)
-    !
-    ! !LOCAL VARIABLES:
-    integer :: l_beg  ! local version of beg
-    integer :: l_end  ! ending index
-
-    character(len=*), parameter :: subname = 'create_subgrid_info'
-    !-----------------------------------------------------------------------
-
-    if (present(beg)) then
-       l_beg = beg
-    else
-       l_beg = 1
-    end if
-    l_end = l_beg + npts - 1
-
-    ! Check array lengths
-    @assertEqual(npts, size(lat))
-    @assertEqual(npts, size(lon))
-    if (present(ptype)) then
-       @assertEqual(npts, size(ptype))
-    end if
-    if (present(ctype)) then
-       @assertEqual(npts, size(ctype))
-    end if
-    if (present(ltype)) then
-       @assertEqual(npts, size(ltype))
-    end if
-    if (present(topoglc)) then
-       @assertEqual(npts, size(topoglc))
-    end if
-
-    ! Set subgrid_info components
-
-    subgrid_info%name = name
-
-    allocate(subgrid_info%lat(l_beg:l_end))
-    subgrid_info%lat = lat
-    allocate(subgrid_info%lon(l_beg:l_end))
-    subgrid_info%lon = lon
-    allocate(subgrid_info%coslat(l_beg:l_end))
-    subgrid_info%coslat = cos(subgrid_info%lat)
-
-    if (present(ptype)) then
-       allocate(subgrid_info%ptype(l_beg:l_end))
-       subgrid_info%ptype = ptype
-    end if
-    if (present(ctype)) then
-       allocate(subgrid_info%ctype(l_beg:l_end))
-       subgrid_info%ctype = ctype
-    end if
-    if (present(ltype)) then
-       allocate(subgrid_info%ltype(l_beg:l_end))
-       subgrid_info%ltype = ltype
-    end if
-    if (present(topoglc)) then
-       allocate(subgrid_info%topoglc(l_beg:l_end))
-       subgrid_info%topoglc = topoglc
-    end if
-
-  end function create_subgrid_info
-
-  !-----------------------------------------------------------------------
-  function create_glc_behavior(collapse_to_atm_topo) result(glc_behavior)
-    !
-    ! !DESCRIPTION:
-    ! Creates a glc_behavior instance with the given collapse_to_atm_topo behavior set
-    ! for all grid cells.
-    !
-    ! Must be called *after* setting up the subgrid structure.
-    !
-    ! Note that collapse_to_atm_topo is the only aspect of glc_behavior that is relevant
-    ! for the unit tests in this module.
-    !
-    ! !ARGUMENTS:
-    type(glc_behavior_type) :: glc_behavior  ! function result
-    logical, intent(in) :: collapse_to_atm_topo
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'create_glc_behavior'
-    !-----------------------------------------------------------------------
-
-    call glc_behavior%InitSetDirectly(bounds%begg, bounds%endg, &
-         has_virtual_columns = grc_array(.false.), &
-         collapse_to_atm_topo = grc_array(collapse_to_atm_topo))
-
-  end function create_glc_behavior
 
   subroutine wrap_set_mindist(subgridi, subgrido, mindist_index, activei, activeo, &
        glc_behavior, glc_elevclasses_same, fill_missing_with_natveg)
@@ -380,7 +265,7 @@ contains
     ! then make sure we find the point with the same type.
     !
     ! This tests a column-level point
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer, parameter :: my_ctype = 15
     integer, parameter :: my_ltype = 8
@@ -424,7 +309,7 @@ contains
     ! topographic height.
     !
     ! This tests both column-level and patch-level
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     integer, parameter :: my_ctype = 15
     integer, parameter :: my_ptype = 25
     real(r8), parameter :: my_topo = 1000._r8
@@ -457,7 +342,7 @@ contains
     ! the same patch type, even if it isn't the one with the closest topographic height.
     !
     ! This tests just patch-level
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     integer, parameter :: my_ctype = 15
     integer, parameter :: my_ptype = 25
     real(r8), parameter :: my_topo = 1000._r8
@@ -496,7 +381,7 @@ contains
     ! one with the closest height
     !
     ! This tests both column-level and patch-level
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     integer, parameter :: my_ctype = 15
     integer, parameter :: my_ptype = 25
     real(r8), parameter :: my_topo = 1000._r8
@@ -530,7 +415,7 @@ contains
     ! the one with the closest height
     !
     ! This tests both column-level and patch-level
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     integer, parameter :: my_ctype = 15
     integer, parameter :: my_ptype = 25
     real(r8), parameter :: my_topo = 1000._r8
@@ -562,7 +447,7 @@ contains
     ! For glc_mec, if we have some points closer in topographic height, but others closer
     ! in x-y space, pick the closer point in x-y space
 
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     type(glc_behavior_type) :: glc_behavior
     integer, parameter :: my_ctype = 15
@@ -609,7 +494,7 @@ contains
     ! For interpolation from a non-crop case to a crop case, ensure that a patch-level
     ! variable takes its input from the correct pft. This simulates what happens to the
     ! generic crop type in this case.
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer, parameter :: my_ptype = 5
     integer :: my_ctype
@@ -664,7 +549,7 @@ contains
     ! For interpolation from a crop case to a non-crop case, ensure that a patch-level
     ! variable takes its input from the correct pft. This simulates what happens to the
     ! generic crop type in this case.
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer, parameter :: my_ptype = 5
     integer :: input_ctype
@@ -718,7 +603,7 @@ contains
   subroutine noncropToCrop_specificCropFromNatveg(this)
     ! For interpolation from a non-crop case to a crop case, ensure that crop columns
     ! take their info from the natural veg column in the input.
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer :: my_ctype
     real(r8), parameter :: my_lat = 31._r8
@@ -772,9 +657,9 @@ contains
     ! bare soil point.
     !
     ! In terms of code coverage, this is largely redundant with
-    ! noncrop_to_crop_specific_crop_from_natveg. But I'm keeping it for now since it
-    ! tests a different use case.
-    class(TestInitInterpMindist), intent(inout) :: this
+    ! noncropToCrop_specificCropFromNatveg. But I'm keeping it for now since it tests a
+    ! different use case.
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer, parameter :: my_ptype = 5
     real(r8), parameter :: my_lat = 31._r8
@@ -828,7 +713,7 @@ contains
     ! This test ensures that, when finding a match for a bare soil patch, we ignore
     ! special landunits. This is important because special landunits also have pft type =
     ! noveg.
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     real(r8), parameter :: my_lat = 31._r8
     real(r8), parameter :: my_lon = 41._r8
@@ -881,7 +766,7 @@ contains
     ! from the natural veg landunit. This is especially important to check for
     ! patch-level variables, for which special landunits also use the noveg (0) pft type.
     ! So here we just check a patch-level variable.
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer, parameter :: my_ptype = 5
     integer, parameter :: my_ctype = 15
@@ -934,7 +819,7 @@ contains
   @Test
   subroutine gridcell_findsClosestLatlon(this)
     ! For gridcell-level variables, should find closest gridcell in lat-lon space
-    class(TestInitInterpMindist), intent(inout) :: this
+    class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer :: i
     integer :: mindist_index(1)
@@ -961,4 +846,4 @@ contains
     @assertEqual(2, mindist_index(1))
   end subroutine gridcell_findsClosestLatlon
 
-end module test_init_interp_mindist
+end module test_set_mindist
