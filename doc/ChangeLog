@@ -1,4 +1,169 @@
 ===============================================================
+Tag name:  clm5.0.dev010
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue May 15 03:00:38 MDT 2018
+One-line Summary: Update cime version to version in cesm2.0.beta10, changes answers for 1850 compsets because of orbit
+
+Purpose of changes
+------------------
+
+Update externals to version in cesm2.0.beta10. Add in f05 crop datasets. Add pauseResume for DART and a
+test for it. Fix several issues required for CESM2.0. Add model_doi_url to history files.
+
+update cism to very latest
+Add model_doi_url to history files
+Update rtm, mosart
+Changes answers because of change in orbit (for testing orbit was already updated for 1850 so will appear to not change answers)
+Using cime5.6.6
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+  #68 --- gnu compiler workaround
+  #364 -- crop f05 datasets
+  #362 -- svn checkout
+  #318 -- quadratic bug
+  #249 -- bypass balance checks for DART
+  #341 -- add model_doi_url
+
+CIME Issues fixed (include issue #): 
+
+Known bugs introduced in this tag (include github issue ID): 
+   #379 -- transient end-of-year exact restart issue
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
+
+  cime updates:
+    - manage_testlist was removed.
+    - Changes to matching behavior in env_mach_specific.
+    - New option to wait_for_tests.
+    - case.st_archive now has a --test option.
+    - New FORCE_BUILD_THREADED.
+    - New custom script option.
+    - env_archive.xml
+    - .case.run.sh file generated for E3SM.
+    - New selectors allowed for batch directives.
+    - Source code files beginning in test_ will be ignored in build.
+    - New prefix attribute available for batch directives.
+    - xmlquery will now accept derived attributes.
+    - Users may run on lawrencium lr3/lr2.
+    - In env_archive.xml.
+    - (cesm only) create_test and query_testlist now have --supported-only flag
+    - New allow_error attribute for module systems.
+    - check_input_data replace --svn-loc with --server and --protocal
+    - Some Tools with "acme" in the name now say "e3sm".
+    - env_archive.xml
+    - .case.run.sh file generated for E3SM.
+    - New selectors allowed for batch directives.
+    - Source code files beginning in test_ will be ignored in build.
+    - New prefix attribute available for batch directives.
+    - xmlquery will now accept derived attributes.
+    - Users may run on lawrencium lr3/lr2.
+    - In env_archive.xml.
+    - (cesm only) create_test and query_testlist now have --supported-only flag
+    - New allow_error attribute for module systems.
+    - check_input_data replace --svn-loc with --server and --protocal
+    - Some Tools with "acme" in the name now say "e3sm".
+    - cime_bisect changes.
+    - New XML variables, PAUSE_ACTIVE_XXX.
+    - module_lmod no longer a support module type.
+    - simple-py-prof sets PYTHONPATH for you, list_acme_tests assumes you want
+      to list tests
+    - jobid now added to CaseStatus case_submit entry.
+    -Splits GLC2OCN_RMAPNAME xml variable into
+     GLC2OCN_LIQ_RMAPNAME and GLC2OCN_ICE_RMAPNAME, and similarly for
+     GLC2OCN_RMAPTYPE
+    - Better defaults for bless_test_results and compare_test_results.
+    - New bless_log file in baseline dirs.
+    - Allow multiple -m args to case.submit. Allows user to put email settings in .cime/config.
+    - New --retry option to create_test.
+    - Add --clean-depends to case.build, this argument can take a component list and will
+      clean all components if one is not provided.
+    - Some additional output from nl comp code in some cases
+    - --driver added to create_newcase, new _V$driver testopt.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   Crop f05 surface datasets
+
+Substantial timing or memory changes: Seems to be slower and require more memory
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   pause/resume is still under development. This works for DART DA as needed for CESm2.0
+
+Changes to tests or testing:
+   Added new pauseResume test on cheyenne_intel
+   Remove some of the higher PE count tests on cheyenne_gnu and replace with cheyenne_intel
+   Lengthen wallclock for a few of the tests on cheyenne
+   Change I1850Clm50BgcSpinup test to f09 resolution so it will run
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons: clm5.0.dev009
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: 1850 compsets change because orbit has been changed
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 1850 compsets
+    - what platforms/compilers: all
+    - nature of change: 1850 orbit rather than 1990
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, rtm, mosart, cism
+
+  cime   to cime5.6.6
+  rtm    to rtm1_0_66
+  mosart to mosart1_0_31
+  cism   to cism2_1_54
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #377 -- update cime
+ #376 -- changes needed for DART
+ #372 -- Update manage_externals
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev009
 Originator(s):  sacks (Bill Sacks)
 Date: Thu May 10 13:48:32 MDT 2018
