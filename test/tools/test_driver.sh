@@ -88,7 +88,7 @@ EOF
     ;;
 
     ## hobart
-    hobart* ) 
+    hobart* | h*.cgd.ucar.edu) 
     submit_script="test_driver_hobart_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
 
