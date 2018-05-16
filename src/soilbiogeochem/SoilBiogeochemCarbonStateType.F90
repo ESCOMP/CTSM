@@ -718,44 +718,55 @@ contains
                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
                   long_name='',  units='', fill_value=spval, &
                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
-             if (use_soil_matrixcn)then
-                ptr2d => this%matrix_cap_decomp_cpools_vr_col(:,:,k)
-                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double,  &
-                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='', fill_value=spval, &
-                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
-                ptr2d => this%matrix_pot_decomp_cpools_vr_col(:,:,k)
-                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Pot_vr", xtype=ncd_double,  &
-                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='', fill_value=spval, &
-                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
-                ptr2d => this%decomp0_cpools_vr_col(:,:,k)
-                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double,  &
-                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='', fill_value=spval, &
-                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
-             end if
           else
              ptr1d => this%decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
              call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
                   dim1name='column', long_name='',  units='', fill_value=spval, &
                   interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-             if (use_soil_matrixcn)then
-                ptr1d => this%matrix_cap_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
-                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap", xtype=ncd_double,  &
-                  dim1name='column', long_name='',  units='', fill_value=spval, &
-                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-                ptr1d => this%matrix_pot_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
-                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Pot", xtype=ncd_double,  &
-                  dim1name='column', long_name='',  units='', fill_value=spval, &
-                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-             end if
+!             if (use_soil_matrixcn)then
+!                ptr1d => this%matrix_cap_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
+!                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap", xtype=ncd_double,  &
+!                  dim1name='column', long_name='',  units='', fill_value=spval, &
+!                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
+!                ptr1d => this%matrix_pot_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
+!                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Pot", xtype=ncd_double,  &
+!                  dim1name='column', long_name='',  units='', fill_value=spval, &
+!                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
+!             end if
           end if
           if (flag=='read' .and. .not. readvar) then
              call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
                   errMsg(sourcefile, __LINE__))
           end if
        end do
+
+       if (use_soil_matrixcn)then
+          do k = 1, ndecomp_pools
+             varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c'
+             if (use_vertsoilc) then
+!                ptr2d => this%matrix_cap_decomp_cpools_vr_col(:,:,k)
+!                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double,  &
+!                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
+!                  long_name='',  units='', fill_value=spval, &
+!                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
+!                ptr2d => this%matrix_pot_decomp_cpools_vr_col(:,:,k)
+!                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Pot_vr", xtype=ncd_double,  &
+!                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
+!                  long_name='',  units='', fill_value=spval, &
+!                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%decomp0_cpools_vr_col(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double,  &
+                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                  long_name='',  units='', fill_value=spval, &
+                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             else
+                ptr1d => this%decomp0_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0", xtype=ncd_double,  &
+                  dim1name='column', long_name='',  units='', fill_value=spval, &
+                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
+             end if
+          end do
+       end if
 
        if (use_vertsoilc) then
           ptr2d => this%ctrunc_vr_col

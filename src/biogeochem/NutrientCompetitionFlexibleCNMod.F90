@@ -347,8 +347,8 @@ contains
          availc                       => cnveg_carbonflux_inst%availc_patch                        , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
          excess_cflux                 => cnveg_carbonflux_inst%excess_cflux_patch                  , & ! Output: [real(r8) (:)   ]  C flux not allocated due to downregulation (gC/m2/s)
          plant_calloc                 => cnveg_carbonflux_inst%plant_calloc_patch                  , & ! Output: [real(r8) (:)   ]  total allocated C flux (gC/m2/s)
-         npp_growth                  => cnveg_carbonflux_inst%npp_growth_patch              , & ! Output:  [real(r8) (:) ] C for growth in FUN. g/m2/s
-         cpool_to_resp                => cnveg_carbonflux_inst%cpool_to_resp_patch                 , & ! Output: [real(r8) (:)   ]
+         npp_growth                  => cnveg_carbonflux_inst%npp_growth_patch              , & ! output:  [real(r8) (:) ] c for growth in fun. g/m2/s
+         cpool_to_resp                => cnveg_carbonflux_inst%cpool_to_resp_patch                 , & ! output: [real(r8) (:)   ]
          cpool_to_leafc_resp          => cnveg_carbonflux_inst%cpool_to_leafc_resp_patch              , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc_storage_resp  => cnveg_carbonflux_inst%cpool_to_leafc_storage_resp_patch      , & ! Output: [real(r8) (:)   ]
          cpool_to_frootc_resp         => cnveg_carbonflux_inst%cpool_to_frootc_resp_patch             , & ! Output: [real(r8) (:)   ]
@@ -960,6 +960,12 @@ contains
          if(use_matrixcn)then
              matrix_Cinput(p) = plant_calloc(p) 
          end if
+         ! CiPEHR
+!         if(p .eq. 12 .or. p .eq. 13)write(514,"(A,I,E17.9)"),'Cinput,alloc',p,plant_calloc(p)*dt
+         ! SPRUCE
+!         if(p .eq. 2 .or. p .eq. 8)write(514,"(A,I,E17.9)"),'Cinput,alloc',p,plant_calloc(p)*dt
+         ! SEV
+!         if(p .eq. 1 .or. p .eq. 15)write(514,"(A,I,E17.9)"),'Cinput,alloc',p,plant_calloc(p)*dt
 
 
          ! computing 1.) fractional N demand and 2.) N allocation after uptake for different plant parts

@@ -482,6 +482,9 @@ contains
                      do j = 1,nlevdecomp
                         do fc =1,num_soilc
                            c = filter_soilc(fc)
+!                           if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                              print*,'matrix_input in Vertical transfer',i_type,c,j,s,matrix_input(c,1,1),source(c,1,1)
+!                           end if
                            matrix_input(c,j,s) = matrix_input(c,j,s) + source(c,j,s)
                         end do
                      end do

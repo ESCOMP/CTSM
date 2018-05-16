@@ -1129,6 +1129,8 @@ contains
                   if(use_soil_matrixcn)then
                      matrix_decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
                             o_scalar(c,j)
+!                     write(420,"(A,2I,10E17.9)"),'decomp',c,j,t_scalar(c,j),w_scalar(c,j),o_scalar(c,j),depth_scalar(c,j),k_l1,k_l2_l3,k_s1,k_s2,k_s3,k_frag
+!                     if(j .eq. 13)print*,'matrix_decomp_k(c,j,i_soil3)',c,j,t_scalar(c,j),w_scalar(c,j),o_scalar(c,j),depth_scalar(c,j),k_s3
                   end if
                end do
             end do

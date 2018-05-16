@@ -18,6 +18,8 @@ module CNNStateUpdate1Mod
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use PatchType                       , only : patch                
+  use ColumnType                      , only : col                
+  use GridcellType                   , only : grc
   !
   implicit none
   private
@@ -68,7 +70,7 @@ contains
     do j = 1, nlevdecomp
        do fc = 1, num_soilc_with_inactive
           c = filter_soilc_with_inactive(fc)
-          if (.not. use_soil_matrixcn) then
+    !      if (.not. use_soil_matrixcn) then
              ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
                nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
              ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &
@@ -77,16 +79,19 @@ contains
                nf_veg%dwt_frootn_to_litr_lig_n_col(c,j) * dt
              ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
                ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) ) * dt
-          else
-             nf_soil%matrix_input_col(c,j,i_met_lit) = nf_soil%matrix_input_col(c,j,i_met_lit) + &
-               nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
-             nf_soil%matrix_input_col(c,j,i_cel_lit) = nf_soil%matrix_input_col(c,j,i_cel_lit) + &
-               nf_veg%dwt_frootn_to_litr_cel_n_col(c,j) * dt
-             nf_soil%matrix_input_col(c,j,i_lig_lit) = nf_soil%matrix_input_col(c,j,i_lig_lit) + &
-               nf_veg%dwt_frootn_to_litr_lig_n_col(c,j) * dt
-             nf_soil%matrix_input_col(c,j,i_cwd) = nf_soil%matrix_input_col(c,j,i_cwd) + &
-               ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) ) * dt
-          end if !soil_matrix
+    !      else
+    !         if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+    !            print*,'before phenology N input to soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%dwt_frootn_to_litr_met_n_col(c,j) 
+    !         end if
+    !         nf_soil%matrix_input_col(c,j,i_met_lit) = nf_soil%matrix_input_col(c,j,i_met_lit) + &
+    !           nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
+    !         nf_soil%matrix_input_col(c,j,i_cel_lit) = nf_soil%matrix_input_col(c,j,i_cel_lit) + &
+    !           nf_veg%dwt_frootn_to_litr_cel_n_col(c,j) * dt
+    !         nf_soil%matrix_input_col(c,j,i_lig_lit) = nf_soil%matrix_input_col(c,j,i_lig_lit) + &
+    !           nf_veg%dwt_frootn_to_litr_lig_n_col(c,j) * dt
+    !         nf_soil%matrix_input_col(c,j,i_cwd) = nf_soil%matrix_input_col(c,j,i_cwd) + &
+    !           ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) ) * dt
+    !      end if !soil_matrix
        end do
     end do
 

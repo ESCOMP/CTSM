@@ -18,9 +18,11 @@ module CNGapMortalityMod
   use CNVegCarbonFluxType     , only : cnveg_carbonflux_type
   use CNVegNitrogenStateType  , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType   , only : cnveg_nitrogenflux_type
+  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use CanopyStateType         , only : canopystate_type            
   use ColumnType              , only : col                
   use PatchType               , only : patch
+  use GridcellType                   , only : grc
   use clm_varctl              , only : use_matrixcn  
   use clm_varpar            , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                        ilivestem,ilivestem_st,ilivestem_xf,&
@@ -86,7 +88,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,&
-       dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+       dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,&
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, canopystate_inst, &  
        leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch)  
     !
@@ -112,6 +114,7 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
     type(canopystate_type)          , intent(in)    :: canopystate_inst 
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
  
     real(r8)                        , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
     real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
@@ -119,7 +122,7 @@ contains
     real(r8)                        , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: p             ! patch index
+    integer :: p,c           ! patch index
     integer :: fp            ! patch filter index
     real(r8):: am            ! rate for fractional mortality (1/yr)
     real(r8):: m             ! rate for fractional mortality (1/s)
@@ -157,6 +160,11 @@ contains
       ! patch loop
       do fp = 1,num_soilp
          p = filter_soilp(fp)
+         c = patch%column(p)
+!           print*,'ioutc in gap mortality',ioutc,ideadstem
+!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
+!             print*,'begin of CNGapMortality',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
+!         end if
 
          if (use_cndv) then
             ! Stress mortality from lpj's subr Mortality.
@@ -234,6 +242,9 @@ contains
          cnveg_carbonflux_inst%m_livecrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%livecrootc_xfer_patch(p)     * m
          cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)     * m
          cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%gresp_xfer_patch(p)          * m
+!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
+!             print*,'before matrix',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
+!         end if
          if (use_matrixcn) then 
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ileaf)         = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ifroot)        = m
@@ -256,9 +267,17 @@ contains
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ilivecroot_xf) = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ideadstem_xf)  = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ioutc,ideadcroot_xf) = m
-!            if(p .eq. 8)write(511,*),'gap_mortality',m
+            !CiPEHR
+!            if(p .eq. 13 .or. p .eq. 12)write(511,*),'gap_mortality',p,m*1800
+            !SPRUCE
+!            if(p .eq. 2 .or. p .eq. 8)write(511,*),'gap_mortality',p,m*1800
+            !SEV
+!            if(p .eq. 1 .or. p .eq. 15)write(511,*),'gap_mortality',p,m*1800
          end if
 
+!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
+!             print*,'after matrix',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
+!         end if
          !------------------------------------------------------
          ! patch-level gap mortality nitrogen fluxes
          !------------------------------------------------------
@@ -306,7 +325,11 @@ contains
          cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p)    * m
          cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p)    * m
 !N-matrix added by Z.Du
+!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
+!             print*,'before_matrix2',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
+!         end if
          if (use_matrixcn) then	 
+!            print*,'ioutn in gap mortality',ioutn,ileaf,iretransn
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ileaf)         = m
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ifroot)        = m
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ilivestem)     = m
@@ -334,6 +357,9 @@ contains
             end if
          end if
 
+!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
+!             print*,'after_matrix2',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
+!         end if
          ! added by F. Li and S. Levis
          if (use_cndv) then
             if (woody(ivt(p)) == 1._r8)then
@@ -350,6 +376,8 @@ contains
 
       ! gather all patch-level litterfall fluxes to the column
       ! for litter C and N inputs
+!if(bounds%begp .le. 691 .and. bounds%endp .ge. 691)print*,'before gap_patchtocolumn',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
+!if(bounds%begp .le. 1472 .and. bounds%endc .ge. 1472)print*,'before gap_patchtocolumn',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
 
       call CNGap_PatchToColumn(bounds, num_soilc, filter_soilc, &
            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -358,6 +386,8 @@ contains
            croot_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full), &
            stem_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full))
 
+!if(bounds%begp .le. 691 .and. bounds%endp .ge. 691)print*,'after gap_patchtocolumn',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
+!if(bounds%begp .le. 1472 .and. bounds%endc .ge. 1472)print*,'after gap_patchtocolumn',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
     end associate
 
   end subroutine CNGapMortality

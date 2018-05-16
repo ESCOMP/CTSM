@@ -740,6 +740,7 @@ contains
     allocate(this%leafc_change_patch      (begp:endp)) ; this%leafc_change_patch      (:) = nan
     allocate(this%soilc_change_patch      (begp:endp)) ; this%soilc_change_patch      (:) = nan
 ! Matrix
+    !print*,'nvegcpool',nvegcpool
     if(use_matrixcn)then
        allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
        allocate(this%matrix_alloc_patch          (begp:endp,1:nvegcpool))              ; this%matrix_alloc_patch       (:,:) = nan

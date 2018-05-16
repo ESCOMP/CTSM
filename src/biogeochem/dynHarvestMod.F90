@@ -437,7 +437,12 @@ contains
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ilivecroot_xf) = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ilivecroot_xf) + m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadstem_xf)  = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadstem_xf)  + m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadcroot_xf) = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ideadcroot_xf) + m
-!               if(p .eq. 8)write(510,*),'harvest',m
+               !CiPEHR
+  !             if(p .eq. 12 .or. p .eq. 13)write(510,*),'harvest',p,m
+               !SPRUCE
+  !             if(p .eq. 2 .or. p .eq. 8)write(510,*),'harvest',p,m
+               !SEV
+!               if(p .eq. 1 .or. p .eq. 15)write(510,*),'harvest',p,m
             end if
                
          end if  ! end tree block

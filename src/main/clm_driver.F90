@@ -341,6 +341,7 @@ contains
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
+       !print*,'before init column balance'
        if (use_cn) then
           call bgc_vegetation_inst%InitColumnBalance(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
@@ -391,7 +392,7 @@ contains
 
     ! Get time as of beginning of time step
     call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
-!    if(bounds_clump%begp .le. 8428 .and. bounds_clump%endp .ge. 8428)print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
+    print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
 !    print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
 
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
@@ -801,6 +802,7 @@ contains
              ! - CNDV defined: prognostic biogeography; else prescribed
        ! - crop model:  crop algorithms called from within CNDriver
              
+       !print*,'before EcosystemDynamicsPreDrainage'
        if (use_cn) then 
           call t_startf('ecosysdyn')
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
@@ -855,6 +857,7 @@ contains
 
        call t_stopf('hydro2_drainage')     
 
+       !print*,'before EcosystemDynamicsPostDrainage'
        if (use_cn) then
 
           call t_startf('EcosysDynPostDrainage')     
@@ -933,7 +936,7 @@ contains
        ! ============================================================================
        ! Check the carbon and nitrogen balance
        ! ============================================================================
-
+!       print*,'before bgc balance check'
        if (use_cn) then
           call t_startf('cnbalchk')
           call bgc_vegetation_inst%BalanceCheck( &
@@ -941,6 +944,7 @@ contains
                soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
           call t_stopf('cnbalchk')
        end if
+!       print*,'after bgc balance check'
 
        ! Calculation of methane fluxes
 

@@ -114,8 +114,8 @@ contains
       ! patch-level carbon fluxes from fire
        do fp = 1,num_soilp
           p = filter_soilp(fp)
-!          if(p .eq. 8)print*,'before fire',cs_veg%leafc_storage_patch(p),cf_veg%m_leafc_storage_to_fire_patch(p) * dt, cf_veg%m_leafc_storage_to_litter_fire_patch(p)* dt
-          !if(p .eq. 8)print*,'before fire',cs_veg%deadcrootc_patch(p),cf_veg%m_deadcrootc_to_fire_patch(p) * dt, cf_veg%m_deadcrootc_to_litter_fire_patch(p)* dt,cf_veg%m_livecrootc_to_deadcrootc_fire_patch(p) * dt
+!          if(p .eq. 5228)print*,'before fire',cs_veg%leafc_storage_patch(p),cf_veg%m_leafc_storage_to_fire_patch(p) * dt, cf_veg%m_leafc_storage_to_litter_fire_patch(p)* dt
+!          if(p .eq. 5228)print*,'before fire',cs_veg%deadcrootc_patch(p),cf_veg%m_deadcrootc_to_fire_patch(p) * dt, cf_veg%m_deadcrootc_to_litter_fire_patch(p)* dt
           if(.not. use_matrixcn)then 
           ! displayed pools
             cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
@@ -218,8 +218,8 @@ contains
          cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
               cf_veg%m_gresp_xfer_to_litter_fire_patch(p) * dt  
         end if !end use_matrixcn
-!        if(p .eq. 8)print*,'after fire',cs_veg%leafc_storage_patch(p)
-        !if(p .eq. 8)print*,'after fire',cs_veg%deadcrootc_patch(p)
+!        if(p .eq. 5228)print*,'after fire',cs_veg%leafc_storage_patch(p)
+!        if(p .eq. 5228)print*,'after fire',cs_veg%deadcrootc_patch(p)
        end do ! end of patch loop
 
 

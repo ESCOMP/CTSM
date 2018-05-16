@@ -15,6 +15,8 @@ module CNNStateUpdate3Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ColumnType                      , only : col                
+  use GridcellType                   , only : grc
   !
   implicit none
   private
@@ -67,6 +69,9 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
 
+!            if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!               print*,'begin of NSupdate matrix inupt',c,j,nf_soil%matrix_input_col(c,j,i_met_lit)
+!            end if
             if (.not. use_nitrif_denitrif) then
                ! mineral N loss due to leaching
                ns_soil%sminn_vr_col(c,j) = ns_soil%sminn_vr_col(c,j) - nf_soil%sminn_leached_vr_col(c,j) * dt
@@ -96,6 +101,9 @@ contains
                  nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
 
             ! patch-level wood to column-level litter (uncombusted wood)
+!               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                  print*,'before fire update matrix inupt',c,j,nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%m_n_to_litr_met_fire_col(c,j)
+!               end if
                nf_soil%matrix_input_col(c,j,i_met_lit) = nf_soil%matrix_input_col(c,j,i_met_lit) + &
                  nf_veg%m_n_to_litr_met_fire_col(c,j)* dt
                nf_soil%matrix_input_col(c,j,i_cel_lit) = nf_soil%matrix_input_col(c,j,i_cel_lit) + &

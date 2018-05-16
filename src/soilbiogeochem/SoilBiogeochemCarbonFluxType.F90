@@ -131,8 +131,6 @@ contains
      this%decomp_k_col(:,:,:)= spval
      ! for soil-matrix
      if(use_soil_matrixcn)then
-        allocate(this%matrix_decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
-        this%matrix_decomp_k_col(:,:,:)= spval
      end if
 
      allocate(this%decomp_cpools_leached_col(begc:endc,1:ndecomp_pools))              
@@ -157,6 +155,8 @@ contains
         allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp));  this%matrix_c_tri_col(:,:)= nan
         allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
         allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:,:)= nan
+        allocate(this%matrix_decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                    
+        this%matrix_decomp_k_col(:,:,:)= spval
      end if
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
@@ -710,9 +710,6 @@ contains
              this%decomp_cascade_ctransfer_col(i,l)      = value_column
              this%decomp_cascade_ctransfer_vr_col(i,j,l) = value_column
              this%decomp_k_col(i,j,l)                    = value_column
-             if(use_soil_matrixcn)then
-                this%matrix_decomp_k_col(i,j,l)             = value_column
-             end if
           end do
        end do
     end do
@@ -733,22 +730,25 @@ contains
     end do
 
 ! for matrix 
+!    print*,'before set value C matrix for soil'
     if(use_soil_matrixcn)then
        do k = 1, ndecomp_pools
           do j = 1, nlevdecomp
-!          do fi = 1,num_column
-!             i = filter_column(fi)
+             do fi = 1,num_column
+                i = filter_column(fi)
              !print*,'before setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
-             this%matrix_a_tri_col(:,j) = value_column
-             this%matrix_b_tri_col(:,j) = value_column
-             this%matrix_c_tri_col(:,j) = value_column
-             this%matrix_input_col(:,j,k) = value_column
-             this%matrix_decomp_fire_k_col(:,j,k) = value_column
+                this%matrix_a_tri_col(i,j) = value_column
+                this%matrix_b_tri_col(i,j) = value_column
+                this%matrix_c_tri_col(i,j) = value_column
+                this%matrix_input_col(i,j,k) = value_column
+                this%matrix_decomp_fire_k_col(i,j,k) = value_column
+                this%matrix_decomp_k_col(i,j,k)             = value_column
              !print*,'after setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
-!          end do
+             end do
           end do
        end do
     end if
+!    print*,'after setting C matrix for soil'
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)
