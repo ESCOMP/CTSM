@@ -14,6 +14,8 @@ module CNNStateUpdate2Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ColumnType                      , only : col                
+  use GridcellType                   , only : grc
   !
   implicit none
   private
@@ -77,6 +79,9 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
             else
+!               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                  print*,'before gap mortality N input to soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%gap_mortality_n_to_litr_met_n_col(c,j)
+!               end if
                nf_soil%matrix_input_col(c,j,i_met_lit) = &
                  nf_soil%matrix_input_col(c,j,i_met_lit) + nf_veg%gap_mortality_n_to_litr_met_n_col(c,j) * dt
                nf_soil%matrix_input_col(c,j,i_cel_lit) = &
@@ -196,6 +201,9 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
             else
+!               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                  print*,'before harvest N input soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%harvest_n_to_litr_met_n_col(c,j)
+!               end if
                nf_soil%matrix_input_col(c,j,i_met_lit) = &
                  nf_soil%matrix_input_col(c,j,i_met_lit) + nf_veg%harvest_n_to_litr_met_n_col(c,j) * dt
                nf_soil%matrix_input_col(c,j,i_cel_lit) = &

@@ -329,7 +329,13 @@ contains
          if (abs(col_errnb(c)) > 1e-7_r8) then
             write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-            write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+            if (use_nitrif_denitrif) then
+!            print*,'balance check,c',c
+!            print*,'smin_no3_leached(c)*dt',smin_no3_leached(c)
+!            print*,'smin_no3_runoff(c)*dt',smin_no3_runoff(c)
+!            print*,'f_n2o_nit(c)*dt',f_n2o_nit(c)
+               write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+            end if
          end if
 
       end do ! end of columns loop

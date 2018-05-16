@@ -580,6 +580,7 @@ contains
         p = filter_soilp(fp)
         c = patch%column(p)
 
+           
         if( patch%itype(p) < nc3crop .and. cropf_col(c) < 1.0_r8)then
            ! For non-crop (bare-soil and natural vegetation)
            if (transient_landcover) then
@@ -604,6 +605,8 @@ contains
            m = 10._r8
         end if
 
+!        if(p .eq. 5228)print*,'after fire m_leaf_stor',leafc_storage(p),f,cc_other(patch%itype(p)),fm_other(patch%itype(p))
+!        if(p .eq. 5228)print*,'after fire m_deadcroot',deadcrootc(p),m,fm_droot(patch%itype(p))
 !        if( .not. use_matrixcn)then
         m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
         m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
@@ -853,7 +856,7 @@ contains
              + f * m*(1._r8 - cc_dstem(patch%itype(p))) * fm_droot(patch%itype(p))
            matrix_fitransfer(p,ioutc,ideadstem_st)    = matrix_fitransfer(p,ioutc,ideadstem_st) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivestem_xf)    = matrix_fitransfer(p,ioutc,ideadstem_xf) &
+           matrix_fitransfer(p,ioutc,ideadstem_xf)    = matrix_fitransfer(p,ioutc,ideadstem_xf) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
            matrix_fitransfer(p,ioutc,ifroot)          = matrix_fitransfer(p,ioutc,ifroot) &
              + f * fm_root(patch%itype(p))
@@ -918,8 +921,14 @@ contains
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
            matrix_nfitransfer(p,ioutn,iretransn)          = matrix_nfitransfer(p,ioutn,iretransn) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
-!           if(p .eq. 8)write(512,*),'fire',f,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
-!           if(p .eq. 16)print*,'after fire nfitransfer 1',matrix_nfitransfer(p,ioutn,ifroot) * frootn(p) * 1800
+           !CiPEHR
+!           if(p .eq. 12 .or. p .eq. 13)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
+           !SPRUCE
+!           if(p .eq. 2 .or. p .eq. 8)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
+           !SEV
+!           if(p .eq. 1 .or. p .eq. 15)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
+!           if(p .eq. 5228)print*,'after fire m_leaf_stor',m_leafc_storage_to_litter_fire(p),m_leafc_storage_to_fire(p)
+!           if(p .eq. 5228)print*,'after fire m_deadcroot',m_deadcrootc_to_litter_fire(p),m_deadcrootc_to_fire(p)
         end if	 			 
 
         if (use_cndv) then

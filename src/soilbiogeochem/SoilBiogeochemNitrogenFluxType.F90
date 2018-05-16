@@ -129,9 +129,9 @@ module SoilBiogeochemNitrogenFluxType
           real(r8), pointer :: sminn_to_plant_fun_vr_col                 (:,:)   ! col total layer soil N uptake of FUN  (gN/m2/s)
 
      ! track tradiagonal matrix  
-     real(r8), pointer :: matrix_a_tri_col                               (:,:,:)   ! subdiagonal coefficients
-     real(r8), pointer :: matrix_b_tri_col                               (:,:,:)   ! diagonal coefficients 
-     real(r8), pointer :: matrix_c_tri_col                               (:,:,:)   ! superdiagonal coefficients
+!     real(r8), pointer :: matrix_a_tri_col                               (:,:,:)   ! subdiagonal coefficients
+!     real(r8), pointer :: matrix_b_tri_col                               (:,:,:)   ! diagonal coefficients 
+!     real(r8), pointer :: matrix_c_tri_col                               (:,:,:)   ! superdiagonal coefficients
      real(r8), pointer :: matrix_input_col                          (:,:,:)   ! source coefficients
    contains
 
@@ -285,6 +285,7 @@ contains
 !    allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
 !    allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
     if(use_soil_matrixcn)then
+       !print*,'allocating matrix Ninput'
        allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
     end if
   end subroutine InitAllocate
@@ -1064,17 +1065,22 @@ contains
           this%decomp_npools_leached_col(i,k) = value_column
        end do
     end do
-    
+   
+!    print*,'set value matrix Ninput' 
     if(use_soil_matrixcn)then
        do k = 1, ndecomp_pools
           do j = 1, nlevdecomp
+             do fi = 1,num_column
+                i = filter_column(fi)
 !             this%matrix_a_tri_col(:,j,k) = value_column
 !             this%matrix_b_tri_col(:,j,k) = value_column
 !             this%matrix_c_tri_col(:,j,k) = value_column
-             this%matrix_input_col(:,j,k) = value_column
+                this%matrix_input_col(i,j,k) = value_column
+             end do
           end do
        end do
     end if
+!    print*,'finish setting value to matrix Ninput' 
 
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
@@ -1244,6 +1250,7 @@ contains
                   this%smin_no3_leached_col(c) + &
                   this%smin_no3_leached_vr_col(c,j) * dzsoi_decomp(j)
 
+             !print*,'this%smin_no3_runoff_col',c,j,this%smin_no3_runoff_vr_col(c,j),dzsoi_decomp(j)
              this%smin_no3_runoff_col(c) = &
                   this%smin_no3_runoff_col(c) + &
                   this%smin_no3_runoff_vr_col(c,j) * dzsoi_decomp(j)

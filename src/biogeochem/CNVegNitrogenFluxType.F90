@@ -532,6 +532,7 @@ contains
     allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
     allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
 	! Matrix
+!    print*,'nvegnpool',nvegnpool
     if(use_matrixcn)then
        allocate(this%matrix_Ninput_patch          (begp:endp)) ;              this%matrix_Ninput_patch      (:) = nan
        allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegnpool)) ;   this%matrix_nalloc_patch      (:,:) = nan

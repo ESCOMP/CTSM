@@ -201,6 +201,7 @@ contains
       ! for linked C-N state variables, perform precision test on
       ! the C component, but truncate C, C13, and N components
 
+!      if(bounds%begp .le. 5228 .and. bounds%endp .ge. 5228)print*,'cs_plant',cs%leafc_patch(5228),cs%leafc_storage_patch(5228),cs%leafc_xfer_patch(5228),cs%frootc_patch(5228),cs%frootc_storage_patch(5228),cs%frootc_xfer_patch(5228),cs%grainc_patch(5228),cs%grainc_storage_patch(5228),cs%grainc_xfer_patch(5228),cs%cropseedc_deficit_patch(5228),cs%livestemc_patch(5228),cs%livestemc_storage_patch(5228),cs%livestemc_xfer_patch(5228), cs%deadstemc_patch(5228),cs%deadstemc_storage_patch(5228),cs%deadstemc_xfer_patch(5228),cs%livecrootc_patch(5228),cs%livecrootc_storage_patch(5228),cs%livecrootc_xfer_patch(5228),cs%deadcrootc_patch(5228),cs%deadcrootc_storage_patch(5228),cs%deadcrootc_xfer_patch(5228),cs%gresp_storage_patch(5228),cs%gresp_xfer_patch(5228),cs%cpool_patch(5228),cs%xsmrpool_patch(5228)
       ! leaf C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_patch(bounds%begp:bounds%endp), &
                                 ns%leafn_patch(bounds%begp:bounds%endp), &
@@ -464,6 +465,15 @@ contains
        p = filter_soilp(fp)
 
        if ( .not. lcroponly .or. (patch%itype(p) >= nc3crop) ) then
+!          if(p .ge. 5228 .and. p .le. 5228)then
+!             print*,'.not. lcroponly .or. (patch%itype(p) >= nc3crop)'
+!             print*,'lallowneg',lallowneg
+!             print*,'cnegcrit',cnegcrit
+!             print*,'nnegcrit',nnegcrit
+!             print*,'carbon_patch(p)',p,carbon_patch(p)
+!             print*,'nitrogen_patch(p)',nitrogen_patch(p)
+!          end if
+!          print*,'bounds%begp,endp',bounds%begp,bounds%endp
           if ( .not. lallowneg .and. ((carbon_patch(p) < cnegcrit) .or. (nitrogen_patch(p) < nnegcrit)) ) then
              write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit

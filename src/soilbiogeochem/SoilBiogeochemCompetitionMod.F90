@@ -19,6 +19,7 @@ module SoilBiogeochemCompetitionMod
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenUptakeMod , only : SoilBiogeochemNitrogenUptake
   use ColumnType                      , only : col                
+  use GridcellType                   , only : grc
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
@@ -29,6 +30,7 @@ module SoilBiogeochemCompetitionMod
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
+
   !
   implicit none
   private
@@ -529,6 +531,9 @@ contains
                   nuptake_prof(c,j) = sminn_vr(c,j) / sminn_tot(c)
                else
                   nuptake_prof(c,j) = nfixation_prof(c,j)
+!                  if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                     print*,'here2 nuptake_prof',c,j,nuptake_prof(c,j),nfixation_prof(c,j),sminn_tot(c)
+!                  end if
                endif
             end do
          end do
@@ -551,11 +556,20 @@ contains
                   nlimit_nh4(c,j) = 0
                   fpi_nh4_vr(c,j) = 1.0_r8
                   actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j)
+!                  if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                     print*,'actual_immob_nh4_vr',c,j,potential_immob_vr(c,j)
+!                  end if
                   !RF added new term. 
                   if ( .not. local_use_fun ) then
                      smin_nh4_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
+!                     if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                        print*,'here1 smin_nh4_to_plant_vr',c,j,smin_nh4_to_plant_vr(c,j),plant_ndemand(c),nuptake_prof(c,j)
+!                     end if
                   else
                      smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j)
+!                     if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                        print*,'here2 smin_nh4_to_plant_vr',c,j,smin_nh4_to_plant_vr(c,j),smin_nh4_vr(c,j),actual_immob_nh4_vr(c,j)
+!                     end if
                   end if
                   f_nit_vr(c,j) = pot_f_nit_vr(c,j)
 
@@ -574,9 +588,15 @@ contains
                          smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(plant_ndemand(c)* &
                           nuptake_prof(c,j)*compet_plant_nh4 / sum_nh4_demand_scaled(c,j)), plant_ndemand(c)*nuptake_prof(c,j))
                           
+!                         if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                            print*,'here3 smin_nh4_to_plant_vr',c,j,smin_nh4_to_plant_vr(c,j),smin_nh4_vr(c,j),plant_ndemand(c),nuptake_prof(c,j),compet_plant_nh4,sum_nh4_demand_scaled(c,j)
+!                         end if
                      else
                         ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
                         smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j)
+!                         if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                            print*,'here4 smin_nh4_to_plant_vr',c,j,smin_nh4_to_plant_vr(c,j),smin_nh4_vr(c,j),actual_immob_nh4_vr(c,j)
+!                         end if
                      end if
                     
                      f_nit_vr(c,j) =  min((smin_nh4_vr(c,j)/dt)*(pot_f_nit_vr(c,j)*compet_nit / &
@@ -584,6 +604,9 @@ contains
                   else
                      actual_immob_nh4_vr(c,j) = 0.0_r8
                      smin_nh4_to_plant_vr(c,j) = 0.0_r8
+!                     if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                        print*,'here5 smin_nh4_to_plant_vr',c,j,smin_nh4_to_plant_vr(c,j)
+!                     end if
                      f_nit_vr(c,j) = 0.0_r8
                   end if
 
@@ -715,6 +738,9 @@ contains
                      supplement_to_sminn_vr(c,j) = supplement_to_sminn_vr(c,j) + &
                           (plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)) - smin_nh4_to_plant_vr(c,j)  ! use old values
                      smin_nh4_to_plant_vr(c,j) = plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)
+!                     if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                        print*,'here6 smin_nh4_to_plant_vr',c,j,smin_nh4_to_plant_vr(c,j),plant_ndemand(c),nuptake_prof(c,j),smin_no3_to_plant_vr(c,j)
+!                     end if
                   end if
                   sminn_to_plant_vr(c,j) = smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j)
                end if
@@ -809,6 +835,9 @@ contains
                      if ( residual_smin_nh4(c) > 0._r8 .and. nlimit_nh4(c,j) .eq. 0 ) then
                         smin_nh4_to_plant_vr(c,j) = smin_nh4_to_plant_vr(c,j) + residual_smin_nh4_vr(c,j) * &
                              min(( residual_plant_ndemand(c) *  dt ) / residual_smin_nh4(c), 1._r8) / dt
+!                        if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                           print*,'here7 smin_nh4_to_plant_vr',c,j,smin_nh4_to_plant_vr(c,j),residual_smin_nh4_vr(c,j),residual_plant_ndemand(c),residual_smin_nh4(c)
+!                        end if
                      endif
                   end if
                end do

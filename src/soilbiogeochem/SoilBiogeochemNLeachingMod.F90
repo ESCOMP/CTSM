@@ -15,6 +15,7 @@ module SoilBiogeochemNLeachingMod
   use WaterStateType                  , only : waterstate_type
   use WaterFluxType                   , only : waterflux_type
   use ColumnType                      , only : col                
+  use GridcellType                   , only : grc
   !
   implicit none
   private
@@ -135,6 +136,9 @@ contains
       do j = 1,nlevsoi
          do fc = 1,num_soilc
             c = filter_soilc(fc)
+!            if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!               print*,'begin of NLeaching matrix inupt',c,j,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,j,1)
+!            end if
             tot_water(c) = tot_water(c) + h2osoi_liq(c,j)
          end do
       end do

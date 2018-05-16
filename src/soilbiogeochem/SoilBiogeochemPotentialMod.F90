@@ -17,6 +17,8 @@ module SoilBiogeochemPotentialMod
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use clm_varctl                         , only : use_fates, iulog
+  use ColumnType                      , only : col                
+  use GridcellType                   , only : grc
   !
   implicit none
   private
@@ -150,6 +152,9 @@ contains
                   if ( decomp_npools_vr(c,j,l) > 0._r8 ) then
                      cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                   end if
+!                  if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                     print*,'here1 cn_decomp_pools',c,j,l,decomp_cpools_vr(c,j,l),decomp_npools_vr(c,j,l),cn_decomp_pools(c,j,l)
+!                  end if
                end do
             end do
          else
@@ -157,6 +162,9 @@ contains
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
+!                  if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                     print*,'here1 cn_decomp_pools',c,j,l,initial_cn_ratio(l),cn_decomp_pools(c,j,l)
+!                  end if
                end do
             end do
          end if
@@ -184,17 +192,29 @@ contains
 
                         if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8) then
                            ratio = cn_decomp_pools(c,j,cascade_receiver_pool(k))/cn_decomp_pools(c,j,cascade_donor_pool(k))
+!                           if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                              print*,'ratio',c,j,k,ratio,cn_decomp_pools(c,j,cascade_receiver_pool(k)),cn_decomp_pools(c,j,cascade_donor_pool(k))
+!                           end if
                         endif
 
                         pmnf_decomp_cascade(c,j,k) = (p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k) - ratio) &
                              / cn_decomp_pools(c,j,cascade_receiver_pool(k)) )
 
+!                        if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                           print*,'here1 pmnf_decomp_cascade',c,j,k,pmnf_decomp_cascade(c,j,k),p_decomp_cpool_loss(c,j,k),rf_decomp_cascade(c,j,k),ratio,cn_decomp_pools(c,j,cascade_receiver_pool(k))
+!                        end if
                      else   ! 100% respiration
                         pmnf_decomp_cascade(c,j,k) = - p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
+!                        if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                           print*,'here2 pmnf_decomp_cascade',c,j,k,pmnf_decomp_cascade(c,j,k),p_decomp_cpool_loss(c,j,k),cn_decomp_pools(c,j,cascade_donor_pool(k))
+!                        end if
                      endif
 
                   else   ! CWD -> litter
                      pmnf_decomp_cascade(c,j,k) = 0._r8
+!                     if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
+!                        print*,'here3 pmnf_decomp_cascade',c,j,k,pmnf_decomp_cascade(c,j,k)
+!                    end if
                   end if
                end if
             end do
