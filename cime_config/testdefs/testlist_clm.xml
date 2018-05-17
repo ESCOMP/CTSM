@@ -369,7 +369,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">02:30:00</option>
       <option name="comment"  >Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code</option>
     </options>
   </test>
@@ -1316,7 +1316,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">02:30:00</option>
       <option name="comment"  >Want a transient case with isotopes, to test isotopes in the transient landuse and harvest code</option>
     </options>
   </test>
