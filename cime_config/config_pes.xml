@@ -81,14 +81,14 @@
       <pes pesize="any" compset="any">
 	<comment>none</comment>
 	<ntasks>
-	  <ntasks_atm>-1</ntasks_atm> 
-	  <ntasks_lnd>-16</ntasks_lnd>           
-	  <ntasks_rof>-16</ntasks_rof> 
-	  <ntasks_ice>-16</ntasks_ice> 
-	  <ntasks_ocn>-16</ntasks_ocn> 
-	  <ntasks_glc>-16</ntasks_glc> 
-	  <ntasks_wav>-16</ntasks_wav> 
-	  <ntasks_cpl>-16</ntasks_cpl> 
+	  <ntasks_atm>-1</ntasks_atm>
+	  <ntasks_lnd>-4</ntasks_lnd>
+	  <ntasks_rof>-4</ntasks_rof>
+	  <ntasks_ice>-4</ntasks_ice>
+	  <ntasks_ocn>-4</ntasks_ocn>
+	  <ntasks_glc>-4</ntasks_glc>
+	  <ntasks_wav>-4</ntasks_wav>
+	  <ntasks_cpl>-4</ntasks_cpl>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>                   
@@ -193,13 +193,13 @@
 	<comment>none</comment>
 	<ntasks>
 	  <ntasks_atm>-1</ntasks_atm> 
-	  <ntasks_lnd>-50</ntasks_lnd>           
-	  <ntasks_rof>-50</ntasks_rof> 
-	  <ntasks_ice>-50</ntasks_ice> 
-	  <ntasks_ocn>-50</ntasks_ocn> 
-	  <ntasks_glc>-50</ntasks_glc> 
-	  <ntasks_wav>-50</ntasks_wav> 
-	  <ntasks_cpl>-50</ntasks_cpl> 
+	  <ntasks_lnd>-40</ntasks_lnd>
+	  <ntasks_rof>-40</ntasks_rof>
+	  <ntasks_ice>-40</ntasks_ice>
+	  <ntasks_ocn>-40</ntasks_ocn>
+	  <ntasks_glc>-40</ntasks_glc>
+	  <ntasks_wav>-40</ntasks_wav>
+	  <ntasks_cpl>-40</ntasks_cpl>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>                   
@@ -267,13 +267,13 @@
 	<comment>none</comment>
 	<ntasks>
 	  <ntasks_atm>-1</ntasks_atm> 
-	  <ntasks_lnd>-60</ntasks_lnd>           
-	  <ntasks_rof>-60</ntasks_rof> 
-	  <ntasks_ice>-60</ntasks_ice> 
-	  <ntasks_ocn>-60</ntasks_ocn> 
-	  <ntasks_glc>-60</ntasks_glc> 
-	  <ntasks_wav>-60</ntasks_wav> 
-	  <ntasks_cpl>-60</ntasks_cpl> 
+	  <ntasks_lnd>-50</ntasks_lnd>
+	  <ntasks_rof>-50</ntasks_rof>
+	  <ntasks_ice>-50</ntasks_ice>
+	  <ntasks_ocn>-50</ntasks_ocn>
+	  <ntasks_glc>-50</ntasks_glc>
+	  <ntasks_wav>-50</ntasks_wav>
+	  <ntasks_cpl>-50</ntasks_cpl>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>                   

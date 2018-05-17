@@ -1,1 +1,3 @@
 ./xmlchange DATM_MODE=CLMCRUNCEPv7
+./xmlchange BFBFLAG="TRUE"
+
