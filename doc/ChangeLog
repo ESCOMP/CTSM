@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  clm5.0.dev011
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 16 20:27:39 MDT 2018
+One-line Summary: 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing
+
+Purpose of changes
+------------------
+
+Update ndep file used for fully coupled 1850 cases to one being used in fully coupled
+simulations. Update cism to latest release branch: release-v2.1.00.
+Update PE layouts for f45, f09, f19.  Turn BFBFLAG=TRUE for most CTSM testing.
+Fix some issues with tools for batch submission. Remove a write statement for VIC
+that was written a ridiculous amount of times.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #) #363 #374 #380 #382 #383: 
+   #363 -- PE Layout
+   $374 -- Turn BFBFLAG on for testing (so PE layout changes won't appear to change answers)
+   #382 -- Write statement for VIC
+   $383 -- mkmapdata intel version
+
+Known bugs introduced in this tag (include github issue ID): #384
+   #384 -- f09 resolution VIC test
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): PE layouts
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): ndep for clm50_cam6 forcing
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Added back tests 
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: self
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons: clm5.0.dev010
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for some
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all with cism, tests as BFBFLAG on
+    - what platforms/compilers: all
+    - nature of change: similar
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cism
+
+     cism to release-v2.1.00
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #381 -- 1850 fully coupled ndep update, update cism, update PE layouts, turn BFBFLAG on for testing
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev010
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue May 15 03:00:38 MDT 2018
