@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
    clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing
    clm5.0.dev010     erik 05/15/2018 Update cime version to version in cesm2.0.beta10, changes answers for 1850 compsets because of orbit
    clm5.0.dev009    sacks 05/10/2018 New init_interp method
