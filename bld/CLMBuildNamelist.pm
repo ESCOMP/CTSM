@@ -1569,12 +1569,15 @@ sub process_namelist_inline_logic {
   setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_fertilizer($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_grainproduct($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
+    setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  }
   setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1742,6 +1745,10 @@ sub process_namelist_inline_logic {
   #######################################################################
   setup_logic_hydrology_switches($nl, $physv);
 
+  #########################################
+  # namelist group: clm_initinterp_inparm #
+  #########################################
+  setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -2069,6 +2076,18 @@ sub setup_logic_create_crop_landunit {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_subgrid {
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   my $var = 'run_zero_weight_urban';
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+}
+
 #-------------------------------------------------------------------------------
 
 sub setup_logic_cnfire {
@@ -2103,7 +2122,7 @@ sub setup_logic_cnfire {
 sub setup_logic_cnprec {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  if ( $physv->as_long() >= $physv->as_long("clm5_0") && &value_is_true($nl->get_value('use_cn')) ) {
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl_flags->{'use_cn'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
                  $nl, 'ncrit', 'use_cn'=>$nl_flags->{'use_cn'});
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
@@ -2363,7 +2382,10 @@ sub setup_logic_initial_conditions {
     }
     if ($opts->{'ignore_ic_date'}) {
       if ( &value_is_true($nl_flags->{'use_crop'}) ) {
-        $log->fatal_error("using ignore_ic_date is incompatable with crop!");
+        $log->warning("using ignore_ic_date is incompatable with crop! If you choose to ignore this error, " . 
+                      "the counters since planting for crops will be messed up. \nSo you should ignore at " . 
+                      "least the first season for crops. And since it will impact the 20 year means, ideally the " .
+                      "first 20 years should be ignored.");
       }
     } elsif ($opts->{'ignore_ic_year'}) {
        $settings{'ic_md'} = $ic_date;
@@ -2386,9 +2408,9 @@ sub setup_logic_initial_conditions {
           # Delete any date settings, except for crop
           delete( $settings{'ic_ymd'} );
           delete( $settings{'ic_md'}  );
-          if ( &value_is_true($nl_flags->{'use_crop'}) ) {
-             $settings{'ic_md'} = $ic_date;
-          }
+          #if ( &value_is_true($nl_flags->{'use_crop'}) ) {
+             #$settings{'ic_md'} = $ic_date;
+          #}
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_sim_years" );
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
           foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
@@ -3700,6 +3722,26 @@ sub setup_logic_lnd2atm {
 
    if ($physv->as_long() >= $physv->as_long("clm4_5")) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'melt_non_icesheet_ice_runoff');
+   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_initinterp {
+   #
+   # Options related to init_interp
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      my $var = 'init_interp_method';
+      if ( &value_is_true($nl->get_value("use_init_interp"))) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      } else {
+         if (defined($nl->get_value($var))) {
+            $log->fatal_error("$var can only be set if use_init_interp is true");
+         }
+      }
    }
 }
 

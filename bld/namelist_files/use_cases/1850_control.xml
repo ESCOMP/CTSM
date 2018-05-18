@@ -33,7 +33,7 @@
 <stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
 
 <stream_fldfilename_ndep phys="clm5_0" use_cn=".true." lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/ndepdata/fndep_clm_hist_simyr1850_0.9x1.25_CMIP6alpha01_c170330.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_hist_simyr1850_0.9x1.25_CMIP6alpha02_c180426.nc</stream_fldfilename_ndep>
  
 <ndep_taxmode use_cn=".true." lnd_tuning_mode="clm5_0_cam6.0">cycle</ndep_taxmode>
 

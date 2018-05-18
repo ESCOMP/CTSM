@@ -18,7 +18,7 @@ module ncdio_var
 
   integer, parameter, public :: max_name = 256   ! max length for a variable name
   
-  ! This type stores a single variable in a fake file, for a single time slice.
+  ! This type stores a single variable in a fake file
   type :: ncdio_var_type
      private
      

@@ -17,8 +17,15 @@ https://escomp.github.io/ctsm-docs/
 
 For help with how to work with CTSM in git, see
 
-https://github.com/ESCOMP/ctsm/wiki/Recommended-git-setup
+https://github.com/ESCOMP/ctsm/wiki/Getting-started-with-CTSM-in-git
 
 and
 
-https://github.com/ESCOMP/ctsm/wiki/Getting-started-with-CTSM-in-git
+https://github.com/ESCOMP/ctsm/wiki/Recommended-git-setup
+
+To get updates on CTSM tags and important notes on CTSM developments
+join our low traffic email list:
+
+https://groups.google.com/a/ucar.edu/forum/#!forum/ctsm-dev
+
+(Send email to ctsm-core@ucar.edu if you have problems with any of this)

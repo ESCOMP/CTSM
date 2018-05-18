@@ -116,6 +116,7 @@ contains
      ! !USES:
      use clm_varcon        , only : spval
      use clm_time_manager  , only : get_step_size, get_nstep
+     use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod
@@ -135,6 +136,7 @@ contains
      integer  :: p,c,l,g,fc                             ! indices
      real(r8) :: dtime                                  ! land model time step (sec)
      integer  :: nstep                                  ! time step number
+     integer  :: DAnstep                                ! time step number since last Data Assimilation (DA)
      logical  :: found                                  ! flag in search loop
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
@@ -200,7 +202,7 @@ contains
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
           eflx_lwrad_net          =>    energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]
           eflx_sh_tot             =>    energyflux_inst%eflx_sh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total sensible heat flux (W/m**2) [+ to atm]
-          eflx_lh_tot             =>    energyflux_inst%eflx_lh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total latent heat flux (W/m8*2)  [+ to atm]
+          eflx_lh_tot             =>    energyflux_inst%eflx_lh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total latent heat flux (W/m**2)  [+ to atm]
           eflx_soil_grnd          =>    energyflux_inst%eflx_soil_grnd_patch    , & ! Input:  [real(r8) (:)   ]  soil heat flux (W/m**2) [+ = into soil] 
           eflx_wasteheat_patch    =>    energyflux_inst%eflx_wasteheat_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
           eflx_heat_from_ac_patch =>    energyflux_inst%eflx_heat_from_ac_patch , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
@@ -236,6 +238,7 @@ contains
        ! Get step size and time step
 
        nstep = get_nstep()
+       DAnstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
        dtime = get_step_size()
 
        ! Determine column level incoming snow and rain
@@ -305,7 +308,7 @@ contains
           if ((col%itype(indexc) == icol_roof .or. &
                col%itype(indexc) == icol_road_imperv .or. &
                col%itype(indexc) == icol_road_perv) .and. &
-               abs(errh2o(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
+               abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
 
              write(iulog,*)'clm urban model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep                 = ',nstep
@@ -334,7 +337,7 @@ contains
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
 
-          else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
+          else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
 
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep                 = ',nstep
@@ -433,7 +436,7 @@ contains
                ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                ' errh2osno= ',errh2osno(indexc)
 
-          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
+          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep              = ',nstep
              write(iulog,*)'errh2osno          = ',errh2osno(indexc)
@@ -525,7 +528,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (nstep > 2) ) then
+       if ( found  .and. (DAnstep > 2) ) then
           write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsol        = ',errsol(indexp)
@@ -555,7 +558,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (nstep > 2) ) then
+       if ( found  .and. (DAnstep > 2) ) then
           write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)' 
           write(iulog,*)'nstep        = ',nstep 
           write(iulog,*)'errlon       = ',errlon(indexp)
@@ -578,7 +581,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (nstep > 2) ) then
+       if ( found  .and. (DAnstep > 2) ) then
           write(iulog,*)'WARNING: BalanceCheck: surface flux energy balance error (W/m2)'
           write(iulog,*)'nstep          = ' ,nstep
           write(iulog,*)'errseb         = ' ,errseb(indexp)
@@ -621,7 +624,7 @@ contains
           write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
-          if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
+          if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (DAnstep > 2) ) then
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if

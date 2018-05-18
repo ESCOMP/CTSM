@@ -7,11 +7,13 @@ module initInterpMod
 
 #include "shr_assert.h"
   use initInterpBounds, only : interp_bounds_type
-  use initInterpMindist, only: set_mindist, subgrid_type, subgrid_special_indices_type
+  use initInterpMindist, only: set_mindist, set_single_match
+  use initInterpMindist, only: subgrid_type, subgrid_special_indices_type
   use initInterp1dData, only : interp_1d_data
   use initInterp2dvar, only: interp_2dvar_type
   use initInterpMultilevelBase, only : interp_multilevel_type
   use initInterpMultilevelContainer, only : interp_multilevel_container_type
+  use initInterpUtils, only: glc_elevclasses_are_same
   use shr_kind_mod   , only: r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
   use shr_sys_mod    , only: shr_sys_flush
@@ -20,7 +22,8 @@ module initInterpMod
   use clm_varctl     , only: iulog
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
-  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip
+  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
+  use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
   use ncdio_pio
   use pio
@@ -38,6 +41,7 @@ module initInterpMod
 
   private :: check_dim_subgrid
   private :: check_dim_level
+  private :: skip_var
   private :: findMinDist
   private :: set_subgrid_info
   private :: interp_0d_copy
@@ -49,6 +53,20 @@ module initInterpMod
   ! Private data
  
   character(len=8) :: created_glacier_mec_landunits
+
+  ! Allowable interpolation methods
+  ! - interp_method_general: The general-purpose method
+  ! - interp_method_finidat_areas: Take areas and other related fields from the finidat
+  !   file, rather than maintaining them at the values from the surface dataset. This
+  !   only works for interpolation from one resolution to the same resolution, and with
+  !   basically the same configuration. This also triggers different logic for finding
+  !   matching points, assuring that we find exactly one match in the input for each
+  !   output point.
+  integer, parameter :: interp_method_general = 1
+  integer, parameter :: interp_method_finidat_areas = 2
+
+  ! One of the above methods
+  integer :: interp_method
 
   ! If true, fill missing types with closest natural veg column (using bare soil for
   ! patch-level variables)
@@ -79,14 +97,16 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
+    character(len=64) :: init_interp_method
 
     character(len=*), parameter :: subname = 'initInterp_readnl'
     !-----------------------------------------------------------------------
 
     namelist /clm_initinterp_inparm/ &
-         init_interp_fill_missing_with_natveg
+         init_interp_method, init_interp_fill_missing_with_natveg
 
     ! Initialize options to default values, in case they are not specified in the namelist
+    init_interp_method = ' '
     init_interp_fill_missing_with_natveg = .false.
 
     if (masterproc) then
@@ -105,6 +125,7 @@ contains
        call relavu( unitn )
     end if
 
+    call shr_mpi_bcast (init_interp_method, mpicom)
     call shr_mpi_bcast (init_interp_fill_missing_with_natveg, mpicom)
 
     if (masterproc) then
@@ -114,10 +135,36 @@ contains
        write(iulog,*) ' '
     end if
 
+    call translate_options(init_interp_method)
+    call check_nl_consistency()
+
+  contains
+    subroutine translate_options(init_interp_method)
+      ! Translate string options into integer parameters
+      character(len=*), intent(in) :: init_interp_method
+
+      select case (init_interp_method)
+      case ('general')
+         interp_method = interp_method_general
+      case ('use_finidat_areas')
+         interp_method = interp_method_finidat_areas
+      case default
+         write(iulog,*) 'Unknown value for init_interp_method: ', trim(init_interp_method)
+         call endrun('Unknown value for init_interp_method')
+      end select
+    end subroutine translate_options
+
+    subroutine check_nl_consistency()
+      if (interp_method == interp_method_finidat_areas .and. &
+           init_interp_fill_missing_with_natveg) then
+         call endrun(msg='init_interp_method = use_finidat_areas is incompatible with init_interp_fill_missing_with_natveg')
+      end if
+    end subroutine check_nl_consistency
+
   end subroutine initInterp_readnl
 
 
-  subroutine initInterp (filei, fileo, bounds)
+  subroutine initInterp (filei, fileo, bounds, glc_behavior)
 
     !----------------------------------------------------------------------- 
     ! Read initial data from netCDF instantaneous initial data history file 
@@ -130,6 +177,7 @@ contains
     character(len=*)  , intent(in) :: filei     !input  initial dataset
     character(len=*)  , intent(in) :: fileo    !output initial dataset
     type(bounds_type) , intent(in) :: bounds
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! local variables
     integer            :: i,j,k,l,m,n     ! loop indices    
@@ -158,7 +206,8 @@ contains
     integer            :: decomp_cascade_state_i, decomp_cascade_state_o 
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
     integer            :: npftso, ncolso, nlunso, ngrcso 
-    integer , pointer  :: pftindx(:)     
+    logical            :: glc_elevclasses_same
+    integer , pointer  :: pftindx(:)
     integer , pointer  :: colindx(:)     
     integer , pointer  :: lunindx(:)     
     integer , pointer  :: grcindx(:) 
@@ -214,6 +263,12 @@ contains
     call check_dim_level(ncidi, ncido, dimname='levgrnd', must_be_same=.false.)
     call check_dim_level(ncidi, ncido, dimname='numrad' , must_be_same=.true.)
 
+    glc_elevclasses_same = glc_elevclasses_are_same(ncidi, ncido)
+    if (masterproc) then
+       write(iulog,*) 'Glacier elevation classes same in input and output?: ', &
+            glc_elevclasses_same
+    end if
+
     ! --------------------------------------------
     ! Determine input file global attributes that are needed 
     ! --------------------------------------------
@@ -262,6 +317,10 @@ contains
          begl = 1, endl = nlunsi, &
          begg = 1, endg = ngrcsi)
 
+    ! It is important for bounds_o to match the passed-in bounds - i.e., for the
+    ! decomposition within init_interp to match the model's decomposition. This way we
+    ! can access other information for the output configuration that is not contained in
+    ! the restart file.
     bounds_o = interp_bounds_type( &
          begp = bounds%begp, endp = bounds%endp, &
          begc = bounds%begc, endc = bounds%endc, &
@@ -291,7 +350,8 @@ contains
     vec_dimname = 'pft'
     call findMinDist(vec_dimname, bounds_i%get_begp(), bounds_i%get_endp(), &
          bounds_o%get_begp(), bounds_o%get_endp(), ncidi, ncido, &
-         subgrid_special_indices, pft_activei, pft_activeo, pftindx )
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         pft_activei, pft_activeo, pftindx )
 
     ! For each output column, find the input column, colindx, that is closest
 
@@ -301,7 +361,8 @@ contains
     vec_dimname = 'column'
     call findMinDist(vec_dimname, bounds_i%get_begc(), bounds_i%get_endc(), &
          bounds_o%get_begc(), bounds_o%get_endc(), ncidi, ncido, &
-         subgrid_special_indices, col_activei, col_activeo, colindx )
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         col_activei, col_activeo, colindx )
 
     ! For each output landunit, find the input landunit, lunindx, that is closest
 
@@ -311,7 +372,8 @@ contains
     vec_dimname = 'landunit'
     call findMinDist(vec_dimname, bounds_i%get_begl(), bounds_i%get_endl(), &
          bounds_o%get_begl(), bounds_o%get_endl(), ncidi, ncido, &
-         subgrid_special_indices, lun_activei, lun_activeo, lunindx )
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         lun_activei, lun_activeo, lunindx )
 
     ! For each output gridcell, find the input gridcell, grcindx, that is closest
 
@@ -321,7 +383,8 @@ contains
     vec_dimname = 'gridcell'
     call findMinDist(vec_dimname, bounds_i%get_begg(), bounds_i%get_endg(), &
          bounds_o%get_begg(), bounds_o%get_endg(), ncidi, ncido, &
-         subgrid_special_indices, grc_activei, grc_activeo, grcindx)
+         subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+         grc_activei, grc_activeo, grcindx)
 
     ! ------------------------------------------------------------------------
     ! Set up interpolators for multi-level variables
@@ -378,7 +441,7 @@ contains
 
        status = pio_inq_varid (ncido, trim(varname), vardesc)
        status = pio_get_att(ncido, vardesc, 'interpinic_flag', iflag_interpinic)
-       if (iflag_interpinic == iflag_skip) then
+       if (skip_var(iflag_interpinic)) then
           if (masterproc) then
              write (iulog,*) 'Skipping     : ', trim(varname)
           end if
@@ -487,6 +550,14 @@ contains
 
              if (masterproc) then
                 write(iulog,*) 'Skipping     : ',trim(varname)
+             end if
+
+          else
+
+             if (masterproc) then
+                write(iulog,*) 'Bad interpinic flag for scalar variable ', trim(varname), &
+                     ': ', iflag_interpinic
+                call endrun(msg='Bad interpinic flag for scalar variable'//errMsg(sourcefile, __LINE__))
              end if
 
           end if
@@ -622,10 +693,45 @@ contains
 
   end subroutine initInterp
 
+  !-----------------------------------------------------------------------
+  function skip_var(iflag_interpinic)
+    !
+    ! !DESCRIPTION:
+    ! Logical function saying whether we should skip a given variable given
+    ! iflag_interpinic and interp_method
+    !
+    ! !ARGUMENTS:
+    logical :: skip_var  ! function result
+    integer, intent(in) :: iflag_interpinic
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'skip_var'
+    !-----------------------------------------------------------------------
+
+    if (iflag_interpinic == iflag_skip) then
+       skip_var = .true.
+    else if (iflag_interpinic == iflag_area) then
+       select case (interp_method)
+       case (interp_method_general)
+          skip_var = .true.
+       case (interp_method_finidat_areas)
+          skip_var = .false.
+       case default
+          call endrun(msg='Unhandled interp_method'//errMsg(sourcefile, __LINE__))
+       end select
+    else
+       skip_var = .false.
+    end if
+
+  end function skip_var
+
+
   !=======================================================================
 
   subroutine findMinDist( dimname, begi, endi, bego, endo, ncidi, ncido, &
-       subgrid_special_indices, activei, activeo, minindx)
+       subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
+       activei, activeo, minindx)
 
     ! --------------------------------------------------------------------
     !
@@ -638,13 +744,15 @@ contains
     type(file_desc_t) , intent(inout) :: ncidi         
     type(file_desc_t) , intent(inout) :: ncido         
     type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
+    type(glc_behavior_type), intent(in) :: glc_behavior
+    logical           , intent(in)    :: glc_elevclasses_same
     logical           , intent(out)   :: activei(begi:endi)
     logical           , intent(out)   :: activeo(bego:endo)
     integer           , intent(out)   :: minindx(bego:endo)         
     !
     ! local variables 
     type(subgrid_type)   :: subgridi 
-    type(subgrid_type)   :: subgrido 
+    type(subgrid_type)   :: subgrido
     ! --------------------------------------------------------------------
 
     if (masterproc) then
@@ -659,11 +767,32 @@ contains
     call set_subgrid_info(beg=bego, end=endo, dimname=dimname, use_glob=.false., &
          ncid=ncido, active=activeo, subgrid=subgrido)
 
-    if (masterproc) then
-       write(iulog,*)'calling set_mindist for ',trim(dimname)
-    end if
-    call set_mindist(begi, endi, bego, endo, activei, activeo, subgridi, subgrido, &
-         subgrid_special_indices, init_interp_fill_missing_with_natveg, minindx)
+    select case (interp_method)
+    case (interp_method_general)
+       if (masterproc) then
+          write(iulog,*) 'calling set_mindist for ',trim(dimname)
+       end if
+       call set_mindist(begi=begi, endi=endi, bego=bego, endo=endo, &
+            activei=activei, activeo=activeo, subgridi=subgridi, subgrido=subgrido, &
+            subgrid_special_indices=subgrid_special_indices, &
+            glc_behavior=glc_behavior, &
+            glc_elevclasses_same=glc_elevclasses_same, &
+            fill_missing_with_natveg=init_interp_fill_missing_with_natveg, &
+            mindist_index=minindx)
+    case (interp_method_finidat_areas)
+       if (masterproc) then
+          write(iulog,*) 'calling set_single_match for ',trim(dimname)
+       end if
+       call set_single_match(begi=begi, endi=endi, bego=bego, endo=endo, &
+            activeo=activeo, subgridi=subgridi, subgrido=subgrido, &
+            subgrid_special_indices=subgrid_special_indices, &
+            glc_behavior=glc_behavior, &
+            glc_elevclasses_same=glc_elevclasses_same, &
+            mindist_index=minindx)
+    case default
+       write(iulog,*) 'findMinDist: unhandled interp_method: ', interp_method
+       call endrun('Unhandled interp_method'//errMsg(sourcefile, __LINE__))
+    end select
 
     deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
     deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)

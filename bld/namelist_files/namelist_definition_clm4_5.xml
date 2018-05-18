@@ -92,6 +92,14 @@ over-productive.
 If TRUE, separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
+<entry id="run_zero_weight_urban" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, run all urban landunits everywhere where we have valid urban data.
+This forces memory to be allocated and calculations to be run even for 0-weight urban points.
+This has a substantial impact on memory use and performance, and should only be used
+if you're interested in potential urban behavior globally.
+</entry>
+
 <entry id="all_active" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, make ALL pfts, columns and landunits active, even those with 0 weight.
@@ -672,7 +680,7 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
 
-<entry id="hist_avgflag_pertape" type="char*1(6)" category="history"
+<entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
        group="clm_inparm" valid_values="A,I,X,M" >
 Per file averaging flag.
     'A' (average over history period)
@@ -681,7 +689,7 @@ Per file averaging flag.
     'M' (minimum over history period)
 </entry>
 
-<entry id="hist_type1d_pertape" type="char*4(6)" category="history"
+<entry id="hist_type1d_pertape" type="char*4(10)" category="history"
        group="clm_inparm" valid_values="GRID,LAND,COLS,PFTS, " >
 Averaging type of output for 1D vector output (when hist_dov2xy is false).
     GRID means average all land-units up to the grid-point level
@@ -690,7 +698,7 @@ Averaging type of output for 1D vector output (when hist_dov2xy is false).
     PFTS means report everything on native PFT level
 </entry>
 
-<entry id="hist_dov2xy" type="logical(6)" category="history"
+<entry id="hist_dov2xy" type="logical(10)" category="history"
        group="clm_inparm" valid_values="" >
 If TRUE, implies output data on a 2D latitude/longitude grid. False means
 output in 1D vector format.  One setting per history tape series.
@@ -732,6 +740,26 @@ Fields to exclude from history tape series  5.
 Fields to exclude from history tape series  6.
 </entry>
 
+<entry id="hist_fexcl7" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  7.
+</entry>
+
+<entry id="hist_fexcl8" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  8.
+</entry>
+
+<entry id="hist_fexcl9" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  9.
+</entry>
+
+<entry id="hist_fexcl10" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series 10.
+</entry>
+
 <entry id="hist_fincl1" type="char*64(1000)" category="history"
        group="clm_inparm" valid_values="" >
 Fields to add to history tape series  1.
@@ -762,27 +790,47 @@ Fields to add to history tape series  5.
 Fields to add to history tape series  6.
 </entry>
 
-<entry id="hist_mfilt" type="integer(6)" category="history"
+<entry id="hist_fincl7" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  7.
+</entry>
+
+<entry id="hist_fincl8" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  8.
+</entry>
+
+<entry id="hist_fincl9" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  9.
+</entry>
+
+<entry id="hist_fincl10" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series 10.
+</entry>
+
+<entry id="hist_mfilt" type="integer(10)" category="history"
        group="clm_inparm" valid_values="" >
 Per tape series  maximum number of time samples.
 </entry>
 
-<entry id="hist_ndens" type="integer(6)" category="history"
+<entry id="hist_ndens" type="integer(10)" category="history"
        group="clm_inparm" valid_values="1,2" >
 Per tape series  history file density (i.e. output precision) 
     1=double precision
     2=single precision
-<default>Default: 2,2,2,2,2,2</default>
+<default>Default: 2,2,2,2,2,2,2,2,2,2</default>
 </entry>
 
-<entry id="hist_nhtfrq" type="integer(6)" category="history"
+<entry id="hist_nhtfrq" type="integer(10)" category="history"
        group="clm_inparm" valid_values="" >
 Per tape series history write frequency. 
     positive means in time steps
     0=monthly
     negative means hours
 (i.e. 5 means every 24 time-steps and -24 means every day
-<default>Default: 0,-24,-24,-24,-24,-24</default>
+<default>Default: 0,-24,-24,-24,-24,-24,-24,-24,-24,-24</default>
 </entry>
 
 <entry id="nsegspc" type="integer" category="clm_performance"
@@ -2366,6 +2414,39 @@ NOTE: Natural vegetation and crop landunits always behave as if this were true. 
 we can't find a column with the same type as a given crop column in the output, then we
 always fill with the closest natural veg patch / column, regardless of the value of this
 flag. So interpolation from non-crop to crop cases can be done without setting this flag.
+</entry>
+
+<entry id="init_interp_method" type="char*64" category="datasets"
+       group="clm_initinterp_inparm"
+       valid_values="general,use_finidat_areas" >
+Method to use for init_interp. Only applies when use_init_interp = .true.
+
+'general': The general-purpose method that can be used when changing
+grids, configurations, etc. This starts off with subgrid areas taken
+from the surface dataset.
+
+'use_finidat_areas': This starts off with subgrid areas taken from the
+input finidat file. This is needed to achieve bit-for-bit results in a
+coupled case (where areas in initialization impact initial fields sent
+to the atmosphere) (but using the 'general' method will typically have
+only a very minor impact on results in this case). For this method to
+work, the input finidat file needs to be at the same resolution as the
+current configuration. So this is a less general form of
+init_interp. However, it can be used when transitioning from a spinup
+run to a transient run, or in other cases where the only difference is
+in internal memory allocation. In order to catch possible problems, this
+uses a different algorithm for finding the input point for each output
+point, which ensures that each active output point is associated with
+exactly one input point with the same latitude, longitude and type. This
+method requires (a) the same grid for input and output, within roundoff;
+(b) any non-zero-weight point in the input must have memory allocated
+for it in this grid cell in the output (this will be satisfied if the
+point is non-zero-weight on the surface dataset or if it's a point for
+which we allocate memory even for zero-weight points); (c) any active
+point in the output (based on the surface dataset and rules for
+determining active points) must have a matching point in this grid cell
+in the input.
+
 </entry>
 
 </namelist_definition>

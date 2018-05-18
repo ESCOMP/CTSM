@@ -58,162 +58,115 @@ contains
 
   end function create_interpolator
 
-
   ! ------------------------------------------------------------------------
-  ! Tests: more levels in destination
+  ! Begin tests
   ! ------------------------------------------------------------------------
 
   @Test
-  subroutine moreDestLevels_noSourceLevels_setsDestToZero(this)
-    ! If there are no existing snow levels in the source, dest should be set to 0 for all
-    ! levels
+  subroutine moreDestLevels_twoSourceLevels(this)
+    ! More dest levels than source levels; only some source levels have snow present
     class(TestInitInterpMultilevelSnow), intent(inout) :: this
     type(interp_multilevel_snow_type) :: interpolator
     real(r8) :: data_dest(5) = 1000._r8
     real(r8) :: data_dest_expected(5)
     real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
 
-    interpolator = create_interpolator(num_snow_layers_source = 0)
-
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
-
-    data_dest_expected(:) = 0._r8
-    @assertEqual(data_dest_expected, data_dest)
-  end subroutine moreDestLevels_noSourceLevels_setsDestToZero
-
-  @Test
-  subroutine moreDestLevels_allSourceLevels(this)
-    ! All source levels have snow present
-    class(TestInitInterpMultilevelSnow), intent(inout) :: this
-    type(interp_multilevel_snow_type) :: interpolator
-    real(r8) :: data_dest(5) = 1000._r8
-    real(r8) :: data_dest_expected(5)
-    real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
-
-    interpolator = create_interpolator(num_snow_layers_source = size(data_source))
+    interpolator = create_interpolator(num_snow_layers_source = 2)
 
     call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(1:2) = 0._r8
     data_dest_expected(3:5) = data_source(:)
     @assertEqual(data_dest_expected, data_dest)
-  end subroutine moreDestLevels_allSourceLevels
-
-  @Test
-  subroutine moreDestLevels_oneSourceLevel(this)
-    ! One source level has snow present
-    class(TestInitInterpMultilevelSnow), intent(inout) :: this
-    type(interp_multilevel_snow_type) :: interpolator
-    real(r8) :: data_dest(5) = 1000._r8
-    real(r8) :: data_dest_expected(5)
-    real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
-
-    interpolator = create_interpolator(num_snow_layers_source = 1)
-
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
-
-    data_dest_expected(1:4) = 0._r8
-    data_dest_expected(5) = data_source(3)
-    @assertEqual(data_dest_expected, data_dest)
-  end subroutine moreDestLevels_oneSourceLevel
-
-  @Test
-  subroutine moreDestLevels_twoSourceLevels(this)
-    ! Two source levels has snow present
-    class(TestInitInterpMultilevelSnow), intent(inout) :: this
-    type(interp_multilevel_snow_type) :: interpolator
-    real(r8) :: data_dest(5) = 1000._r8
-    real(r8) :: data_dest_expected(5)
-    real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
-
-    interpolator = create_interpolator(num_snow_layers_source = 2)
-
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
-
-    data_dest_expected(1:3) = 0._r8
-    data_dest_expected(4:5) = data_source(2:3)
-    @assertEqual(data_dest_expected, data_dest)
   end subroutine moreDestLevels_twoSourceLevels
 
-  ! ------------------------------------------------------------------------
-  ! Tests: fewer levels in source
-  ! ------------------------------------------------------------------------
-
   @Test
-  subroutine fewerDestLevels_noSourceLevels_setsDestToZero(this)
-    ! If there are no existing snow levels in the source, dest should be set to 0 for all
-    ! levels
+  subroutine sameDestLevels(this)
+    ! Same number of levels in dest as source; only some source levels have snow present
     class(TestInitInterpMultilevelSnow), intent(inout) :: this
     type(interp_multilevel_snow_type) :: interpolator
     real(r8) :: data_dest(5) = 1000._r8
     real(r8) :: data_dest_expected(5)
     integer  :: i
-    real(r8) :: data_source(7) = [ (i, i=11,17) ]
+    real(r8) :: data_source(5) = [ (i, i=11,15) ]
 
-    interpolator = create_interpolator(num_snow_layers_source = 0)
-
+    interpolator = create_interpolator(num_snow_layers_source = 3)
     call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
-    data_dest_expected(:) = 0._r8
+    data_dest_expected(:) = data_source(:)
     @assertEqual(data_dest_expected, data_dest)
-  end subroutine fewerDestLevels_noSourceLevels_setsDestToZero
-
+  end subroutine sameDestLevels
+ 
   @Test
-  subroutine fewerDestLevels_allSourceLevels(this)
-    ! All source levels have snow present
+  subroutine fewerDestLevels_moreThanExist(this)
+    ! Fewer snow levels in dest than source, but dest has more levels than the number of
+    ! existing snow layers in source
     class(TestInitInterpMultilevelSnow), intent(inout) :: this
     type(interp_multilevel_snow_type) :: interpolator
     real(r8) :: data_dest(5) = 1000._r8
     real(r8) :: data_dest_expected(5)
     integer  :: i
-    real(r8) :: data_source(7) = [ (i, i=11,17) ]
+    real(r8) :: data_source(9) = [ (i, i=11,19) ]
 
-    interpolator = create_interpolator(num_snow_layers_source = size(data_source))
+    interpolator = create_interpolator(num_snow_layers_source = 3)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
+    data_dest_expected(:) = data_source(5:9)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine fewerDestLevels_moreThanExist
+
+  @Test
+  subroutine fewerDestLevels_sameAsExist(this)
+    ! Fewer snow levels in dest than source; dest has the same number of levels as the
+    ! number of existing snow layers in source
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    integer  :: i
+    real(r8) :: data_source(9) = [ (i, i=11,19) ]
+
+    interpolator = create_interpolator(num_snow_layers_source = 5)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+
+    data_dest_expected(:) = data_source(5:9)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine fewerDestLevels_sameAsExist
+
+  @Test
+  subroutine fewerDestLevels_fewerThanExist(this)
+    ! Fewer snow levels in dest than source; dest has fewer levels than the number of
+    ! existing snow layers in source
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    integer  :: i
+    real(r8) :: data_source(9) = [ (i, i=11,19) ]
+
+    interpolator = create_interpolator(num_snow_layers_source = 7)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+
+    ! Note that the top level of source where snow exists is level 3
+    data_dest_expected(:) = data_source(3:7)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine fewerDestLevels_fewerThanExist
+
+  @Test
+  subroutine fewerDestLevels_allExist(this)
+    ! Fewer snow levels in dest than source; all snow levels exist in source
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    integer  :: i
+    real(r8) :: data_source(9) = [ (i, i=11,19) ]
+
+    interpolator = create_interpolator(num_snow_layers_source = 9)
     call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(:) = data_source(1:5)
     @assertEqual(data_dest_expected, data_dest)
-
-  end subroutine fewerDestLevels_allSourceLevels
-
-  @Test
-  subroutine fewerDestLevels_oneSourceLevel(this)
-    ! One source level has snow present
-    class(TestInitInterpMultilevelSnow), intent(inout) :: this
-    type(interp_multilevel_snow_type) :: interpolator
-    real(r8) :: data_dest(5) = 1000._r8
-    real(r8) :: data_dest_expected(5)
-    integer  :: i
-    real(r8) :: data_source(7) = [ (i, i=11,17) ]
-
-    interpolator = create_interpolator(num_snow_layers_source = 1)
-
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
-
-    data_dest_expected(1:4) = 0._r8
-    data_dest_expected(5) = data_source(7)
-    @assertEqual(data_dest_expected, data_dest)
-  end subroutine fewerDestLevels_oneSourceLevel
-
-  @Test
-  subroutine fewerDestLevels_twoSourceLevels(this)
-    ! Two source levels have snow present
-    class(TestInitInterpMultilevelSnow), intent(inout) :: this
-    type(interp_multilevel_snow_type) :: interpolator
-    real(r8) :: data_dest(5) = 1000._r8
-    real(r8) :: data_dest_expected(5)
-    integer  :: i
-    real(r8) :: data_source(7) = [ (i, i=11,17) ]
-
-    interpolator = create_interpolator(num_snow_layers_source = 2)
-
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
-
-    data_dest_expected(1:3) = 0._r8
-    data_dest_expected(4:5) = data_source(6:7)
-    @assertEqual(data_dest_expected, data_dest)
-  end subroutine fewerDestLevels_twoSourceLevels
-
+  end subroutine fewerDestLevels_allExist
 
 end module test_init_interp_multilevel_snow

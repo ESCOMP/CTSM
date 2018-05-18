@@ -434,6 +434,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_nguardrail phys="clm5_0" use_cn=".true." >.true.</use_nguardrail>
 
 <ncrit    phys="clm5_0" use_cn=".true.">1.d-9</ncrit>
+<ncrit    phys="clm4_5" use_cn=".true.">1.d-8</ncrit>
 <cnegcrit phys="clm5_0" use_cn=".true.">-6.d+1</cnegcrit>
 <nnegcrit phys="clm5_0" use_cn=".true.">-6.d+0</nnegcrit>
 <cnegcrit phys="clm4_5" use_cn=".true.">-6.d+2</cnegcrit>
@@ -478,19 +479,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1"
+<!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1" use_cn=".false."
 >hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1"
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1" use_cn=".true."
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7"
+<!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7" use_cn=".true."
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7"
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7" use_cn=".false."
 >hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
@@ -509,21 +512,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm4_5_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v6_simyr1850_c180204.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm4_5_CRUv7"
 >lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v6_simyr1850_c180204.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm4_5_cam6.0"
 >lnd/clm2/initdata_map/clmi.B1850.0161-01-01.0.9x1.25_gx1v7_simyr1850_c180130.nc
 </finidat>
@@ -531,7 +534,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v6_simyr1850_c171214.nc
 </finidat>
@@ -547,22 +550,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru.1526-01-01.0.9x1.25_gx1v6_simyr1850_c180109.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru.1526-01-01.0.9x1.25_gx1v6_simyr1850_c180109b.nc
 </finidat>
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/initdata_map/clmi.B1850.0161-01-01.0.9x1.25_gx1v7_simyr1850_c180130.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
 >lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v6_simyr1850_c180110.nc
 </finidat>
@@ -584,13 +587,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="4x5"  maxpft="17"  mask="gx3v7" use_cn=".false." use_fates=".true."
          ic_ymd="20000101"  use_nitrif_denitrif=".false." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
->lnd/clm2/initdata_map/clmi.I2000Clm45Fates.0121-01-01.4x5_mgx3v7_simyr2000_c180122.nc
-</finidat>
-
-<finidat hgrid="1x1_brazil"  maxpft="17"  mask="navy" use_cn=".false." use_fates=".true."
-         ic_ymd="20000101"  use_nitrif_denitrif=".false." use_vertsoilc=".true." sim_year="2000"
-         ic_tod="0" glc_nec="0" use_crop=".false." irrigate=".true."
->lnd/clm2/initdata_map/clmi.I2000Clm45Fates.0101-01-01.1x1_brazil_simyr2000_c180120.nc
+>lnd/clm2/initdata_map/clmi.I2000Clm45Fates.0021-01-01.4x5_mgx3v7_simyr2000_c180306.nc
 </finidat>
 
 
@@ -663,12 +660,14 @@ lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_16pfts_Irrig_CMIP6_simyr2000_c1
 lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
+<fsurdat hgrid="0.47x0.63"  sim_year="1850" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/surfdata_0.47x0.63_16pfts_Irrig_CMIP6_simyr1850_c180508.nc</fsurdat>
 <fsurdat hgrid="360x720cru"   sim_year="1850" use_crop=".false." irrigate=".true." >
 lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_48x96_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 
-<fsurdat hgrid="0.47x0.63"  sim_year="1850" use_crop=".true." >
+<fsurdat hgrid="0.47x0.63"  sim_year="1850" use_crop=".false."   irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_0.47x0.63_16pfts_Irrig_CMIP6_simyr1850_c170919.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"     sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
@@ -748,6 +747,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 
 <!-- Dynamic PFT surface datasets for crop -->
 
+<flanduse_timeseries hgrid="0.47x0.63"      sim_year_range="1850-2000"
+ use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_78pfts_CMIP6_simyr1850-2015_c180508.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    sim_year_range="1850-2000"
  use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
@@ -779,6 +780,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
 
 <!-- Other future scenario Dynamic PFT datasets with crop off -->
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="8.5" sim_year_range="1850-2000" irrigate=".true."
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c171025.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="8.5" sim_year_range="1850-2100" irrigate=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100" irrigate=".true."
@@ -797,6 +800,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="1x1_brazil"    rcp="8.5" sim_year_range="1850-2100" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="6" sim_year_range="1850-2000" irrigate=".true."
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c171025.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="6"   sim_year_range="1850-2100"  irrigate=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="6"   sim_year_range="1850-2100"  irrigate=".true."
@@ -810,6 +815,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="ne30np4"       rcp="6"   sim_year_range="1850-2100" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="4.5" sim_year_range="1850-2000" irrigate=".true."
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c171025.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="4.5" sim_year_range="1850-2100"  irrigate=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="4.5" sim_year_range="1850-2100"  irrigate=".true."
@@ -825,6 +832,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="ne30np4"       rcp="4.5" sim_year_range="1850-2100" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="2.6" sim_year_range="1850-2000" irrigate=".true."
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c171025.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="2.6" sim_year_range="1850-2100"  irrigate=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="2.6" sim_year_range="1850-2100"  irrigate=".true."
@@ -839,6 +848,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
 <!-- Other future scenario Dynamic PFT datasets with crop on -->
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="8.5" sim_year_range="1850-2000"
+ use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_78pfts_CMIP6_simyr1850-2015_c180508.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="8.5" sim_year_range="1850-2100"
  use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100"
@@ -859,6 +870,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="1x1_brazil"    rcp="8.5" sim_year_range="1850-2100"
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="6" sim_year_range="1850-2000"
+ use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_78pfts_CMIP6_simyr1850-2015_c180508.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="6"   sim_year_range="1850-2100" 
  use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="6"   sim_year_range="1850-2100" 
@@ -874,6 +887,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="ne30np4"       rcp="6"   sim_year_range="1850-2100"
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="4.5" sim_year_range="1850-2000"
+ use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_78pfts_CMIP6_simyr1850-2015_c180508.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="4.5" sim_year_range="1850-2100" 
  use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="4.5" sim_year_range="1850-2100" 
@@ -891,6 +906,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="ne30np4"       rcp="4.5" sim_year_range="1850-2100"
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="0.47x0.63"     rcp="2.6" sim_year_range="1850-2000"
+ use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_78pfts_CMIP6_simyr1850-2015_c180508.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="360x720cru"    rcp="2.6" sim_year_range="1850-2100" 
  use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="2.6" sim_year_range="1850-2100" 
@@ -1113,6 +1130,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <create_crop_landunit     use_fates=".false.">.true.</create_crop_landunit>
 <create_crop_landunit     use_fates=".true." >.false.</create_crop_landunit>
 
+<run_zero_weight_urban>.false.</run_zero_weight_urban>
 
 <!-- =========================================  -->
 <!-- Performance issues                         -->
@@ -2416,5 +2434,11 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
+
+<!-- =========================================  -->
+<!-- Defaults for init_interp                   -->
+<!-- =========================================  -->
+
+<init_interp_method>general</init_interp_method>
 
 </namelist_defaults>

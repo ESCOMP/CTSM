@@ -92,7 +92,7 @@ module subgridWeightsMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, all_active, use_fates
+  use clm_varctl   , only : iulog, all_active, run_zero_weight_urban, use_fates
   use clm_varcon   , only : nameg, namel, namec, namep
   use decompMod    , only : bounds_type
   use GridcellType , only : grc                
@@ -301,7 +301,7 @@ contains
     ! Determine whether the given landunit is active
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istice_mec
+    use landunit_varcon, only : istsoil, istice_mec, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     implicit none
@@ -332,6 +332,11 @@ contains
 
        if (lun%itype(l) == istice_mec .and. &
             glc_behavior%has_virtual_columns_grc(g)) then
+          is_active_l = .true.
+       end if
+
+       if ((lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) .and. &
+            run_zero_weight_urban) then
           is_active_l = .true.
        end if
 
@@ -668,6 +673,14 @@ contains
     deallocate(sumwtcol, sumwtlunit, sumwtgcell)
 
     if (error_found) then
+       write(iulog,*) ' '
+       write(iulog,*) 'If you are seeing this message at the beginning of a run with'
+       write(iulog,*) 'use_init_interp = .true. and init_interp_method = "use_finidat_areas",'
+       write(iulog,*) 'and you are seeing weights less than 1, then a likely cause is:'
+       write(iulog,*) 'For the above-mentioned grid cell(s):'
+       write(iulog,*) 'The matching input grid cell had some non-zero-weight subgrid type'
+       write(iulog,*) 'that is not present in memory in the new run.'
+       write(iulog,*) ' '
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 

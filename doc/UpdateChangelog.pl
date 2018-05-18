@@ -67,7 +67,7 @@ if ( ! $opts{'update'} ) {
    $tag = $ARGV[0];
    $sum = $ARGV[1];
 
-   if ( $tag !~ /clm[0-9]+_([0-9]+)_[0-9]+_r[0-9]+/ ) {
+   if ( $tag !~ /clm[0-9]\.[0-9]\.(dev[0-9][0-9][0-9]|[0-9][0-9])/ ) {
      print "ERROR: bad tagname: $tag\n";
      usage();
    }

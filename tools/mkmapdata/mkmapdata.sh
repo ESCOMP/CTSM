@@ -337,7 +337,7 @@ case $hostname in
   cheyenne* | r* )
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
   esmfvers=7.0.0
-  intelvers=16.0.3
+  intelvers=17.0.1
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
   module load ncl

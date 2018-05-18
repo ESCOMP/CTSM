@@ -23,10 +23,11 @@
 cur_time=`date '+%H:%M:%S'`
 
 hostname=`hostname`
+echo $hostname
 case $hostname in
 
     ##cheyenne
-     cheyenne*)
+     cheyenne* | r*i*n*)
     submit_script="test_driver_cheyenne${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -87,7 +88,7 @@ EOF
     ;;
 
     ## hobart
-    hobart* ) 
+    hobart* | h*.cgd.ucar.edu) 
     submit_script="test_driver_hobart_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
 
@@ -164,62 +165,8 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##yong
-    yong* | vpn* )
-    submit_script="test_driver_yong_${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-interactive="YES"
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=2
-fi
-export CLM_RESTART_THREADS=1
-
-##mpi tasks
-export CLM_TASKS=2
-export CLM_RESTART_TASKS=1
-
-export CESM_MACH="generic_Darwin"
-if [ "\$CLM_FC" = "PGI" ]; then
-   export CESM_COMP="pgi"
-   export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-10.9
-   export CFG_STRING=""
-   export TOOLS_MAKE_STRING=""
-else
-   export CESM_COMP="intel"
-   export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
-   export MPICH_PATH=/usr/local/mpich2-1.3.1-intel-11.1
-   export PATH="\$MPICH_PATH/bin:$PATH"
-   export CFG_STRING=""
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CC=icc "
-   export DYLD_LIBRARY_PATH=/opt/intel/Compiler/11.1/067/lib
-fi
-export NETCDF_DIR=\$NETCDF_PATH
-export INC_NETCDF=\$NETCDF_PATH/include
-export LIB_NETCDF=\$NETCDF_PATH/lib
-export MAKE_CMD="make -j 4"
-export MACH_WORKSPACE="/glade/scratch"
-export CPRNC_EXE=$HOME/bin/newcprnc
-export DATM_QIAN_DATA_DIR="/fis/cgd/cseg/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-export ESMFBIN_PATH=\
-"/usr/local/esmf_5_2_0/DEFAULTINSTALLDIR/bin/binO/Darwin.intel.64.mpiuni.default"
-dataroot="/fis/cgd/cseg/csm"
-echo_arg=""
-input_file="tests_posttag_yong"
-export TOOLSLIBS=""
-export TOOLS_CONF_STRING="-scratchroot \$MACH_WORKSPACE/$USER -max_tasks_per_node 2 -din_loc_root \$dataroot/inputdata"
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
     * )
-    echo "Only setup to work on: cheyenne, yellowstone, hobart, and yong"
+    echo "Only setup to work on: cheyenne and hobart"
     exit
  
 
@@ -521,7 +468,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on yellowstone, hobart, and yongi: "
+    echo "usage on cheyenne and hobart: "
     echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "

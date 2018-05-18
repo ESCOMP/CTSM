@@ -20,7 +20,7 @@ module abortutils
 CONTAINS
 
   !-----------------------------------------------------------------------
-  subroutine endrun_vanilla(msg) 
+  subroutine endrun_vanilla(msg, additional_msg)
 
     !-----------------------------------------------------------------------
     ! !DESCRIPTION:
@@ -31,21 +31,28 @@ CONTAINS
     !
     ! !ARGUMENTS:
     implicit none
-    character(len=*), intent(in), optional :: msg    ! string to be printed
+
+    ! Generally you want to at least provide msg. The main reason to separate msg from
+    ! additional_msg is to supported expected-exception unit testing: you can put
+    ! volatile stuff in additional_msg, as in:
+    !   call endrun(msg='Informative message', additional_msg=errmsg(__FILE__, __LINE__))
+    ! and then just assert against msg.
+    character(len=*), intent(in), optional :: msg            ! string to be passed to shr_sys_abort
+    character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_sys_abort
     !-----------------------------------------------------------------------
 
-    if (present (msg)) then
-       write(iulog,*)'ENDRUN:', msg
+    if (present (additional_msg)) then
+       write(iulog,*)'ENDRUN: ', additional_msg
     else
-       write(iulog,*)'ENDRUN: called without a message string'
+       write(iulog,*)'ENDRUN:'
     end if
 
-    call shr_sys_abort()
+    call shr_sys_abort(msg)
 
   end subroutine endrun_vanilla
 
   !-----------------------------------------------------------------------
-  subroutine endrun_globalindex(decomp_index, clmlevel, msg)
+  subroutine endrun_globalindex(decomp_index, clmlevel, msg, additional_msg)
 
     !-----------------------------------------------------------------------
     ! Description:
@@ -59,7 +66,14 @@ CONTAINS
     implicit none
     integer          , intent(in)           :: decomp_index
     character(len=*) , intent(in)           :: clmlevel
-    character(len=*) , intent(in), optional :: msg    ! string to be printed
+
+    ! Generally you want to at least provide msg. The main reason to separate msg from
+    ! additional_msg is to supported expected-exception unit testing: you can put
+    ! volatile stuff in additional_msg, as in:
+    !   call endrun(msg='Informative message', additional_msg=errmsg(__FILE__, __LINE__))
+    ! and then just assert against msg.
+    character(len=*), intent(in), optional :: msg            ! string to be passed to shr_sys_abort
+    character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_sys_abort
     !
     ! Local Variables:
     integer :: igrc, ilun, icol 
@@ -68,13 +82,13 @@ CONTAINS
     write(6,*)'calling getglobalwrite with decomp_index= ',decomp_index,' and clmlevel= ',trim(clmlevel)
     call GetGlobalWrite(decomp_index, clmlevel)
 
-    if (present (msg)) then
-       write(iulog,*)'ENDRUN:', msg
+    if (present (additional_msg)) then
+       write(iulog,*)'ENDRUN: ', additional_msg
     else
-       write(iulog,*)'ENDRUN: called without a message string'
+       write(iulog,*)'ENDRUN:'
     end if
 
-    call shr_sys_abort()
+    call shr_sys_abort(msg)
 
   end subroutine endrun_globalindex
 
