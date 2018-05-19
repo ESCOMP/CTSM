@@ -422,7 +422,7 @@ contains
                  cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
 !            if(p .eq. 8)then
-!               print*,'before Cinput to deadcroot',cs_veg%leafc_patch(p),cf_veg%cpool_to_leafc_patch(p)*dt
+!               print*,'before Cinput to deadcroot',cs_veg%deadcrootc_patch(p),cf_veg%cpool_to_deadcrootc_patch(p)*dt
 !            end if
             if(.not. use_matrixcn)then
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt

@@ -497,14 +497,14 @@ contains
             avgflag='A', long_name='grain N', &
             ptr_patch=this%grainn_patch)
        if(use_matrixcn)then
-          this%matrix_cap_grainn_patch(begp:endp) = spval
-          call hist_addfld1d (fname='GRAINN_CAP', units='gN/m^2', &
-               avgflag='I', long_name='grain N capacity', &
-               ptr_patch=this%matrix_cap_grainn_patch)
-          this%matrix_pot_grainn_patch(begp:endp) = spval
-          call hist_addfld1d (fname='GRAINN_POT', units='gN/m^2', &
-               avgflag='I', long_name='grain N potential', &
-               ptr_patch=this%matrix_pot_grainn_patch)
+!          this%matrix_cap_grainn_patch(begp:endp) = spval
+!          call hist_addfld1d (fname='GRAINN_CAP', units='gN/m^2', &
+!               avgflag='I', long_name='grain N capacity', &
+!               ptr_patch=this%matrix_cap_grainn_patch)
+!          this%matrix_pot_grainn_patch(begp:endp) = spval
+!          call hist_addfld1d (fname='GRAINN_POT', units='gN/m^2', &
+!               avgflag='I', long_name='grain N potential', &
+!               ptr_patch=this%matrix_pot_grainn_patch)
        end if
        call hist_addfld1d (fname='CROPSEEDN_DEFICIT', units='gN/m^2', &
             avgflag='A', long_name='N used for crop seed that needs to be repaid', &
@@ -1484,7 +1484,6 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='deadcrootn_xfer', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%deadcrootn_xfer_patch) 
-    !print*,'restart_use_matrixcn',use_matrixcn
 
     if(use_matrixcn)then
        call restartvar(ncid=ncid, flag=flag, varname='livestemn_cap', xtype=ncd_double,  &
@@ -1811,7 +1810,6 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='pft_ntrunc', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch)
-    !print*,'before crop'
 
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainn', xtype=ncd_double,  &
