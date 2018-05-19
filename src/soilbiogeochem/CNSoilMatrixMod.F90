@@ -14,13 +14,13 @@ module CNSoilMatrixMod
   use decompMod                      , only : bounds_type  
   use abortutils                     , only : endrun
   use clm_time_manager               , only : get_step_size, is_end_curr_month,get_curr_date,get_days_per_year
-  use clm_time_manager               , only : is_first_step_of_this_run_segment,is_beg_curr_year
+  use clm_time_manager               , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year
   use clm_varpar                     , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                     , only :ndecomp_cascade_transitions
   use clm_varpar                     , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varcon                     , only : dzsoi_decomp,zsoi,secspday
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con    !zgdu
-  use clm_varctl                     , only : use_vertsoilc
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con    
+!  use clm_varctl                     , only : use_vertsoilc
   use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
   use CNVegNitrogenFluxType          , only : cnveg_nitrogenflux_type
   use SoilBiogeochemStateType        , only : soilbiogeochem_state_type
@@ -33,6 +33,7 @@ module CNSoilMatrixMod
   use clm_varctl                     , only : isspinup, use_soil_matrixcn, is_outmatrix
   use ColumnType                      , only : col                
   use GridcellType                   , only : grc
+  use clm_varctl                     , only : use_c13, use_c14
 !
   implicit none
   private
@@ -48,35 +49,39 @@ contains
        cnveg_carbonflux_inst,soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
        cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst, &
-       soilbiogeochem_nitrogenstate_inst,soilstate_inst)
+       soilbiogeochem_nitrogenstate_inst,c13_soilbiogeochem_carbonstate_inst,&
+       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonstate_inst,&
+       c14_soilbiogeochem_carbonflux_inst)
     ! !DESCRIPTION:
     ! !ARGUMENTS:
-    type(bounds_type)                      , intent(in)    :: bounds
-    integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                                , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    type(cnveg_carbonflux_type)            , intent(in)    :: cnveg_carbonflux_inst
-    type(soilbiogeochem_carbonstate_type)  , intent(inout) :: soilbiogeochem_carbonstate_inst
-    type(soilbiogeochem_carbonflux_type)   , intent(in)    :: soilbiogeochem_carbonflux_inst
-    type(soilbiogeochem_state_type)        , intent(inout) :: soilbiogeochem_state_inst
-
+    type(bounds_type)                        , intent(in)    :: bounds
+    integer                                  , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    type(cnveg_carbonflux_type)              , intent(in)    :: cnveg_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)    , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)     , intent(in)    :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_state_type)          , intent(inout) :: soilbiogeochem_state_inst
     type(cnveg_nitrogenflux_type)            , intent(in)    :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_nitrogenflux_type)   , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type)  , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(soilstate_type)                   , intent(in)    :: soilstate_inst
-
+    type(soilbiogeochem_carbonstate_type)    , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)     , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)    , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)     , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
     ! !LOCAL VARIABLES:
     integer :: fc,j,i, l,k ! indices
     integer :: c     !  
-    real(r8):: dt        ! time step (seconds)
-    real(r8):: secspyear        ! time step (seconds)
-    logical  ::  end_of_year
-    integer, save :: counter=0
+!    integer,parameter:: nspools=7       
+    real(r8):: dt                   ! time step (seconds)
+    real(r8):: secspyear            ! time step (seconds)
+    real(r8):: epsi                 !small number
+    real(r8):: days_per_year,decay_const,half_life
 
     integer :: begc,endc                                    ! bounds 
     real(r8),dimension(ndecomp_pools_vr,ndecomp_pools_vr) :: a_ma_vr, kk_ma_vr, kk_fire_vr,tri_ma_vr, tranvert,ntranvert
     real(r8),dimension(ndecomp_pools_vr,ndecomp_pools_vr) :: na_ma_vr
-    real(r8),dimension(ndecomp_pools,ndecomp_pools) :: a_ma, kk_ma, matrix_soil_cn
-    real(r8),dimension(ndecomp_pools,ndecomp_pools) :: na_ma
+!    real(r8),dimension(ndecomp_pools,ndecomp_pools) :: a_ma, kk_ma, matrix_soil_cn
+!    real(r8),dimension(ndecomp_pools,ndecomp_pools) :: na_ma
     real(r8),dimension(num_soilc,nlevdecomp) :: depth_scalar,two_scalar
     real(r8),dimension(num_soilc,nlevdecomp) :: n_scalar_ave,t_scalar_ave,w_scalar_ave, o_scalar_ave
     real(r8)::  a_tri_ave_c(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -90,8 +95,12 @@ contains
 
 
     real(r8),dimension(ndecomp_pools_vr,1) :: matrix_Cinter,matrix_Cinter_next,matrix_Cinput_vector,emulator_tmp,emulator_tmp1,emulator_tmpn
+
+    real(r8),dimension(ndecomp_pools_vr,1) :: matrix13_Cinter,   matrix14_Cinter
+    real(r8),dimension(ndecomp_pools_vr,1) :: matrix_Cinput13_vector,matrix_Cinput14_vector
+    real(r8),dimension(ndecomp_pools_vr,1) :: matrix_Cinter13_next,matrix_Cinter14_next
+
     real(r8),dimension(ndecomp_pools_vr,1) ::  soilmatrixc_cap,soilmatrixn_cap
-    real(r8),dimension(ndecomp_pools_vr,ndecomp_pools_vr) ::    matrix_Cinter_2d,matrix_Ninter_2d
     real(r8), dimension(ndecomp_pools_vr,ndecomp_pools_vr)   ::  AKinv,AKinvn
     real(r8),dimension(ndecomp_pools,1) :: emulator_Cinter_1,emulator_Cinter_next_1,emulator_Cinput_1
 
@@ -127,7 +136,7 @@ contains
     real(r8):: tau_s2                       ! turnover time of  SOM 2 (yr)
     real(r8):: tau_s3                       ! turnover time of  SOM 3 (yr)
     real(r8):: tau_cwd                      ! corrected fragmentation rate constant CWD
-    real(r8):: days_per_year 
+!    real(r8):: days_per_year 
 
     !-----------------------------------------------------------------------
     begc = bounds%begc; endc = bounds%endc
@@ -141,6 +150,11 @@ contains
          nf_veg  => cnveg_nitrogenflux_inst, &
          nf_soil => soilbiogeochem_nitrogenflux_inst, &
          ns_soil => soilbiogeochem_nitrogenstate_inst, &
+         cs13_soil => c13_soilbiogeochem_carbonstate_inst, & ! 
+         cf13_soil => c13_soilbiogeochem_carbonflux_inst, & ! 
+         cs14_soil => c14_soilbiogeochem_carbonstate_inst, & ! 
+         cf14_soil => c14_soilbiogeochem_carbonflux_inst, & ! 
+
          matrix_decomp_k  => soilbiogeochem_carbonflux_inst%matrix_decomp_k_col, & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
          fpi_vr          => soilbiogeochem_state_inst%fpi_vr_col    , & ! Input:  [real(r8) (:,:)   ]  fraction of potential immobilization (no units) 
          cascade_donor_pool => decomp_cascade_con%cascade_donor_pool, &
@@ -162,15 +176,11 @@ contains
      ! set time steps
       dt = real( get_step_size(), r8 )
       days_per_year = get_days_per_year()
-      secspyear = get_days_per_year() * secspday
+      secspyear = days_per_year* secspday
+      half_life = 5730._r8 * secspyear
+      decay_const = - log(0.5_r8) / half_life
 
-      counter = counter + dt
-     if (counter >= 1*secspyear) then ! link to the recycling span of climate forcing
-          end_of_year = .true.
-          counter = 0._r8
-       else
-          end_of_year = .false.
-       end if
+      epsi = 1.e-30_r8 
 
       !! turnover rate and time. Copied from SoilBiogeochemDecompCascadeBGCMod
       ! the belowground parameters from century
@@ -218,8 +228,6 @@ contains
         matrix_Cinput_vector = 0.0_r8
         matrix_Ninput_vector = 0.0_r8
 
-        matrix_Cinter_2d = 0.0_r8
-        matrix_Ninter_2d = 0.0_r8
         AKinv(:,:)=0._r8    
         AKinvn(:,:)=0._r8    
 
@@ -235,12 +243,14 @@ contains
 
           do j = 1, nlevdecomp
              do i = 1,ndecomp_pools
-!                write(422,"(A,3I,E17.9)"),'litter input',c,j,i,matrix_Cinput(c,j,i)
-!                write(423,"(A,3I,2E17.9)"),'fire decomp',c,j,i,matrix_decomp_fire_k(c,j,i),fpi_vr(c,j)
-!                write(426,"(A,3I,4E17.9)"),'vertical tr',c,j,i,matrix_a_tri(c,j),matrix_b_tri(c,j),matrix_c_tri(c,j),dzsoi_decomp(j)
-!                write(424,"(A,3I,E17.9)"),'decomp_cpools',c,j,i,cs_soil%decomp_cpools_vr_col(c,j,i)
-                matrix_Cinput_vector(j+(i-1)*nlevdecomp,1) = matrix_Cinput(c,j,i) 
-                matrix_Ninput_vector(j+(i-1)*nlevdecomp,1) = matrix_Ninput(c,j,i)
+                matrix_Cinput_vector(j+(i-1)*nlevdecomp,1) = max(matrix_Cinput(c,j,i),epsi) 
+                matrix_Ninput_vector(j+(i-1)*nlevdecomp,1) = max(matrix_Ninput(c,j,i),epsi)
+                if ( use_c13 ) then
+                   matrix_Cinput13_vector(j+(i-1)*nlevdecomp,1) = max(cf13_soil%matrix_input_col(c,j,i),epsi)
+                end if !c13
+                if ( use_c14 ) then
+                   matrix_Cinput14_vector(j+(i-1)*nlevdecomp,1) = max(cf14_soil%matrix_input_col(c,j,i),epsi)
+                end if !c14
                 kk_fire_vr((i-1)*nlevdecomp+j,(i-1)*nlevdecomp+j) = matrix_decomp_fire_k(c,j,i) 
                 if(is_litter(i))then
                    kk_ma_vr((i-1)*nlevdecomp+j,(i-1)*nlevdecomp+j)   = matrix_decomp_k(c,j,i) * fpi_vr(c,j) 
@@ -259,13 +269,20 @@ contains
 !                if(i .eq. i_soil3 .and. j .eq. 13)print*,'Cinput',matrix_Cinput(c,j,i),kk_ma_vr((i-1)*nlevdecomp+j,(i-1)*nlevdecomp+j),matrix_decomp_k(c,j,i),cs_soil%decomp_cpools_vr_col(c,j,i),tri_ma_vr(j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp)*dt*cs_soil%decomp_cpools_vr_col(c,j,i),tri_ma_vr(j+(i-1)*nlevdecomp,j+1+(i-1)*nlevdecomp)*dt*cs_soil%decomp_cpools_vr_col(c,j+1,i),cs_soil%decomp_cpools_vr_col(c,j+1,i),tri_ma_vr(j+(i-1)*nlevdecomp,j+1+(i-1)*nlevdecomp)
                 matrix_Cinter(j+(i-1)*nlevdecomp,1)   = cs_soil%decomp_cpools_vr_col(c,j,i)                
                 matrix_Ninter(j+(i-1)*nlevdecomp,1)   = ns_soil%decomp_npools_vr_col(c,j,i)     
+               if ( use_c13 )then
+                 matrix13_Cinter(j+(i-1)*nlevdecomp,1)   = cs13_soil%decomp_cpools_vr_col(c,j,i)
+               end if !c13
+
+               if ( use_c14 )then
+                 matrix14_Cinter(j+(i-1)*nlevdecomp,1)   = cs14_soil%decomp_cpools_vr_col(c,j,i)
+               end if !c14
        
-              if (is_beg_curr_year() .or.is_first_step_of_this_run_segment() )then  
-                 cs_soil%decomp0_cpools_vr_col(c,j,i)=max(cs_soil%decomp_cpools_vr_col(c,j,i),1.e-10_r8)
-                 ns_soil%decomp0_npools_vr_col(c,j,i)=max(ns_soil%decomp_npools_vr_col(c,j,i),1.e-10_r8)
+              if (is_beg_curr_year())then  
+                 cs_soil%decomp0_cpools_vr_col(c,j,i)=cs_soil%decomp_cpools_vr_col(c,j,i)
+                 ns_soil%decomp0_npools_vr_col(c,j,i)=ns_soil%decomp_npools_vr_col(c,j,i)
               end if
-                 matrix_Cinter_2d(j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp)=cs_soil%decomp_cpools_vr_col(c,j,i)/cs_soil%decomp0_cpools_vr_col(c,j,i)
-                 matrix_Ninter_2d(j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp)=ns_soil%decomp_npools_vr_col(c,j,i)/ns_soil%decomp0_npools_vr_col(c,j,i)
+              cs_soil%decomp0_cpools_vr_col(c,j,i) = max(cs_soil%decomp0_cpools_vr_col(c,j,i),epsi)
+              ns_soil%decomp0_npools_vr_col(c,j,i) = max(ns_soil%decomp0_npools_vr_col(c,j,i),epsi)
              end do
 
              do k = 1, ndecomp_cascade_transitions
@@ -314,29 +331,118 @@ contains
 !             print*,'after matrix',matrix_Ninter_next(1+(i_met_lit-1)*nlevdecomp,1),matrix_Ninput_vector(1+(i_met_lit-1)*nlevdecomp,1)
 !          end if
  
+         if ( use_c13)then
+              matrix_Cinter13_next(:,:) = matrix13_Cinter + matrix_Cinput13_vector + &
+                                   matmul(tranvert, matrix13_Cinter)*dt
+         end if !c13
+         if ( use_c14)then
+              matrix_Cinter14_next(:,:) = matrix14_Cinter + matrix_Cinput14_vector + &
+                                   matmul(tranvert, matrix14_Cinter)*dt
+         end if !c14
+
+
           do j = 1,nlevdecomp
              do i=1,ndecomp_pools
                 cs_soil%decomp_cpools_vr_col(c,j,i) = matrix_Cinter_next(j+(i-1)*nlevdecomp,1)
                 ns_soil%decomp_npools_vr_col(c,j,i) = matrix_Ninter_next(j+(i-1)*nlevdecomp,1)
              end do
           end do
+          
+          if( use_c13 ) then
+             do j = 1,nlevdecomp
+                do i=1,ndecomp_pools
+                   cs13_soil%decomp_cpools_vr_col(c,j,i) = matrix_Cinter13_next(j+(i-1)*nlevdecomp,1)
+                end do
+             end do
+          end if
+
+          if( use_c14 ) then
+             do j = 1,nlevdecomp
+                do i=1,ndecomp_pools
+                   cs14_soil%decomp_cpools_vr_col(c,j,i) = matrix_Cinter14_next(j+(i-1)*nlevdecomp,1)
+                end do
+             end do
+          end if
 
          if(use_soil_matrixcn .and. (is_outmatrix .or. isspinup))then
-            cs_soil%in_acc(c,:) = cs_soil%in_acc(c,:) + matrix_Cinput_vector(:,1) 
-            cs_soil%tran_acc(c,1:ndecomp_pools_vr,:) = cs_soil%tran_acc(c,1:ndecomp_pools_vr,:)&
-                                         + matmul(tranvert(1:ndecomp_pools_vr,:),matrix_Cinter_2d(:,:))*dt 
+            do j = 1,nlevdecomp
+               do i = 1,ndecomp_pools
+                  cs_soil%in_acc_2d(c,j,i) = cs_soil%in_acc_2d(c,j,i) +   matrix_Cinput_vector(j+(i-1)*nlevdecomp,1)
+                  ns_soil%in_nacc_2d(c,j,i) = ns_soil%in_nacc_2d(c,j,i) + matrix_Ninput_vector(j+(i-1)*nlevdecomp,1)
+
+                  if(j < nlevdecomp)then
+                     cs_soil%vert_up_tran_acc(c,j,i) = cs_soil%vert_up_tran_acc(c,j,i) &
+                             + tranvert(j+(i-1)*nlevdecomp,j+1+(i-1)*nlevdecomp) * matrix_Cinter(j+1+(i-1)*nlevdecomp,1) * dt
+                     ns_soil%vert_up_tran_nacc(c,j,i) = ns_soil%vert_up_tran_nacc(c,j,i) &
+                             + ntranvert(j+(i-1)*nlevdecomp,j+1+(i-1)*nlevdecomp) * matrix_Ninter(j+1+(i-1)*nlevdecomp,1) * dt
+                  end if
+                  if(j > 1)then
+                     cs_soil%vert_down_tran_acc(c,j,i) = cs_soil%vert_down_tran_acc(c,j,i) &
+                             + tranvert(j+(i-1)*nlevdecomp,j-1+(i-1)*nlevdecomp) * matrix_Cinter(j-1+(i-1)*nlevdecomp,1) * dt
+                     ns_soil%vert_down_tran_nacc(c,j,i) = ns_soil%vert_down_tran_nacc(c,j,i) &
+                             + ntranvert(j+(i-1)*nlevdecomp,j-1+(i-1)*nlevdecomp) * matrix_Ninter(j-1+(i-1)*nlevdecomp,1) * dt
+                  end if
+
+                  cs_soil%exit_acc(c,j,i) = cs_soil%exit_acc(c,j,i) &
+                             + tranvert(j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp) * matrix_Cinter(j+(i-1)*nlevdecomp,1) * dt
+                  ns_soil%exit_nacc(c,j,i) = ns_soil%exit_nacc(c,j,i) &
+                             + ntranvert(j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp) * matrix_Ninter(j+(i-1)*nlevdecomp,1) * dt
+               end do
+               do k = 1,ndecomp_cascade_transitions
+                  if(cascade_receiver_pool(k) .ne. 0)then  !transition to atmosphere
+                     cs_soil%hori_tran_acc(c,j,k) = cs_soil%hori_tran_acc(c,j,k) &
+                             + tranvert(j+(cascade_receiver_pool(k)-1)*nlevdecomp,j+(cascade_donor_pool(k)-1)*nlevdecomp) &
+                             * matrix_Cinter(j+(cascade_donor_pool(k)-1)*nlevdecomp,1) * dt
+                     ns_soil%hori_tran_nacc(c,j,k) = ns_soil%hori_tran_nacc(c,j,k) &
+                             + ntranvert(j+(cascade_receiver_pool(k)-1)*nlevdecomp,j+(cascade_donor_pool(k)-1)*nlevdecomp) &
+                             * matrix_Ninter(j+(cascade_donor_pool(k)-1)*nlevdecomp,1) * dt
+                  end if
+               end do
+            end do
+                  
+            if(is_end_curr_year())then
+               cs_soil%in_acc   (c,:)   = 0.
+               cs_soil%tran_acc (c,:,:) = 0.
+               ns_soil%in_nacc  (c,:)   = 0.
+               ns_soil%tran_nacc(c,:,:) = 0.
+               do j = 1,nlevdecomp
+                  do i = 1,ndecomp_pools
+                     cs_soil%in_acc(c,j+(i-1)*nlevdecomp)   = cs_soil%in_acc_2d(c,j,i) 
+                     ns_soil%in_nacc(c,j+(i-1)*nlevdecomp)  = ns_soil%in_nacc_2d(c,j,i) 
+                     if(j < nlevdecomp)then
+                        cs_soil%tran_acc(c,j+(i-1)*nlevdecomp,j+1+(i-1)*nlevdecomp) = cs_soil%vert_up_tran_acc(c,j,i) &
+                                   / cs_soil%decomp0_cpools_vr_col(c,j+1,i)
+                        ns_soil%tran_nacc(c,j+(i-1)*nlevdecomp,j+1+(i-1)*nlevdecomp) = ns_soil%vert_up_tran_nacc(c,j,i) &
+                                   / ns_soil%decomp0_npools_vr_col(c,j+1,i)
+                     end if
+                     if(j > 1)then
+                        cs_soil%tran_acc(c,j+(i-1)*nlevdecomp,j-1+(i-1)*nlevdecomp) = cs_soil%vert_down_tran_acc(c,j,i) &
+                                   / cs_soil%decomp0_cpools_vr_col(c,j-1,i)
+                        ns_soil%tran_nacc(c,j+(i-1)*nlevdecomp,j-1+(i-1)*nlevdecomp) = ns_soil%vert_down_tran_nacc(c,j,i) &
+                                   / ns_soil%decomp0_npools_vr_col(c,j-1,i)
+                     end if
+                     cs_soil%tran_acc(c,j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp) = cs_soil%exit_acc(c,j,i) &
+                                   / cs_soil%decomp0_cpools_vr_col(c,j,i)
+                     ns_soil%tran_nacc(c,j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp) = ns_soil%exit_nacc(c,j,i) & 
+                                   / ns_soil%decomp0_npools_vr_col(c,j,i)
+                  end do
+                  do k = 1,ndecomp_cascade_transitions
+                     if(cascade_receiver_pool(k) .ne. 0)then
+                        cs_soil%tran_acc(c,j+(cascade_receiver_pool(k)-1)*nlevdecomp,j+(cascade_donor_pool(k)-1)*nlevdecomp) &
+                                              = cs_soil%hori_tran_acc(c,j,k) / cs_soil%decomp0_cpools_vr_col(c,j,cascade_donor_pool(k))
+                        ns_soil%tran_nacc(c,j+(cascade_receiver_pool(k)-1)*nlevdecomp,j+(cascade_donor_pool(k)-1)*nlevdecomp) &
+                                              = ns_soil%hori_tran_nacc(c,j,k) / ns_soil%decomp0_npools_vr_col(c,j,cascade_donor_pool(k))
+                     end if
+                  end do
+               end do
          
-            ns_soil%in_nacc(c,:) = ns_soil%in_nacc(c,:) + matrix_Ninput_vector(:,1) 
-            ns_soil%tran_nacc(c,1:ndecomp_pools_vr,:) = ns_soil%tran_nacc(c,1:ndecomp_pools_vr,:)&
-                                         + matmul(ntranvert(1:ndecomp_pools_vr,:),matrix_Ninter_2d(:,:))*dt 
-            if(end_of_year)then
                do i=1,ndecomp_pools_vr
-                  if (cs_soil%tran_acc(c,i,i) .eq. 0)then !avoid inversion nan
-                     cs_soil%tran_acc(c,i,i) = 1.e+36
+                  if (abs(cs_soil%tran_acc(c,i,i)) .le. epsi)then !avoid inversion nan
+                      cs_soil%tran_acc(c,i,i) = 1.e+36
                   end if 
                end do
                do i=1,ndecomp_pools_vr
-                  if (ns_soil%tran_nacc(c,i,i) .eq. 0)then
+                  if (abs(ns_soil%tran_nacc(c,i,i)) .le. epsi)then
                      ns_soil%tran_nacc(c,i,i) = 1.e+36
                   end if 
                end do
@@ -347,10 +453,10 @@ contains
          
                do j = 1,nlevdecomp
                   do i=1,ndecomp_pools
-                     if(soilmatrixc_cap(j+(i-1)*nlevdecomp,1) .le. 1.e-25)then ! for model stability
-                        soilmatrixc_cap(j+(i-1)*nlevdecomp,1) = cs_soil%decomp_cpools_vr_col(c,j,i)
-                        soilmatrixn_cap(j+(i-1)*nlevdecomp,1) = ns_soil%decomp_npools_vr_col(c,j,i)
-                     end if
+                  !   if(soilmatrixc_cap(j+(i-1)*nlevdecomp,1) .le. 1.e-25)then ! for model stability
+                  !      soilmatrixc_cap(j+(i-1)*nlevdecomp,1) = cs_soil%decomp_cpools_vr_col(c,j,i)
+                  !      soilmatrixn_cap(j+(i-1)*nlevdecomp,1) = ns_soil%decomp_npools_vr_col(c,j,i)
+                  !   end if
                      if(isspinup)then
                         cs_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc_cap(j+(i-1)*nlevdecomp,1)
                         ns_soil%decomp_npools_vr_col(c,j,i) =  soilmatrixn_cap(j+(i-1)*nlevdecomp,1)
@@ -361,147 +467,19 @@ contains
                      ns_soil%matrix_pot_decomp_npools_vr_col(c,j,i) = soilmatrixn_cap(j+(i-1)*nlevdecomp,1) - ns_soil%decomp_npools_vr_col(c,j,i)
                   end do
                end do
-               cs_soil%in_acc(c,:)     = 0.0_r8  
-               cs_soil%tran_acc(c,:,:) = 0.0_r8 
-               ns_soil%in_nacc(c,:)     = 0.0_r8  
-               ns_soil%tran_nacc(c,:,:) = 0.0_r8 
+               cs_soil%in_acc_2d(c,:,:)          = 0.0_r8  
+               cs_soil%vert_up_tran_acc(c,:,:)   = 0.0_r8 
+               cs_soil%vert_down_tran_acc(c,:,:) = 0.0_r8 
+               cs_soil%exit_acc(c,:,:)           = 0.0_r8 
+               cs_soil%hori_tran_acc(c,:,:)      = 0.0_r8 
+
+               ns_soil%in_nacc_2d(c,:,:)          = 0.0_r8  
+               ns_soil%vert_up_tran_nacc(c,:,:)   = 0.0_r8 
+               ns_soil%vert_down_tran_nacc(c,:,:) = 0.0_r8 
+               ns_soil%exit_nacc(c,:,:)           = 0.0_r8 
+               ns_soil%hori_tran_nacc(c,:,:)      = 0.0_r8 
             end if
          end if !is out_matrix
-!      else
-!         kk_ma = 0.0_r8
-!         matrix_soil_cn = 0.0_r8
-!         emulator_Cinput_1 = 0.0_r8
-!         matrix_Ninput_1= 0.0_r8
-!         a_ma = 0.0_r8
-!         na_ma = 0.0_r8  
-!         do j=1,7
-!            a_ma(j,j) = -1.0
-!            na_ma(j,j) = -1.0  
-!         enddo 
-!            a_ma(3,1) = (1.0-rf_decomp_cascade(c,1,9))*pathfrac_decomp_cascade(c,1,9)
-!            a_ma(4,1) = (1.0-rf_decomp_cascade(c,1,10))*pathfrac_decomp_cascade(c,1,10)
-!            a_ma(5,2) = (1.0-rf_decomp_cascade(c,1,1))*pathfrac_decomp_cascade(c,1,1)
-!            a_ma(5,3) = (1.0-rf_decomp_cascade(c,1,2))*pathfrac_decomp_cascade(c,1,2)
-!            a_ma(5,6) = (1.0-rf_decomp_cascade(c,1,6))*pathfrac_decomp_cascade(c,1,6)
-!            a_ma(5,7) = (1.0-rf_decomp_cascade(c,1,8))*pathfrac_decomp_cascade(c,1,8)
-!            a_ma(6,4) = (1.0-rf_decomp_cascade(c,1,3))*pathfrac_decomp_cascade(c,1,3)
-!            a_ma(6,5) = (1.0-rf_decomp_cascade(c,1,4))*pathfrac_decomp_cascade(c,1,4)
-!            a_ma(7,5) = (1.0-rf_decomp_cascade(c,1,5))*pathfrac_decomp_cascade(c,1,5)
-!            a_ma(7,6) = (1.0-rf_decomp_cascade(c,1,7))*pathfrac_decomp_cascade(c,1,7)
-!! vector A_n  for N-matrix
-!            na_ma(3,1) = (1.0-rf_decomp_cascade(c,1,9))* &
-!                            (cn_decomp_pools(c,1,i_cwd)/cn_decomp_pools(c,1,i_cel_lit))*pathfrac_decomp_cascade(c,1,9)
-!            na_ma(4,1) = (1.0-rf_decomp_cascade(c,1,10))* &
-!                            (cn_decomp_pools(c,1,i_cwd)/cn_decomp_pools(c,1,i_lig_lit))*pathfrac_decomp_cascade(c,1,10)
-!            na_ma(5,2) = (1.0-rf_decomp_cascade(c,1,1))* &
-!                            (cn_decomp_pools(c,1, i_cel_lit)/cn_decomp_pools(c,1,i_soil1))*pathfrac_decomp_cascade(c,1,1)
-!            na_ma(5,3) = (1.0-rf_decomp_cascade(c,1,2))* &
-!                            (cn_decomp_pools(c,1, i_lig_lit)/cn_decomp_pools(c,1,i_soil1))*pathfrac_decomp_cascade(c,1,2)
-!            na_ma(5,6) = (1.0-rf_decomp_cascade(c,1,6))* &
-!                            (cn_decomp_pools(c,1, i_soil2)/cn_decomp_pools(c,1,i_soil1))*pathfrac_decomp_cascade(c,1,6)
-!            na_ma(5,7) = (1.0-rf_decomp_cascade(c,1,8))* &
-!                            (cn_decomp_pools(c,1, i_soil3)/cn_decomp_pools(c,1,i_soil1))*pathfrac_decomp_cascade(c,1,8)
-!            na_ma(6,4) = (1.0-rf_decomp_cascade(c,1,3))* &
-!                            (cn_decomp_pools(c,1, i_lig_lit)/cn_decomp_pools(c,1,i_soil2))*pathfrac_decomp_cascade(c,1,3)
-!            na_ma(6,5) = (1.0-rf_decomp_cascade(c,1,4))* &
-!                            (cn_decomp_pools(c,1, i_soil1)/cn_decomp_pools(c,1,i_soil2))*pathfrac_decomp_cascade(c,1,4)
-!            na_ma(7,5) = (1.0-rf_decomp_cascade(c,1,5))* &
-!                            (cn_decomp_pools(c,1, i_soil1)/cn_decomp_pools(c,1,i_soil3))*pathfrac_decomp_cascade(c,1,5)
-!            na_ma(7,6) = (1.0-rf_decomp_cascade(c,1,7))* &
-!                            (cn_decomp_pools(c,1, i_soil2)/cn_decomp_pools(c,1,i_soil3))*pathfrac_decomp_cascade(c,1,7)
-!
-!            tot_c_to_litr_met_c(fc,1) = cf_veg%phenology_c_to_litr_met_c_col(c,1) + cf_veg%dwt_frootc_to_litr_met_c_col(c,1) &
-!                 + cf_veg%gap_mortality_c_to_litr_met_c_col(c,1) + cf_veg%harvest_c_to_litr_met_c_col(c,1)             &
-!                 + cf_veg%m_c_to_litr_met_fire_col(c,1) - cf_veg%m_decomp_cpools_to_fire_vr_col(c,1,1)
-!            tot_c_to_litr_cel_c(fc,1) =  cf_veg%phenology_c_to_litr_cel_c_col(c,1) + cf_veg%dwt_frootc_to_litr_cel_c_col(c,1) &
-!                 + cf_veg%gap_mortality_c_to_litr_cel_c_col(c,1) + cf_veg%harvest_c_to_litr_cel_c_col(c,1)             &
-!                 + cf_veg%m_c_to_litr_cel_fire_col(c,1) - cf_veg%m_decomp_cpools_to_fire_vr_col(c,1,2)
-!            tot_c_to_litr_lig_c(fc,1) = cf_veg%phenology_c_to_litr_lig_c_col(c,1) + cf_veg%dwt_frootc_to_litr_lig_c_col(c,1) &
-!                 + cf_veg%gap_mortality_c_to_litr_lig_c_col(c,1) + cf_veg%harvest_c_to_litr_lig_c_col(c,1)            &
-!                 + cf_veg%m_c_to_litr_lig_fire_col(c,1) - cf_veg%m_decomp_cpools_to_fire_vr_col(c,1,3)
-!            tot_c_to_cwdc(fc,1)       = cf_veg%dwt_livecrootc_to_cwdc_col(c,1) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,1)  &
-!                 + cf_veg%gap_mortality_c_to_cwdc_col(c,1) + cf_veg%harvest_c_to_cwdc_col(c,1)               &
-!                 + cf_veg%fire_mortality_c_to_cwdc_col(c,1) - cf_veg%m_decomp_cpools_to_fire_vr_col(c,1,4)
-! 
-!            tot_n_to_litr_met_n(fc,1) = nf_veg%phenology_n_to_litr_met_n_col(c,1) + nf_veg%dwt_frootn_to_litr_met_n_col(c,1) &
-!                 + nf_veg%gap_mortality_n_to_litr_met_n_col(c,1) + nf_veg%harvest_n_to_litr_met_n_col(c,1)             &
-!                 + nf_veg%m_n_to_litr_met_fire_col(c,1) - nf_veg%m_decomp_npools_to_fire_vr_col(c,1,1)
-!            tot_n_to_litr_cel_n(fc,1) =  nf_veg%phenology_n_to_litr_cel_n_col(c,1) + nf_veg%dwt_frootn_to_litr_cel_n_col(c,1) &
-!                 + nf_veg%gap_mortality_n_to_litr_cel_n_col(c,1) + nf_veg%harvest_n_to_litr_cel_n_col(c,1)             &
-!                 + nf_veg%m_n_to_litr_cel_fire_col(c,1) - nf_veg%m_decomp_npools_to_fire_vr_col(c,1,2)
-!            tot_n_to_litr_lig_n(fc,1) = nf_veg%phenology_n_to_litr_lig_n_col(c,1) + nf_veg%dwt_frootn_to_litr_lig_n_col(c,1) &
-!                 + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,1) + nf_veg%harvest_n_to_litr_lig_n_col(c,1)            &
-!                 + nf_veg%m_n_to_litr_lig_fire_col(c,1) - nf_veg%m_decomp_npools_to_fire_vr_col(c,1,3)
-!            tot_n_to_cwdn(fc,1)       = nf_veg%dwt_livecrootn_to_cwdn_col(c,1) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,1)  &
-!                 + nf_veg%gap_mortality_n_to_cwdn_col(c,1) + nf_veg%harvest_n_to_cwdn_col(c,1)               &
-!                 + nf_veg%fire_mortality_n_to_cwdn_col(c,1) - nf_veg%m_decomp_npools_to_fire_vr_col(c,1,4)
-!
-!            two_scalar(fc,1)   = t_scalar_ave(fc,1) * w_scalar_ave(fc,1)*o_scalar_ave(fc,1) 
-                  
-!            kk_ma(1,1) = k_frag * two_scalar(fc,1)
-!            kk_ma(2,2) = k_l1 * two_scalar(fc,1)* n_scalar_ave(fc,1) 
-!            kk_ma(3,3) = k_l2_l3 * two_scalar(fc,1)* n_scalar_ave(fc,1) 
-!            kk_ma(4,4) = k_l2_l3 * two_scalar(fc,1)* n_scalar_ave(fc,1) 
-!            kk_ma(5,5) = k_s1 * two_scalar(fc,1)
-!            kk_ma(6,6) = k_s2 * two_scalar(fc,1)
-!            kk_ma(7,7) = k_s3 * two_scalar(fc,1)
-! C:N ratio				  
-!            matrix_soil_cn(1,1) = cn_decomp_pools(c,1, i_cwd)
-!            matrix_soil_cn(2,2) = cn_decomp_pools(c,1, i_met_lit)
-!            matrix_soil_cn(3,3) = cn_decomp_pools(c,1, i_cel_lit)
-!            matrix_soil_cn(4,4) = cn_decomp_pools(c,1, i_lig_lit)
-!            matrix_soil_cn(5,5) = cn_decomp_pools(c,1, i_soil1)
-!            matrix_soil_cn(6,6) = cn_decomp_pools(c,1, i_soil2)
-!            matrix_soil_cn(7,7) = cn_decomp_pools(c,1, i_soil3)
-                 
-!            emulator_Cinter_1(1,1) = cs_soil%decomp_cpools_vr_col(c,1,4) 
-!            emulator_Cinter_1(2,1) = cs_soil%decomp_cpools_vr_col(c,1,1)
-!            emulator_Cinter_1(3,1) = cs_soil%decomp_cpools_vr_col(c,1,2)
-!            emulator_Cinter_1(4,1) = cs_soil%decomp_cpools_vr_col(c,1,3)
-!            emulator_Cinter_1(5,1) = cs_soil%decomp_cpools_vr_col(c,1,5)
-!            emulator_Cinter_1(6,1) = cs_soil%decomp_cpools_vr_col(c,1,6)
-!            emulator_Cinter_1(7,1) = cs_soil%decomp_cpools_vr_col(c,1,7)
-     
-!            emulator_Cinput_1(1,1)    = tot_c_to_cwdc(fc,1) * dt
-!            emulator_Cinput_1(2,1)    = tot_c_to_litr_met_c(fc,1) * dt 
-!            emulator_Cinput_1(3,1)    = tot_c_to_litr_cel_c(fc,1) * dt
-!            emulator_Cinput_1(4,1)    = tot_c_to_litr_lig_c(fc,1) * dt
-! N
-!            matrix_Ninter_1(1,1)    = ns_soil%decomp_npools_vr_col(c,1,4)   ! cwdc
-!            matrix_Ninter_1(2,1) = ns_soil%decomp_npools_vr_col(c,1,1) ! litr1n
-!            matrix_Ninter_1(3,1) = ns_soil%decomp_npools_vr_col(c,1,2) ! litr2n 
-!            matrix_Ninter_1(4,1) = ns_soil%decomp_npools_vr_col(c,1,3) ! litr3n
-!            matrix_Ninter_1(5,1) = ns_soil%decomp_npools_vr_col(c,1,5) ! soil1n
-!            matrix_Ninter_1(6,1) = ns_soil%decomp_npools_vr_col(c,1,6) ! soil2n
-!            matrix_Ninter_1(7,1) = ns_soil%decomp_npools_vr_col(c,1,7) ! soil3n
-   
-!            matrix_Ninput_1(1,1)    = tot_n_to_cwdn(fc,1) * dt
-!            matrix_Ninput_1(2,1)    = tot_n_to_litr_met_n(fc,1) * dt 
-!            matrix_Ninput_1(3,1)    = tot_n_to_litr_cel_n(fc,1) * dt
-!            matrix_Ninput_1(4,1)    = tot_n_to_litr_lig_n(fc,1) * dt
-!            emulator_Cinter_next_1(:,:) = emulator_Cinter_1 + emulator_Cinput_1 + &
-!                   matmul(matmul(a_ma,kk_ma),emulator_Cinter_1)*dt
-!N
-!            matrix_Ninter_next_1(:,:) = matrix_Ninter_1 + matrix_Ninput_1 + &
-!                    matmul(matmul(na_ma,kk_ma),matrix_Ninter_1)*dt
-
-!            cs_soil%decomp_cpools_vr_col(c,1,4) = emulator_Cinter_next_1(1,1) 
-!            cs_soil%decomp_cpools_vr_col(c,1,1) = emulator_Cinter_next_1(1+1*nlevdecomp,1) 
-!            cs_soil%decomp_cpools_vr_col(c,1,2) = emulator_Cinter_next_1(1+2*nlevdecomp,1)  
-!            cs_soil%decomp_cpools_vr_col(c,1,3) = emulator_Cinter_next_1(1+3*nlevdecomp,1)  
-!            cs_soil%decomp_cpools_vr_col(c,1,5) = emulator_Cinter_next_1(1+4*nlevdecomp,1) 
-!            cs_soil%decomp_cpools_vr_col(c,1,6) = emulator_Cinter_next_1(1+5*nlevdecomp,1)  
-!            cs_soil%decomp_cpools_vr_col(c,1,7) = emulator_Cinter_next_1(1+6*nlevdecomp,1) 
-!N
-!            ns_soil%decomp_npools_vr_col(c,1,4) = matrix_Ninter_next_1(1,1) 
-!            ns_soil%decomp_npools_vr_col(c,1,1) = matrix_Ninter_next_1(1+1*nlevdecomp,1) 
-!            ns_soil%decomp_npools_vr_col(c,1,2) = matrix_Ninter_next_1(1+2*nlevdecomp,1)  
-!            ns_soil%decomp_npools_vr_col(c,1,3) = matrix_Ninter_next_1(1+3*nlevdecomp,1)  
-!            ns_soil%decomp_npools_vr_col(c,1,5) = matrix_Ninter_next_1(1+4*nlevdecomp,1) 
-!            ns_soil%decomp_npools_vr_col(c,1,6) = matrix_Ninter_next_1(1+5*nlevdecomp,1)  
-!            ns_soil%decomp_npools_vr_col(c,1,7) = matrix_Ninter_next_1(1+6*nlevdecomp,1) 
-
-!      endif !end of decay matrix + scalar matrix without vertical  
    enddo !fc 
    end associate 
  end subroutine CNSoilMatrix

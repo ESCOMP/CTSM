@@ -586,15 +586,15 @@ contains
                avgflag='A', long_name='C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch)
           if(use_matrixcn)then
-             this%matrix_cap_grainc_patch(begp:endp) = spval
-             call hist_addfld1d (fname='GRAINC_CAP', units='gC/m^2', &
-                  avgflag='I', long_name='grain C capacity', &
-                  ptr_patch=this%matrix_cap_grainc_patch)
+!             this%matrix_cap_grainc_patch(begp:endp) = spval
+!             call hist_addfld1d (fname='GRAINC_CAP', units='gC/m^2', &
+!                  avgflag='I', long_name='grain C capacity', &
+!                  ptr_patch=this%matrix_cap_grainc_patch)
 
-             this%matrix_pot_grainc_patch(begp:endp) = spval
-             call hist_addfld1d (fname='GRAINC_POT', units='gC/m^2', &
-                  avgflag='I', long_name='grain C potential', &
-                  ptr_patch=this%matrix_pot_grainc_patch)
+!             this%matrix_pot_grainc_patch(begp:endp) = spval
+!             call hist_addfld1d (fname='GRAINC_POT', units='gC/m^2', &
+!                  avgflag='I', long_name='grain C potential', &
+!                  ptr_patch=this%matrix_pot_grainc_patch)
           end if
        end if
        
@@ -1653,6 +1653,10 @@ contains
              this%deadcrootc0_storage_patch(p) = 0._r8 
              this%deadcrootc0_xfer_patch(p)    = 0._r8
 
+             this%grainc0_patch(p)                  = 0._r8
+             this%grainc0_storage_patch(p)          = 0._r8
+             this%grainc0_xfer_patch(p)             = 0._r8
+
              this%matrix_calloc_leaf_acc_patch(p) =  0._r8
              this%matrix_calloc_leafst_acc_patch(p) =  0._r8
              this%matrix_calloc_froot_acc_patch(p) =  0._r8
@@ -2250,6 +2254,7 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecroot_to_deadcroot_acc', xtype=ncd_double,  &
                dim1name='pft', long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch)
+          !print*,'io restart matrix_ctransfer_livecroot_to_deadcroot_acc',this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch
 
           call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecroot_acc', xtype=ncd_double,  &
                dim1name='pft', long_name='', units='', &
@@ -2267,6 +2272,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_patch) 
+       !print*,'io restart deadcrootc',this%deadcrootc_patch
 
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -3658,6 +3664,9 @@ contains
           this%deadcrootc0_patch(i)         = value_patch
           this%deadcrootc0_storage_patch(i) = value_patch
           this%deadcrootc0_xfer_patch(i)    = value_patch
+          this%grainc0_patch(i)             = value_patch
+          this%grainc0_storage_patch(i)             = value_patch
+          this%grainc0_xfer_patch(i)             = value_patch
 !!!!matrix
           this%matrix_calloc_leaf_acc_patch(i)              =  value_patch
           this%matrix_calloc_leafst_acc_patch(i)      =  value_patch
