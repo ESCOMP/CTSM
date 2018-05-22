@@ -4,20 +4,33 @@ module DaylengthMod
   ! !DESCRIPTION:
   ! Computes daylength
   !
+#include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_log_mod      , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use GridcellType , only : grc                
   !
   implicit none
   save
   private
+
+  ! TODO(wjs, 2018-05-16) We should make this object-oriented, and move max_dayl, dayl
+  ! and prev_dayl out of GridcellType into a new type defined here. Then can also move
+  ! the hist_addfld1d calls for DAYL and PREV_DAYL to here.
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: daylength         ! function to compute daylength
   public :: InitDaylength     ! initialize daylength for all grid cells
   public :: UpdateDaylength   ! update daylength for all grid cells
+
+  ! The following are public only to support unit testing, and shouldn't generally be
+  ! called from outside this module.
+  public :: daylength            ! function to compute daylength
+  public :: ComputeMaxDaylength  ! compute max daylength for each grid cell
   !
   !-----------------------------------------------------------------------
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
 
 contains
 
@@ -77,12 +90,41 @@ contains
 
   end function daylength
 
-
   !-----------------------------------------------------------------------
-  subroutine InitDaylength(bounds, declin, declinm1)
+  subroutine ComputeMaxDaylength(bounds, lat, obliquity, max_daylength)
     !
     ! !DESCRIPTION:
-    ! Initialize daylength for all grid cells, and initialize previous daylength.
+    ! Compute max daylength for each grid cell
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(in)  :: obliquity           ! earth's obliquity (radians)
+    real(r8), intent(in)  :: lat(bounds%begg: )  ! latitude (radians)
+    real(r8), intent(out) :: max_daylength(bounds%begg: ) ! maximum daylength for each gridcell (s)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g
+    real(r8) :: max_decl  ! max declination angle
+
+    character(len=*), parameter :: subname = 'ComputeMaxDaylength'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(lat) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(max_daylength) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+
+    do g = bounds%begg,bounds%endg
+       max_decl = obliquity
+       if (lat(g) < 0._r8) max_decl = -max_decl
+       max_daylength(g) = daylength(lat(g), max_decl)
+    end do
+
+  end subroutine ComputeMaxDaylength
+
+  !-----------------------------------------------------------------------
+  subroutine InitDaylength(bounds, declin, declinm1, obliquity)
+    !
+    ! !DESCRIPTION:
+    ! Initialize daylength, previous daylength and max daylength for all grid cells.
     !
     ! This should be called with declin set at the value for the first model time step,
     ! and declinm1 at the value for the previous time step
@@ -91,6 +133,7 @@ contains
     type(bounds_type), intent(in) :: bounds
     real(r8), intent(in) :: declin              ! solar declination angle for the first model time step (radians)
     real(r8), intent(in) :: declinm1            ! solar declination angle for the previous time step (radians)
+    real(r8), intent(in) :: obliquity           ! earth's obliquity (radians)
     !
     !-----------------------------------------------------------------------
 
@@ -98,6 +141,7 @@ contains
     lat       => grc%lat,       & ! Input:   [real(r8) (:)] latitude (radians)
     dayl      => grc%dayl,      & ! Output:  [real(r8) (:)] day length (s)
     prev_dayl => grc%prev_dayl, & ! Output:  [real(r8) (:)] day length from previous time step (s)
+    max_dayl  => grc%max_dayl , & ! Output:  [real(r8) (:)] maximum day length (s)
 
     begg      => bounds%begg  , & ! beginning grid cell index
     endg      => bounds%endg    & ! ending grid cell index
@@ -106,17 +150,23 @@ contains
     prev_dayl(begg:endg) = daylength(lat(begg:endg), declinm1)
     dayl(begg:endg) = daylength(lat(begg:endg), declin)
 
+    call ComputeMaxDaylength(bounds, &
+         lat = lat(bounds%begg:bounds%endg), &
+         obliquity = obliquity, &
+         max_daylength = max_dayl(bounds%begg:bounds%endg))
+
     end associate
 
   end subroutine InitDaylength
 
 
   !-----------------------------------------------------------------------
-  subroutine UpdateDaylength(bounds, declin)
+  subroutine UpdateDaylength(bounds, declin, obliquity)
     !
     ! !DESCRIPTION:
-    ! Update daylength for all grid cells, and set previous daylength. This should be
-    ! called exactly once per time step.
+    ! Update daylength, previous daylength and max daylength for all grid cells.
+    !
+    ! This should be called exactly once per time step.
     !
     ! Assumes that InitDaylength has been called in initialization. This Update routine
     ! should NOT be called in initialization.
@@ -127,6 +177,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     real(r8), intent(in) :: declin            ! solar declination angle (radians)
+    real(r8), intent(in) :: obliquity         ! earth's obliquity (radians)
     !
     !-----------------------------------------------------------------------
 
@@ -134,6 +185,7 @@ contains
     lat       => grc%lat,       & ! Input:  [real(r8) (:)] latitude (radians)
     dayl      => grc%dayl,      & ! InOut:  [real(r8) (:)] day length (s)
     prev_dayl => grc%prev_dayl, & ! Output: [real(r8) (:)] day length from previous time step (s)
+    max_dayl  => grc%max_dayl , & ! Output: [real(r8) (:)] maximum day length (s)
 
     begg      => bounds%begg  , & ! beginning grid cell index
     endg      => bounds%endg    & ! ending grid cell index
@@ -150,6 +202,11 @@ contains
        prev_dayl(begg:endg) = dayl(begg:endg)
        dayl(begg:endg) = daylength(lat(begg:endg), declin)
     end if
+
+    call ComputeMaxDaylength(bounds, &
+         lat = lat(bounds%begg:bounds%endg), &
+         obliquity = obliquity, &
+         max_daylength = max_dayl(bounds%begg:bounds%endg))
 
     end associate
 
