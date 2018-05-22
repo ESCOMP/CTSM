@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.01     erik 05/22/2018 First release branch tag for CESM2.0 release, identical to clm5.0.dev012
     clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
     clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing
     clm5.0.dev010     erik 05/15/2018 Update cime version to version in cesm2.0.beta10, changes answers for 1850 compsets because of orbit

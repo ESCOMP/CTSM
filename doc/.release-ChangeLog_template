@@ -22,6 +22,8 @@ Science changes since:
 
 Softare changes since: 
 
+Changes to User Interface since: 
+
 Testing:
 --------
 
@@ -85,6 +87,8 @@ Changes answers relative to baseline:
 
 Detailed list of changes:
 ------------------------
+
+Externals being used:
 
 CTSM Tag versions pulled over from master development branch:
 
