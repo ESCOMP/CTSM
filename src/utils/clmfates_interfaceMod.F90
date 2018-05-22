@@ -107,7 +107,6 @@ module CLMFatesInterfaceMod
 
    use ChecksBalancesMod     , only : SummarizeNetFluxes, FATES_BGC_Carbon_BalanceCheck
    use EDTypesMod            , only : ed_patch_type
-   use FatesHydraulicsMemMod , only : nlevsoi_hyd
    use FatesInterfaceMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
@@ -467,8 +466,9 @@ contains
 
          call this%init_soil_depths(nc)
          
-         if (use_fates_planthydro) call InitHydrSites(this%fates(nc)%sites)
-
+         if (use_fates_planthydro) then
+            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in)
+         end if
 
          if( this%fates(nc)%nsites == 0 ) then
             write(iulog,*) 'Clump ',nc,' had no valid FATES sites'
