@@ -66,10 +66,11 @@ def _main_func():
             #-------------------------------------------------------
             # create Filepath file for clm4_5 or clm5_0
             #-------------------------------------------------------
+            driver = case.get_value("COMP_INTERFACE").lower()
             filepath_file = os.path.join(bldroot,"Filepath")
             if not os.path.isfile(filepath_file):
                 caseroot = case.get_value("CASEROOT")
-                paths = [os.path.join(caseroot,"SourceMods","src.clm"), 
+                paths = [os.path.join(caseroot,"SourceMods","src.clm"),
                          os.path.join(lnd_root,"src","main"),
                          os.path.join(lnd_root,"src","biogeophys"),
                          os.path.join(lnd_root,"src","biogeochem"),
@@ -82,11 +83,13 @@ def _main_func():
                          os.path.join(lnd_root,"src","fates","biogeochem"),
                          os.path.join(lnd_root,"src","fates","fire"),
                          os.path.join(lnd_root,"src","utils"),
-                         os.path.join(lnd_root,"src","cpl")]
+                         os.path.join(lnd_root,"src","cpl"),
+                         os.path.join(lnd_root,"src","cpl",driver)]
+
                 with open(filepath_file, "w") as filepath:
                     filepath.write("\n".join(paths))
                     filepath.write("\n")
-                
+
         #-------------------------------------------------------
         # create the library in libroot
         #-------------------------------------------------------
@@ -114,4 +117,3 @@ def _main_func():
 
 if __name__ == "__main__":
     _main_func()
-

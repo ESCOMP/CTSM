@@ -1,0 +1,6 @@
+./xmlchange USE_ESMF_LIB=TRUE
+comp_interface=`./xmlquery --value COMP_INTERFACE`
+if [ $comp_interface == 'mct' ]
+then
+   ./xmlchange COMPARE_TO_NUOPC=TRUE
+fi
