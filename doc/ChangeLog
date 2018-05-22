@@ -1,4 +1,145 @@
 ===============================================================
+Tag name:  clm5.0.dev012
+Originator(s):  sacks (Bill Sacks)
+Date: Thu May 17 14:13:34 MDT 2018
+One-line Summary: Fixes for variable_year orbital mode
+
+Purpose of changes
+------------------
+
+Fixes for correctness and exact restartability with variable_year
+orbital mode:
+
+(1) Update max day length (max_dayl) each time step, rather than just
+    updating it once in initialization
+
+(2) Update to a cime version that has a fix for datm, which updates the
+    orbital parameters (used for solar zenith angle-based interpolation)
+    each time step, rather than just once in initialization
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #379 (Problems with Hist decStart restart tests due to variable
+  orbital year)
+- Fixes #260 (max daylength doesn't change over time for varying orbital
+  parameters)
+
+CIME Issues fixed (include issue #):
+- ESMCI/cime#2598 (datm doesn't restart properly with variable year orbit)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Gave extra time to some tests so they would pass
+
+Code reviewed by: Erik Kluzek
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, some baselines fail as expected
+
+    Also verified that this test (reported in #379) now passes:
+    ERS_D_P36x1.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-decStart
+
+    Also verified that the ctsm code changes alone (without the cime
+    update) have the expected behavior in terms of baseline
+    passes/fails:
+
+    FAIL SMS_D_Ld10.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-decStart BASELINE
+	Enters the second year
+    PASS SMS_D_Ld1.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-decStart BASELINE
+	Stays in first year
+    PASS SMS_Lm1.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-ciso_bombspike1963 BASELINE
+	Stays in first year
+
+CLM tag used for the baseline comparisons: clm5.0.dev011
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: multi-year runs with HIST compsets
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated carefully, but expected to be larger than roundoff/same climate
+
+      Bit-for-bit for runs with fixed orbital parameters (non-HIST
+      compsets) and for HIST runs that do not span multiple years.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: adds one commit that fixes ESMCI/cime#2598 
+
+Pull Requests that document the changes (include PR ids):
+- #385 (Update max day length (max_dayl) each time step)
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev011
 Originator(s):  erik (Erik Kluzek)
 Date: Wed May 16 20:27:39 MDT 2018
