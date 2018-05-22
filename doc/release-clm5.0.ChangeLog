@@ -1,0 +1,24 @@
+===============================================================
+Tag name:  clm5.0.000
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Feb 05 2018
+One-line Summary: Initial version of CLM5.0
+
+This is the initial science version of CLM5.0.
+
+Developments for CLM5.0 build on the progress made in CLM4.5. Most major components of the model have been updated with particularly
+notable changes made to soil and plant hydrology, snow density, river modeling, carbon and nitrogen cycling and coupling, and crop
+modeling.
+The updates to CLM science are documented here:
+
+https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#clm5-0
+
+This version has production versions of CLM5.0 CMIP6 land-use change files for 1850, historical, and 2000. It has preliminary
+versions of CMIP6 forcing files for Nitrogen deposition and population density. Further updates are needed for prescribed aerosols,
+and future scenarios.
+
+Spunup initial conditions are provided for several CLM physics and forcing combinations from simulations run at 1-degree resolution
+(fv 0.9x1.25 with g1xv6 ocean mask).
+
+===============================================================
+
