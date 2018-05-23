@@ -13,6 +13,7 @@ module WaterstateType
   use clm_varctl     , only : use_vancouver, use_mexicocity, use_cn, iulog, use_luna
   use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
+  use abortutils     , only : endrun
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   !
@@ -612,7 +613,6 @@ contains
     use clm_varctl      , only : fsurdat, iulog
     use clm_varctl        , only : use_bedrock
     use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
     use fileutils       , only : getfil
     use ncdio_pio       , only : file_desc_t, ncd_io
     !
@@ -1076,32 +1076,17 @@ contains
          long_name='snow layer effective radius', units='um', &
          interpinic_flag='interp', readvar=readvar, data=this%snw_rds_col)
     if (flag == 'read' .and. .not. readvar) then
-
-       ! initial run, not restart: initialize snw_rds
+       ! NOTE(wjs, 2018-05-22) There was some code here that looked like it was just for
+       ! the sake of backwards compatibility, dating back to 2014 or earlier. I was
+       ! tempted to just remove it, but on the off-chance that this conditional is still
+       ! ever entered, I'm putting an endrun call here to notify users of this removed
+       ! code.
        if (masterproc) then
           write(iulog,*) "SNICAR: This is an initial run (not a restart), and grain size/aerosol " // &
-               "mass data are not defined in initial condition file. Initialize snow " // &
-               "effective radius to fresh snow value, and snow/aerosol masses to zero."
+               "mass data are not defined in initial condition file. This situation is no longer handled."
        endif
-
-       do c= bounds%begc, bounds%endc
-          if (col%snl(c) < 0) then
-             this%snw_rds_col(c,col%snl(c)+1:0) = snw_rds_min
-             this%snw_rds_col(c,-nlevsno+1:col%snl(c)) = 0._r8
-             this%snw_rds_top_col(c) = snw_rds_min
-             this%sno_liq_top_col(c) = this%h2osoi_liq_col(c,col%snl(c)+1) / &
-                                      (this%h2osoi_liq_col(c,col%snl(c)+1)+this%h2osoi_ice_col(c,col%snl(c)+1))
-          elseif (this%h2osno_col(c) > 0._r8) then
-             this%snw_rds_col(c,0) = snw_rds_min
-             this%snw_rds_col(c,-nlevsno+1:-1) = 0._r8
-             this%snw_rds_top_col(c) = spval
-             this%sno_liq_top_col(c) = spval
-          else
-             this%snw_rds_col(c,:) = 0._r8
-             this%snw_rds_top_col(c) = spval
-             this%sno_liq_top_col(c) = spval
-          endif
-       enddo
+       call endrun(msg = "Absent snw_rds on initial conditions file no longer handled. "// &
+            errMsg(sourcefile, __LINE__))
     endif
 
     call restartvar(ncid=ncid, flag=flag, varname='qaf', xtype=ncd_double, dim1name='landunit',                       &
