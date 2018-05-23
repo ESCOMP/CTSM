@@ -22,3 +22,10 @@ https://github.com/ESCOMP/ctsm/wiki/Getting-started-with-CTSM-in-git
 and
 
 https://github.com/ESCOMP/ctsm/wiki/Recommended-git-setup
+
+To get updates on CTSM tags and important notes on CTSM developments
+join our low traffic email list:
+
+https://groups.google.com/a/ucar.edu/forum/#!forum/ctsm-dev
+
+(Send email to ctsm-core@ucar.edu if you have problems with any of this)

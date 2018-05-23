@@ -355,9 +355,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>/glade/u/home/rgknox/ctsm/src/fates/parameter_files/fates_params_2trop.c180512.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_default_2trop.c180518.nc</fates_paramfile>
 
-<!-- lnd/clm2/paramdata/fates_params_2troppftclones_f0.c180220.nc</fates_paramfile> -->
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -436,6 +435,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_nguardrail phys="clm5_0" use_cn=".true." >.true.</use_nguardrail>
 
 <ncrit    phys="clm5_0" use_cn=".true.">1.d-9</ncrit>
+<ncrit    phys="clm4_5" use_cn=".true.">1.d-8</ncrit>
 <cnegcrit phys="clm5_0" use_cn=".true.">-6.d+1</cnegcrit>
 <nnegcrit phys="clm5_0" use_cn=".true.">-6.d+0</nnegcrit>
 <cnegcrit phys="clm4_5" use_cn=".true.">-6.d+2</cnegcrit>
@@ -480,19 +480,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1"
+<!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1" use_cn=".false."
 >hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1"
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1" use_cn=".true."
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7"
+<!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7" use_cn=".true."
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7"
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7" use_cn=".false."
 >hgrid=0.9x1.25 maxpft=17 mask=gx1v6 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
@@ -511,21 +513,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm4_5_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v6_simyr1850_c180204.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm4_5_CRUv7"
 >lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v6_simyr1850_c180204.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm4_5_cam6.0"
 >lnd/clm2/initdata_map/clmi.B1850.0161-01-01.0.9x1.25_gx1v7_simyr1850_c180130.nc
 </finidat>
@@ -533,7 +535,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v6_simyr1850_c171214.nc
 </finidat>
@@ -549,22 +551,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru.1526-01-01.0.9x1.25_gx1v6_simyr1850_c180109.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru.1526-01-01.0.9x1.25_gx1v6_simyr1850_c180109b.nc
 </finidat>
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/initdata_map/clmi.B1850.0161-01-01.0.9x1.25_gx1v7_simyr1850_c180130.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
 >lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v6_simyr1850_c180110.nc
 </finidat>
@@ -583,10 +585,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- FATES on for 2000 (MUST be an exact match - can't interpolate files for FATES -->
+<!-- Temporarily removing finidat file until fates api 4.0.0 -->
 <finidat hgrid="4x5"  maxpft="17"  mask="gx3v7" use_cn=".false." use_fates=".true."
          ic_ymd="20000101"  use_nitrif_denitrif=".false." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true.">
-/glade/scratch/rgknox/fates-clm-tests/iclm50fates-finit-s.1.12.3_a.4.0.0-f45/run/iclm50fates-finit-s.1.12.3_a.4.0.0-f45.clm2.r.0056-01-01-00000.nc
 </finidat>
 
 
@@ -1109,6 +1111,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <create_crop_landunit     use_fates=".false.">.true.</create_crop_landunit>
 <create_crop_landunit     use_fates=".true." >.false.</create_crop_landunit>
 
+<run_zero_weight_urban>.false.</run_zero_weight_urban>
 
 <!-- =========================================  -->
 <!-- Performance issues                         -->

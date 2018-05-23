@@ -422,7 +422,11 @@ contains
   subroutine ncd_inqdlen(ncid,dimid,len,name)
     !
     ! !DESCRIPTION:
-    ! enddef netcdf file
+    ! Gets the length of the given dimension
+    !
+    ! If 'name' is absent, then 'dimid' is used as an input: the dimension id to inquire.
+    ! If 'name' is present, then it gives the name of the dimension to inquire, and
+    ! 'dimid' is set to the ID associated with this dimension.
     !
     ! !ARGUMENTS:
     class(file_desc_t), intent(inout) :: ncid       ! netcdf file id

@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 895;
+my $ntests = 939;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 564;
+   $ntests += 597;
 }
 plan( tests=>$ntests );
 
@@ -268,9 +268,9 @@ foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-dry
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 
-print "\n==================================================\n";
+print "\n===============================================================================\n";
 print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
-print "==================================================\n";
+print "=================================================================================\n";
 
 # irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
@@ -278,6 +278,8 @@ foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
+                      "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                      "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -1360,22 +1362,28 @@ foreach my $phys ( "clm4_0", "clm4_5", 'clm5_0' ) {
   my $mode = "-phys $phys";
   system( "../configure -s $mode" );
   foreach my $forc ( "CRUv7", "GSWP3v1", "cam6.0" ) {
-     my $lndtuningmode = "${phys}_${forc}";
-     my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode";
-     if ( $phys eq "clm4_0" ) { $clmoptions .= " -glc_nec 0"; }
-     &make_env_run( );
-     eval{ system( "$bldnml $clmoptions > $tempfile 2>&1 " ); };
-     is( $@, '', "$clmoptions" );
-     $cfiles->checkfilesexist( "$clmoptions", $mode );
-     $cfiles->shownmldiff( "default", "standard" );
-     if ( defined($opts{'compare'}) ) {
-        $cfiles->doNOTdodiffonfile( "$tempfile", "$clmoptions", $mode );
-        $cfiles->comparefiles( "$clmoptions", $mode, $opts{'compare'} );
+     foreach my $bgc ( "sp", "bgc" ) {
+        my $lndtuningmode = "${phys}_${forc}";
+        my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode";
+        if ( $phys eq "clm4_0" ) { 
+           $clmoptions .= " -glc_nec 0"; 
+        } else {
+           $clmoptions .= " -bgc $bgc"; 
+        }
+        &make_env_run( );
+        eval{ system( "$bldnml $clmoptions > $tempfile 2>&1 " ); };
+        is( $@, '', "$clmoptions" );
+        $cfiles->checkfilesexist( "$clmoptions", $mode );
+        $cfiles->shownmldiff( "default", "standard" );
+        if ( defined($opts{'compare'}) ) {
+           $cfiles->doNOTdodiffonfile( "$tempfile", "$clmoptions", $mode );
+           $cfiles->comparefiles( "$clmoptions", $mode, $opts{'compare'} );
+        }
+        if ( defined($opts{'generate'}) ) {
+           $cfiles->copyfiles( "$clmoptions", $mode );
+        }
+        &cleanup();
      }
-     if ( defined($opts{'generate'}) ) {
-        $cfiles->copyfiles( "$clmoptions", $mode );
-     }
-     &cleanup();
   }
 }
 &cleanup();
