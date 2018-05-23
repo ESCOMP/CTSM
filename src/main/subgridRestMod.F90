@@ -6,6 +6,7 @@ module subgridRestMod
   ! !USES:
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
+  use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
   use abortutils         , only : endrun
   use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, ldecomp
   use domainMod          , only : ldomain
@@ -98,8 +99,6 @@ contains
     ! they can be computed using other info on the restart file (particularly subgrid
     ! weights).
     !
-    ! !USES:
-    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds ! bounds
     type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
@@ -116,6 +115,8 @@ contains
     integer , pointer :: ilarr(:)    ! temporary
     integer , pointer :: icarr(:)    ! temporary
     integer , pointer :: iparr(:)    ! temporary
+
+    real(r8), pointer :: elevclass_bounds(:)
 
     real(r8), pointer :: temp2d_r(:,:) ! temporary for multi-level variables
     integer , pointer :: temp2d_i(:,:) ! temporary for multi-level variables
@@ -435,6 +436,18 @@ contains
     deallocate(temp2d_r)
 
     deallocate(rparr, iparr)
+
+    ! ------------------------------------------------------------------------
+    ! Write other subgrid-related metadata
+    ! ------------------------------------------------------------------------
+
+    allocate(elevclass_bounds(0:glc_get_num_elevation_classes()))
+    elevclass_bounds = glc_get_elevclass_bounds()
+    call restartvar(ncid=ncid, flag=flag, varname='glc_elevclass_bounds', xtype=ncd_double, &
+         dim1name='glc_nec1', is_spatial = .false., &
+         long_name='glacier elevation class bounds', units='m', &
+         interpinic_flag='skip', readvar=readvar, data=elevclass_bounds)
+    deallocate(elevclass_bounds)
 
   end subroutine subgridRest_write_only
 

@@ -795,17 +795,17 @@ contains
        !       ! Diagnose water storage in canopy if hydraulics is on
        !       ! This updates the internal value and the bc_out value.
        !       ! If hydraulics is off, it returns 0 storage
-       !       if ( use_fates_planthydro ) then
+       if ( use_fates_planthydro ) then
        !          call UpdateH2OVeg(this%fates(nc)%nsites, &
        !                this%fates(nc)%sites,  &
        !                this%fates(nc)%bc_out)
        !
-       !          do s = 1, this%fates(nc)%nsites
-       !             c = this%f2hmap(nc)%fcolumn(s)
-       !             waterstate_inst%total_plant_stored_h2o_col(c) = &
-       !                   this%fates(nc)%bc_out(s)%plant_stored_h2o_si
-       !          end do
-       !       end if
+          do s = 1, this%fates(nc)%nsites
+             c = this%f2hmap(nc)%fcolumn(s)
+             waterstate_inst%total_plant_stored_h2o_col(c) = &
+                  this%fates(nc)%bc_out(s)%plant_stored_h2o_si
+          end do
+       end if
        !---------------------------------------------------------------------------------
        
        ! Convert FATES dynamics into HLM usable information
@@ -2223,7 +2223,7 @@ contains
     
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
-       waterflux_inst%qflx_rootsoi_col(c,:) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(:)
+       waterflux_inst%qflx_rootsoi_col(c,1:nlevsoi) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoi)
     end do
     
  end subroutine ComputeRootSoilFlux

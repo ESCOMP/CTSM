@@ -20,7 +20,7 @@ from manic.externals_description import create_externals_description
 from manic.externals_description import read_externals_description_file
 from manic.externals_status import check_safe_to_update_repos
 from manic.sourcetree import SourceTree
-from manic.utils import printlog
+from manic.utils import printlog, fatal_error
 from manic.global_constants import VERSION_SEPERATOR, LOG_FILE_NAME
 
 if sys.hexversion < 0x02070000:
@@ -207,14 +207,15 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
 
   * tag (string) : tag to checkout
 
-    This can also be a git SHA-1
+  * hash (string) : the git hash to checkout. Only applies to git
+    repositories.
 
   * branch (string) : branch to checkout from the specified
     repository. Specifying a branch on a remote repository means that
     %(prog)s will checkout the version of the branch in the remote,
     not the the version in the local repository (if it exists).
 
-    Note: either tag or branch must be supplied, but not both.
+    Note: one and only one of tag, branch hash must be supplied.
 
   * externals (string) : used to make manage_externals aware of
     sub-externals required by an external. This is a relative path to
@@ -228,6 +229,11 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
 
   * Lines begining with '#' or ';' are comments and will be ignored.
 
+# Obtaining this tool, reporting issues, etc.
+
+  The master repository for manage_externals is
+  https://github.com/ESMCI/manage_externals. Any issues with this tool
+  should be reported there.
 '''
 
     parser = argparse.ArgumentParser(
@@ -237,6 +243,10 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     #
     # user options
     #
+    parser.add_argument("components", nargs="*",
+                        help="Specific component(s) to checkout. By default"
+                        "all required externals are checked out.")
+
     parser.add_argument('-e', '--externals', nargs='?',
                         default='Externals.cfg',
                         help='The externals description filename. '
@@ -289,6 +299,11 @@ def main(args):
     Function to call when module is called from the command line.
     Parse externals file and load required repositories or all repositories if
     the --all option is passed.
+
+    Returns a tuple (overall_status, tree_status). overall_status is 0
+    on success, non-zero on failure. tree_status gives the full status
+    *before* executing the checkout command - i.e., the status that it
+    used to determine if it's safe to proceed with the checkout.
     """
     if not args.no_logging:
         logging.basicConfig(filename=LOG_FILE_NAME,
@@ -305,7 +320,12 @@ def main(args):
 
     root_dir = os.path.abspath(os.getcwd())
     external_data = read_externals_description_file(root_dir, args.externals)
-    external = create_externals_description(external_data)
+    external = create_externals_description(external_data, components=args.components)
+
+    for comp in args.components:
+        if comp not in external.keys():
+            fatal_error("No component {} found in {}".format(comp, args.externals))
+
 
     source_tree = SourceTree(root_dir, external)
     printlog('Checking status of externals: ', end='')
@@ -343,7 +363,10 @@ The following are two options for how to proceed:
             printlog(msg)
             printlog('-' * 70)
         else:
-            source_tree.checkout(args.verbose, load_all)
+            if not args.components:
+                source_tree.checkout(args.verbose, load_all)
+            for comp in args.components:
+                source_tree.checkout(args.verbose, load_all, load_comp=comp)
             printlog('')
 
     logging.info('%s completed without exceptions.', program_name)
