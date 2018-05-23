@@ -2199,6 +2199,7 @@ contains
     integer :: l
     integer :: nc
     integer :: num_filter_fates
+    integer :: nlevsoil
 
 
     if( .not. use_fates_planthydro ) return
@@ -2223,7 +2224,8 @@ contains
     
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
-       waterflux_inst%qflx_rootsoi_col(c,1:nlevsoi) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoi)
+       nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+       waterflux_inst%qflx_rootsoi_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoil)
     end do
     
  end subroutine ComputeRootSoilFlux
