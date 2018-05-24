@@ -1286,6 +1286,14 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="DAE_N2_D_Ld1" grid="f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/DA_multidrv">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
   <test name="SMS_D_Ld3" grid="f19_f19_mg16" compset="IHistClm40SpCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
