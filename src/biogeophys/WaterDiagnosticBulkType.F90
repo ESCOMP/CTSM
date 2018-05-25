@@ -1,8 +1,8 @@
-module WaterBulkOnlyDiagnosticType
+module WaterDiagnosticsBulkType
 
-  ! This type contains water diagnostic variables that only apply to the bulk water
-  ! state. I don't love the name.
-  type, public :: water_bulk_only_diag_type
+  ! This type contains everything in waterdiag_type, plus water diagnostic variables that
+  ! only apply to the bulk water state.
+  type, extends(waterdiag_type), public :: waterdiag_bulk_type
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
@@ -47,10 +47,20 @@ module WaterBulkOnlyDiagnosticType
    contains
      procedure :: Init
      procedure :: Restart
-  end type waterdiag_type
+  end type waterdiag_bulk_type
 
 contains
 
-  ! Standard infrastructure routines here
+  subroutine Init(this, bounds, ...)
+    call this%waterdiag_type%Init(bounds, ...)
 
-end module WaterBulkOnlyDiagnosticType
+    ! Then do init stuff needed for the variables declared in this module
+  end subroutine Init
+
+  subroutine Restart(this, bounds, ...)
+    call this%waterdiag_type%Restart(bounds, ...)
+
+    ! Then do restart stuff needed for the variables declared in this module
+  end subroutine Restart
+
+end module WaterDiagnosticsBulkType

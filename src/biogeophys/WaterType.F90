@@ -7,9 +7,10 @@ module WaterType
   ! single instance of water_type, named water_inst, and will call water_inst%Init and
   ! water_inst%Restart.
   type, public :: water_type
-     type(water_bulk_and_tracer_type) :: water_bulk_inst
-     type(water_bulk_and_tracer_type), allocatable :: water_tracer_inst(:)
-     type(water_bulk_only_type) :: water_bulk_only_inst
+     type(waterbulk_type) :: waterbulk_inst
+
+     ! Mat: You don't need to implement this now: This will come in the next iteration
+     type(watertracer_type), allocatable :: watertracer_inst(:)
    contains
      procedure :: Init
      procedure :: Restart
@@ -18,23 +19,24 @@ module WaterType
 contains
 
   subroutine Init(this, bounds, ...)
-    call this%water_bulk_inst%Init(bounds, ...)
-    call this%water_bulk_only_inst%Init(bounds, ...)
+    call this%waterbulk_inst%Init(bounds, ...)
+
+    ! Mat: You don't need to implement the following now: This will come in the next iteration
 
     ! Determine number of tracers
 
-    allocate(this%water_tracer_inst(ntracers))
-    do i = 1, size(this%water_tracer_inst)
-       call this%water_tracer_inst(i)%Init(bounds, ...)
+    allocate(this%watertracer_inst(ntracers))
+    do i = 1, size(this%watertracer_inst)
+       call this%watertracer_inst(i)%Init(bounds, ...)
     end do
   end subroutine Init
 
   subroutine Restart(this, bounds, ...)
-    call this%water_bulk_inst%Restart(bounds, ...)
-    call this%water_bulk_only_inst%Restart(bounds, ...)
+    call this%waterbulk_inst%Restart(bounds, ...)
 
-    do i = 1, size(water_tracer_inst)
-       call this%water_tracer_inst(i)%Restart(bounds, ...)
+    ! Mat: You don't need to implement the following now: This will come in the next iteration
+    do i = 1, size(watertracer_inst)
+       call this%watertracer_inst(i)%Restart(bounds, ...)
     end do
   end subroutine Restart
 
