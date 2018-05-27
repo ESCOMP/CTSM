@@ -1082,6 +1082,11 @@ in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 <!--                                                   -->
 <!-- mksurfdata namelist                               -->
 <!--                                                   -->
+<entry id="gitdescribe" type="char*80" category="mksurfdata"
+       group="clmexp" valid_values="" >
+Output of "git describe" to give the tag/commit the version being used corresponds to
+</entry>
+
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
        valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >

@@ -89,18 +89,12 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Host', len_trim(str), trim(str)), subname)
 
-    str = 'Community Land Model: CLM4'
+    str = 'Community Land Model: CLM5'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
-    str = &
-'$HeadURL$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-         'Version', len_trim(str), trim(str)), subname)
-
-    str = '$Id$'
-    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-         'Revision_Id', len_trim(str), trim(str)), subname)
+         'Version', len_trim(gitdescribe), trim(gitdescribe)), subname)
 
 #ifdef OPT
     str = 'TRUE'
