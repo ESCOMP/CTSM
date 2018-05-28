@@ -7,8 +7,6 @@
 ;
 ;  Erik Kluzek
 ;  Mar/03/2010
-;  $Id$
-;  $HeadURL;
 ;
 begin
   ; ===========================================================================================================
@@ -109,8 +107,7 @@ begin
    fileattdef ( nco, ncg );
    nco@history  = ldate+": Convert by getco2_historical.ncl";
    nco@source   = "Convert from:"+ghgfile;
-   nco@Version  = "$HeadURL$";
-   nco@Revision = "$Id$";
+   nco@Version  = systemfunc( "git describe" );
    ;
    ; Set static variables
    ;
