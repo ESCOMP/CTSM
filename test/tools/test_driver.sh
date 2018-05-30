@@ -202,6 +202,8 @@ fi
 if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
     export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
+    export CTSM_ROOT=\${CLM_ROOT}
+    export CIME_ROOT=\${CLM_ROOT}/cime
 else
     if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/tools/test_driver.sh ]; then
 	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/tools; pwd \`
