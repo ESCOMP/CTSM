@@ -203,7 +203,16 @@ if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
     export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
     export CTSM_ROOT=\${CLM_ROOT}
-    export CIME_ROOT=\${CLM_ROOT}/cime
+    if [ -d \${CLM_ROOT}/cime ]; then
+       export CIME_ROOT=\${CLM_ROOT}/cime
+    else
+       export CIME_ROOT=\${CLM_ROOT}/../../cime
+    fi
+    if [ ! -d \${CIME_ROOT} ]; then
+       echo "ERROR: trouble finding the CIME_ROOT directory: \$CIME_ROOT"
+       exit 3
+    fi
+    echo "CTSM, CIME ROOT: \$CTSM_ROOT, \$CIME_ROOT"
 else
     if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/tools/test_driver.sh ]; then
 	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/tools; pwd \`
