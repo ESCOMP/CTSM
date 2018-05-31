@@ -842,7 +842,7 @@ contains
           ! Set the bareground patch indicator
           patch%is_bareground(col%patchi(c)) = .true.
           npatch = this%fates(nc)%sites(s)%youngest_patch%patchno
-          patch%wt_ed(col%patchi(c)) = 1.0-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))
+          patch%wt_ed(col%patchi(c)) = 1.0_r8-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))
 
           if(sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))>1.0_r8)then
              write(iulog,*)'Projected Canopy Area of all FATES patches'
