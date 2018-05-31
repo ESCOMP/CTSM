@@ -212,7 +212,6 @@ if [ -f \${initdir}/test_driver.sh ]; then
        echo "ERROR: trouble finding the CIME_ROOT directory: \$CIME_ROOT"
        exit 3
     fi
-    echo "CTSM, CIME ROOT: \$CTSM_ROOT, \$CIME_ROOT"
 else
     if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/tools/test_driver.sh ]; then
 	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/tools; pwd \`
