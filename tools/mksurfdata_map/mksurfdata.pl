@@ -304,7 +304,7 @@ sub write_namelist_file {
       $landuse_timeseries_text_file, $setnumpft) = @_;
 
 
-  my $gitdescribe = `git describe`;
+  my $gitdescribe = `cd $scrdir; git describe; cd -`;
   chomp( $gitdescribe );
   my $fh = IO::File->new;
   $fh->open( ">$namelist_fname" ) or die "** can't open file: $namelist_fname\n";
