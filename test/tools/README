@@ -11,11 +11,11 @@ To use...
 
 ./test_driver.sh -i
 
-on yellowstone
+on cheyenne
 
 execgy ./test_driver.sh -i >& run.out &
 
-Intended for use on NCAR machines yellowstone and hobart.
+Intended for use on NCAR machines cheyenne and hobart.
 
 II. RUNNING test_driver.sh TOOLS TESTING:
 

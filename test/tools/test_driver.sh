@@ -27,7 +27,7 @@ echo $hostname
 case $hostname in
 
     ##cheyenne
-     cheyenne* | r*i*n*)
+     cheyenne* | r*i*n* | geyser* | caldera* | pronghorn*)
     submit_script="test_driver_cheyenne${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
