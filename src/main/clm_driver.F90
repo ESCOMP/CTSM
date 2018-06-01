@@ -660,22 +660,13 @@ contains
        ! ============================================================================
 
        call t_startf('bgp2')
-!KO       call SoilFluxes(bounds_clump,                                                          &
-!KO            filter(nc)%num_urbanl,  filter(nc)%urbanl,                                        &
-!KO            filter(nc)%num_nolakec, filter(nc)%nolakec,                                       &
-!KO            filter(nc)%num_nolakep, filter(nc)%nolakep,                                       &
-!KO            atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, waterstate_inst, &
-!KO            energyflux_inst, waterflux_inst)            
-!KO
        call SoilFluxes(bounds_clump,                                                          &
             filter(nc)%num_urbanl,  filter(nc)%urbanl,                                        &
-            filter(nc)%num_urbanc,  filter(nc)%urbanc,                                        &
             filter(nc)%num_urbanp,  filter(nc)%urbanp,                                        &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                                       &
             atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, waterstate_inst, &
-            energyflux_inst, waterflux_inst, urbanparams_inst)            
-!KO
+            energyflux_inst, waterflux_inst)            
        call t_stopf('bgp2')
 
        ! ============================================================================
