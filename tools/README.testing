@@ -32,11 +32,11 @@ Options to the Makefile:
  SMP ---------- Shared memory Multi-processing (TRUE or FALSE) [default is FALSE]
  OPT ---------- Use optimized options. (TRUE or FALSE)
 
-3.) Successful completion of the tool ends with "Successfully created ..."
+3.) Successful completion of the tool ends with "Successfully ..."
 
 After the tool completes it should have an unique string telling of the 
 successful completion of the file that is searchable in the log file starting
-with "Successfully created ". If this string isn't found in the log file, it
+with "Successfully ". If this string isn't found in the log file, it
 will be assumed by the test setup that the test failed.
 
 4.) NetCDF files are created or modified
