@@ -15,6 +15,7 @@
 #SBATCH -t 03:00:00
 #SBATCH -A P93300606
 #SBATCH -p dav
+#SBATCH --export=ALL       # Export all env variables (needed for RES)
 #SBATCH -e regrid.%J.out   # output filename
 #SBATCH -o regrid.%J.err   # error filename
 
