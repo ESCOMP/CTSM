@@ -4,19 +4,20 @@
 # Batch script to submit to create mapping files for all standard
 # resolutions.  If you provide a single resolution via "$RES", only
 # that resolution will be used. In that case: If it is a regional or
-# single point resolution, you should set '#PBS -n' to 1, and be sure
+# single point resolution, you should set '#SBATCH -n' to 1, and be sure
 # that '-t regional' is specified in cmdargs.
 #
-# cheyenne specific batch commands:
-#PBS -A P93300606
-#PBS -N regrid
-#PBS -q regular
-#PBS -l select=4:ncpus=2:mpiprocs=2:mem=109GB
-#PBS -l walltime=2:00:00
-#PBS -j oe
-#PBS -me
-#PBS -V
-#PBS -S /bin/bash
+# geyser specific batch commands:
+#SBATCH -J regrid        # job name
+#SBATCH -n 8
+#SBATCH --ntasks-per-node=4
+#SBATCH --mem=450G
+#SBATCH -t 03:00:00
+#SBATCH -A P93300606
+#SBATCH -p dav
+#SBATCH --export=ALL       # Export all env variables (needed for RES)
+#SBATCH -e regrid.%J.out   # output filename
+#SBATCH -o regrid.%J.err   # error filename
 
 #----------------------------------------------------------------------
 # Set parameters
