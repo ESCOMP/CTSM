@@ -357,6 +357,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <fates_paramfile>lnd/clm2/paramdata/fates_params_default_2trop.c180518.nc</fates_paramfile>
 
+
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
 <!-- ========================================================================================  -->
