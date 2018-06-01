@@ -349,7 +349,7 @@ Index of lower boundary condition for Richards equation.
 lower_boundary_condition = 1 : flux lower boundary condition                                     (use with soilwater_movement_method=adaptive time stepping)
 lower_boundary_condition = 2 : zero-flux lower boundary condition                                (use with soilwater_movement_method=adaptive time stepping)
 lower_boundary_condition = 3 : water table head-based lower boundary condition w/ aquifer layer. (use with soilwater_movement_method=adaptive time stepping)
-lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer                                (only used with soilwater_movement_method=Zeng&Decker 2009)
+lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer                                (only used with soilwater_movement_method=Zeng&amp;Decker 2009)
 
 TODO(bja, 2015-09) these should be strings so they have meaningful names instead of ints. 
 </entry>
