@@ -23,9 +23,7 @@ module TemperatureType
 
      ! Temperatures
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
-!KO
      real(r8), pointer :: t_skin_patch             (:)   ! patch skin temperature (Kelvin)
-!KO
      real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
      real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
      real(r8), pointer :: t_veg10_day_patch        (:)   ! 10 day running mean of patch daytime time vegetation temperature (Kelvin), LUNA specific, but can be reused
@@ -49,9 +47,6 @@ module TemperatureType
      real(r8), pointer :: t_sunw_inner_lun         (:)   ! lun sunwall inside surface temperature (K)
      real(r8), pointer :: t_shdw_inner_lun         (:)   ! lun shadewall inside surface temperature (K)
      real(r8), pointer :: t_floor_lun              (:)   ! lun floor temperature (K)
-!KO
-     real(r8), pointer :: t_skin_lun               (:)   ! lun skin temperature (K)
-!KO
      real(r8), pointer :: snot_top_col             (:)   ! col temperature of top snow layer [K]
      real(r8), pointer :: dTdz_top_col             (:)   ! col temperature gradient in top layer  [K m-1]
      real(r8), pointer :: dt_veg_patch             (:)   ! patch change in t_veg, last iteration (Kelvin)
@@ -194,9 +189,7 @@ contains
 
     ! Temperatures
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
-!KO
     allocate(this%t_skin_patch             (begp:endp))                      ; this%t_skin_patch             (:)   = nan
-!KO
     if(use_luna) then
      allocate(this%t_veg_day_patch         (begp:endp))                      ; this%t_veg_day_patch          (:)   = spval
      allocate(this%t_veg_night_patch       (begp:endp))                      ; this%t_veg_night_patch        (:)   = spval
@@ -218,9 +211,6 @@ contains
     allocate(this%t_sunw_inner_lun         (begl:endl))                      ; this%t_sunw_inner_lun         (:)   = nan
     allocate(this%t_shdw_inner_lun         (begl:endl))                      ; this%t_shdw_inner_lun         (:)   = nan
     allocate(this%t_floor_lun              (begl:endl))                      ; this%t_floor_lun              (:)   = nan
-!KO
-    allocate(this%t_skin_lun               (begl:endl))                      ; this%t_skin_lun               (:)   = nan
-!KO
     allocate(this%snot_top_col             (begc:endc))                      ; this%snot_top_col             (:)   = nan
     allocate(this%dTdz_top_col             (begc:endc))                      ; this%dTdz_top_col             (:)   = nan
     allocate(this%dt_veg_patch             (begp:endp))                      ; this%dt_veg_patch             (:)   = nan
@@ -397,16 +387,10 @@ contains
          avgflag='A', long_name='vegetation temperature', &
          ptr_patch=this%t_veg_patch)
 
-!KO
     this%t_skin_patch(begp:endp) = spval
     call hist_addfld1d(fname='TSKIN', units='K',  &
          avgflag='A', long_name='skin temperature', &
          ptr_patch=this%t_skin_patch, c2l_scale_type='urbans')
-!   this%t_skin_lun(begl:endl) = spval
-!   call hist_addfld1d(fname='TSKIN', units='K',  &
-!        avgflag='A', long_name='skin temperature', &
-!        ptr_lun=this%t_skin_patch, set_nourb=spval, l2g_scale_type='unity')
-!KO
 
     this%t_grnd_col(begc:endc) = spval
     call hist_addfld1d (fname='TG',  units='K',  &
