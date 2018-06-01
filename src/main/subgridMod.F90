@@ -74,6 +74,8 @@ contains
     ! atm_topo is arbitrary for the sake of getting these counts. We don't have a true
     ! atm_topo value at the point of this call, so use 0.
     real(r8), parameter :: atm_topo = 0._r8
+    logical :: sesc = .TRUE.         ! switch for separated soil columns of natural vegetation
+
     !------------------------------------------------------------------------------
 
     npatches = 0
@@ -81,7 +83,7 @@ contains
     nlunits  = 0
     ncohorts = 0
 
-    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp)
+    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp, sesc)
     call accumulate_counters()
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)
@@ -123,7 +125,7 @@ contains
   end subroutine subgrid_get_gcellinfo
 
   !-----------------------------------------------------------------------
-  subroutine subgrid_get_info_natveg(gi, npatches, ncols, nlunits)
+  subroutine subgrid_get_info_natveg(gi, npatches, ncols, nlunits, sesc)
     !
     ! !DESCRIPTION:
     ! Obtain properties for natural vegetated landunit in this grid cell
@@ -133,6 +135,8 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
+    logical, intent(in)  :: sesc      ! switch for separated soil columns of natural vegetation
+
     integer, intent(out) :: npatches  ! number of nat veg patches in this grid cell
     integer, intent(out) :: ncols     ! number of nat veg columns in this grid cell
     integer, intent(out) :: nlunits   ! number of nat veg landunits in this grid cell
@@ -152,8 +156,14 @@ contains
     end do
 
     if (npatches > 0) then
-       ! Assume that the vegetated landunit has one column
-       ncols = 1
+       if(sesc) then
+             ! Assume one soil column for each patch
+             ncols = npatches
+       else
+             ! Assume that the vegetated landunit has one column
+             ncols = 1
+       end if
+
        nlunits = 1
     else
        ! As noted in natveg_patch_exists, we expect a naturally vegetated landunit in
