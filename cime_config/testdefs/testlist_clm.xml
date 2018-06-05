@@ -166,7 +166,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D" grid="f10_f10_musgs" compset="IHistClm45Bgc" testmods="clm/default">
+  <test name="ERP_D" grid="f10_f10_musgs" compset="IHistClm45BgcGs" testmods="clm/default">
     <machines>
       <machine name="hobart" compiler="nag" category="prealpha"/>
     </machines>
@@ -637,13 +637,13 @@
       <option name="comment"  >Include a few debug tests of Cn</option>
     </options>
   </test>
-  <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="IHistClm45Bgc" testmods="clm/decStart">
+  <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="IHistClm45BgcCruGs" testmods="clm/decStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >include a debug test of IHistClm45Bgc</option>
+      <option name="comment"  >include a debug test of IHistClm45BgcCruGs</option>
     </options>
   </test>
   <test name="ERP_P36x2_Lm13" grid="f10_f10_musgs" compset="IHistClm50Bgc" testmods="clm/monthly">
@@ -884,7 +884,7 @@
       <option name="comment"  >Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly</option>
     </options>
   </test>
-  <test name="ERS_Ld3" grid="f19_f19_mg16" compset="I1850Clm40SpCruGs" testmods="clm/40default">
+  <test name="ERS_Ld3" grid="f19_f19_mg16" compset="I1850Clm40SpGswGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1269,7 +1269,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_N2_D" grid="f09_g16" compset="I2000Clm50SpGs" testmods="clm/pauseResume">
+  <test name="SMS_N2_D_Lh12" grid="f09_g16" compset="I2000Clm50SpGs" testmods="clm/pauseResume">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1277,7 +1277,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="DAE_N2_D_Ld1" grid="f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/DA_multidrv">
+  <test name="DAE_N2_D_Lh12" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/DA_multidrv">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1285,7 +1285,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3" grid="f19_f19_mg16" compset="IHistClm40SpCruGs" testmods="clm/40default">
+  <test name="SMS_D_Ld3" grid="f19_f19_mg16" compset="IHistClm40CnCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1324,7 +1324,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">02:40:00</option>
+      <option name="wallclock">03:40:00</option>
     </options>
   </test>
   <test name="SMS_D_Ly2" grid="1x1_brazil" compset="IHistClm50BgcQianGs" testmods="clm/ciso_bombspike1963">
@@ -1332,7 +1332,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">02:40:00</option>
+      <option name="wallclock">03:40:00</option>
     </options>
   </test>
   <test name="SMS_D_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm45BgcCropQianGs" testmods="clm/cropMonthOutput">
@@ -1394,7 +1394,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f19_f19_mg16" compset="IHistClm40SpCruGs" testmods="clm/40default">
+  <test name="SMS_Ld1" grid="f19_f19_mg16" compset="IHistClm40CnCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1436,7 +1436,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld2" grid="T31_g37" compset="IHistClm40SpCruGs">
+  <test name="SMS_Ld2" grid="T31_g37" compset="IHistClm40CnGswGs">
     <machines>
       <machine name="hobart" compiler="intel" category="prealpha"/>
     </machines>
