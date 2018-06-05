@@ -653,6 +653,7 @@
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="ERP_P36x2_Lm36" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrigOn_reduceOutput">
@@ -720,6 +721,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >include a debug test of I1850Clm45BgcCrop</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I1850Clm45BgcCru" testmods="clm/default">
@@ -977,6 +979,7 @@
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="ERS_Ly3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/cmip6">
@@ -1049,6 +1052,7 @@
     <options>
       <option name="wallclock">01:40:00</option>
       <option name="comment"  >restart is right before increasing natural veg to &gt; 0 while also shifting PCT_CFT</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="LII_D_Ld3" grid="f19_g17_gl4" compset="I2000Clm50BgcCrop" testmods="clm/glcMEC_spunup_1way">
@@ -1118,6 +1122,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >The main purpose of this test is to test threading of init_interp, exercising the OpenMP directives in initInterp. (Note that ERP tests don't compare threaded vs. non-threaded runs of init_interp, since init_interp won't run in the restart case.) Note that this test will use init_interp as long as we don't have out-of-the-box initial conditions at f10 resolution. We could probably get a similar level of confidence in the threading directives by deleting this test and instead changing the LII test to use threading; the main loss would be that that wouldn't test threading combined with interpolating from one resolution to another, as this one does.</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="SMS" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
@@ -1308,6 +1313,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpGs" testmods="clm/USUMB">
@@ -1317,6 +1323,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="SMS_D_Ly2" grid="1x1_numaIA" compset="IHistClm50BgcCropGs" testmods="clm/ciso_bombspike1963">
@@ -1325,6 +1332,7 @@
     </machines>
     <options>
       <option name="wallclock">03:40:00</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="SMS_D_Ly2" grid="1x1_brazil" compset="IHistClm50BgcQianGs" testmods="clm/ciso_bombspike1963">
@@ -1333,6 +1341,7 @@
     </machines>
     <options>
       <option name="wallclock">03:40:00</option>
+      <option name="tput_tolerance">0.5</option>
     </options>
   </test>
   <test name="SMS_D_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm45BgcCropQianGs" testmods="clm/cropMonthOutput">
