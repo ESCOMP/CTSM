@@ -5,7 +5,7 @@ offline-build and test scripts. This gives you everything you need
 to run CLM with CESM with datm8 to provide CRU NCEP or GSWP3 forcing data in 
 place of a modeled atmosphere.
 
-For lists of current bugs (issues) and current development see the CTSM github page:
+For lists of current bugs (issues) and current development see the CTSM GitHub page:
 
 https://github.com/ESCOMP/ctsm
 

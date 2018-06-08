@@ -10,34 +10,35 @@ The ctsm-dev group is here:
 
 https://groups.google.com/a/ucar.edu/forum/#!forum/ctsm-dev
 
-Use the help from the WIKI below to setup a fork and personal branch in github to put your developments
-on and keep up to date with the main development CTSM. Once the changes are sufficiently advanced you
-can form a Pull Request on github under
+Use the help from the wiki below to setup a fork and personal branch in GitHub to put your developments
+on and keep up to date with the master branch of CTSM. Once the changes are sufficiently advanced you
+can form a Pull Request on GitHub. Either from your fork on GitHub, or from the main ESCOMP GitHub page
+for CTSM (be sure to hit the "compare across forks" link at the top of the page when you first create
+the pull request).
 
 https://github.com/ESCOMP/ctsm/pulls
 
-To show your proposed changes and start getting feedback on your code changes. This also allows your
-changes to be planned for and slated for a time to come into CTSM master. In most cases you won't merge
-the Pull Request yourself, but a software engineer responsible for CTSM will do additional testing and
-bring the changes to CTSM master.
+This allows you to show your proposed changes and start getting feedback on them (even if they aren't finished). 
+This also allows your changes to be planned for and slated for a time to come into CTSM master. In most 
+cases you won't merge the Pull Request yourself, but a software engineer responsible for CTSM will do 
+additional testing and bring the changes to CTSM master.
 
-## CTSM Developers Guide:
+# CTSM Developers Guide:
 
  https://wiki.ucar.edu/display/ccsm/Community+Land+Model+Developers+Guide
 
 ## Getting Started:
 
-## CTSM WIKI:
+The following resources give you information on the project and how to get started.
+
+# CTSM Wiki:
 
 https://github.com/ESCOMP/ctsm/wiki
-https://github.com/ESCOMP/ctsm/wiki/Getting-started-with-CTSM-in-git
-https://github.com/ESCOMP/ctsm/wiki/Recommended-git-setup
 
-## Coding Practices and Style:
+# Coding Practices and Style:
 
-Code conventions: https://wiki.ucar.edu/display/ccsm/CLM+Coding+Conventions
+Code conventions: https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines
 
-
-## Code of Conduct:
+# Code of Conduct:
 
 See the "CODE_OF_CONDUCT.md" file for expectations of how to work in the community.
