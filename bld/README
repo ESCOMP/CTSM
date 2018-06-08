@@ -1,4 +1,4 @@
-bld/README                            Jun/08/2018 
+$CTSMROOT/bld/README                            Jun/08/2018 
 
 CLM build and configure directory and scripts. Scripts to help
 you prepare to build CLM as a component within CESM, and setup

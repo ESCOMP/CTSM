@@ -1,4 +1,4 @@
-clm/test/tools/README					05/15/2013
+$CTSMROOT/clm/test/tools/README					06/08/2018
 
 Scripts for testing the CLM support tools with many different 
 configurations and run-time options.
