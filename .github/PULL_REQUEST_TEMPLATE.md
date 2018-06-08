@@ -1,15 +1,14 @@
-## Description of changes:
+# Description of changes:
 
-## CTSM Issues Fixed (include github issue #):
-(https://github.com/ESCOMP/ctsm/issues)
+# CTSM Issues Fixed (include github issue #):
 
-## Are answers expected to change?:
+# Are answers expected to change? (and if so in what way):
 
-## Any User Interface Changes?:
+# Any User Interface Changes (namelist or namelist defaults changes)?:
 
-## Externals updated (if any):
+# Testing performed:
+(List what testing you did to show your changes worked as expected)
+(This can be manual testing or running of the different test suites)
 
-## Testing performed:
-
-## Did you follow the conventions in the CTSM Developers Guide?:
-(https://wiki.ucar.edu/display/ccsm/CLM+Coding+Conventions)
+# NOTE: Be sure to check your Coding style against the standard:
+https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines
