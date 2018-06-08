@@ -59,7 +59,6 @@ Externals.cfg --------------- File for management of the main high level externa
 Externals_CLM.cfg ----------- File for management of the CLM specific externals (i.e. FATES)
 parse_cime.cs.status -------- Script to parse test status files cs.status.* created by create_test
 doc/Quickstart.GUIDE -------- Quick guide to using cpl7 scripts.
-doc/Quickstart.userdatasets - Quick guide to using your own datasets.
 doc/IMPORTANT_NOTES --------- Some important notes about this version of 
                                                  clm, configuration modes and namelist items 
                                                  that are not validated or functional.
