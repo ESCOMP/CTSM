@@ -1,4 +1,4 @@
-### How to contribute:
+## How to contribute:
 
 It's recommended that you first contact ctsm-software@ucar.edu to discuss the changes or additions that you propose.
 Work with them to think about the design and implemention of the changes as well as the planning
@@ -23,7 +23,7 @@ This also allows your changes to be planned for and slated for a time to come in
 cases you won't merge the Pull Request yourself, but a software engineer responsible for CTSM will do 
 additional testing and bring the changes to CTSM master.
 
-# CTSM Developers Guide:
+### CTSM Developers Guide:
 
  https://wiki.ucar.edu/display/ccsm/Community+Land+Model+Developers+Guide
 
@@ -31,14 +31,14 @@ additional testing and bring the changes to CTSM master.
 
 The following resources give you information on the project and how to get started.
 
-# CTSM Wiki:
+#### CTSM Wiki:
 
 https://github.com/ESCOMP/ctsm/wiki
 
-# Coding Practices and Style:
+#### Coding Practices and Style:
 
 Code conventions: https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines
 
-# Code of Conduct:
+#### Code of Conduct:
 
 See the "CODE_OF_CONDUCT.md" file for expectations of how to work in the community.
