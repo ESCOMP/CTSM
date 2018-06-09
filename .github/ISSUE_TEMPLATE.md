@@ -1,27 +1,22 @@
-# Type of Issue:
+### General Type of Issue:
 Some example types are:
-* bug in science or answers
-* bug in software
-* science enhancement (changes answers and requires science development)
-* software enhancement
-* FATES change
-* Discussion
+* bug
+* enhancement
+* question
 
+### Details of Issue:
+(Be sure to give enough details that the issue can be understood sufficiently 
+to replicate or to make the required changes)
 
-## Summary of Issue:
-
-## Details of Issue:
-(Be sure to give enough details that the issue can understood sufficiently to replicate
- or to make the required changes)
-
-# For bugs be sure to fill out the following (otherwise remove):
+### For bugs be sure to fill out the following:
+(Otherwise remove, and remove any prompts that aren't useful)
 -----------------------------------------------------------------
-# Expected behavior and actual behavior:
+### Important Details of your setup/configuration (compset, settings, etc.):
 
-# Steps to reproduce the problem:
+### Important output or errors that show the problem:
 
-# What is the CTSM version you are using (output of git describe)?:
+#### What is the CTSM version you are using (output of git describe)?:
 
-# What is the machine you are running on?:
+#### What is the machine you are running on:?
 
 -----------------------------------------------------------------
