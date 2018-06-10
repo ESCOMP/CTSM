@@ -1,4 +1,4 @@
-IMPORTANT_NOTES							May/07/2013
+$CTSMROOT/doc/IMPORTANT_NOTES					Jun/08/2018
 								Erik Kluzek
 
 I.) For clm4_0:
@@ -18,55 +18,52 @@ Namelist items that should NOT be exercised:
                          to be too productive.
   urban_traffic:         Not currently functional
 
-II.) For clm4_5:
+II.) For clm4_5/clm5_0:
 
-Configure Modes NOT scientifically validated, documented, supported or even advised to be used:
-(options to CLM_CONFIG_OPTS)
-
-    VIC		      (-vichydro)
-        VIC hydrology has just been added, and this mode is experimental.
-
-    EXTRALAKELAYERS   (-exlaklayers)
-        Experimental and not normally exercised.
-
-    (-vsoilc_centbgc no-cent,no-nitrif) 
-        CLM4.5 BGC is normally exercised with vertical soil carbon, Century pools, and 
-        Nitrification/Denitrification with the CLM4Me Methane model. Turning Century pools
-        off and/or Nitrification/Denitrification off is experimental and NOT normally exercised.
-        We do limited testing with CLM4.5 BGC without vertically resolved Carbon pools.
-
-Namelist items that should NOT be exercised:
+Namelist items that are not regularly tested or used. Some aren't even implemented.
 
     See
 
     ../bld/namelist_files/namelist_definition_clm4_5.xml -- for definitions
 
-    All of these are experimental, and most are NOT tested, some aren't even functional.
-    The two thare ARE tested are: more_vertlayers and allowlakeprod
+    CN_evergreen_phenology_opt
+    CN_partition_opt
+    CN_residual_opt
+    CNratio_floating
+    all_active
+    allowlakeprod
+    anoxia_wtsat
+    carbon_resp_opt
+    ch4offline
+    downreg_opt
+    fin_use_fsat
+    lake_decomp_fact
+    no_frozen_nitrif_denitrif
+    nscalar_opt
+    perchroot
+    perchroot_alt
+    plant_ndemand_opt
+    reduce_dayl_factor
+    replenishlakec
+    substrate_term_opt
+    temp_scalar_opt
+    urban_traffic
+    use_extralakelayers
+    use_lai_streams
+    use_snicar_frc
+    use_vichydro
+    usefrootc
+    vcmax_opt = 4
 
-    allowlakeprod                  Turn methane production on for lake columns
-    anoxia_wtsat                   Weight calculation of oxygen limitation by the inundated fraction
-                                   if anoxia is on.
-                                   (NOT functional -- Deprecated will be removed)
-    atm_c14_filename               C14 dataset -- No dataset provided
-    exponential_rooting_profile    Use exponential rooting profile.
-    fin_use_fsat                   Use the saturated fraction (fsat) calculated 
-                                   in Soil Hydrology to diagnose the inundated fraction 
-    glc_dyntopo                    Change topographic height over glacier MEC (Not functional)
-    lake_decomp_fact               Used if allowlakeprod is on
-    more_vertlayers                Increase number of vertical layers
-    no_frozen_nitrif_denitrif      No denitrification or nitrification in frozen soil layer
-    perchroot                      Weight btran by unfrozen layers
-    perchroot_alt                  Weight btran by active layer
-    replenishlakec                 Maintain constant soil carbon under lakes
-    use_c14_bombspike              Use C14 dataset -- No datasets provided
-    usefrootc                      Use the fine root carbon predicted by CN
+    FATES namelist options: FATES is a new experiemental subcomponent where all of it's options are
+                            under current development. As such FATES and all of it's options should
+                            be considered experimental.
 
-See KnownBugs/KnownLimitations files for Known Problems:
-
-    See the KnownBugs file in this directory for the list of known problems. We expect
-    that eventually we will fix the bugs in this list. In the KnownLimitations file
-    we list limitations in the code that we have workarounds for that we do NOT expect
-    to fix.
-
-
+   use_fates
+   use_fates_spitfire
+   use_fates_logging
+   use_fates_planthydro
+   use_fates_ed_st3
+   use_fates_ed_prescribed_phys
+   use_fates_inventory_init
+   fates_inventory_ctrl_filename
