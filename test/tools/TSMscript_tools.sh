@@ -89,15 +89,15 @@ fi
 
 if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    ${cfgdir}/$2 $scopts >> test.log 2>&1
-   status="PASS"
    rc=$?
+   status="PASS"
 else
    echo "success" > test.log
    status="GEN"
    rc=0
 fi
 
-if [ $rc -eq 0 ] && grep -ci "success" test.log > /dev/null; then
+if [ $rc -eq 0 ] && grep -ci "Successfully " test.log > /dev/null; then
     echo "TSMscript_tools.sh: smoke test passed" 
     echo "$status" > TestStatus
     # Copy files from subdirectories up...

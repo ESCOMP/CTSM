@@ -15,7 +15,7 @@
 #SBATCH -t 03:00:00
 #SBATCH -A P93300606
 #SBATCH -p dav
-#SBATCH --export=ALL       # Export all env variables (needed for RES)
+#SBATCH --export=ALL       # Environment variables
 #SBATCH -e regrid.%J.out   # output filename
 #SBATCH -o regrid.%J.err   # error filename
 
@@ -64,13 +64,9 @@ for res in $resols; do
        regrid_num_proc=1
    else
        echo "global"
-       regrid_num_proc=8
-       if [ ! -z "$LSFUSER" ]; then
+       regrid_num_proc=$SLURM_NTASKS
+       if [ ! -z "$SLURM_JOB_ACCOUNT" ]; then
            echo "batch"
-	   cmdargs="$cmdargs -b"
-       fi
-       if [ ! -z "$PBS_O_WORKDIR" ]; then
-           cd $PBS_O_WORKDIR
 	   cmdargs="$cmdargs -b"
        fi
    fi
