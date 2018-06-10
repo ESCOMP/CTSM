@@ -1,3 +1,5 @@
+$CTSMROOT/doc/Quickstart.GUIDE                                    Jun/08/2018
+
           Quick-Start to Using cpl7 Scripts for clm5_0
           ============================================
 
@@ -33,7 +35,7 @@ Process:
 
    # Submit the run
 
-   ./casesubmit
+   ./case.submit
 
 Information on Compsets:
 
@@ -42,24 +44,10 @@ Information on Compsets:
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
      the date). 
-     Some of the I compsets are:
 
-     Name		  (short-name): Description
-     --------------------------------------------------------------------------
-     I_2000                 (I):             CLM to simulate year=2000
-     I_2000_1PTFRC          (I1PT):          CLM to simulate year=2000 with single-point forcing
-     I_2000_CN              (ICN):           CLM to simulate year=2000 with Carbon-Nitrogen BGC model (CN)
-     I_1850                 (I1850):         CLM to simulate year=1850
-     I_1850_CN              (I1850CN):       CLM to simulate year=1850 with Carbon-Nitrogen BGC model (CN)
-     I_1850_SPINUP_3HrWx_CN (I1850SPINUPCN): CLM to simulate year=1850 with MOAR forcing to spinup Carbon-Nitrogen BGC model (CN)
-     I_1948_2004            (I4804):         CLM running with atm data over 1948-2004
-     I_1850-2000            (I8520):         CLM with transient PFT over 1850-2000
-     I_1948-2004_CN         (I4804CN):       CLM with CN on running with atm data over 1948-2004 
-     I_1850-2000_CN         (I20TRCN):       CLM with CN on with transient PFT over 1850-2000
-     I_RCP2.6_CN            (IRCP26CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=2.6 scenario
-     I_RCP4.5_CN            (IRCP45CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=4.5 scenario
-     I_RCP6.0_CN            (IRCP60CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=6.0 scenario
-     I_RCP8.5_CN            (IRCP85CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=8.5 scenario
+     To get a list of the "I" compsets use the "query_config" utility in cime/scripts
+
+    ./query_config --compsets clm
 
 Automatically resubmitting jobs:
 

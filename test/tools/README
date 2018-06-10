@@ -1,4 +1,4 @@
-clm/test/tools/README					05/15/2013
+$CTSMROOT/clm/test/tools/README					06/08/2018
 
 Scripts for testing the CLM support tools with many different 
 configurations and run-time options.
@@ -13,9 +13,11 @@ To use...
 
 on cheyenne
 
-execgy ./test_driver.sh -i >& run.out &
+qcmd -- ./test_driver.sh -i >& run.out &
+execgy 
+./test_driver.sh -i >& run.out &
 
-Intended for use on NCAR machines cheyenne and hobart.
+Intended for use on NCAR machines cheyenne, geyser (DAV) and hobart.
 
 II. RUNNING test_driver.sh TOOLS TESTING:
 

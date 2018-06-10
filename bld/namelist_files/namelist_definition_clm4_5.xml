@@ -1946,25 +1946,21 @@ Enable C14 model
 <entry id="use_c14_bombspike" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Flag to use the atmospheric time series of C14 concentrations from bomb fallout and Seuss effect, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c14_filename" type="char*256" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "Delta14co2_in_air". time variable is in format: years since 1850-01-01 0:0:0.0  units are permil.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="use_c13_timeseries" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Flag to use the atmospheric time series of C13 concentrations from natural abundance and the Seuss Effect, rather than static values.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c13_filename" type="char*256" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0. units are permil.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 
@@ -2061,7 +2057,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
