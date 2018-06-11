@@ -131,6 +131,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_bedrock phys="clm4_5">.false.</use_bedrock>
 
 
+<use_individual_pft_soil_column>.false.</use_individual_pft_soil_column>
+
 <!-- Rooting profile namelist defaults -->
 <rooting_profile_method_water  phys="clm5_0">1</rooting_profile_method_water>
 <rooting_profile_method_water  phys="clm4_5">0</rooting_profile_method_water>
@@ -229,6 +231,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability phys="clm5_0">.false.</use_undercanopy_stability>
 <use_undercanopy_stability phys="clm4_5">.true.</use_undercanopy_stability>
+<use_biomass_heat_storage>.false.</use_biomass_heat_storage>
+
+<!-- Individual pft soil columns -->
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi phys="clm5_0">.true.</use_clm5_fpi>

@@ -1572,7 +1572,7 @@ sub process_namelist_inline_logic {
   setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_fertilizer($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_grainproduct($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_pftsoilcolumn($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
@@ -2191,6 +2191,15 @@ sub error_if_set {
    }
 }
 
+
+#-------------------------------------------------------------------------------
+sub setup_logic_pftsoilcolumn {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_individual_pft_soil_column');
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -3616,6 +3625,7 @@ sub setup_logic_canopyfluxes {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_undercanopy_stability' );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_biomass_heat_storage');
   }
 }
 

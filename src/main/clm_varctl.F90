@@ -238,6 +238,18 @@ module clm_varctl
   logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
 
   !----------------------------------------------------------
+  ! biomass heat storage switch
+  !----------------------------------------------------------
+
+  logical, public :: use_biomass_heat_storage = .false. ! true => include biomass heat storage in canopy energy budget
+
+  !----------------------------------------------------------
+  ! each pft has individual soil column switch 
+  !----------------------------------------------------------
+
+  logical, public :: use_individual_pft_soil_column = .false. ! true => each pft exists on its own soil column
+
+  !----------------------------------------------------------
   ! bedrock / soil depth switch
   !----------------------------------------------------------
 

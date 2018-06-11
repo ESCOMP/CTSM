@@ -14,7 +14,7 @@ module subgridMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog
+  use clm_varctl     , only : iulog,use_individual_pft_soil_column
   use clm_instur     , only : wt_lunit, wt_nat_patch, urban_valid, wt_cft
   use landunit_varcon, only : istcrop, istdlak, istwet, isturb_tbd, isturb_hd, isturb_md
   use glcBehaviorMod , only : glc_behavior_type
@@ -74,7 +74,6 @@ contains
     ! atm_topo is arbitrary for the sake of getting these counts. We don't have a true
     ! atm_topo value at the point of this call, so use 0.
     real(r8), parameter :: atm_topo = 0._r8
-    logical :: sesc = .TRUE.         ! switch for separated soil columns of natural vegetation
 
     !------------------------------------------------------------------------------
 
@@ -83,7 +82,7 @@ contains
     nlunits  = 0
     ncohorts = 0
 
-    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp, sesc)
+    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp, use_individual_pft_soil_column)
     call accumulate_counters()
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)

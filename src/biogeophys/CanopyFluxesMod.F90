@@ -68,7 +68,7 @@ module CanopyFluxesMod
   logical, private :: snowveg_on     = .false.                ! snowveg_flag = 'ON'
   logical, private :: snowveg_onrad  = .true.                 ! snowveg_flag = 'ON_RAD'
   logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
-
+  logical, private :: use_biomass_heat_storage  = .false.     ! include biomass heat storage
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ contains
     character(len=*), parameter :: nmlname = 'canopyfluxes_inparm'
     !-----------------------------------------------------------------------
 
-    namelist /canopyfluxes_inparm/ use_undercanopy_stability
+    namelist /canopyfluxes_inparm/ use_undercanopy_stability,use_biomass_heat_storage
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -121,6 +121,7 @@ contains
     end if
 
     call shr_mpi_bcast (use_undercanopy_stability, mpicom)
+    call shr_mpi_bcast (use_biomass_heat_storage, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -353,20 +354,24 @@ contains
 
     real(r8) :: cp_veg(bounds%begp:bounds%endp)    !heat capacity of veg
     real(r8) :: cp_stem(bounds%begp:bounds%endp)   !heat capacity of stems
-    real(r8) :: dt_stem(bounds%begp:bounds%endp)
+    real(r8) :: dt_stem(bounds%begp:bounds%endp)   !change in stem temperature
     real(r8) :: fstem(bounds%begp:bounds%endp)     !fraction of stem
-    real(r8) :: bhd(0:mxpft)                       !stem breast-height-diameter
-    real(r8) :: wood_density, carea_stem
     real(r8) :: lw_stem(bounds%begp:bounds%endp)   !internal longwave stem
     real(r8) :: lw_leaf(bounds%begp:bounds%endp)   !internal longwave leaf
     real(r8) :: sa_stem(bounds%begp:bounds%endp)   !surface area stem m2/m2_ground
     real(r8) :: sa_leaf(bounds%begp:bounds%endp)   !surface area leaf m2/m2_ground
     real(r8) :: sa_internal(bounds%begp:bounds%endp)   !min(sa_stem,sa_leaf)
     real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
+    real(r8) :: bhd(0:mxpft)                       !stem breast-height-diameter
+    real(r8) :: fbw(0:mxpft)                       !stem diameter at breast-height
+    real(r8) :: nstem(0:mxpft)                     !number of stems per m2
+    real(r8) :: rstem(0:mxpft)                     !stem resistance to heat transfer, per stem diameter
+    real(r8) :: wood_density(0:mxpft)              !wood density (kg/m3)
+    real(r8) :: cp_wood
+    real(r8) :: carea_stem
+    real(r8) :: rstema
     ! biomass parameters
     real(r8), parameter :: c_to_b = 2.0_r8         !(g biomass /g C)
-    real(r8), parameter :: ntree  = 0.4_r8         !(number of trees / m2)
-    real(r8), parameter :: rstem  = 100._r8        !stem resistance (s/m)
 
     real(r8), parameter :: k_vert = 0.1            !vertical distribution of stem
     real(r8), parameter :: k_cyl_vol = 1.0         !departure from cylindrical volume
@@ -626,8 +631,12 @@ contains
          hs_canopy(p) = 0._r8
       end do
 
-! set bhd (should be done on parameter file)
+! set pft specific stem properties (should be done on parameter file)
       bhd(1:16) = (/0.15,0.15,0.15,0.2,0.2,0.2,0.2,0.1,0.02,0.02,0.02,0.004,0.004,0.004,0.004,0.004/)
+      fbw(1:16) = (/0.45,0.45,0.45,0.6,0.6,0.6,0.6,0.45,0.5,0.5,0.5,0.7,0.7,0.7,0.7,0.7/)
+      nstem(1:16) = (/0.4,0.4,0.4,0.2,0.2,0.2,0.2,0.4,1.,1.,1.,100.,100.,100.,100.,100./)
+      rstem(1:16) = (/100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100./)
+      wood_density(1:16) = (/500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500./)
 
       ! calculate biomass heat capacities
       do f = 1, fn
@@ -636,34 +645,45 @@ contains
          ! fraction of stem receiving incoming radiation
          fstem(p) = (esai(p))/(elai(p)+esai(p))
          fstem(p) = k_vert * fstem(p)
+         if(.not.use_biomass_heat_storage) then
+            fstem(p) = 0._r8
+         endif
+! do not calculate separate leaf/stem heat capacity for grasses
+         if(patch%itype(p) > 11) fstem(p) = 0.0
+
          ! leaf and stem surface area
          sa_leaf(p) = elai(p)
 ! double in spirit of full surface area for sensible heat
          sa_leaf(p) = 2.*sa_leaf(p)
-         sa_stem(p) = ntree*(htop(p)*shr_const_pi*bhd(patch%itype(p)))
+
+         sa_stem(p) = nstem(patch%itype(p))*(htop(p)*shr_const_pi*bhd(patch%itype(p)))
 ! adjust for departure of cylindrical stem model
          sa_stem(p) = k_cyl_area * sa_stem(p)
+         if(.not.use_biomass_heat_storage) then 
+            sa_stem(p) = 0._r8
+         endif
+! do not calculate separate leaf/stem heat capacity for grasses
+         if(patch%itype(p) > 11) sa_stem(p) = 0.0
+
 ! internal longwave fluxes between leaf and stem
 ! surface area term must be equal, remainder cancels
 ! (use same area of interaction i.e. ignore leaf <-> leaf)
          sa_internal(p) = min(sa_leaf(p),sa_stem(p))
          sa_internal(p) = k_internal * sa_internal(p)
 
-!scs: specify heat capacity of vegetation
+! calculate specify heat capacity of vegetation
 !(lma * c2b = lma_dry, lma * c2b * (fw/(1-fw)) = lma_wet, sum these) 
 ! lma_dry has units of kg dry mass /m2 here (table 2 of bonan 2017) 
 ! cdry_biomass = 1400 J/kg/K, cwater = 4188 J/kg/K
 ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
-         cp_veg(p)  = (0.25_r8 * elai(p)) * (1400._r8 + (0.7/(1.-0.7))*4188._r8)
+         cp_veg(p)  = (0.25_r8 * max(0.01_r8,elai(p))) * (1400._r8 + (fbw(patch%itype(p))/(1.-fbw(patch%itype(p))))*4188._r8)
 
-! wood density could vary by pft...
-         wood_density = 5.e2_r8    ! kg/m3 lindroth2010 uses ~4.e2
          carea_stem   = shr_const_pi * (bhd(patch%itype(p))*0.5)**2
 
 ! cp-stem will have units J/k/ground_area (here assuming 1 stem/m2)
-         cp_stem(p) = (1400._r8 + (0.7/(1.-0.7))*4188._r8)
+         cp_stem(p) = (1400._r8 + (fbw(patch%itype(p))/(1.-fbw(patch%itype(p))))*4188._r8)
 ! use weight of dry wood
-         cp_stem(p) = cp_stem(p) * ntree * wood_density * htop(p) * carea_stem
+         cp_stem(p) = nstem(patch%itype(p))* cp_stem(p) * wood_density(patch%itype(p)) * htop(p) * carea_stem
 ! adjust for departure from cylindrical stem model
          cp_stem(p) = k_cyl_vol * cp_stem(p)
       enddo
@@ -997,7 +1017,8 @@ contains
             wtg(p) = 1._r8/rah(p,2)             ! ground
             !            wtstem = sa_stem(p)/rb(p)    ! stem
             ! add resistance between internal stem temperature and canopy air 
-            wtstem = sa_stem(p)/(rstem + rb(p))    ! stem
+            rstema = rstem(patch%itype(p))*bhd(patch%itype(p))
+            wtstem = sa_stem(p)/(rstema + rb(p))    ! stem
 
             wtshi  = 1._r8/(wta+wtl+wtstem+wtg(p))
 

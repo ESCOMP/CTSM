@@ -63,7 +63,7 @@ contains
     use subgridWeightsMod , only : compute_higher_order_weights
     use landunit_varcon   , only : istsoil, istwet, istdlak, istice_mec
     use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
-    use clm_varctl        , only : use_fates
+    use clm_varctl        , only : use_fates,use_individual_pft_soil_column
     use shr_const_mod     , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -74,7 +74,7 @@ contains
     integer :: nclumps              ! number of clumps on this processor
     type(bounds_type) :: bounds_proc
     type(bounds_type) :: bounds_clump
-    logical :: sesc = .TRUE.        ! switch for separated soil columns of natural vegetation
+
     !------------------------------------------------------------------------
 
     ! Notes about how this routine is arranged, and its implications for the arrangement
@@ -138,7 +138,7 @@ contains
 
        ! Determine naturally vegetated landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
-          if(sesc) then
+          if(use_individual_pft_soil_column) then
                 call set_landunit_veg_noncompete(       &
                      ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi)
           else       
@@ -344,7 +344,7 @@ contains
     SHR_ASSERT(ncols_added == ncols, errMsg(sourcefile, __LINE__))
     SHR_ASSERT(npatches_added == npatches, errMsg(sourcefile, __LINE__))
 
-  end subroutine set_landunit_veg_compete
+  end subroutine set_landunit_veg_noncompete
 
   
   !------------------------------------------------------------------------

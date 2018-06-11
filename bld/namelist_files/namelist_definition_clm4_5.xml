@@ -131,6 +131,11 @@ specify spatially variable soil thickness. If not present, use bottom
 of soil column (nlevsoi).
 </entry>
 
+<entry id="use_individual_pft_soil_column" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, each pft exists on a separate soil column.
+</entry>
+
 <entry id="rooting_profile_method_water" type="integer" category="clm_physics"
        group="rooting_profile_inparm" valid_values="0,1,2" >
 Index of rooting profile for water
@@ -301,6 +306,11 @@ Intercept of free living Nitrogen fixation with zero annual ET
 <entry id="use_undercanopy_stability" type="logical" category="clm_physics"
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng, 2008)
+</entry>
+
+<entry id="use_biomass_heat_storage" type="logical" category="clm_physics"
+       group="canopyfluxes_inparm" valid_values="" >
+If TRUE, include biomass heat storage in canopy energy balance.
 </entry>
 
 <entry id="interception_fraction" type="real" category="clm_physics"
