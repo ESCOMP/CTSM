@@ -10,18 +10,28 @@
 # geyser specific batch commands:
 #SBATCH -J regrid        # job name
 #SBATCH -n 8
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=8
 #SBATCH --mem=450G
 #SBATCH -t 03:00:00
 #SBATCH -A P93300606
 #SBATCH -p dav
-#SBATCH --export=ALL       # Environment variables
 #SBATCH -e regrid.%J.out   # output filename
 #SBATCH -o regrid.%J.err   # error filename
+#
+# To submit this script:
+#
+#  sbatch regridgeyser.sh
+#
+## IMPORTANT NOTE:
+#
+#  environment variables can NOT be passed into DAV
+#  queues. Hence, this script MUST be edited to select
+#  what resolution to run for.
 
 #----------------------------------------------------------------------
 # Set parameters
 #----------------------------------------------------------------------
+export RES=1x1_brazil
 
 #----------------------------------------------------------------------
 # Begin main script

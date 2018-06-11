@@ -41,9 +41,6 @@ default_res="10x15"
 if [ -z "$CSMDATA" ]; then
    CSMDATA=/glade/p/cesm/cseg/inputdata
 fi
-if [ -z "$REGRID_PROC" ]; then
-   REGRID_PROC=36
-fi
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -336,6 +333,9 @@ case $hostname in
   ##cheyenne
   cheyenne* | r* )
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  if [ -z "$REGRID_PROC" ]; then
+     REGRID_PROC=36
+  fi
   esmfvers=7.0.0
   intelvers=17.0.1
   module load esmf_libs/$esmfvers
@@ -362,13 +362,23 @@ case $hostname in
   ## DAV
   pronghorn* | caldera* | geyser* )
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  if [ -z "$REGRID_PROC" ]; then
+     REGRID_PROC=8
+  fi
   esmfvers=7.0.0
-  intelvers=12.1.5
+  intelvers=15.0.0
+  #intelvers=12.1.5
   module purge
   module load intel/$intelvers
   module load ncl
   module load nco
+  #module load impi
   module load mpich-slurm
+  module load netcdf/4.3.3.1
+  #module load netcdf/4.3.0
+  module load ncarcompilers
+
+  module load esmf
 
   if [ "$interactive" = "NO" ]; then
      mpi=mpi
@@ -377,16 +387,19 @@ case $hostname in
      mpi=uni
      mpitype="mpiuni"
   fi
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib/gcc/x86_64-redhat-linux/4.4.7:/usr/lib64:/glade/apps/opt/usr/lib:/usr/lib:/glade/u/ssg/ys/opt/intel/12.1.0.233/composer_xe_2011_sp1.11.339/compiler/lib/intel64:/lib:/lib64"
   module load esmf-${esmfvers}-ncdfio-${mpi}-O
   if [ -z "$ESMFBIN_PATH" ]; then
      ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
   echo "ESMFMKFILE: $ESMFMKFILE"
-  env
+  echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
   if [ -z "$MPIEXEC" ]; then
-     MPIEXEC="mpiexec -np $REGRID_PROC"
+     MPIEXEC="mpiexec -n $REGRID_PROC"
   fi
+  echo "ERROR: Currently can NOT run on the DAV cluster, because ESMF is not configured correctly"
+  exit 1
   ;;
 
   ##no other machine currently supported    
