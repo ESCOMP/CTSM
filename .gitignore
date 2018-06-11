@@ -65,6 +65,12 @@ clm.input_data_list.previous
 tools/mksurfdata_map/mksurfdata_map
 tools/mkprocdata_map/mkprocdata_map
 
+# mkmapdata output files
+tools/mkmapdata/PET*.RegridWeightGen.Log
+tools/mkmapdata/regrid.*.out
+tools/mkmapdata/regrid.*.err
+tools/mkmapdata/regrid.o*
+
 # build output
 *.o
 *.mod
@@ -72,3 +78,4 @@ core.*
 *.gz
 *.log !run.log
 *.pyc
+Depends
