@@ -1,4 +1,568 @@
 ===============================================================
+Tag name:  clm5.0.dev012
+Originator(s):  sacks (Bill Sacks)
+Date: Thu May 17 14:13:34 MDT 2018
+One-line Summary: Fixes for variable_year orbital mode
+
+Purpose of changes
+------------------
+
+Fixes for correctness and exact restartability with variable_year
+orbital mode:
+
+(1) Update max day length (max_dayl) each time step, rather than just
+    updating it once in initialization
+
+(2) Update to a cime version that has a fix for datm, which updates the
+    orbital parameters (used for solar zenith angle-based interpolation)
+    each time step, rather than just once in initialization
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #379 (Problems with Hist decStart restart tests due to variable
+  orbital year)
+- Fixes #260 (max daylength doesn't change over time for varying orbital
+  parameters)
+
+CIME Issues fixed (include issue #):
+- ESMCI/cime#2598 (datm doesn't restart properly with variable year orbit)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Gave extra time to some tests so they would pass
+
+Code reviewed by: Erik Kluzek
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass, some baselines fail as expected
+
+    Also verified that this test (reported in #379) now passes:
+    ERS_D_P36x1.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-decStart
+
+    Also verified that the ctsm code changes alone (without the cime
+    update) have the expected behavior in terms of baseline
+    passes/fails:
+
+    FAIL SMS_D_Ld10.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-decStart BASELINE
+	Enters the second year
+    PASS SMS_D_Ld1.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-decStart BASELINE
+	Stays in first year
+    PASS SMS_Lm1.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-ciso_bombspike1963 BASELINE
+	Stays in first year
+
+CLM tag used for the baseline comparisons: clm5.0.dev011
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: multi-year runs with HIST compsets
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated carefully, but expected to be larger than roundoff/same climate
+
+      Bit-for-bit for runs with fixed orbital parameters (non-HIST
+      compsets) and for HIST runs that do not span multiple years.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: adds one commit that fixes ESMCI/cime#2598 
+
+Pull Requests that document the changes (include PR ids):
+- #385 (Update max day length (max_dayl) each time step)
+
+===============================================================
+===============================================================
+Tag name:  clm5.0.dev011
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 16 20:27:39 MDT 2018
+One-line Summary: 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing
+
+Purpose of changes
+------------------
+
+Update ndep file used for fully coupled 1850 cases to one being used in fully coupled
+simulations. Update cism to latest release branch: release-v2.1.00.
+Update PE layouts for f45, f09, f19.  Turn BFBFLAG=TRUE for most CTSM testing.
+Fix some issues with tools for batch submission. Remove a write statement for VIC
+that was written a ridiculous amount of times.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #) #363 #374 #380 #382 #383: 
+   #363 -- PE Layout
+   $374 -- Turn BFBFLAG on for testing (so PE layout changes won't appear to change answers)
+   #382 -- Write statement for VIC
+   $383 -- mkmapdata intel version
+
+Known bugs introduced in this tag (include github issue ID): #384
+   #384 -- f09 resolution VIC test
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): PE layouts
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): ndep for clm50_cam6 forcing
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Added back tests 
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: self
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons: clm5.0.dev010
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for some
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all with cism, tests as BFBFLAG on
+    - what platforms/compilers: all
+    - nature of change: similar
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cism
+
+     cism to release-v2.1.00
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #381 -- 1850 fully coupled ndep update, update cism, update PE layouts, turn BFBFLAG on for testing
+
+===============================================================
+===============================================================
+Tag name:  clm5.0.dev010
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue May 15 03:00:38 MDT 2018
+One-line Summary: Update cime version to version in cesm2.0.beta10, changes answers for 1850 compsets because of orbit
+
+Purpose of changes
+------------------
+
+Update externals to version in cesm2.0.beta10. Add in f05 crop datasets. Add pauseResume for DART and a
+test for it. Fix several issues required for CESM2.0. Add model_doi_url to history files.
+
+update cism to very latest
+Add model_doi_url to history files
+Update rtm, mosart
+Changes answers because of change in orbit (for testing orbit was already updated for 1850 so will appear to not change answers)
+Using cime5.6.6
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+  #68 --- gnu compiler workaround
+  #364 -- crop f05 datasets
+  #362 -- svn checkout
+  #318 -- quadratic bug
+  #249 -- bypass balance checks for DART
+  #341 -- add model_doi_url
+
+CIME Issues fixed (include issue #): 
+
+Known bugs introduced in this tag (include github issue ID): 
+   #379 -- transient end-of-year exact restart issue
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
+
+  cime updates:
+    - manage_testlist was removed.
+    - Changes to matching behavior in env_mach_specific.
+    - New option to wait_for_tests.
+    - case.st_archive now has a --test option.
+    - New FORCE_BUILD_THREADED.
+    - New custom script option.
+    - env_archive.xml
+    - .case.run.sh file generated for E3SM.
+    - New selectors allowed for batch directives.
+    - Source code files beginning in test_ will be ignored in build.
+    - New prefix attribute available for batch directives.
+    - xmlquery will now accept derived attributes.
+    - Users may run on lawrencium lr3/lr2.
+    - In env_archive.xml.
+    - (cesm only) create_test and query_testlist now have --supported-only flag
+    - New allow_error attribute for module systems.
+    - check_input_data replace --svn-loc with --server and --protocal
+    - Some Tools with "acme" in the name now say "e3sm".
+    - env_archive.xml
+    - .case.run.sh file generated for E3SM.
+    - New selectors allowed for batch directives.
+    - Source code files beginning in test_ will be ignored in build.
+    - New prefix attribute available for batch directives.
+    - xmlquery will now accept derived attributes.
+    - Users may run on lawrencium lr3/lr2.
+    - In env_archive.xml.
+    - (cesm only) create_test and query_testlist now have --supported-only flag
+    - New allow_error attribute for module systems.
+    - check_input_data replace --svn-loc with --server and --protocal
+    - Some Tools with "acme" in the name now say "e3sm".
+    - cime_bisect changes.
+    - New XML variables, PAUSE_ACTIVE_XXX.
+    - module_lmod no longer a support module type.
+    - simple-py-prof sets PYTHONPATH for you, list_acme_tests assumes you want
+      to list tests
+    - jobid now added to CaseStatus case_submit entry.
+    -Splits GLC2OCN_RMAPNAME xml variable into
+     GLC2OCN_LIQ_RMAPNAME and GLC2OCN_ICE_RMAPNAME, and similarly for
+     GLC2OCN_RMAPTYPE
+    - Better defaults for bless_test_results and compare_test_results.
+    - New bless_log file in baseline dirs.
+    - Allow multiple -m args to case.submit. Allows user to put email settings in .cime/config.
+    - New --retry option to create_test.
+    - Add --clean-depends to case.build, this argument can take a component list and will
+      clean all components if one is not provided.
+    - Some additional output from nl comp code in some cases
+    - --driver added to create_newcase, new _V$driver testopt.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   Crop f05 surface datasets
+
+Substantial timing or memory changes: Seems to be slower and require more memory
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   pause/resume is still under development. This works for DART DA as needed for CESm2.0
+
+Changes to tests or testing:
+   Added new pauseResume test on cheyenne_intel
+   Remove some of the higher PE count tests on cheyenne_gnu and replace with cheyenne_intel
+   Lengthen wallclock for a few of the tests on cheyenne
+   Change I1850Clm50BgcSpinup test to f09 resolution so it will run
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons: clm5.0.dev009
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: 1850 compsets change because orbit has been changed
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 1850 compsets
+    - what platforms/compilers: all
+    - nature of change: 1850 orbit rather than 1990
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, rtm, mosart, cism
+
+  cime   to cime5.6.6
+  rtm    to rtm1_0_66
+  mosart to mosart1_0_31
+  cism   to cism2_1_54
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #377 -- update cime
+ #376 -- changes needed for DART
+ #372 -- Update manage_externals
+
+===============================================================
+===============================================================
+Tag name:  clm5.0.dev009
+Originator(s):  sacks (Bill Sacks)
+Date: Thu May 10 13:48:32 MDT 2018
+One-line Summary: New init_interp method
+
+Purpose of changes
+------------------
+
+The main change in this tag is to introduce a new method for
+init_interp. This is needed in order for subgrid areas to be the same in
+initialization in runs with and without init_interp.
+
+The choice of init_interp method is controlled by a new namelist
+variable, init_interp_method, whose documentation appears below:
+
+   Method to use for init_interp. Only applies when use_init_interp = .true.
+
+   'general': The general-purpose method that can be used when changing
+   grids, configurations, etc. This starts off with subgrid areas taken
+   from the surface dataset.
+
+   'use_finidat_areas': This starts off with subgrid areas taken from the
+   input finidat file. This is needed to achieve bit-for-bit results in a
+   coupled case (where areas in initialization impact initial fields sent
+   to the atmosphere) (but using the 'general' method will typically have
+   only a very minor impact on results in this case). For this method to
+   work, the input finidat file needs to be at the same resolution as the
+   current configuration. So this is a less general form of
+   init_interp. However, it can be used when transitioning from a spinup
+   run to a transient run, or in other cases where the only difference is
+   in internal memory allocation. In order to catch possible problems, this
+   uses a different algorithm for finding the input point for each output
+   point, which ensures that each active output point is associated with
+   exactly one input point with the same latitude, longitude and type. This
+   method requires (a) the same grid for input and output, within roundoff;
+   (b) any non-zero-weight point in the input must have memory allocated
+   for it in this grid cell in the output (this will be satisfied if the
+   point is non-zero-weight on the surface dataset or if it's a point for
+   which we allocate memory even for zero-weight points); (c) any active
+   point in the output (based on the surface dataset and rules for
+   determining active points) must have a matching point in this grid cell
+   in the input.
+
+This tag also has some other changes:
+
+- Fixes #347 - endrun message behavior: needed for some of the new unit
+  tests
+
+- Fixes #345 - Add a cmip6_evolving_icesheet usermods directory:
+  unrelated, but folded in here for convenience of testing)
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- #346: New mode of operation for init_interp: Copy subgrid areas, too
+- #347: endrun message behavior
+- #345: Add a cmip6_evolving_icesheet usermods directory
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable - init_interp_method - documented above. Default
+  behavior is the same as before ('general')
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Added a new test type, similar to LII, that covers the new init_interp behavior
+- Removed some no-longer-needed tests with 'interp' testmods
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    tests pass, namelists differ as expected
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    Unexpected baseline failures for these two tests that are in the
+    expected fail list for other reasons:
+    <entry issue="mosart/#3">FAIL ERP_Ld5.f10_f10_musgs.I2000Clm50Vic.cheyenne_gnu.clm-decStart COMPARE_base_rest</entry>
+    <entry issue="mosart/#3">FAIL ERP_D.f10_f10_musgs.IHistClm50Bgc.cheyenne_gnu.clm-decStart COMPARE_base_rest</entry>
+
+    Differences are just in some cism fields that I’m not concerned
+    about: roundoff-level differences in internal_time; big differences
+    in tempstag, uvel and vvel, but those fields don’t really make sense
+    in this configuration (and I have removed them in the latest CISM
+    tag). (Note that I did two runs of each of these tests from my
+    branch, and for both tests, the two runs had identical cism hist
+    files, so I don’t think this is a reproducibility problem.)
+
+
+CLM tag used for the baseline comparisons: clm5.0.dev008
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+- #352
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev008
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Apr 27 13:28:41 MDT 2018

@@ -16,6 +16,7 @@ module clm_driver
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
+  use clm_varorb             , only : obliqr
   use spmdMod                , only : masterproc, mpicom
   use decompMod              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
   use filterMod              , only : filter, filter_inactive_and_active
@@ -398,7 +399,7 @@ contains
 
        call t_startf('drvinit')
 
-       call UpdateDaylength(bounds_clump, declin)
+       call UpdateDaylength(bounds_clump, declin=declin, obliquity=obliqr)
 
        ! Initialze variables needed for new driver time step 
        call clm_drv_init(bounds_clump, &
