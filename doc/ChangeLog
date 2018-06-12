@@ -125,10 +125,13 @@ Changes answers relative to baseline: Yes! Because of changes in cism and cime
 Detailed list of changes
 ------------------------
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cism
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cism, rtm, mosart, PTCLM
 
-   cime to cime_cesm2_0_rel_03 (changes answers for 2000 cases because of change to orbit
-   cism to release-v2.1.01 (changes answers for two fields for NOEVOLVE and more fields for EVOLVE)
+   cime  to cime_cesm2_0_rel_03 (changes answers for 2000 cases because of change to orbit
+   cism  to release-v2.1.01 (changes answers for two fields for NOEVOLVE and more fields for EVOLVE)
+   PTCLM to PTCLM2_180611
+
+   rtm and mosart changed to point to cesm2_0 release versions (identical to previous version)
 
 Pull Requests that document the changes (include PR ids): #398, #400, #407, #408, #417, #394
 (https://github.com/ESCOMP/ctsm/pull)
