@@ -886,6 +886,11 @@ contains
          long_name='vegetation temperature', units='K', &
          interpinic_flag='interp', readvar=readvar, data=this%t_veg_patch)
 
+    call restartvar(ncid=ncid, flag=flag, varname='T_STEM', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='stem temperature', units='K', &
+         interpinic_flag='interp', readvar=readvar, data=this%t_stem_patch)
+
     call restartvar(ncid=ncid, flag=flag, varname='TH2OSFC', xtype=ncd_double,  &
          dim1name='column', &
          long_name='surface water temperature', units='K', &

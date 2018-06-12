@@ -633,9 +633,9 @@ contains
       end do
 
 ! set pft specific stem properties (should be done on parameter file)
-      bhd(1:16) = (/0.15,0.15,0.15,0.2,0.2,0.2,0.2,0.1,0.02,0.02,0.02,0.004,0.004,0.004,0.004,0.004/)
+      bhd(1:16) = (/0.2,0.3,0.3,0.35,0.35,0.25,0.25,0.2,0.05,0.05,0.05,0.008,0.008,0.008,0.008,0.008/)
       fbw(1:16) = (/0.45,0.45,0.45,0.6,0.6,0.6,0.6,0.45,0.5,0.5,0.5,0.7,0.7,0.7,0.7,0.7/)
-      nstem(1:16) = (/0.4,0.4,0.4,0.2,0.2,0.2,0.2,0.4,1.,1.,1.,100.,100.,100.,100.,100./)
+      nstem(1:16) = (/0.4,0.4,0.4,0.2,0.2,0.2,0.2,0.4,0.5,0.5,0.5,100.,100.,100.,100.,100./)
       rstem(1:16) = (/100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100.,100./)
       wood_density(1:16) = (/500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500.,500./)
 
@@ -1396,6 +1396,12 @@ contains
 
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*((1.-fstem(p))*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))+fstem(p)*tsbef(p)**3*(tsbef(p) + 4._r8*dt_stem(p))) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+
+!scs
+if(ulrad(p) > 0. .and. ulrad(p) < 5.e3) then 
+else
+write(iulog,*) 'badulrad: ', p, patch%itype(p),ulrad(p),tlbef(p),tsbef(p),dt_stem(p)
+endif
 
 !ABT
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
