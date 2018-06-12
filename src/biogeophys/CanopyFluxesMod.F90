@@ -629,6 +629,7 @@ contains
          btran(p)  = btran0
          btran2(p)  = btran0
          hs_canopy(p) = 0._r8
+         eflx_sh_stem(p) = 0._r8
       end do
 
 ! set pft specific stem properties (should be done on parameter file)

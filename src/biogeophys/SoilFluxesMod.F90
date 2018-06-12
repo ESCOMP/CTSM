@@ -311,7 +311,9 @@ contains
 
          ! Total fluxes (vegetation + ground)
 
-         eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_stem(p) + eflx_sh_grnd(p)
+!         eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_stem(p) + eflx_sh_grnd(p)
+         eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
+         if (.not. lun%urbpoi(l)) eflx_sh_tot(p) = eflx_sh_tot(p) + eflx_sh_stem(p) 
          qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
          eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
