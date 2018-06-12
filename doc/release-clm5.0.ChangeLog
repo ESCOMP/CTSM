@@ -1,7 +1,7 @@
 ===============================================================
-Tag name:  release-clm5.0.02
+Tag name:  release-clm5.0.03
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Jun 12 15:04:49 MDT 2018
+Date:  Tue Jun 12 15:32:53 MDT 2018
 One-line Summary: Second release branch tag for CESM2.0 release, fixing DA and tools and README files, identical to clm5.0.dev013
 
 Purpose of this version:
