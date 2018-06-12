@@ -6,8 +6,6 @@
 ;
 ;  Erik Kluzek
 ;  Dec/07/2011
-;  $Id$
-;  $HeadURL;
 ;
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
@@ -158,8 +156,7 @@ end
   nc = addfile( outfilename, "w" );
   nc@history = ldate+": create using mkscripgrid.ncl";
   nc@comment = "Ocean is assumed to non-existant at this point";
-  nc@Version = "$HeadURL$";
-  nc@Revision = "$Id$";
+  nc@Version = systemfunc( "git describe" );
   if ( printn )then
     print( "================================================================================================" );
     print( "Successfully created SCRIP grid file: "+outfilename);
