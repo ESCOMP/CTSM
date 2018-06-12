@@ -1,4 +1,147 @@
 ===============================================================
+Tag name:  clm5.0.dev013
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Jun 12 13:46:31 MDT 2018
+One-line Summary: cleanup and update cime and cism
+
+Purpose of changes
+------------------
+
+Update cime and cism to newer versions used in release. These bring in some answer
+changes. The cime version updates the orbit for 2000 compsets. The cism version
+changes answers for two fields with NO_EVOLVE and more fields for EVOLVE.
+
+Fixes an important bug needed for use with Data Assimulation. Several changes
+to testing. Adding wallclock as needed, changing a few compsets so science
+supported compsets are used, added tput_tolerance to some tests known to be
+variable.
+
+Many changes to the clm tools for creating input files. Added the version by
+querying "git describe" and adding it as an attribute to NetCDF files. Changes
+to get tools working, and tested. Also changed so that tools can be run in either
+a CTSM checkout or a CESM checkout.
+
+Updated README files so they are accurate.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+  #188 -- Global PTCLM tools test fails
+  #187 -- PTCLM tools tests fail baseline comparisons due to a seg fault
+  #259 -- Most README files in ctsm are incorrect
+  #386 -- Shorten some currently very long debug tests
+  #387 -- Lots of testmods still set orb_iyear and orb_iyear_align
+  #388 -- Add "git describe" to input files that are created
+  #389 -- Post data-assimilation processing broken with multi-driver 
+  #393 -- Increase wallclock
+  #399 -- minor format update needed in namelist_definition_clm4_5.xml
+  #402 -- Some smaller tests can be slow..
+  #411 -- Refactor tools aren't useful anymore
+  #414 -- PTCLM tests aren't working
+  #415 -- mkprocdata_map tests aren't working because of bad return statement in script type: bug - other
+  #418 -- Path needs to be updated for getco2 script type: bug - other
+
+Known bugs found since the previous tag (include github issue ID): #404, #413, #414
+  #404 -- Carbon balance error in decStart test just after new year
+  #413 -- Currently can't use DAV cluster to make mapping files 
+  #414 -- With change in repo for fates, had to enter username/password four times
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CLMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Yes
+   Lengthen some of the wallclock times. Remove the 1850 test-mods that just change the orbit.
+   Change some of the compsets tested to cover the science supported compsets.
+   Allow decStart test modes to ignore errors, so Crop tests can run. Remove a very long debug test.
+   Add a setting for tput_tolerance for some tests that are shown to have a large variability.
+   Add a test mod for data assimulation. Remove some of the settings from the pauseResume test
+   as already done, or tested seperately in the DA test.
+
+Code reviewed by: self
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+     hobart --- OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CLM tag used for the baseline comparisons: clm5.0.dev012
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! Because of changes in cism and cime
+
+  Summarize any changes to answers:
+    - what code configurations: All 2000 compsets and some cases with cism
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cism
+
+   cime to cime_cesm2_0_rel_03 (changes answers for 2000 cases because of change to orbit
+   cism to release-v2.1.01 (changes answers for two fields for NOEVOLVE and more fields for EVOLVE)
+
+Pull Requests that document the changes (include PR ids): #398, #400, #407, #408, #417, #394
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #394 -- some final cleanup
+  #417 -- Make PR template questions less prominent
+  #408 -- Documentation updates
+  #407 -- Initial version of templates for contributing, PR's and issues
+  #400 -- Update CanopyStateType.F90 priority: high type: code cleanup/docs
+  #398 -- Allow first history tape to have other than one time point per file priority: high type: enhance - science
+
+===============================================================
+===============================================================
 Tag name:  clm5.0.dev012
 Originator(s):  sacks (Bill Sacks)
 Date: Thu May 17 14:13:34 MDT 2018
