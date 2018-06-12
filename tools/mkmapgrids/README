@@ -1,4 +1,4 @@
-components/clm/tools/mkmapgrids/README		Oct/03/2014
+$CTSMROOT/tools/mkmapgrids/README		June08/2018
 
 NCL script to create a SCRIP grid file for a regular lat/lon grid.
 

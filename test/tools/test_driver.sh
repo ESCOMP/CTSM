@@ -87,6 +87,68 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
+    ## DAV cluster
+     geyser* | caldera* | pronghorn*)
+    submit_script="test_driver_dav${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+interactive="YES"
+input_file="tests_posttag_dav_mpi"
+c_threads=36
+
+
+export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
+. \$INITMODULES
+
+module purge
+module load ncarenv/1.0
+module load intel/12.1.5
+module load mkl
+module load ncarcompilers
+module load netcdf/4.3.3.1
+module load mpich-slurm/3.2.1
+
+module load nco
+module load python
+module load ncl
+
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=\$c_threads
+fi
+
+# Stop on first failed test
+if [ -z "\$CLM_SOFF" ]; then   #CLM_SOFF NOT set
+   export CLM_SOFF=FALSE
+fi
+
+export CESM_MACH="cheyenne"
+export CESM_COMP="intel"
+
+export NETCDF_DIR=\$NETCDF
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
+export MAKE_CMD="gmake -j "
+export CFG_STRING=""
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CPPDEFS=-DLINUX"
+export MACH_WORKSPACE="/glade/scratch"
+export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
+dataroot="$CESMDATAROOT"
+export TOOLSLIBS=""
+export TOOLS_CONF_STRING="--mpilib mpich"
+
+
+echo_arg=""
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
     ## hobart
     hobart* | h*.cgd.ucar.edu) 
     submit_script="test_driver_hobart_${cur_time}.sh"
@@ -202,6 +264,16 @@ fi
 if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
     export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
+    export CTSM_ROOT=\${CLM_ROOT}
+    if [ -d \${CLM_ROOT}/cime ]; then
+       export CIME_ROOT=\${CLM_ROOT}/cime
+    else
+       export CIME_ROOT=\${CLM_ROOT}/../../cime
+    fi
+    if [ ! -d \${CIME_ROOT} ]; then
+       echo "ERROR: trouble finding the CIME_ROOT directory: \$CIME_ROOT"
+       exit 3
+    fi
 else
     if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/tools/test_driver.sh ]; then
 	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/tools; pwd \`

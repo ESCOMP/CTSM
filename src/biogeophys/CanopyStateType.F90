@@ -179,22 +179,22 @@ contains
          ptr_patch=this%esai_patch)
 
     this%tlai_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TLAI', units='none', &
+    call hist_addfld1d (fname='TLAI', units='m^2/m^2', &
          avgflag='A', long_name='total projected leaf area index', &
          ptr_patch=this%tlai_patch)
 
     this%tsai_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TSAI', units='none', &
+    call hist_addfld1d (fname='TSAI', units='m^2/m^2', &
          avgflag='A', long_name='total projected stem area index', &
          ptr_patch=this%tsai_patch)
 
     this%laisun_patch(begp:endp) = spval
-    call hist_addfld1d (fname='LAISUN', units='none', &
+    call hist_addfld1d (fname='LAISUN', units='m^2/m^2', &
          avgflag='A', long_name='sunlit projected leaf area index', &
          ptr_patch=this%laisun_patch, set_urb=0._r8)
 
     this%laisha_patch(begp:endp) = spval
-    call hist_addfld1d (fname='LAISHA', units='none', &
+    call hist_addfld1d (fname='LAISHA', units='m^2/m^2', &
          avgflag='A', long_name='shaded projected leaf area index', &
          ptr_patch=this%laisha_patch, set_urb=0._r8)
 

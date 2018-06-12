@@ -3,8 +3,6 @@
 ;
 ;  Mark Taylor (converted for use by CLM mkmapdata by Erik Kluzek)
 ;  Sep/01/2011
-;  $Id$
-;  $HeadURL;
 ;
 load "$NCARG_NCARG/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_NCARG/nclscripts/csm/gsn_csm.ncl"
@@ -118,8 +116,7 @@ begin
     nco@history = nco@history + " Removed duplicate weights from mapping file with: rmdups.ncl "
     nco@rmdups_Logname       = logname;
     nco@rmdups_mod_date      = ldate;
-    nco@rmdups_version       = "$HeadURL$";
-    nco@rmdups_revision_id   = "$Id$";
+    nco@rmdups_version       = systemfunc( "git describe" );
 
     print("Successfully removed duplicate weights from mapping file" );
 

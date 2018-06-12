@@ -4,23 +4,34 @@
 # Batch script to submit to create mapping files for all standard
 # resolutions.  If you provide a single resolution via "$RES", only
 # that resolution will be used. In that case: If it is a regional or
-# single point resolution, you should set '#PBS -n' to 1, and be sure
+# single point resolution, you should set '#SBATCH -n' to 1, and be sure
 # that '-t regional' is specified in cmdargs.
 #
-# cheyenne specific batch commands:
-#PBS -A P93300606
-#PBS -N regrid
-#PBS -q regular
-#PBS -l select=4:ncpus=2:mpiprocs=2:mem=109GB
-#PBS -l walltime=2:00:00
-#PBS -j oe
-#PBS -me
-#PBS -V
-#PBS -S /bin/bash
+# geyser specific batch commands:
+#SBATCH -J regrid        # job name
+#SBATCH -n 8
+#SBATCH --ntasks-per-node=8
+#SBATCH --mem=450G
+#SBATCH -t 03:00:00
+#SBATCH -A P93300606
+#SBATCH -p dav
+#SBATCH -e regrid.%J.out   # output filename
+#SBATCH -o regrid.%J.err   # error filename
+#
+# To submit this script:
+#
+#  sbatch regridgeyser.sh
+#
+## IMPORTANT NOTE:
+#
+#  environment variables can NOT be passed into DAV
+#  queues. Hence, this script MUST be edited to select
+#  what resolution to run for.
 
 #----------------------------------------------------------------------
 # Set parameters
 #----------------------------------------------------------------------
+export RES=1x1_brazil
 
 #----------------------------------------------------------------------
 # Begin main script
@@ -63,13 +74,9 @@ for res in $resols; do
        regrid_num_proc=1
    else
        echo "global"
-       regrid_num_proc=8
-       if [ ! -z "$LSFUSER" ]; then
+       regrid_num_proc=$SLURM_NTASKS
+       if [ ! -z "$SLURM_JOB_ACCOUNT" ]; then
            echo "batch"
-	   cmdargs="$cmdargs -b"
-       fi
-       if [ ! -z "$PBS_O_WORKDIR" ]; then
-           cd $PBS_O_WORKDIR
 	   cmdargs="$cmdargs -b"
        fi
    fi

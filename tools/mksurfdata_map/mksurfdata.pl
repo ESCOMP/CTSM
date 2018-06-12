@@ -304,6 +304,8 @@ sub write_namelist_file {
       $landuse_timeseries_text_file, $setnumpft) = @_;
 
 
+  my $gitdescribe = `cd $scrdir; git describe; cd -`;
+  chomp( $gitdescribe );
   my $fh = IO::File->new;
   $fh->open( ">$namelist_fname" ) or die "** can't open file: $namelist_fname\n";
   print $fh <<"EOF";
@@ -351,6 +353,7 @@ sub write_namelist_file {
  all_urban      = $all_urb
  no_inlandwet   = $no_inlandwet
  mksrf_furban   = '$datfil->{'urb'}'
+ gitdescribe    = '$gitdescribe'
 EOF
   if ( defined($opts{'soil_override'}) ) {
     print $fh <<"EOF";
@@ -558,8 +561,6 @@ EOF
 set CSMDATA = $CSMDATA
 EOF
    system( "chmod +x $cfile" );
-   my $svnrepo = "https://svn-ccsm-inputdata.cgd.ucar.edu/trunk/inputdata";
-   my $svnmesg = "Update fsurdat files with mksurfdata_map";
    my $surfdir = "lnd/clm2/surfdata";
 
    # string to add to options for crop off or on

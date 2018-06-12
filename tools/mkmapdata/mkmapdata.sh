@@ -41,9 +41,6 @@ default_res="10x15"
 if [ -z "$CSMDATA" ]; then
    CSMDATA=/glade/p/cesm/cseg/inputdata
 fi
-if [ -z "$REGRID_PROC" ]; then
-   REGRID_PROC=36
-fi
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -91,7 +88,7 @@ usage() {
   echo "  REGRID_PROC -- Number of MPI processors to use"
   echo "                 (default is $REGRID_PROC)"
   echo ""
-  echo "**defaults can be determined on the machines: cheyenne, yellowstone, or edison"
+  echo "**defaults can be determined on the machines: cheyenne or geyser"
   echo ""
   echo "**pass environment variables by preceding above commands "
   echo "  with 'env var1=setting var2=setting '"
@@ -336,74 +333,75 @@ case $hostname in
   ##cheyenne
   cheyenne* | r* )
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  if [ -z "$REGRID_PROC" ]; then
+     REGRID_PROC=36
+  fi
   esmfvers=7.0.0
   intelvers=17.0.1
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
   module load ncl
   module load nco
-  #export MPI_USE_ARRAY=false
 
+  if [ "$interactive" = "NO" ]; then
+     mpi=mpi
+     mpitype="mpich2"
+  else
+     mpi=uni
+     mpitype="mpiuni"
+  fi
+  module load esmf-${esmfvers}-ncdfio-${mpi}-O
   if [ -z "$ESMFBIN_PATH" ]; then
-     if [ "$interactive" = "NO" ]; then
-        mpi=ncdfio-mpi
-        mpitype="mpi"
-     else
-        mpi=ncdfio
-        mpitype="mpiuni"
-     fi
-     ESMFBIN_PATH=/glade/u/apps/ch/opt/esmf/${esmfvers}-${mpi}/intel/$intelvers/bin/binO/Linux.intel.64.${mpitype}.default
+     ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
   if [ -z "$MPIEXEC" ]; then
-     #MPIEXEC="mpirun -np $REGRID_PROC"
      MPIEXEC="mpiexec_mpt -np $REGRID_PROC"
   fi
   ;;
 
-  ##yellowstone
-  ys* | caldera* | geyser* )
-  . /glade/apps/opt/lmod/lmod/init/bash
-  module load esmf
+  ## DAV
+  pronghorn* | caldera* | geyser* )
+  . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  if [ -z "$REGRID_PROC" ]; then
+     REGRID_PROC=8
+  fi
+  esmfvers=7.0.0
+  intelvers=15.0.0
+  #intelvers=12.1.5
+  module purge
+  module load intel/$intelvers
   module load ncl
   module load nco
+  #module load impi
+  module load mpich-slurm
+  module load netcdf/4.3.3.1
+  #module load netcdf/4.3.0
+  module load ncarcompilers
 
+  module load esmf
+
+  if [ "$interactive" = "NO" ]; then
+     mpi=mpi
+     mpitype="mpich2"
+  else
+     mpi=uni
+     mpitype="mpiuni"
+  fi
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib/gcc/x86_64-redhat-linux/4.4.7:/usr/lib64:/glade/apps/opt/usr/lib:/usr/lib:/glade/u/ssg/ys/opt/intel/12.1.0.233/composer_xe_2011_sp1.11.339/compiler/lib/intel64:/lib:/lib64"
+  module load esmf-${esmfvers}-ncdfio-${mpi}-O
   if [ -z "$ESMFBIN_PATH" ]; then
-     if [ "$interactive" = "NO" ]; then
-        mpi=mpi
-        mpitype="mpich2"
-     else
-        mpi=uni
-        mpitype="mpiuni"
-     fi
-     ESMFBIN_PATH=/glade/apps/opt/esmf/6.3.0-ncdfio/intel/12.1.5/bin/binO/Linux.intel.64.${mpitype}.default
+     ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
+  echo "ESMFMKFILE: $ESMFMKFILE"
+  echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
   if [ -z "$MPIEXEC" ]; then
-     MPIEXEC="mpirun.lsf"
+     MPIEXEC="mpiexec -n $REGRID_PROC"
   fi
+  echo "ERROR: Currently can NOT run on the DAV cluster, because ESMF is not configured correctly"
+  exit 1
   ;;
 
-  ## edison
-  edison* )
-  .  /opt/modules/default/init/bash
-  module load ncl/6.1.1
-  module load nco
-  if [ -z "$ESMFBIN_PATH" ]; then
-     module use -a /project/projectdirs/ccsm1/modulefiles/edison
-     if [ "$interactive" = "NO" ]; then
-        mpi=mpi
-        mpitype="mpi"
-     else
-        mpi=uni
-        mpitype="mpiuni"
-     fi
-     module load esmf/6.3.0r-ncdfio-${mpitype}-O
-     ESMFBIN_PATH=$ESMF_LIBDIR/../bin
-  fi
-  if [ -z "$MPIEXEC" ]; then
-    MPIEXEC="aprun -n $REGRID_PROC"
-  fi
-
-  ;;
   ##no other machine currently supported    
   *)
   echo "Machine $hostname NOT recognized"
