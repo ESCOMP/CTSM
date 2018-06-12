@@ -26,7 +26,7 @@ begin
    if ( ismissing(clmroot) )then
       querynml = "../../"+querynml;
    else
-      querynml = clmroot+"/components/clm/"+querynml;
+      querynml = clmroot+"/"+querynml;
    end if
    histrcp = -999.9
    if ( ismissing(rcp) )then
