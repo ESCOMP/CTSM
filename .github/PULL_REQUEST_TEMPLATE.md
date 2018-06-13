@@ -2,6 +2,8 @@
 
 ### Specific notes
 
+Contributors other than yourself, if any:
+
 CTSM Issues Fixed (include github issue #):
 
 Are answers expected to change (and if so in what way)?
