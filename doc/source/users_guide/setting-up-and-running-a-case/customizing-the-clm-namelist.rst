@@ -16,16 +16,16 @@ Definition of Namelist items and their default values
 
 Here we point to you where you can find the definition of each namelist item and separately the default values for them. The default values may change depending on the resolution, land-mask, simulation-year and other attributes. Both of these files are viewable in your web browser, and then expand each in turn.
 
-1. `Definition of Namelists Relevant for CLM4.5 <CLM-URL>`_
+1. `Definition of Namelists Relevant for +|version| <CLM-URL>`_
 
 2. `Default values of each CLM4.0 Namelist Item <CLM-URL>`_
 
-3. `Default values of each CLM4.5 Namelist Item <CLM-URL>`_
+3. `Default values of each +|version| Namelist Item <CLM-URL>`_
 
 List of fields that can be added to your output history files by namelist
 -------------------------------------------------------------------------
 
-One set of the namelist items allows you to add fields to the output history files: ``hist_fincl1``, ``hist_fincl2``, ``hist_fincl3``, ``hist_fincl4``, ``hist_fincl5``, and ``hist_fincl6``. The following links for `CLM4.0 History Fields <CLM-URL>`_ and `CLM4.5 History Fields <CLM-URL>`_ documents all of the history fields available and gives the long-name and units for each. The table below lists all the CLM4.5 history fields.
+One set of the namelist items allows you to add fields to the output history files: ``hist_fincl1``, ``hist_fincl2``, ``hist_fincl3``, ``hist_fincl4``, ``hist_fincl5``, and ``hist_fincl6``. The following links for `CLM4.0 History Fields <CLM-URL>`_ and `+|version| History Fields <CLM-URL>`_ documents all of the history fields available and gives the long-name and units for each. The table below lists all the +|version| history fields.
 
 Definition of CLM history variables
 -----------------------------------
@@ -53,7 +53,7 @@ Below we will give examples of user namelists that activate different commonly u
 The default namelist
 --------------------
 
-Here we give the default namelist as it would be created for an "I1850CRUCLM45BGC" compset at 0.9x1.25 resolution with a gx1v6 land-mask on yellowstone. To edit the namelist you would edit the ``user_nl_clm`` user namelist with just the items you want to change. For simplicity we will just show the CLM namelist and NOT the entire file. In the sections below, for simplicity we will just show the user namelist (``user_nl_clm``) that will add (or modify existing) namelist items to the namelist.
+Here we give the default namelist as it would be created for an "I1850Clm50BgcCropCru" compset at 0.9x1.25 resolution with a gx1v6 land-mask on cheyenne. To edit the namelist you would edit the ``user_nl_clm`` user namelist with just the items you want to change. For simplicity we will just show the CLM namelist and NOT the entire file. In the sections below, for simplicity we will just show the user namelist (``user_nl_clm``) that will add (or modify existing) namelist items to the namelist.
 
 Example 1-2. Default CLM Namelist
 ---------------------------------
@@ -66,7 +66,7 @@ Example 1-2. Default CLM Namelist
       create_crop_landunit = .false.
       dtime = 1800
       fatmlndfrc = '/glade/p/cesm/cseg/inputdata/share/domains/domain.lnd.fv0.9x1.25_gx1v6.090309.nc'
-      finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.0.9x1.25_g1v6_simyr1850_c130531.nc'
+      finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru.0241-01-01.0.9x1.25_g1v6_simyr1850_c130531.nc'
       fpftcon = '/glade/p/cesm/cseg/inputdata/lnd/clm2/pftdata/pft-physiology.c130503.nc'
       fsnowaging = '/glade/p/cesm/cseg/inputdata/lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc'
       fsnowoptics = '/glade/p/cesm/cseg/inputdata/lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc'

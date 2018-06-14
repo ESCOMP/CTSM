@@ -4,7 +4,7 @@
  Changing Default Filenames
 ============================
 
-To add or change the default filenames you edit the ``models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml`` and either change an existing filename or add a new one. 
+To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_+|version|.xml`` and either change an existing filename or add a new one. 
 Most entries in the default namelist files, include different attributes that describe the different properties that describe the differences in the datasets. 
 Attributes include the: resolution, year to simulation, range of years to simulate for transient datafiles, the land-mask, the representative concentration pathway (rcp) for future scenarios, and the type of biogeochemistry (bgc) model used. 
 For example the fatmgrid for the 1.9x2.5 resolution is as follows:
@@ -18,8 +18,8 @@ lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr1850_c130415.nc</fsurdat>
 Other ``fsurdat`` files are distinguished from this one by their resolution (hgrid), simulation year (sim_year) and prognostic crop (crop) attributes.
 
 
-To add or change the default filenames for CLM tools edit the ``models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml`` and either change an existing filename or add a new one. 
-Editing this file is similar to the ``namelist_defaults_clm4_5.xml`` talked about above.
+To add or change the default filenames for CLM tools edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_+|version|_tools.xml`` and either change an existing filename or add a new one. 
+Editing this file is similar to the ``namelist_defaults_+|version|.xml`` talked about above.
 
 
 ----------------------------
@@ -27,7 +27,7 @@ What are the required files?
 ----------------------------
 
 Different types of simulations and different types of configurations for CLM require different lists of files. 
-The CLM4.5-BGC or Carbon Nitrogen (cn) Biogeochemistry model for example requires ``stream_fldfilename_ndep`` files, which are NOT required by CLMSP. 
+The +|version|-BGC or Carbon Nitrogen (cn) Biogeochemistry model for example requires ``stream_fldfilename_ndep`` files, which are NOT required by CLMSP. 
 Transient simulations also require transient datasets, and the names of these datasets are sometimes different from the static versions (sometimes both are required as in the dynamic PFT cases).
 
 

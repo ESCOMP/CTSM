@@ -20,37 +20,37 @@ CIME Testing scripts
 We first introduce the test scripts that work for all CESM components. 
 The CIME script **create_test** runs a specific type of test, at a given resolution, for a given compset using a given machine. 
 There is a list of different tests, but the "ERI" tests do several things at once, running from startup, as well as doing exact branch and restart tests. 
-So to run "ERI" testing at 2-degree with the I1850CRUCLM45 compset on yellowstone_intel you do the following.
+So to run "ERI" testing at 2-degree with the I1850CRUCLM45 compset on cheyenne_intel you do the following.
 ::
 
    > cd scripts
-   > ./create_test -testname ERI.f19_g16.I1850CRUCLM45.yellowstone_intel
-   > cd ERI.f19_g16.I1850CRUCLM45.yellowstone_intel.$id
-   > ./ERI.f19_g16.I1850CRUCLM45.yellowstone_intel.$id.build
-   > ERI.f19_g16.I1850CRUCLM45.yellowstone_intel.$id.submit
+   > ./create_test -testname ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel
+   > cd ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel.$id
+   > ./ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel.$id.build
+   > ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel.$id.submit
 
 When the test is done it will update the file TestStatus with either a PASS or FAIL message.
 
-We already have a standard list of tests for clm (the "aux_clm" list of tests). To run the CLM yellowstone intel compiler test list, for the same machine and compiler you would do the following:
+We already have a standard list of tests for clm (the "aux_clm" list of tests). To run the CLM cheyenne intel compiler test list, for the same machine and compiler you would do the following:
 ::
 
    > cd scripts
-   > ./create_test -xml_mach yellowstone -xml_compiler intel -xml_category aux_clm  -mach yellowstone -compiler intel
+   > ./create_test -xml_mach cheyenne -xml_compiler intel -xml_category aux_clm  -mach cheyenne -compiler intel
    # Normally it will submit the jobs as they are ready, but if it's interrupted you 
    # may need to submit by hand as follows...
    # Submit the suite of tests (note $id refers to the integer job number for this job)
-   > ./cs.submit.$id.yellowstone
+   > ./cs.submit.$id.cheyenne
    # Later check the tests with...
    > ./cs.status.$id
    # The above will give a PASS or FAIL message for each test.
 
-For more information on doing testing with the CESM scripts see the `CESM1.2.0 User's Guide <CLM-URL>`_ on testing.
+For more information on doing testing with the CESM scripts see the `+|cesmrelease| User's Guide <CLM-URL>`_ on testing.
 
 Testing PTCLM
 =============
 
 There is a simple test script for PTCLM called ``testcases.csh`` in the PTCLM directory (``scripts/ccsm_utils/Tools/lnd/clm/PTCLM``). 
-The test script is setup to run on the machines: yellowstone, frankfurt, yong, and titan. 
+The test script is setup to run on the machines: cheyenne, frankfurt, yong, and titan. 
 You simply run the script interactively. 
 The script will write out the status of tests to a file called: ``tc.job#.status``.
 

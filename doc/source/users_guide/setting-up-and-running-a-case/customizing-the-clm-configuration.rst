@@ -4,7 +4,7 @@
 Customizing CLM's Configuration
 *******************************
 
-The "Creating a Case" section of the `CESM1.2.0 Scripts User's-Guide <link-CESM-UG>`_ gives instructions on creating a case. What is of interest here is how to customize your use of CLM for the case that you created.
+The "Creating a Case" section of the `+|cesmrelease| Scripts User's-Guide <link-CESM-UG>`_ gives instructions on creating a case. What is of interest here is how to customize your use of CLM for the case that you created.
 
 For CLM when **preview_namelist**, **$CASE.build**, or **$CASE.run** are called there are two steps that take place:
 
@@ -12,9 +12,9 @@ For CLM when **preview_namelist**, **$CASE.build**, or **$CASE.run** are called 
 
 2. The CLM "**build-namelist**" script is called to generate the run-time namelist for CLM (more information on **build-namelist** is given below in `the Section called Definition of Namelist items and their default values <CLM-URL>`_.
 
-When customizing your case at the *8cesm_setup** step you are able to modify the process by effecting either one or both of these steps. The CLM "**configure**" and "**build-namelist**" scripts are both available in the "models/lnd/clm/bld" directory in the distribution. Both of these scripts have a "-help" option that is useful to examine to see what types of options you can give either of them.
+When customizing your case at the *8cesm_setup** step you are able to modify the process by effecting either one or both of these steps. The CLM "**configure**" and "**build-namelist**" scripts are both available in the "$CTSMROOT/bld" directory in the distribution. Both of these scripts have a "-help" option that is useful to examine to see what types of options you can give either of them.
 
-There are five different types of customization for the configuration that we will discuss: CLM4.5 in CESM1.2.0 build-time options, CLM4.5 in CESM1.2.0 run-time options, User Namelist, other noteworthy CESM1.2.0 configuration items, the CLM **configure** script options, and the CLM **build-namelist** script options.
+There are five different types of customization for the configuration that we will discuss: +|version| in +|cesmrelease| build-time options, +|version| in +|cesmrelease| run-time options, User Namelist, other noteworthy +|cesmrelease| configuration items, the CLM **configure** script options, and the CLM **build-namelist** script options.
 
 Information on all of the script, configuration, build and run items is found under ``scripts/ccsm_utils/Case.template`` in the `config_definition.xml <CLM-URL>`_ file.
 
@@ -51,7 +51,7 @@ CLM_NML_USE_CASE
   ``CLM_NML_USE_CASE`` is used to set a particular set of conditions that set multiple namelist items, all centering around a particular usage of the model. To list the valid options do the following:
   ::
 
-     > cd models/lnd/clm/doc
+     > cd $CTSMROOT/doc
      > ../bld/build-namelist -use_case list
 
   The output of the above command is:
@@ -109,7 +109,7 @@ CLM_BLDNML_OPTS
   As with the CLM "configure" script the CLM clm.buildnml.csh may already invoke certain options and as such those options will NOT be available to be set here. The best way to see what options can be sent to the "build-namelist" script is to do
   ::
 
-     > cd models/lnd/clm/bld
+     > cd $CTSMROOT/bld
      > ./build-namelist -help
 
   Here is the output from the above.
@@ -179,7 +179,7 @@ CLM_BLDNML_OPTS
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
 
                                  file specified.
-     -irrig "value"           If .true. turn irrigation on with namelist logical irrigate (for CLM4.5 physics)
+     -irrig "value"           If .true. turn irrigation on with namelist logical irrigate (for +|version| physics)
                               (requires crop to be on in the clm configuration) 
                               Seek surface datasets with irrigation turned on.  (for CLM4.0 physics)
                               Default: .false.
@@ -284,7 +284,7 @@ Hence only the following different options can be set:
 #. -verbose
 
 
-"-bgc_spinup" is an option only available for CLM4.5 for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See `the Section called Spinning up the CLM4.5 biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for an example using this option.
+"-bgc_spinup" is an option only available for +|version| for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See `the Section called Spinning up the +|version| biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for an example using this option.
 
 "-chk_res" ensures that the resolution chosen is supported by CLM. If the resolution is NOT supported it will cause the CLM **build-namelist** to abort when run. So when either **preview_namelist**, **$CASE.build** or **$CASE.run** is executed it will abort early. Since, the CESM scripts only support certain resolutions anyway, in general this option is NOT needed in the context of running CESM cases.
 
@@ -296,7 +296,7 @@ Hence only the following different options can be set:
 To see a list of valid variables that you could set do this:
 ::
 
-   > cd models/lnd/clm/doc
+   > cd $CTSMROOT/doc
    > ../bld/build-namelist -clm_demand list
 
 
@@ -317,13 +317,13 @@ When "-irrig" is used **build-namelist** will try to find surface datasets that 
 "-rcp" is used to set the representative concentration pathway for the future scenarios you want the data-sets to simulate conditions for, in the input datasets. To list the valid options do the following:
 ::
 
-   > cd models/lnd/clm/doc
+   > cd $CTSMROOT/doc
    > ../bld/build-namelist -rcp list
 
 "-sim_year" is used to set the simulation year you want the data-sets to simulate conditions for in the input datasets. The simulation "year" can also be a range of years in order to do simulations with changes in the dataset values as the simulation progresses. To list the valid options do the following:
 ::
 
-   > cd models/lnd/clm/doc
+   > cd $CTSMROOT/doc
    > ../bld/build-namelist -sim_year list
 
 ``CLM_NAMELIST_OPTS`` 
@@ -355,7 +355,7 @@ When "-irrig" is used **build-namelist** will try to find surface datasets that 
    For example if your ``CLM_USRDAT_NAME`` will be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850, the following will list what your filenames should be:
    ::
 
-      > cd models/lnd/clm/bld
+      > cd $CTSMROOT/bld
       > queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 
       An example of using ``CLM_USRDAT_NAME`` for a simulation is given in `Example 5-4 <CLM-URL>`_.
@@ -464,11 +464,11 @@ Especially with CLMBGC and CLMCN starting from initial conditions is very import
 Doing a hybrid simulation to provide initial conditions
 -------------------------------------------------------
 
-The first option is to setup a hybrid simulation and give a ``RUN_REFCASE`` and ``RUN_REFDATE`` to specify the reference case simulation name to use. When you setup most cases, at the standard resolutions of "f09" or "f19" it will already do this for you. For example, if you run an "I2000CN" compset at "f09_g16" resolution the following settings will already be done for you.
+The first option is to setup a hybrid simulation and give a ``RUN_REFCASE`` and ``RUN_REFDATE`` to specify the reference case simulation name to use. When you setup most cases, at the standard resolutions of "f09" or "f19" it will already do this for you. For example, if you run an "I2000CN" compset at "f09_g17_gl4" resolution the following settings will already be done for you.
 
-``./xmlchange RUN_TYPE=hybrid,RUN_REFCASE=I2000CN_f09_g16_c100503,RUN_REFDATE=0001-01-01,GET_REFCASE=TRUE``
+``./xmlchange RUN_TYPE=hybrid,RUN_REFCASE=I2000CN_f09_g17_gl4_c100503,RUN_REFDATE=0001-01-01,GET_REFCASE=TRUE``
 
-Setting the ``GET_REFCASE`` option to ``TRUE means`` it will copy the files from the: ``$DIN_LOC_ROOT/ccsm4_init/I2000CN_f09_g16_c100503/0001-01-01`` directory. Note, that the ``RUN_REFCASE`` and ``RUN_REFDATE`` variables are expanded to get the directory name above. If you do NOT set ``GET_REFCASE`` to ``TRUE`` then you will need to have placed the file in your run directory yourself. In either case, the file is expected to be named: ``$RUN_REFCASE.clm2.r.$RUN_REFDATE-00000.nc`` with the variables expanded of course.
+Setting the ``GET_REFCASE`` option to ``TRUE means`` it will copy the files from the: ``$DIN_LOC_ROOT/ccsm4_init/I2000CN_f09_g17_gl4_c100503/0001-01-01`` directory. Note, that the ``RUN_REFCASE`` and ``RUN_REFDATE`` variables are expanded to get the directory name above. If you do NOT set ``GET_REFCASE`` to ``TRUE`` then you will need to have placed the file in your run directory yourself. In either case, the file is expected to be named: ``$RUN_REFCASE.clm2.r.$RUN_REFDATE-00000.nc`` with the variables expanded of course.
 
 -------------------------------------------------------
 Doing a branch simulation to provide initial conditions
@@ -483,7 +483,7 @@ Providing a finidat file in your user_nl_clm file
 Setting up a branch or hybrid simulation requires the initial condition file to follow a standard naming convention, and a standard input directory if you use the ``GET_REFCASE`` option. If you want to name your file willy nilly and place it anywhere, you can set it in your ``user_nl_clm`` file as in this example.
 ::
 
-   finidat    = '/glade/home/$USER/myinitdata/clmi_I1850CN_f09_g16_0182-01-01.c120329.nc'
+   finidat    = '/glade/home/$USER/myinitdata/clmi_I1850CN_f09_g17_gl4_0182-01-01.c120329.nc'
 
 Note, if you provide an initial condition file -- you can NOT set ``CLM_FORCE_COLDSTART`` to ``TRUE``.
 
@@ -530,7 +530,7 @@ If you are running an B, E, or F case that doesn't use the DATM obviously the DA
      CPLHIST3HrWx
 
 ``CLMCRUNCEP`` 
-   The standard mode for CLM4.5 of using global atmospheric data that was developed by CRU using NCEP data from 1901 to 2010. 
+   The standard mode for +|version| of using global atmospheric data that was developed by CRU using NCEP data from 1901 to 2010. 
    See `the Section called CLMCRUNCEP mode and it's DATM settings <CLM-URL>`_ for more information on the DATM settings for ``CLMCRUNCEP`` mode. 
 
 ``CLM_QIAN`` 
@@ -582,9 +582,9 @@ Downloading DATM Forcing Data
 
 In Chapter One of the `CESM User's Guide <link-to-CESM-UG>`_ there is a section on "Downloading input data". The normal process of setting up cases will use the "scripts/ccsm_utils/Tools/check_input_data" script to retrieve data from the CESM subversion inputdata repository. This is true for the standard `CLM_QIAN` forcing as well.
 
-The `CLMCRUNCEP` data is uploaded into the subversion inputdata repository as well -- but as it is 1.1 Terabytes of data downloading it is problematic (*IT WILL TAKE SEVERAL DAYS TO DOWNLOAD THE ENTIRE DATASET USING SUBVERSION*). Because of it's size you may also need to download it onto a separate disk space. We have done that on yellowstone for example where it resides in ``$ENV{CESMROOT}/lmwg`` while the rest of the input data resides in ``$ENV{CESMDATAROOT}/inputdata``. The data is also already available on: janus, franklin, and hopper. If you download the data, we recommend that you break your download into several chunks, by setting up a case and setting the year range for ``DATM_CPL_YR_START`` and ``DATM_CPL_YR_END`` in say 20 year sections over 1901 to 2010, and then use **check_input_data** to export the data.
+The `CLMCRUNCEP` data is uploaded into the subversion inputdata repository as well -- but as it is 1.1 Terabytes of data downloading it is problematic (*IT WILL TAKE SEVERAL DAYS TO DOWNLOAD THE ENTIRE DATASET USING SUBVERSION*). Because of it's size you may also need to download it onto a separate disk space. We have done that on cheyenne for example where it resides in ``$ENV{CESMROOT}/lmwg`` while the rest of the input data resides in ``$ENV{CESMDATAROOT}/inputdata``. The data is also already available on: janus, franklin, and hopper. If you download the data, we recommend that you break your download into several chunks, by setting up a case and setting the year range for ``DATM_CPL_YR_START`` and ``DATM_CPL_YR_END`` in say 20 year sections over 1901 to 2010, and then use **check_input_data** to export the data.
 
-The ``CPLHIST3HrWx`` DATM forcing data is unique -- because it is large compared to the rest of the input data, and we only have a disk copy on yellowstone. The DATM assumes the path for the previous NCAR machine yellowstone of ``/glade/p/cesm/shared_outputdata/cases/ccsm4/$DATM_CPLHIST_CASE`` for the data. So you will need to change this path in order to run on any other machine. You can download the data itself from NCAR HPSS from ``/CCSM/csm/$DATM_CPLHIST_CASE``.
+The ``CPLHIST3HrWx`` DATM forcing data is unique -- because it is large compared to the rest of the input data, and we only have a disk copy on cheyenne. The DATM assumes the path for the previous NCAR machine cheyenne of ``/glade/p/cesm/shared_outputdata/cases/ccsm4/$DATM_CPLHIST_CASE`` for the data. So you will need to change this path in order to run on any other machine. You can download the data itself from NCAR HPSS from ``/CCSM/csm/$DATM_CPLHIST_CASE``.
 
 --------------------------------------
 Customizing via the build script files
@@ -601,7 +601,7 @@ The final thing that the user may wish to do before **cesm_setup** is run is to 
 More information on the CLM configure script
 --------------------------------------------
 
-The CLM **configure** script defines the details of a clm configuration and summarizes it into a ``config_cache.xml`` file. The ``config_cache.xml`` will be placed in your case directory under ``Buildconf/clmconf``. The `config_definition.xml <CLM-URL>`_ in ``models/lnd/clm/bld/config_files`` gives a definition of each CLM configuration item, it is viewable in a web-browser. Many of these items are things that you would NOT change, but looking through the list gives you the valid options, and a good description of each. Below we repeat the ``config_definition.xml`` files contents:
+The CLM **configure** script defines the details of a clm configuration and summarizes it into a ``config_cache.xml`` file. The ``config_cache.xml`` will be placed in your case directory under ``Buildconf/clmconf``. The `config_definition.xml <CLM-URL>`_ in ``$CTSMROOT/bld/config_files`` gives a definition of each CLM configuration item, it is viewable in a web-browser. Many of these items are things that you would NOT change, but looking through the list gives you the valid options, and a good description of each. Below we repeat the ``config_definition.xml`` files contents:
 
 Help on CLM configure
 ---------------------
@@ -609,7 +609,7 @@ Help on CLM configure
 Coupling this with looking at the options to CLM **configure** with "-help" as below will enable you to understand how to set the different options.
 ::
 
-   > cd models/lnd/clm/bld
+   > cd $CTSMROOT/bld
    > configure -help
 
 The output to the above command is as follows:
@@ -632,7 +632,7 @@ The output to the above command is as follows:
                             (default: CLM build directory).
      -clm4me <name>         Turn Methane model: [on | off]
                               Requires bgc=cn/cndv (Carbon Nitrogen model)
-                            (ONLY valid for CLM4.5!)
+                            (ONLY valid for +|version|!)
      -clm_root <dir>        Root directory of clm source code 
                             (default: directory above location of this script)
      -cppdefs <string>      A string of user specified CPP defines.  Appended to
@@ -647,12 +647,12 @@ The output to the above command is as follows:
                             Parameters relating to the build which are system dependent will
                             be ignored.
      -exlaklayers <name>    Turn on extra lake layers (25 layers instead of 10) [on | off]
-                            (ONLY valid for CLM4.5!)
+                            (ONLY valid for +|version|!)
      -help [or -h]          Print usage to STDOUT.
      -nofire                Turn off wildfires for BGC setting of CN 
                             (default includes fire for CN)
      -noio                  Turn history output completely off (typically for testing).
-     -phys <name>           Value of clm4_0 or clm4_5 (default is clm4_0)   
+     -phys <name>           Value of clm4_0 or +|version| (default is clm4_0)   
      -silent [or -s]        Turns on silent mode - only fatal messages issued.
      -sitespf_pt <name>     Setup for the given site specific single-point resolution.
      -snicar_frc <name>     Turn on SNICAR radiative forcing calculation. [on | off] 
@@ -676,7 +676,7 @@ The output to the above command is as follows:
                             eliminate inconsistent duplicate soil hydraulic 
                             parameters used in soil biogeochem.
                             (requires either CN or CNDV)
-                            (ONLY valid for CLM4.5!)
+                            (ONLY valid for +|version|!)
                             [on,off or colon delimited list of no options] (default off)
                               no-vert     Turn vertical soil Carbon profile off
                               no-cent     Turn CENTURY off

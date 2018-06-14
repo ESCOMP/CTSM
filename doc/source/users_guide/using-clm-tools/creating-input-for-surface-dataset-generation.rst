@@ -15,7 +15,7 @@ SCRIP grid files for all the standard model resolutions and the raw surface data
 Using mknocnmap.pl to create grid and maps for single-point regional grids
 --------------------------------------------------------------------------
 
-If you want to create a regular latitude/longitude single-point or regional grid, we suggest you use **mknoocnmap.pl** in ``models/lnd/clm/tools/shared/mkmapdata`` which will create both the SCRIP grid file you need (using ``models/lnd/clm/tools/shared/mkmapgrids/mkscripgrid.ncl`` AND an identity mapping file assuming there is NO ocean in your grid domain. If you HAVE ocean in your domain you could modify the mask in the SCRIP grid file for ocean, and then use **ESMF_RegridWeightGen** to create the mapping file, and **gen_domain** to create the domain file. Like other tools, ``shared/mkmapdata/mknoocnmap.pl`` has a help option with the following:
+If you want to create a regular latitude/longitude single-point or regional grid, we suggest you use **mknoocnmap.pl** in ``$CTSMROOT/tools/mkmapdata`` which will create both the SCRIP grid file you need (using ``$CTSMROOT/tools/mkmapgrids/mkscripgrid.ncl`` AND an identity mapping file assuming there is NO ocean in your grid domain. If you HAVE ocean in your domain you could modify the mask in the SCRIP grid file for ocean, and then use **ESMF_RegridWeightGen** to create the mapping file, and **gen_domain** to create the domain file. Like other tools, ``./mkmapdata/mknoocnmap.pl`` has a help option with the following:
 ::
 
    SYNOPSIS
@@ -43,20 +43,20 @@ See `Figure 2-5 <CLM-URL>`_ for a visual representation of this process.
 
 ``mkmapdata.sh`` uses the above SCRIP grid input files to create SCRIP mapping data files (uses ESMF). 
 
-The bash shell script ``models/lnd/clm/tools/shared/mkmapgrids/mkmapdata.sh`` uses **ESMF_RegridWeightGen** to create a list of maps from the raw datasets that are input to **mksurfdata_map**. 
+The bash shell script ``$CTSMROOT/tools/mkmapgrids/mkmapdata.sh`` uses **ESMF_RegridWeightGen** to create a list of maps from the raw datasets that are input to **mksurfdata_map**. 
 Each dataset that has a different grid, or land-mask needs a different mapping file for it, but many different raw datasets share the same grid/land-mask as other files. 
 Hence, there doesn't need to be a different mapping file for EACH raw dataset -- just for each DIFFERENT raw dataset. 
 See `Figure 2-3 <CLM-URL>`_ for a visual representation of how this works. 
 The bash script figures out which mapping files it needs to create and then runs **ESMF_RegridWeightGen** for each one. 
 You can then either enter the datasets into the XML database (see `Chapter 3 <CLM-URL>`_ or leave the files in place, and use the "-res usrspec -usr_gname -usr_gdate" options to **mksurfdata_map** (see `the Section called Running mksurfdata.pl <CLM-URL>`_ below). 
-Use the "-phys" option to specify if you are creating mapping files for clm4_0 or clm4_5 (the list of raw datafiles is somewhat different between the two). 
+Use the "-phys" option to specify if you are creating mapping files for clm4_0 or +|version| (the list of raw datafiles is somewhat different between the two). 
 mkmapdata.sh has a help option with the following
 ::
 
-   ../../tools/shared/mkmapdata/mkmapdata.sh
+   ../../tools/mkmapdata/mkmapdata.sh
 
    **********************
-   usage on yellowstone:
+   usage on cheyenne:
    ./mkmapdata.sh
 
    valid arguments: 
@@ -74,8 +74,8 @@ mkmapdata.sh has a help option with the following
 	Model output grid type
 	supported values are [regional,global], (default is global)
    [-p|--phys <CLM-version>]
-	Whether to generate mapping files for clm4_0 or clm4_5
-	supported values are [clm4_0,clm4_5], (default is clm4_5)
+	Whether to generate mapping files for clm4_0 or +|version|
+	supported values are [clm4_0,+|version|], (default is +|version|)
    [-b|--batch]
 	Toggles batch mode usage. 
    If you want to run in batch mode
@@ -107,7 +107,7 @@ mkmapdata.sh has a help option with the following
    **********************
 
 
-.. warning:: Make sure you specify with the "-phys" option if you are creating files for CLM4.0! The default is CLM4.5.
+.. warning:: Make sure you specify with the "-phys" option if you are creating files for CLM4.0! The default is +|version|.
 
 Figure 2-3. Details of running mkmapdata.sh
 -------------------------------------------

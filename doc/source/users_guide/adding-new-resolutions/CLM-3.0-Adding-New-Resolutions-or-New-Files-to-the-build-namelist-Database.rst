@@ -14,11 +14,11 @@ If you have a LOT of files to keep track of it also might be easier than keeping
 If you just have a few quick experiments to try, for a short time period you might be best off using the other methods mentioned above.
 
 There are two parts to adding files to the build-namelist database. 
-The first part is adding new resolution names which is done in the ``models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml`` file (and in the ``models/lnd/clm/bld/config_files/config_definition.xml`` file when adding supported single-point datasets). 
+The first part is adding new resolution names which is done in the ``$CTSMROOT/bld/namelist_files/namelist_definition_+|version|.xml`` file (and in the ``$CTSMROOT/bld/config_files/config_definition.xml`` file when adding supported single-point datasets). 
 You can then use the new resolution by using ``CLM_USRDAT_NAME``. 
 If you also want to be able to give the resolution into **create_newcase** -- you'll need to add the grid to the ``scripts/ccsm_utils/Case.template/config_grid.xml`` file.
 
-The second part is actually adding the new filenames which is done in the ``models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml`` file (``models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml`` file for CLM tools). 
+The second part is actually adding the new filenames which is done in the ``$CTSMROOT/bld/namelist_files/namelist_defaults_+|version|.xml`` file (``$CTSMROOT/bld/namelist_files/namelist_defaults_+|version|_tools.xml`` file for CLM tools). 
 If you aren't adding any new resolutions, and you are just changing the files for existing resolutions, you don't need to edit the namelist_definition file.
 
 

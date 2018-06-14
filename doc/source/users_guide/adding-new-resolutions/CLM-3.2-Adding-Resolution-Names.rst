@@ -5,7 +5,7 @@
 =========================
 
 If you are adding files for new resolutions which aren't covered in the namelist_definition file -- you'll need to add them in. 
-The list of valid resolutions is in the id="res" entry in the ``models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml`` file. 
+The list of valid resolutions is in the id="res" entry in the ``$CTSMROOT/bld/namelist_files/namelist_definition_+|version|.xml`` file. 
 You need to choose a name for your new resolution and simply add it to the comma delimited list of valid_values for the id="res" entry. 
 The convention for global Gaussian grids is number_of_latitudes x number_of_longitudes. 
 The convention for global finite volume grids is latitude_grid_size x longitude_grid_size where latitude and longitude is measured in degrees. 
@@ -29,7 +29,7 @@ The only hard requirement is that names be unique for different grid files. Here
 
 As you can see you just add your new resolution names to the end of the valid_values list.
 
-When using PTCLM and adding supported single-point resolutions, you'll also want to add these resolutions to the ``models/lnd/clm/bld/config_files/config_definition.xml`` under the ``sitespf_pt`` name. 
+When using PTCLM and adding supported single-point resolutions, you'll also want to add these resolutions to the ``$CTSMROOT/bld/config_files/config_definition.xml`` under the ``sitespf_pt`` name. 
 The entry in that file looks like:
 ::
 
