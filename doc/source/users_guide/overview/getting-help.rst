@@ -8,10 +8,10 @@ In addition to this users-guide there are several other resources that are avail
 ---------------------------
 The CESM User's-Guide
 ---------------------------
++|release|
++|release| in +|cesmrelease| is always run from within the standard +|cesmrelease| build and run scripts. Therefore, the user of CLM4.5 should familiarize themselves with the +|cesmrelease| scripts and understand how to work with them. User's-Guide documentation on the +|cesmrelease| scripts are available from the following web-page. The purpose of this +|version| in +|cesmrelease| User's Guide is to give the +|version| user more complete details on how to work with CLM and the set of tools that support CLM, as well as to give examples that are unique to the use of CLM. However, the +|cesmrelease| Scripts User's-Guide remains the primary source to get detailed information on how to build and run the CESM system.
 
-CLM5.0 in CESM2.0 is always run from within the standard CESM2.0 build and run scripts. Therefore, the user of CLM4.5 should familiarize themselves with the CESM1.2.0 scripts and understand how to work with them. User's-Guide documentation on the CESM1.2.0 scripts are available from the following web-page. The purpose of this CLM4.5 in CESM1.2.0 User's Guide is to give the CLM4.5 user more complete details on how to work with CLM and the set of tools that support CLM, as well as to give examples that are unique to the use of CLM. However, the CESM1.2.0 Scripts User's-Guide remains the primary source to get detailed information on how to build and run the CESM system.
-
-`cesmrel; Scripts User's-Guide (http://www.cesm.ucar.edu/models/cesm1.2/cesm/doc/usersguide/book1.html) <CLM-URL>`_
+`+|cesmrelease| Quickstart Guide <https://escomp.github.io/cesm/release-cesm2/>`_
 
 -----------------------
 The CESM Bulletin Board
