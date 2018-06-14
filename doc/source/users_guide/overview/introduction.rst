@@ -20,18 +20,18 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 Introduction
 ==============
 
-The Community Land Model (+|release| in CESM2.0) is the latest in a
+The Community Land Model (+|release| in +|cesmrelease|) is the latest in a
 series of global land models developed by the CESM Land Model Working
 Group (LMWG) and maintained at the National Center for Atmospheric
 Research (NCAR). This guide is intended to instruct both the novice
 and experienced user on running CLM. This guide pertains to the latest
-version +|version| in CESM2.0 available for download from the public
+version +|version| in +|cesmrelease| available for download from the public
 release subversion repository as a part of CESM1.2.0. Documentation
 may be different if you are using an older version, you should either
 use the documentation for that release version, update to the latest
 version, or use the documentation inside your own source tree. There
 is information in the ChangeLog file and in the `What is new with
-+|version| in CESM2.0 since previous public releases? <CLM-URL>`_
++|version| in +|cesmrelease| since previous public releases? <CLM-URL>`_
 regarding the changes from previous versions of CESM.
 
 .. note:: This release of CLM5.0 in CESM1.2.0 includes BOTH CLM4.0
@@ -79,12 +79,13 @@ and then finally do it by hand. If you are using non supported
 machines you may also want to use the test scripts to make sure your
 machine is working correctly.
 
-.. _what-is-new-with-clm4.5:
+.. _what-is-new-with-+|version|:
 
 =========================
- What is New with CLM4.5
+ What is New with +|version|
 =========================
 
+`What's new with +|version| science <https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#clm5-0/>`_
 The CESM1.2.0 `What's New Science <CLM-URL>`_ and `What's New Software <CLM-URL>`_ pages gives a synopsis of the changes to all CESM components since the CESM1.1.1 release.
 More details are given in the `CLM ChangeLog file <CLM-URL>`_.
 
