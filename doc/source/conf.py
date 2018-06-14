@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'clmdoc'
-copyright = u'2017, Erik Kluzek, Bill Sacks, Ben Andre'
+copyright = u'2018, Erik Kluzek, Bill Sacks, Ben Andre'
 author = u'Erik Kluzek, Bill Sacks, Ben Andre'
 
 # The version info for the project you're documenting, acts as replacement for
