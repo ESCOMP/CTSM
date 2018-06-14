@@ -62,6 +62,6 @@ Creating a Complete Set of Files for Input to CLM
 
 The ``$CTSMROOT/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
 
-.. include:: ../../+|version|/tools/README
+.. include:: ../../clm5.0/tools/README
    :literal:
 

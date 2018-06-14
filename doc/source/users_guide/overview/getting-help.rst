@@ -33,17 +33,17 @@ The main CLM web page contains information on the CLM, it's history, developers,
 Also note that several of the XML database files can be viewed in a web browser to get a nice table of namelist options, namelist defaults, or compsets. Simply view them as a local file and bring up one of the following files:
 
 - `$CTSMROOT/bld/namelist_files/namelist_definition_clm4_0.xml <CLM-URL>`_ -- definition of CLM4.0 namelist items.
-- `$CTSMROOT/bld/namelist_files/namelist_definition_+|version|.xml <CLM-URL>`_ -- definition of CLM4.0 namelist items.
+- `$CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml <CLM-URL>`_ -- definition of CLM4.5/CLM5.0 namelist items.
 - `$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_0.xml <CLM-URL>`_ -- default values for CLM4.0 namelist items.
-- `$CTSMROOT/bld/namelist_files/namelist_defaults_+|version|.xml <CLM-URL>`_ -- default values for +|version| namelist items.
+- `$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5.xml <CLM-URL>`_ -- default values for CLM4.5/CLM5.0 namelist items.
 - `scripts/ccsm_utils/Case.template/config_definition.xml <CLM-URL>`_ -- definition of all env_*.xml items.
 - `scripts/ccsm_utils/Case.template/config_compsets.xml <CLM-URL>`_ -- definition of all the compsets.
 - `$CTSMROOT/bld/namelist_files/history_fields_clm4_0.xml <CLM-URL>`_ -- definition of CLM4.0 history fields.
-- `$CTSMROOT/bld/namelist_files/history_fields_+|version|.xml <CLM-URL>`_ -- definition of +|version| history fields.
+- `$CTSMROOT/bld/namelist_files/history_fields_clm4_5.xml <CLM-URL>`_ -- definition of CLM4.5/CLM5.0 history fields.
 
-------------------------
+----------------------------
 Reporting bugs in +|version|
-------------------------
+----------------------------
 
 If you have any problems, additional questions, bug reports, or any other feedback, please send an email to <`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_>. If you find bad, wrong, or misleading information in this users guide send an email to <`erik@ucar.edu <mailto:erik@ucar.edu>`_>. The current list of known issues for +|version| in +|cesmrelease| is in the $CTSMROOT/doc/KnownBugs file, and the list of issues for +|cesmrelease| is at... 
 `http://www.cesm.ucar.edu/models/cesm1.2//tags/+|cesmrelease|/#PROBLEMS <http://www.cesm.ucar.edu/models/cesm1.2//tags/+|cesmrelease|/#PROBLEMS>`_.
@@ -64,7 +64,7 @@ CLM
 CLMBGC
   Community Land Model (+|version|) with BGC Biogeochemistry. Uses CN Biogeochemistry with vertically resolved soil Carbon, CENTURY model like pools, and Nitrification/De-Nitrification. The CLM_CONFIG_OPTS option for this is
 
-  ``./xmlchange CLM_CONFIG_OPTS="phys +|version| -bgc cn -vsoilc_centbgc on -clm4me on"``
+  ``./xmlchange CLM_CONFIG_OPTS="phys clm5_0 -bgc cn -vsoilc_centbgc on -clm4me on"``
 
 CLMCN
   Community Land Model (CLM) with Carbon Nitrogen (CN) Biogeochemistry (either CLM4.0 or +|version|) The CLM_CONFIG_OPTS option for this is
