@@ -6,7 +6,7 @@
 .. _users-guide:
 
 #####################################
-CLM User's Guide
+|version| User's Guide
 #####################################
 
 .. toctree::
@@ -20,3 +20,4 @@ CLM User's Guide
    running-single-points/index.rst
    running-PTCLM/index.rst
    trouble-shooting/index.rst
+   testing/index.rst
