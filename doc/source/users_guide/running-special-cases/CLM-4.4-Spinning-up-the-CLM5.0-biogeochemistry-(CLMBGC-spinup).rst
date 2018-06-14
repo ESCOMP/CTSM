@@ -1,8 +1,8 @@
 .. _spinning-up-clm45-bgc:
 
-======================
+=========================
  Spinup of +|version|-BGC
-======================
+=========================
 
 To get the +|version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**) mode for 1000 simulation years. 
 After this you branch from this mode in the "final spinup" (-bgc_spinup off in CLM **configure**), and run for (at least 200+ simulation years).
