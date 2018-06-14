@@ -11,7 +11,7 @@ However, users can create their own dataset.
 To get the list of supported dataset resolutions do this:
 ::
 
-   > cd models/lnd/clm/doc
+   > cd $CTSMROOT/doc
    > ../bld/build-namelist -res list
 
 
@@ -120,7 +120,7 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
    > ./case.setup
 
 
-.. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model (see bug 1110 in the `models/lnd/clm/doc/KnownLimitationss <CLM-URL>`_ file for documentation on this). Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
+.. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model (see bug 1110 in the `$CTSMROOT/doc/KnownLimitationss <CLM-URL>`_ file for documentation on this). Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
 
 .. note:: Just like ``PTS_MODE`` above, By default it sets up to run with ``MPILIB=mpi-serial`` (in the env_build.xml file) turned on, which allows you to run the model interactively.
 
@@ -164,17 +164,17 @@ Example: Creating a surface dataset for a single point
    > setenv GRIDNAME 1x1_boulderCO
    > setenv CDATE    `date +%y%m%d`
    # Create the SCRIP grid file for the location and create a unity mapping file for it.
-   > cd models/lnd/clm/tools/shared/mkmapdata
+   > cd $CTSMROOT/tools/mkmapdata
    > ./mknoocnmap.pl -p 40,255 -n $GRIDNAME
    # Set pointer to MAPFILE just created that will be used later
    > setenv MAPFILE `pwd`/map_${GRIDNAME}_noocean_to_${GRIDNAME}_nomask_aave_da_${CDATE}.nc
    # create the mapping files needed by mksurfdata_map.
-   > cd ../../shared/mkmapdata
+   > cd ../.././mkmapdata
    > setenv GRIDFILE ../mkmapgrids/SCRIPgrid_${GRIDNAME}_nomask_${CDATE}.nc
    > ./mkmapdata.sh -r $GRIDNAME -f $GRIDFILE -t regional
    # create the domain file
    > cd ../../../../tools/mapping/gen_domain_files/src
-   > ../../../scripts/ccsm_utils/Machines/configure -mach yellowstone -compiler intel
+   > ../../../scripts/ccsm_utils/Machines/configure -mach cheyenne -compiler intel
    > gmake
    > cd ..
    > setenv OCNDOM domain.ocn_noocean.nc
@@ -183,7 +183,7 @@ Example: Creating a surface dataset for a single point
    # Save the location where the domain file was created 
    > setenv GENDOM_PATH `pwd`
    # Finally create the surface dataset
-   > cd ../../../../lnd/clm/tools/clm4_5/mksurfdata_map/src
+   > cd ../../../../lnd/clm/tools/+|version|/mksurfdata_map/src
    > gmake
    > cd ..
    > ./mksurfdata.pl -r usrspec -usr_gname $GRIDNAME -usr_gdate $CDATE
@@ -202,11 +202,11 @@ Example: Setting up a case from the single-point surface dataset just created
    > ./link_dirtree $CSMDATA $MYCSMDATA
    # Copy the file you created above to your new $MYCSMDATA location following the CLMUSRDAT 
    # naming convention (leave off the creation date)
-   > cp $CESMROOT/models/lnd/clm/tools/clm4_5/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
+   > cp $CESMROOT/$CTSMROOT/tools/+|version|/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
    $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc
    > cd $CESMROOT/scripts
-   > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850CRUCLM45BGC \
-   -mach yellowstone_intel
+   > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850Clm50BgcCropCru \
+   -mach cheyenne_intel
    > cd my_usernldatasets_test
    > ./xmlchange DIN_LOC_ROOT=$MYCSMDATA
    # Set the path to the location of gen_domain set in the creation step above

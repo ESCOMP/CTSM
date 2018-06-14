@@ -18,7 +18,7 @@ Setup Problems
 
 The first type of problem happens when you invoke the **case.setup** command. 
 This indicates there is something wrong with your input datasets, or the details of what you are trying to setup the model to do. 
-There's also a trouble-shooting chapter in the `CESM1.2.0 Scripts User's Guide <CLM-URL>`_. 
+There's also a trouble-shooting chapter in the `+|cesmrelease| Scripts User's Guide <CLM-URL>`_. 
 Many of the problems with configuration can be resolved with the guidelines given there. 
 Here we will restrict ourselves to problems from the input files.
 
@@ -27,7 +27,7 @@ Example: Missing datasets
 ::
 
    > ./create_newcase -case ne60rcp6 -res ne60_g16 -compset IRCP60CN \
-   -mach yellowstone_intel
+   -mach cheyenne_intel
    > ./case.setup
 
 The following is what is displayed to the screen.
@@ -100,7 +100,7 @@ Below we show the log file results of a job that aborted while running.
     Sun Jun 20 18:24:35 MDT 2010 -- CSM EXECUTION HAS FINISHED
     Model did not complete - see /ptmp/erik/test_run/run/cpl.log.100620-182358
 
-In the next section we will talk about using the different log files to track down problems, and find out where the problem is coming from. In the section after that we give some general advice on debugging problems and some suggestions on ideas that may be helpful to track the problem down. Some of the examples below are from the `models/lnd/clm/doc/KnownBugs <CLM-URL>`_ file.
+In the next section we will talk about using the different log files to track down problems, and find out where the problem is coming from. In the section after that we give some general advice on debugging problems and some suggestions on ideas that may be helpful to track the problem down. Some of the examples below are from the `$CTSMROOT/doc/KnownBugs <CLM-URL>`_ file.
 
 Tracking Problems by Querying Log Files
 ---------------------------------------
@@ -146,10 +146,10 @@ For example, here is some output from an older version of CESM (CESM1.0.2) where
 
    NODE#  NAME
    (    0)  be1105en.ucar.edu
-   "/gpfs/proj2/fis/cgd/home/erik/clm_trunk/models/lnd/clm/src/riverroute/RtmMod.F90", line
+   "/gpfs/proj2/fis/cgd/home/erik/clm_trunk/$CTSMROOT/src/riverroute/RtmMod.F90", line
    239: 1525-155 The file name provided in the OPEN statement for unit 1 has zero length or
    contains all blanks.  The program will recover by ignoring the OPEN statement.
-   "/gpfs/proj2/fis/cgd/home/erik/clm_trunk/models/lnd/clm/src/riverroute/RtmMod.F90", line
+   "/gpfs/proj2/fis/cgd/home/erik/clm_trunk/$CTSMROOT/src/riverroute/RtmMod.F90", line
    241: 1525-001 The READ statement on the file fort.1 cannot be completed because the end
    of the file was reached.  The program will stop.
 
@@ -291,12 +291,12 @@ The CLM log file
 Of course when you are working with and making changes to CLM, most of your focus will be on the CLM log file and the errors it shows. 
 As already pointed out if you don't see errors in the ``lnd.log.*`` file you should look in the ``cesm.log.*`` to see if any errors showed up there.
 
-Here's an example of the ``lnd.log.*`` file when running ``PTS_MODE`` with initial conditions (this is bug 1025 in the `models/lnd/clm/doc/KnownLimitationss <CLM-URL>`_ file).
+Here's an example of the ``lnd.log.*`` file when running ``PTS_MODE`` with initial conditions (this is bug 1025 in the `$CTSMROOT/doc/KnownLimitationss <CLM-URL>`_ file).
 ::
 
  Successfully initialized variables for accumulation
  
- reading restart file I2000CN_f09_g16_c100503.clm2.r.0001-01-01-00000.nc                                                                                                                                                                                                              
+ reading restart file I2000CN_f09_g17_gl4_c100503.clm2.r.0001-01-01-00000.nc                                                                                                                                                                                                              
  Reading restart dataset
  ERROR - setlatlon.F:Cant get variable dim for lat or lsmlat
  ENDRUN: called without a message string
@@ -319,7 +319,7 @@ Here's an example of a problem that occurs when the wrong prescribed aerosol fil
 The batch log files
 -------------------
 
-The names of the batch log files will depend on the batch system of the machine that is being used. They will normally be in the script directory. Usually, they don't contain important information, but they are a last resort place to look for error messages. On the NCAR system "yellowstone" the batch files are called with names that start with the batch submission script and then either "stderr.o" or "stdout.o", with the job number at the end.
+The names of the batch log files will depend on the batch system of the machine that is being used. They will normally be in the script directory. Usually, they don't contain important information, but they are a last resort place to look for error messages. On the NCAR system "cheyenne" the batch files are called with names that start with the batch submission script and then either "stderr.o" or "stdout.o", with the job number at the end.
 
 General Advice on Debugging Run time Problems
 =============================================

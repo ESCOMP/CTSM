@@ -104,10 +104,10 @@ The output to the above command is as follows:
 
   Main Script Version Id: $Id: PTCLM.py 47576 2013-05-29 19:11:16Z erik $ Scripts URL: $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/PTCLM/trunk_tags/PTCLM1_130529/PTCLM.py $:
 
-Here we give a simple example of using PTCLM1 for a straightforward case of running at the US-UMB Fluxnet site on yellowstone where we already have the meteorology data on the machine. 
+Here we give a simple example of using PTCLM1 for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. 
 Note, see `the Section called Converting AmeriFlux Data for use by PTCLM <CLM-URL>`_ for permission information to use this data.
 
-Example 6-1. Example of running PTCLM1 for US-UMB on yellowstone
+Example 6-1. Example of running PTCLM1 for US-UMB on cheyenne
 ----------------------------------------------------------------
 
 ::
@@ -115,18 +115,18 @@ Example 6-1. Example of running PTCLM1 for US-UMB on yellowstone
    > setenv CSMDATA   $CESMDATAROOT/inputdata
    > setenv MYCSMDATA $HOME/inputdata
    > setenv SITE      US-UMB
-   > setenv MYMACH    yellowstone_intel
+   > setenv MYMACH    cheyenne_intel
    > setenv MYCASE    testPTCLM
    # First link the standard input files to a location you have write access
    > cd scripts
    > ./link_dirtree $CSMDATA $MYCSMDATA
    
    # Next build all of the clm tools you will need
-   > cd ../models/lnd/clm/tools/clm4_5/mksurfdata_map
+   > cd ../$CTSMROOT/tools/+|version|/mksurfdata_map
    > gmake
    > gmake clean
    > cd ../../../../../../tools/mapping/gen_domain_files/src
-   > ../../../../scripts/ccsm_utils/Machines/configure -mach yellowstone -compiler intel
+   > ../../../../scripts/ccsm_utils/Machines/configure -mach cheyenne -compiler intel
    > gmake
    > gmake clean
    # next run PTCLM (NOTE -- MAKE SURE python IS IN YOUR PATH)

@@ -25,12 +25,12 @@ Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)
 | Short Name | Description  | Atm.      | Compset Alias   | Period         |
 |            |              | Forcing   | Name            |                |
 +============+==============+===========+=================+================+
-| CLM4.5SP   | Satellite    | CRUNCEP   | 1850CRUCLM45    | 1850           |
+| +|version|SP   | Satellite    | CRUNCEP   | 1850CRUCLM45    | 1850           |
 |            | phenology    |           |                 |                |
 |            | with new     |           |                 |                |
 |            | biogeophys   |           |                 |                |
 +------------+--------------+-----------+-----------------+----------------+
-| CLM4.5SP   | New          | CRUNCEP   | I1850CRUCLM45BGC| 1850           |
+| +|version|SP   | New          | CRUNCEP   | I1850Clm50BgcCropCru| 1850           |
 |            | biogeophys   |           +-----------------+----------------+
 |            | + CENTURY-   |           | I20TRCRUCLM45BGC| 20th Century   |
 |            | like         |           |                 |                |
@@ -42,7 +42,7 @@ Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)
 |            | nitrogen     |           |                 |                |
 |            | updates      |           |                 |                |
 +------------+--------------+-----------+-----------------+----------------+
-| CLM4.5CN   | New          | CRUNCEP   | I1850CRUCLM45CN | 1850           |
+| +|version|CN   | New          | CRUNCEP   | I1850CRUCLM45CN | 1850           |
 |            | biogeophys   |           |                 |                |
 |            | + CN soil    |           |                 |                |
 |            | BGC, updates |           |                 |                |
@@ -74,7 +74,7 @@ Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)
 | Short Name | Description       | Atm.              | Compset Alias   | Period |
 |            |                   | Forcing           | Name            |        |
 +============+===================+===================+=================+========+
-| CLM4.5BGC- | ICRUCLM45BGCCROP  | New biogeophys +  | CRUNCEP         | 2000   |
+| +|version|BGC- | ICRUCLM45BGCCROP  | New biogeophys +  | CRUNCEP         | 2000   |
 | CROP       |                   | CENTURY-like      |                 |        |
 |            |                   | vertically        |                 |        |
 |            |                   | resolved soil     |                 |        |
@@ -85,7 +85,7 @@ Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)
 |            |                   | CROP              |                 |        |
 |            |                   |                   |                 |        |
 +------------+-------------------+-------------------+-----------------+--------+
-| CLM4.5BGC- | I1850CRUCLM45BGCDV| New biogeophys    | CRUNCEP         | 1850   |
+| +|version|BGC- | I1850Clm50BgcCropCruDV| New biogeophys    | CRUNCEP         | 1850   |
 | DV         |                   | + CENTURY-like    |                 |        |
 |            |                   | vertically        |                 |        |
 |            |                   | resolved soil     |                 |        |
@@ -97,7 +97,7 @@ Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)
 |            |                   |                   |                 |        |
 |            |                   |                   |                 |        |
 +------------+-------------------+-------------------+-----------------+--------+
-| CLM4.5SP-  | ICLM45VIC         | Satellite         | Qian            | 2000   |
+| +|version|SP-  | ICLM45VIC         | Satellite         | Qian            | 2000   |
 | VIC        |                   | phenology with new|                 |        |
 |            |                   | biogeophys with   |                 |        |
 |            |                   | VIC hydrology     |                 |        |
@@ -132,9 +132,9 @@ Alias (Long-name with time-period and each component)
 
 #. ``I1850CRUCLM45`` (1850_DATM%CRU_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV)
 
-#. ``I1850CRUCLM45BGC`` (1850_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV)
+#. ``I1850Clm50BgcCropCru`` (1850_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV)
 
-#. ``I1850CRUCLM45BGCDV`` (1850_DATM%CRU_CLM45%BGCDV_SICE_SOCN_RTM_SGLC_SWAV)
+#. ``I1850Clm50BgcCropCruDV`` (1850_DATM%CRU_CLM45%BGCDV_SICE_SOCN_RTM_SGLC_SWAV)
 
 #. ``I1850CRUCLM45CN`` (1850_DATM%CRU_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV)
 
@@ -142,7 +142,7 @@ Alias (Long-name with time-period and each component)
 
 #. ``I1850SPINUPCLM45BGC`` (1850_DATM%S1850_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV)
 
-#. ``I1850SPINUPCN`` (1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV)
+#. ``I1850Clm50BgcSpinup`` (1850_DATM%S1850_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV)
 
 #. ``I1PT`` (2000_DATM%1PT_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV)
 

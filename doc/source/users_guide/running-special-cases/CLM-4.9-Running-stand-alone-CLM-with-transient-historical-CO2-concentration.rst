@@ -27,7 +27,7 @@ The datafile is a CF-compliant NetCDF file with the data that will be mapped.
 The streams text file is the XML-like file that tells datm how to find the files and how to map the variables datm knows about to the variable names on the NetCDF files. Note, that in our case the domain file and the data file are the same file. In other cases, the domain file may be separate from the data file.
 
 First we are going to create a case, and we will edit the ``user_nl_datm`` so that we add a CO2 data stream in. 
-There is a streams text file available in ``models/lnd/clm/doc/UsersGuide/co2_streams.txt``, that includes file with a CO2 time-series from 1765 to 2007.
+There is a streams text file available in ``$CTSMROOT/doc/UsersGuide/co2_streams.txt``, that includes file with a CO2 time-series from 1765 to 2007.
 
 
 Example: Transient Simulation with Historical CO2
@@ -35,7 +35,7 @@ Example: Transient Simulation with Historical CO2
 ::
 
    > cd scripts
-   > ./create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I20TRCRUCLM45BGC 
+   > ./create_newcase -case DATM_CO2_TSERIES -res f19_g17_gl4 -compset I20TRCRUCLM45BGC 
    > cd DATM_CO2_TSERIES
 
    # Set CCSM_BGC to CO2A so that CO2 will be passed from atmosphere to land
@@ -50,7 +50,7 @@ Example: Transient Simulation with Historical CO2
       <general_comment>
          This is a streams file to pass historical CO2 from datm8 to the other
 	 surface models. It reads in a historical dataset derived from data used
-	 by CAM. The getco2_historical.ncl script in models/lnd/clm2/tools/ncl_scripts
+	 by CAM. The getco2_historical.ncl script in $CTSMROOT2/tools/ncl_scripts
 	 was used to convert the CAM file to a streams compatible format (adding domain
 	 information and making CO2 have latitude/longitude even if only for a single 
 	 point.
@@ -106,7 +106,7 @@ Example: Transient Simulation with Historical CO2
    > ./preview_namelists
 
 The first thing we will do is to edit the ``user_nl_datm`` file to add a CO2 file stream in. 
-To do this we will copy a ``user_nl_datm`` in with the changes needed. The file ``addco2_user_nl_datm.user_nl`` is in ``models/lnd/clm/doc/UsersGuide`` and looks like this...
+To do this we will copy a ``user_nl_datm`` in with the changes needed. The file ``addco2_user_nl_datm.user_nl`` is in ``$CTSMROOT/doc/UsersGuide`` and looks like this...
 ::
 
    dtlimit = 1.5,1.5,1.5,1.5,1.5
@@ -123,12 +123,12 @@ To do this we will copy a ``user_nl_datm`` in with the changes needed. The file 
 You just copy this into your case directory. But, also compare it to the version in ``CaseDocs`` to make sure the changes are just to add in the new CO2 stream. Check to see that filenames, and start, end and align years are correct.
 ::
 
-   > cp ../../models/lnd/clm/doc/UsersGuide/addco2_user_nl_datm.user_nl user_nl_datm
+   > cp ../../$CTSMROOT/doc/UsersGuide/addco2_user_nl_datm.user_nl user_nl_datm
    > diff user_nl_datm CaseDocs/datm_atm_in
 
 Once, you've done that you can build and run your case normally.
 
-.. warning:: This procedure assumes you are using a ``I20TRCRUCLM45BGC`` compset out of the box, with ``DATM_PRESAERO`` equal to trans_1850-2000. So it assumes standard CLM4.5 CRUNCEP atmosphere forcing, and transient prescribed aerosols from streams files. If your case changes anything here your ``user_nl_datm`` file will need to be adjusted to work with it.
+.. warning:: This procedure assumes you are using a ``I20TRCRUCLM45BGC`` compset out of the box, with ``DATM_PRESAERO`` equal to trans_1850-2000. So it assumes standard +|version| CRUNCEP atmosphere forcing, and transient prescribed aerosols from streams files. If your case changes anything here your ``user_nl_datm`` file will need to be adjusted to work with it.
 
 .. note:: The intent of the ``user_nl_datm`` is to add an extra streams file for CO2 to the end of the streams variable, and other arrays associated with streams (adding mapalgo as a new array with bilinear for everything, but the CO2 file which should be "nn" for nearest neighbor). Other variables should be the same as the other stream values.
 

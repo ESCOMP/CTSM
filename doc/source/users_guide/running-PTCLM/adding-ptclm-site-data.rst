@@ -89,7 +89,7 @@ Also note that this site has a site-specific dynamic land-use change file for it
      # Note: When creating the fpftdyn dataset for this site it will use the 
      #     PTCLM_sitedata/US-Ha1_dynpftdata.txt
      # file for land-use change and harvesting
-     > ./PTCLM.py -m yellowstone_intel -s US-Ha1 -d $MYCSMDATA --sitegroupname AmeriFlux -c I20TRCRUCLM45BGC
+     > ./PTCLM.py -m cheyenne_intel -s US-Ha1 -d $MYCSMDATA --sitegroupname AmeriFlux -c I20TRCRUCLM45BGC
      > mkdir $MYCSMDATA/atm/datm7/CLM1PT_data/1x1pt_US-Ha1
      > cd $MYCSMDATA/atm/datm7/CLM1PT_data/1x1pt_US-Ha1
      # Copy data in NetCDF format to this directory, filenames should be YYYY-MM.nc

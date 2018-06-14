@@ -26,4 +26,4 @@ Options:
 
 See the **cprnc** `README <CLM-URL>`_ file for more details.
 
-.. note:: To compare files with OUT a time axis you can use the **cprnc.ncl** NCL script in ``models/lnd/clm/tools/shared/ncl_scripts``. It won't give you the details on the differences but will report if the files are identical or different.
+.. note:: To compare files with OUT a time axis you can use the **cprnc.ncl** NCL script in ``$CTSMROOT/tools/ncl_scripts``. It won't give you the details on the differences but will report if the files are identical or different.

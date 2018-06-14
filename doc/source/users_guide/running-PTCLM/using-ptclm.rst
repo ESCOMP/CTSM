@@ -8,7 +8,7 @@ There are three types of options to PTCLM1: required, setup/run-time, and datase
 The three required options are the three settings that MUST be specified for PTCLM to work at all. The other settings have default values that will default to something useful. The setup/run-time options control how the simulation will be setup and run. The dataset generation options control the generation of datasets needed when PTCLM is run. Most options use a double dash "--" "longname" such as "--list", but the most common options also have a short-name with a single dash (such as -m instead of --machine).
 
 The required options to PTCLM are: inputdata directory (-d), machine (-m) and site-name (-s). 
-Inputdata directory is the directory where you have the CESM inputdata files, you need to have write access to this directory, so if you are running on a machine that you do NOT have write access to the standard inputdata location (such as NCAR yellowstone or LBNL hopper) you need to link the standard files to a location you do have control over. We recommend using the ``scripts/link_dirtree`` tool to do that. "machine" is the scripts name for the machine/compiler you will be using for your case. And finally site-name is the name of the site that you want to run for. Site-name can either be a valid supported dataset name or a Fluxnet site name from the list of sites you are running on (see the --sitegroupname for more information about the site lists).
+Inputdata directory is the directory where you have the CESM inputdata files, you need to have write access to this directory, so if you are running on a machine that you do NOT have write access to the standard inputdata location (such as NCAR cheyenne or LBNL hopper) you need to link the standard files to a location you do have control over. We recommend using the ``scripts/link_dirtree`` tool to do that. "machine" is the scripts name for the machine/compiler you will be using for your case. And finally site-name is the name of the site that you want to run for. Site-name can either be a valid supported dataset name or a Fluxnet site name from the list of sites you are running on (see the --sitegroupname for more information about the site lists).
 
 After PTCLM is run a case directory where you can then setup, build and run your CESM case as normal. 
 It also creates a ``README.PTCLM`` in that directory that documents the commandline options to PTCLM that were used to create it.
@@ -33,7 +33,7 @@ Steps in running PTCLM
    You need to setup an inputdata directory where you have write access to it. 
    Normally, for NCAR machines the data is on an inputdata where the user does NOT have write access to it. 
    A way that you can get around this is to use the **link_dirtree** script to create softlinks from the normal location to a location you have write access to. 
-   So for example on yellowstone:
+   So for example on cheyenne:
    ::
 
       > setenv CSMDATA $CESMDATAROOT/inputdata
@@ -48,11 +48,11 @@ Steps in running PTCLM
    Next you need to make sure all the CLM FORTRAN tools are built.
    ::
 
-      > cd models/lnd/clm/tools/clm4_5/mksurfdata_map
+      > cd $CTSMROOT/tools/+|version|/mksurfdata_map
       > gmake
       > gmake clean
       > cd ../../../../../../tools/mapping/gen_domain_files/src
-      > ../../../../scripts/ccsm_utils/Machines/configure -mach yellowstone -compiler intel
+      > ../../../../scripts/ccsm_utils/Machines/configure -mach cheyenne -compiler intel
       > gmake
       > gmake clean
 
@@ -77,7 +77,7 @@ Steps in running PTCLM
       ::
 
 	 > cd scripts
-	 > ./PTCLM.py -m yellowstone_intel -s US-UMB -d $MYCSMDATA -c ICRUCLM45BGC --use QIAN "US-UMB_I_2000_CN_QIAN"
+	 > ./PTCLM.py -m cheyenne_intel -s US-UMB -d $MYCSMDATA -c ICRUCLM45BGC --use QIAN "US-UMB_I_2000_CN_QIAN"
 
    b. PTCLM creates datasets for you
       It will populate $MYCSMDATA with new datasets it creates using the CLM tools.

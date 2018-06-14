@@ -106,7 +106,7 @@ More details on each environment variable.
 
 .. note:: There are several files that are copies of the original files from either models``/lnd/clm/src/util_share``, ``models/csm_share/shr``, or copies from other tool directories. By having copies the tools can all be made stand-alone, but any changes to the originals will have to be put into the tool directories as well.
 
-The *README.filecopies* (which can be found in ``models/lnd/clm/tools``) is repeated here.
+The *README.filecopies* (which can be found in ``$CTSMROOT/tools``) is repeated here.
 
-.. include:: ../../clm5.0/tools/README.filecopies
+.. include:: ../../+|version|/tools/README.filecopies
    :literal:

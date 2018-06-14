@@ -5,28 +5,28 @@
 ========================
 
 There are several tools provided with CLM that allow you to create your own input datasets at resolutions you choose, or to interpolate initial conditions to a different resolution, or used to compare CLM history files between different cases. 
-The tools are all available in the ``models/lnd/clm/tools`` directory. 
-Most of the tools are FORTRAN stand-alone programs in their own directory, but there is also a suite of NCL scripts in the ``shared/ncl_scripts`` directory, and some of the tools are scripts that may also call the ESMF regridding program. 
+The tools are all available in the ``$CTSMROOT/tools`` directory. 
+Most of the tools are FORTRAN stand-alone programs in their own directory, but there is also a suite of NCL scripts in the ``./ncl_scripts`` directory, and some of the tools are scripts that may also call the ESMF regridding program. 
 Some of the NCL scripts are very specialized and not meant for general use, and we won't document them here. 
 They still contain documentation in the script itself and the README file in the tools directory.
 
-The tools are divided into three directories for three categories: clm4_0, clm4_5, and shared. 
-The first two are of course for tools that are designed to work with either the CLM4.0 or CLM4.5 versions of the model. 
+The tools are divided into three directories for three categories: clm4_0, +|version|, and shared. 
+The first two are of course for tools that are designed to work with either the CLM4.0 or +|version| versions of the model. 
 The last one are shared utilities that can be used by either, or have a "-phys" option so you can specify which version you want to use.
 
 The list of generally important scripts and programs are as follows.
 
 1. *tools/cprnc* (relative to top level directory) to compare NetCDF files with a time axis.
 
-#. *shared/mkmapgrids* to create SCRIP grid data files from old CLM format grid files that can then be used to create new CLM datasets (deprecated). There is also a NCL script (``shared/mkmapgrids/mkscripgrid.ncl`` to create SCRIP grid files for regular latitude/longitude grids.
+#. *./mkmapgrids* to create SCRIP grid data files from old CLM format grid files that can then be used to create new CLM datasets (deprecated). There is also a NCL script (``./mkmapgrids/mkscripgrid.ncl`` to create SCRIP grid files for regular latitude/longitude grids.
 
-#. *shared/mkmapdata* to create SCRIP mapping data file from SCRIP grid files (uses ESMF).
+#. *./mkmapdata* to create SCRIP mapping data file from SCRIP grid files (uses ESMF).
 
-#. *shared/gen_domain* to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
+#. *./gen_domain* to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
 
-#. *mksurfdata_map* to create surface datasets from grid datasets (clm4_0 and clm4_5 versions).
+#. *mksurfdata_map* to create surface datasets from grid datasets (clm4_0 and +|version| versions).
 
-#. *shared/mkprocdata_map* to interpolate output unstructured grids (such as the CAM HOMME dy-core "ne" grids like ne30np4) into a 2D regular lat/long grid format that can be plotted easily. Can be used by either clm4_0 or clm4_5.
+#. *./mkprocdata_map* to interpolate output unstructured grids (such as the CAM HOMME dy-core "ne" grids like ne30np4) into a 2D regular lat/long grid format that can be plotted easily. Can be used by either clm4_0 or +|version|.
 
 In the sections to come we will go into detailed description of how to use each of these tools in turn. 
 First, however we will discuss the common environment variables and options that are used by all of the FORTRAN tools. 
@@ -56,9 +56,9 @@ Namelists that you create should be similar to the example namelist.
 The namelist values are also documented along with the other namelists in the: 
 ::
 
-   models/lnd/clm/bld/namelist_files/namelist_definition.xml`` file 
+   $CTSMROOT/bld/namelist_files/namelist_definition.xml`` file 
         and default values in the: 
-   models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml`` file.
+   $CTSMROOT/bld/namelist_files/namelist_defaults_clm_tools.xml`` file.
 
 -----------------------------------------------
 Running FORTRAN tools with command line options
@@ -75,14 +75,14 @@ Running FORTRAN tools built with SMP=TRUE
 When you enable ``SMP=TRUE`` on your build of one of the tools that make use of it, you are using OpenMP for shared memory parallelism (SMP). 
 In SMP loops are run in parallel with different threads run on different processors all of which access the same memory (called on-node). 
 Thus you can only usefully run up to the number of processors that are available on a single-node of the machine you are running on. 
-For example, on the NCAR machine yellowstone there are 16 processors per node, but the SMT hardware on the machine allows you to submit twice as many threads or 32 threads. 
+For example, on the NCAR machine cheyenne there are 16 processors per node, but the SMT hardware on the machine allows you to submit twice as many threads or 32 threads. 
 
 
 ---------
 Using NCL
 ---------
 
-In the tools directory ``models/lnd/clm/tools/shared/ncl_scripts`` and in a few other locations there are scripts that use NCAR Command Language (NCL). 
+In the tools directory ``$CTSMROOT/tools/ncl_scripts`` and in a few other locations there are scripts that use NCAR Command Language (NCL). 
 Unlike the FORTRAN tools, you will need to get a copy of NCL in order to use them. 
 You also won't have to build an executable in order to use them, hence no Makefile is provided. 
 NCL is provided for free download as either binaries or source code from: `http://www.ncl.ucar.edu/ <http://www.ncl.ucar.edu/>`_. 

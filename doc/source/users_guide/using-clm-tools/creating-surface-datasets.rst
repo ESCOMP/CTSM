@@ -25,7 +25,7 @@ Creating a Complete Set of Files for Input to CLM
 
 1. Create SCRIP grid datasets (if NOT already done)
 
-   First you need to create a descriptor file for your grid, that includes the locations of cell centers and cell corners. There is also a "mask" field, but in this case the mask is set to one everywhere (i.e. all of the masks for the output model grid are "nomask"). An example SCRIP grid file is: $CSMDATA/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc. The mkmapgrids and mkscripgrid.ncl NCL script in the models/lnd/clm/tools/shared/mkmapgrids directory can help you with this. SCRIP grid files for all the standard CLM grids are already created for you. See the Section called Creating an output SCRIP grid file at a resolution to run the model on for more information on this.
+   First you need to create a descriptor file for your grid, that includes the locations of cell centers and cell corners. There is also a "mask" field, but in this case the mask is set to one everywhere (i.e. all of the masks for the output model grid are "nomask"). An example SCRIP grid file is: $CSMDATA/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc. The mkmapgrids and mkscripgrid.ncl NCL script in the $CTSMROOT/tools/mkmapgrids directory can help you with this. SCRIP grid files for all the standard CLM grids are already created for you. See the Section called Creating an output SCRIP grid file at a resolution to run the model on for more information on this.
 
 2. Create domain dataset (if NOT already done)
 
@@ -33,11 +33,11 @@ Creating a Complete Set of Files for Input to CLM
 
 3. Create mapping files for mksurfdata_map (if NOT already done)
 
-   Create mapping files for mksurfdata_map with mkmapdata.sh in models/lnd/clm/tools/shared/mkmapdata. See the Section called Creating mapping files that mksurfdata_map will use for more information on this.
+   Create mapping files for mksurfdata_map with mkmapdata.sh in $CTSMROOT/tools/mkmapdata. See the Section called Creating mapping files that mksurfdata_map will use for more information on this.
 
 4. Create surface datasets
 
-   Next use mksurfdata_map to create a surface dataset, using the mapping datasets created on the previous step as input. There is a version for either clm4_0 or clm4_5 for this program. See the Section called Using mksurfdata_map to create surface datasets from grid datasets for more information on this.
+   Next use mksurfdata_map to create a surface dataset, using the mapping datasets created on the previous step as input. There is a version for either clm4_0 or +|version| for this program. See the Section called Using mksurfdata_map to create surface datasets from grid datasets for more information on this.
 
 5. Create some sort of initial condition dataset
 
@@ -49,19 +49,19 @@ Creating a Complete Set of Files for Input to CLM
 
    b. Use interpinic to interpolate existing initial condition datasets
 
-      The next option is to interpolate from spunup datasets at a different resolution, using interpinic. There is a version for either clm4_0 or clm4_5 for this program. See the Section called Using interpinic to interpolate initial conditions to different resolutions for more information on this.
+      The next option is to interpolate from spunup datasets at a different resolution, using interpinic. There is a version for either clm4_0 or +|version| for this program. See the Section called Using interpinic to interpolate initial conditions to different resolutions for more information on this.
 
    c. Start up from arbitrary initial conditions
 
-      The last alternative is to run from arbitrary initial conditions without using any spun-up datasets. This is inappropriate when using CLM4.5-BGC or CLMCN (bgc=cn or cndv) as it takes a long time to spinup Carbon pools.
+      The last alternative is to run from arbitrary initial conditions without using any spun-up datasets. This is inappropriate when using +|version|-BGC or CLMCN (bgc=cn or cndv) as it takes a long time to spinup Carbon pools.
 
 .. warning:: This is NOT recommended as many fields in CLM take a long time to equilibrate.
 
 6. Enter the new datasets into the build-namelist XML database
    The last optional thing to do is to enter the new datasets into the build-namelist XML database. See Chapter 3 for more information on doing this. This is optional because the user may enter these files into their namelists manually. The advantage of entering them into the database is so that they automatically come up when you create new cases.
 
-The ``models/lnd/clm/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
+The ``$CTSMROOT/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
 
-.. include:: ../../clm5.0/tools/README
+.. include:: ../../+|version|/tools/README
    :literal:
 

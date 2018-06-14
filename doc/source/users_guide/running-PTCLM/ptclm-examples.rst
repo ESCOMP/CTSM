@@ -13,7 +13,7 @@ Example: Running PTCLM for the Mexicocity supported single point dataset
 ::
 
    > cd scripts/ccsm_utils/Tools/lnd/clm/PTCLM
-   > ./PTCLM.py -m yellowstone_intel -s 1x1_mexicocityMEX -d $CSMDATA --nopointdata \
+   > ./PTCLM.py -m cheyenne_intel -s 1x1_mexicocityMEX -d $CSMDATA --nopointdata \
    --stdurbpt -c ICRUCLM45 --caseidprefix `pwd`/myPTCLMcases/site
    > cd myPTCLMcases/site_1x1_mexicocityMEX_I
    > ./cesm_setup
@@ -29,7 +29,7 @@ Example: Running PTCLM for a spinup simulation with Qian data for tower years.
 ::
    
    > cd scripts/ccsm_utils/Tools/lnd/clm/PTCLM
-   > ./PTCLM.py -m yellowstone_intel -s US-Ha1 -d $CSMDATA --sitegroupname AmeriFlux --useQIAN --QIAN_tower_yrs
+   > ./PTCLM.py -m cheyenne_intel -s US-Ha1 -d $CSMDATA --sitegroupname AmeriFlux --useQIAN --QIAN_tower_yrs
    > cd ../../../../../US-Ha1_ICRUCLM45BGC_QIAN
    > ./cesm_setup
    # Now build and run normally
@@ -67,4 +67,4 @@ Example: Running PTCLM on a user-defined machine with global PFT and soil types 
    # Here we show running interactively
    > ./US-UMB_ICRUCLM45BGC.userdefined_intel.run
 
-.. warning: Because of Bug 1364, when running this case as above we get a floating point error after reaching time-step 124 for the example exactly as above. Other machines or compilers probably won't have this problem. See the `models/lnd/clm/doc/KnownBugs <CLM-URL>`_ file for more information on this problem.
+.. warning: Because of Bug 1364, when running this case as above we get a floating point error after reaching time-step 124 for the example exactly as above. Other machines or compilers probably won't have this problem. See the `$CTSMROOT/doc/KnownBugs <CLM-URL>`_ file for more information on this problem.

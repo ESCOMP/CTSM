@@ -1,21 +1,21 @@
 .. _spinning-up-clm45-bgc:
 
 ======================
- Spinup of CLM4.5-BGC
+ Spinup of +|version|-BGC
 ======================
 
-To get the CLM4.5-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**) mode for 1000 simulation years. 
+To get the +|version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**) mode for 1000 simulation years. 
 After this you branch from this mode in the "final spinup" (-bgc_spinup off in CLM **configure**), and run for (at least 200+ simulation years).
 
 **1. 45_AD_SPINUP**
      For the first step of running 1000+ years in "-bgc_spinup on" mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
    
-Example:: AD_SPINUP Simulation for CLM4.5-BGC
+Example:: AD_SPINUP Simulation for +|version|-BGC
 --------------------------------------------------------
 ::
 
    > cd scripts
-   > ./create_newcase -case BGC_spinup -res f19_g16 -compset I1850CRUCLM45BGC -mach yellowstone_intel
+   > ./create_newcase -case BGC_spinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru -mach cheyenne_intel
    > cd BGC_spinup
    # Append "-spinup on" to CLM_BLDNML_OPTS
    > ./xmlchange CLM_BLDNML_OPTS="-bgc_spinup on" -append
@@ -33,19 +33,19 @@ Example:: AD_SPINUP Simulation for CLM4.5-BGC
    # Now run normally
    > ./BGC_spinup.submit
 
-.. note:: This same procedure works for CLM4.5-CN as well, you can typically shorten the spinup time from 1000 years to 600 though.
+.. note:: This same procedure works for +|version|-CN as well, you can typically shorten the spinup time from 1000 years to 600 though.
 
 Afterwards save the last restart file from this simulation to use in the next step.
 
-**2. Final spinup for CLM4.5-BGC**
+**2. Final spinup for +|version|-BGC**
      Next save the last restart file from this step and use it as the "finidat" file to use for one more spinup for at least 200+ years in normal mode. So do the following:
 
-Example: Final CLMBGC Spinup Simulation for CLM4.5-BGC
+Example: Final CLMBGC Spinup Simulation for +|version|-BGC
 ------------------------------------------------------------------
 ::
 
    > cd scripts
-   > ./create_newcase -case BGC_finalspinup -res f19_g16 -compset I1850CRUCLM45BGC -mach yellowstone_intel
+   > ./create_newcase -case BGC_finalspinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru -mach cheyenne_intel
    > cd BGC_finalspinup
    # Now, Copy the last CLM restart file from the earlier case into your run directory
    > cp /ptmp/$LOGIN/archive/BGC_spinup/rest/BGC_spinup.clm*.r*.1002-01-01-00000.nc \
@@ -69,7 +69,7 @@ Example: Final CLMBGC Spinup Simulation for CLM4.5-BGC
 
 To assess if the model is spunup plot trends of CLMBGC variables of interest. If you see a trend, you may need to run the simulation longer. Finally save the restart file from the end of this simulation to use as an "finidat" file for future simulations.
 
-.. note:: This same final spinup procedure works for CLM4.5-CN as well, you can typically shorten the spinup time from 200 years to 50 though.
+.. note:: This same final spinup procedure works for +|version|-CN as well, you can typically shorten the spinup time from 200 years to 50 though.
 
 
    
