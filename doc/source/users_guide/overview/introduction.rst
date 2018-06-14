@@ -1,6 +1,6 @@
 .. _introduction:
 
-**User's Guide to version 5.0 of the Community Land Model (CLM)**
+**User's Guide to version +|version| of the Community Land Model (CLM)**
 
 **Authors: Benjamin Andre, Erik Kluzek, William Sacks**
 
@@ -20,18 +20,18 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 Introduction
 ==============
 
-The Community Land Model (CLM5.0 in CESM2.0) is the latest in a
-series of global land models developed by t he CESM Land Model Working
+The Community Land Model (+|release| in CESM2.0) is the latest in a
+series of global land models developed by the CESM Land Model Working
 Group (LMWG) and maintained at the National Center for Atmospheric
 Research (NCAR). This guide is intended to instruct both the novice
 and experienced user on running CLM. This guide pertains to the latest
-version CLM5.0 in CESM2.0 available for download from the public
+version +|version| in CESM2.0 available for download from the public
 release subversion repository as a part of CESM1.2.0. Documentation
 may be different if you are using an older version, you should either
 use the documentation for that release version, update to the latest
 version, or use the documentation inside your own source tree. There
 is information in the ChangeLog file and in the `What is new with
-CLM5.0 in CESM2.0 since previous public releases? <CLM-URL>`_
++|version| in CESM2.0 since previous public releases? <CLM-URL>`_
 regarding the changes from previous versions of CESM.
 
 .. note:: This release of CLM5.0 in CESM1.2.0 includes BOTH CLM4.0

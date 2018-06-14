@@ -34,3 +34,4 @@ Note other directories have README files that explain different components and t
 The Quickstart.GUIDE (which can be found in ``models/lnd/clm/doc``) is repeated here.
 
 .. include:: ../../clm5.0/doc/Quickstart.GUIDE
+   :literal:
