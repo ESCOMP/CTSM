@@ -1,11 +1,12 @@
 ## How to contribute:
 
-It's recommended that you first contact ctsm-software@ucar.edu to discuss the changes or additions that you propose.
-Work with them to think about the design and implemention of the changes as well as the planning
-and scheduling for the change to come into CTSM.
+We recommend that you first open an issue (https://github.com/escomp/ctsm/issues/) to
+discuss the changes or additions that you propose. Through the issue discussion, you can
+work with other CTSM developers to think about the design and implementation of the changes
+as well as the planning and scheduling for the change to come into CTSM.
 
-It's also recommened that you join the ctsm-dev@ucar.edu google groups in order 
-to be informed about the science that is happening in CTSM as well as the latest develepments and tags.
+We also recommend that you join the ctsm-dev@ucar.edu google groups in order 
+to be informed about the science that is happening in CTSM as well as the latest developments and tags.
 The ctsm-dev group is here:
 
 https://groups.google.com/a/ucar.edu/forum/#!forum/ctsm-dev
