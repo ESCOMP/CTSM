@@ -79,11 +79,11 @@ and then finally do it by hand. If you are using non supported
 machines you may also want to use the test scripts to make sure your
 machine is working correctly.
 
-.. _what-is-new-with-+|version|:
+.. _what-is-new-with-clm5_0:
 
-=========================
+============================
  What is New with +|version|
-=========================
+============================
 
 `What's new with +|version| science <https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#+|version|/>`_
 The +|cesmrelease| `What's New Science <CLM-URL>`_ and `What's New Software <CLM-URL>`_ pages gives a synopsis of the changes to all CESM components since the CESM1.1.1 release.
