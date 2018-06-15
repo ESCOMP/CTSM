@@ -23,3 +23,5 @@
    running-PTCLM/index.rst
    trouble-shooting/index.rst
    testing/index.rst
+
+Documentation was built: |today|
