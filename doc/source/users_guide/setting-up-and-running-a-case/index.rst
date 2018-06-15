@@ -5,6 +5,8 @@
 
 .. _customizing_section:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Setting Up and Running a Case
 #####################################

@@ -5,6 +5,8 @@
 
 .. _running-PTCLM:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Running PTCLM
 #####################################

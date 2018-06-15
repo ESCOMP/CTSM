@@ -1,5 +1,7 @@
 .. _adding-resolutions:
 
+.. include:: ../substitutions.rst
+
 ========================
  Adding New Resolutions
 ========================

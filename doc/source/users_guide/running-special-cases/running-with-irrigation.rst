@@ -1,5 +1,7 @@
 .. running-with-irrigation:
 
+.. include:: ../substitutions.rst
+
 ===================================
  Running with irrigation
 ===================================

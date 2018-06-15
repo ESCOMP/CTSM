@@ -1,5 +1,7 @@
 .. _introduction:
 
+.. include:: ../substitutions.rst
+
 **User's Guide to version |version| of the Community Land Model (CLM)**
 
 **Authors: Benjamin Andre, Erik Kluzek, William Sacks**

@@ -5,6 +5,8 @@
 
 .. _running-special-cases-section:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Running Special Cases
 #####################################

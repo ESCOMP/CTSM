@@ -1,5 +1,7 @@
 .. _customizing-a-case:
 
+.. include:: ../substitutions.rst
+
 ============================
  Customizing CLM's namelist
 ============================

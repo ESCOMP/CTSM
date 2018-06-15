@@ -5,6 +5,8 @@
 
 .. _adding-new-resolutions-section:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Adding New Resolutions
 #####################################

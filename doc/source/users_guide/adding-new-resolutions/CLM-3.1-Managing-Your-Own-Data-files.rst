@@ -1,5 +1,7 @@
 .. _managing-your-data-files:
 
+.. include:: ../substitutions.rst
+
 ==============================
  Managing Your Data Own Files
 ==============================

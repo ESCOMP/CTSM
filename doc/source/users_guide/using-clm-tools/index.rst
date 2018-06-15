@@ -5,6 +5,8 @@
 
 .. _using-clm-tools-section:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Using CLM tools
 #####################################

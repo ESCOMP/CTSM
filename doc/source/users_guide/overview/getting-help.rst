@@ -1,5 +1,7 @@
 .. _getting-help:
 
+.. include:: ../substitutions.rst
+
 ==============
  Getting Help
 ==============

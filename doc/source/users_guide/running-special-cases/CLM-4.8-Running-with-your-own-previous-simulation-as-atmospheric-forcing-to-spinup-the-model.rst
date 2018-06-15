@@ -1,5 +1,7 @@
 .. _running-with-previous-simulation-forcing:
 
+.. include:: ../substitutions.rst
+
 =============================================================
  Running with atmospheric forcing from a previous simulation
 =============================================================

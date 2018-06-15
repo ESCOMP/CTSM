@@ -2,6 +2,8 @@
  Building the CLM tools
 ========================
 
+.. include:: ../substitutions.rst
+
 The FORTRAN tools all have similar makefiles, and similar options for building. 
 All of the Makefiles use GNU Make extensions and thus require that you use GNU make to use them. 
 They also auto detect the type of platform you are on, using "uname -s" and set the compiler, compiler flags and such accordingly. 

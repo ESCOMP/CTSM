@@ -1,5 +1,7 @@
 .. _testing:
 
+.. include:: ../substitutions.rst
+
 *******
 Testing
 *******

@@ -1,5 +1,7 @@
 .. _creating-domain-files:
 
+.. include:: ../substitutions.rst
+
 *****************************
  Creating CLM domain files
 *****************************

@@ -1,5 +1,7 @@
 .. _trouble-shooting:
 
+.. include:: ../substitutions.rst
+
 *********************
 Trouble Shooting 
 *********************
