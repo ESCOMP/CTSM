@@ -14,7 +14,7 @@ are those of the author(s) and do not necessarily reflect the views of
 the National Science Foundation.
 
 National Center for Atmospheric Research
-P. O. Box 3000, Boulder, Colorado 80307-300
+P. O. Box 3000, Boulder, Colorado 80307-3000
 
 .. _rst_Users_Guide_Introduction:
 
@@ -37,12 +37,13 @@ is information in the ChangeLog file and in the `What is new with
 regarding the changes from previous versions of CESM.
 
 .. note:: This release of |version| in |cesmrelease| includes BOTH CLM4.0
- physics used in previous releases as well as the updated |version|
- physics. Both CLM as well as CLM support tools allow you to trigger
- between the two physics modes. Most often when we refer to CLM4.0 we
+ physics and CLM4.5 physics used in previous releases as well as the updated |version|
+ physics. CLM allow you to trigger between the three physics modes. Most often when we refer to CLM4.0 we
  are referring to the CLM4.0 physics in |version| in |cesmrelease| rather
  than to a specific version of CLM4.0 (where we would give the exact
- version). Likewise, when referring to |version| we are referring to the
+ version). And when we refer to CLM4.5 we are referring to the CLM4.5
+ physics in |version| in |cesmrelease| rather
+ than to a specific version of CLM4.5. Likewise, when referring to |version| we are referring to the
  |version| physics in |version| in |cesmrelease|.
 
 The novice user should read `Chapter 1 <CLM-URL>`_ in detail before
@@ -88,11 +89,10 @@ machine is working correctly.
 ============================
 
 `What's new with |version| science <https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#|version|/>`_
-The |cesmrelease| `What's New Science <CLM-URL>`_ and `What's New Software <CLM-URL>`_ pages gives a synopsis of the changes to all CESM components since the CESM1.1.1 release.
+gives a synopsis of the changes to CLM since the CLM4.5 release.
 More details are given in the `CLM ChangeLog file <CLM-URL>`_.
 
 Previous release pages give similar list of changes for previous versions of the model.
-The `CLM4 in CESM1.0.5 User's Guide <CLM-URL>`_ gives information on the updates for versions up to CLM4 in CESM1.0.5.
 
 .. _users-guide-overview:
 
@@ -102,23 +102,23 @@ The `CLM4 in CESM1.0.5 User's Guide <CLM-URL>`_ gives information on the updates
 
 In this introduction we first give a simple guide to understand the document conventions in `How to Use This Document <CLM-URL>`_.
 The next section `What is new with |version| in |cesmrelease| since previous public releases? <CLM-URL>`_ gives references to describe the differences between |version| in |cesmrelease| and previous CESM releases both from a scientific as well as a software engineering point of view.
-For information on previous releases of |version| before |version| in |cesmrelease| see the CESM1.1.1 documentation.
+For information on previous releases of |version| before |version| in |cesmrelease| see the CESM1.2.2 documentation.
 The next section `Quickstart to using |version| <CLM-URL>`_ is for users that are already experts in using CLM and gives a quickstart guide to the bare details on how to use |version|.
 The next `What is scientifically validated and functional in |version| in |cesmrelease|? <CLM-URL>`_ tells you about what has been extensively tested and scientifically validated (and maybe more importantly) what has NOT.
 `What are the UNIX utilities required to use |version|? <CLM-URL>`_ lists the UNIX utilities required to use |version| and is important if you are running on non-NCAR machines, generic local machines, or machines NOT as well tested by us at NCAR.
 Next we have `Important Notes and Best Practices for Usage of |version| <CLM-URL>`_ to detail some of the best practices for using |version| for science.
-The last introductory section is `Other resources <CLM-URL>`_ to get help from which lists different resources for getting help with CESM1.0 and |version|.
+The last introductory section is `Other resources <CLM-URL>`_ to get help from which lists different resources for getting help with |version| and |cesmrelease|.
 
 `Chapter 1 <CLM-URL>`_ goes into detail on how to setup and run simulations with |version| and especially how to customize cases.
 Details of cesm_setup modes and build-namelist options as well as namelist options are given in this chapter.
 
-`Chapter 2 <CLM-URL>`_ gives instructions on the CLM tools for either CLM4.0 or |version| physics for creating input datasets for use by CLM, for the expert user.
+`Chapter 2 <CLM-URL>`_ gives instructions on the CLM tools for either CLM4.5 or |version| physics for creating input datasets for use by CLM, for the expert user.
 There's an overview of what each tool does, and some general notes on how to build the FORTRAN tools.
 Then each tool is described in detail along with different ways in which the tool might be used.
 A final section on how to customize datasets for observational sites for very savvy expert users is given as the last section of this chapter.
 
 As a followup to the tools chapter, `Chapter 3 <CLM-URL>`_ tells how to add files to the XML database for build-namelist to use.
-This is important if you want to use the XML database to automatically select user-created input files that you have created when you setup new cases with CLM (both CLM4.0 and |version| physics).
+This is important if you want to use the XML database to automatically select user-created input files that you have created when you setup new cases with CLM (CLM4.0, CLM4.5 and |version| physics).
 
 In `Chapter 4 <CLM-URL>`_, again for the expert user, we give details on how to do some particularly difficult special cases.
 For example, we give the protocol for spinning up the |version|-BGC and CLMCN models as well as CLM with dynamic vegetation active (CNDV).
@@ -153,9 +153,11 @@ This also could be useful for developers who need to update the documentation du
  Best Practices
 ================
 
-- |version| includes BOTH the old CLM4.0 physics AND the new |version| physics and you can toggle between two.
+- |version| includes BOTH the old CLM4.0, CLM4.5 physics AND the new |version| physics and you can toggle between those three.
   The "standard" practice for CLM4.0 is to run with CN on, and with Qian atmospheric forcing.
-  While the "standard" practice for |version| is to run with BGC on, and CRUNCEP atmospheric forcing.
+  While the "standard" practice for CLM4.5 is to run with BGC on, and CRUNCEP atmospheric forcing.
+  And finally the "standard" practice for |version| is to run with BGC and Prognostic Crop on, with the MOSART model for river routing, as well as the CISM
+  ice sheet model, and using GSWP3 atmospheric forcing.
   "BGC" is the new |version| biogeochemistry and include CENTURY-like pools, vertical resolved carbon, as well as Nitrification and de-Nitrification (see `the Section called Some Acronym's and Terms We'll be Using in Other resources to get help from <CLM-URL>`_ ).
 
 - When running with CLMCN (either CLM4.0 or |version| physics) or |version|-BGC, it is critical to begin with initial conditions that are provided with the release or to spin the model up following the CN spinup procedure before conducting scientific runs (see `the Section called Spinning up the |version| biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for |version| or `the Section called Spinning up the CLM4.0 biogeochemistry Carbon-Nitrogen Model (CN spinup) in Chapter 4 <CLM-URL>`_ for CLM4.0).
@@ -172,22 +174,33 @@ This also could be useful for developers who need to update the documentation du
   Note also that spinning the 2000 initial conditions out to equilibrium will not reflect the best estimate of the real carbon/nitrogen state for the year 2000.
 
 - Initial condition files are also provided for |version| for several configurations and resolutions.
-  For |version|-SP and |version|-BGC with CRUNCEP forcing we have initial conditions at 1deg resolution for both 1850 and 2000.
-  The |version|-BGC initial conditions for 1850 (again with CRUNCEP forcing) were also interpolated to 2deg, CRUNCEP half degree (360x720cru), and ne30np4 resolutions.
-  Also the |version|-BGC initial conditions for 1850 (with CRUNCEP forcing) were interpolated to 1deg |version|-BGC-DV and 2deg |version|-BGC-Crop.
+  For CLM4.5-SP and CLM4.5-BGC with both CRUNCEP and GSWP3 forcing we have initial conditions at 1deg resolution for 1850.
+  For |version|-SP and |version|-BGC-Crop with both CRUNCEP and GSWP3 forcing we have initial conditions at 1deg resolution for 1850.
+  Normally, these files are interpolated to any other resolution that you run at.
 
-- Users can generate initial condition files at different resolutions by using the CLM tool interpinic to interpolate from one of the provided resolutions to the resolution of interest.
+- Users can interpolate initial condition files at different resolutions at startup of a CLM4.5 or |version| simulation. And the file created can be stored for later use.
   Interpolated initial condition files may no longer be in 'reasonable' equilibrium.
 
-- In |version| for both |version|-CN and |version|-BGC the new fire model requires lightning frequency data, and human population density (both are read inside of CLM).
-  By default we have provided a climatology dataset for lightning frequency and a dataset with coverage from 1850 to 2010 for population density.
+- In |version| for both |version|-CN, |version|-BGC, and |version|-BGC-Crop the new fire model requires lightning frequency data, and human population density (both are read inside of CLM).
+  By default we have provided a climatology dataset for lightning frequency and a dataset with coverage from 1850 to 2014 for population density.
   Both of these datasets are interpolated from the native resolution of the datasets to the resolution you are running the model on.
   If you are running with an atmosphere model or forcing that is significantly different than present day -- the lightning frequency may NOT appropriately correspond to your atmosphere forcing and fire initiation would be inappropriate.
 
-- Aerosol deposition is a required field to both CLM4.0 and |version| physics, sent from the atmosphere model.
+- Aerosol deposition is a required field to both CLM4.0, CLM4.5 and |version| physics, sent from the atmosphere model.
   Simulations without aerosol deposition will exhibit unreasonably high snow albedos.
   The model sends aerosol deposition from the atmospheric model (either CAM or DATM).
   When running with prescribed aerosol the atmosphere model will interpolate the aerosols from 2-degree resolution to the resolution the atmosphere model is running at.
+
+.. _CTSM_vs_CESM_checkout:
+
+=============================
+A CTSM versus a CESM checkout
+=============================
+
+The directory structure for |version| is different depending on if it's checked out from |release| or |cesmrelease|.
+If |version| is checked out from |ctsm_gh| the CLM source code is directly under the top level directory. If |cesmrelease|
+is checkout out from |cesm_gh| then the CLM source directories are under "components/clm" from the top level directory. We
+will refer to this directory for the CLM source directories in the User's Guide as "$CTSMROOT".
 
 .. _how-to-use-this-document:
 
@@ -215,3 +228,5 @@ Links to descriptions and definitions have been provided in the code below. We u
    that continues to the following line.
    > $EDITOR filename # means you are using a text editor to edit "filename"
    # This is a comment line
+
+   $CTSMROOT means the path to the root of the CTSM model
