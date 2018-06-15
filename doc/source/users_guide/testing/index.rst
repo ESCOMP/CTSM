@@ -5,6 +5,8 @@
 
 .. _testing_section:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Testing
 #####################################

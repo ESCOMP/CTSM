@@ -1,5 +1,7 @@
 .. _creating-maps-for-mksurfdata:
 
+.. include:: ../substitutions.rst
+
 *********************************************
 Creating input for surface dataset generation
 *********************************************

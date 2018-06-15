@@ -1,5 +1,7 @@
 .. _creating-surface-datasets:
 
+.. include:: ../substitutions.rst
+
 ===========================
  Creating Surface Datasets
 ===========================

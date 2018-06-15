@@ -1,5 +1,7 @@
 .. _spinning-up-clm45-bgc:
 
+.. include:: ../substitutions.rst
+
 =====================
  Spinup of CLM5.0-BGC
 =====================

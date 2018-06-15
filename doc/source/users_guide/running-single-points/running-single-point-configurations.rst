@@ -1,5 +1,7 @@
 .. _running-single-point-datasets:
 
+.. include:: ../substitutions.rst
+
 ******************************************
  Running Single Point Configurations
 ******************************************

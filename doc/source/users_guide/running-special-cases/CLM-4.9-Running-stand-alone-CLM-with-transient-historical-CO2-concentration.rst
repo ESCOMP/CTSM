@@ -1,5 +1,7 @@
 .. _running-with-historical-co2-forcing:
 
+.. include:: ../substitutions.rst
+
 =====================================
  Running with historical CO2 forcing
 =====================================

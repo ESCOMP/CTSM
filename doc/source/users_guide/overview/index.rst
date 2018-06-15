@@ -5,6 +5,8 @@
 
 .. _overview_section:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Overview
 #####################################

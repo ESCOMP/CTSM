@@ -1,5 +1,7 @@
 .. running-prognostic-crop-model:
 
+.. include:: ../substitutions.rst
+
 ===================================
  Running the prognostic crop model
 ===================================

@@ -1,5 +1,7 @@
 .. _scientific-validiation:
 
+.. include:: ../substitutions.rst
+
 ========================
  Scientific Validation
 ========================

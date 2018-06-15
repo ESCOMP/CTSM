@@ -5,6 +5,8 @@
 
 .. _troubleshooting:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Troubleshooting
 #####################################

@@ -1,3 +1,5 @@
+.. include:: ../substitutions.rst
+
 ==================================
  Datasets for Observational Sites
 ==================================

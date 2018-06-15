@@ -1,5 +1,7 @@
 .. _using-ptclm.rst:
 
+.. include:: ../substitutions.rst
+
 **************************
 Using PTCLM
 **************************

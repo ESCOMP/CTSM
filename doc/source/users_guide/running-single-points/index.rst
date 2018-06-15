@@ -5,6 +5,8 @@
 
 .. _running-single-points:
 
+.. include:: ../substitutions.rst
+
 #####################################
 Running Single Point Regional Cases
 #####################################

@@ -1,5 +1,7 @@
 .. _adding-ptclm-site-data:
 
+.. include:: ../substitutions.rst
+
 ======================
 Adding PTCLM Site Data
 ======================

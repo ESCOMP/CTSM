@@ -1,10 +1,12 @@
 .. _configuring-clm:
 
+.. include:: ../substitutions.rst
+
 *******************************
 Customizing CLM's Configuration
 *******************************
 
-The "Creating a Case" section of the `|cesmrelease| Scripts User's-Guide <link-CESM-UG>`_ gives instructions on creating a case. What is of interest here is how to customize your use of CLM for the case that you created.
+The "Creating a Case" section of the |cesmrelease| `Scripts User's-Guide <link-CESM-UG>`_ gives instructions on creating a case. What is of interest here is how to customize your use of CLM for the case that you created.
 
 For CLM when **preview_namelist**, **$CASE.build**, or **$CASE.run** are called there are two steps that take place:
 

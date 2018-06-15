@@ -1,5 +1,7 @@
 .. _adding-resolution-names:
 
+.. include:: ../substitutions.rst
+
 =========================
  Adding Resolution Names
 =========================

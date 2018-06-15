@@ -1,5 +1,7 @@
 .. _introduction-to-ptclm.rst:
 
+.. include:: ../substitutions.rst
+
 .. _what-is-ptclm:
 
 ===============

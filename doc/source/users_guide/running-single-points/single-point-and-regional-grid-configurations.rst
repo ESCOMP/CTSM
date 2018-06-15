@@ -1,5 +1,7 @@
 .. _single-point-configurations:
 
+.. include:: ../substitutions.rst
+
 *****************************************
 Single and Regional Grid Configurations
 *****************************************

@@ -5,7 +5,7 @@
 
 .. _users-guide:
 
-.. |cesmrelease| replace:: CESM2.0.0
+.. include:: substitutions.rst
 
 #####################################
 |version| User's Guide

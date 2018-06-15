@@ -1,5 +1,7 @@
 .. _ptclm-examples:
 
+.. include:: ../substitutions.rst
+
 =========================
  Examples of using PTCLM
 =========================

@@ -1,5 +1,7 @@
 .. _what-are-the-clm-tools:
 
+.. include:: ../substitutions.rst
+
 ========================
  What are the CLM tools
 ========================
