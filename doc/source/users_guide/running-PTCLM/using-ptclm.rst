@@ -48,7 +48,7 @@ Steps in running PTCLM
    Next you need to make sure all the CLM FORTRAN tools are built.
    ::
 
-      > cd $CTSMROOT/tools/+|version|/mksurfdata_map
+      > cd $CTSMROOT/tools/|version|/mksurfdata_map
       > gmake
       > gmake clean
       > cd ../../../../../../tools/mapping/gen_domain_files/src

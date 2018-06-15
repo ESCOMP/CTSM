@@ -4,7 +4,7 @@
 Customizing CLM's Configuration
 *******************************
 
-The "Creating a Case" section of the `+|cesmrelease| Scripts User's-Guide <link-CESM-UG>`_ gives instructions on creating a case. What is of interest here is how to customize your use of CLM for the case that you created.
+The "Creating a Case" section of the `|cesmrelease| Scripts User's-Guide <link-CESM-UG>`_ gives instructions on creating a case. What is of interest here is how to customize your use of CLM for the case that you created.
 
 For CLM when **preview_namelist**, **$CASE.build**, or **$CASE.run** are called there are two steps that take place:
 
@@ -14,7 +14,7 @@ For CLM when **preview_namelist**, **$CASE.build**, or **$CASE.run** are called 
 
 When customizing your case at the *8cesm_setup** step you are able to modify the process by effecting either one or both of these steps. The CLM "**configure**" and "**build-namelist**" scripts are both available in the "$CTSMROOT/bld" directory in the distribution. Both of these scripts have a "-help" option that is useful to examine to see what types of options you can give either of them.
 
-There are five different types of customization for the configuration that we will discuss: +|version| in +|cesmrelease| build-time options, +|version| in +|cesmrelease| run-time options, User Namelist, other noteworthy +|cesmrelease| configuration items, the CLM **configure** script options, and the CLM **build-namelist** script options.
+There are five different types of customization for the configuration that we will discuss: |version| in |cesmrelease| build-time options, |version| in |cesmrelease| run-time options, User Namelist, other noteworthy |cesmrelease| configuration items, the CLM **configure** script options, and the CLM **build-namelist** script options.
 
 Information on all of the script, configuration, build and run items is found under ``scripts/ccsm_utils/Case.template`` in the `config_definition.xml <CLM-URL>`_ file.
 
@@ -179,7 +179,7 @@ CLM_BLDNML_OPTS
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
 
                                  file specified.
-     -irrig "value"           If .true. turn irrigation on with namelist logical irrigate (for +|version| physics)
+     -irrig "value"           If .true. turn irrigation on with namelist logical irrigate (for |version| physics)
                               (requires crop to be on in the clm configuration) 
                               Seek surface datasets with irrigation turned on.  (for CLM4.0 physics)
                               Default: .false.
@@ -284,7 +284,7 @@ Hence only the following different options can be set:
 #. -verbose
 
 
-"-bgc_spinup" is an option only available for +|version| for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See `the Section called Spinning up the +|version| biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for an example using this option.
+"-bgc_spinup" is an option only available for |version| for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See `the Section called Spinning up the |version| biogeochemistry (CLMBGC spinup) in Chapter 4 <CLM-URL>`_ for an example using this option.
 
 "-chk_res" ensures that the resolution chosen is supported by CLM. If the resolution is NOT supported it will cause the CLM **build-namelist** to abort when run. So when either **preview_namelist**, **$CASE.build** or **$CASE.run** is executed it will abort early. Since, the CESM scripts only support certain resolutions anyway, in general this option is NOT needed in the context of running CESM cases.
 
@@ -530,7 +530,7 @@ If you are running an B, E, or F case that doesn't use the DATM obviously the DA
      CPLHIST3HrWx
 
 ``CLMCRUNCEP`` 
-   The standard mode for +|version| of using global atmospheric data that was developed by CRU using NCEP data from 1901 to 2010. 
+   The standard mode for |version| of using global atmospheric data that was developed by CRU using NCEP data from 1901 to 2010. 
    See `the Section called CLMCRUNCEP mode and it's DATM settings <CLM-URL>`_ for more information on the DATM settings for ``CLMCRUNCEP`` mode. 
 
 ``CLM_QIAN`` 
@@ -632,7 +632,7 @@ The output to the above command is as follows:
                             (default: CLM build directory).
      -clm4me <name>         Turn Methane model: [on | off]
                               Requires bgc=cn/cndv (Carbon Nitrogen model)
-                            (ONLY valid for +|version|!)
+                            (ONLY valid for |version|!)
      -clm_root <dir>        Root directory of clm source code 
                             (default: directory above location of this script)
      -cppdefs <string>      A string of user specified CPP defines.  Appended to
@@ -647,12 +647,12 @@ The output to the above command is as follows:
                             Parameters relating to the build which are system dependent will
                             be ignored.
      -exlaklayers <name>    Turn on extra lake layers (25 layers instead of 10) [on | off]
-                            (ONLY valid for +|version|!)
+                            (ONLY valid for |version|!)
      -help [or -h]          Print usage to STDOUT.
      -nofire                Turn off wildfires for BGC setting of CN 
                             (default includes fire for CN)
      -noio                  Turn history output completely off (typically for testing).
-     -phys <name>           Value of clm4_0 or +|version| (default is clm4_0)   
+     -phys <name>           Value of clm4_0 or |version| (default is clm4_0)   
      -silent [or -s]        Turns on silent mode - only fatal messages issued.
      -sitespf_pt <name>     Setup for the given site specific single-point resolution.
      -snicar_frc <name>     Turn on SNICAR radiative forcing calculation. [on | off] 
@@ -676,7 +676,7 @@ The output to the above command is as follows:
                             eliminate inconsistent duplicate soil hydraulic 
                             parameters used in soil biogeochem.
                             (requires either CN or CNDV)
-                            (ONLY valid for +|version|!)
+                            (ONLY valid for |version|!)
                             [on,off or colon delimited list of no options] (default off)
                               no-vert     Turn vertical soil Carbon profile off
                               no-cent     Turn CENTURY off

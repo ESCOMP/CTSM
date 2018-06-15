@@ -49,7 +49,7 @@ Hence, there doesn't need to be a different mapping file for EACH raw dataset --
 See `Figure 2-3 <CLM-URL>`_ for a visual representation of how this works. 
 The bash script figures out which mapping files it needs to create and then runs **ESMF_RegridWeightGen** for each one. 
 You can then either enter the datasets into the XML database (see `Chapter 3 <CLM-URL>`_ or leave the files in place, and use the "-res usrspec -usr_gname -usr_gdate" options to **mksurfdata_map** (see `the Section called Running mksurfdata.pl <CLM-URL>`_ below). 
-Use the "-phys" option to specify if you are creating mapping files for clm4_0 or +|version| (the list of raw datafiles is somewhat different between the two). 
+Use the "-phys" option to specify if you are creating mapping files for clm4_0 or |version| (the list of raw datafiles is somewhat different between the two). 
 mkmapdata.sh has a help option with the following
 ::
 
@@ -74,8 +74,8 @@ mkmapdata.sh has a help option with the following
 	Model output grid type
 	supported values are [regional,global], (default is global)
    [-p|--phys <CLM-version>]
-	Whether to generate mapping files for clm4_0 or +|version|
-	supported values are [clm4_0,+|version|], (default is +|version|)
+	Whether to generate mapping files for clm4_0 or |version|
+	supported values are [clm4_0,|version|], (default is |version|)
    [-b|--batch]
 	Toggles batch mode usage. 
    If you want to run in batch mode
@@ -107,7 +107,7 @@ mkmapdata.sh has a help option with the following
    **********************
 
 
-.. warning:: Make sure you specify with the "-phys" option if you are creating files for CLM4.0! The default is +|version|.
+.. warning:: Make sure you specify with the "-phys" option if you are creating files for CLM4.0! The default is |version|.
 
 Figure 2-3. Details of running mkmapdata.sh
 -------------------------------------------

@@ -122,7 +122,7 @@ Example 6-1. Example of running PTCLM1 for US-UMB on cheyenne
    > ./link_dirtree $CSMDATA $MYCSMDATA
    
    # Next build all of the clm tools you will need
-   > cd ../$CTSMROOT/tools/+|version|/mksurfdata_map
+   > cd ../$CTSMROOT/tools/|version|/mksurfdata_map
    > gmake
    > gmake clean
    > cd ../../../../../../tools/mapping/gen_domain_files/src

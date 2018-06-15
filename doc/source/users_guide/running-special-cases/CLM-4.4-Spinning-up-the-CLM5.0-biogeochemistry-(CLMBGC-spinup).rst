@@ -4,13 +4,13 @@
  Spinup of CLM5.0-BGC
 =====================
 
-To get the +|version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**) mode for 1000 simulation years. 
+To get the |version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**) mode for 1000 simulation years. 
 After this you branch from this mode in the "final spinup" (-bgc_spinup off in CLM **configure**), and run for (at least 200+ simulation years).
 
 **1. 45_AD_SPINUP**
      For the first step of running 1000+ years in "-bgc_spinup on" mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
    
-Example:: AD_SPINUP Simulation for +|version|-BGC
+Example:: AD_SPINUP Simulation for |version|-BGC
 --------------------------------------------------------
 ::
 
@@ -33,14 +33,14 @@ Example:: AD_SPINUP Simulation for +|version|-BGC
    # Now run normally
    > ./BGC_spinup.submit
 
-.. note:: This same procedure works for +|version|-CN as well, you can typically shorten the spinup time from 1000 years to 600 though.
+.. note:: This same procedure works for |version|-CN as well, you can typically shorten the spinup time from 1000 years to 600 though.
 
 Afterwards save the last restart file from this simulation to use in the next step.
 
-**2. Final spinup for +|version|-BGC**
+**2. Final spinup for |version|-BGC**
      Next save the last restart file from this step and use it as the "finidat" file to use for one more spinup for at least 200+ years in normal mode. So do the following:
 
-Example: Final CLMBGC Spinup Simulation for +|version|-BGC
+Example: Final CLMBGC Spinup Simulation for |version|-BGC
 ------------------------------------------------------------------
 ::
 
@@ -69,7 +69,7 @@ Example: Final CLMBGC Spinup Simulation for +|version|-BGC
 
 To assess if the model is spunup plot trends of CLMBGC variables of interest. If you see a trend, you may need to run the simulation longer. Finally save the restart file from the end of this simulation to use as an "finidat" file for future simulations.
 
-.. note:: This same final spinup procedure works for +|version|-CN as well, you can typically shorten the spinup time from 200 years to 50 though.
+.. note:: This same final spinup procedure works for |version|-CN as well, you can typically shorten the spinup time from 200 years to 50 though.
 
 
    
