@@ -183,7 +183,7 @@ Example: Creating a surface dataset for a single point
    # Save the location where the domain file was created 
    > setenv GENDOM_PATH `pwd`
    # Finally create the surface dataset
-   > cd ../../../../lnd/clm/tools/+|version|/mksurfdata_map/src
+   > cd ../../../../lnd/clm/tools/|version|/mksurfdata_map/src
    > gmake
    > cd ..
    > ./mksurfdata.pl -r usrspec -usr_gname $GRIDNAME -usr_gdate $CDATE
@@ -202,7 +202,7 @@ Example: Setting up a case from the single-point surface dataset just created
    > ./link_dirtree $CSMDATA $MYCSMDATA
    # Copy the file you created above to your new $MYCSMDATA location following the CLMUSRDAT 
    # naming convention (leave off the creation date)
-   > cp $CESMROOT/$CTSMROOT/tools/+|version|/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
+   > cp $CESMROOT/$CTSMROOT/tools/|version|/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
    $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc
    > cd $CESMROOT/scripts
    > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850Clm50BgcCropCru \

@@ -5,6 +5,8 @@
 
 .. _users-guide:
 
+.. |cesmrelease| replace:: CESM2.0.0
+
 #####################################
 |version| User's Guide
 #####################################

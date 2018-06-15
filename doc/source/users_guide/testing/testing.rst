@@ -44,7 +44,7 @@ We already have a standard list of tests for clm (the "aux_clm" list of tests). 
    > ./cs.status.$id
    # The above will give a PASS or FAIL message for each test.
 
-For more information on doing testing with the CESM scripts see the `+|cesmrelease| User's Guide <CLM-URL>`_ on testing.
+For more information on doing testing with the CESM scripts see the `|cesmrelease| User's Guide <CLM-URL>`_ on testing.
 
 Testing PTCLM
 =============

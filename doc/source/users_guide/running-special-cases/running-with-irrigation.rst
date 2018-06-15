@@ -4,8 +4,8 @@
  Running with irrigation
 ===================================
 
-In +|version| irrigation can ONLY be used WITH crop. 
-To turn on irrigation in +|version| we simply add "-irrig on" to ``CLM_BLDNML_OPTS``. 
+In |version| irrigation can ONLY be used WITH crop. 
+To turn on irrigation in |version| we simply add "-irrig on" to ``CLM_BLDNML_OPTS``. 
 Just as in the crop example we also change ``RUN_TYPE`` to ``startup`` so that we don't use an initial condition file that is incompatible with irrigation.
 
 Example: Irrigation Simulation

@@ -18,7 +18,7 @@ Setup Problems
 
 The first type of problem happens when you invoke the **case.setup** command. 
 This indicates there is something wrong with your input datasets, or the details of what you are trying to setup the model to do. 
-There's also a trouble-shooting chapter in the `+|cesmrelease| Scripts User's Guide <CLM-URL>`_. 
+There's also a trouble-shooting chapter in the `|cesmrelease| Scripts User's Guide <CLM-URL>`_. 
 Many of the problems with configuration can be resolved with the guidelines given there. 
 Here we will restrict ourselves to problems from the input files.
 

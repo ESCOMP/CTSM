@@ -128,7 +128,7 @@ You just copy this into your case directory. But, also compare it to the version
 
 Once, you've done that you can build and run your case normally.
 
-.. warning:: This procedure assumes you are using a ``I20TRCRUCLM45BGC`` compset out of the box, with ``DATM_PRESAERO`` equal to trans_1850-2000. So it assumes standard +|version| CRUNCEP atmosphere forcing, and transient prescribed aerosols from streams files. If your case changes anything here your ``user_nl_datm`` file will need to be adjusted to work with it.
+.. warning:: This procedure assumes you are using a ``I20TRCRUCLM45BGC`` compset out of the box, with ``DATM_PRESAERO`` equal to trans_1850-2000. So it assumes standard |version| CRUNCEP atmosphere forcing, and transient prescribed aerosols from streams files. If your case changes anything here your ``user_nl_datm`` file will need to be adjusted to work with it.
 
 .. note:: The intent of the ``user_nl_datm`` is to add an extra streams file for CO2 to the end of the streams variable, and other arrays associated with streams (adding mapalgo as a new array with bilinear for everything, but the CO2 file which should be "nn" for nearest neighbor). Other variables should be the same as the other stream values.
 

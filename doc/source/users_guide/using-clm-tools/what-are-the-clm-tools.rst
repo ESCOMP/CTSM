@@ -10,8 +10,8 @@ Most of the tools are FORTRAN stand-alone programs in their own directory, but t
 Some of the NCL scripts are very specialized and not meant for general use, and we won't document them here. 
 They still contain documentation in the script itself and the README file in the tools directory.
 
-The tools are divided into three directories for three categories: clm4_0, +|version|, and shared. 
-The first two are of course for tools that are designed to work with either the CLM4.0 or +|version| versions of the model. 
+The tools are divided into three directories for three categories: clm4_0, |version|, and shared. 
+The first two are of course for tools that are designed to work with either the CLM4.0 or |version| versions of the model. 
 The last one are shared utilities that can be used by either, or have a "-phys" option so you can specify which version you want to use.
 
 The list of generally important scripts and programs are as follows.
@@ -24,9 +24,9 @@ The list of generally important scripts and programs are as follows.
 
 #. *./gen_domain* to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
 
-#. *mksurfdata_map* to create surface datasets from grid datasets (clm4_0 and +|version| versions).
+#. *mksurfdata_map* to create surface datasets from grid datasets (clm4_0 and |version| versions).
 
-#. *./mkprocdata_map* to interpolate output unstructured grids (such as the CAM HOMME dy-core "ne" grids like ne30np4) into a 2D regular lat/long grid format that can be plotted easily. Can be used by either clm4_0 or +|version|.
+#. *./mkprocdata_map* to interpolate output unstructured grids (such as the CAM HOMME dy-core "ne" grids like ne30np4) into a 2D regular lat/long grid format that can be plotted easily. Can be used by either clm4_0 or |version|.
 
 In the sections to come we will go into detailed description of how to use each of these tools in turn. 
 First, however we will discuss the common environment variables and options that are used by all of the FORTRAN tools. 

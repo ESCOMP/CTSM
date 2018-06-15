@@ -16,16 +16,16 @@ Definition of Namelist items and their default values
 
 Here we point to you where you can find the definition of each namelist item and separately the default values for them. The default values may change depending on the resolution, land-mask, simulation-year and other attributes. Both of these files are viewable in your web browser, and then expand each in turn.
 
-1. `Definition of Namelists Relevant for +|version| <CLM-URL>`_
+1. `Definition of Namelists Relevant for |version| <CLM-URL>`_
 
 2. `Default values of each CLM4.0 Namelist Item <CLM-URL>`_
 
-3. `Default values of each +|version| Namelist Item <CLM-URL>`_
+3. `Default values of each |version| Namelist Item <CLM-URL>`_
 
 List of fields that can be added to your output history files by namelist
 -------------------------------------------------------------------------
 
-One set of the namelist items allows you to add fields to the output history files: ``hist_fincl1``, ``hist_fincl2``, ``hist_fincl3``, ``hist_fincl4``, ``hist_fincl5``, and ``hist_fincl6``. The following links for `CLM4.0 History Fields <CLM-URL>`_ and `+|version| History Fields <CLM-URL>`_ documents all of the history fields available and gives the long-name and units for each. The table below lists all the +|version| history fields.
+One set of the namelist items allows you to add fields to the output history files: ``hist_fincl1``, ``hist_fincl2``, ``hist_fincl3``, ``hist_fincl4``, ``hist_fincl5``, and ``hist_fincl6``. The following links for `CLM4.0 History Fields <CLM-URL>`_ and `|version| History Fields <CLM-URL>`_ documents all of the history fields available and gives the long-name and units for each. The table below lists all the |version| history fields.
 
 Definition of CLM history variables
 -----------------------------------
