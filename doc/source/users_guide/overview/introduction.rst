@@ -147,6 +147,15 @@ Finally in `Appendix A <CLM-URL>`_ we give instructions on how to build the docu
 This document is included in every CLM distribution and can be built so that you can view a local copy rather than having to go to the CESM website.
 This also could be useful for developers who need to update the documentation due to changes they have made.
 
+================================
+README file describing |version|
+================================
+
+The README (which can be found in ``$CTSMROOT/doc``) is repeated here.
+
+.. include:: ../../clm5.0/README
+   :literal:
+
 .. _best-practices-for-usage:
 
 ================
