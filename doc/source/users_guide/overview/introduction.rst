@@ -200,7 +200,7 @@ The README (which can be found in ``$CTSMROOT/doc``) is repeated here.
   The model sends aerosol deposition from the atmospheric model (either CAM or DATM).
   When running with prescribed aerosol the atmosphere model will interpolate the aerosols from 2-degree resolution to the resolution the atmosphere model is running at.
 
-.. _CTSM_vs_CESM_checkout:
+.. _ctsm_vs_cesm_checkout:
 
 =============================
 A CTSM versus a CESM checkout

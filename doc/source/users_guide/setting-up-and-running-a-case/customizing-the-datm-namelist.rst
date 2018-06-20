@@ -11,7 +11,7 @@ When running "I" compsets with CLM you use the DATM model to give atmospheric fo
 1. **DATM Main Namelist and Stream Namlist gorup** (``datm_in``)
 2. **DATM stream files**
 
-The `Data Model Documentation <CLM-URL>`_ gives the details of all the options for the data models and for DATM specifically. 
+The `Data Model Documentation <http://esmci.github.io/cime/data_models/data-atm.html>`_ gives the details of all the options for the data models and for DATM specifically. 
 It goes into detail on all namelist items both for DATM and for DATM streams. 
 So here we won't list ALL of the DATM namelist options, nor go into great details about stream files. 
 But, we will talk about a few of the different options that are relevant for running with CLM. 
@@ -51,10 +51,20 @@ tintalgo
 In the sections below we go over each of the relevant ``DATM_MODE`` options and what the above DATM settings are for each. This gives you examples of actual usage for the settings. We also describe in what ways you might want to customize them for your own case.
 
 --------------------------------------
-CLMCRUNCEP mode and it's DATM settings
+CLMGSWP3v1 mode and it's DATM settings
 --------------------------------------
 
-In ``CLMCRUNCEP`` mode the CRUNCEP dataset is used and all of it's data is on a 6-hourly interval. 
+In ``CLMGSWP3v1`` mode the GSWP3 NCEP forcing dataset is used and all of it's data is on a 3-hourly interval. 
+Like ``CLM_QIAN`` the dataset is divided into those three data streams: solar, precipitation, and everything else (temperature, pressure, humidity, Long-Wave down and wind). 
+The time-stamps of the data were also adjusted so that they are the beginning of the interval for solar, and the middle for the other two. 
+Because, of this the ``offset`` is set to zero, and the ``tintalgo`` is: ``coszen``, ``nearest``, and ``linear`` for the solar, precipitation and other data respectively. 
+``taxmode`` is set to ``cycle`` and ``mapalgo`` is set to ``bilinear`` so that the data is spatially interpolated from the input exact half degree grid to the grid the atmosphere model is being run at (to run at this same model resolution use the 360x720cru_360x720cru resolution).
+
+----------------------------------------
+CLMCRUNCEPv7 mode and it's DATM settings
+----------------------------------------
+
+In ``CLMCRUNCEPv7`` mode the CRUNCEP dataset is used and all of it's data is on a 6-hourly interval. 
 Like ``CLM_QIAN`` the dataset is divided into those three data streams: solar, precipitation, and everything else (temperature, pressure, humidity and wind). 
 The time-stamps of the data were also adjusted so that they are the beginning of the interval for solar, and the middle for the other two. 
 Because, of this the ``offset`` is set to zero, and the ``tintalgo`` is: ``coszen``, ``nearest``, and ``linear`` for the solar, precipitation and other data respectively. 
@@ -63,6 +73,12 @@ Because, of this the ``offset`` is set to zero, and the ``tintalgo`` is: ``cosze
 .. note:: The "everything else" data stream (of temperature, pressure, humidity and wind) also includes the data for longwave downward forcing as well. Our simulations showed sensitivity to this field, so we backed off in using it, and let DATM calculate longwave down from the other fields.
 
 For more information on CRUNCEP forcing see `http://dods.extra.cea.fr/data/p529viov/cruncep/ <http://dods.extra.cea.fr/data/p529viov/cruncep/>`_.
+
+--------------------------------------
+CLMCRUNCEP mode and it's DATM settings
+--------------------------------------
+
+``CLMCRUNCEP`` is similar to the ``CLMCRUNCEPv7`` mode above, except it uses Version 4 of the CRUNCEP data rather than version 7.
 
 ------------------------------------
 CLM_QIAN mode and it's DATM settings
@@ -92,11 +108,11 @@ Because, of this the ``offset`` is set to zero, and the ``tintalgo`` is set to `
 
 If you are using your own data for this mode and it's not at least hourly you'll want to adjust the DATM settings for it. If the data is three or six hourly, you'll need to divide it up into separate streams like in ``CLM_QIAN`` mode which will require fairly extensive changes to the DATM namelist and streams files. For an example of doing this see `Example 5-8 <CLM-URL>`_.
 
-----------------------------------------
-CPLHIST3HrWx mode and it's DATM settings
-----------------------------------------
+------------------------------------------
+CPLHISTForcing mode and it's DATM settings
+------------------------------------------
 
-In ``CPLHIST3HrWx`` mode the model is assumed to have 3-hourly for a global grid from a previous CESM simulation. 
+In ``CPLHISTForcing`` mode the model is assumed to have 3-hourly for a global grid from a previous CESM simulation. 
 Like ``CLM_QIAN`` mode the data is divided into three streams: one for precipitation, one for solar, and one for everything else. 
 The time-stamps for Coupler history files for CESM is at the end of the interval, so the ``offset`` needs to be set in order to adjust the time-stamps to what it needs to be for the ``tintalgo`` settings. 
 For precipitation ``taxmode`` is set to ``nearest`` so the ``offset`` is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval. 

@@ -6,7 +6,7 @@
  Customizing CLM's namelist
 ============================
 
-Once a case is **cesm_setup**, we can then customize the case further, by editing the run-time namelist for CLM. First let's list the definition of each namelist item and their valid values, and then we'll list the default values for them. Next for some of the most used or tricky namelist items we'll give examples of their use, and give you example namelists that highlight these features.
+Once a case has run **case.setup**, we can then customize the case further, by editing the run-time namelist for CLM. First let's list the definition of each namelist item and their valid values, and then we'll list the default values for them. Next for some of the most used or tricky namelist items we'll give examples of their use, and give you example namelists that highlight these features.
 
 In the following, various examples of namelists are provided that feature the use of different namelist options to customize a case for particular uses. 
 Most the examples revolve around how to customize the output history fields. 
@@ -55,7 +55,7 @@ Below we will give examples of user namelists that activate different commonly u
 The default namelist
 --------------------
 
-Here we give the default namelist as it would be created for an "I1850Clm50BgcCropCru" compset at 0.9x1.25 resolution with a gx1v6 land-mask on cheyenne. To edit the namelist you would edit the ``user_nl_clm`` user namelist with just the items you want to change. For simplicity we will just show the CLM namelist and NOT the entire file. In the sections below, for simplicity we will just show the user namelist (``user_nl_clm``) that will add (or modify existing) namelist items to the namelist.
+Here we give the default namelist as it would be created for an "I1850Clm50BgcCropCru" compset at 0.9x1.25 resolution with a gx1v7 land-mask on cheyenne. To edit the namelist you would edit the ``user_nl_clm`` user namelist with just the items you want to change. For simplicity we will just show the CLM namelist and NOT the entire file. In the sections below, for simplicity we will just show the user namelist (``user_nl_clm``) that will add (or modify existing) namelist items to the namelist.
 
 Example 1-2. Default CLM Namelist
 ---------------------------------
@@ -141,7 +141,7 @@ The number of samples on each history file stream is given by the namelist varia
 A sample user namelist ``user_nl_clm`` turning on four extra file streams for output: daily, six-hourly, hourly, and every time-step, leaving the primary history files as monthly, and changing the number of samples on the streams to: yearly (12), thirty, weekly (28), daily (24), and daily (48) is:
 
 Example: user_nl_clm namelist adding auxiliary history files and changing output frequency
-------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 ::
 
    hist_fincl2 = 'TG', 'TV'
@@ -241,8 +241,6 @@ Example: user_nl_clm namelist outputting some files in 1D Vector format
 .. warning:: LAND and COLS are also options to the pertape averaging, but currently there is a bug with them and they fail to work.
 
 .. note:: Technically the default for hist_nhtfrq is for primary files output monthly and the other auxiliary tapes for daily, so we don't actually have to include hist_nhtfrq, we could use the default for it. Here we specify it for clarity.
-
-.. caution:: LAND and COLS are also options to the pertape averaging, but currently there is a bug with them and they fail to work. 
 
 Visualizing global 1D vector files will take effort. 
 You'll probably want to do some post-processing and possibly just extract out single points of interest to see what is going on. 
