@@ -4,24 +4,24 @@
 
 .. include:: ../substitutions.rst
 
-The FORTRAN tools all have similar makefiles, and similar options for building. 
-All of the Makefiles use GNU Make extensions and thus require that you use GNU make to use them. 
+The CLM FORTRAN tools all have similar makefiles, and similar options for building.  The tools
+**cprnc** and **gen_domain** use the CIME configure/build system which is described in the next section.
+
+The Makefiles (for **mksurfdata_map** and **mkprocdata_map**) use GNU Make extensions and thus require that you use GNU make to use them. 
 They also auto detect the type of platform you are on, using "uname -s" and set the compiler, compiler flags and such accordingly. 
 There are also environment variables that can be set to set things that must be customized. 
 All the tools use NetCDF and hence require the path to the NetCDF libraries and include files. 
 On some platforms (such as Linux) multiple compilers can be used, and hence there are env variables that can be set to change the FORTRAN and/or "C" compilers used. 
-The tools other than cprnc also allow finer control, by also allowing the user to add compiler flags they choose, for both FORTRAN and "C", as well as picking the compiler, linker and and add linker options. 
-Finally the tools other than **cprnc** allow you to turn optimization on (which is off by default but on for the **mksurfdata_map** and **interpinic** programs) with the OPT flag so that the tool will run faster. 
-To get even faster performance, the **interpinic**, program allows you to also use the SMP to turn on multiple shared memory processors. 
-When ``SMP=TRUE`` you set the number of threads used by the program with the ``OMP_NUM_THREADS`` environment variable.
+The tools also allow finer control, by also allowing the user to add compiler flags they choose, for both FORTRAN and "C", as well as picking the compiler, linker and and add linker options. 
+Finally the tools allow you to turn optimization on (which is off by default but on for **mksurfdata_map**) with the OPT flag so that the tool will run faster. 
 
-Options used by all: **cprnc**, **interpinic**, and **mksurfdata_map**
+Options used by all:  **mksurfdata_map**
 
 - ``LIB_NETCDF`` -- sets the location of the NetCDF library.
 - ``INC_NETCDF`` -- sets the location of the NetCDF include files.
 - ``USER_FC`` -- sets the name of the FORTRAN compiler.
 
-Options used by: **interpinic**, **mkprocdata_map**, **mkmapgrids**, and **mksurfdata_map**
+Options used by: **mkprocdata_map**, and **mksurfdata_map**
 
 - ``MOD_NETCDF`` -- sets the location of the NetCDF FORTRAN module.
 - ``USER_LINKER`` -- sets the name of the linker to use.
@@ -37,11 +37,6 @@ Options used by: **interpinic**, **mkprocdata_map**, **mkmapgrids**, and **mksur
 - ``Makefile`` -- customized makefile options for this particular tool.
 - ``mkDepends`` -- figure out dependencies between source files, so make can compile in order..
 - ``Makefile.common`` -- General tool Makefile that should be the same between all tools.
-
-Options used only by **cprnc**:
-
-- ``EXEDIR`` -- sets the location where the executable will be built.
-- ``VPATH`` -- colon delimited path list to find the source files.
 
 More details on each environment variable.
 
@@ -81,7 +76,7 @@ More details on each environment variable.
 .. warning:: Note, that depending on the compiler answers may be different when SMP is activated.
 
 ``OPT``
-  This variable flags if compiler optimization should be used when compiling the tool. It can be set to either ``TRUE`` or ``FALSE``, by default it is set to ``FALSE`` for **mkmapgrids** and ``TRUE`` for **mksurfdata_map**, **mkprocdata_map** and **interpinic**. Turning this on should make the tool run much faster.
+  This variable flags if compiler optimization should be used when compiling the tool. It can be set to either ``TRUE`` or ``FALSE``, by default it is set to for both **mksurfdata_map** and **mkprocdata_map**. Turning this on should make the tool run much faster.
 
 .. warning:: Note, you should expect that answers will be different when ``OPT`` is activated.
 
@@ -100,15 +95,20 @@ More details on each environment variable.
 ``mkDepends``
   The ``mkDepends`` is the copy of the perl script used by the ``Makefile.common`` to figure out the dependencies between the source files so that it can compile in the necessary order. This file should be identical between the different tools.
 
-``EXEDIR``
-  The cprnc tool uses this variable to set the location of where the executable will be built. The default is the current directory.
-
-``VPATH``
-  The **cprnc** tool uses this variable to set the colon delimited pathnames of where the source code exists. The default is the current directory.
-
-.. note:: There are several files that are copies of the original files from either models``/lnd/clm/src/util_share``, ``models/csm_share/shr``, or copies from other tool directories. By having copies the tools can all be made stand-alone, but any changes to the originals will have to be put into the tool directories as well.
+.. note:: There are several files that are copies of the original files. By having copies the tools can all be made stand-alone, but any changes to the originals will have to be put into the tool directories as well.
 
 The *README.filecopies* (which can be found in ``$CTSMROOT/tools``) is repeated here.
 
 .. include:: ../../clm5.0/tools/README.filecopies
    :literal:
+
+================================================================
+ Building the CLM tools that use the CIME configure/build system
+================================================================
+
+**cprnc** and *gen_domain** both use the CIME configure/build system rather than the CLM specific version described above.
+
+See `CIME documentation on adding grids <http://esmci.github.io/cime/users_guide/grids.html?highlight=gen_domain#adding-grids>`_ for
+more information on adding grids, creating mapping files,  and running **gen_domain**. Also see the CIME file: 
+``$CTSMROOT/tools/mapping/gen_domain_files/INSTALL`` for how to build **gen_domain**.
+

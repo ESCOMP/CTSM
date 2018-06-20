@@ -41,25 +41,7 @@ Creating a Complete Set of Files for Input to CLM
 
    Next use mksurfdata_map to create a surface dataset, using the mapping datasets created on the previous step as input. There is a version for either clm4_0 or |version| for this program. See the Section called Using mksurfdata_map to create surface datasets from grid datasets for more information on this.
 
-5. Create some sort of initial condition dataset
-
-   You then need to do one of the following three options to have an initial dataset to start from.
-
-   a. Use spinup-procedures to create initial condition datasets
-
-      The first option is to do the spinup procedures from arbitrary initial conditions to get good initial datasets. This is the most robust method to use. See the Section called Spinning up the Satellite Phenology Model (CLMSP spinup) in Chapter 4, the Section called Spinning up the CLM4.0 biogeochemistry Carbon-Nitrogen Model (CN spinup) in Chapter 4, or the Section called Spinning up the CLM4.0 Carbon-Nitrogen Dynamic Global Vegetation Model (CNDV spinup) in Chapter 4 for more information on this.
-
-   b. Use interpinic to interpolate existing initial condition datasets
-
-      The next option is to interpolate from spunup datasets at a different resolution, using interpinic. There is a version for either clm4_0 or |version| for this program. See the Section called Using interpinic to interpolate initial conditions to different resolutions for more information on this.
-
-   c. Start up from arbitrary initial conditions
-
-      The last alternative is to run from arbitrary initial conditions without using any spun-up datasets. This is inappropriate when using |version|-BGC or CLMCN (bgc=cn or cndv) as it takes a long time to spinup Carbon pools.
-
-.. warning:: This is NOT recommended as many fields in CLM take a long time to equilibrate.
-
-6. Enter the new datasets into the build-namelist XML database
+5. Enter the new datasets into the build-namelist XML database
    The last optional thing to do is to enter the new datasets into the build-namelist XML database. See Chapter 3 for more information on doing this. This is optional because the user may enter these files into their namelists manually. The advantage of entering them into the database is so that they automatically come up when you create new cases.
 
 The ``$CTSMROOT/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
