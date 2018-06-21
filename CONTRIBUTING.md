@@ -3,9 +3,10 @@
 We recommend that you first open an issue (https://github.com/escomp/ctsm/issues/) to
 discuss the changes or additions that you propose. Through the issue discussion, you can
 work with other CTSM developers to think about the design and implementation of the changes
-as well as the planning and scheduling for the change to come into CTSM. An alternative is to
-contact the key software and science developers via ctsm-software@ucar.edu. The sooner those
-contacts are made the better and more likely your development can come into CTSM.
+as well as the planning and scheduling for the change to come into CTSM. An alternative is
+to contact the key software and science developers via ctsm-software@ucar.edu. Making
+contact early in your project will increase the likelihood that your developments can come
+into CTSM.
 
 We also recommend that you join the ctsm-dev@ucar.edu google groups in order 
 to be informed about the science that is happening in CTSM as well as the latest developments and tags.
@@ -44,4 +45,4 @@ Code conventions: https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines
 
 #### Code of Conduct:
 
-See the "CODE_OF_CONDUCT.md" file for expectations of how to work in the community.
+See the `CODE_OF_CONDUCT.md` file for expectations of how to work in the community.
