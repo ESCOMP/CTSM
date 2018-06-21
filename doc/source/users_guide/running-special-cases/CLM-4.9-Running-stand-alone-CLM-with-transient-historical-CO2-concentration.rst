@@ -37,104 +37,17 @@ Example: Transient Simulation with Historical CO2
 ::
 
    > cd scripts
-   > ./create_newcase -case DATM_CO2_TSERIES -res f19_g17_gl4 -compset I20TRCRUCLM45BGC 
+   > ./create_newcase -case DATM_CO2_TSERIES -res f19_g17_gl4 -compset IHistClm50BgcCrop 
    > cd DATM_CO2_TSERIES
 
-   # Set CCSM_BGC to CO2A so that CO2 will be passed from atmosphere to land
-   # Set CLM_CO2_TYPE to diagnostic so that the land will use the value sent from the atmosphere
-   > ./xmlchange CCSM_BGC=CO2A,CLM_CO2_TYPE=diagnostic
+   # Historical CO2 will already be setup correctly for this compset
+   # to check that look at the variables: CCSM_BGC,CLM_CO2_TYPE, and DATM_CO2_TSERIES
+   > ./xmlquery CCSM_BGC,CLM_CO2_TYPE,DATM_CO2_TSERIES
+   # Expect: CCSM_BGC=CO2A,CLM_CO2_TYPE=diagnostic,DATM_CO2_TSERIES=20tr
    > ./case.setup
-
-   # Create the streams file for CO2
-   > cat << EOF >> datm.streams.txt.co2tseries
-
-   <streamstemplate>
-      <general_comment>
-         This is a streams file to pass historical CO2 from datm8 to the other
-	 surface models. It reads in a historical dataset derived from data used
-	 by CAM. The getco2_historical.ncl script in $CTSMROOT2/tools/ncl_scripts
-	 was used to convert the CAM file to a streams compatible format (adding domain
-	 information and making CO2 have latitude/longitude even if only for a single 
-	 point.
-      </general_comment>
-   <stream>
-      <comment>
-        Input stream description file for historical CO2 reconstruction data
-
-        04 March 2010: Converted to form that can be used by datm8 by Erik Kluzek
-        18 December 2009: Prepared by B. Eaton using data provided by 
-        Jean-Francois Lamarque. All variables except f11 are directly from
-        PRE2005_MIDYR_CONC.DAT. Data from 1765 to 2007 with 2006/2007 just
-        a repeat of 2005.
-      </comment>
-      <dataSource>
-         CLMNCEP
-      </dataSource>
-      <domainInfo>
-         <variableNames>
-            time    time
-            lonc    lon
-            latc    lat
-            area    area
-            mask    mask
-         </variableNames>
-         <filePath>
-            $CSMDATA/atm/datm7/CO2
-         </filePath>
-         <fileNames>
-            fco2_datm_1765-2007_c100614.nc
-         </fileNames>
-      </domainInfo>
-      <fieldInfo>
-         <variableNames>
-            CO2        co2diag
-         </variableNames>
-         <filePath>
-            $CSMDATA/atm/datm7/CO2
-         </filePath>
-         <fileNames>
-            fco2_datm_1765-2007_c100614.nc
-         </fileNames>
-      </fieldInfo>
-   </stream>
-   </streamstemplate>
-
-   EOF
-
-   # And copy it to the run directory
-   > cp datm.streams.txt.co2tseries $RUNDIR
 
    # Run preview namelist so we have the namelist in CaseDocs
    > ./preview_namelists
 
-The first thing we will do is to edit the ``user_nl_datm`` file to add a CO2 file stream in. 
-To do this we will copy a ``user_nl_datm`` in with the changes needed. The file ``addco2_user_nl_datm.user_nl`` is in ``$CTSMROOT/doc/UsersGuide`` and looks like this...
-::
-
-   dtlimit = 1.5,1.5,1.5,1.5,1.5
-   fillalgo = 'nn','nn','nn','nn','nn'
-   fillmask = 'nomask','nomask','nomask','nomask','nomask'
-   mapalgo = 'bilinear','bilinear','bilinear','bilinear','nn'
-   mapmask = 'nomask','nomask','nomask','nomask',nomask'
-   streams = "datm.streams.txt.CLM_QIAN.Solar 1895 1948 1972  ", "datm.streams.txt.CLM_QIAN.Precip 1895 1948 1972  ",
-             "datm.streams.txt.CLM_QIAN.TPQW 1895 1948 1972  ", "datm.streams.txt.presaero.trans_1850-2000 1849 1849 2006",
-	     "datm.streams.txt.co2tseries 1766 1766 2005 "
-   taxmode = 'cycle','cycle','cycle','cycle','extend'
-   tintalgo = 'coszen','nearest','linear','linear','linear'
-
-You just copy this into your case directory. But, also compare it to the version in ``CaseDocs`` to make sure the changes are just to add in the new CO2 stream. Check to see that filenames, and start, end and align years are correct.
-::
-
-   > cp ../../$CTSMROOT/doc/UsersGuide/addco2_user_nl_datm.user_nl user_nl_datm
-   > diff user_nl_datm CaseDocs/datm_atm_in
-
 Once, you've done that you can build and run your case normally.
-
-.. warning:: This procedure assumes you are using a ``I20TRCRUCLM45BGC`` compset out of the box, with ``DATM_PRESAERO`` equal to trans_1850-2000. So it assumes standard |version| CRUNCEP atmosphere forcing, and transient prescribed aerosols from streams files. If your case changes anything here your ``user_nl_datm`` file will need to be adjusted to work with it.
-
-.. note:: The intent of the ``user_nl_datm`` is to add an extra streams file for CO2 to the end of the streams variable, and other arrays associated with streams (adding mapalgo as a new array with bilinear for everything, but the CO2 file which should be "nn" for nearest neighbor). Other variables should be the same as the other stream values.
-
-.. warning:: The streams file above is hard-coded for the path of the file on NCAR computers. To use it on an outside machine you'll need to edit the filepath in the streams file to point to the location where you have the file.
-
-After going through these steps, you will have a case where you have datm reading in an extra streams text file that points to a data file with CO2 data on it that will send that data to the CLM.
 

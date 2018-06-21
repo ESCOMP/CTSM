@@ -1,15 +1,15 @@
-.. _spinning-up-clm45-bgc:
+.. _spinning-up-clm50-bgc:
 
 .. include:: ../substitutions.rst
 
-=====================
- Spinup of CLM5.0-BGC
-=====================
+==========================
+ Spinup of CLM5.0-BGC-Crop
+==========================
 
 To get the |version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**) mode for 1000 simulation years. 
 After this you branch from this mode in the "final spinup" (-bgc_spinup off in CLM **configure**), and run for (at least 200+ simulation years).
 
-**1. 45_AD_SPINUP**
+**1. 50_AD_SPINUP**
      For the first step of running 1000+ years in "-bgc_spinup on" mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
    
 Example:: AD_SPINUP Simulation for |version|-BGC
@@ -17,23 +17,19 @@ Example:: AD_SPINUP Simulation for |version|-BGC
 ::
 
    > cd scripts
-   > ./create_newcase -case BGC_spinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru -mach cheyenne_intel
+   > ./create_newcase -case BGC_spinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
    > cd BGC_spinup
-   # Append "-spinup on" to CLM_BLDNML_OPTS
-   > ./xmlchange CLM_BLDNML_OPTS="-bgc_spinup on" -append
-   # The following sets CLM_FORCE_COLDSTART to "on", and run-type to startup (you could also use an editor)
-   > ./xmlchange CLM_FORCE_COLDSTART=on,RUN_TYPE=startup
-   # Make the output history files only annual, by adding the following to the user_nl_clm namelist
-   > echo 'hist_nhtfrq = -8760' >> user_nl_clm
+   # Change accelerated spinup mode
+   > ./xmlchange CLM_ACCELERATED_SPINUP="on"
    # Now setup
-   > ./cesm_setup -case
+   > ./case.setup -case
    # Now build
-   > ./BGC_spinup.build
+   > ./case.build
    # The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
    # The following sets STOP_DATE,STOP_N and STOP_OPTION to Jan/1/1001, 20, "nyears" in env_run.xml (you could also use an       editor)
    > ./xmlchange RESUBMIT=20,STOP_N=50,STOP_OPTION=nyears,STOP_DATE=10010101
    # Now run normally
-   > ./BGC_spinup.submit
+   > ./case.submit
 
 .. note:: This same procedure works for |version|-CN as well, you can typically shorten the spinup time from 1000 years to 600 though.
 
@@ -47,7 +43,7 @@ Example: Final CLMBGC Spinup Simulation for |version|-BGC
 ::
 
    > cd scripts
-   > ./create_newcase -case BGC_finalspinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru -mach cheyenne_intel
+   > ./create_newcase -case BGC_finalspinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
    > cd BGC_finalspinup
    # Now, Copy the last CLM restart file from the earlier case into your run directory
    > cp /ptmp/$LOGIN/archive/BGC_spinup/rest/BGC_spinup.clm*.r*.1002-01-01-00000.nc \
@@ -60,14 +56,14 @@ Example: Final CLMBGC Spinup Simulation for |version|-BGC
    # Set the finidat file to the last restart file saved in previous step
    > echo ' finidat = "BGC_spinup.clm2.r.1002-01-01-00000.nc"' > user_nl_clm
    # Now setup
-   > ./cesm_setup
+   > ./case.setup
    > Now build
-   > ./BGC_finalspinup.build
+   > ./case.build
    # The following sets RESUBMIT to 4 times in env_run.xml (you could also use an editor)
    # The following sets STOP_N and STOP_OPTION to 50 and "nyears" in env_run.xml (you could also use an editor)
    > ./xmlchange RESUBMIT=4,STOP_OPTION=nyears,STOP_N=50
    > Now run as normal
-   > ./BGC_finalspinup.submit
+   > ./case.submit
 
 To assess if the model is spunup plot trends of CLMBGC variables of interest. If you see a trend, you may need to run the simulation longer. Finally save the restart file from the end of this simulation to use as an "finidat" file for future simulations.
 

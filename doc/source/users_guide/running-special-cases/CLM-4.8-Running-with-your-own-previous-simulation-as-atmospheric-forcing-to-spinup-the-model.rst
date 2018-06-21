@@ -16,9 +16,9 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
 ::
 
    > cd scripts
-   > ./create_newcase -case myBCN1850 -res f09_g17_gl4 -compset B1850CN  -mach cheyenne_intel
-   > cd myBCN1850
-   > ./cesm_setup
+   > ./create_newcase -case myB1850 -res f09_g17_gl4 -compset B1850
+   > cd myB1850
+   > ./case.setup
    # Set histaux_a2x3hr to .true. in your user_nl_cpl output from the atmosphere model 
    # will be saved 3 hourly
    echo "histaux_a2x3hr=.true." >> user_nl_cpl
@@ -26,7 +26,7 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
    > cp ../../models/drv/driver/ccsm_comp_mod.F90 SourceMods/src.cpl
    > $EDITOR SourceMods/src.cpl
    # Now build
-   > ./myBCN1850.build
+   > ./case.build
    # The following sets the archival disk space (you could also use an editor)
    > ./xmlchange DOUT_S_ROOT='/glade/home/$USER/$CASE'
    # Make sure files are archived to disk, but NOT to long term storage 
@@ -35,21 +35,19 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
    # Set the run length to run a total of 20 years (you could also use an editor)
    > ./xmlchange RESUBMIT=9,STOP_OPTION=nyears,STOP_N=2
    # Now run as normal
-   > ./myBCN1850.submit
+   > ./case.submit
 
-.. warning:: Because of bug 1733 (see the `$CTSMROOT/doc/KnownBugs <CLM-URL>`_ file on this) you'll need to edit the driver code in order for it to produce the correct list of fields needed to run the model later.
-
-Now we run an I compset forced with the data from the previous simulation using the ``CPLHIST3HrWx`` option to DATM_MODE. See `the Section called CPLHIST3HrWx mode and it's DATM settings in Chapter 1 <CLM-URL>`_ for more information on the DATM settings for ``CPLHIST3HrWx`` mode.
+Now we run an I compset forced with the data from the previous simulation using the CPLHISTForcing`` option to DATM_MODE. See `the Section called CPLHISTForcing mode and it's DATM settings in Chapter 1 <CLM-URL>`_ for more information on the DATM settings for ``CPLHISTForcing`` mode.
 
 Example: Simulation Forced with Data from the Previous Simulation
 ------------------------------------------------------------------------------
 ::
 
    > cd scripts
-   > ./create_newcase -case frcwmyBCN1850 -res f09_g17_gl4 -compset I1850Clm50BgcSpinup -mach cheyenne_intel
-   > cd frcWmyBCN1850
+   > ./create_newcase -case frcwmyB1850 -res f09_g17_gl4 -compset I1850Clm50BgcSpinup
+   > cd frcWmyB1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)
-   > ./xmlchange DATM_CPLHIST_CASE="myBCN1850"
+   > ./xmlchange DATM_CPLHIST_CASE="myB1850"
    # The following sets the align year and years to run over for atm forcing 
    #  (you could also use an editor)
    > ./xmlchange DATM_CPLHIST_YR_ALIGN="1",DATM_CPLHIST_YR_START=1,DATM_CPLHIST_YR_END=20
@@ -57,10 +55,10 @@ Example: Simulation Forced with Data from the Previous Simulation
    # file to the archival path of the case above in the form of: /glade/home/achive/$USER/$DATM_CPLHIST_CASE/cpl/hist
    # NOTE: THIS WILL CHANGE THE PATH FOR ALL I1850Clm50BgcSpinup COMPSET CASES MADE AFTER THIS!
    > $EDITOR ../../models/atm/datm/bld/namelist_files/namelist_defaults_datm.xml
-   > ./cesm_setup
+   > ./case.setup
    # Now build and run as normal
-   > ./frcwmyBCN1850.build
-   > ./frcwmyBCN1850.submit
+   > ./case.build
+   > ./case.submit
 
 
 .. note:: We did this by editing the "namelist_defaults_datm.xml" which will change the settings for ALL future ``I1850Clm50BgcSpinup`` cases you run. You could also do this by editing the path in the resulting streams text files in the CaseDocs directory, and then create a "user\_" streams file with the correct path. This would change the streams file JUST for this case. The steps do it this way are:

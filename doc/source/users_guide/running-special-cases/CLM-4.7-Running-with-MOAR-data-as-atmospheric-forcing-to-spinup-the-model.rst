@@ -17,17 +17,15 @@ Example: Simulation with MOAR Data on cheyenne
 ::
 
    > cd scripts
-   > ./create_newcase -case MOARforce1850 -res f19_g17_gl4 -compset I1850Clm50BgcSpinup -mach cheyenne_intel
+   > ./create_newcase -case MOARforce1850 -res f19_g17_gl4 -compset I1850Clm50BgcSpinup
    > cd MOARforce1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)
    > ./xmlchange DATM_CPL_CASE=b40.1850.track1.1deg.006a
    # The following sets the align year and years to run over for atm forcing 
    #  (you could also use an editor)
    > ./xmlchange DATM_CPL_YR_ALIGN=1,DATM_CPL_YR_START=960,DATM_CPL_YR_END=1030
-   > ./cesm_setup
+   > ./case.setup
    # Now build and run as normal
-   > ./MOARforce1850.build
-   > ./MOARforce1850.submit
+   > ./case.build
+   > ./case.submit
 
-
-.. warning: Because of bug 1339 (see the `$CTSMROOT/doc/KnownBugs <CLM-URL>`_ file on this) you can't run with 83 or more years of forcing. If you do need to run with more years of forcing, you'll need to address the issue as outlined in the `$CTSMROOT/doc/KnownBugs <CLM-URL>`_ file.
