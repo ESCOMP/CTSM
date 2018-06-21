@@ -15,7 +15,8 @@ module controlMod
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
   use abortutils                       , only: endrun
-  use spmdMod                          , only: masterproc
+  use spmdMod                          , only: masterproc, mpicom
+  use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
@@ -195,7 +196,7 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, soil_layerstruct, subgridflag, &
-         irrigate, all_active
+         irrigate, run_zero_weight_urban, all_active
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -210,7 +211,14 @@ contains
     namelist /clm_inparm/ use_c13, use_c14
 
 
-    namelist /clm_inparm/ fates_paramfile, use_fates, use_fates_spitfire
+    ! FATES Flags
+    namelist /clm_inparm/ fates_paramfile, use_fates,   &
+          use_fates_spitfire, use_fates_logging,        &
+          use_fates_planthydro, use_fates_ed_st3,       &
+          use_fates_ed_prescribed_phys,                 &
+          use_fates_inventory_init,                     &
+          fates_inventory_ctrl_filename
+
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -220,7 +228,7 @@ contains
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
          CN_partition_opt, CN_evergreen_phenology_opt, carbon_resp_opt  
 
-    namelist /clm_inparm / use_lai_streams
+    namelist /clm_inparm/ use_lai_streams
 
     namelist /clm_inparm/ use_bedrock
 
@@ -251,6 +259,7 @@ contains
        write(iulog,*) 'Attempting to initialize run control settings .....'
     endif
 
+    finidat_interp_dest = 'finidat_interp_dest'//trim(inst_suffix)//'.nc'
     runtyp(:)               = 'missing'
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
@@ -298,6 +307,7 @@ contains
        else
           call endrun(msg='ERROR finding clm_nitrogen namelist'//errMsg(sourcefile, __LINE__))
        end if
+
        call relavu( unitn )
 
        ! ----------------------------------------------------------------------
@@ -313,9 +323,7 @@ contains
        ! History and restart files
 
        do i = 1, max_tapes
-          if (hist_nhtfrq(i) == 0) then
-             hist_mfilt(i) = 1
-          else if (hist_nhtfrq(i) < 0) then
+          if (hist_nhtfrq(i) < 0) then
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
@@ -429,7 +437,10 @@ contains
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
 
-    call initInterp_readnl( NLFilename )
+    call mpi_bcast (use_init_interp, 1, MPI_LOGICAL, 0, mpicom, ierr)
+    if (use_init_interp) then
+       call initInterp_readnl( NLFilename )
+    end if
 
     !I call init_hydrology to set up default hydrology sub-module methods.
     !For future version, I suggest to  put the following two calls inside their
@@ -539,9 +550,6 @@ contains
     ! it to all processors, or collects data from
     ! all processors and writes it to disk.
     !
-    ! !USES:
-    use spmdMod,    only : mpicom, MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
-    !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
@@ -592,6 +600,7 @@ contains
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Other subgrid logic
+    call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! max number of plant functional types in naturally vegetated landunit
@@ -613,6 +622,12 @@ contains
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_fates_spitfire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
@@ -938,7 +953,13 @@ contains
     write(iulog, *) '    use_fates = ', use_fates
     if (use_fates) then
        write(iulog, *) '    use_fates_spitfire = ', use_fates_spitfire
+       write(iulog, *) '    use_fates_logging = ', use_fates_logging
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
+       write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
+       write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
+       write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
+       write(iulog, *) '    use_fates_inventory_init = ',use_fates_inventory_init
+       write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
     end if
   end subroutine control_print
 

@@ -6,7 +6,9 @@ if [ $# -ne 3 ]; then
     exit 1
 fi
 
-test_name=TSMCFGtools.$1.$2.$3
+tool=$(basename $1)
+test_name=TSMCFGtools.$tool.$2.$3
+
 
 if [ -z "$CLM_RERUN" ]; then
   CLM_RERUN="no"
@@ -35,7 +37,7 @@ if [ "$CLM_RERUN" != "yes" ] && [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; t
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1`
+cfgdir=`ls -1d ${CLM_ROOT}/tools/${1}*`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -47,7 +49,7 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
-echo "TSMCFGtools.sh: calling TCBCFGtools.sh to prepare $1 executable" 
+echo "TSMCFGtools.sh: calling TCBCFGtools.sh to prepare $tool executable" 
 ${CLM_SCRIPTDIR}/TCBCFGtools.sh $1 $2
 rc=$?
 if [ $rc -ne 0 ]; then
@@ -56,15 +58,15 @@ if [ $rc -ne 0 ]; then
     exit 4
 fi
 
-echo "TSMCFGtools.sh: running $1 output in ${rundir}/test.log" 
+echo "TSMCFGtools.sh: running $tool output in ${rundir}/test.log" 
 
 if [ "$2" = "CFGtools__o" ] || [ "$2" = "CFGtools__do" ]; then
-   toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBCFGtools.$1.$2/$1"
+   toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBCFGtools.$tool.$2/${tool}*"
 else
-   toolrun="${CLM_TESTDIR}/TCBCFGtools.$1.$2/$1"
+   toolrun="${CLM_TESTDIR}/TCBCFGtools.$tool.$2/${tool}*"
 fi
 
-runfile="${CLM_SCRIPTDIR}/nl_files/$1.$3"
+runfile="${CLM_SCRIPTDIR}/nl_files/$tool.$3"
 if [ ! -f "${runfile}" ]; then
    echo "TSMCFGtools.sh: error ${runfile} input run file not found"
    echo "FAIL.job${JOBID}" > TestStatus
@@ -102,7 +104,7 @@ if [ $rc -eq 0 ] && grep -ci "Successfully created " test.log > /dev/null; then
     echo "TSMCFGtools.sh: smoke test passed" 
     echo "$status" > TestStatus
 else
-    echo "TSMCFGtools.sh: error running $1, error= $rc" 
+    echo "TSMCFGtools.sh: error running $tool, error= $rc" 
     echo "TSMCFGtools.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 6

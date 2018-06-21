@@ -15,7 +15,8 @@ module subgridMod
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
-  use clm_instur     , only : wt_lunit, urban_valid, wt_cft
+  use clm_instur     , only : wt_lunit, wt_nat_patch, urban_valid, wt_cft
+  use landunit_varcon, only : istcrop, istdlak, istwet, isturb_tbd, isturb_hd, isturb_md
   use glcBehaviorMod , only : glc_behavior_type
   use FatesInterfaceMod, only : fates_maxElementsPerSite
 
@@ -28,6 +29,8 @@ module subgridMod
 
   ! Routines to get info for each landunit:
   public :: subgrid_get_info_natveg
+  public :: natveg_patch_exists ! returns true if the given natural veg patch should be created in memory
+  public :: subgrid_get_info_cohort
   public :: subgrid_get_info_urban_tbd
   public :: subgrid_get_info_urban_hd
   public :: subgrid_get_info_urban_md
@@ -78,7 +81,7 @@ contains
     nlunits  = 0
     ncohorts = 0
 
-    call subgrid_get_info_natveg(gi, ncohorts, npatches_temp, ncols_temp, nlunits_temp)
+    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)
@@ -103,6 +106,7 @@ contains
     call subgrid_get_info_crop(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
    
+    call subgrid_get_info_cohort(gi,ncohorts)
 
   contains
     subroutine accumulate_counters
@@ -119,49 +123,133 @@ contains
   end subroutine subgrid_get_gcellinfo
 
   !-----------------------------------------------------------------------
-  subroutine subgrid_get_info_natveg(gi, ncohorts, npatches, ncols, nlunits)
+  subroutine subgrid_get_info_natveg(gi, npatches, ncols, nlunits)
     !
     ! !DESCRIPTION:
     ! Obtain properties for natural vegetated landunit in this grid cell
+    !
+    ! !USES
+    use clm_varpar, only : natpft_lb, natpft_ub
+    !
+    ! !ARGUMENTS:
+    integer, intent(in)  :: gi        ! grid cell index
+    integer, intent(out) :: npatches  ! number of nat veg patches in this grid cell
+    integer, intent(out) :: ncols     ! number of nat veg columns in this grid cell
+    integer, intent(out) :: nlunits   ! number of nat veg landunits in this grid cell
+    !
+    ! !LOCAL VARIABLES:
+    integer :: pft  ! plant functional type index
+
+    character(len=*), parameter :: subname = 'subgrid_get_info_natveg'
+    !-----------------------------------------------------------------------
+
+    npatches = 0
+
+    do pft = natpft_lb, natpft_ub
+       if (natveg_patch_exists(gi, pft)) then
+          npatches = npatches + 1
+       end if
+    end do
+
+    if (npatches > 0) then
+       ! Assume that the vegetated landunit has one column
+       ncols = 1
+       nlunits = 1
+    else
+       ! As noted in natveg_patch_exists, we expect a naturally vegetated landunit in
+       ! every grid cell. This means that npatches should be at least 1 in every grid
+       ! cell. If we find that isn't true, abort.
+       write(iulog,*) 'Expect at least one natural veg patch in every grid cell'
+       write(iulog,*) 'Found 0 for gi = ', gi
+       call endrun(subname//' ERROR: Expect at least one natural veg patch in every grid cell')
+    end if
+
+  end subroutine subgrid_get_info_natveg
+
+  !-----------------------------------------------------------------------
+  function natveg_patch_exists(gi, pft) result(exists)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if a patch should be created in memory for the given natural veg PFT
+    ! in this grid cell.
+    !
+    ! !USES:
+    use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_varctl, only : use_cndv, use_fates
+    use dynSubgridControlMod, only : get_do_transient_pfts
+    !
+    ! !ARGUMENTS:
+    logical :: exists  ! function result
+    integer, intent(in) :: gi  ! grid cell index
+    integer, intent(in) :: pft ! plant functional type
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'natveg_patch_exists'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(pft >= natpft_lb, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(pft <= natpft_ub, errMsg(sourcefile, __LINE__))
+
+    if (get_do_transient_pfts() .or. use_cndv .or. use_fates) then
+       ! To support transient PFTS and dynamic vegetation cases, we have all possible PFTs
+       ! in every grid cell, because they might need to come into existence even if their
+       ! weight is 0 at the start of the run. (Similarly for FATES, but there patches do
+       ! not correspond to PFTs.)
+       exists = .true.
+
+    else
+       ! For a non-transient PFT/dynamic-veg run: We still have a naturally vegetated
+       ! landunit in every grid cell, because this is needed to support any aspect of
+       ! dynamic landunits, as well as to provide forcings for a GLC model. So we don't
+       ! take into account the landunit's weight on the gridcell in determining whether to
+       ! allocate memory. However, we only allocate memory for patches that actually exist
+       ! on this landunit. (This will require running init_interp when changing between a
+       ! transient run and a non-transient run.)
+       if (wt_nat_patch(gi, pft) > 0.0_r8) then
+          exists = .true.
+       else
+          exists = .false.
+       end if
+    end if
+
+  end function natveg_patch_exists
+
+
+  ! -----------------------------------------------------------------------------
+
+  subroutine subgrid_get_info_cohort(gi, ncohorts)
+    !
+    ! !DESCRIPTION:
+    ! Obtain cohort counts per each gridcell.
     !
     ! !USES
     use clm_varpar, only : natpft_size
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
-    integer, intent(out) :: ncohorts  ! number of nat veg cohorts in this grid cell
-    integer, intent(out) :: npatches  ! number of nat veg patches in this grid cell
-    integer, intent(out) :: ncols     ! number of nat veg columns in this grid cell
-    integer, intent(out) :: nlunits   ! number of nat veg landunits in this grid cell
+    integer, intent(out) :: ncohorts  ! number of cohorts in this grid cell
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'subgrid_get_info_natveg'
+    character(len=*), parameter :: subname = 'subgrid_get_info_cohort'
     !-----------------------------------------------------------------------
-
-    ! To support dynamic landunits, we have a naturally vegetated landunit in every grid
-    ! cell, because it might need to come into existence even if its weight is 0 at the
-    ! start of the run. And to support transient patches or dynamic vegetation, we always
-    ! allocate space for ALL patches on this landunit.
-
-    npatches = natpft_size
-
-    ! Assume that the vegetated landunit has one column
-    nlunits = 1
-    ncols = 1
 
     ! -------------------------------------------------------------------------
     ! Number of cohorts is set here
-    ! fates cohorts (via FATES) populate all natural vegetation columns.
-    ! Current implementations mostly assume that only one column contains
-    ! natural vegetation, which is synonomous with the soil column. 
-    ! For restart output however, we will allocate the cohort vector space
-    ! based on all columns.
+    ! FATES cohorts populate all natural vegetation columns.
+    ! There is only one natural vegetation column per grid-cell.  So allocations
+    ! are mapped to the gridcell.  In the future we may have more than one site
+    ! per gridcell, and we just multiply that factor here.
+    ! It is possible that there may be gridcells that don't have a naturally
+    ! vegetated column.  That case should be fine, as the cohort
+    ! restart vector will just be a little sparse.
     ! -------------------------------------------------------------------------
+    
+    ncohorts = fates_maxElementsPerSite
+    
+ end subroutine subgrid_get_info_cohort
 
-    ncohorts = ncols*fates_maxElementsPerSite
-
-  end subroutine subgrid_get_info_natveg
 
   !-----------------------------------------------------------------------
   subroutine subgrid_get_info_urban_tbd(gi, npatches, ncols, nlunits)
@@ -180,7 +268,7 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_urban_tbd'
     !-----------------------------------------------------------------------
 
-    call subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+    call subgrid_get_info_urban(gi, isturb_tbd, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_urban_tbd
 
@@ -201,7 +289,7 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_urban_hd'
     !-----------------------------------------------------------------------
 
-    call subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+    call subgrid_get_info_urban(gi, isturb_hd, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_urban_hd
 
@@ -222,12 +310,12 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_urban_md'
     !-----------------------------------------------------------------------
 
-    call subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+    call subgrid_get_info_urban(gi, isturb_md, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_urban_md
 
   !-----------------------------------------------------------------------
-  subroutine subgrid_get_info_urban(gi, npatches, ncols, nlunits)
+  subroutine subgrid_get_info_urban(gi, ltype, npatches, ncols, nlunits)
     !
     ! !DESCRIPTION:
     ! Obtain properties for one of the urban landunits in this grid cell
@@ -236,24 +324,46 @@ contains
     !
     ! !USES
     use clm_varpar, only : maxpatch_urb
+    use clm_varctl, only : run_zero_weight_urban
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
+    integer, intent(in)  :: ltype     ! landunit type (isturb_tbd, etc.)
     integer, intent(out) :: npatches  ! number of urban patches in this grid cell, for one urban landunit
     integer, intent(out) :: ncols     ! number of urban columns in this grid cell, for one urban landunit
     integer, intent(out) :: nlunits   ! number of urban landunits in this grid cell, for one urban landunit
     !
     ! !LOCAL VARIABLES:
+    logical :: this_landunit_exists
 
     character(len=*), parameter :: subname = 'subgrid_get_info_urban'
     !-----------------------------------------------------------------------
 
-    ! To support dynamic landunits, we have all urban landunits in every grid cell that
-    ! has valid urban parameters, because they might need to come into existence even if
-    ! their weight is 0 at the start of the run. And for simplicity, we always allocate
-    ! space for ALL columns on the urban landunits.
+    ! In general, only allocate memory for urban landunits that have non-zero weight.
+    !
+    ! However, if run_zero_weight_urban is .true., then allocate memory for all urban landunits in
+    ! every grid cell that has valid urban parameters. (This is useful if you want to
+    ! know urban behavior for all potential urban areas, or - in the future - to support
+    ! transient urban areas via dynamic landunits.)
+    !
+    ! In either case, for simplicity, we always allocate space for all columns on any
+    ! allocated urban landunits.
 
-    if (urban_valid(gi)) then
+    if (run_zero_weight_urban) then
+       if (urban_valid(gi)) then
+          this_landunit_exists = .true.
+       else
+          this_landunit_exists = .false.
+       end if
+    else
+       if (wt_lunit(gi, ltype) > 0.0_r8) then
+          this_landunit_exists = .true.
+       else
+          this_landunit_exists = .false.
+       end if
+    end if
+
+    if (this_landunit_exists) then
        npatches = maxpatch_urb
        ncols = npatches
        nlunits = 1
@@ -263,6 +373,7 @@ contains
        nlunits = 0
     end if
 
+
   end subroutine subgrid_get_info_urban
 
   !-----------------------------------------------------------------------
@@ -270,9 +381,6 @@ contains
     !
     ! !DESCRIPTION:
     ! Obtain properties for lake landunit in this grid cell
-    !
-    ! !USES:
-    use landunit_varcon, only : istdlak
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -305,9 +413,6 @@ contains
     !
     ! !DESCRIPTION:
     ! Obtain properties for wetland landunit in this grid cell
-    !
-    ! !USES:
-    use landunit_varcon, only : istwet
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -411,7 +516,6 @@ contains
     use clm_varpar           , only : cft_lb, cft_ub
     use clm_varctl           , only : create_crop_landunit
     use pftconmod            , only : pftcon
-    use landunit_varcon      , only : istcrop
     use dynSubgridControlMod , only : get_do_transient_crops
     !
     ! !ARGUMENTS:

@@ -23,10 +23,11 @@
 cur_time=`date '+%H:%M:%S'`
 
 hostname=`hostname`
+echo $hostname
 case $hostname in
 
     ##cheyenne
-     cheyenne*)
+     cheyenne* | r*i*n*)
     submit_script="test_driver_cheyenne${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -77,7 +78,7 @@ export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
 dataroot="$CESMDATAROOT"
 export TOOLSLIBS=""
-export TOOLS_CONF_STRING=""
+export TOOLS_CONF_STRING="--mpilib mpi-serial"
 
 
 echo_arg=""
@@ -85,9 +86,10 @@ echo_arg=""
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
-    ##yellowstone
-     ys* | caldera* | geyser* | pronghorn*)
-    submit_script="test_driver_yellowstone${cur_time}.sh"
+
+    ## DAV cluster
+     geyser* | caldera* | pronghorn*)
+    submit_script="test_driver_dav${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -95,28 +97,24 @@ cat > ./${submit_script} << EOF
 #
 
 interactive="YES"
-input_file="tests_pretag_yellowstone_nompi"
-c_threads=16
+input_file="tests_posttag_dav_mpi"
+c_threads=36
 
-export INITMODULES="/glade/apps/opt/lmod/lmod/init/sh"
+
+export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
 . \$INITMODULES
 
 module purge
 module load ncarenv/1.0
-module load ncarbinlibs/1.1
-module load perlmods
-module load gmake/4.1
-
-module load intel/15.0.3
-module load ncarcompilers/1.0
+module load intel/12.1.5
+module load mkl
+module load ncarcompilers
 module load netcdf/4.3.3.1
-module load pnetcdf/1.6.1
-module load mkl/11.1.2
+module load mpich-slurm/3.2.1
 
 module load nco
-module load ncl
 module load python
-module load all-python-libs
+module load ncl
 
 
 ##omp threads
@@ -129,7 +127,7 @@ if [ -z "\$CLM_SOFF" ]; then   #CLM_SOFF NOT set
    export CLM_SOFF=FALSE
 fi
 
-export CESM_MACH="yellowstone"
+export CESM_MACH="cheyenne"
 export CESM_COMP="intel"
 
 export NETCDF_DIR=\$NETCDF
@@ -139,10 +137,10 @@ export MAKE_CMD="gmake -j "
 export CFG_STRING=""
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CPPDEFS=-DLINUX"
 export MACH_WORKSPACE="/glade/scratch"
-export CPRNC_EXE="$CESMDATAROOT/tools/cprnc/cprnc"
+export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
 dataroot="$CESMDATAROOT"
 export TOOLSLIBS=""
-export TOOLS_CONF_STRING=""
+export TOOLS_CONF_STRING="--mpilib mpich"
 
 
 echo_arg=""
@@ -152,7 +150,7 @@ EOF
     ;;
 
     ## hobart
-    hobart* ) 
+    hobart* | h*.cgd.ucar.edu) 
     submit_script="test_driver_hobart_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
 
@@ -229,62 +227,8 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##yong
-    yong* | vpn* )
-    submit_script="test_driver_yong_${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-interactive="YES"
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=2
-fi
-export CLM_RESTART_THREADS=1
-
-##mpi tasks
-export CLM_TASKS=2
-export CLM_RESTART_TASKS=1
-
-export CESM_MACH="generic_Darwin"
-if [ "\$CLM_FC" = "PGI" ]; then
-   export CESM_COMP="pgi"
-   export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-10.9
-   export CFG_STRING=""
-   export TOOLS_MAKE_STRING=""
-else
-   export CESM_COMP="intel"
-   export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
-   export MPICH_PATH=/usr/local/mpich2-1.3.1-intel-11.1
-   export PATH="\$MPICH_PATH/bin:$PATH"
-   export CFG_STRING=""
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CC=icc "
-   export DYLD_LIBRARY_PATH=/opt/intel/Compiler/11.1/067/lib
-fi
-export NETCDF_DIR=\$NETCDF_PATH
-export INC_NETCDF=\$NETCDF_PATH/include
-export LIB_NETCDF=\$NETCDF_PATH/lib
-export MAKE_CMD="make -j 4"
-export MACH_WORKSPACE="/glade/scratch"
-export CPRNC_EXE=$HOME/bin/newcprnc
-export DATM_QIAN_DATA_DIR="/fis/cgd/cseg/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-export ESMFBIN_PATH=\
-"/usr/local/esmf_5_2_0/DEFAULTINSTALLDIR/bin/binO/Darwin.intel.64.mpiuni.default"
-dataroot="/fis/cgd/cseg/csm"
-echo_arg=""
-input_file="tests_posttag_yong"
-export TOOLSLIBS=""
-export TOOLS_CONF_STRING="-scratchroot \$MACH_WORKSPACE/$USER -max_tasks_per_node 2 -din_loc_root \$dataroot/inputdata"
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
     * )
-    echo "Only setup to work on: cheyenne, yellowstone, hobart, and yong"
+    echo "Only setup to work on: cheyenne and hobart"
     exit
  
 
@@ -319,15 +263,25 @@ fi
 ##establish script dir and clm_root
 if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
-    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../../../..; pwd \`
+    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
+    export CTSM_ROOT=\${CLM_ROOT}
+    if [ -d \${CLM_ROOT}/cime ]; then
+       export CIME_ROOT=\${CLM_ROOT}/cime
+    else
+       export CIME_ROOT=\${CLM_ROOT}/../../cime
+    fi
+    if [ ! -d \${CIME_ROOT} ]; then
+       echo "ERROR: trouble finding the CIME_ROOT directory: \$CIME_ROOT"
+       exit 3
+    fi
 else
-    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/components/clm/test/tools/test_driver.sh ]; then
-	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/components/clm/test/tools; pwd \`
+    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/tools/test_driver.sh ]; then
+	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/tools; pwd \`
     else
 	echo "ERROR: unable to determine script directory "
 	echo "       if initiating batch job from directory other than the one containing test_driver.sh, "
 	echo "       you must set the environment variable CLM_ROOT to the full path of directory containing "
-        echo "       <components> and <cime/scripts>. "
+        echo "       <cime/scripts>. "
 	exit 3
     fi
 fi
@@ -586,7 +540,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on yellowstone, hobart, and yongi: "
+    echo "usage on cheyenne and hobart: "
     echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "

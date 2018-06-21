@@ -196,4 +196,28 @@ contains
     @assertFalse(is_first)
   end subroutine isFirstStep_notAtFirstStep
 
+  @Test
+  subroutine check_DA_nstep(this)
+    class(TestTimeManager), intent(inout) :: this
+    integer :: nstep
+
+    nstep = 100
+    call set_nstep(nstep)
+
+    @assertEqual( nstep, get_nstep() )
+    @assertEqual( nstep, get_nstep_since_startup_or_lastDA_restart_or_pause() )
+
+    ! Now update DA nstep, and nstep should be the same, but DA step should be zero
+    call update_DA_nstep()
+    @assertEqual( nstep, get_nstep() )
+    @assertEqual( 0, get_nstep_since_startup_or_lastDA_restart_or_pause() )
+
+    ! Advance time step and should be one more step out
+    call advance_timestep()
+
+    @assertEqual( nstep+1, get_nstep() )
+    @assertEqual( 1, get_nstep_since_startup_or_lastDA_restart_or_pause() )
+
+  end subroutine check_DA_nstep
+
 end module test_clm_time_manager

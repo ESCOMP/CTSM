@@ -28,7 +28,6 @@ module initVerticalMod
   use ColumnType        , only : col                
   use glcBehaviorMod    , only : glc_behavior_type
   use SnowHydrologyMod  , only : InitSnowLayers             
-  use EDTypesMod        , only : ed_hist_scpfmaps
   use abortUtils        , only : endrun    
   use ncdio_pio
   !
@@ -310,11 +309,6 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
     end if
-
-    if(use_fates)then
-      call ed_hist_scpfmaps
-    end if
-
 
     ! Column level initialization for urban wall and roof layers and interfaces
     do l = bounds%begl,bounds%endl

@@ -60,6 +60,7 @@ def buildnml(case, caseroot, compname):
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
+    mask = case.get_value("MASK_GRID")
 
     # -----------------------------------------------------
     # Clear out old data
@@ -166,6 +167,11 @@ def buildnml(case, caseroot, compname):
     else:
         usecase = ""
 
+    if ( (mask != "null") and (mask != "UNSET") ):
+       gridmask = "-mask %s" %mask
+    else:
+       gridmask = ""
+
     start_ymd = run_startdate.replace('-','')
 
     if ('-01-01' in run_startdate) or ('-09-01' in run_startdate):
@@ -230,11 +236,11 @@ def buildnml(case, caseroot, compname):
         command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
                    "%s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
                    "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
-                   "%s %s %s"
+                   "%s %s %s %s"
                    %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
                      nomeg, usecase, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
                      lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file, 
-                     clm_bldnml_opts, spinup, tuning))
+                     clm_bldnml_opts, spinup, tuning, gridmask))
 
         rc, out, err = run_cmd(command, from_dir=clmconf)
         expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))

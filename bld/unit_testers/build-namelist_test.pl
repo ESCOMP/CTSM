@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 840;
+my $ntests = 939;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 525;
+   $ntests += 597;
 }
 plan( tests=>$ntests );
 
@@ -268,9 +268,9 @@ foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-dry
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 
-print "\n==================================================\n";
+print "\n===============================================================================\n";
 print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
-print "==================================================\n";
+print "=================================================================================\n";
 
 # irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
@@ -278,6 +278,8 @@ foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
+                      "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                      "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -755,47 +757,62 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      conopts=>"-phys clm4_0",
                                    },
-     "useEDContradict"           =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "useFATESContradict"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "useEDContradict2"          =>{ options=>"-envxml_dir . -no-megan",
+     "useFATESContradict2"       =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"use_fates=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "useEDWCN"                  =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "useFATESWCN"               =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_cn=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "useEDWcreatecrop"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "useFATESWcreatecrop"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "useEDWTransient"           =>{ options=>"-bgc fates -use_case 20thC_transient -envxml_dir . -no-megan -res 10x15",
+     "useFATESWTransient"        =>{ options=>"-bgc fates -use_case 20thC_transient -envxml_dir . -no-megan -res 10x15",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "useEDclm40"                =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "useFATESclm40"             =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_0",
                                    },
-     "usespitfireButNOTED"       =>{ options=>"-envxml_dir . -no-megan",
+     "usespitfireButNOTFATES"    =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"use_fates_spitfire=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "useMEGANwithED"            =>{ options=>"-bgc fates -envxml_dir . -megan",
+     "useloggingButNOTFATES"     =>{ options=>"-envxml_dir . -no-megan",
+                                     namelst=>"use_fates_logging=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "useinventorybutnotfile"    =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_inventory_init=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "useMEGANwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -megan",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "useHYDSTwithED"            =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "useHYDSTwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_hydrstress=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
@@ -1224,7 +1241,7 @@ foreach my $res ( @tran_res ) {
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
-foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
+foreach my $usecase ( "1850_control", "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
@@ -1311,7 +1328,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
      $cfiles->copyfiles( "$options $clmopts", $mode );
   }
   &cleanup();
-  # Run ED mode for several resolutions and configurations
+  # Run FATES mode for several resolutions and configurations
   system( "../configure -s $mode" );
   my $clmoptions = "-bgc fates -envxml_dir . -no-megan";
   my @clmres = ( "1x1_brazil", "5x5_amazon", "10x15", "1.9x2.5" );
@@ -1330,6 +1347,40 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
         }
         if ( defined($opts{'generate'}) ) {
            $cfiles->copyfiles( "$options $edop", $mode );
+        }
+        &cleanup();
+     }
+  }
+}
+#
+# Run over the differen lnd_tuning modes
+#
+my $res = "0.9x1.25";
+my $mask = "gx1v6";
+my $simyr = "1850";
+foreach my $phys ( "clm4_0", "clm4_5", 'clm5_0' ) {
+  my $mode = "-phys $phys";
+  system( "../configure -s $mode" );
+  foreach my $forc ( "CRUv7", "GSWP3v1", "cam6.0" ) {
+     foreach my $bgc ( "sp", "bgc" ) {
+        my $lndtuningmode = "${phys}_${forc}";
+        my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode";
+        if ( $phys eq "clm4_0" ) { 
+           $clmoptions .= " -glc_nec 0"; 
+        } else {
+           $clmoptions .= " -bgc $bgc"; 
+        }
+        &make_env_run( );
+        eval{ system( "$bldnml $clmoptions > $tempfile 2>&1 " ); };
+        is( $@, '', "$clmoptions" );
+        $cfiles->checkfilesexist( "$clmoptions", $mode );
+        $cfiles->shownmldiff( "default", "standard" );
+        if ( defined($opts{'compare'}) ) {
+           $cfiles->doNOTdodiffonfile( "$tempfile", "$clmoptions", $mode );
+           $cfiles->comparefiles( "$clmoptions", $mode, $opts{'compare'} );
+        }
+        if ( defined($opts{'generate'}) ) {
+           $cfiles->copyfiles( "$clmoptions", $mode );
         }
         &cleanup();
      }

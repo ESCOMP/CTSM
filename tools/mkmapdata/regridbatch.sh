@@ -4,25 +4,9 @@
 # Batch script to submit to create mapping files for all standard
 # resolutions.  If you provide a single resolution via "$RES", only
 # that resolution will be used. In that case: If it is a regional or
-# single point resolution, you should set 'BSUB -n' to 1, and be sure
+# single point resolution, you should set '#PBS -n' to 1, and be sure
 # that '-t regional' is specified in cmdargs.
 #
-# Currently only setup to run on yellowstone/caldera/geyser. Note that
-# geyser is needed for very high resolution files (e.g., 1 km) because
-# of its large memory per node, so that is set as the default.
-# However, for coarser resolutions, you may get better performance on
-# caldera or yellowstone.
-# 
-# yellowstone specific batch commands:
-#BSUB -P P93300606
-#BSUB -n 8
-#BSUB -R "span[ptile=8]" 
-#BSUB -o regrid.%J.out   # ouput filename
-#BSUB -e regrid.%J.err   # error filename
-#BSUB -J regrid          # job name
-#BSUB -W 24:00
-#BSUB -q geyser          # queue
-
 # cheyenne specific batch commands:
 #PBS -A P93300606
 #PBS -N regrid

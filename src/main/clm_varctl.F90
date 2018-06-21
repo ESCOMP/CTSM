@@ -111,7 +111,7 @@ module clm_varctl
   ! from finidat if use_init_interp is .true.
 
   character(len=fname_len), public :: finidat_interp_source = ' '
-  character(len=fname_len), public :: finidat_interp_dest   = 'finidat_interp_dest.nc'     
+  character(len=fname_len), public :: finidat_interp_dest   = ''
 
   !----------------------------------------------------------
   ! Crop & Irrigation logic
@@ -129,6 +129,9 @@ module clm_varctl
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
+
+  ! true => allocate and run urban landunits everywhere where we have valid urban data
+  logical, public :: run_zero_weight_urban = .false.
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          
@@ -187,11 +190,19 @@ module clm_varctl
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
 
   !----------------------------------------------------------
-  !  fates switches
+  !  FATES switches
   !----------------------------------------------------------
 
-  logical, public :: use_fates = .false.            ! true => use  ED
-  logical, public :: use_fates_spitfire = .false.  ! true => use spitfire model
+  logical, public :: use_fates = .false.            ! true => use fates
+
+  ! These are INTERNAL to the FATES module
+  logical, public            :: use_fates_spitfire = .false.           ! true => use spitfire model
+  logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
+  logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
+  logical, public            :: use_fates_ed_st3   = .false.           ! true => static stand structure
+  logical, public            :: use_fates_ed_prescribed_phys = .false. ! true => prescribed physiology
+  logical, public            :: use_fates_inventory_init = .false.     ! true => initialize fates from inventory
+  character(len=256), public :: fates_inventory_ctrl_filename = ''     ! filename for inventory control
 
   !----------------------------------------------------------
   !  LUNA switches		
@@ -294,7 +305,7 @@ module clm_varctl
   logical, public :: hist_wrtch4diag = .false.         
 
   !----------------------------------------------------------
-  ! ED/FATES
+  ! FATES
   !----------------------------------------------------------
   character(len=fname_len), public :: fates_paramfile  = ' '
 

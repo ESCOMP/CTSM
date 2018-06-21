@@ -43,8 +43,6 @@ contains
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
-  
-    use CLMFatesParamInterfaceMod         , only : FatesReadParameters
     !
     ! !ARGUMENTS:
     type(photosyns_type)                   , intent(in) :: photosyns_inst
@@ -103,8 +101,6 @@ contains
 
     !
     call ncd_pio_closefile(ncid)
-
-    call FatesReadParameters()
 
   end subroutine readParameters
 

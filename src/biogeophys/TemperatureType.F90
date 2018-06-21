@@ -11,9 +11,9 @@ module TemperatureType
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
-  use LandunitType    , only : lun                
-  use ColumnType      , only : col                
-  use PatchType       , only : patch                
+  use LandunitType    , only : lun
+  use ColumnType      , only : col
+  use PatchType       , only : patch
   !
   implicit none
   save
@@ -30,11 +30,12 @@ module TemperatureType
      integer,  pointer :: ndaysteps_patch          (:)   ! number of daytime steps accumulated from mid-night, LUNA specific
      integer,  pointer :: nnightsteps_patch        (:)   ! number of nighttime steps accumulated from mid-night, LUNA specific
      real(r8), pointer :: t_h2osfc_col             (:)   ! col surface water temperature
-     real(r8), pointer :: t_h2osfc_bef_col         (:)   ! col surface water temperature from time-step before  
-     real(r8), pointer :: t_ssbef_col              (:,:) ! col soil/snow temperature before update (-nlevsno+1:nlevgrnd) 
-     real(r8), pointer :: t_soisno_col             (:,:) ! col soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd) 
+     real(r8), pointer :: t_h2osfc_bef_col         (:)   ! col surface water temperature from time-step before
+     real(r8), pointer :: t_ssbef_col              (:,:) ! col soil/snow temperature before update (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: t_soisno_col             (:,:) ! col soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
      real(r8), pointer :: t_soi10cm_col            (:)   ! col soil temperature in top 10cm of soil (Kelvin)
      real(r8), pointer :: t_soi17cm_col            (:)   ! col soil temperature in top 17cm of soil (Kelvin)
+     real(r8), pointer :: t_sno_mul_mss_col        (:)   ! col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
      real(r8), pointer :: t_lake_col               (:,:) ! col lake temperature (Kelvin)  (1:nlevlak)          
      real(r8), pointer :: t_grnd_col               (:)   ! col ground temperature (Kelvin)
      real(r8), pointer :: t_grnd_r_col             (:)   ! col rural ground temperature (Kelvin)
@@ -98,10 +99,10 @@ module TemperatureType
      real(r8), pointer :: liquid_water_temp2_grc   (:)   ! grc post land cover change weighted average liquid water temperature (K)
 
      ! Flags
-     integer , pointer :: imelt_col                (:,:) ! flag for melting (=1), freezing (=2), Not=0 (-nlevsno+1:nlevgrnd) 
+     integer , pointer :: imelt_col                (:,:) ! flag for melting (=1), freezing (=2), Not=0 (-nlevsno+1:nlevgrnd)
 
      ! Emissivities
-     real(r8), pointer :: emv_patch                (:)   ! patch vegetation emissivity 
+     real(r8), pointer :: emv_patch                (:)   ! patch vegetation emissivity
      real(r8), pointer :: emg_col                  (:)   ! col ground emissivity
 
      ! Misc
@@ -113,10 +114,10 @@ module TemperatureType
    contains
 
      procedure, public  :: Init
-     procedure, public  :: Restart      
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, public  :: Restart
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
@@ -140,7 +141,7 @@ contains
     ! for history output, and initialize values needed for a cold-start.
     !
     class(temperature_type)        :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     real(r8)          , intent(in) :: em_roof_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_wall_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_improad_lun(bounds%begl:)
@@ -170,7 +171,7 @@ contains
     !
     ! !ARGUMENTS:
     class(temperature_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -211,6 +212,7 @@ contains
     allocate(this%dTdz_top_col             (begc:endc))                      ; this%dTdz_top_col             (:)   = nan
     allocate(this%dt_veg_patch             (begp:endp))                      ; this%dt_veg_patch             (:)   = nan
 
+    allocate(this%t_sno_mul_mss_col        (begc:endc))                      ; this%t_sno_mul_mss_col        (:)   = nan
     allocate(this%t_soi10cm_col            (begc:endc))                      ; this%t_soi10cm_col            (:)   = nan
     allocate(this%t_soi17cm_col            (begc:endc))                      ; this%t_soi17cm_col            (:)   = spval
     allocate(this%dt_grnd_col              (begc:endc))                      ; this%dt_grnd_col              (:)   = nan
@@ -282,7 +284,7 @@ contains
     !
     ! !ARGUMENTS:
     class(temperature_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     logical          , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
     logical          , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
@@ -410,6 +412,18 @@ contains
          avgflag='A', long_name='soil temperature in top 10cm of soil', &
          ptr_col=this%t_soi10cm_col, set_urb=spval)
 
+    this%t_sno_mul_mss_col(begc:endc) = spval
+    call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
+         avgflag='A', long_name='snow temperature times layer mass, layer sum; '// &
+         'to get mass-weighted temperature, divide by (SNOWICE+SNOWLIQ)', &
+         ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='SNOTXMASS_ICE',  units='K kg/m2', &
+         avgflag='A', long_name='snow temperature times layer mass, layer sum (ice landunits only); ' // &
+         'to get mass-weighted temperature, divide by (SNOWICE_ICE+SNOWLIQ_ICE)', &
+         ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     if (use_cndv .or. use_crop) then
        active = "active"
     else
@@ -481,14 +495,14 @@ contains
     this%heat2_grc(begg:endg) = spval
     call hist_addfld1d (fname='HEAT_CONTENT2',  units='J/m^2',  &
          avgflag='A', long_name='post land cover change total heat content', &
-         ptr_lnd=this%heat2_grc, default='inactive')  
+         ptr_lnd=this%heat2_grc, default='inactive')
 
     this%liquid_water_temp1_grc(begg:endg) = spval
     call hist_addfld1d (fname='LIQUID_WATER_TEMP1', units='K', &
          avgflag='A', long_name='initial gridcell weighted average liquid water temperature', &
          ptr_lnd=this%liquid_water_temp1_grc, default='inactive')
 
-    this%snot_top_col(begc:endc) = spval 
+    this%snot_top_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTTOPL', units='K', &
          avgflag='A', long_name='snow temperature (top layer)', &
          ptr_col=this%snot_top_col, set_urb=spval, default='inactive')
@@ -497,7 +511,7 @@ contains
          avgflag='A', long_name='snow temperature (top layer, ice landunits only)', &
          ptr_col=this%snot_top_col, set_urb=spval, l2g_scale_type='ice', default='inactive')
 
-    this%dTdz_top_col(begc:endc) = spval 
+    this%dTdz_top_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOdTdzL', units='K/m', &
          avgflag='A', long_name='top snow layer temperature gradient (land)', &
          ptr_col=this%dTdz_top_col, set_urb=spval, default='inactive')
@@ -607,7 +621,7 @@ contains
     !
     ! !ARGUMENTS:
     class(temperature_type)        :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     real(r8)          , intent(in) :: em_roof_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_wall_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_improad_lun(bounds%begl:)
@@ -628,11 +642,11 @@ contains
     SHR_ASSERT_ALL((ubound(em_improad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(em_perroad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
 
-    associate(snl => col%snl) ! Output: [integer (:)    ]  number of snow layers   
+    associate(snl => col%snl) ! Output: [integer (:)    ]  number of snow layers
 
       ! Set snow/soil temperature
-      ! t_lake only has valid values over non-lake   
-      ! t_soisno, t_grnd and t_veg have valid values over all land 
+      ! t_lake only has valid values over non-lake
+      ! t_soisno, t_grnd and t_veg have valid values over all land
 
       do c = bounds%begc,bounds%endc
          l = col%landunit(c)
@@ -647,7 +661,7 @@ contains
          end if
 
          ! Below snow temperatures - nonlake points (lake points are set below)
-         if (.not. lun%lakpoi(l)) then 
+         if (.not. lun%lakpoi(l)) then
 
             if (lun%itype(l)==istice_mec) then
                this%t_soisno_col(c,1:nlevgrnd) = 250._r8
@@ -657,11 +671,11 @@ contains
 
             else if (lun%urbpoi(l)) then
                if (use_vancouver) then
-                  if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then 
+                  if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 20C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 297.56 - (j-1) * ((297.56-293.16)/(nlevgrnd-1)) 
+                        this%t_soisno_col(c,j) = 297.56 - (j-1) * ((297.56-293.16)/(nlevgrnd-1))
                      end do
                      ! Set wall and roof layers to initial air temperature
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
@@ -670,11 +684,11 @@ contains
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
                else if (use_mexicocity) then
-                  if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then 
+                  if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 22C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 289.46 - (j-1) * ((289.46-295.16)/(nlevgrnd-1)) 
+                        this%t_soisno_col(c,j) = 289.46 - (j-1) * ((289.46-295.16)/(nlevgrnd-1))
                      end do
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
                      ! Set wall and roof layers to initial air temperature
@@ -683,7 +697,7 @@ contains
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
                else
-                  if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then 
+                  if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                      this%t_soisno_col(c,1:nlevgrnd) = 274._r8
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
                        .or. col%itype(c) == icol_roof) then
@@ -722,7 +736,7 @@ contains
       do c = bounds%begc,bounds%endc
          l = col%landunit(c)
 
-         if (lun%lakpoi(l)) then 
+         if (lun%lakpoi(l)) then
             this%t_grnd_col(c) = 277._r8
          else
             this%t_grnd_col(c) = this%t_soisno_col(c,snl(c)+1)
@@ -742,7 +756,7 @@ contains
 
       this%t_h2osfc_col(bounds%begc:bounds%endc)  = 274._r8
 
-      ! Set t_veg, t_ref2m, t_ref2m_u and tref2m_r 
+      ! Set t_veg, t_ref2m, t_ref2m_u and tref2m_r
 
       do p = bounds%begp, bounds%endp
          c = patch%column(p)
@@ -772,8 +786,8 @@ contains
             else
                this%t_ref2m_u_patch(p) = 283._r8
             end if
-         else 
-            if (.not. lun%ifspecial(l)) then 
+         else
+            if (.not. lun%ifspecial(l)) then
                if (use_vancouver) then
                   this%t_ref2m_r_patch(p) = 297.56
                else if (use_mexicocity) then
@@ -781,7 +795,7 @@ contains
                else
                   this%t_ref2m_r_patch(p) = 283._r8
                end if
-            else 
+            else
                this%t_ref2m_r_patch(p) = spval
             end if
          end if
@@ -790,7 +804,7 @@ contains
 
     end associate
 
-    do l = bounds%begl, bounds%endl 
+    do l = bounds%begl, bounds%endl
        if (lun%urbpoi(l)) then
           if (use_vancouver) then
              this%taf_lun(l) = 297.56_r8
@@ -816,7 +830,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, is_simple_buildtemp, is_prog_buildtemp)
-    ! 
+    !
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
@@ -824,14 +838,14 @@ contains
     use shr_log_mod     , only : errMsg => shr_log_errMsg
     use spmdMod         , only : masterproc
     use abortutils      , only : endrun
-    use ncdio_pio       , only : file_desc_t, ncd_double
+    use ncdio_pio       , only : file_desc_t, ncd_double, ncd_int
     use restUtilMod
     !
     ! !ARGUMENTS:
     class(temperature_type) :: this
-    type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   
-    character(len=*) , intent(in)    :: flag   
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
     logical          , intent(in)    :: is_simple_buildtemp  ! Simple building temp is being used
     logical          , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
@@ -872,7 +886,7 @@ contains
          dim1name='column', &
          long_name='rural ground temperature', units='K', &
          interpinic_flag='interp', readvar=readvar, data=this%t_grnd_r_col)
-         
+
     call restartvar(ncid=ncid, flag=flag, varname='T_GRND_U', xtype=ncd_double, &
          dim1name='column',                    &
          long_name='urban ground temperature', units='K', &
@@ -984,17 +998,17 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='tair10', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean air temperature', units='Kelvin', &
             interpinic_flag='interp', readvar=readvar, data=this%t_a10_patch )
-       call restartvar(ncid=ncid, flag=flag, varname='ndaysteps', xtype=ncd_double,  &
+       call restartvar(ncid=ncid, flag=flag, varname='ndaysteps', xtype=ncd_int,  &
             dim1name='pft', long_name='accumulative daytime steps', units='steps', &
             interpinic_flag='interp', readvar=readvar, data=this%ndaysteps_patch )
-       call restartvar(ncid=ncid, flag=flag, varname='nnightsteps', xtype=ncd_double,  &
+       call restartvar(ncid=ncid, flag=flag, varname='nnightsteps', xtype=ncd_int,  &
             dim1name='pft', long_name='accumulative nighttime steps', units='steps', &
             interpinic_flag='interp', readvar=readvar, data=this%nnightsteps_patch )
     endif
 
     if ( is_prog_buildtemp )then
        ! landunit type physical state variable - t_building
-       call restartvar(ncid=ncid, flag=flag, varname='t_building', xtype=ncd_double,  & 
+       call restartvar(ncid=ncid, flag=flag, varname='t_building', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='internal building air temperature', units='K', &
             interpinic_flag='interp', readvar=readvar, data=this%t_building_lun)
@@ -1005,7 +1019,7 @@ contains
        end if
 
        ! landunit type physical state variable - t_roof_inner
-       call restartvar(ncid=ncid, flag=flag, varname='t_roof_inner', xtype=ncd_double,  & 
+       call restartvar(ncid=ncid, flag=flag, varname='t_roof_inner', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='roof inside surface temperature', units='K', &
             interpinic_flag='interp', readvar=readvar, data=this%t_roof_inner_lun)
@@ -1016,7 +1030,7 @@ contains
        end if
 
        ! landunit type physical state variable - t_sunw_inner
-       call restartvar(ncid=ncid, flag=flag, varname='t_sunw_inner', xtype=ncd_double,  & 
+       call restartvar(ncid=ncid, flag=flag, varname='t_sunw_inner', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='sunwall inside surface temperature', units='K', &
             interpinic_flag='interp', readvar=readvar, data=this%t_sunw_inner_lun)
@@ -1027,7 +1041,7 @@ contains
        end if
 
        ! landunit type physical state variable - t_shdw_inner
-       call restartvar(ncid=ncid, flag=flag, varname='t_shdw_inner', xtype=ncd_double,  & 
+       call restartvar(ncid=ncid, flag=flag, varname='t_shdw_inner', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='shadewall inside surface temperature', units='K', &
             interpinic_flag='interp', readvar=readvar, data=this%t_shdw_inner_lun)
@@ -1038,7 +1052,7 @@ contains
        end if
 
        ! landunit type physical state variable - t_floor
-       call restartvar(ncid=ncid, flag=flag, varname='t_floor', xtype=ncd_double,  & 
+       call restartvar(ncid=ncid, flag=flag, varname='t_floor', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='floor temperature', units='K', &
             interpinic_flag='interp', readvar=readvar, data=this%t_floor_lun)
@@ -1048,7 +1062,7 @@ contains
           this%t_floor_lun(bounds%begl:bounds%endl) = this%taf_lun(bounds%begl:bounds%endl)
        end if
     end if
-   
+
 
   end subroutine Restart
 
@@ -1061,10 +1075,10 @@ contains
     ! restart file for restart or branch runs
     ! Each interval and accumulation type is unique to each field processed.
     ! Routine [initAccBuffer] defines the fields to be processed
-    ! and the type of accumulation. 
+    ! and the type of accumulation.
     ! Routine [updateAccVars] does the actual accumulation for a given field.
-    ! Fields are accumulated by calls to subroutine [update_accum_field]. 
-    ! To accumulate a field, it must first be defined in subroutine [initAccVars] 
+    ! Fields are accumulated by calls to subroutine [update_accum_field].
+    ! To accumulate a field, it must first be defined in subroutine [initAccVars]
     ! and then accumulated by calls to [updateAccVars].
     ! Four types of accumulations are possible:
     !   o average over time interval
@@ -1075,16 +1089,16 @@ contains
     ! averaging interval. Accumulated fields are continuously accumulated.
     ! The trigger value "-99999." resets the accumulation to zero.
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : init_accum_field
     use clm_time_manager , only : get_step_size
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     !
     ! !ARGUMENTS:
     class(temperature_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
-    ! !LOCAL VARIABLES: 
+    ! !LOCAL VARIABLES:
     real(r8) :: dtime
     integer, parameter :: not_used = huge(1)
     !---------------------------------------------------------------------
@@ -1161,10 +1175,10 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
+    ! and a restart run (and must therefore must be called after the restart file
     ! is read in and the accumulation buffer is obtained)
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : init_accum_field, extract_accum_field
     use clm_time_manager , only : get_nstep
     use clm_varctl       , only : nsrest, nsrStartup
@@ -1172,7 +1186,7 @@ contains
     !
     ! !ARGUMENTS:
     class(temperature_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
@@ -1204,17 +1218,17 @@ contains
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
 
     if (use_crop) then
-       call extract_accum_field ('TDM10', rbufslp, nstep) 
+       call extract_accum_field ('TDM10', rbufslp, nstep)
        this%t_a10min_patch(begp:endp)= rbufslp(begp:endp)
 
-       call extract_accum_field ('TDM5', rbufslp, nstep) 
+       call extract_accum_field ('TDM5', rbufslp, nstep)
        this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
     ! Initialize variables that are to be time accumulated
     ! Initialize 2m ref temperature max and min values
 
-    if (nsrest == nsrStartup) then 
+    if (nsrest == nsrStartup) then
        this%t_ref2m_max_patch(begp:endp)        =  spval
        this%t_ref2m_max_r_patch(begp:endp)      =  spval
        this%t_ref2m_max_u_patch(begp:endp)      =  spval
@@ -1240,7 +1254,7 @@ contains
        call extract_accum_field ('GDD8', rbufslp, nstep) ;
        this%gdd8_patch(begp:endp) = rbufslp(begp:endp)
 
-       call extract_accum_field ('GDD10', rbufslp, nstep) 
+       call extract_accum_field ('GDD10', rbufslp, nstep)
        this%gdd10_patch(begp:endp) = rbufslp(begp:endp)
 
     end if
@@ -1290,7 +1304,7 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-    ! Accumulate and extract T_VEG24 & T_VEG240 
+    ! Accumulate and extract T_VEG24 & T_VEG240
     do p = begp,endp
        rbufslp(p) = this%t_veg_patch(p)
     end do
