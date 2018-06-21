@@ -222,6 +222,16 @@ runaway sea ice growth in that region.
  |               |               | place         |               |
  +---------------+---------------+---------------+---------------+
 
+.. note::
+
+   In regions that have both the ``Glacial melt = Replaced by ice`` and the ``Ice runoff =
+   Melted`` behaviors (by default, this is just the region inside the standard CISM grid
+   but outside Greenland itself): During periods of glacial melt, a negative ice runoff is
+   generated (due to the ``Glacial melt = Replaced by ice`` behavior); this negative ice
+   runoff is converted to a negative liquid runoff plus a positive sensible heat flux (due
+   to the ``Ice runoff = Melted`` behavior). We recommend that you limit the portion of
+   the globe with both of these behaviors combined, in order to avoid having too large of
+   an impact of this non-physical behavior.
 
 .. _Multiple elevation class scheme:
 
