@@ -1476,11 +1476,6 @@ contains
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*((1.-fstem(p))*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))+fstem(p)*tsbef(p)**3*(tsbef(p) + 4._r8*dt_stem(p))) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
 
-!scs
-if(ulrad(p) > 0. .and. ulrad(p) < 5.e3) then 
-else
-write(iulog,*) 'badulrad: ', p, patch%itype(p),ulrad(p),tlbef(p),tsbef(p),dt_stem(p)
-endif
 
 !ABT
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
