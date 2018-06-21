@@ -6,22 +6,22 @@
  Changing Default Filenames
 ============================
 
-To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_|version|.xml`` and either change an existing filename or add a new one. 
+To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5.xml`` and either change an existing filename or add a new one. 
 Most entries in the default namelist files, include different attributes that describe the different properties that describe the differences in the datasets. 
 Attributes include the: resolution, year to simulation, range of years to simulate for transient datafiles, the land-mask, the representative concentration pathway (rcp) for future scenarios, and the type of biogeochemistry (bgc) model used. 
-For example the fatmgrid for the 1.9x2.5 resolution is as follows:
+For example the fsurdat for the 1.9x2.5 resolution is as follows:
 
 ```
-<fsurdat hgrid="0.9x1.25" sim_year="1850" crop="off" >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr1850_c130415.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_CMIP6_simyr1850_c170824.nc
 </fsurdat>
 ```
 
-Other ``fsurdat`` files are distinguished from this one by their resolution (hgrid), simulation year (sim_year) and prognostic crop (crop) attributes.
+Other ``fsurdat`` files are distinguished from this one by their resolution (hgrid), simulation year (sim_year) and prognostic crop (use_crop) attributes.
 
 
 To add or change the default filenames for CLM tools edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_|version|_tools.xml`` and either change an existing filename or add a new one. 
-Editing this file is similar to the ``namelist_defaults_|version|.xml`` talked about above.
+Editing this file is similar to the ``namelist_defaults_clm4_5.xml`` talked about above.
 
 
 ----------------------------
