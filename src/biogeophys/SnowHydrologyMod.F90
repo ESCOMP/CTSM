@@ -307,7 +307,7 @@ contains
          qflx_evap_grnd => waterflux_inst%qflx_evap_grnd_col , & ! Input:  [real(r8) (:)   ] ground surface evaporation rate (mm H2O/s) [+]
          qflx_dew_grnd  => waterflux_inst%qflx_dew_grnd_col  , & ! Input:  [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]
          qflx_snow_drain => waterflux_inst%qflx_snow_drain_col,& ! Output: [real(r8) (:)   ] net snow melt
-         qflx_top_soil  => waterflux_inst%qflx_top_soil_col  , & ! Output: [real(r8) (:)   ] net water input into soil from top (mm/s)
+         qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Output: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
          snow_depth     => waterstate_inst%snow_depth_col    , & ! Output: [real(r8) (:)   ] snow height (m)
 
          mss_bcphi      => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic BC mass in snow (col,lyr) [kg]
@@ -546,7 +546,7 @@ contains
        ! Qout from snow bottom
        qflx_snow_drain(c) = qflx_snow_drain(c) + (qout(c) / dtime)
 
-       qflx_top_soil(c) = (qout(c) / dtime) &
+       qflx_rain_plus_snomelt(c) = (qout(c) / dtime) &
             + (1.0_r8 - frac_sno_eff(c)) * qflx_rain_grnd(c)
        int_snow(c) = int_snow(c) + frac_sno_eff(c) &
                      * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_rain_grnd(c)) * dtime
@@ -556,7 +556,7 @@ contains
        c = filter_nosnowc(fc)
        qflx_snow_drain(c) = qflx_snomelt(c)
 
-       qflx_top_soil(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
+       qflx_rain_plus_snomelt(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
        ! reset accumulated snow when no snow present
        if (h2osno(c) <= 0._r8) then
           int_snow(c) = 0._r8

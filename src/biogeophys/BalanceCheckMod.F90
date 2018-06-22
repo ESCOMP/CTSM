@@ -180,7 +180,6 @@ contains
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
           qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
           qflx_floodc             =>    waterflux_inst%qflx_floodc_col          , & ! Input:  [real(r8) (:)   ]  total runoff due to flooding            
-          qflx_h2osfc_surf        =>    waterflux_inst%qflx_h2osfc_surf_col     , & ! Input:  [real(r8) (:)   ]  surface water runoff (mm/s)              
           qflx_snow_drain         =>    waterflux_inst%qflx_snow_drain_col      , & ! Input:  [real(r8) (:)   ]  drainage from snow pack                         
           qflx_surf               =>    waterflux_inst%qflx_surf_col            , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)              
           qflx_qrgwl              =>    waterflux_inst%qflx_qrgwl_col           , & ! Input:  [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
@@ -272,7 +271,6 @@ contains
                   + qflx_glcice_dyn_water_flux(c) &
                   - qflx_evap_tot(c)         &
                   - qflx_surf(c)             &
-                  - qflx_h2osfc_surf(c)      &
                   - qflx_qrgwl(c)            &
                   - qflx_drain(c)            &
                   - qflx_drain_perched(c)    &
@@ -320,7 +318,6 @@ contains
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
              write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
-             write(iulog,*)'qflx_h2osfc_surf      = ',qflx_h2osfc_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
              write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
@@ -332,7 +329,7 @@ contains
              write(iulog,*)'deltawb          = ',endwb(indexc)-begwb(indexc)
              write(iulog,*)'deltawb/dtime    = ',(endwb(indexc)-begwb(indexc))/dtime
              write(iulog,*)'deltaflux        = ',forc_rain_col(indexc)+forc_snow_col(indexc) - (qflx_evap_tot(indexc) + &
-                  qflx_surf(indexc)+qflx_h2osfc_surf(indexc)+qflx_drain(indexc))
+                  qflx_surf(indexc)+qflx_drain(indexc))
 
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
@@ -351,7 +348,6 @@ contains
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
              write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
-             write(iulog,*)'qflx_h2osfc_surf      = ',qflx_h2osfc_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
              write(iulog,*)'qflx_drain_perched    = ',qflx_drain_perched(indexc)*dtime
