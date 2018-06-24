@@ -700,6 +700,7 @@ module clm_comp_nuopc
     logical           :: dosend         ! true => send data back to driver
     logical           :: doalb          ! .true. ==> do albedo calculation on this time step
     logical           :: rof_prognostic ! .true. => running with a prognostic ROF model
+    logical           :: glc_present    ! .true. => running with a non-stub GLC model
     real(r8)          :: nextsw_cday    ! calday from clock of next radiation computation
     real(r8)          :: caldayp1       ! clm calday plus dtime offset
     integer           :: lbnum          ! input to memory diagnostic
@@ -743,7 +744,8 @@ module clm_comp_nuopc
     ! Determine time of next atmospheric shortwave calculation
     !--------------------------------
 
-    call shr_nuopc_methods_State_GetScalar(importState, flds_scalar_index_nextsw_cday, nextsw_cday, mpicom, &
+    call shr_nuopc_methods_State_GetScalar(importState, &
+         flds_scalar_index_nextsw_cday, nextsw_cday, mpicom, &
          flds_scalar_name, flds_scalar_num, rc)
     call set_nextsw_cday( nextsw_cday )
 
@@ -767,14 +769,14 @@ module clm_comp_nuopc
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) mvelpp
 
-    ! TODO: Determine if we're running with a prognostic ROF model. This won't change
-    ! throughout the run, but we can't count on this being set in initialization, so need
-    ! to get it in the run method.
+    ! TODO: Determine if we're running with prognostic ROF and GLC models. 
+    ! This won't change throughout the run, but we can't count on this being set in 
+    ! initialization, so need to get it in the run method.
     ! This seems to imply an order dependence - for now simply set this to false for debugging - since
     ! are running without a river model for the first test
-    ! call seq_infodata_GetData( infodata, rof_prognostic=rof_prognostic )
 
     rof_prognostic = .false. !THIS MUST BE FIXED before a prognostic river model is added with a nuopc cap
+    glc_present    = .false. !THIS MUST BE FIXED before a prognostic ice-sheet model is added with a nuopc cap
 
     !--------------------------------
     ! Unpack export state
@@ -783,10 +785,17 @@ module clm_comp_nuopc
     call get_proc_bounds(bounds)
 
     call t_startf ('lc_lnd_import')
+
     call shr_nuopc_grid_StateToArray(importState, x2l, flds_x2l, grid_option, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call lnd_import( bounds, x2l, flds_x2l, atm2lnd_inst, glc2lnd_inst )
+    call lnd_import( bounds, &
+         x2l=x2l, &
+         flds_x2l=flds_x2l, &
+         glc_present=glc_present, &
+         atm2lnd_inst=atm2lnd_inst, &
+         glc2lnd_inst=glc2lnd_inst )
+
     call t_stopf ('lc_lnd_import')
 
     !--------------------------------

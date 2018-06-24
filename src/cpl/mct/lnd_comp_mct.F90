@@ -397,12 +397,14 @@ contains
     ! Map to clm (only when state and/or fluxes need to be updated)
 
     call t_startf ('lc_lnd_import')
+
     call lnd_import( bounds, &
          x2l=x2l_l%rattr, &
-         x2l=seq_flds_x2l_fields, &
+         flds_x2l=seq_flds_x2l_fields, &
          glc_present=glc_present, &
          atm2lnd_inst=atm2lnd_inst, &
          glc2lnd_inst=glc2lnd_inst )
+
     call t_stopf ('lc_lnd_import')
 
     ! Use infodata to set orbital values if updated mid-run

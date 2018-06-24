@@ -81,14 +81,14 @@
       <pes pesize="any" compset="any">
 	<comment>none</comment>
 	<ntasks>
-	  <ntasks_atm>-1</ntasks_atm>
-	  <ntasks_lnd>-4</ntasks_lnd>
-	  <ntasks_rof>-4</ntasks_rof>
-	  <ntasks_ice>-4</ntasks_ice>
-	  <ntasks_ocn>-4</ntasks_ocn>
-	  <ntasks_glc>-4</ntasks_glc>
-	  <ntasks_wav>-4</ntasks_wav>
-	  <ntasks_cpl>-4</ntasks_cpl>
+	  <ntasks_atm>-2</ntasks_atm>
+	  <ntasks_lnd>-2</ntasks_lnd>
+	  <ntasks_rof>-2</ntasks_rof>
+	  <ntasks_ice>-2</ntasks_ice>
+	  <ntasks_ocn>-2</ntasks_ocn>
+	  <ntasks_glc>-2</ntasks_glc>
+	  <ntasks_wav>-2</ntasks_wav>
+	  <ntasks_cpl>-2</ntasks_cpl>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>                   
@@ -102,13 +102,13 @@
 	</nthrds>
 	<rootpe>
 	  <rootpe_atm>0</rootpe_atm> 
-	  <rootpe_lnd>-1</rootpe_lnd> 
-	  <rootpe_rof>-1</rootpe_rof> 
-	  <rootpe_ice>-1</rootpe_ice>    
-	  <rootpe_ocn>-1</rootpe_ocn>   
-	  <rootpe_glc>-1</rootpe_glc> 
-	  <rootpe_wav>-1</rootpe_wav> 
-	  <rootpe_cpl>-1</rootpe_cpl>                         
+	  <rootpe_lnd>-2</rootpe_lnd> 
+	  <rootpe_rof>-2</rootpe_rof> 
+	  <rootpe_ice>-2</rootpe_ice>    
+	  <rootpe_ocn>-2</rootpe_ocn>   
+	  <rootpe_glc>-2</rootpe_glc> 
+	  <rootpe_wav>-2</rootpe_wav> 
+	  <rootpe_cpl>-2</rootpe_cpl>                         
 	</rootpe>
       </pes>
     </mach>

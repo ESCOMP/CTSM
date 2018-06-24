@@ -9,8 +9,6 @@ module clm_cpl_indices
   ! !USES:
   use shr_sys_mod,    only : shr_sys_abort
   implicit none
-
-  SAVE
   private                              ! By default make data private
 
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -40,7 +38,7 @@ module clm_cpl_indices
   integer, public ::index_l2x_Sl_snowh        ! snow height
   integer, public ::index_l2x_Sl_u10          ! 10m wind
   integer, public ::index_l2x_Sl_ddvel        ! dry deposition velocities (optional)
-  integer, public ::index_l2x_Sl_fv           ! friction velocity
+  integer, public ::index_l2x_Sl_fv           ! friction velocity  
   integer, public ::index_l2x_Sl_ram1         ! aerodynamical resistance
   integer, public ::index_l2x_Sl_soilw        ! volumetric soil water
   integer, public ::index_l2x_Fall_taux       ! wind stress, zonal
@@ -102,6 +100,7 @@ module clm_cpl_indices
   integer, public ::index_x2l_Faxa_dstwet4    ! flux: Size 4 dust -- wet deposition
   integer, public ::index_x2l_Faxa_dstdry1    ! flux: Size 1 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry2    ! flux: Size 2 dust -- dry deposition
+  
   integer, public ::index_x2l_Faxa_dstdry3    ! flux: Size 3 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry4    ! flux: Size 4 dust -- dry deposition
 

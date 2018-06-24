@@ -1,16 +1,18 @@
 module lnd_import_export
 
-  use shr_kind_mod   , only : r8 => shr_kind_r8, cl=>shr_kind_cl
-  use abortutils     , only : endrun
-  use decompmod      , only : bounds_type
-  use lnd2atmType    , only : lnd2atm_type
-  use lnd2glcMod     , only : lnd2glc_type
-  use atm2lndType    , only : atm2lnd_type
-  use glc2lndMod     , only : glc2lnd_type
-  use spmdMod        , only : masterproc, iam
-  use shr_infnan_mod , only : isnan => shr_infnan_isnan
-  use shr_string_mod , only : shr_string_listGetName
-  use domainMod      , only : ldomain
+  use shr_kind_mod     , only : r8 => shr_kind_r8, cl=>shr_kind_cl
+  use abortutils       , only : endrun
+  use decompmod        , only : bounds_type
+  use lnd2atmType      , only : lnd2atm_type
+  use lnd2glcMod       , only : lnd2glc_type
+  use atm2lndType      , only : atm2lnd_type
+  use glc2lndMod       , only : glc2lnd_type
+  use spmdMod          , only : masterproc, iam
+  use shr_infnan_mod   , only : isnan => shr_infnan_isnan
+  use shr_string_mod   , only : shr_string_listGetName
+  use domainMod        , only : ldomain
+  use clm_varctl       , only : iulog
+  use clm_time_manager , only : get_nstep, get_step_size
   use clm_cpl_indices
 
   implicit none
@@ -29,16 +31,15 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  !===============================================================================
   subroutine lnd_import( bounds, x2l, flds_x2l, glc_present, atm2lnd_inst, glc2lnd_inst)
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
     ! Convert the input data from the coupler to the land model
+    !---------------------------------------------------------------------------
     !
     ! !USES:
-    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
-    use clm_varctl      , only: ndep_from_cpl
+    use clm_varctl      , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     !
@@ -103,44 +104,44 @@ contains
        call endrun( sub//' ERROR: must have nonzero index_x2l_Sa_co2diag for co2_type equal to diagnostic' )
     end if
 
-    !DEBUG
+    ! Write debug output if appropriate
     if (masterproc .and. debug > 0) then
        do g = bounds%begg,bounds%endg
           i = 1 + (g - bounds%begg)
-          write(6,*)'DEBUG: clm i,Sa_z        = ',i,x2l(index_x2l_Sa_z,i)
-          write(6,*)'DEBUG: clm i,Sa_topo     = ',i,x2l(index_x2l_Sa_topo,i)
-          write(6,*)'DEBUG: clm i,Sa_u        = ',i,x2l(index_x2l_Sa_u,i)
-          write(6,*)'DEBUG: clm i,Sa_v        = ',i,x2l(index_x2l_Sa_v,i)
-          write(6,*)'DEBUG: clm i,Fa_swndr    = ',i,x2l(index_x2l_Faxa_swndr,i)
-          write(6,*)'DEBUG: clm i,Fa_swvdr    = ',i,x2l(index_x2l_Faxa_swvdr,i)
-          write(6,*)'DEBUG: clm i,Fa_swndf    = ',i,x2l(index_x2l_Faxa_swndf,i)
-          write(6,*)'DEBUG: clm i,Fa_swvdf    = ',i,x2l(index_x2l_Faxa_swvdf,i)
-          write(6,*)'DEBUG: clm i,Sa_ptem     = ',i,x2l(index_x2l_Sa_ptem,i)
-          write(6,*)'DEBUG: clm i,Sa_shum     = ',i,x2l(index_x2l_Sa_shum,i)
-          write(6,*)'DEBUG: clm i,Sa_pbot     = ',i,x2l(index_x2l_Sa_pbot,i)
-          write(6,*)'DEBUG: clm i,Sa_tbot     = ',i,x2l(index_x2l_Sa_tbot,i)
-          write(6,*)'DEBUG: clm i,Fa_lwdn     = ',i,x2l(index_x2l_Faxa_lwdn,i)
-          write(6,*)'DEBUG: clm i,Fa_rainc    = ',i,x2l(index_x2l_Faxa_rainc,i)
-          write(6,*)'DEBUG: clm i,Fa_rainl    = ',i,x2l(index_x2l_Faxa_rainl,i)
-          write(6,*)'DEBUG: clm i,Fa_snowc    = ',i,x2l(index_x2l_Faxa_snowc,i)
-          write(6,*)'DEBUG: clm i,Fa_snowl    = ',i,x2l(index_x2l_Faxa_snowl,i)
-          write(6,*)'DEBUG: clm i,Fa_bcphidry = ',i,x2l(index_x2l_Faxa_bcphidry,i)
-          write(6,*)'DEBUG: clm i,Fa_fcphodry = ',i,x2l(index_x2l_Faxa_bcphodry,i)
-          write(6,*)'DEBUG: clm i,Fa_bcphiwet = ',i,x2l(index_x2l_Faxa_bcphiwet,i)
-          write(6,*)'DEBUG: clm i,Fa_ocphidry = ',i,x2l(index_x2l_Faxa_ocphidry,i)
-          write(6,*)'DEBUG: clm i,Fa_ocphodry = ',i,x2l(index_x2l_Faxa_ocphodry,i)
-          write(6,*)'DEBUG: clm i,Fa_ocphiwet = ',i,x2l(index_x2l_Faxa_ocphiwet,i)
-          write(6,*)'DEBUG: clm i,Fa_dstwet1  = ',i,x2l(index_x2l_Faxa_dstwet1,i)
-          write(6,*)'DEBUG: clm i,Fa_dstdry1  = ',i,x2l(index_x2l_Faxa_dstdry1,i)
-          write(6,*)'DEBUG: clm i,Fa_dstwet2  = ',i,x2l(index_x2l_Faxa_dstwet2,i)
-          write(6,*)'DEBUG: clm i,Fa_dstdry2  = ',i,x2l(index_x2l_Faxa_dstdry2,i)
-          write(6,*)'DEBUG: clm i,Fa_dstwet3  = ',i,x2l(index_x2l_Faxa_dstwet3,i)
-          write(6,*)'DEBUG: clm i,Fa_dstdry3  = ',i,x2l(index_x2l_Faxa_dstdry3,i)
-          write(6,*)'DEBUG: clm i,Fa_dstwet4  = ',i,x2l(index_x2l_Faxa_dstwet4,i)
-          write(6,*)'DEBUG: clm i,Fa_dstdry4  = ',i,x2l(index_x2l_Faxa_dstdry4,i)
+          write(iulog,F01)'import: nstep, n, Sa_z        = ',get_nstep(), i, x2l(index_x2l_Sa_z,i)
+          write(iulog,F01)'import: nstep, n, Sa_topo     = ',get_nstep(), i, x2l(index_x2l_Sa_topo,i)
+          write(iulog,F01)'import: nstep, n, Sa_u        = ',get_nstep(), i, x2l(index_x2l_Sa_u,i)
+          write(iulog,F01)'import: nstep, n, Sa_v        = ',get_nstep(), i, x2l(index_x2l_Sa_v,i)
+          write(iulog,F01)'import: nstep, n, Fa_swndr    = ',get_nstep(), i, x2l(index_x2l_Faxa_swndr,i)
+          write(iulog,F01)'import: nstep, n, Fa_swvdr    = ',get_nstep(), i, x2l(index_x2l_Faxa_swvdr,i)
+          write(iulog,F01)'import: nstep, n, Fa_swndf    = ',get_nstep(), i, x2l(index_x2l_Faxa_swndf,i)
+          write(iulog,F01)'import: nstep, n, Fa_swvdf    = ',get_nstep(), i, x2l(index_x2l_Faxa_swvdf,i)
+          write(iulog,F01)'import: nstep, n, Sa_ptem     = ',get_nstep(), i, x2l(index_x2l_Sa_ptem,i)
+          write(iulog,F01)'import: nstep, n, Sa_shum     = ',get_nstep(), i, x2l(index_x2l_Sa_shum,i)
+          write(iulog,F01)'import: nstep, n, Sa_pbot     = ',get_nstep(), i, x2l(index_x2l_Sa_pbot,i)
+          write(iulog,F01)'import: nstep, n, Sa_tbot     = ',get_nstep(), i, x2l(index_x2l_Sa_tbot,i)
+          write(iulog,F01)'import: nstep, n, Fa_lwdn     = ',get_nstep(), i, x2l(index_x2l_Faxa_lwdn,i)
+          write(iulog,F01)'import: nstep, n, Fa_rainc    = ',get_nstep(), i, x2l(index_x2l_Faxa_rainc,i)
+          write(iulog,F01)'import: nstep, n, Fa_rainl    = ',get_nstep(), i, x2l(index_x2l_Faxa_rainl,i)
+          write(iulog,F01)'import: nstep, n, Fa_snowc    = ',get_nstep(), i, x2l(index_x2l_Faxa_snowc,i)
+          write(iulog,F01)'import: nstep, n, Fa_snowl    = ',get_nstep(), i, x2l(index_x2l_Faxa_snowl,i)
+          write(iulog,F01)'import: nstep, n, Fa_bcphidry = ',get_nstep(), i, x2l(index_x2l_Faxa_bcphidry,i)
+          write(iulog,F01)'import: nstep, n, Fa_fcphodry = ',get_nstep(), i, x2l(index_x2l_Faxa_bcphodry,i)
+          write(iulog,F01)'import: nstep, n, Fa_bcphiwet = ',get_nstep(), i, x2l(index_x2l_Faxa_bcphiwet,i)
+          write(iulog,F01)'import: nstep, n, Fa_ocphidry = ',get_nstep(), i, x2l(index_x2l_Faxa_ocphidry,i)
+          write(iulog,F01)'import: nstep, n, Fa_ocphodry = ',get_nstep(), i, x2l(index_x2l_Faxa_ocphodry,i)
+          write(iulog,F01)'import: nstep, n, Fa_ocphiwet = ',get_nstep(), i, x2l(index_x2l_Faxa_ocphiwet,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstwet1  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet1,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstdry1  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry1,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstwet2  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet2,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstdry2  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry2,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstwet3  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet3,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstdry3  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry3,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstwet4  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet4,i)
+          write(iulog,F01)'import: nstep, n, Fa_dstdry4  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry4,i)
        end do
     end if
-    !DEBUG
+
     ! Note that the precipitation fluxes received  from the coupler
     ! are in units of kg/s/m^2. To convert these precipitation rates
     ! in units of mm/sec, one must divide by 1000 kg/m^3 and multiply
@@ -332,10 +333,9 @@ contains
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
     ! Convert the data to be sent from the clm model to the coupler
+    !---------------------------------------------------------------------------
     !
     ! !USES:
-    use clm_varctl         , only : iulog
-    use clm_time_manager   , only : get_nstep, get_step_size
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
@@ -470,42 +470,42 @@ contains
 
     end do
 
-    if (debug > 0) then
+    if (masterproc .and. debug > 0) then
        do g = bounds%begg,bounds%endg
           i = 1 + (g-bounds%begg)
-          write(6,F01)'export: iam, nstep, n, Sl_5       = ',iam, get_nstep(), i,l2x(index_l2x_Sl_t,i)
-          write(6,F01)'export: iam, nstep, n, Sl_snowh   = ',iam, get_nstep(), i,l2x(index_l2x_Sl_snowh,i)
-          write(6,F01)'export: iam, nstep, n, Sl_avsdr   = ',iam, get_nstep(), i,l2x(index_l2x_Sl_avsdr,i)
-          write(6,F01)'export: iam, nstep, n, Sl_anidr   = ',iam, get_nstep(), i,l2x(index_l2x_Sl_anidr,i)
-          write(6,F01)'export: iam, nstep, n, Sl_avsdf   = ',iam, get_nstep(), i,l2x(index_l2x_Sl_avsdf,i)
-          write(6,F01)'export: iam, nstep, n, Sl_anidf   = ',iam, get_nstep(), i,l2x(index_l2x_Sl_anidf,i)
-          write(6,F01)'export: iam, nstep, n, Sl_tref    = ',iam, get_nstep(), i,l2x(index_l2x_Sl_tref,i)
-          write(6,F01)'export: iam, nstep, n, Sl_qref    = ',iam, get_nstep(), i,l2x(index_l2x_Sl_qref,i)
-          write(6,F01)'export: iam, nstep, n, Sl_u10     = ',iam, get_nstep(), i,l2x(index_l2x_Sl_u10,i)
-          write(6,F01)'export: iam, nstep, n, Fl_taux    = ',iam, get_nstep(), i,l2x(index_l2x_Fall_taux,i)
-          write(6,F01)'export: iam, nstep, n, Fl_tauy    = ',iam, get_nstep(), i,l2x(index_l2x_Fall_tauy,i)
-          write(6,F01)'export: iam, nstep, n, Fl_lat     = ',iam, get_nstep(), i,l2x(index_l2x_Fall_lat,i)
-          write(6,F01)'export: iam, nstep, n, Fl_sen     = ',iam, get_nstep(), i,l2x(index_l2x_Fall_sen,i)
-          write(6,F01)'export: iam, nstep, n, Fl_lwup    = ',iam, get_nstep(), i,l2x(index_l2x_Fall_lwup,i)
-          write(6,F01)'export: iam, nstep, n, Fl_evap    = ',iam, get_nstep(), i,l2x(index_l2x_Fall_evap,i)
-          write(6,F01)'export: iam, nstep, n, Fl_swnet   = ',iam, get_nstep(), i,l2x(index_l2x_Fall_swnet,i)
-          write(6,F01)'export: iam, nstep, n, Sl_ram1    = ',iam, get_nstep(), i,l2x(index_l2x_Sl_ram1,i)
-          write(6,F01)'export: iam, nstep, n, Sl_fv      = ',iam, get_nstep(), i,l2x(index_l2x_Sl_fv,i)
+          write(iulog,F01)'export:  nstep, n, Sl_5       = ', get_nstep(), i,l2x(index_l2x_Sl_t,i)
+          write(iulog,F01)'export:  nstep, n, Sl_snowh   = ', get_nstep(), i,l2x(index_l2x_Sl_snowh,i)
+          write(iulog,F01)'export:  nstep, n, Sl_avsdr   = ', get_nstep(), i,l2x(index_l2x_Sl_avsdr,i)
+          write(iulog,F01)'export:  nstep, n, Sl_anidr   = ', get_nstep(), i,l2x(index_l2x_Sl_anidr,i)
+          write(iulog,F01)'export:  nstep, n, Sl_avsdf   = ', get_nstep(), i,l2x(index_l2x_Sl_avsdf,i)
+          write(iulog,F01)'export:  nstep, n, Sl_anidf   = ', get_nstep(), i,l2x(index_l2x_Sl_anidf,i)
+          write(iulog,F01)'export:  nstep, n, Sl_tref    = ', get_nstep(), i,l2x(index_l2x_Sl_tref,i)
+          write(iulog,F01)'export:  nstep, n, Sl_qref    = ', get_nstep(), i,l2x(index_l2x_Sl_qref,i)
+          write(iulog,F01)'export:  nstep, n, Sl_u10     = ', get_nstep(), i,l2x(index_l2x_Sl_u10,i)
+          write(iulog,F01)'export:  nstep, n, Fl_taux    = ', get_nstep(), i,l2x(index_l2x_Fall_taux,i)
+          write(iulog,F01)'export:  nstep, n, Fl_tauy    = ', get_nstep(), i,l2x(index_l2x_Fall_tauy,i)
+          write(iulog,F01)'export:  nstep, n, Fl_lat     = ', get_nstep(), i,l2x(index_l2x_Fall_lat,i)
+          write(iulog,F01)'export:  nstep, n, Fl_sen     = ', get_nstep(), i,l2x(index_l2x_Fall_sen,i)
+          write(iulog,F01)'export:  nstep, n, Fl_lwup    = ', get_nstep(), i,l2x(index_l2x_Fall_lwup,i)
+          write(iulog,F01)'export:  nstep, n, Fl_evap    = ', get_nstep(), i,l2x(index_l2x_Fall_evap,i)
+          write(iulog,F01)'export:  nstep, n, Fl_swnet   = ', get_nstep(), i,l2x(index_l2x_Fall_swnet,i)
+          write(iulog,F01)'export:  nstep, n, Sl_ram1    = ', get_nstep(), i,l2x(index_l2x_Sl_ram1,i)
+          write(iulog,F01)'export:  nstep, n, Sl_fv      = ', get_nstep(), i,l2x(index_l2x_Sl_fv,i)
           if (index_l2x_Sl_soilw     /= 0 ) then
-             write(6,F01)'export: iam, nstep, n, Sl_soilw   = ',iam, get_nstep(), i,l2x(index_l2x_Sl_soilw,i)
+             write(iulog,F01)'export:  nstep, n, Sl_soilw   = ', get_nstep(), i,l2x(index_l2x_Sl_soilw,i)
           end if
           if (index_l2x_Fall_flxdst1 /= 0) then
-             write(6,F01)'export: iam, nstep, n, Fl_flxdst1 = ',iam, get_nstep(), i,l2x(index_l2x_Fall_flxdst1,i)
-             write(6,F01)'export: iam, nstep, n, Fl_flxdst2 = ',iam, get_nstep(), i,l2x(index_l2x_Fall_flxdst2,i)
-             write(6,F01)'export: iam, nstep, n, Fl_flxdst3 = ',iam, get_nstep(), i,l2x(index_l2x_Fall_flxdst3,i)
-             write(6,F01)'export: iam, nstep, n, Fl_flxdst4 = ',iam, get_nstep(), i,l2x(index_l2x_Fall_flxdst4,i)
+             write(iulog,F01)'export:  nstep, n, Fl_flxdst1 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst1,i)
+             write(iulog,F01)'export:  nstep, n, Fl_flxdst2 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst2,i)
+             write(iulog,F01)'export:  nstep, n, Fl_flxdst3 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst3,i)
+             write(iulog,F01)'export:  nstep, n, Fl_flxdst4 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst4,i)
           end if
-          write(6,F01)'export: iam, nstep, n, Sl_fv       = ',iam, get_nstep(), i,l2x(index_l2x_Sl_fv,i)
-          write(6,F01)'export: iam, nstep, n, Flrl_rofsur = ',iam, get_nstep(), i,l2x(index_l2x_Flrl_rofsur,i)
-          write(6,F01)'export: iam, nstep, n, Flrl_rofsub = ',iam, get_nstep(), i,l2x(index_l2x_Flrl_rofsub,i)
-          write(6,F01)'export: iam, nstep, n, Flrl_rofgwl = ',iam, get_nstep(), i,l2x(index_l2x_Flrl_rofgwl,i)
-          write(6,F01)'export: iam, nstep, n, Flrl_rofi   = ',iam, get_nstep(), i,l2x(index_l2x_Flrl_rofi,i)
-          write(6,F01)'export: iam, nstep, n, Flrl_irrig  = ',iam, get_nstep(), i,l2x(index_l2x_Flrl_irrig,i)
+          write(iulog,F01)'export:  nstep, n, Sl_fv       = ', get_nstep(), i,l2x(index_l2x_Sl_fv,i)
+          write(iulog,F01)'export:  nstep, n, Flrl_rofsur = ', get_nstep(), i,l2x(index_l2x_Flrl_rofsur,i)
+          write(iulog,F01)'export:  nstep, n, Flrl_rofsub = ', get_nstep(), i,l2x(index_l2x_Flrl_rofsub,i)
+          write(iulog,F01)'export:  nstep, n, Flrl_rofgwl = ', get_nstep(), i,l2x(index_l2x_Flrl_rofgwl,i)
+          write(iulog,F01)'export:  nstep, n, Flrl_rofi   = ', get_nstep(), i,l2x(index_l2x_Flrl_rofi,i)
+          write(iulog,F01)'export:  nstep, n, Flrl_irrig  = ', get_nstep(), i,l2x(index_l2x_Flrl_irrig,i)
        end do
     end if
 
