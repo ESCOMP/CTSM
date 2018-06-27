@@ -14,8 +14,10 @@ Module HydrologyNoDrainageMod
   use AerosolMod        , only : aerosol_type
   use EnergyFluxType    , only : energyflux_type
   use TemperatureType   , only : temperature_type
-  use SoilHydrologyType , only : soilhydrology_type  
+  use SoilHydrologyType , only : soilhydrology_type
   use SoilStateType     , only : soilstate_type
+  use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
+  use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use WaterfluxType     , only : waterflux_type
   use WaterstateType    , only : waterstate_type
   use CanopyStateType   , only : canopystate_type
@@ -43,22 +45,12 @@ contains
        clm_fates, &
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
-       soilhydrology_inst, aerosol_inst, &
-       canopystate_inst, soil_water_retention_curve, topo_inst)
+       soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
+       aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
     ! hydrology
-    ! Calling sequence is:
-    !    -> SnowWater:             change of snow mass and snow water onto soil
-    !    -> SurfaceRunoff:         surface runoff
-    !    -> Infiltration:          infiltration into surface soil layer
-    !    -> SoilWater:             soil water movement between layers
-    !          -> Tridiagonal      tridiagonal matrix solution
-    !    -> Drainage:              subsurface runoff
-    !    -> SnowCompaction:        compaction of snow layers
-    !    -> CombineSnowLayers:     combine snow layers that are thinner than minimum
-    !    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
     !
     ! !USES:
     use clm_varcon           , only : denh2o, denice, hfus, grav, tfrz
@@ -70,7 +62,11 @@ contains
     use clm_time_manager     , only : get_step_size, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
-    use SoilHydrologyMod     , only : CLMVICMap, SurfaceRunoff, Infiltration, WaterTable, PerchedWaterTable
+    use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions
+    use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess, UpdateH2osfc
+    use SoilHydrologyMod     , only : Infiltration, TotalSurfaceRunoff
+    use SoilHydrologyMod     , only : UpdateUrbanPonding
+    use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
     use SoilWaterMovementMod , only : SoilWater 
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
@@ -99,6 +95,8 @@ contains
     type(waterstate_type)    , intent(inout) :: waterstate_inst
     type(aerosol_type)       , intent(inout) :: aerosol_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
+    type(saturated_excess_runoff_type), intent(inout) :: saturated_excess_runoff_inst
+    type(infiltration_excess_runoff_type), intent(inout) :: infiltration_excess_runoff_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     class(topo_type)   , intent(in)    :: topo_inst
@@ -186,12 +184,38 @@ contains
               soilhydrology_inst, waterstate_inst)
       end if
 
-      call SurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-           soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst)
+      call SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
+           soilhydrology_inst, soilstate_inst, waterstate_inst)
 
-      call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
-           energyflux_inst, soilhydrology_inst, soilstate_inst, temperature_inst, &
+      call saturated_excess_runoff_inst%SaturatedExcessRunoff(&
+           bounds, num_hydrologyc, filter_hydrologyc, col, &
+           soilhydrology_inst, soilstate_inst, waterflux_inst)
+
+      call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
+           waterflux_inst, saturated_excess_runoff_inst, waterstate_inst)
+
+      call infiltration_excess_runoff_inst%InfiltrationExcessRunoff( &
+           bounds, num_hydrologyc, filter_hydrologyc, &
+           soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterflux_inst, &
+           waterstate_inst)
+
+      call RouteInfiltrationExcess(bounds, num_hydrologyc, filter_hydrologyc, &
+           waterflux_inst, infiltration_excess_runoff_inst, soilhydrology_inst)
+
+      call UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
+           infiltration_excess_runoff_inst, &
+           energyflux_inst, soilhydrology_inst, &
            waterflux_inst, waterstate_inst)
+
+      call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
+           waterflux_inst)
+
+      call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
+           num_urbanc, filter_urbanc, &
+           waterflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, waterstate_inst)
+
+      call UpdateUrbanPonding(bounds, num_urbanc, filter_urbanc, &
+           waterstate_inst, soilhydrology_inst, waterflux_inst)
 
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterflux_inst, energyflux_inst)
