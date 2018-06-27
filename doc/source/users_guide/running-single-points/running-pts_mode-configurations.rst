@@ -21,13 +21,13 @@ To setup a ``PTS_MODE`` simulation you use the "-pts_lat" and "-pts_lon" argumen
 
 Then setup, build and run as normal. We make sure initial conditions are NOT used since ``PTS_MODE`` currently CAN NOT run with initial conditions.
 
-.. warning:: ``PTS_MODE`` currently does NOT restart nor is it able to startup from global initial condition files. See bugs "1017 and 1025" in the `$CTSMROOT/doc/KnownLimitationss <CLM-URL>`_ file.
+.. warning:: ``PTS_MODE`` currently does NOT restart nor is it able to startup from global initial condition files. This is a known issue we are unlikely to fix.
 
 .. note:: You can change the point you are simulating for at run-time by changing the values of ``PTS_LAT`` and ``PTS_LON`` in the ``env_run.xml`` file.
 
-==================================
- Running on in a single processor
-==================================
+==============================
+ Running in a single processor
+==============================
 
 Note, that when running with ``PTS_MODE`` the number of processors is automatically set to one. 
 When running a single grid point you can only use a single processor. 
