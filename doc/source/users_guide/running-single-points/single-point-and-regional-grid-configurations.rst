@@ -17,10 +17,10 @@ There are three different ways to do this for normal-supported site
 ``CLM_USRDAT_NAME``
   runs using your own datasets (single-point or regional).
 
-``PTCLM``
+``PTCLMmkdata``
   easily setup simulations to run for tower sites..
 
-.. note:: ``PTS_MODE`` and ``PTCLM`` only works for a single point, while the other two options can also work for regional datasets as well.
+.. note:: ``PTS_MODE`` and ``PTCLMmkdata`` only works for a single point, while the other two options can also work for regional datasets as well.
 
 .. _options-for-single-points:
 
@@ -42,12 +42,12 @@ With this method you don't have to change DATM or add files to the XML database 
 However, once the files are named and in the proper location, you can easily setup new cases that use these datasets. 
 This is good for treating all the required datasets as a "group" and for a particular model version. For advanced CLM developers who need to track dataset changes with different model versions you would be best off adding these datasets as supported datasets with the "normal supported datasets" method.
 
-Lastly *PTCLM* is a great way to easily create datasets, setup simulations and run simulations for tower sites. 
+Lastly *PTCLMmkdata* is a great way to easily create datasets, setup simulations and run simulations for tower sites. 
 It takes advantage of both normal supported site functionality and CLM_USRDAT_NAME internally. 
-A big advantage to it, is that it's one-stop shopping, it runs tools to create datasets, and runs **create_newcase** and sets the appropriate env variables for you. So you only have to learn how to run one tool, rather than work with many different ones. PTCLM is described in the next chapter `Chapter 6 <CLM-URL>`_.
+A big advantage to it, is that it's one-stop shopping, it runs tools to create datasets, and runs **create_newcase** and sets the appropriate env variables for you. So you only have to learn how to run one tool, rather than work with many different ones. PTCLMmkdata is described in the next chapter `Chapter 6 <CLM-URL>`_.
 
 Finally, if you also have meteorology data that you want to force your CLM simulations with you'll need to setup cases as described in `the Section called Running with your own atmosphere forcing <CLM-URL>`_. 
 You'll need to create CLM datasets either according to ``CLM_USRDAT_NAME``. 
 You may also need to modify DATM to use your forcing data. 
-And you'll need to change your forcing data to be in a format that DATM can use. In the PTCLM chapter `the Section called Converting AmeriFlux Data for use by PTCLM in Chapter 6 <CLM-URL>`_ section tells you how to use AmeriFlux data for atmospheric forcing.
+And you'll need to change your forcing data to be in a format that DATM can use. In the PTCLMmkdata chapter `the Section called Converting AmeriFlux Data for use by PTCLMmkdata in Chapter 6 <CLM-URL>`_ section tells you how to use AmeriFlux data for atmospheric forcing.
 
