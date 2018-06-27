@@ -67,6 +67,8 @@ if [ -n "${BL_ROOT}" ]; then
     env CLM_TESTDIR=${BL_TESTDIR} \
         CLM_SCRIPTDIR=$bl_dir \
         CLM_ROOT=$BL_ROOT \
+        CTSM_ROOT=$BL_ROOT \
+        CIME_ROOT=$BL_ROOT/cime \
         $bl_dir/TSMscript_tools.sh $1 $2 $3
     rc=$?
     if [ $rc -ne 0 ]; then

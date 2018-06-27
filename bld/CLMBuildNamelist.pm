@@ -1569,6 +1569,7 @@ sub process_namelist_inline_logic {
   setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_fertilizer($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_grainproduct($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1744,6 +1745,10 @@ sub process_namelist_inline_logic {
   #######################################################################
   setup_logic_hydrology_switches($nl, $physv);
 
+  #########################################
+  # namelist group: clm_initinterp_inparm #
+  #########################################
+  setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -2071,6 +2076,18 @@ sub setup_logic_create_crop_landunit {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_subgrid {
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   my $var = 'run_zero_weight_urban';
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+}
+
 #-------------------------------------------------------------------------------
 
 sub setup_logic_cnfire {
@@ -3705,6 +3722,26 @@ sub setup_logic_lnd2atm {
 
    if ($physv->as_long() >= $physv->as_long("clm4_5")) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'melt_non_icesheet_ice_runoff');
+   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_initinterp {
+   #
+   # Options related to init_interp
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      my $var = 'init_interp_method';
+      if ( &value_is_true($nl->get_value("use_init_interp"))) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      } else {
+         if (defined($nl->get_value($var))) {
+            $log->fatal_error("$var can only be set if use_init_interp is true");
+         }
+      }
    }
 }
 

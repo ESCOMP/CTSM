@@ -26,6 +26,7 @@ module clm_time_manager
         get_step_size_real,       &! return step size in seconds, real-valued
         get_rad_step_size,        &! return radiation step size in seconds
         get_nstep,                &! return timestep number
+        get_nstep_since_startup_or_lastDA_restart_or_pause, &! return number of timesteps since restart was modified
         get_curr_date,            &! return date components at end of current timestep
         get_prev_date,            &! return date components at beginning of current timestep
         get_start_date,           &! return components of the start date
@@ -54,6 +55,7 @@ module clm_time_manager
         is_perpetual,             &! return true if perpetual calendar is in use
         is_restart,               &! return true if this is a restart run
         update_rad_dtime,         &! track radiation interval via nstep
+        update_DA_nstep,          &! update the Data Assimulation time step
         timemgr_reset              ! reset values to their defaults, and free memory
 
    ! Public methods, but just to support unit testing:
@@ -110,6 +112,10 @@ module clm_time_manager
    ! Next short-wave radiation calendar day
    ! 
    real(r8) :: nextsw_cday = uninit_r8 ! calday from clock of next radiation computation
+
+   !
+   ! The time-step number of startup or last Data Assimulation (DA) restart or pause
+   integer, save :: DA_nstep = 0 ! Last step number that state was modified externally (by DA)
 
    ! Private module methods
 
@@ -875,6 +881,13 @@ contains
 
   !=========================================================================================
 
+  subroutine update_DA_nstep()
+     ! Update the Data Assimulation time-step to the current time step, since DA has been done
+     DA_nstep = get_nstep()
+  end subroutine update_DA_nstep
+
+  !=========================================================================================
+
   subroutine update_rad_dtime(doalb)
     !---------------------------------------------------------------------------------
     ! called only on doalb timesteps to save off radiation nsteps
@@ -932,6 +945,18 @@ contains
     get_nstep = step_no
 
   end function get_nstep
+
+  !=========================================================================================
+
+  integer function get_nstep_since_startup_or_lastDA_restart_or_pause()
+
+    ! Return the number of time-steps since the restart file was modified
+
+    character(len=*), parameter :: sub = 'clm::get_nstep_since_rest_mod'
+
+    get_nstep_since_startup_or_lastDA_restart_or_pause = get_nstep() - DA_nstep
+
+  end function get_nstep_since_startup_or_lastDA_restart_or_pause
 
   !=========================================================================================
 
