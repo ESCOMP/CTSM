@@ -21,8 +21,6 @@ To setup a ``PTS_MODE`` simulation you use the "-pts_lat" and "-pts_lon" argumen
 
 Then setup, build and run as normal. We make sure initial conditions are NOT used since ``PTS_MODE`` currently CAN NOT run with initial conditions.
 
-.. note:: By default it sets up to run with MPILIB=mpi-serial (in the env_build.xml file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
-
 .. warning:: ``PTS_MODE`` currently does NOT restart nor is it able to startup from global initial condition files. See bugs "1017 and 1025" in the `$CTSMROOT/doc/KnownLimitationss <CLM-URL>`_ file.
 
 .. note:: You can change the point you are simulating for at run-time by changing the values of ``PTS_LAT`` and ``PTS_LON`` in the ``env_run.xml`` file.
@@ -37,6 +35,5 @@ You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial``
 
 On many machines, batch queues have a minimum number of nodes or processors that can be used. 
 On these machines you may have to change the queue and possibly the time-limits of the job, to get it to run in the batch queue. 
-On the NCAR machine, cheyenne, this is done for you automatically, and the "caldera" queue is used for such single-processor simulations. 
-Another way to get around this problem is to run the job interactively using ``MPILIB=mpi-serial`` so that you don't submit the job to the batch queue.  
+On the NCAR machine, cheyenne, this is done for you automatically, and the "share" or "caldera" queue is used for such single-processor simulations. 
 For single point mode you also may want to consider using a smaller workstation or cluster, rather than a super-computer, because you can't take advantage of the multi-processing power of the super-computer anyway.

@@ -34,13 +34,13 @@ The resolution names that have an underscore in them ("_") are all single-point 
 
 To run for the Brazil test site do the following:
 
-Example: Running CLM over a single-point test site in Brazil with the default Qian atmosphere data forcing.
---------------------------------------------------------------------------------------------------------------------------
+Example: Running CLM over a single-point test site in Brazil
+------------------------------------------------------------
 ::
 
    > cd scripts
    > set SITE=1x1_brazil
-   > ./create_newcase -case testSPDATASET -res $SITE -compset I 
+   > ./create_newcase -case testSPDATASET -res $SITE -compset I2000Clm50SpGs 
    > cd testSPDATASET
 
 Then setup, build and run normally.
@@ -54,11 +54,8 @@ Example: Running CLM over the single-point of Mexicocity Mexico with the default
    > cd scripts
    # Set a variable to the site you want to use (as it's used several times below)
    > set SITE=1x1_mexicocityMEX
-   > ./create_newcase -case testSPDATASET -res $SITE -compset I 
+   > ./create_newcase -case testSPDATASET -res $SITE -compset I1PtClm50SpGs 
    > cd testSPDATASET
-   # Set DATM prescribed aerosols to single-point dataset
-   # Will then use the dataset with just the point for this $SITE
-   > ./xmlchange DATM_PRESAERO=pt1_pt1
 
 Then setup, build and run normally.
 
@@ -72,9 +69,9 @@ Using Supported Single-point Datasets that have their own Atmospheric Forcing
 ================================================================================
 
 Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project). 
-Mexico city and Vancouver also have "#ifdef" in the source code for them to work with modified urban data parameters that are particular to these locations. 
-They can be turned on by using the ``CLM_CONFIG_OPTS env_build.xml`` variable to set the "-sitespf_pt" option in the CLM **configure**. 
+Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations. 
 To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked.
+If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
 
 When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. 
 If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. 
@@ -94,11 +91,8 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
    > set SITE=1x1_vancouverCAN
 
    # Create a case at the single-point resolutions with their forcing
-   > ./create_newcase -case testSPDATASETnAtmForcing -res $SITE -compset I1PTCLM45 
+   > ./create_newcase -case testSPDATASETnAtmForcing -res $SITE -compset I1PtClm50SpGs
    > cd testSPDATASETnAtmForcing
-
-   # Set namelist options for urban test site
-   > ./xmlchange CLM_NML_USE_CASE=stdurbpt_pd
 
    # Figure out the start and end date for this dataset
    # You can do this by examining the datafile.
@@ -116,13 +110,10 @@ Example: Running CLM over the single-point of Vancouver Canada with supplied atm
    hist_nhtfrq = -1,1,1
    EOF
 
-   # Set DATM prescribed aerosols to single-point dataset
-   # Will then use the dataset with just the point for this site
-   > ./xmlchange DATM_PRESAERO=pt1_pt1
    > ./case.setup
 
 
-.. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model (see bug 1110 in the `$CTSMROOT/doc/KnownLimitationss <CLM-URL>`_ file for documentation on this). Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
+.. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model. Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
 
 .. note:: Just like ``PTS_MODE`` above, By default it sets up to run with ``MPILIB=mpi-serial`` (in the env_build.xml file) turned on, which allows you to run the model interactively.
 
@@ -140,7 +131,7 @@ Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a spe
 ::
 
    > cd scripts
-   > ./create_newcase -case my_userdataset_test -res CLM_USRDAT -compset ICRUCLM45
+   > ./create_newcase -case my_userdataset_test -res CLM_USRDAT -compset I2000Clm50BgcCruGs
    > cd my_userdataset_test/
    > set GRIDNAME=13x12pt_f19_alaskaUSA
    > set LMASK=gx1v6
@@ -204,7 +195,7 @@ Example: Setting up a case from the single-point surface dataset just created
    > ./link_dirtree $CSMDATA $MYCSMDATA
    # Copy the file you created above to your new $MYCSMDATA location following the CLMUSRDAT 
    # naming convention (leave off the creation date)
-   > cp $CESMROOT/$CTSMROOT/tools/|version|/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
+   > cp $CESMROOT/$CTSMROOT/tools/mksurfdata_map/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
    $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc
    > cd $CESMROOT/scripts
    > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850Clm50BgcCropCru \
