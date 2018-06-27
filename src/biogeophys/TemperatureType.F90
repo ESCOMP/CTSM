@@ -31,9 +31,9 @@ module TemperatureType
      integer,  pointer :: ndaysteps_patch          (:)   ! number of daytime steps accumulated from mid-night, LUNA specific
      integer,  pointer :: nnightsteps_patch        (:)   ! number of nighttime steps accumulated from mid-night, LUNA specific
      real(r8), pointer :: t_h2osfc_col             (:)   ! col surface water temperature
-     real(r8), pointer :: t_h2osfc_bef_col         (:)   ! col surface water temperature from time-step before  
-     real(r8), pointer :: t_ssbef_col              (:,:) ! col soil/snow temperature before update (-nlevsno+1:nlevgrnd) 
-     real(r8), pointer :: t_soisno_col             (:,:) ! col soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd) 
+     real(r8), pointer :: t_h2osfc_bef_col         (:)   ! col surface water temperature from time-step before
+     real(r8), pointer :: t_ssbef_col              (:,:) ! col soil/snow temperature before update (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: t_soisno_col             (:,:) ! col soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
      real(r8), pointer :: tsl_col                  (:)   ! col temperature of near-surface soil layer (Kelvin)
      real(r8), pointer :: t_soi10cm_col            (:)   ! col soil temperature in top 10cm of soil (Kelvin)
      real(r8), pointer :: t_soi17cm_col            (:)   ! col soil temperature in top 17cm of soil (Kelvin)
@@ -215,6 +215,7 @@ contains
     allocate(this%dTdz_top_col             (begc:endc))                      ; this%dTdz_top_col             (:)   = nan
     allocate(this%dt_veg_patch             (begp:endp))                      ; this%dt_veg_patch             (:)   = nan
 
+    allocate(this%tsl_col                  (begc:endc))                      ; this%tsl_col                  (:)   = nan
     allocate(this%t_sno_mul_mss_col        (begc:endc))                      ; this%t_sno_mul_mss_col        (:)   = nan
     allocate(this%tsl_col                  (begc:endc))                      ; this%tsl_col                  (:)   = nan
     allocate(this%t_soi10cm_col            (begc:endc))                      ; this%t_soi10cm_col            (:)   = nan
@@ -421,6 +422,10 @@ contains
          avgflag='A', long_name='soil temperature in top 10cm of soil', &
          ptr_col=this%t_soi10cm_col, set_urb=spval)
 
+    this%tsl_col(begc:endc) = spval
+    call hist_addfld1d (fname='TSL',  units='K', &
+         avgflag='A', long_name='temperature of near-surface soil layer (vegetated landunits only)', &
+         ptr_col=this%tsl_col, l2g_scale_type='veg')
     this%t_sno_mul_mss_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
          avgflag='A', long_name='snow temperature times layer mass, layer sum; '// &
