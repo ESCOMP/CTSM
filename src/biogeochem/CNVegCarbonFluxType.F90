@@ -397,6 +397,7 @@ contains
 
     call this%InitAllocate ( bounds, carbon_type)
     call this%InitHistory ( bounds, carbon_type )
+    call this%InitCold (bounds )
 
   end subroutine Init
 
@@ -3571,6 +3572,7 @@ contains
             dim1name='pft', &
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_to_litter_fun_patch)
+        ! BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
         call set_missing_vals_to_constant(this%leafc_to_litter_fun_patch, 0._r8)
     end if
 
