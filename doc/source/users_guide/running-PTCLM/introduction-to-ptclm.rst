@@ -4,38 +4,39 @@
 
 .. _what-is-ptclm:
 
-===============
- What is PTCLM
-===============
+=====================
+ What is PTCLMmkdata?
+=====================
 
-PTCLM (pronounced either as point clime or Pee-Tee clime) is a Python script to help you set up PoinT CLM simulations. 
+PTCLMmkdata (pronounced Pee-Tee Cee-L-M make data is a Python script to help you set up PoinT CLM simulations. 
 
-It runs the CLM tools for you to get datasets set up, and copies them to a location you can use them according to the ``CLM_USRDAT_NAME`` naming convention. 
+It runs the CLM tools for you to get datasets set up, and copies them to a location you can use them including the changes
+needed for a case to use the dataset with namelist and XML changes.
 
-Then it runs **create_newcase** for you and modifies the env settings and namelist appropriately. 
+Then you run **create_newcase** and point to the directory so that the namelist and XML changes are automatically applied.
 
-PTCLM has a simple ASCII text file for storing basic information for your sites. 
+PTCLMmkdata has a simple ASCII text file for storing basic information for your sites. 
 
 We also have complete lists for AmeriFlux and Fluxnet-Canada sites, although we only have the meteorology data for one site. 
 
 For other sites you will need to obtain the meteorology data and translate it to a format that the CESM datm model can use. 
 
-But, even without meteorology data PTCLM is useful to setup datasets to run with standard ``CLM_QIAN`` data.
+But, even without meteorology data PTCLMmkdata is useful to setup datasets to run with standard ``CLM_QIAN`` data.
 
-The original authors of PTCLM are: Daniel M. Ricciuto, Dali Wang, Peter E. Thornton, Wilfred M. Post all at Environmental Sciences Division, Oak Ridge National Laboratory (ORNL) and R. Quinn Thomas at Cornell University. It was then modified fairly extensively by Erik Kluzek at NCAR. We want to thank all of these individuals for this contribution to the CESM effort. We also want to thank the folks at University of Michigan Biological Stations (US-UMB) who allowed us to use their Fluxnet station data and import it into our inputdata repository, especially Gil Bohrer the PI on record for this site.
+The original authors of PTCLMmkdata are: Daniel M. Ricciuto, Dali Wang, Peter E. Thornton, Wilfred M. Post all at Environmental Sciences Division, Oak Ridge National Laboratory (ORNL) and R. Quinn Thomas at Cornell University. It was then modified fairly extensively by Erik Kluzek at NCAR. We want to thank all of these individuals for this contribution to the CESM effort. We also want to thank the folks at University of Michigan Biological Stations (US-UMB) who allowed us to use their Fluxnet station data and import it into our inputdata repository, especially Gil Bohrer the PI on record for this site.
 
 
 .. _details-of-ptclm:
 
-==================
- Details of PTCLM
-==================
+=======================
+ Details of PTCLMmkdata
+=======================
 
-To get help on PTCLM1.110726 use the "--help" option as follows.
+To get help on PTCLM2_180611 use the "--help" option as follows.
 ::
 
-   > cd scripts/ccsm_utils/Tools/lnd/clm/PTCLM
-   > ./PTCLM.py --help
+   > cd $CTSMROOT/tools/PTCLM
+   > ./PTCLMmkdata --help
 
 The output to the above command is as follows:
 ::
@@ -106,36 +107,34 @@ The output to the above command is as follows:
 
   Main Script Version Id: $Id: PTCLM.py 47576 2013-05-29 19:11:16Z erik $ Scripts URL: $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/PTCLM/trunk_tags/PTCLM1_130529/PTCLM.py $:
 
-Here we give a simple example of using PTCLM1 for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. 
-Note, see `the Section called Converting AmeriFlux Data for use by PTCLM <CLM-URL>`_ for permission information to use this data.
+Here we give a simple example of using PTCLMmkdata for a straightforward case of running at the US-UMB Fluxnet site on cheyenne where we already have the meteorology data on the machine. 
+Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ for permission information to use this data.
 
-Example 6-1. Example of running PTCLM1 for US-UMB on cheyenne
+Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
 ----------------------------------------------------------------
 
 ::
 
    > setenv CSMDATA   $CESMDATAROOT/inputdata
-   > setenv MYCSMDATA $HOME/inputdata
+   > setenv MYDATAFILES `pwd`/mydatafiles
    > setenv SITE      US-UMB
-   > setenv MYMACH    cheyenne_intel
    > setenv MYCASE    testPTCLM
-   # First link the standard input files to a location you have write access
-   > cd scripts
-   > ./link_dirtree $CSMDATA $MYCSMDATA
    
    # Next build all of the clm tools you will need
-   > cd ../$CTSMROOT/tools/|version|/mksurfdata_map
-   > gmake
-   > gmake clean
-   > cd ../../../../../../tools/mapping/gen_domain_files/src
-   > ../../../../scripts/ccsm_utils/Machines/configure -mach cheyenne -compiler intel
-   > gmake
-   > gmake clean
+   > cd $CTSMROOT/tools/PTCLM
+   > buildtools
    # next run PTCLM (NOTE -- MAKE SURE python IS IN YOUR PATH)
-   > cd ../../../../../scripts/ccsm_utils/Tools/lnd/clm/PTCLM
-   > ./PTCLM.py -m $MYMACH  --case=$MYCASE --site=$SITE --csmdata=$MYCSMDATA --aerdepgrid --ndepgrid
-   # NOTE: we use --aerdepgrid --ndepgrid so that you use the global
-   # aerosol and Nitrogen deposition files rather than site-specific ones.
-   > cd ../../../../../$MYCASE
-   # Finally setup, build, and run the case as normal
+   > cd $CTSMROOT/tools/PTCLM
+   # Here we run it using qcmd so that it will be run on a batch node
+   > qcmd --  ./PTCLMmkdata --site=$SITE --csmdata=$CSMDATA --mydatadir=$MYDATAFILES >& ptclmrun.log &
+   > cd $CIMEROOT/scripts
+   > ./create_newcase --user-mods-dir $MYDATAFILES/1x1pt_$SITE --case $MYCASE --res CLM_USRDAT --compset I1PtClm50SpGs
+   # Next setup, build and run as normal
+   > cd $MYCASE
+   > ./case.setup
 
+
+PTCLMmkdata includes a README file that gives some extra details and a simple example.
+
+.. include:: ../../clm5.0/tools/PTCLM/README
+   :literal:
