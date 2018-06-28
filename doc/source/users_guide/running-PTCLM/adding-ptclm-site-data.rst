@@ -2,13 +2,13 @@
 
 .. include:: ../substitutions.rst
 
-======================
-Adding PTCLM Site Data
-======================
+============================
+Adding PTCLMmkdata Site Data
+============================
 
-The "sitegroupname" option to PTCLM1.110726 looks for groups of sites in the files in the ``PTCLM_sitedata`` directory under the PTCLM directory. 
+The "sitegroupname" option to PTCLMmkdata looks for groups of sites in the files in the ``PTCLM_sitedata`` directory under the PTCLMmkdata directory. 
 You can add new names available for this option including your own lists of sites, by adding more files in this directory. 
-There are three files for each "sitegroupname": ``$SITEGROUP_sitedata.txt``, ``$SITEGROUP_soildata.txt`` and ``$SITEGROUP_pftdata.txt`` (where ``$SITEGROUP`` is the name that would be entered as "sitegroupname" to PTCLM). 
+There are three files for each "sitegroupname": ``$SITEGROUP_sitedata.txt``, ``$SITEGROUP_soildata.txt`` and ``$SITEGROUP_pftdata.txt`` (where ``$SITEGROUP`` is the name that would be entered as "sitegroupname" to PTCLMmkdata). 
 Each file needs to have the same list of sites, but gives different information: site data, PFT data, and soil data respectively. 
 Although the site codes need to be the same between the three files, the files do NOT have to be in the same order. 
 Each file has a one-line header that lists the contents of each column which are separated by commas. 
@@ -36,20 +36,20 @@ PFT data file: ``$SITEGROUP_pftdata.txt```): The header for this file is:
 
 This file gives the vegetation coverage for the different vegetation types for the site. The file only supports up to five PFT's at the same time. The columns with "pft_f" are the fractions for each PFT, and the columns with "pft_c" is the integer index of the given PFT. Look at the pft-physiology file to see what the PFT index for each PFT type is.
 
-----------------------------------------------
-Dynamic Land-Use Change Files for use by PTCLM
-----------------------------------------------
+----------------------------------------------------
+Dynamic Land-Use Change Files for use by PTCLMmkdata
+----------------------------------------------------
 
-There is a mechanism for giving site-specific land-use change in PTCLM. Adding site specific files to the ``PTCLM_sitedata`` directory under PTCLM allows you to specify the change in vegetation and change in harvesting (for the CN model) for that site. Files are named: ``$SITE_dynpftdata.txt``. There is a sample file for the US-Ha1 site called: ``US-Ha1_dynpftdata.txt``. The file has a one-line header with the information that the file has, and then one-line for each year with a transition. The header line is as follows:
+There is a mechanism for giving site-specific land-use change in PTCLMmkdata. Adding site specific files to the ``PTCLM_sitedata`` directory under PTCLMmkdata allows you to specify the change in vegetation and change in harvesting (for the CN model) for that site. Files are named: ``$SITE_dynpftdata.txt``. There is a sample file for the US-Ha1 site called: ``US-Ha1_dynpftdata.txt``. The file has a one-line header with the information that the file has, and then one-line for each year with a transition. The header line is as follows:
 ::
 
    trans_year,pft_f1,pft_c1,pft_f2,pft_c2,pft_f3,pft_c3,pft_f4,pft_c4,pft_f5,pft_c5,har_vh1,har_vh2,har_sh1,har_sh2,har_sh3,graze,hold_harv,hold_graze
 
-This file only requires a line for each year where a transition or harvest happens. As in the "pftdata" file above "pft_f" refers to the fraction and "pft_c" refers to the PFT index, and only up to five vegetation types are allowed to co-exist. The last eight columns have to do with harvesting and grazing. The last two columns are whether to hold harvesting and/or grazing constant until the next transition year and will just be either 1 or 0. This file will be converted by the **PTCLM_sitedata/cnvrt_trnsyrs2_pftdyntxtfile.pl** script in the PTCLM directory to a format that **mksurfdata_map** can read that has an entry for each year for the range of years valid for the compset in question.
+This file only requires a line for each year where a transition or harvest happens. As in the "pftdata" file above "pft_f" refers to the fraction and "pft_c" refers to the PFT index, and only up to five vegetation types are allowed to co-exist. The last eight columns have to do with harvesting and grazing. The last two columns are whether to hold harvesting and/or grazing constant until the next transition year and will just be either 1 or 0. This file will be converted by the **PTCLM_sitedata/cnvrt_trnsyrs2_pftdyntxtfile.pl** script in the PTCLMmkdata directory to a format that **mksurfdata_map** can read that has an entry for each year for the range of years valid for the compset in question.
 
-------------------------------------------
-Converting AmeriFlux Data for use by PTCLM
-------------------------------------------
+------------------------------------------------
+Converting AmeriFlux Data for use by PTCLMmkdata
+------------------------------------------------
 
 AmeriFlux data comes in comma separated format and is available from: 
 `http://public.ornl.gov/ameriflux/dataproducts.shtml <http://public.ornl.gov/ameriflux/dataproducts.shtml>`_. Before you download the data you need to agree to the usage terms.
@@ -75,23 +75,23 @@ The units of Temperature need to be converted from "Celsius" to "Kelvin" (use th
 The units of Pressure also need to be converted from "kPa" to "Pa". LATIXY, and LONGXY should also be set to the latitude and longitude of the site.
 
 
------------------------------------------------------------
-Example: PTCLM transient example over a shorter time period
------------------------------------------------------------
+-----------------------------------------------------------------
+Example: PTCLMmkdata transient example over a shorter time period
+-----------------------------------------------------------------
 
-This is an example of using PTCLM for Harvard Forest (AmeriFlux site code US-Ha1) for transient land use 1991-2006. 
-In order to do this we would've needed to have converted the AmeriFlux data into NetCDF format as show in the `the Section called Converting AmeriFlux Data for use by PTCLM <CLM-URL>`_ section above. 
-Also note that this site has a site-specific dynamic land-use change file for it ``PTCLM_sitedata/US-Ha1_dynpftdata.txt`` in the PTCLM directory and this file will be used for land-use change and harvesting rather than the global dataset.
+This is an example of using PTCLMmkdata for Harvard Forest (AmeriFlux site code US-Ha1) for transient land use 1991-2006. 
+In order to do this we would've needed to have converted the AmeriFlux data into NetCDF format as show in the `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ section above. 
+Also note that this site has a site-specific dynamic land-use change file for it ``PTCLM_sitedata/US-Ha1_dynpftdata.txt`` in the PTCLMmkdata directory and this file will be used for land-use change and harvesting rather than the global dataset.
 
 ::
 
-     > cd scripts/ccsm_utils/Tools/lnd/clm/PTCLM
+     > cd $CTSMROOT/tools/PTCLM
      # We are going to use forcing data over 1991 to 2006, but we need to start with
      # a transient compset to do so, so we use the 20th Century transient: 1850-2000
      # Note: When creating the fpftdyn dataset for this site it will use the 
      #     PTCLM_sitedata/US-Ha1_dynpftdata.txt
      # file for land-use change and harvesting
-     > ./PTCLM.py -m cheyenne_intel -s US-Ha1 -d $MYCSMDATA --sitegroupname AmeriFlux -c I20TRCRUCLM45BGC
+     > ./PTCLMmkdata -s US-Ha1 -d $MYCSMDATA --sitegroupname AmeriFlux
      > mkdir $MYCSMDATA/atm/datm7/CLM1PT_data/1x1pt_US-Ha1
      > cd $MYCSMDATA/atm/datm7/CLM1PT_data/1x1pt_US-Ha1
      # Copy data in NetCDF format to this directory, filenames should be YYYY-MM.nc
@@ -107,5 +107,3 @@ Also note that this site has a site-specific dynamic land-use change file for it
      > cat << EOF >> user_nl_clm
      model_year_align_ndep=1991,stream_year_first_ndep=1991,stream_year_last_ndep=2006
      EOF
-     # Now setup the case, and we'll edit the datm namelist for prescribed aerosols
-     > ./cesm_setup
