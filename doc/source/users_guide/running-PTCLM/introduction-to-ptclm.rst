@@ -111,8 +111,7 @@ Here we give a simple example of using PTCLMmkdata for a straightforward case of
 Note, see `the Section called Converting AmeriFlux Data for use by PTCLMmkdata <CLM-URL>`_ for permission information to use this data.
 
 Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
-----------------------------------------------------------------
-
+------------------------------------------------------------------
 ::
 
    > setenv CSMDATA   $CESMDATAROOT/inputdata
