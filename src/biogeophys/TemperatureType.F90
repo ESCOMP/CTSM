@@ -437,10 +437,6 @@ contains
          'to get mass-weighted temperature, divide by (SNOWICE_ICE+SNOWLIQ_ICE)', &
          ptr_col=this%t_sno_mul_mss_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
-    this%tsl_col(begc:endc) = spval
-    call hist_addfld1d (fname='TSL',  units='K', &
-         avgflag='A', long_name='temperature of near-surface soil layer (vegetated landunits only)', &
-         ptr_col=this%tsl_col, l2g_scale_type='veg')
 
     if (use_cndv .or. use_crop) then
        active = "active"
