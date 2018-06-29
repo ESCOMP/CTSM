@@ -21,44 +21,41 @@ CIME Testing scripts
 
 We first introduce the test scripts that work for all CESM components. 
 The CIME script **create_test** runs a specific type of test, at a given resolution, for a given compset using a given machine. 
-There is a list of different tests, but the "ERI" tests do several things at once, running from startup, as well as doing exact branch and restart tests. 
-So to run "ERI" testing at 2-degree with the I1850CRUCLM45 compset on cheyenne_intel you do the following.
+See `CIME Chapter on Testing <http://esmci.github.io/cime/users_guide/testing.html>`_ for how to use it to run single
+tests as well as lists of tests. The standard testname for CLM is "aux_clm" for cheyenne with intel and gnu compilers as
+well as the CGD machine hobart for intel, nag, and pgi compilers.  There's also a shorter test list called "clm_short". Also
+see the `CTSM Wiki on Testing <https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide>`_.
+
+CTSM Tools Testing
+==================
+
+.. include:: ../../clm5.0/test/tools/README
+   :literal:
+
+CTSM Fortran Unit Tests
+=======================
+
+.. include:: ../../clm5.0/src/README.unit_testing
+   :literal:
+
+CTSM Build-namelist Tests
+=========================
+
+Run the following perl tester that 
+
 ::
+   > cd bld/unit_testers
+   > ./build-namelist_test.pl
 
-   > cd scripts
-   > ./create_test -testname ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel
-   > cd ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel.$id
-   > ./ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel.$id.build
-   > ERI.f19_g17_gl4.I1850CRUCLM45.cheyenne_intel.$id.submit
-
-When the test is done it will update the file TestStatus with either a PASS or FAIL message.
-
-We already have a standard list of tests for clm (the "aux_clm" list of tests). To run the CLM cheyenne intel compiler test list, for the same machine and compiler you would do the following:
-::
-
-   > cd scripts
-   > ./create_test -xml_mach cheyenne -xml_compiler intel -xml_category aux_clm  -mach cheyenne -compiler intel
-   # Normally it will submit the jobs as they are ready, but if it's interrupted you 
-   # may need to submit by hand as follows...
-   # Submit the suite of tests (note $id refers to the integer job number for this job)
-   > ./cs.submit.$id.cheyenne
-   # Later check the tests with...
-   > ./cs.status.$id
-   # The above will give a PASS or FAIL message for each test.
-
-For more information on doing testing with the CESM scripts see the `|cesmrelease| User's Guide <CLM-URL>`_ on testing.
 
 Testing PTCLM
 =============
 
-There is a simple test script for PTCLM called ``testcases.csh`` in the PTCLM directory (``scripts/ccsm_utils/Tools/lnd/clm/PTCLM``). 
-The test script is setup to run on the machines: cheyenne, frankfurt, yong, and titan. 
-You simply run the script interactively. 
-The script will write out the status of tests to a file called: ``tc.job#.status``.
+.. include:: ../../clm5.0/tools/PTCLM/README
+   :literal:
 
-There are a few environment variables that can be used with ``testcases.csh`` to change it's operation.
+To run on cheyenne, you do the following:
 
-``CESM_ROOT``: To test with a separate root to CESM code set this env variable to the root directory to use.
-``CLM_SOFF``: If set to ``TRUE`` - stop on first failed test rather than continuing to run.
-``CLM_RETAIN_FILES``: If set to ``FALSE`` - cleanup tools build first.
-``DEBUG``: If set to ``TRUE`` - setup cases, but do not build or run.
+
+.. include:: ../../clm5.0/tools/PTCLM/test/README.run_cheyenne
+   :literal:
