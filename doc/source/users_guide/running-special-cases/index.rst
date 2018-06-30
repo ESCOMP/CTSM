@@ -17,8 +17,8 @@ Running Special Cases
    what-is-a-special-case.rst
    running-the-prognostic-crop-model.rst
    running-with-irrigation.rst
-   CLM-4.3-Spinning-up-the-Satellite-Phenology-Model-(CLMSP-spinup).rst
-   CLM-4.4-Spinning-up-the-CLM5.0-biogeochemistry-(CLMBGC-spinup).rst
-   CLM-4.7-Running-with-MOAR-data-as-atmospheric-forcing-to-spinup-the-model.rst
-   CLM-4.8-Running-with-your-own-previous-simulation-as-atmospheric-forcing-to-spinup-the-model.rst
-   CLM-4.9-Running-stand-alone-CLM-with-transient-historical-CO2-concentration.rst
+   Spinning-up-the-Satellite-Phenology-Model-CLMSP-spinup.rst
+   Spinning-up-the-biogeochemistry-BGC-spinup.rst
+   Running-with-MOAR-data-as-atmospheric-forcing-to-spinup-the-model.rst
+   Running-with-your-own-previous-simulation-as-atmospheric-forcing-to-spinup-the-model.rst
+   Running-stand-alone-CLM-with-transient-historical-CO2-concentration.rst
