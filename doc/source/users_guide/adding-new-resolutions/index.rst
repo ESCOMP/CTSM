@@ -14,6 +14,6 @@ Adding New Resolutions
 .. toctree::
    :maxdepth: 2
 
-   CLM-3.0-Adding-New-Resolutions-or-New-Files-to-the-build-namelist-Database.rst
-   CLM-3.2-Adding-Resolution-Names.rst
-   CLM-3.3-Adding-or-Changing-Default-Filenames.rst
+   Adding-New-Resolutions-or-New-Files-to-the-build-namelist-Database.rst
+   Adding-Resolution-Names.rst
+   Adding-or-Changing-Default-Filenames.rst
