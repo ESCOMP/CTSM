@@ -619,7 +619,7 @@ contains
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
-            waterstate_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
+            waterstatebulk_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
        call t_stopf('init_map2gc')
     end if
 
@@ -654,7 +654,7 @@ contains
     ! --------------------------------------------------------------
    
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
-       call clm_fates%init_coldstart(waterstate_inst,canopystate_inst,soilstate_inst, frictionvel_inst)
+       call clm_fates%init_coldstart(waterstatebulk_inst,waterdiagnosticbulk_inst, canopystate_inst,soilstate_inst, frictionvel_inst)
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through

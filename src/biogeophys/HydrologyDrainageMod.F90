@@ -15,7 +15,9 @@ module HydrologyDrainageMod
   use SoilStateType     , only : soilstate_type
   use TemperatureType   , only : temperature_type
   use WaterfluxType     , only : waterflux_type
-  use WaterstateType    , only : waterstate_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use WaterBalanceType    , only : waterbalance_type
   use IrrigationMod     , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake
@@ -39,7 +41,7 @@ contains
        num_urbanc, filter_urbanc,                    &
        num_do_smb_c, filter_do_smb_c,                &
        atm2lnd_inst, glc2lnd_inst, temperature_inst, &
-       soilhydrology_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
+       soilhydrology_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, &
        irrigation_inst, glacier_smb_inst)
     !
     ! !DESCRIPTION:
@@ -70,7 +72,9 @@ contains
     type(temperature_type)   , intent(in)    :: temperature_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
-    type(waterstate_type)    , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterbalance_type)    , intent(inout) :: waterbalance_inst
     type(waterflux_type)     , intent(inout) :: waterflux_inst
     type(irrigation_type)    , intent(in)    :: irrigation_inst
     type(glacier_smb_type)   , intent(in)    :: glacier_smb_inst
@@ -86,11 +90,11 @@ contains
          qflx_floodg        => atm2lnd_inst%forc_flood_grc           , & ! Input: rain rate [mm/s]   
          forc_rain          => atm2lnd_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
          forc_snow          => atm2lnd_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
-         begwb              => waterstate_inst%begwb_col             , & ! Output:water mass end of the time step 
-         endwb              => waterstate_inst%endwb_col             , & ! Output:water mass end of the time step     
-         h2osoi_ice         => waterstate_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      
-         h2osoi_liq         => waterstate_inst%h2osoi_liq_col        , & ! Output: liquid water (kg/m2) 
-         h2osoi_vol         => waterstate_inst%h2osoi_vol_col        , & ! Output: volumetric soil water 
+         begwb              => waterbalance_inst%begwb_col             , & ! Output:water mass end of the time step 
+         endwb              => waterbalance_inst%endwb_col             , & ! Output:water mass end of the time step     
+         h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      
+         h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col        , & ! Output: liquid water (kg/m2) 
+         h2osoi_vol         => waterstatebulk_inst%h2osoi_vol_col        , & ! Output: volumetric soil water 
                                                                          ! (0<=h2osoi_vol<=watsat) [m3/m3]
          qflx_evap_tot      => waterflux_inst%qflx_evap_tot_col      , & ! Input: qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
          qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col     , & ! Input: excess solid h2o due to snow 
@@ -123,26 +127,26 @@ contains
 
       if (use_vichydro) then
          call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc, &
-              soilhydrology_inst, waterstate_inst)
+              soilhydrology_inst, waterstatebulk_inst)
       endif
 
       if (use_aquifer_layer()) then 
          call Drainage(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc,&
               temperature_inst, soilhydrology_inst, soilstate_inst, &
-              waterstate_inst, waterflux_inst)
+              waterstatebulk_inst, waterflux_inst)
       else
          
          call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc,&
               soilhydrology_inst, soilstate_inst, &
-              waterstate_inst, waterflux_inst)
+              waterstatebulk_inst, waterflux_inst)
 
          
          call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc,&
               soilhydrology_inst, soilstate_inst, &
-              waterstate_inst, waterflux_inst)
+              waterstatebulk_inst, waterflux_inst)
 
       endif
 
@@ -158,7 +162,7 @@ contains
       end do
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-           soilhydrology_inst, waterstate_inst, endwb(bounds%begc:bounds%endc))
+           soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))
 
 
       

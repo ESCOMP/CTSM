@@ -11,7 +11,7 @@ module SurfaceRadiationMod
   use decompMod         , only : bounds_type
   use clm_varcon        , only : namec
   use atm2lndType       , only : atm2lnd_type
-  use WaterstateType    , only : waterstate_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use CanopyStateType   , only : canopystate_type
   use SurfaceAlbedoType , only : surfalb_type
   use SolarAbsorbedType , only : solarabs_type
@@ -414,7 +414,7 @@ contains
   !------------------------------------------------------------------------------
   subroutine SurfaceRadiation(bounds, num_nourbanp, filter_nourbanp, &
        num_urbanp, filter_urbanp, num_urbanc, filter_urbanc, &
-       atm2lnd_inst, waterstate_inst, canopystate_inst, &
+       atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst, &
        surfalb_inst, solarabs_inst, surfrad_inst)
      !
      ! !DESCRIPTION: 
@@ -451,7 +451,7 @@ contains
      integer                , intent(in)            :: num_urbanc         ! number of urban columns in clump
      integer                , intent(in)            :: filter_urbanc(:)   ! urban column filter
      type(atm2lnd_type)     , intent(in)            :: atm2lnd_inst
-     type(waterstate_type)  , intent(in)            :: waterstate_inst
+     type(waterdiagnosticbulk_type)  , intent(in)            :: waterdiagnosticbulk_inst
      type(surfalb_type)     , intent(in)            :: surfalb_inst
      type(canopystate_type) , intent(inout)         :: canopystate_inst
      type(solarabs_type)    , intent(inout)         :: solarabs_inst
@@ -499,8 +499,8 @@ contains
           forc_solad      =>    atm2lnd_inst%forc_solad_grc       , & ! Input:  [real(r8) (:,:) ] direct beam radiation (W/m**2)        
           forc_solai      =>    atm2lnd_inst%forc_solai_grc       , & ! Input:  [real(r8) (:,:) ] diffuse radiation (W/m**2)            
 
-          snow_depth      =>    waterstate_inst%snow_depth_col    , & ! Input:  [real(r8) (:)   ] snow height (m)                         
-          frac_sno        =>    waterstate_inst%frac_sno_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+          snow_depth      =>    waterdiagnosticbulk_inst%snow_depth_col    , & ! Input:  [real(r8) (:)   ] snow height (m)                         
+          frac_sno        =>    waterdiagnosticbulk_inst%frac_sno_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
           
           nrad            =>    surfalb_inst%nrad_patch           , & ! Input:  [integer  (:)   ] number of canopy layers, above snow for radiative transfer
           coszen          =>    surfalb_inst%coszen_col           , & ! Input:  [real(r8) (:)   ] column cosine of solar zenith angle            
@@ -582,7 +582,7 @@ contains
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-          frac_sno_eff    => waterstate_inst%frac_sno_eff_col       & !Input: 
+          frac_sno_eff    => waterdiagnosticbulk_inst%frac_sno_eff_col       & !Input: 
   
           )
 

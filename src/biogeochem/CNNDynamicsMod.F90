@@ -19,7 +19,7 @@ module CNNDynamicsMod
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use WaterStateType                  , only : waterstate_type
+  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
   use WaterFluxType                   , only : waterflux_type
   use CropType                        , only : crop_type
   use ColumnType                      , only : col                
@@ -293,7 +293,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNSoyfix (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       waterstate_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
+       waterdiagnosticbulk_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
        soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -312,7 +312,7 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
     type(crop_type)                         , intent(in)    :: crop_inst
     type(cnveg_state_type)                  , intent(in)    :: cnveg_state_inst
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
@@ -331,7 +331,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                      & 
-         wf               =>  waterstate_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
+         wf               =>  waterdiagnosticbulk_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
 
          hui              =>  crop_inst%gddplant_patch                    ,         & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
          croplive         =>  crop_inst%croplive_patch                    ,         & ! Input:  [logical  (:) ]  true if planted and not harvested                  

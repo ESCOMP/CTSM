@@ -18,7 +18,7 @@ module GlacierSurfaceMassBalanceMod
   use ColumnType     , only : col                
   use LandunitType   , only : lun
   use glc2lndMod     , only : glc2lnd_type
-  use WaterstateType , only : waterstate_type
+  use WaterStateBulkType , only : waterstatebulk_type
   use WaterfluxType  , only : waterflux_type
 
   ! !PUBLIC TYPES:
@@ -161,7 +161,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine HandleIceMelt(this, bounds, num_do_smb_c, filter_do_smb_c, &
-       waterstate_inst)
+       waterstatebulk_inst)
     !
     ! !DESCRIPTION:
     ! Compute ice melt in glacier columns, and convert liquid back to ice
@@ -188,7 +188,7 @@ contains
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_do_smb_c        ! number of column points in filter_do_smb_c
     integer, intent(in) :: filter_do_smb_c(:)  ! column filter for points where SMB is calculated
-    type(waterstate_type), intent(inout) :: waterstate_inst
+    type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: j
@@ -200,8 +200,8 @@ contains
 
     associate( &
          qflx_glcice_melt => this%qflx_glcice_melt_col , & ! Output: [real(r8) (:)   ] ice melt (positive definite) (mm H2O/s)
-         h2osoi_liq       => waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
-         h2osoi_ice       => waterstate_inst%h2osoi_ice_col        & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
+         h2osoi_liq       => waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+         h2osoi_ice       => waterstatebulk_inst%h2osoi_ice_col        & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
          )
 
     dtime = get_step_size()
@@ -238,7 +238,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeSurfaceMassBalance(this, bounds, num_allc, filter_allc, &
-       num_do_smb_c, filter_do_smb_c, glc2lnd_inst, waterstate_inst, waterflux_inst)
+       num_do_smb_c, filter_do_smb_c, glc2lnd_inst, waterstatebulk_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
     ! Compute glacier fluxes other than ice melt.
@@ -257,7 +257,7 @@ contains
     integer, intent(in) :: num_do_smb_c        ! number of column points in filter_do_smb_c
     integer, intent(in) :: filter_do_smb_c(:)  ! column filter for points where SMB is calculated
     type(glc2lnd_type), intent(in) :: glc2lnd_inst
-    type(waterstate_type), intent(in) :: waterstate_inst
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     type(waterflux_type), intent(in) :: waterflux_inst
     !
     ! !LOCAL VARIABLES:
@@ -272,7 +272,7 @@ contains
          qflx_glcice_dyn_water_flux => this%qflx_glcice_dyn_water_flux_col     , & ! Output: [real(r8) (:)] water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
          qflx_glcice_melt           => this%qflx_glcice_melt_col               , & ! Input: [real(r8) (:)] ice melt (positive definite) (mm H2O/s)
          glc_dyn_runoff_routing     => glc2lnd_inst%glc_dyn_runoff_routing_grc , & ! Input:  [real(r8) (:)]  whether we're doing runoff routing appropriate for having a dynamic icesheet
-         snow_persistence           => waterstate_inst%snow_persistence_col    , & ! Input: [real(r8) (:)]  counter for length of time snow-covered
+         snow_persistence           => waterstatebulk_inst%snow_persistence_col    , & ! Input: [real(r8) (:)]  counter for length of time snow-covered
          qflx_snwcp_ice             => waterflux_inst%qflx_snwcp_ice_col         & ! Input: [real(r8) (:)]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
          )
 

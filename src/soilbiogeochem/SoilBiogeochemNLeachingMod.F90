@@ -12,7 +12,7 @@ module SoilBiogeochemNLeachingMod
   use clm_varctl                      , only : use_nitrif_denitrif, use_vertsoilc
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use WaterStateType                  , only : waterstate_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterFluxType                   , only : waterflux_type
   use ColumnType                      , only : col                
   !
@@ -73,7 +73,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemNLeaching(bounds, num_soilc, filter_soilc, &
-       waterstate_inst, waterflux_inst, &
+       waterstatebulk_inst, waterflux_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -88,7 +88,7 @@ contains
     type(bounds_type)                       , intent(in)    :: bounds  
     integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterflux_type)                    , intent(in)    :: waterflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(in)    :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst 
@@ -106,7 +106,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                             & 
-         h2osoi_liq          => waterstate_inst%h2osoi_liq_col                           , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
+         h2osoi_liq          => waterstatebulk_inst%h2osoi_liq_col                           , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
 
          qflx_drain          => waterflux_inst%qflx_drain_col                            , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)                    
          qflx_surf           => waterflux_inst%qflx_surf_col                             , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)                        

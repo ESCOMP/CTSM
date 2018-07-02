@@ -19,7 +19,8 @@ module UrbanFluxesMod
   use atm2lndType          , only : atm2lnd_type
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
-  use WaterstateType       , only : waterstate_type
+  use WaterStateBulkType       , only : waterstatebulk_type
+  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use FrictionVelocityMod  , only : frictionvel_type
   use EnergyFluxType       , only : energyflux_type
   use WaterfluxType        , only : waterflux_type
@@ -52,7 +53,7 @@ contains
   subroutine UrbanFluxes (bounds, num_nourbanl, filter_nourbanl,                        &
        num_urbanl, filter_urbanl, num_urbanc, filter_urbanc, num_urbanp, filter_urbanp, &
        atm2lnd_inst, urbanparams_inst, soilstate_inst, temperature_inst,                &
-       waterstate_inst, frictionvel_inst, energyflux_inst, waterflux_inst,              &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, frictionvel_inst, energyflux_inst, waterflux_inst,              &
        humanindex_inst) 
     !
     ! !DESCRIPTION: 
@@ -87,7 +88,8 @@ contains
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(inout) :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
     type(waterflux_type)   , intent(inout) :: waterflux_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
@@ -253,16 +255,16 @@ contains
          swmp80_ref2m        => humanindex_inst%swmp80_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 80% effi (C)
          swmp80_ref2m_u      => humanindex_inst%swmp80_ref2m_u_patch        , & ! Output: [real(r8) (:)   ]  Urban 2 m Swamp Cooler temperature 80% effi (C)
 
-         frac_sno            =>   waterstate_inst%frac_sno_col              , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
-         snow_depth          =>   waterstate_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
-         dqgdT               =>   waterstate_inst%dqgdT_col                 , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                    
-         qg                  =>   waterstate_inst%qg_col                    , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface (kg/kg)       
-         h2osoi_ice          =>   waterstate_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
-         h2osoi_liq          =>   waterstate_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         qaf                 =>   waterstate_inst%qaf_lun                   , & ! Output: [real(r8) (:)   ]  urban canopy air specific humidity (kg/kg)        
-         q_ref2m             =>   waterstate_inst%q_ref2m_patch             , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
-         rh_ref2m            =>   waterstate_inst%rh_ref2m_patch            , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
-         rh_ref2m_u          =>   waterstate_inst%rh_ref2m_u_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
+         frac_sno            =>   waterdiagnosticbulk_inst%frac_sno_col              , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         snow_depth          =>   waterdiagnosticbulk_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
+         dqgdT               =>   waterdiagnosticbulk_inst%dqgdT_col                 , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                    
+         qg                  =>   waterdiagnosticbulk_inst%qg_col                    , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface (kg/kg)       
+         h2osoi_ice          =>   waterstatebulk_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         h2osoi_liq          =>   waterstatebulk_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+         qaf                 =>   waterdiagnosticbulk_inst%qaf_lun                   , & ! Output: [real(r8) (:)   ]  urban canopy air specific humidity (kg/kg)        
+         q_ref2m             =>   waterdiagnosticbulk_inst%q_ref2m_patch             , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
+         rh_ref2m            =>   waterdiagnosticbulk_inst%rh_ref2m_patch            , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
+         rh_ref2m_u          =>   waterdiagnosticbulk_inst%rh_ref2m_u_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
 
          forc_hgt_u_patch    =>   frictionvel_inst%forc_hgt_u_patch         , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch-level (m)     
          forc_hgt_t_patch    =>   frictionvel_inst%forc_hgt_t_patch         , & ! Input:  [real(r8) (:)   ]  observational height of temperature at patch-level (m)

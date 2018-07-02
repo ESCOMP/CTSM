@@ -18,7 +18,9 @@ module BalanceCheckMod
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type
   use SoilHydrologyType  , only : soilhydrology_type  
-  use WaterstateType     , only : waterstate_type
+  use WaterStateBulkType     , only : waterstatebulk_type
+  use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
+  use WaterBalanceType     , only : waterbalance_type
   use WaterfluxType      , only : waterflux_type
   use IrrigationMod      , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
@@ -50,7 +52,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstate_inst)
+       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step
@@ -62,7 +64,9 @@ contains
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(soilhydrology_type)  , intent(inout) :: soilhydrology_inst
-    type(waterstate_type)     , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)     , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)     , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterbalance_type)     , intent(inout) :: waterbalance_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c, j, fc                  ! indices
@@ -72,7 +76,7 @@ contains
          zi           =>    col%zi                         , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
          zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
          wa           =>    soilhydrology_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
-         begwb        =>    waterstate_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
+         begwb        =>    waterbalance_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
    do fc = 1, num_nolakec
@@ -85,10 +89,10 @@ contains
     end do
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-         soilhydrology_inst, waterstate_inst, begwb(bounds%begc:bounds%endc))
+         soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, begwb(bounds%begc:bounds%endc))
+         waterstatebulk_inst, begwb(bounds%begc:bounds%endc))
 
     end associate 
 
@@ -96,7 +100,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
-        atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
+        atm2lnd_inst, solarabs_inst, waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, &
         irrigation_inst, glacier_smb_inst, energyflux_inst, canopystate_inst)
      !
      ! !DESCRIPTION:
@@ -126,7 +130,9 @@ contains
      type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
      type(solarabs_type)   , intent(in)    :: solarabs_inst
      type(waterflux_type)  , intent(inout) :: waterflux_inst
-     type(waterstate_type) , intent(inout) :: waterstate_inst
+     type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
+     type(waterbalance_type) , intent(inout) :: waterbalance_inst
      type(irrigation_type) , intent(in)    :: irrigation_inst
      type(glacier_smb_type), intent(in)    :: glacier_smb_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
@@ -151,16 +157,16 @@ contains
           forc_snow               =>    atm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
-          h2osno                  =>    waterstate_inst%h2osno_col              , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
-          h2osno_old              =>    waterstate_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
-          frac_sno_eff            =>    waterstate_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
-          frac_sno                =>    waterstate_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
-          snow_depth              =>    waterstate_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
-          begwb                   =>    waterstate_inst%begwb_col               , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
-          errh2o                  =>    waterstate_inst%errh2o_col              , & ! Output: [real(r8) (:)   ]  water conservation error (mm H2O)       
-          errh2osno               =>    waterstate_inst%errh2osno_col           , & ! Output: [real(r8) (:)   ]  error in h2osno (kg m-2)                
-          endwb                   =>    waterstate_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
-          total_plant_stored_h2o_col => waterstate_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
+          h2osno                  =>    waterstatebulk_inst%h2osno_col              , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
+          h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
+          frac_sno_eff            =>    waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
+          frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          snow_depth              =>    waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
+          begwb                   =>    waterbalance_inst%begwb_col               , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
+          errh2o                  =>    waterbalance_inst%errh2o_col              , & ! Output: [real(r8) (:)   ]  water conservation error (mm H2O)       
+          errh2osno               =>    waterbalance_inst%errh2osno_col           , & ! Output: [real(r8) (:)   ]  error in h2osno (kg m-2)                
+          endwb                   =>    waterbalance_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
+          total_plant_stored_h2o_col => waterdiagnosticbulk_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
           qflx_rootsoi_col        =>    waterflux_inst%qflx_rootsoi_col         , & ! Input   [real(r8) (:)   ]  water loss in soil layers to root uptake (mm H2O/s)
                                                                                     !                            (ie transpiration demand, often = transpiration)
           qflx_rain_grnd_col      =>    waterflux_inst%qflx_rain_grnd_col       , & ! Input:  [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]

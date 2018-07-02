@@ -29,7 +29,9 @@ module LakeHydrologyMod
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
   use WaterfluxType        , only : waterflux_type
-  use WaterstateType       , only : waterstate_type
+  use WaterStateBulkType       , only : waterstatebulk_type
+  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use WaterBalanceType       , only : waterbalance_type
   use TotalWaterAndHeatMod , only : ComputeWaterMassLake
   !
   ! !PUBLIC TYPES:
@@ -47,7 +49,7 @@ contains
   subroutine LakeHydrology(bounds, &
        num_lakec, filter_lakec, num_lakep, filter_lakep, &
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
-       atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
+       atm2lnd_inst, temperature_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, &
        energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
     !
     ! !DESCRIPTION:
@@ -90,7 +92,9 @@ contains
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterbalance_type)  , intent(inout) :: waterbalance_inst
     type(waterflux_type)   , intent(inout) :: waterflux_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
@@ -144,21 +148,21 @@ contains
          snot_top             =>  temperature_inst%snot_top_col         , & ! Output: [real(r8) (:)   ]  snow temperature in top layer [K]  !TODO
          t_sno_mul_mss        => temperature_inst%t_sno_mul_mss_col     , & ! Output: [real(r8) (:)   ]  col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
 
-         begwb                =>  waterstate_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
-         endwb                =>  waterstate_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
-         snw_rds              =>  waterstate_inst%snw_rds_col           , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
-         snw_rds_top          =>  waterstate_inst%snw_rds_top_col       , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
-         h2osno_top           =>  waterstate_inst%h2osno_top_col        , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    
-         sno_liq_top          =>  waterstate_inst%sno_liq_top_col       , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer [frc] 
-         frac_sno_eff         =>  waterstate_inst%frac_sno_eff_col      , & ! Output: [real(r8) (:)   ]  needed for snicar code                  
-         frac_iceold          =>  waterstate_inst%frac_iceold_col       , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
-         snow_depth           =>  waterstate_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ]  snow height (m)                         
-         h2osno               =>  waterstate_inst%h2osno_col            , & ! Output: [real(r8) (:)   ]  snow water (mm H2O)                     
-         snowice              =>  waterstate_inst%snowice_col           , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
-         snowliq              =>  waterstate_inst%snowliq_col           , & ! Output: [real(r8) (:)   ]  average snow liquid water               
-         h2osoi_ice           =>  waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         h2osoi_liq           =>  waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
-         h2osoi_vol           =>  waterstate_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ]  volumetric soil water [m3/m3]         
+         begwb                =>  waterbalance_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
+         endwb                =>  waterbalance_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
+         snw_rds              =>  waterdiagnosticbulk_inst%snw_rds_col           , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
+         snw_rds_top          =>  waterdiagnosticbulk_inst%snw_rds_top_col       , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
+         h2osno_top           =>  waterdiagnosticbulk_inst%h2osno_top_col        , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    
+         sno_liq_top          =>  waterdiagnosticbulk_inst%sno_liq_top_col       , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer [frc] 
+         frac_sno_eff         =>  waterdiagnosticbulk_inst%frac_sno_eff_col      , & ! Output: [real(r8) (:)   ]  needed for snicar code                  
+         frac_iceold          =>  waterdiagnosticbulk_inst%frac_iceold_col       , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
+         snow_depth           =>  waterdiagnosticbulk_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ]  snow height (m)                         
+         h2osno               =>  waterstatebulk_inst%h2osno_col            , & ! Output: [real(r8) (:)   ]  snow water (mm H2O)                     
+         snowice              =>  waterdiagnosticbulk_inst%snowice_col           , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
+         snowliq              =>  waterdiagnosticbulk_inst%snowliq_col           , & ! Output: [real(r8) (:)   ]  average snow liquid water               
+         h2osoi_ice           =>  waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
+         h2osoi_liq           =>  waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
+         h2osoi_vol           =>  waterstatebulk_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ]  volumetric soil water [m3/m3]         
 
          qflx_floodc          =>  waterflux_inst%qflx_floodc_col        , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
          qflx_prec_grnd       =>  waterflux_inst%qflx_prec_grnd_patch   , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
@@ -265,7 +269,7 @@ contains
 
              ! intitialize SNICAR variables for fresh snow:
              call aerosol_inst%Reset(column=c)
-             call waterstate_inst%Reset(column=c)
+             call waterdiagnosticbulk_inst%ResetBulk(column=c)
 
          end if
 
@@ -387,10 +391,10 @@ contains
 
       call SnowWater(bounds, &
            num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
-           atm2lnd_inst, waterflux_inst, waterstate_inst, aerosol_inst)
+           atm2lnd_inst, waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, aerosol_inst)
 
       call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
-           aerosol_inst, waterflux_inst, waterstate_inst, topo_inst)
+           aerosol_inst, waterflux_inst, waterstatebulk_inst, topo_inst)
 
       ! Determine soil hydrology
       ! Here this consists only of making sure that soil is saturated even as it melts and
@@ -435,17 +439,17 @@ contains
       ! Natural compaction and metamorphosis.
 
       call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
-           temperature_inst, waterstate_inst, atm2lnd_inst)
+           temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, atm2lnd_inst)
 
       ! Combine thin snow elements
 
       call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-           aerosol_inst, temperature_inst, waterflux_inst, waterstate_inst)
+           aerosol_inst, temperature_inst, waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
 
       ! Divide thick snow elements
 
       call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-           aerosol_inst, temperature_inst, waterstate_inst, is_lake=.true.)
+           aerosol_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, is_lake=.true.)
 
       ! Check for single completely unfrozen snow layer over lake.  Modeling this ponding is unnecessary and
       ! can cause instability after the timestep when melt is completed, as the temperature after melt can be
@@ -624,7 +628,7 @@ contains
       ! Determine ending water balance and volumetric soil water
 
       call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-           waterstate_inst, endwb(bounds%begc:bounds%endc))
+           waterstatebulk_inst, endwb(bounds%begc:bounds%endc))
 
       do j = 1, nlevgrnd
          do fc = 1, num_lakec

@@ -25,7 +25,7 @@ module SoilBiogeochemCompetitionMod
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
   !use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use WaterStateType                  , only : waterstate_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterfluxType                   , only : waterflux_type
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
@@ -165,7 +165,7 @@ contains
   end subroutine SoilBiogeochemCompetitionInit
 
   !-----------------------------------------------------------------------
-   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstate_inst, &
+   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
                                          waterflux_inst, temperature_inst,soilstate_inst,                          &
                                          cnveg_state_inst,cnveg_carbonstate_inst,                                  &
                                          cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
@@ -188,7 +188,7 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)  ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)  ! filter for soil patches
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterflux_type)                    , intent(in)    :: waterflux_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
@@ -366,7 +366,7 @@ contains
 
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
+            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst, &
                       waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
@@ -734,7 +734,7 @@ contains
 
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
+            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst,&
                       waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &

@@ -214,7 +214,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SoilWater(bounds, num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-       waterflux_inst, waterstate_inst, temperature_inst, &
+       waterflux_inst, waterstatebulk_inst, temperature_inst, &
        canopystate_inst, energyflux_inst, soil_water_retention_curve)
     !
     ! DESCRIPTION
@@ -231,7 +231,7 @@ contains
     use TemperatureType   , only : temperature_type
     use WaterFluxType     , only : waterflux_type
     use EnergyFluxType    , only : energyflux_type
-    use WaterStateType    , only : waterstate_type
+    use WaterStateBulkType    , only : waterstatebulk_type
     use CanopyStateType   , only : canopystate_type
     use ColumnType        , only : col
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
@@ -248,7 +248,7 @@ contains
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(waterflux_type)     , intent(inout) :: waterflux_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
-    type(waterstate_type)    , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     type(temperature_type)   , intent(in)    :: temperature_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
@@ -264,9 +264,9 @@ contains
     associate(                                                         &
       wa                 =>    soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
       dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)    
-      h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
-      h2osoi_vol         =>    waterstate_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
-      h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+      h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+      h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+      h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
     )      
 
     select case(soilwater_movement_method)
@@ -275,14 +275,14 @@ contains
 
        call soilwater_zengdecker2009(bounds, num_hydrologyc, filter_hydrologyc, &
             num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-            waterflux_inst, waterstate_inst, temperature_inst, &
+            waterflux_inst, waterstatebulk_inst, temperature_inst, &
             canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
     case (moisture_form)
 
        call soilwater_moisture_form(bounds, num_hydrologyc, filter_hydrologyc, &
             num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-            waterflux_inst, waterstate_inst, temperature_inst, &
+            waterflux_inst, waterstatebulk_inst, temperature_inst, &
             canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
     case (mixed_form)
@@ -388,7 +388,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine soilwater_zengdecker2009(bounds, num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-       waterflux_inst, waterstate_inst, temperature_inst, &
+       waterflux_inst, waterstatebulk_inst, temperature_inst, &
        canopystate_inst, energyflux_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
@@ -470,7 +470,7 @@ contains
     use TemperatureType            , only : temperature_type
     use WaterFluxType              , only : waterflux_type
     use EnergyFluxType             , only : energyflux_type
-    use WaterStateType             , only : waterstate_type
+    use WaterStateBulkType             , only : waterstatebulk_type
     use CanopyStateType            , only : canopystate_type
     use SoilWaterRetentionCurveMod , only : soil_water_retention_curve_type
     use PatchType                  , only : patch
@@ -487,7 +487,7 @@ contains
     type(soilhydrology_type), intent(inout) :: soilhydrology_inst
     type(soilstate_type)    , intent(inout) :: soilstate_inst
     type(waterflux_type)    , intent(inout) :: waterflux_inst
-    type(waterstate_type)   , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)   , intent(inout) :: waterstatebulk_inst
     type(canopystate_type)  , intent(inout) :: canopystate_inst
     type(temperature_type)  , intent(in)    :: temperature_inst
     type(energyflux_type)   , intent(in)    :: energyflux_inst
@@ -566,9 +566,9 @@ contains
          smp_l             =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
 
-         h2osoi_ice        =>    waterstate_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
-         h2osoi_liq        =>    waterstate_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         h2osoi_vol        =>    waterstate_inst%h2osoi_vol_col     , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
+         h2osoi_liq        =>    waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+         h2osoi_vol        =>    waterstatebulk_inst%h2osoi_vol_col     , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
 
          qflx_deficit      =>    waterflux_inst%qflx_deficit_col    , & ! Input:  [real(r8) (:)   ]  water deficit to keep non-negative liquid water content
          qflx_infl         =>    waterflux_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
@@ -967,7 +967,7 @@ contains
 !-----------------------------------------------------------------------
    subroutine soilwater_moisture_form(bounds, num_hydrologyc, &
         filter_hydrologyc, num_urbanc, filter_urbanc, soilhydrology_inst, &
-        soilstate_inst, waterflux_inst, waterstate_inst, temperature_inst, &
+        soilstate_inst, waterflux_inst, waterstatebulk_inst, temperature_inst, &
         canopystate_inst, energyflux_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
@@ -1053,7 +1053,7 @@ contains
     use SoilHydrologyType    , only : soilhydrology_type
     use TemperatureType      , only : temperature_type
     use WaterFluxType        , only : waterflux_type
-    use WaterStateType       , only : waterstate_type
+    use WaterStateBulkType       , only : waterstatebulk_type
     use EnergyFluxType       , only : energyflux_type
     use CanopyStateType      , only : canopystate_type
     use SoilWaterRetentionCurveMod , only : soil_water_retention_curve_type
@@ -1070,7 +1070,7 @@ contains
     type(soilhydrology_type), intent(inout) :: soilhydrology_inst
     type(soilstate_type)    , intent(inout) :: soilstate_inst
     type(waterflux_type)    , intent(inout) :: waterflux_inst
-    type(waterstate_type)   , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)   , intent(inout) :: waterstatebulk_inst
     type(temperature_type)  , intent(in)    :: temperature_inst
     type(canopystate_type)  , intent(inout) :: canopystate_inst
     type(energyflux_type)   , intent(in)    :: energyflux_inst
@@ -1155,8 +1155,8 @@ contains
 
          smp_l             =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
-         h2osoi_ice        =>    waterstate_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
-         h2osoi_liq        =>    waterstate_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+         h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
+         h2osoi_liq        =>    waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
          qflx_rootsoi_col  =>    waterflux_inst%qflx_rootsoi_col      &
          )  ! end associate statement
 
@@ -1408,7 +1408,7 @@ contains
 
          call compute_qcharge(bounds, &
               num_hydrologyc, filter_hydrologyc, soilhydrology_inst, &
-              soilstate_inst, waterstate_inst, &
+              soilstate_inst, waterstatebulk_inst, &
               soil_water_retention_curve, &
               dwat(bounds%begc:bounds%endc,1:nlevsoi), &
               smp(bounds%begc:bounds%endc,1:nlevsoi), &
@@ -2000,7 +2000,7 @@ contains
 !-----------------------------------------------------------------------
    subroutine compute_qcharge(bounds, num_hydrologyc, &
         filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
-        waterstate_inst, soil_water_retention_curve, &
+        waterstatebulk_inst, soil_water_retention_curve, &
         dwat, smp, imped, vwc_liq)
     !
     ! !DESCRIPTION:
@@ -2019,7 +2019,7 @@ contains
     use SoilHydrologyType    , only : soilhydrology_type
     use TemperatureType      , only : temperature_type
     use WaterFluxType        , only : waterflux_type
-    use WaterStateType       , only : waterstate_type
+    use WaterStateBulkType       , only : waterstatebulk_type
     use ColumnType           , only : col
     !
     ! !ARGUMENTS:
@@ -2030,7 +2030,7 @@ contains
 
     type(soilhydrology_type), intent(in) :: soilhydrology_inst
     type(soilstate_type)    , intent(in) :: soilstate_inst
-    type(waterstate_type)    , intent(in) :: waterstate_inst
+    type(waterstatebulk_type)    , intent(in) :: waterstatebulk_inst
 
 !    integer,  intent(in)  :: soil_hydraulic_properties_method
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
@@ -2062,7 +2062,7 @@ contains
          sucsat            =>    soilstate_inst%sucsat_col          , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)                       
          watsat            =>    soilstate_inst%watsat_col          , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  
          smpmin            =>    soilstate_inst%smpmin_col          , & ! Input:  [real(r8) (:)   ]  restriction for min of soil potential (mm)        
-         h2osoi_vol        =>    waterstate_inst%h2osoi_vol_col     , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_vol        =>    waterstatebulk_inst%h2osoi_vol_col     , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          z                 =>    col%z                              , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
          zi                =>    col%zi                               & ! Input:  [real(r8) (:,:) ]  layer interface depth (m)                                 
          )  ! end associate statement

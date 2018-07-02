@@ -17,7 +17,8 @@ module SoilFluxesMod
   use EnergyFluxType    , only : energyflux_type
   use SolarAbsorbedType , only : solarabs_type
   use TemperatureType   , only : temperature_type
-  use WaterstateType    , only : waterstate_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use WaterfluxType     , only : waterflux_type
   use LandunitType	, only : lun                
   use ColumnType	, only : col                
@@ -37,7 +38,7 @@ contains
   subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
        atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, &
-       waterstate_inst, energyflux_inst, waterflux_inst)            
+       waterstatebulk_inst, waterdiagnosticbulk_inst, energyflux_inst, waterflux_inst)            
     !
     ! !DESCRIPTION:
     ! Update surface fluxes based on the new ground temperature
@@ -61,7 +62,8 @@ contains
     type(solarabs_type)    , intent(in)    :: solarabs_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(waterflux_type)   , intent(inout) :: waterflux_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     !
@@ -89,10 +91,10 @@ contains
 
          frac_veg_nosno          => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer (:)    ]  fraction of veg not covered by snow (0/1 now) [-]
 
-         frac_sno_eff            => waterstate_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
-         frac_h2osfc             => waterstate_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-         h2osoi_ice              => waterstate_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
-         h2osoi_liq              => waterstate_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
+         frac_sno_eff            => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
+         frac_h2osfc             => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         h2osoi_ice              => waterstatebulk_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
+         h2osoi_liq              => waterstatebulk_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
 
          sabg_soil               => solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)

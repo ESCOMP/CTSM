@@ -36,7 +36,7 @@ module CNFUNMod
   use SoilBiogeochemNitrogenStateType  , only : soilbiogeochem_nitrogenstate_type
 
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use WaterStateType                  , only : waterstate_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterfluxType                   , only : waterflux_type
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
@@ -200,7 +200,7 @@ module CNFUNMod
   !--------------------------------------------------------------------
   !---
   subroutine CNFUN(bounds,num_soilc, filter_soilc,num_soilp&
-       &,filter_soilp,waterstate_inst                 ,&
+       &,filter_soilp,waterstatebulk_inst, &
        & waterflux_inst,temperature_inst,soilstate_inst&
        &,cnveg_state_inst,cnveg_carbonstate_inst,&
        & cnveg_carbonflux_inst,cnveg_nitrogenstate_inst&
@@ -224,7 +224,7 @@ module CNFUNMod
    integer                                 , intent(in)    :: filter_soilc(:)       ! filter for soil columns
    integer                                 , intent(in)    :: num_soilp             ! number of soil patches in filter
    integer                                 , intent(in)    :: filter_soilp(:)       ! filter for soil patches
-   type(waterstate_type)                   , intent(in)    :: waterstate_inst
+   type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
    type(waterflux_type)                    , intent(in)    :: waterflux_inst
    type(temperature_type)                  , intent(in)    :: temperature_inst
    type(soilstate_type)                    , intent(in)    :: soilstate_inst
@@ -706,7 +706,7 @@ module CNFUNMod
          !  NO3              
          soilc_change           => cnveg_carbonflux_inst%soilc_change_patch               , & ! Output:  [real(r8)
          !  (:) ]  Used C from the soil (gC/m2/s)
-         h2osoi_liq             => waterstate_inst%h2osoi_liq_col                                , & ! Input:   [real(r8) (:,:)]
+         h2osoi_liq             => waterstatebulk_inst%h2osoi_liq_col                                , & ! Input:   [real(r8) (:,:)]
          !   liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
          qflx_tran_veg          => waterflux_inst%qflx_tran_veg_patch                            , & ! Input:   [real(r8) (:)  ]
          !   vegetation transpiration (mm H2O/s) (+ = to atm)
