@@ -44,12 +44,14 @@ module clm_instMod
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
+  use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
-  use SoilHydrologyType               , only : soilhydrology_type  
+  use SoilHydrologyType               , only : soilhydrology_type
+  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use SoilStateType                   , only : soilstate_type
   use SolarAbsorbedType               , only : solarabs_type
   use SurfaceRadiationMod             , only : surfrad_type
@@ -95,12 +97,14 @@ module clm_instMod
   type(energyflux_type)                   :: energyflux_inst
   type(frictionvel_type)                  :: frictionvel_inst
   type(glacier_smb_type)                  :: glacier_smb_inst
+  type(infiltration_excess_runoff_type)   :: infiltration_excess_runoff_inst
   type(irrigation_type)                   :: irrigation_inst
   type(lakestate_type)                    :: lakestate_inst
   class(ozone_base_type), allocatable     :: ozone_inst
   type(photosyns_type)                    :: photosyns_inst
   type(soilstate_type)                    :: soilstate_inst
   type(soilhydrology_type)                :: soilhydrology_inst
+  type(saturated_excess_runoff_type)      :: saturated_excess_runoff_inst
   type(solarabs_type)                     :: solarabs_inst
   type(surfalb_type)                      :: surfalb_inst
   type(surfrad_type)                      :: surfrad_inst
@@ -303,6 +307,9 @@ contains
 
     call soilhydrology_inst%Init(bounds, nlfilename)
     call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst) ! sets time constant properties
+
+    call saturated_excess_runoff_inst%Init(bounds)
+    call infiltration_excess_runoff_inst%Init(bounds)
 
     call solarabs_inst%Init(bounds)
 

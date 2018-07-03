@@ -72,7 +72,7 @@ module CNVegetationFacade
   use CNDVType                        , only : dgvs_type
   use CNDVDriverMod                   , only : CNDVDriver, CNDVHIST
   use EnergyFluxType                  , only : energyflux_type
-  use SoilHydrologyType               , only : soilhydrology_type
+  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use FrictionVelocityMod             , only : frictionvel_type
   use SoilBiogeochemStateType         , only : soilBiogeochem_state_type
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
@@ -784,7 +784,7 @@ contains
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
        atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-       photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+       photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
        nutrient_competition_method, fireemis_inst)
     !
     ! !DESCRIPTION:
@@ -823,7 +823,7 @@ contains
     type(crop_type)                         , intent(inout) :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
-    type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
+    type(saturated_excess_runoff_type)      , intent(in)    :: saturated_excess_runoff_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
@@ -853,7 +853,7 @@ contains
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
          atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
          canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-         this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+         this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
          nutrient_competition_method, this%cnfire_method)
 
     ! fire carbon emissions 

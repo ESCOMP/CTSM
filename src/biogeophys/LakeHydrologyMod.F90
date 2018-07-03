@@ -184,7 +184,6 @@ contains
          qflx_snwcp_discarded_ice => waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
          qflx_snwcp_discarded_liq => waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input: [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
          qflx_drain_perched   =>  waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s) !TODO - move this to somewhere else
-         qflx_h2osfc_surf     =>  waterflux_inst%qflx_h2osfc_surf_col   , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)        
          qflx_snow_drain      =>  waterflux_inst%qflx_snow_drain_col    , & ! Output: [real(r8) (:)   ]  drainage from snow pack                          
          qflx_rsub_sat        =>  waterflux_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ]  soil saturation excess [mm h2o/s]        
          qflx_surf            =>  waterflux_inst%qflx_surf_col          , & ! Output: [real(r8) (:)   ]  surface runoff (mm H2O /s)              
@@ -193,6 +192,7 @@ contains
          qflx_qrgwl           =>  waterflux_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
          qflx_runoff          =>  waterflux_inst%qflx_runoff_col        , & ! Output: [real(r8) (:)   ]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_ice_runoff_snwcp => waterflux_inst%qflx_ice_runoff_snwcp_col, & ! Output: [real(r8) (:)] solid runoff from snow capping (mm H2O /s)
+         qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Output: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
          qflx_top_soil        =>  waterflux_inst%qflx_top_soil_col      , & ! Output: [real(r8) (:)   ]  net water input into soil from top (mm/s)
 
          eflx_snomelt         =>  energyflux_inst%eflx_snomelt_col      , & ! Output: [real(r8) (:)   ]  snow melt heat flux (W/m**2)
@@ -639,7 +639,6 @@ contains
          g = pgridcell(p)
 
          qflx_drain_perched(c) = 0._r8
-         qflx_h2osfc_surf(c)   = 0._r8
          qflx_rsub_sat(c)      = 0._r8
          qflx_infl(c)          = 0._r8
          qflx_surf(c)          = 0._r8
@@ -652,7 +651,8 @@ contains
               (endwb(c)-begwb(c))/dtime + qflx_floodg(g)
          qflx_floodc(c)    = qflx_floodg(g)
          qflx_runoff(c)    = qflx_drain(c) + qflx_qrgwl(c)
-         qflx_top_soil(c)  = qflx_prec_grnd_rain(p) + qflx_snow_drain(c)
+         qflx_rain_plus_snomelt(c) = qflx_prec_grnd_rain(p) + qflx_snow_drain(c)
+         qflx_top_soil(c)  = qflx_rain_plus_snomelt(c)
          qflx_ice_runoff_snwcp(c) = qflx_snwcp_ice(c)
 
       enddo

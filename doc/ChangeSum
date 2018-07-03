@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev001    sacks 06/22/2018 Begin separating SoilHydrology flux calculations
    clm5.0.dev013     erik 06/12/2018 cleanup and update cime and cism
    clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
    clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing

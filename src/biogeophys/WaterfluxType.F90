@@ -73,11 +73,18 @@ module WaterfluxType
      real(r8), pointer :: qflx_adv_col             (:,:) ! col advective flux across different soil layer interfaces [mm H2O/s] [+ downward]
      real(r8), pointer :: qflx_rootsoi_col         (:,:) ! col root and soil water exchange [mm H2O/s] [+ into root]
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
-     real(r8), pointer :: qflx_surf_col            (:)   ! col surface runoff (mm H2O /s)
+     real(r8), pointer :: qflx_infl_excess_surf_col(:)   ! col surface runoff due to infiltration excess (mm H2O /s)
+     real(r8), pointer :: qflx_h2osfc_surf_col     (:)   ! col surface water runoff (mm H2O /s)
+     real(r8), pointer :: qflx_surf_col            (:)   ! col total surface runoff (mm H2O /s)
      real(r8), pointer :: qflx_drain_col           (:)   ! col sub-surface runoff (mm H2O /s)
+     real(r8), pointer :: qflx_rain_plus_snomelt_col(:)  ! col rain plus snow melt falling on the soil (mm/s)
      real(r8), pointer :: qflx_top_soil_col        (:)   ! col net water input into soil from top (mm/s)
+     real(r8), pointer :: qflx_in_soil_col         (:)   ! col surface input to soil (mm/s)
+     real(r8), pointer :: qflx_in_soil_limited_col (:)   ! col surface input to soil, limited by max infiltration rate (mm/s)
+     real(r8), pointer :: qflx_h2osfc_drain_col    (:)   ! col bottom drainage from h2osfc (mm/s)
+     real(r8), pointer :: qflx_top_soil_to_h2osfc_col(:) ! col portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
+     real(r8), pointer :: qflx_in_h2osfc_col(:)          ! col total surface input to h2osfc
      real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
-     real(r8), pointer :: qflx_h2osfc_surf_col     (:)   ! col surface water runoff
      real(r8), pointer :: qflx_snow_h2osfc_col     (:)   ! col snow falling on surface water
      real(r8), pointer :: qflx_drain_perched_col   (:)   ! col sub-surface runoff from perched wt (mm H2O /s)
      real(r8), pointer :: qflx_deficit_col         (:)   ! col water deficit to keep non-negative liquid water content (mm H2O)   
@@ -216,8 +223,15 @@ contains
     allocate(this%qflx_infl_col            (begc:endc))              ; this%qflx_infl_col            (:)   = nan
     allocate(this%qflx_surf_col            (begc:endc))              ; this%qflx_surf_col            (:)   = nan
     allocate(this%qflx_drain_col           (begc:endc))              ; this%qflx_drain_col           (:)   = nan
+    allocate(this%qflx_rain_plus_snomelt_col(begc:endc))             ; this%qflx_rain_plus_snomelt_col(:)  = nan
     allocate(this%qflx_top_soil_col        (begc:endc))              ; this%qflx_top_soil_col        (:)   = nan
+    allocate(this%qflx_in_soil_col         (begc:endc))              ; this%qflx_in_soil_col         (:)   = nan
+    allocate(this%qflx_in_soil_limited_col (begc:endc))              ; this%qflx_in_soil_limited_col (:)   = nan
+    allocate(this%qflx_h2osfc_drain_col    (begc:endc))              ; this%qflx_h2osfc_drain_col    (:)   = nan
+    allocate(this%qflx_top_soil_to_h2osfc_col(begc:endc))            ; this%qflx_top_soil_to_h2osfc_col(:) = nan
+    allocate(this%qflx_in_h2osfc_col       (begc:endc))              ; this%qflx_in_h2osfc_col(:)          = nan
     allocate(this%qflx_h2osfc_to_ice_col   (begc:endc))              ; this%qflx_h2osfc_to_ice_col   (:)   = nan
+    allocate(this%qflx_infl_excess_surf_col(begc:endc))              ; this%qflx_infl_excess_surf_col(:)   = nan
     allocate(this%qflx_h2osfc_surf_col     (begc:endc))              ; this%qflx_h2osfc_surf_col     (:)   = nan
     allocate(this%qflx_snow_h2osfc_col     (begc:endc))              ; this%qflx_snow_h2osfc_col     (:)   = nan
     allocate(this%qflx_snomelt_col         (begc:endc))              ; this%qflx_snomelt_col         (:)   = nan
@@ -290,7 +304,7 @@ contains
 
     this%qflx_surf_col(begc:endc) = spval
     call hist_addfld1d (fname='QOVER',  units='mm/s',  &
-         avgflag='A', long_name='surface runoff', &
+         avgflag='A', long_name='total surface runoff (includes QH2OSFC)', &
          ptr_col=this%qflx_surf_col, c2l_scale_type='urbanf')
 
     this%qflx_qrgwl_col(begc:endc) = spval

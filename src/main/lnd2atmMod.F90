@@ -361,11 +361,6 @@ contains
     enddo
 
     call c2g( bounds, &
-         waterflux_inst%qflx_h2osfc_surf_col (bounds%begc:bounds%endc), &
-         lnd2atm_inst%qflx_rofliq_h2osfc_grc(bounds%begg:bounds%endg), &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-
-    call c2g( bounds, &
          waterflux_inst%qflx_drain_perched_col (bounds%begc:bounds%endc), &
          lnd2atm_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
