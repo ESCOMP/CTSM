@@ -497,6 +497,10 @@ module clm_comp_nuopc
        call shr_sys_abort( subname//'ERROR:: bad calendar for ESMF' )
     end if
 
+    !----------------------
+    ! Initialize time info
+    !----------------------
+
     call set_timemgr_init(       &
          calendar_in=calendar,   &
          start_ymd_in=start_ymd, &

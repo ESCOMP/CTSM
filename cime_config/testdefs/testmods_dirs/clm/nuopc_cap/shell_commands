@@ -4,3 +4,4 @@ if [ $comp_interface == 'mct' ]
 then
    ./xmlchange COMPARE_TO_NUOPC=TRUE
 fi
+./xmlchange ROF_NCPL=\$ATM_NCPL
