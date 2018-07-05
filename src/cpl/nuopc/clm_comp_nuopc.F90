@@ -4,20 +4,17 @@ module clm_comp_nuopc
   ! This is the NUOPC cap for CTSM
   !----------------------------------------------------------------------------
 
-  use shr_kind_mod          , only : R8=>SHR_KIND_R8, IN=>SHR_KIND_IN
-  use shr_kind_mod          , only : CS=>SHR_KIND_CS, CL=>SHR_KIND_CL, CXX => shr_kind_CXX
+  use shr_kind_mod          , only : R8=>SHR_KIND_R8, CXX=>SHR_KIND_CXX, CL=>SHR_KIND_CL
   use shr_sys_mod           , only : shr_sys_abort
-  use shr_log_mod           , only : shr_log_Unit
   use shr_file_mod          , only : shr_file_getlogunit, shr_file_setlogunit
   use shr_file_mod          , only : shr_file_getloglevel, shr_file_setloglevel
   use shr_file_mod          , only : shr_file_setIO, shr_file_getUnit
   use shr_string_mod        , only : shr_string_listGetNum
   use shr_orb_mod           , only : shr_orb_decl
-  use seq_timemgr_mod       , only : seq_timemgr_EClockGetData, seq_timemgr_EClockDateInSync
+  use shr_cal_mod           , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use esmFlds               , only : fldListFr, fldListTo, complnd, compname
   use esmFlds               , only : flds_scalar_name, flds_scalar_num
   use esmFlds               , only : flds_scalar_index_nx, flds_scalar_index_ny
-  use esmFlds               , only : flds_scalar_index_dead_comps
   use esmFlds               , only : flds_scalar_index_nextsw_cday
   use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Realize
   use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Concat
@@ -43,7 +40,7 @@ module clm_comp_nuopc
   use clm_cpl_indices   , only : clm_cpl_indices_set
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
   use spmdMod           , only : masterproc, mpicom, spmd_init
-  use decompMod         , only : bounds_type, ldecomp, get_proc_bounds, get_proc_global
+  use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
   use domainMod         , only : ldomain
   use controlMod        , only : control_setNL
   use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
@@ -86,7 +83,7 @@ module clm_comp_nuopc
   character(len=*),parameter :: grid_option = "mesh" ! grid_de, grid_arb, grid_reg, mesh
   integer, parameter         :: dbug = 10
   integer                    :: dbrc
-  integer(IN)                :: compid               ! component id
+  integer                    :: compid               ! component id
 
   !----- formats -----
   character(*),parameter :: modName =  "(clm_comp_nuopc)"
@@ -124,18 +121,18 @@ module clm_comp_nuopc
 
     ! attach specializing method(s)
     call NUOPC_CompSpecialize(gcomp, specLabel=model_label_Advance, &
-      specRoutine=ModelAdvance, rc=rc)
+         specRoutine=ModelAdvance, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_MethodRemove(gcomp, label=model_label_SetRunClock, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call NUOPC_CompSpecialize(gcomp, specLabel=model_label_SetRunClock, &
-      specRoutine=ModelSetRunClock, rc=rc)
+         specRoutine=ModelSetRunClock, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call NUOPC_CompSpecialize(gcomp, specLabel=model_label_Finalize, &
-      specRoutine=ModelFinalize, rc=rc)
+         specRoutine=ModelFinalize, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
@@ -169,20 +166,20 @@ module clm_comp_nuopc
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_VM)      :: vm
-    integer(IN)        :: lmpicom
-    character(CL)      :: cvalue
-    logical            :: exists
-    integer(IN)        :: lsize      ! local array size
-    integer(IN)        :: ierr       ! error code
-    integer(IN)        :: shrlogunit ! original log unit
-    integer(IN)        :: shrloglev  ! original log level
-    integer            :: n,nflds       
-    logical            :: isPresent
-    character(len=512) :: diro
-    character(len=512) :: logfile
-    logical            :: activefld
-    character(CS)      :: stdname, shortname
+    type(ESMF_VM)          :: vm
+    integer                :: lmpicom
+    character(ESMF_MAXSTR) :: cvalue
+    logical                :: exists
+    integer                :: lsize      ! local array size
+    integer                :: ierr       ! error code
+    integer                :: shrlogunit ! original log unit
+    integer                :: shrloglev  ! original log level
+    integer                :: n,nflds       
+    logical                :: isPresent
+    character(len=512)     :: diro
+    character(len=512)     :: logfile
+    logical                :: activefld
+    character(ESMF_MAXSTR) :: stdname, shortname
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
@@ -296,8 +293,6 @@ module clm_comp_nuopc
   !===============================================================================
 
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
-
-    implicit none
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState
     type(ESMF_State)     :: exportState
@@ -305,47 +300,56 @@ module clm_comp_nuopc
     integer, intent(out) :: rc
 
     ! local variables
-    integer , allocatable  :: gindex(:)
-    real(r8), pointer      :: lat(:)
-    real(r8), pointer      :: lon(:)
-    real(r8), pointer      :: elemCoords(:,:)
-    real(r8), pointer      :: elemCornerCoords(:,:,:)
-    real(r8)               :: dx,dy
-    character(CL)          :: cvalue
-    character(ESMF_MAXSTR) :: convCIM, purpComp
-    type(ESMF_Grid)        :: Egrid
-    type(ESMF_Mesh)        :: Emesh
-    integer(IN)            :: shrlogunit            ! original log unit
-    integer(IN)            :: shrloglev             ! original log level
-    type(ESMF_VM)          :: vm
-    integer(IN)            :: n, m
-    logical                :: connected             ! is field connected?
-    integer                :: lsize                 ! local size ofarrays
-    integer                :: g,i,j                 ! indices
-    integer                :: dtime_sync            ! coupling time-step from the input synchronization clock
-    integer                :: dtime_clm             ! clm time-step
-    real(r8)               :: scmlat                ! single-column latitude
-    real(r8)               :: scmlon                ! single-column longitude
-    real(r8)               :: nextsw_cday           ! calday from clock of next radiation computation
-    character(len=CL)      :: caseid                ! case identifier name
-    character(len=CL)      :: ctitle                ! case description title
-    character(len=CL)      :: starttype             ! start-type (startup, continue, branch, hybrid)
-    character(len=CL)      :: calendar              ! calendar type name
-    character(len=CL)      :: hostname              ! hostname of machine running on
-    character(len=CL)      :: model_version         ! Model version
-    character(len=CL)      :: username              ! user running the model
-    integer                :: nsrest                ! clm restart type
-    integer                :: ref_ymd               ! reference date (YYYYMMDD)
-    integer                :: ref_tod               ! reference time of day (sec)
-    integer                :: start_ymd             ! start date (YYYYMMDD)
-    integer                :: start_tod             ! start time of day (sec)
-    integer                :: stop_ymd              ! stop date (YYYYMMDD)
-    integer                :: stop_tod              ! stop time of day (sec)
-    logical                :: brnch_retain_casename ! flag if should retain the case name on a branch start type
-    integer                :: lbnum                 ! input to memory diagnostic
-    type(bounds_type)      :: bounds                ! bounds
-    integer                :: numg
-    type(ESMF_Time)        :: currTime
+    type(ESMF_Time)         :: currTime              ! Current time
+    type(ESMF_Time)         :: startTime             ! Start time
+    type(ESMF_Time)         :: stopTime              ! Stop time
+    type(ESMF_Time)         :: refTime               ! Ref time
+    type(ESMF_TimeInterval) :: timeStep              ! Model timestep
+    type(ESMF_Calendar)     :: esmf_calendar         ! esmf calendar     
+    type(ESMF_CalKind_Flag) :: esmf_caltype          ! esmf calendar type
+    integer                 :: ref_ymd               ! reference date (YYYYMMDD)
+    integer                 :: ref_tod               ! reference time of day (sec)
+    integer                 :: yy,mm,dd              ! Temporaries for time query 
+    integer                 :: start_ymd             ! start date (YYYYMMDD)
+    integer                 :: start_tod             ! start time of day (sec)
+    integer                 :: stop_ymd              ! stop date (YYYYMMDD)
+    integer                 :: stop_tod              ! stop time of day (sec)
+    integer                 :: curr_ymd              ! Start date (YYYYMMDD)
+    integer                 :: curr_tod              ! Start time of day (sec)
+    integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
+    integer                 :: dtime_clm             ! clm time-step
+    integer , allocatable   :: gindex(:)
+    real(r8), pointer       :: lat(:)
+    real(r8), pointer       :: lon(:)
+    real(r8), pointer       :: elemCoords(:,:)
+    real(r8), pointer       :: elemCornerCoords(:,:,:)
+    real(r8)                :: dx,dy
+    character(ESMF_MAXSTR)  :: cvalue
+    character(ESMF_MAXSTR)  :: convCIM, purpComp
+    type(ESMF_Grid)         :: Egrid
+    type(ESMF_Mesh)         :: Emesh
+    integer                 :: shrlogunit            ! original log unit
+    integer                 :: shrloglev             ! original log level
+    type(ESMF_VM)           :: vm
+    integer                 :: n, m
+    logical                 :: connected             ! is field connected?
+    integer                 :: lsize                 ! local size ofarrays
+    integer                 :: g,i,j                 ! indices
+    real(r8)                :: scmlat                ! single-column latitude
+    real(r8)                :: scmlon                ! single-column longitude
+    real(r8)                :: nextsw_cday           ! calday from clock of next radiation computation
+    character(len=CL)       :: caseid                ! case identifier name
+    character(len=CL)       :: ctitle                ! case description title
+    character(len=CL)       :: starttype             ! start-type (startup, continue, branch, hybrid)
+    character(len=CL)       :: calendar              ! calendar type name
+    character(len=CL)       :: hostname              ! hostname of machine running on
+    character(len=CL)       :: model_version         ! Model version
+    character(len=CL)       :: username              ! user running the model
+    integer                 :: nsrest                ! clm restart type
+    logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
+    integer                 :: lbnum                 ! input to memory diagnostic
+    type(bounds_type)       :: bounds                ! bounds
+    integer                 :: numg
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -458,14 +462,40 @@ module clm_comp_nuopc
     call control_setNL("lnd_in"//trim(inst_suffix))
 
     !----------------------
-    ! Get time info
+    ! Get properties from clock
     !----------------------
 
-    call seq_timemgr_EClockGetData(clock,          &
-         start_ymd=start_ymd, start_tod=start_tod, &
-         ref_ymd=ref_ymd    , ref_tod=ref_tod,     &
-         stop_ymd=stop_ymd  , stop_tod=stop_tod,   &
-         calendar=calendar )
+    call ESMF_ClockGet( clock, &
+         currTime=currTime, startTime=startTime, stopTime=stopTime, refTime=RefTime, &
+         timeStep=timeStep, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_TimeGet( currTime, yy=yy, mm=mm, dd=dd, s=curr_tod, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call shr_cal_ymd2date(yy,mm,dd,curr_ymd)
+
+    call ESMF_TimeGet( startTime, yy=yy, mm=mm, dd=dd, s=start_tod, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call shr_cal_ymd2date(yy,mm,dd,start_ymd)
+
+    call ESMF_TimeGet( stopTime, yy=yy, mm=mm, dd=dd, s=stop_tod, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call shr_cal_ymd2date(yy,mm,dd,stop_ymd)
+
+    call ESMF_TimeGet( refTime, yy=yy, mm=mm, dd=dd, s=ref_tod, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call shr_cal_ymd2date(yy,mm,dd,ref_ymd)
+
+    call ESMF_TimeGet( currTime, calkindflag=esmf_caltype, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (esmf_caltype == ESMF_CALKIND_NOLEAP) then
+       calendar = shr_cal_noleap
+    else if (esmf_caltype == ESMF_CALKIND_GREGORIAN) then
+       calendar = shr_cal_gregorian
+    else
+       call shr_sys_abort( subname//'ERROR:: bad calendar for ESMF' )
+    end if
 
     call set_timemgr_init(       &
          calendar_in=calendar,   &
@@ -569,14 +599,20 @@ module clm_comp_nuopc
     ! Check that clm internal dtime aligns with clm coupling interval
     !--------------------------------
 
-    call seq_timemgr_EClockGetData(clock, dtime=dtime_sync)
+    call ESMF_ClockGet( clock, timeStep=timeStep, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_TimeIntervalGet( timeStep, s=dtime_sync, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
     dtime_clm = get_step_size()
+
     if (masterproc) then
        write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_clm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
     end if
     if (mod(dtime_sync,dtime_clm) /= 0) then
        write(iulog,*)'clm dtime ',dtime_clm,' and clock dtime ',dtime_sync,' never align'
-       call shr_sys_abort( subname//' ERROR: time out of sync' )
+       rc = ESMF_FAILURE
+       return
     end if
 
     !--------------------------------
@@ -616,10 +652,6 @@ module clm_comp_nuopc
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call shr_nuopc_methods_State_SetScalar(dble(ldomain%nj), flds_scalar_index_ny, exportState, mpicom, &
-         flds_scalar_name, flds_scalar_num, rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call shr_nuopc_methods_State_SetScalar(0.0_r8, flds_scalar_index_dead_comps, exportState, mpicom, &
          flds_scalar_name, flds_scalar_num, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -665,52 +697,48 @@ module clm_comp_nuopc
   !===============================================================================
 
   subroutine ModelAdvance(gcomp, rc)
-
-    ! !DESCRIPTION:
-    ! Run CLM model
-
-    ! !ARGUMENTS:
-    implicit none
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
-    ! !LOCAL VARIABLES:
-    type(ESMF_Clock)  :: clock
-    type(ESMF_Alarm)  :: alarm
-    type(ESMF_Time)   :: time
-    type(ESMF_State)  :: importState, exportState
-    character(CL)     :: cvalue
-    integer(IN)       :: shrlogunit     ! original log unit
-    integer(IN)       :: shrloglev      ! original log level
-    character(CL)     :: case_name      ! case name
-    integer           :: ymd            ! CLM current date (YYYYMMDD)
-    integer           :: yr             ! CLM current year
-    integer           :: mon            ! CLM current month
-    integer           :: day            ! CLM current day
-    integer           :: tod            ! CLM current time of day (sec)
-    integer           :: ymd_sync       ! Sync date (YYYYMMDD)
-    integer           :: yr_sync        ! Sync current year
-    integer           :: mon_sync       ! Sync current month
-    integer           :: day_sync       ! Sync current day
-    integer           :: tod_sync       ! Sync current time of day (sec)
-    integer           :: dtime          ! time step increment (sec)
-    integer           :: nstep          ! time step index
-    logical           :: rstwr          ! .true. ==> write restart file before returning
-    logical           :: nlend          ! .true. ==> last time-step
-    logical           :: dosend         ! true => send data back to driver
-    logical           :: doalb          ! .true. ==> do albedo calculation on this time step
-    logical           :: rof_prognostic ! .true. => running with a prognostic ROF model
-    logical           :: glc_present    ! .true. => running with a non-stub GLC model
-    real(r8)          :: nextsw_cday    ! calday from clock of next radiation computation
-    real(r8)          :: caldayp1       ! clm calday plus dtime offset
-    integer           :: lbnum          ! input to memory diagnostic
-    integer           :: g,i            ! counters
-    real(r8)          :: calday         ! calendar day for nstep
-    real(r8)          :: declin         ! solar declination angle in radians for nstep
-    real(r8)          :: declinp1       ! solar declination angle in radians for nstep+1
-    real(r8)          :: eccf           ! earth orbit eccentricity factor
-    type(bounds_type) :: bounds         ! bounds
-    character(len=32) :: rdate          ! date char string for restart file names
+    ! Run CTSM
+
+    ! local variables:
+    type(ESMF_Clock)       :: clock
+    type(ESMF_Alarm)       :: alarm
+    type(ESMF_Time)        :: currTime
+    type(ESMF_State)       :: importState, exportState
+    character(ESMF_MAXSTR) :: cvalue
+    integer                :: shrlogunit     ! original log unit
+    integer                :: shrloglev      ! original log level
+    character(ESMF_MAXSTR) :: case_name      ! case name
+    integer                :: ymd            ! CLM current date (YYYYMMDD)
+    integer                :: yr             ! CLM current year
+    integer                :: mon            ! CLM current month
+    integer                :: day            ! CLM current day
+    integer                :: tod            ! CLM current time of day (sec)
+    integer                :: ymd_sync       ! Sync date (YYYYMMDD)
+    integer                :: yr_sync        ! Sync current year
+    integer                :: mon_sync       ! Sync current month
+    integer                :: day_sync       ! Sync current day
+    integer                :: tod_sync       ! Sync current time of day (sec)
+    integer                :: dtime          ! time step increment (sec)
+    integer                :: nstep          ! time step index
+    logical                :: rstwr          ! .true. ==> write restart file before returning
+    logical                :: nlend          ! .true. ==> last time-step
+    logical                :: dosend         ! true => send data back to driver
+    logical                :: doalb          ! .true. ==> do albedo calculation on this time step
+    logical                :: rof_prognostic ! .true. => running with a prognostic ROF model
+    logical                :: glc_present    ! .true. => running with a non-stub GLC model
+    real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
+    real(r8)               :: caldayp1       ! clm calday plus dtime offset
+    integer                :: lbnum          ! input to memory diagnostic
+    integer                :: g,i            ! counters
+    real(r8)               :: calday         ! calendar day for nstep
+    real(r8)               :: declin         ! solar declination angle in radians for nstep
+    real(r8)               :: declinp1       ! solar declination angle in radians for nstep+1
+    real(r8)               :: eccf           ! earth orbit eccentricity factor
+    type(bounds_type)      :: bounds         ! bounds
+    character(len=32)      :: rdate          ! date char string for restart file names
     character(len=*),parameter  :: subname=trim(modName)//':(ModelAdvance) '
     !-------------------------------------------------------------------------------
 
@@ -874,8 +902,10 @@ module clm_comp_nuopc
 
        call t_startf ('clm_run')
 
-       call seq_timemgr_EClockGetData(clock, &
-            curr_tod=tod_sync, curr_yr=yr_sync, curr_mon=mon_sync, curr_day=day_sync)
+       call ESMF_ClockGet( clock, currTime=currTime )
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_TimeGet( currTime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc )
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
        write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
 
        call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
@@ -914,11 +944,19 @@ module clm_comp_nuopc
     call get_curr_date( yr, mon, day, tod, offset=-2*dtime )
     ymd = yr*10000 + mon*100 + day
     tod = tod
-    if ( .not. seq_timemgr_EClockDateInSync( clock, ymd, tod ) )then
-       call seq_timemgr_EclockGetData( clock, curr_ymd=ymd_sync, curr_tod=tod_sync )
+
+    call ESMF_ClockGet( clock, currTime=currTime, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_TimeGet( currTime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call shr_cal_ymd2date(yr_sync, mon_sync, day_sync, ymd_sync)
+
+    if ( (ymd /= ymd_sync) .and. (tod /= tod_sync) ) then
        write(iulog,*)' clm ymd=',ymd     ,'  clm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
-       call shr_sys_abort( subname//":: CLM clock not in sync with Master Sync clock" )
+       rc = ESMF_FAILURE
+       call ESMF_LogWrite(subname//" CLM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR, rc=dbrc)
     end if
 
     !--------------------------------
@@ -928,13 +966,13 @@ module clm_comp_nuopc
     if (dbug > 1) then
        call shr_nuopc_methods_State_diagnose(exportState,subname//':ES',rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_ClockPrint(clock, options="currTime", preString="------>Advancing LND from: ", rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_ClockPrint(clock, options="stopTime", preString="--------------------------------> to: ", rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
-
-    call ESMF_ClockPrint(clock, options="currTime", preString="------>Advancing LND from: ", rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_ClockPrint(clock, options="stopTime", preString="--------------------------------> to: ", rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
     ! Reset shr logging to my original values
@@ -972,6 +1010,7 @@ module clm_comp_nuopc
     type(ESMF_Alarm)         :: dalarm
     integer                  :: alarmcount, n
     character(len=*),parameter :: subname=trim(modName)//':(ModelSetRunClock) '
+    !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
     if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
@@ -982,6 +1021,7 @@ module clm_comp_nuopc
 
     call ESMF_ClockGet(dclock, currTime=dcurrtime, timeStep=dtimestep, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
     call ESMF_ClockGet(mclock, currTime=mcurrtime, timeStep=mtimestep, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -992,33 +1032,31 @@ module clm_comp_nuopc
     if (mcurrtime /= dcurrtime) then
       call ESMF_TimeGet(dcurrtime, timeString=dtimestring, rc=rc)
       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
       call ESMF_TimeGet(mcurrtime, timeString=mtimestring, rc=rc)
       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-      rc=ESMF_Failure
       call ESMF_LogWrite(subname//" ERROR in time consistency; "//trim(dtimestring)//" ne "//trim(mtimestring),  &
            ESMF_LOGMSG_ERROR, rc=dbrc)
-      if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+      rc=ESMF_Failure
+      return
     endif
 
-    !--------------------------------
-    ! force the driver timestep into the model clock for consistency
-    ! by default, the model timestep is probably the slowest timestep in the system
-    ! while the driver timestep will be the timestep for this NUOPC slot
-    ! also update the model stop time for this timestep
-    !--------------------------------
+    !--------------------------------                                                                                 
+    ! force model clock currtime and timestep to match driver and set stoptime                                        
+    !--------------------------------                                                                                 
 
     mstoptime = mcurrtime + dtimestep
 
-    call ESMF_ClockSet(mclock, timeStep=dtimestep, stopTime=mstoptime, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_ClockGetAlarmList(mclock, alarmlistflag=ESMF_ALARMLIST_ALL, alarmCount=alarmCount, rc=rc)
+    call ESMF_ClockSet(mclock, currTime=dcurrtime, timeStep=dtimestep, stopTime=mstoptime, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
     ! copy alarms from driver to model clock if model clock has no alarms (do this only once!)
     !--------------------------------
+
+    call ESMF_ClockGetAlarmList(mclock, alarmlistflag=ESMF_ALARMLIST_ALL, alarmCount=alarmCount, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     if (alarmCount == 0) then
       call ESMF_ClockGetAlarmList(dclock, alarmlistflag=ESMF_ALARMLIST_ALL, alarmCount=alarmCount, rc=rc)
@@ -1040,6 +1078,16 @@ module clm_comp_nuopc
       deallocate(alarmList)
     endif
 
+    !--------------------------------                                                                                 
+    ! Advance model clock to trigger alarms then reset model clock back to currtime                                   
+    !--------------------------------                                                                                 
+
+    call ESMF_ClockAdvance(mclock,rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_ClockSet(mclock, currTime=dcurrtime, timeStep=dtimestep, stopTime=mstoptime, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
     if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine ModelSetRunClock
@@ -1047,7 +1095,6 @@ module clm_comp_nuopc
   !===============================================================================
 
   subroutine ModelFinalize(gcomp, rc)
-    implicit none
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
