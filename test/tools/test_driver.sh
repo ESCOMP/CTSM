@@ -210,7 +210,8 @@ export INITMODULES="/usr/share/Modules/init/sh"
 
 . \$INITMODULES
 module purge
-module load compiler/intel/15.0.2.164
+module load compiler/intel/18.0.3
+module load tool/nco
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
