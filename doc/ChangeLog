@@ -1,4 +1,123 @@
 ===============================================================
+Tag name:  ctsm1.0.dev002
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jul  6 16:33:03 MDT 2018
+One-line Summary: Fix NFIX flux variables so special land-units are zeroed out, tools update, add some *_MAX fields on mksurfdata_map for transient cases
+
+Purpose of changes
+------------------
+
+Nitrogen Fixation flux arrays were being set to missing value over non-vegetated landunits. This sets them to zero everywhere
+and averages in the zero's at the gridcell level for history output. It also reads in restarts with missing values and converts
+them to zero's.
+
+There are also some tools updates, getting the tools working on the new upgraded hobart.cgd.ucar.edu.
+
+And mksurfdata_map is updated to add some *_MAX files on the landuse.timeseries files that will allow us to conserve memory
+for transient cases.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #435, #436, #433 (for tools)
+    #435 -- intel build for tools
+    #426 -- Nitrogen Fixation flux variables
+    #433 -- hobart broken, got it working for tools
+
+Known bugs found since the previous tag (include github issue ID): #433, #431
+
+   #433 -- with hobart upgrade, hobart build isn't working
+   #431 -- When set_* options are used to hist_addfld be careful of ordering
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): ndep file updated for clm5_0 for 1850
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CLMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): NFIX flux variables
+   NFIX flux variables when read from restart have special-values (missing on non veg landunits) converted to zero's
+   They are now initialized to zero everywhere.
+
+Changes to tests or testing: None
+
+Code reviewed by: self, wwieder, and lawrence, sacks (mksurfdata_map code)
+
+CLM testing: regular (although none on hobart!)
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (5 tests differ from previous version)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+
+CLM tag used for the baseline comparisons: ctsm1.0.dev001
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: clm5_0 BGC configurations with FUN and clm5_0 with BGC for new 1850 ndep file
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All clm5_0 BGC due to NFIX fields, and clm5_0 1850 BGC due to new ndep file
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #437 -- ChangeLog template
+  #432 -- nfix
+  #331 -- _MAX fields on mksurfdata_map
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev001
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jun 22 07:31:43 MDT 2018
