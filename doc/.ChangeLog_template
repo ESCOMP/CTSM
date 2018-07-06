@@ -25,13 +25,15 @@ Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
 Does this tag change answers significantly for any of the following physics configurations?
-(Details of any changes will be given in the "Answer changes" section below)
+(Details of any changes will be given in the "Answer changes" section below.)
 
-- clm5_0: [Y/N]
+    [Put an [X] in the box for any configuration with significant answer changes.]
 
-- clm4_5: [Y/N]
+[ ] clm5_0
 
-- clm4_0: [Y/N]
+[ ] clm4_5
+
+[ ] clm4_0
 
 Notes of particular relevance for users
 ---------------------------------------
