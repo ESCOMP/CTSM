@@ -24,11 +24,14 @@ Known bugs found since the previous tag (include github issue ID): [If none, rem
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
-Does this tag change answers significantly for any of the following configurations?
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below)
 
-- CLM5.0: [Y/N]
+- clm5_0: [Y/N]
 
-- CLM4.5: [Y/N]
+- clm4_5: [Y/N]
+
+- clm4_0: [Y/N]
 
 Notes of particular relevance for users
 ---------------------------------------
