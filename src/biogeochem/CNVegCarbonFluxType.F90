@@ -1662,12 +1662,10 @@ contains
                avgflag='A', long_name='Total C used by N uptake in FUN',  &
                ptr_patch=this%npp_Nuptake_patch)
 
-    this%npp_growth_patch(begp:endp) = spval
+          this%npp_growth_patch(begp:endp) = spval
           call hist_addfld1d (fname='NPP_GROWTH', units='gC/m^2/s',      &
                avgflag='A', long_name='Total C used for growth in FUN',  &
                ptr_patch=this%npp_growth_patch)
-
-
 
           this%leafc_change_patch(begp:endp) = spval
           call hist_addfld1d (fname='LEAFC_CHANGE', units='gC/m^2/s',     &
@@ -3322,7 +3320,7 @@ contains
     do p = bounds%begp,bounds%endp
        l = patch%landunit(p)
        this%gpp_before_downreg_patch(p)       = 0._r8
-
+       ! WW should these be considered spval or 0?
        if (lun%ifspecial(l)) then
           this%availc_patch(p)                = spval
           this%xsmrpool_recover_patch(p)      = spval
@@ -3574,6 +3572,8 @@ contains
             dim1name='pft', &
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_to_litter_fun_patch)
+        ! BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
+        call set_missing_vals_to_constant(this%leafc_to_litter_fun_patch, 0._r8)
     end if
 
   end subroutine RestartBulkOnly

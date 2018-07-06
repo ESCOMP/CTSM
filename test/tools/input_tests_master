@@ -3,10 +3,10 @@
 smc#4 TSMscript_tools.sh mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
 blc#4 TBLscript_tools.sh mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
 
-sme14 TSMCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds T31.runoptions
-ble14 TBLCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds T31.runoptions
-sme@4 TSMCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds ne30.runoptions
-ble@4 TBLCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds ne30.runoptions
+sme14 TSMCFGtools.sh gen_domain   CFGtools__ds T31.runoptions
+ble14 TBLCFGtools.sh gen_domain   CFGtools__ds T31.runoptions
+sme@4 TSMCFGtools.sh gen_domain   CFGtools__ds ne30.runoptions
+ble@4 TBLCFGtools.sh gen_domain   CFGtools__ds ne30.runoptions
 
 smg54 TSMtools.sh mksurfdata_map   tools__s  namelist
 blg54 TBLtools.sh mksurfdata_map   tools__s  namelist

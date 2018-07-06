@@ -58,18 +58,27 @@ test_driver_*.sh
 # mksurfdata output
 surfdata_*.log
 surfdata_*.namelist
+landuse.timeseries_*.namelist
+landuse.timeseries_*.log
+landuse_timeseries_*.txt
 clm.input_data_list
 clm.input_data_list.previous
+*.stdout.txt.o*
 
 # Tools executables
 tools/mksurfdata_map/mksurfdata_map
 tools/mkprocdata_map/mkprocdata_map
+
+# mksurfdata output files
+tools/mksurfdata_map/surfdata_*.nc
+tools/mksurfdata_map/landuse.timeseries_*.nc
 
 # mkmapdata output files
 tools/mkmapdata/PET*.RegridWeightGen.Log
 tools/mkmapdata/regrid.*.out
 tools/mkmapdata/regrid.*.err
 tools/mkmapdata/regrid.o*
+tools/mkmapdata/map*.nc
 
 # build output
 *.o
