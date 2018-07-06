@@ -212,7 +212,7 @@ export INITMODULES="/usr/share/Modules/init/sh"
 module purge
 module load compiler/intel/18.0.3
 module load tool/nco/4.7.5
-tool/netcdf/4.6.1/intel
+module load tool/netcdf/4.6.1/intel
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
