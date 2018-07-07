@@ -205,6 +205,7 @@ program mksurfdat
          map_ftopostats,           &
          map_fvic,                 &
          map_fch4,                 &
+         gitdescribe,              &
          outnc_large_files,        &
          outnc_double,             &
          outnc_dims,               &
@@ -277,6 +278,7 @@ program mksurfdat
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
     !    nglcec ------------ If you want to change the number of Glacier elevation classes
+    !    gitdescribe ------- Description of this version from git
     ! ======================================
     ! Optional settings to change values for entire area
     ! ======================================

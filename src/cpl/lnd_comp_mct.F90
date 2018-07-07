@@ -683,7 +683,7 @@ contains
 
     call seq_infodata_GetData(infodata, lnd_resume=lnd_resume )
     ! If lnd_resume is blank, restart file wasn't modified
-    if ( len_trim(lnd_resume(inst_index)) == 0 )then
+    if ( len_trim(lnd_resume(min(num_inst_lnd,inst_index))) == 0 )then
        resume_from_data_assim = .false.
     ! Otherwise restart was modified and we are resuming from data assimulation
     else

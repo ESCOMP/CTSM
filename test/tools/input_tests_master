@@ -34,6 +34,8 @@ smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 smi59 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 bli59 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
+smi79 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
+bli79 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
 
 smf84 TSMscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
 blf84 TBLscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
