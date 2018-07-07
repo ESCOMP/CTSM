@@ -170,8 +170,6 @@ contains
        end do
 
        do c = bounds%begc, bounds%endc
-          soilhydrology_inst%max_infil_col(c) = spval
-          soilhydrology_inst%i_0_col(c)       = spval
           do lev = 1, nlayer
              soilhydrology_inst%ice_col(c,lev)       = spval
              soilhydrology_inst%moist_col(c,lev)     = spval

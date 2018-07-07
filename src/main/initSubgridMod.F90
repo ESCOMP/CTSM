@@ -416,6 +416,7 @@ contains
     col%hydrologically_active(ci) = is_hydrologically_active( &
          col_itype = ctype, &
          lun_itype = lun%itype(li))
+    col%urbpoi(ci) = lun%urbpoi(li)
 
   end subroutine add_column
 
