@@ -84,6 +84,10 @@ Module DryDepVelocity
 
      real(r8), pointer, public  :: velocity_patch (:,:) ! Dry Deposition Velocity
      real(r8), pointer, private :: rs_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
+     real(r8), pointer, private :: rsg_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
+     real(r8), pointer, private :: rac_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
+     real(r8), pointer, private :: ra_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
+     real(r8), pointer, private :: rb_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
 
    contains
 
@@ -130,7 +134,12 @@ CONTAINS
     ! Dry Deposition Velocity 
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        allocate(this%velocity_patch(begp:endp, n_drydep));  this%velocity_patch(:,:) = nan 
-       allocate(this%rs_drydep_patch(begp:endp))         ;  this%rs_drydep_patch(:)  = nan 
+       allocate(this%rs_drydep_patch(begp:endp))         ;  this%rs_drydep_patch(:)  = nan
+       allocate(this%rsg_drydep_patch(begp:endp))         ;  this%rsg_drydep_patch(:)  = nan
+       allocate(this%rac_drydep_patch(begp:endp))         ;  this%rac_drydep_patch(:)  = nan
+       allocate(this%ra_drydep_patch(begp:endp))         ;  this%ra_drydep_patch(:)  = nan
+       allocate(this%rb_drydep_patch(begp:endp))         ;  this%rb_drydep_patch(:)  = nan
+
     end if
 
   end subroutine InitAllocate
@@ -167,13 +176,35 @@ CONTAINS
        ptr_1d => this%velocity_patch(begp:endp,ispec)
        call hist_addfld1d ( fname='DRYDEPV_'//trim(drydep_list(ispec)), units='cm/sec',  &
             avgflag='A', long_name='Dry Deposition Velocity', &
-            ptr_patch=ptr_1d, default='inactive' )
+            ptr_patch=ptr_1d, default='active' )
     end do
 
     this%rs_drydep_patch(begp:endp)= spval
     call hist_addfld1d ( fname='RS_DRYDEP_O3', units='s/m',  &
          avgflag='A', long_name='Stomatal Resistance Associated with Ozone Dry Deposition Velocity', &
-         ptr_patch=this%rs_drydep_patch, default='inactive' )
+         ptr_patch=this%rs_drydep_patch, default='active' )
+
+    this%rsg_drydep_patch(begp:endp)= spval
+    call hist_addfld1d ( fname='RSG_DRYDEP_SO2', units='s/m',  &
+         avgflag='A', long_name='Ground Resistance Associated with SO2 Dry Deposition Velocity', &
+         ptr_patch=this%rsg_drydep_patch, default='active' )
+
+    this%rac_drydep_patch(begp:endp)= spval
+    call hist_addfld1d ( fname='RAC_DRYDEP', units='s/m',  &
+         avgflag='A', long_name='Upper canopy resistance for dry dep', &
+         ptr_patch=this%rac_drydep_patch, default='active' )
+
+    this%ra_drydep_patch(begp:endp)= spval
+    call hist_addfld1d ( fname='RA_DRYDEP', units='s/m',  &
+         avgflag='A', long_name='Aerodynamic resistance', &
+         ptr_patch=this%ra_drydep_patch, default='active' )
+
+    this%rb_drydep_patch(begp:endp)= spval
+    call hist_addfld1d ( fname='RB_DRYDEP', units='s/m',  &
+         avgflag='A', long_name='Quasi-laminar layer resistance', &
+         ptr_patch=this%rb_drydep_patch, default='active' )
+
+    
 
   end subroutine InitHistory
 
@@ -249,7 +280,8 @@ CONTAINS
     logical  :: has_dew
     logical  :: has_rain
     real(r8), parameter :: rain_threshold      = 1.e-7_r8  ! of the order of 1cm/day expressed in m/s
-
+    real(r8), parameter :: pH = 6.5_r8 ! pH used in scaling solubility-dependent resistances 
+    
     ! local arrays: dependent on species only 
     real(r8), dimension(n_drydep) :: rsmx  !vegetative resistance (plant mesophyll) 
     real(r8), dimension(n_drydep) :: rclx !lower canopy resistance  
@@ -260,7 +292,8 @@ CONTAINS
     real(r8) :: rc    !combined surface resistance 
     real(r8) :: cts   !correction to flu rcl and rgs for frost 
     real(r8) :: rlux_o3 !to calculate O3 leaf resistance in dew/rain conditions
-
+    real(r8) :: heff_so2 ! effective Henry's law constant for SO2 under the local conditions
+    real(r8) :: cts2
     ! constants 
     real(r8), parameter :: slope = 0._r8      ! Used to calculate  rdc in (lower canopy resistance) 
     integer, parameter :: wveg_unset = -1     ! Unset Wesley vegetation type
@@ -300,7 +333,12 @@ CONTAINS
          annlai     =>    canopystate_inst%annlai_patch         , & ! Input:  [real(r8) (:,:) ] 12 months of monthly lai from input data set     
          
          velocity   =>    drydepvel_inst%velocity_patch         , & ! Output: [real(r8) (:,:) ] cm/sec
-         rs_drydep  =>    drydepvel_inst%rs_drydep_patch          & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
+         rs_drydep  =>    drydepvel_inst%rs_drydep_patch ,         & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
+         rac_drydep =>    drydepvel_inst%rac_drydep_patch, &
+         rsg_drydep =>    drydepvel_inst%rsg_drydep_patch, &
+         ra_drydep =>    drydepvel_inst%ra_drydep_patch, &
+         rb_drydep =>    drydepvel_inst%rb_drydep_patch &
+    
          )
 
       !_________________________________________________________________ 
@@ -448,9 +486,11 @@ CONTAINS
             ! land types are computed seperately, then resistance is computed as average of values 
             ! following wesely rc=(1/(rs+rm) + 1/rlu +1/(rdc+rcl) + 1/(rac+rgs))**-1 
 
+            
             !******************************************************* 
-            call seq_drydep_setHCoeff( sfc_temp, heff(:n_drydep) )
+            call seq_drydep_setHCoeff( sfc_temp, 10**(-pH), heff(:n_drydep) )
             !********************************************************* 
+            heff_so2 = heff(index_so2)
 
             species_loop1: do ispec=1, n_drydep
                if(mapping(ispec) <= 0) cycle 
@@ -465,9 +505,24 @@ CONTAINS
                cts = 1000._r8*exp( -tc - 4._r8 ) 
 
                !ground resistance  
-               rgsx(ispec) = 1._r8/((heff(ispec)/(1.e5_r8*(rgss(index_season,wesveg)+cts))) + & 
-                    (foxd(ispec)/(rgso(index_season,wesveg)+cts))) 
+               !rgsx(ispec) = 1._r8 / ((heff(ispec) / (1.e5_r8*(rgss(index_season,wesveg)+cts))) + & 
+               !     (foxd(ispec)/(rgso(index_season,wesveg)+cts))) 
 
+               !rgsx(ispec) = 1._r8/((heff(ispec)/(1.e5_r8*(rgss(index_season,wesveg)))) + & 
+               !     (foxd(ispec)/(rgso(index_season,wesveg)))) 
+
+               !rgsx(ispec) = 1._r8/((heff(ispec)/(heff_so2*(rgss(index_season,wesveg) + cts))) + & 
+               !     (foxd(ispec)/(rgso(index_season,wesveg) + cts)))
+
+               if (tc < -1) then
+                  cts2 = min(2.0_r8, exp(0.2*(-1.0_r8 - tc)))
+               else
+                  cts2 = 1.0_r8
+               end if
+               rgsx(ispec) = cts2 / ((heff(ispec)/(heff_so2*(rgss(index_season,wesveg)))) + & 
+                    (foxd(ispec)/(rgso(index_season,wesveg))))
+               
+               
                !-------------------------------------------------------------------------------------
                ! special case for H2 and CO;; CH4 is set ot a fraction of dv(H2)
                !-------------------------------------------------------------------------------------
@@ -524,13 +579,19 @@ CONTAINS
 
                   ! Leaf resistance
                   !MVM: adjusted rlu by LAI to get leaf resistance over bulk canopy (gao and wesely, 1995)
-                  rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
-                  rlux(ispec) = rlu_lai/(1.e-5_r8*heff(ispec)+foxd(ispec))      
+                  !rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
+                  !rlux(ispec) = rlu_lai/(1.e-5_r8*heff(ispec)+foxd(ispec))      
+
+                  rlu_lai = rlu(index_season,wesveg)/elai(pi)
+                  rlux(ispec) = cts2 * rlu_lai / (heff(ispec)/heff_so2 + foxd(ispec))      
 
                   !Lower canopy resistance 
-                  rclx(ispec) = 1._r8/((heff(ispec)/(1.e5_r8*(rcls(index_season,wesveg)+cts))) + &
-                       (foxd(ispec)/(rclo(index_season,wesveg)+cts)))
+                  !rclx(ispec) = 1._r8/((heff(ispec)/(1.e5_r8*(rcls(index_season,wesveg)+cts))) + &
+                  !     (foxd(ispec)/(rclo(index_season,wesveg)+cts)))
+                  rclx(ispec) = cts2 / ((heff(ispec)/(heff_so2*(rcls(index_season,wesveg)))) + &
+                       (foxd(ispec)/(rclo(index_season,wesveg))))
 
+                  
                   !-----------------------------------
                   !mvm 11/30/2013: special case for CO
                   !Dry deposition of CO and hydrocarbons is negligibly 
@@ -574,8 +635,11 @@ CONTAINS
                   ! 
                   non_freezing: if(sfc_temp.gt.tmelt) then
                      if( has_dew ) then 
-                        rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
-                        rlux_o3 = 1._r8/((1._r8/3000._r8)+(1._r8/(3._r8*rlu_lai))) 
+                        !rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
+                        !rlux_o3 = 1._r8/((1._r8/3000._r8)+(1._r8/(3._r8*rlu_lai))) 
+
+                        rlu_lai=rlu(index_season,wesveg)/elai(pi)
+                        rlux_o3 = cts2/((1._r8/3000._r8)+(1._r8/(3._r8*rlu_lai))) 
 
                         if (index_o3 > 0) then
                            rlux(index_o3) = rlux_o3
@@ -586,8 +650,10 @@ CONTAINS
                      endif
 
                      if(has_rain) then 
-                        rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
-                        rlux_o3 = 1._r8/((1._r8/1000._r8)+(1._r8/(3._r8*rlu_lai)))
+                        !rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
+                        !rlux_o3 = 1._r8/((1._r8/1000._r8)+(1._r8/(3._r8*rlu_lai)))
+                        rlu_lai=rlu(index_season,wesveg)/elai(pi)
+                        rlux_o3 = cts2 / ((1._r8/1000._r8)+(1._r8/(3._r8*rlu_lai)))
 
                         if (index_o3 > 0) then
                            rlux(index_o3) = rlux_o3
@@ -602,9 +668,13 @@ CONTAINS
                         if(ispec.ne.index_o3.and.ispec.ne.index_o3a.and.ispec.ne.index_so2) then 
 
                            if( has_dew .or. has_rain) then
-                              rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
-                              rlux(ispec)=1._r8/((1._r8/(3._r8*rlu_lai))+ & 
-                                   (1.e-7_r8*heff(ispec))+(foxd(ispec)/rlux_o3))
+                              !rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
+                              !rlux(ispec)=1._r8/((1._r8/(3._r8*rlu_lai))+ & 
+                              !     (1.e-7_r8*heff(ispec))+(foxd(ispec)/rlux_o3))
+                              rlu_lai = rlu(index_season,wesveg)/elai(pi)
+                              rlux(ispec) = cts / ((1._r8/(3._r8*rlu_lai))+ & 
+                                   (1.e-7_r8*heff(ispec)) + (foxd(ispec)/rlux_o3))
+
                            endif
 
                         elseif(ispec.eq.index_so2) then 
@@ -614,8 +684,12 @@ CONTAINS
                            endif
 
                            if(has_rain) then 
-                              rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
-                              rlux(ispec) = 1._r8/((1._r8/5000._r8)+(1._r8/(3._r8*rlu_lai))) 
+                              !rlu_lai=cts+rlu(index_season,wesveg)/elai(pi)
+                              !rlux(ispec) = 1._r8/((1._r8/5000._r8)+(1._r8/(3._r8*rlu_lai)))
+
+                              rlu_lai=rlu(index_season,wesveg)/elai(pi)
+                              rlux(ispec) = cts2 / ((1._r8/5000._r8)+(1._r8/(3._r8*rlu_lai))) 
+
                            endif
 
                            if( has_dew .or. has_rain ) then
@@ -663,7 +737,11 @@ CONTAINS
                case ( 'CB1', 'CB2', 'OC1', 'OC2', 'SOAM', 'SOAI', 'SOAT', 'SOAB', 'SOAX' )
                   velocity(pi,ispec) = 0.10_r8
                case ( 'SO2' )
-                  velocity(pi,ispec) = (1._r8/(ram1(pi)+rb1(pi)+rc))*200._r8
+                  velocity(pi,ispec) = (1._r8/(ram1(pi)+rb1(pi)+rc))*100._r8
+                  rsg_drydep(pi) = rgsx(ispec)
+                  rac_drydep(pi) = rac(index_season,wesveg)
+                  ra_drydep(pi) = ram1(pi)
+                  rb_drydep(pi) = rb1(pi)
                case default
                   velocity(pi,ispec) = (1._r8/(ram1(pi)+rb1(pi)+rc))*100._r8
                end select
