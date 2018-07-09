@@ -193,7 +193,7 @@ contains
            soilhydrology_inst, soilstate_inst, waterflux_inst)
 
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
-           waterflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst)
+           waterflux_inst, waterdiagnosticbulk_inst)
 
       call infiltration_excess_runoff_inst%InfiltrationExcessRunoff( &
            bounds, num_hydrologyc, filter_hydrologyc, &
@@ -201,7 +201,7 @@ contains
            waterdiagnosticbulk_inst)
 
       call RouteInfiltrationExcess(bounds, num_hydrologyc, filter_hydrologyc, &
-           waterflux_inst, infiltration_excess_runoff_inst, soilhydrology_inst)
+           waterflux_inst, soilhydrology_inst)
 
       call UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
            infiltration_excess_runoff_inst, &
@@ -213,7 +213,7 @@ contains
 
       call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
            num_urbanc, filter_urbanc, &
-           waterflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, &
+           waterflux_inst, soilhydrology_inst, &
            waterstatebulk_inst)
 
       call UpdateUrbanPonding(bounds, num_urbanc, filter_urbanc, &

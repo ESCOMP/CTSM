@@ -22,8 +22,6 @@ module BalanceCheckMod
   use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
   use WaterBalanceType     , only : waterbalance_type
   use WaterfluxType      , only : waterflux_type
-  use IrrigationMod      , only : irrigation_type
-  use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake, ComputeWaterMassLake
   use GridcellType       , only : grc                
   use LandunitType       , only : lun                
@@ -101,7 +99,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, &
-        irrigation_inst, glacier_smb_inst, energyflux_inst, canopystate_inst)
+        energyflux_inst, canopystate_inst)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -133,8 +131,6 @@ contains
      type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
      type(waterbalance_type) , intent(inout) :: waterbalance_inst
-     type(irrigation_type) , intent(in)    :: irrigation_inst
-     type(glacier_smb_type), intent(in)    :: glacier_smb_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
      type(canopystate_type), intent(inout) :: canopystate_inst
      !
@@ -200,9 +196,9 @@ contains
           snow_sources            =>    waterflux_inst%snow_sources_col         , & ! Output: [real(r8) (:)   ]  snow sources (mm H2O /s)  
           snow_sinks              =>    waterflux_inst%snow_sinks_col           , & ! Output: [real(r8) (:)   ]  snow sinks (mm H2O /s)    
 
-          qflx_irrig              =>    irrigation_inst%qflx_irrig_col          , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
+          qflx_irrig              =>    waterflux_inst%qflx_irrig_col          , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
 
-          qflx_glcice_dyn_water_flux => glacier_smb_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
+          qflx_glcice_dyn_water_flux => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
           eflx_lwrad_net          =>    energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]

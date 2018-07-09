@@ -24,7 +24,6 @@ module CanopyHydrologyMod
   use WaterfluxType   , only : waterflux_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-  use IrrigationMod   , only : irrigation_type
   use ColumnType      , only : col                
   use PatchType       , only : patch                
   !
@@ -143,7 +142,7 @@ contains
    subroutine CanopyHydrology(bounds, &
         num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
         atm2lnd_inst, canopystate_inst, temperature_inst, &
-        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, irrigation_inst)
+        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst)
      !
      ! !DESCRIPTION:
      ! Calculation of
@@ -178,7 +177,6 @@ contains
      type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
      type(waterflux_type)   , intent(inout) :: waterflux_inst
-     type(irrigation_type)  , intent(in)    :: irrigation_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: f                                            ! filter index
@@ -266,8 +264,7 @@ contains
           qflx_prec_intr       => waterflux_inst%qflx_prec_intr_patch     , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
           qflx_prec_grnd       => waterflux_inst%qflx_prec_grnd_patch     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_rain_grnd       => waterflux_inst%qflx_rain_grnd_patch     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
-
-          qflx_irrig           => irrigation_inst%qflx_irrig_patch        , & ! Input: [real(r8) (:)    ]  irrigation amount (mm/s)           
+          qflx_irrig           => waterflux_inst%qflx_irrig_patch         , & ! Input: [real(r8) (:)    ]  irrigation amount (mm/s)           
           qflx_snowindunload   => waterflux_inst%qflx_snowindunload_patch , & ! Output: [real(r8) (:)   ]  canopy snow unloading from wind [mm/s]    
           qflx_snotempunload   => waterflux_inst%qflx_snotempunload_patch   & ! Output: [real(r8) (:)   ]  canopy snow unloading from temp. [mm/s]    
           )

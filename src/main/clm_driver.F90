@@ -424,7 +424,7 @@ contains
 
        ! Irrigation flux
        ! input is main channel storage
-       call irrigation_inst%ApplyIrrigation(bounds_clump)
+       call irrigation_inst%ApplyIrrigation(bounds_clump, waterflux_inst)
        call t_stopf('drvinit')
 
        ! ============================================================================
@@ -440,8 +440,7 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
             atm2lnd_inst, canopystate_inst, temperature_inst, &
-            aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, &
-            irrigation_inst)
+            aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst)
        call t_stopf('canhydro')
 
        ! ============================================================================
@@ -653,7 +652,7 @@ contains
        ! converted back to solid ice as soon as possible
        call glacier_smb_inst%HandleIceMelt(bounds_clump, &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c, &
-            waterstatebulk_inst)
+            waterstatebulk_inst, waterflux_inst)
        call t_stopf('soiltemperature')
 
        ! ============================================================================
@@ -853,7 +852,7 @@ contains
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,     &                
             atm2lnd_inst, glc2lnd_inst, temperature_inst,     &
             soilhydrology_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, &
-            irrigation_inst, glacier_smb_inst)
+            glacier_smb_inst)
 
        call t_stopf('hydro2_drainage')     
 
@@ -927,7 +926,7 @@ contains
        call t_startf('balchk')
        call BalanceCheck(bounds_clump, &
             atm2lnd_inst, solarabs_inst, waterflux_inst, &
-            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, irrigation_inst, glacier_smb_inst, &
+            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, &
             energyflux_inst, canopystate_inst)
        call t_stopf('balchk')
 
@@ -1041,7 +1040,7 @@ contains
 
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
-         waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, energyflux_inst, &
          solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
          lnd2atm_inst, &
@@ -1059,7 +1058,7 @@ contains
        call get_clump_bounds(nc, bounds_clump)
        call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-            temperature_inst, glacier_smb_inst, topo_inst,    &
+            temperature_inst, waterflux_inst, topo_inst,    &
             init=.false.)           
     end do
     !$OMP END PARALLEL DO

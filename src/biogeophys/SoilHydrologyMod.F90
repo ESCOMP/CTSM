@@ -22,7 +22,6 @@ module SoilHydrologyMod
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
-  use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use WaterfluxType     , only : waterflux_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
@@ -189,7 +188,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
-        waterflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst)
+        waterflux_inst, waterdiagnosticbulk_inst)
      !
      ! !DESCRIPTION:
      ! Set various input fluxes of water
@@ -199,7 +198,6 @@ contains
      integer                    , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
      integer                    , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(waterflux_type)       , intent(inout) :: waterflux_inst
-     type(saturated_excess_runoff_type) , intent(in) :: saturated_excess_runoff_inst
      type(waterdiagnosticbulk_type)     , intent(in) :: waterdiagnosticbulk_inst
      !
      ! !LOCAL VARIABLES:
@@ -222,8 +220,7 @@ contains
           qflx_ev_soil            =>    waterflux_inst%qflx_ev_soil_col           , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
           qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]
           qflx_ev_h2osfc          =>    waterflux_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
-
-          qflx_sat_excess_surf    => saturated_excess_runoff_inst%qflx_sat_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+          qflx_sat_excess_surf    =>    waterflux_inst%qflx_sat_excess_surf_col   , & ! Input:  [real(r8) (:)]  surface runoff due to saturated surface (mm H2O /s)
 
           frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_eff_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
           frac_h2osfc             =>    waterdiagnosticbulk_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
@@ -262,7 +259,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine RouteInfiltrationExcess(bounds, num_hydrologyc, filter_hydrologyc, &
-        waterflux_inst, infiltration_excess_runoff_inst, soilhydrology_inst)
+        waterflux_inst, soilhydrology_inst)
      !
      ! !DESCRIPTION:
      ! Route the infiltration excess runoff flux
@@ -274,7 +271,6 @@ contains
      integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(waterflux_type)     , intent(inout) :: waterflux_inst
-     type(infiltration_excess_runoff_type), intent(in) :: infiltration_excess_runoff_inst
      type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
      !
      ! !LOCAL VARIABLES:
@@ -289,8 +285,7 @@ contains
           qflx_infl_excess_surf   => waterflux_inst%qflx_infl_excess_surf_col             , & ! Output: [real(r8) (:)   ] surface runoff due to infiltration excess (mm H2O /s)
           qflx_in_soil            => waterflux_inst%qflx_in_soil_col                      , & ! Input:  [real(r8) (:)   ] surface input to soil (mm/s)
           qflx_top_soil_to_h2osfc => waterflux_inst%qflx_top_soil_to_h2osfc_col           , & ! Input:  [real(r8) (:)   ] portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
-
-          qflx_infl_excess        => infiltration_excess_runoff_inst%qflx_infl_excess_col , & ! Input:  [real(r8) (:)   ] infiltration excess runoff (mm H2O /s)
+          qflx_infl_excess        => waterflux_inst%qflx_infl_excess_col                  , & ! Input:  [real(r8) (:)   ] infiltration excess runoff (mm H2O /s)
 
           h2osfcflag              => soilhydrology_inst%h2osfcflag                          & ! Input:  integer
           )
@@ -574,7 +569,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, &
-        waterflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, &
+        waterflux_inst, soilhydrology_inst, &
         waterstatebulk_inst)
      !
      ! !DESCRIPTION:
@@ -593,7 +588,6 @@ contains
      integer              , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
      type(waterflux_type) , intent(inout) :: waterflux_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
-     type(saturated_excess_runoff_type), intent(in) :: saturated_excess_runoff_inst
      type(waterstatebulk_type), intent(in)    :: waterstatebulk_inst
      !
      ! !LOCAL VARIABLES:
@@ -612,10 +606,9 @@ contains
           qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
           qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col   , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
           qflx_floodc      =>    waterflux_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
+          qflx_sat_excess_surf => waterflux_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
           xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Output: [real(r8) (:)   ]  excess soil water above urban ponding limit
-
-          qflx_sat_excess_surf => saturated_excess_runoff_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
           h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
           )

@@ -30,14 +30,7 @@ module InfiltrationExcessRunoffMod
      private
      ! Public data members
      ! Note: these should be treated as read-only by other modules
-
-     ! These are valid within the hydrology filter.
-     !
-     ! Both of these give averages over the entire column. However, qinmax is implicitly
-     ! 0 over the fraction of the column given by fsat, and qflx_infl_excess is
-     ! implicitly 0 over both fsat and frac_h2osfc.
      real(r8), pointer, public :: qinmax_col(:)  ! maximum infiltration rate (mm H2O /s)
-     real(r8), pointer, public :: qflx_infl_excess_col(:)  ! infiltration excess runoff (mm H2O /s)
 
      ! Private data members
      integer :: qinmax_method
@@ -121,7 +114,6 @@ contains
 
     begc = bounds%begc; endc= bounds%endc
     allocate(this%qinmax_col          (begc:endc)); this%qinmax_col          (:) = nan
-    allocate(this%qflx_infl_excess_col(begc:endc)); this%qflx_infl_excess_col(:) = nan
 
   end subroutine InitAllocate
 
@@ -183,8 +175,13 @@ contains
     ! !DESCRIPTION:
     ! Calculate surface runoff due to infiltration excess
     !
+    ! Sets waterflux_inst%qflx_infl_excess_col and this%qinmax_col. These are valid within
+    ! the hydrology filter. Both of these give averages over the entire column. However,
+    ! qinmax is implicitly 0 over the fraction of the column given by fsat, and
+    ! qflx_infl_excess is implicitly 0 over both fsat and frac_h2osfc.
+    !
     ! !ARGUMENTS:
-    class(infiltration_excess_runoff_type) , intent(inout) :: this
+    class(infiltration_excess_runoff_type) , intent(in)    :: this
     type(bounds_type)                      , intent(in)    :: bounds               
     integer                                , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
     integer                                , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
@@ -203,10 +200,10 @@ contains
 
     associate( &
          qinmax           =>    this%qinmax_col                     , & ! Output: [real(r8) (:)   ]  maximum infiltration rate (mm H2O /s)
-         qflx_infl_excess =>    this%qflx_infl_excess_col           , & ! Output: [real(r8) (:)   ]  infiltration excess runoff (mm H2O /s)
 
          fsat             =>   saturated_excess_runoff_inst%fsat_col, & ! Input:  [real(r8) (:)   ]  fractional area with water table at surface       
 
+         qflx_infl_excess =>    waterflux_inst%qflx_infl_excess_col , & ! Output: [real(r8) (:)   ]  infiltration excess runoff (mm H2O /s)
          qflx_in_soil     =>    waterflux_inst%qflx_in_soil_col     , & ! Input:  [real(r8) (:)   ]  surface input to soil (mm/s)
 
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)

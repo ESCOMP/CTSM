@@ -18,7 +18,6 @@ module HydrologyDrainageMod
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use WaterBalanceType    , only : waterbalance_type
-  use IrrigationMod     , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake
   use LandunitType      , only : lun                
@@ -42,7 +41,7 @@ contains
        num_do_smb_c, filter_do_smb_c,                &
        atm2lnd_inst, glc2lnd_inst, temperature_inst, &
        soilhydrology_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, &
-       irrigation_inst, glacier_smb_inst)
+       glacier_smb_inst)
     !
     ! !DESCRIPTION:
     ! Calculates soil/snow hydrology with drainage (subsurface runoff)
@@ -76,7 +75,6 @@ contains
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)    , intent(inout) :: waterbalance_inst
     type(waterflux_type)     , intent(inout) :: waterflux_inst
-    type(irrigation_type)    , intent(in)    :: irrigation_inst
     type(glacier_smb_type)   , intent(in)    :: glacier_smb_inst
     !
     ! !LOCAL VARIABLES:
@@ -117,7 +115,7 @@ contains
          qflx_runoff_r      => waterflux_inst%qflx_runoff_r_col      , & ! Rural total runoff 
                                                                          ! (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_ice_runoff_snwcp => waterflux_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
-         qflx_irrig         => irrigation_inst%qflx_irrig_col          & ! irrigation flux (mm H2O /s)   
+         qflx_irrig         => waterflux_inst%qflx_irrig_col          & ! irrigation flux (mm H2O /s)   
          )
 
       ! Determine time step and step size
@@ -199,6 +197,7 @@ contains
       ! qflx_qrgwl and qflx_ice_runoff_snwcp, but before the ues of qflx_qrgwl in
       ! qflx_runoff.
       call glacier_smb_inst%AdjustRunoffTerms(bounds, num_do_smb_c, filter_do_smb_c, &
+           waterflux_inst, &
            glc2lnd_inst, &
            qflx_qrgwl = qflx_qrgwl(bounds%begc:bounds%endc), &
            qflx_ice_runoff_snwcp = qflx_ice_runoff_snwcp(bounds%begc:bounds%endc))

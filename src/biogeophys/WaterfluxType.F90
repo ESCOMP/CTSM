@@ -29,6 +29,8 @@ module WaterfluxType
      real(r8), pointer :: qflx_rain_grnd_col       (:)   ! col rain on ground after interception (mm H2O/s) [+]
      real(r8), pointer :: qflx_snow_grnd_patch     (:)   ! patch snow on ground after interception (mm H2O/s) [+]
      real(r8), pointer :: qflx_snow_grnd_col       (:)   ! col snow on ground after interception (mm H2O/s) [+]
+     real(r8), pointer :: qflx_irrig_patch         (:)   ! patch irrigation flux (mm H2O/s) [+]
+     real(r8), pointer :: qflx_irrig_col           (:)   ! col irrigation flux (mm H2O/s) [+]
      real(r8), pointer :: qflx_sub_snow_patch      (:)   ! patch sublimation rate from snow pack (mm H2O /s) [+]
      real(r8), pointer :: qflx_sub_snow_col        (:)   ! col sublimation rate from snow pack (mm H2O /s) [+]
      real(r8), pointer :: qflx_evap_soi_patch      (:)   ! patch soil evaporation (mm H2O/s) (+ = to atm)
@@ -49,6 +51,11 @@ module WaterfluxType
      real(r8), pointer :: qflx_snwcp_ice_col       (:)   ! col excess solid h2o due to snow capping (outgoing) (mm H2O /s)
      real(r8), pointer :: qflx_snwcp_discarded_liq_col(:) ! col excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
      real(r8), pointer :: qflx_snwcp_discarded_ice_col(:) ! col excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+     real(r8), pointer :: qflx_glcice_col(:)              ! col net flux of new glacial ice (growth - melt) (mm H2O/s), passed to GLC; only valid inside the do_smb_c filter
+     real(r8), pointer :: qflx_glcice_dyn_water_flux_col(:) ! col water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system); valid for all columns
+     real(r8), pointer :: qflx_glcice_frz_col (:)         ! col ice growth (positive definite) (mm H2O/s); only valid inside the do_smb_c filter
+     real(r8), pointer :: qflx_glcice_melt_col(:)         ! col ice melt (positive definite) (mm H2O/s); only valid inside the do_smb_c filter
+
 
      real(r8), pointer :: qflx_tran_veg_patch      (:)   ! patch vegetation transpiration (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_tran_veg_col        (:)   ! col vegetation transpiration (mm H2O/s) (+ = to atm)
@@ -72,6 +79,8 @@ module WaterfluxType
 
      real(r8), pointer :: qflx_adv_col             (:,:) ! col advective flux across different soil layer interfaces [mm H2O/s] [+ downward]
      real(r8), pointer :: qflx_rootsoi_col         (:,:) ! col root and soil water exchange [mm H2O/s] [+ into root]
+     real(r8), pointer :: qflx_sat_excess_surf_col (:)   ! col surface runoff due to saturated surface (mm H2O /s)
+     real(r8), pointer :: qflx_infl_excess_col     (:)   ! col infiltration excess runoff (mm H2O /s)
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_infl_excess_surf_col(:)   ! col surface runoff due to infiltration excess (mm H2O /s)
      real(r8), pointer :: qflx_h2osfc_surf_col     (:)   ! col surface water runoff (mm H2O /s)
@@ -175,6 +184,7 @@ contains
     allocate(this%qflx_prec_grnd_patch     (begp:endp))              ; this%qflx_prec_grnd_patch     (:)   = nan
     allocate(this%qflx_rain_grnd_patch     (begp:endp))              ; this%qflx_rain_grnd_patch     (:)   = nan
     allocate(this%qflx_snow_grnd_patch     (begp:endp))              ; this%qflx_snow_grnd_patch     (:)   = nan
+    allocate(this%qflx_irrig_patch         (begp:endp))              ; this%qflx_irrig_patch         (:)   = nan
     allocate(this%qflx_sub_snow_patch      (begp:endp))              ; this%qflx_sub_snow_patch      (:)   = 0.0_r8
     allocate(this%qflx_tran_veg_patch      (begp:endp))              ; this%qflx_tran_veg_patch      (:)   = nan
 
@@ -190,11 +200,16 @@ contains
     allocate(this%qflx_prec_grnd_col       (begc:endc))              ; this%qflx_prec_grnd_col       (:)   = nan
     allocate(this%qflx_rain_grnd_col       (begc:endc))              ; this%qflx_rain_grnd_col       (:)   = nan
     allocate(this%qflx_snow_grnd_col       (begc:endc))              ; this%qflx_snow_grnd_col       (:)   = nan
+    allocate(this%qflx_irrig_col           (begc:endc))              ; this%qflx_irrig_col           (:)   = nan
     allocate(this%qflx_sub_snow_col        (begc:endc))              ; this%qflx_sub_snow_col        (:)   = 0.0_r8
     allocate(this%qflx_snwcp_liq_col       (begc:endc))              ; this%qflx_snwcp_liq_col       (:)   = nan
     allocate(this%qflx_snwcp_ice_col       (begc:endc))              ; this%qflx_snwcp_ice_col       (:)   = nan
     allocate(this%qflx_snwcp_discarded_liq_col(begc:endc))           ; this%qflx_snwcp_discarded_liq_col(:) = nan
     allocate(this%qflx_snwcp_discarded_ice_col(begc:endc))           ; this%qflx_snwcp_discarded_ice_col(:) = nan
+    allocate(this%qflx_glcice_col          (begc:endc))              ; this%qflx_glcice_col          (:)   = nan
+    allocate(this%qflx_glcice_dyn_water_flux_col(begc:endc))         ; this%qflx_glcice_dyn_water_flux_col (:) = nan
+    allocate(this%qflx_glcice_frz_col      (begc:endc))              ; this%qflx_glcice_frz_col      (:)   = nan
+    allocate(this%qflx_glcice_melt_col     (begc:endc))              ; this%qflx_glcice_melt_col     (:)   = nan
     allocate(this%qflx_tran_veg_col        (begc:endc))              ; this%qflx_tran_veg_col        (:)   = nan
     allocate(this%qflx_evap_veg_col        (begc:endc))              ; this%qflx_evap_veg_col        (:)   = nan
     allocate(this%qflx_evap_can_col        (begc:endc))              ; this%qflx_evap_can_col        (:)   = nan
@@ -220,6 +235,8 @@ contains
     allocate(this%qflx_drain_vr_col      (begc:endc,1:nlevsoi))      ; this%qflx_drain_vr_col        (:,:) = nan
     allocate(this%qflx_adv_col             (begc:endc,0:nlevsoi))    ; this%qflx_adv_col             (:,:) = nan
     allocate(this%qflx_rootsoi_col         (begc:endc,1:nlevsoi))    ; this%qflx_rootsoi_col         (:,:) = nan
+    allocate(this%qflx_sat_excess_surf_col (begc:endc))              ; this%qflx_sat_excess_surf_col (:)   = nan
+    allocate(this%qflx_infl_excess_col     (begc:endc))              ; this%qflx_infl_excess_col     (:)   = nan
     allocate(this%qflx_infl_col            (begc:endc))              ; this%qflx_infl_col            (:)   = nan
     allocate(this%qflx_surf_col            (begc:endc))              ; this%qflx_surf_col            (:)   = nan
     allocate(this%qflx_drain_col           (begc:endc))              ; this%qflx_drain_col           (:)   = nan
@@ -460,6 +477,21 @@ contains
          avgflag='A', long_name='excess solid h2o due to snow capping not including correction for land use change', &
          ptr_col=this%qflx_snwcp_ice_col, c2l_scale_type='urbanf')
 
+    this%qflx_glcice_col(begc:endc) = spval
+    call hist_addfld1d (fname='QICE',  units='mm/s',  &
+         avgflag='A', long_name='ice growth/melt', &
+         ptr_col=this%qflx_glcice_col, l2g_scale_type='ice')
+
+    this%qflx_glcice_frz_col(begc:endc) = spval
+    call hist_addfld1d (fname='QICE_FRZ',  units='mm/s',  &
+         avgflag='A', long_name='ice growth', &
+         ptr_col=this%qflx_glcice_frz_col, l2g_scale_type='ice')
+
+    this%qflx_glcice_melt_col(begc:endc) = spval
+    call hist_addfld1d (fname='QICE_MELT',  units='mm/s',  &
+         avgflag='A', long_name='ice melt', &
+         ptr_col=this%qflx_glcice_melt_col, l2g_scale_type='ice')
+
     this%qflx_rain_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='QFLX_RAIN_GRND', units='mm H2O/s', &
          avgflag='A', long_name='rain on ground after interception', &
@@ -469,6 +501,11 @@ contains
     call hist_addfld1d (fname='QFLX_SNOW_GRND', units='mm H2O/s', &
          avgflag='A', long_name='snow on ground after interception', &
          ptr_patch=this%qflx_snow_grnd_patch, default='inactive', c2l_scale_type='urbanf')
+
+    this%qflx_irrig_patch(begp:endp) = spval
+    call hist_addfld1d (fname='QIRRIG', units='mm/s', &
+         avgflag='A', long_name='water added through irrigation', &
+         ptr_patch=this%qflx_irrig_patch)
 
     this%qflx_evap_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='QFLX_EVAP_GRND', units='mm H2O/s', &
@@ -694,6 +731,13 @@ contains
     ! This variable only gets set in the hydrology filter; need to initialize it to 0 for
     ! the sake of columns outside this filter
     this%qflx_ice_runoff_xs_col(bounds%begc:bounds%endc) = 0._r8
+
+    ! Initialize qflx_glcice_dyn_water_flux_col to 0 for all columns because we want this
+    ! flux to remain 0 for columns where is is never set, including non-glacier columns.
+    !
+    ! Other qflx_glcice fluxes intentionally remain unset (spval) outside the do_smb
+    ! filter, so that they are flagged as missing value outside that filter.
+    this%qflx_glcice_dyn_water_flux_col(bounds%begc:bounds%endc) = 0._r8
 
     this%AnnEt(bounds%begc:bounds%endc)                 = 0._r8
   
