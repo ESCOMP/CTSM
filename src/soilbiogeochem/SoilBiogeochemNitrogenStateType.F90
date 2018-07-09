@@ -42,9 +42,12 @@ module SoilBiogeochemNitrogenStateType
      !JV, FAN
      real(r8), pointer :: tan_g1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G1
      real(r8), pointer :: tan_g2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G2
+     real(r8), pointer :: tan_g3_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G2
+     
      real(r8), pointer :: tan_s0_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S0
      real(r8), pointer :: tan_s1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S1
      real(r8), pointer :: tan_s2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S2
+     real(r8), pointer :: tan_s3_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S2
 
      real(r8), pointer :: tan_f0_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F0
      real(r8), pointer :: tan_f1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F1
@@ -64,6 +67,7 @@ module SoilBiogeochemNitrogenStateType
 
      real(r8), pointer :: man_n_stored_col(:)                  ! col (gN/m2) manure N in storage
      real(r8), pointer :: man_tan_stored_col(:)                ! col (gN/m2) manure TAN in storage
+     real(r8), pointer :: fan_grz_fract_col(:)                 ! col unitless fraction of animals grazing
 !KO
      ! FAN
      real(r8), pointer :: smin_no3_monthly_col         (:)     ! col (gN/m2) soil mineral NO3 pool
@@ -201,9 +205,11 @@ contains
     if (use_fan) then
        allocate(this%tan_g1_col(begc:endc)) ; this%tan_g1_col(:) = nan
        allocate(this%tan_g2_col(begc:endc)) ; this%tan_g2_col(:) = nan
+       allocate(this%tan_g3_col(begc:endc)) ; this%tan_g3_col(:) = nan
        allocate(this%tan_s0_col(begc:endc)) ; this%tan_s0_col(:) = nan
        allocate(this%tan_s1_col(begc:endc)) ; this%tan_s1_col(:) = nan
        allocate(this%tan_s2_col(begc:endc)) ; this%tan_s2_col(:) = nan
+       allocate(this%tan_s3_col(begc:endc)) ; this%tan_s3_col(:) = nan
        allocate(this%tan_f0_col(begc:endc)) ; this%tan_f0_col(:) = nan
        allocate(this%tan_f1_col(begc:endc)) ; this%tan_f1_col(:) = nan
        allocate(this%tan_f2_col(begc:endc)) ; this%tan_f2_col(:) = nan
@@ -221,6 +227,7 @@ contains
 
        allocate(this%man_n_stored_col(begc:endc)) ; this%man_n_stored_col(:) = nan
        allocate(this%man_tan_stored_col(begc:endc)) ; this%man_tan_stored_col(:) = nan
+       allocate(this%fan_grz_fract_col(begc:endc)) ; this%fan_grz_fract_col(:) = nan
 
     end if
     !KO
@@ -595,6 +602,11 @@ contains
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool G2', &
             ptr_col=this%tan_g2_col)
 
+       this%tan_g3_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_G3', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool G3', &
+            ptr_col=this%tan_g3_col)
+       
        this%tan_f0_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_F0', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F0', &
@@ -636,10 +648,16 @@ contains
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S1', &
             ptr_col=this%tan_s1_col)
 
-       this%tan_s1_col(begc:endc) = spval
+       this%tan_s2_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_S2', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S2', &
             ptr_col=this%tan_s2_col)
+
+       this%tan_s3_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_S3', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S3', &
+            ptr_col=this%tan_s3_col)
+
 
        this%man_u_grz_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_U_GRZ', units='gN/m^2', &
@@ -680,6 +698,12 @@ contains
        call hist_addfld1d (fname='MAN_TAN_STORED', units='gN/m^2', &
             avgflag='A', long_name='Manure ammoniacal nitrogen in storage', &
             ptr_col=this%man_tan_stored_col)
+
+       this%fan_grz_fract_col(begc:endc) = spval
+       call hist_addfld1d (fname='FAN_GRZ_FRACT', units='', &
+            avgflag='A', long_name='Fraction of animals grazing', &
+            ptr_col=this%fan_grz_fract_col)
+
 
     end if
     
@@ -772,9 +796,11 @@ contains
              !JV
              this%tan_g1_col(c) = 0.0_r8
              this%tan_g2_col(c) = 0.0_r8
+             this%tan_g3_col(c) = 0.0_r8
              this%tan_s0_col(c) = 0.0_r8
              this%tan_s1_col(c) = 0.0_r8
              this%tan_s2_col(c) = 0.0_r8
+             this%tan_s3_col(c) = 0.0_r8
              this%tan_f0_col(c) = 0.0_r8
              this%tan_f1_col(c) = 0.0_r8
              this%tan_f2_col(c) = 0.0_r8
@@ -791,6 +817,7 @@ contains
              this%man_r_app_col(c) = 0.0_r8
 
              this%man_tan_stored_col(c) = 0.0_r8
+             this%fan_grz_fract_col(c) = 0.0_r8
              this%man_n_stored_col(c) = 0.0_r8
              
              this%TAN_manu_col(c)               = 0._r8
@@ -1124,6 +1151,10 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='tan_g2', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%tan_g2_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_g3', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_g3_col)
+       
        call restartvar(ncid=ncid, flag=flag, varname='tan_s0', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%tan_s0_col)
@@ -1133,6 +1164,10 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='tan_s2', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%tan_s2_col)
+       call restartvar(ncid=ncid, flag=flag, varname='tan_s3', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_s3_col)
+
        call restartvar(ncid=ncid, flag=flag, varname='tan_f0', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%tan_f0_col)
@@ -1179,6 +1214,9 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='man_n_stored', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%man_n_stored_col)
+       call restartvar(ncid=ncid, flag=flag, varname='fan_grz_fract', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%fan_grz_fract_col)
 
        !JV
     end if

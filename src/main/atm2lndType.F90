@@ -89,12 +89,13 @@ module atm2lndType
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
      real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
-!KO
+!JV
      real(r8), pointer :: forc_ndep2_grc                (:)   => null() ! FAN nitrogen deposition (manure) rate (gN/m2/s)
      real(r8), pointer :: forc_ndep3_grc                (:)   => null() ! FAN nitrogen deposition (fertilizer) rate (gN/m2/s)
      real(r8), pointer :: forc_ndep_urea_grc            (:)   => null() ! FAN nitrogen deposition, urea fertilizer fraction
      real(r8), pointer :: forc_ndep_nitr_grc            (:)   => null() ! FAN nitrogen deposition, nitrate fertilizer fraction
-!KO
+     real(r8), pointer :: forc_soilph_grc          (:)   => null() ! FAN soil pH
+!JV
      real(r8), pointer :: forc_pc13o2_grc               (:)   => null() ! C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_grc                  (:)   => null() ! O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_240_patch            (:)   => null() ! 10-day mean O2 partial pressure (Pa)
@@ -524,6 +525,7 @@ contains
        allocate(this%forc_ndep3_grc             (begg:endg))        ; this%forc_ndep3_grc                (:)   = ival
        allocate(this%forc_ndep_urea_grc         (begg:endg))        ; this%forc_ndep3_grc                (:)   = ival
        allocate(this%forc_ndep_nitr_grc         (begg:endg))        ; this%forc_ndep3_grc                (:)   = ival
+       allocate(this%forc_soilph_grc            (begg:endg))        ; this%forc_soilph_grc               (:)   = ival
     end if
 !KO
     allocate(this%forc_pc13o2_grc               (begg:endg))        ; this%forc_pc13o2_grc               (:)   = ival
@@ -1265,6 +1267,7 @@ contains
        deallocate(this%forc_ndep3_grc)
        deallocate(this%forc_ndep_nitr_grc)
        deallocate(this%forc_ndep_urea_grc)
+       deallocate(this%forc_soilph_grc)
        !KO
     end if
     deallocate(this%forc_pc13o2_grc)

@@ -36,7 +36,7 @@ module FanStreamMod
 !KO  public :: clm_domain_mct ! Sets up MCT domain for this resolution
 
   ! ! PRIVATE TYPES
-  type(shr_strdata_type)  :: sdat_past, sdat_mix, sdat_urea, sdat_nitr         ! input data streams
+  type(shr_strdata_type)  :: sdat_past, sdat_mix, sdat_urea, sdat_nitr, sdat_soilph         ! input data streams
   integer :: stream_year_first_ndep2      ! first year in stream to use
   integer :: stream_year_last_ndep2       ! last year in stream to use
   integer :: model_year_align_ndep2       ! align stream_year_firstndep2 with 
@@ -240,6 +240,32 @@ contains
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
+   call shr_strdata_create(sdat_soilph,name="clmndep2ph",    &
+        pio_subsystem=pio_subsystem,                & 
+        pio_iotype=shr_pio_getiotype(inst_name),    &
+        mpicom=mpicom, compid=comp_id,              &
+        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        nxg=ldomain%ni, nyg=ldomain%nj,             &
+        yearFirst=stream_year_first_ndep2,          &
+        yearLast=stream_year_last_ndep2,            &
+        yearAlign=model_year_align_ndep2,           &
+        offset=0,                                   &
+        domFilePath='',                             &
+        domFileName=trim(stream_fldFileName_ndep2), &
+        domTvarName='time',                         &
+        domXvarName='x' ,                           &
+        domYvarName='y' ,                           &  
+        domAreaName='area',                         &
+        domMaskName='mask',                         &
+        filePath='',                                &
+        filename=(/trim(stream_fldFileName_ndep2)/),&
+        fldListFile='soilph',                &
+        fldListModel='fansoilph',               &
+        fillalgo='none',                            &
+        mapalgo='nn',                       &
+        calendar=get_calendar(),                    &
+	taxmode='extend'                            )
+
    if (masterproc) then
       call shr_strdata_print(sdat_mix,'CLMNDEP2 data')
    endif
@@ -304,6 +330,15 @@ contains
       ig = ig+1
       atm2lnd_inst%forc_ndep_nitr_grc(g) = sdat_nitr%avs(1)%rAttr(1,ig)
    end do
+
+   call shr_strdata_advance(sdat_soilph, mcdate, sec, mpicom, 'clmndep2ph')
+
+   ig = 0
+   do g = bounds%begg,bounds%endg
+      ig = ig+1
+      atm2lnd_inst%forc_soilph_grc(g) = sdat_soilph%avs(1)%rAttr(1,ig)
+   end do
+
    
  end subroutine fanstream_interp
     
