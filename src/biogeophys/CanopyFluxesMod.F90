@@ -1128,7 +1128,7 @@ contains
             end if
 
 ! should be the same expression used in Photosynthesis/getqflx
-            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p)*(qsatl(p)-qaf(p))
+            efpot = forc_rho(c)*elai(p)/rb(p)*(qsatl(p)-qaf(p))
 
             ! When the hydraulic stress parameterization is active calculate rpp
             ! but not transpiration
@@ -1169,7 +1169,7 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-            wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
+            wtlq    = frac_veg_nosno(p)*elai(p)/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
             snow_depth_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
@@ -1248,7 +1248,7 @@ contains
             ! result in an imbalance in "hvap*qflx_evap_veg" and
             ! "efe + dc2*wtgaq*qsatdt_veg"
 
-            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p) &
+            efpot = forc_rho(c)*elai(p)/rb(p) &
                  *(wtgaq*(qsatl(p)+qsatldT(p)*dt_veg(p)) &
                  -wtgq0*qg(c)-wtaq0(p)*forc_q(c))
             qflx_evap_veg(p) = rpp*efpot
@@ -1314,8 +1314,12 @@ contains
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta(p) >= 0._r8) then     !stable
-!remove cap               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
-               zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
+               ! remove stability cap when biomass heat storage is active 
+               if(use_biomass_heat_storage) then 
+                  zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
+               else
+                  zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
+               endif
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
