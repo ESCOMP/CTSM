@@ -585,11 +585,6 @@ contains
           call fanstream_init(bounds_proc, NLFilename)
           call fanstream_interp(bounds_proc, atm2lnd_inst)
           call t_stopf('init_ndep2')
-
-!!$          call t_startf('init_ndep3')
-!!$          call ndep3_init(bounds_proc, NLFilename)
-!!$          call ndep3_interp(bounds_proc, atm2lnd_inst)
-!!$          call t_stopf('init_ndep3')
        end if
 !KO
     end if
