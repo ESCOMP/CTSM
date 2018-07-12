@@ -390,9 +390,9 @@ contains
        ! grazing
        !
 
-       ndep_org(ind_avail) = ngrz(c) * (1.0_r8-tract_tan) * fract_avail
-       ndep_org(ind_resist) = ngrz(c) * (1.0_r8-tract_tan) * fract_resist
-       ndep_org(ind_unavail) = ngrz(c) * (1.0_r8-tract_tan) * fract_unavail
+       ndep_org(ind_avail) = ngrz(c) * (1.0_r8-fract_tan) * fract_avail
+       ndep_org(ind_resist) = ngrz(c) * (1.0_r8-fract_tan) * fract_resist
+       ndep_org(ind_unavail) = ngrz(c) * (1.0_r8-fract_tan) * fract_unavail
        tandep = ngrz(c) * fract_tan
 
        orgpools(ind_avail) = man_a_grz(c)
