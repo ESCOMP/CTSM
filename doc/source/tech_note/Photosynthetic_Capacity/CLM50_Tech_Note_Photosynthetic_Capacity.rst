@@ -82,7 +82,64 @@ multiplication of leaf mass per unit area (:math:`\text{LMA}`; g biomass/m :sup:
 
    N_{\text{str}} = \text{SNC} \cdot \text{LMA}
 
-where :math:`\text{SNC}` is set to be fixed at 0.002 (gN/g biomass), based on data on C:N ratio from dead wood (White etal.,2000).
+where :math:`\text{SNC}` is set to be fixed at 0.002 (gN/g biomass), based on data on C:N ratio from dead wood (White etal.,2000),
+and :math:`\text{LMA}` is the inverse of specific leaf area at the canopy top (:math:`SLA_{\text{0}}`), a PFT-level parameter (:numref:`Table Plant functional type (PFT) leaf N parameters`).
+
+.. _Table Plant functional type (PFT) leaf N parameters:
+
+.. table:: Plant functional type (PFT) leaf N parameters.
+
+ +----------------------------------+--------------------------+--------------------------+
+ | PFT                              |  :math:`SLA_{\text{0}}`  |  :math:`N_{\text{cb}}`   |
+ +==================================+==========================+==========================+
+ | NET Temperate                    |          0.0100          |           0.0509         |
+ +----------------------------------+--------------------------+--------------------------+
+ | NET Boreal                       |          0.0100          |           0.0466         |
+ +----------------------------------+--------------------------+--------------------------+
+ | NDT Boreal                       |          0.0202          |           0.0546         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BET Tropical                     |          0.0190          |           0.0461         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BET temperate                    |          0.0190          |           0.0515         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BDT tropical                     |          0.0308          |           0.0716         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BDT temperate                    |          0.0308          |           0.1007         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BDT boreal                       |          0.0308          |           0.1007         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BES temperate                    |          0.0180          |           0.0517         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BDS temperate                    |          0.0307          |           0.0943         |
+ +----------------------------------+--------------------------+--------------------------+
+ | BDS boreal                       |          0.0307          |           0.0943         |
+ +----------------------------------+--------------------------+--------------------------+
+ | C\ :sub:`3` arctic grass         |          0.0402          |           0.1365         |
+ +----------------------------------+--------------------------+--------------------------+
+ | C\ :sub:`3` grass                |          0.0402          |           0.1365         |
+ +----------------------------------+--------------------------+--------------------------+
+ | C\ :sub:`4` grass                |          0.0385          |           0.0900         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Temperate Corn                   |          0.0500          |           0.2930         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Spring Wheat                     |          0.0350          |           0.4102         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Temperate Soybean                |          0.0350          |           0.4102         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Cotton                           |          0.0350          |           0.4102         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Rice                             |          0.0350          |           0.4102         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Sugarcane                        |          0.0500          |           0.2930         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Tropical Corn                    |          0.0500          |           0.2930         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Tropical Soybean                 |          0.0350          |           0.4102         |
+ +----------------------------------+--------------------------+--------------------------+
+
+Notes: :math:`SLA_{\text{0}}` is the specific leaf area at the canopy top (m :sup:`2` leaf/g biomass),
+and :math:`N_{\text{cb}}` is the fraction of leaf nitrogen in Rubisco (g N in Rubisco g :sup:`-1` N)
+
 
 We assume that plants optimize their nitrogen allocations (i.e., :math:`N_{\text{store}}`,  :math:`N_{\text{resp}}`,  :math:`N_{\text{lc}}`,  :math:`N_{\text{et}}`, :math:`N_{\text{cb}}`) to maximize the photosynthetic carbon gain, defined as
 the gross photosynthesis ( :math:`A` ) minus the maintenance respiration for
@@ -202,7 +259,7 @@ as in :ref:`Thornton and Zimmermann (2007)<ThorntonZimmermann2007>`. At 25ºC,
 
 where :math:`N_{str}` is the area-based leaf nitrogen concentration (g N
 m\ :sup:`-2` leaf area), :math:`N_{cb}`  is the fraction of leaf
-nitrogen in Rubisco (g N in Rubisco g\ :sup:`-1` N),
+nitrogen in Rubisco (g N in Rubisco g\ :sup:`-1` N, :numref:`Table Plant functional type (PFT) leaf N parameters`),
 :math:`F_{NR} =7.16` is the mass ratio of total Rubisco molecular mass
 to nitrogen in Rubisco (g Rubisco g\ :sup:`-1` N in Rubisco), and
 :math:`a_{R25} =60` is the specific activity of Rubisco (µmol
