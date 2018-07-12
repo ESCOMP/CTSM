@@ -54,7 +54,7 @@ Tissue Stoichiometry
 
 As of CLM5, vegetation tissues have a flexible stoichiometry, as
 described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each
-tissue has a target C\:N ratio, and nitrogen is allocated at each
+tissue has a target C\:N ratio (see :numref:`Table Plant functional type (PFT) target CN parameters`), and nitrogen is allocated at each
 timestep in order to allow the plant to best match the target
 stoichiometry.  Nitrogen downregulation of productivity acts by
 increasing the C\:N ratio of leaves when insufficient nitrogen is
@@ -63,3 +63,57 @@ reducing the N available for photosynthesis and reducing the :math:`V_{\text{c,m
 :math:`J_{\text{max25}}` terms, as described in Chapter 
 :numref:`rst_Photosynthetic Capacity`.  Details of the flexible tissue
 stoichiometry are described in Chapter :numref:`rst_CN Allocation`.
+
+.. _Table Plant functional type (PFT) target CN parameters:
+
+.. table:: Plant functional type (PFT) target C:N parameters. 
+
+ +----------------------------------+-------------------+
+ | PFT                              |  target leaf C:N  |
+ +==================================+===================+
+ | NET Temperate                    |        58.00      |
+ +----------------------------------+-------------------+
+ | NET Boreal                       |        58.00      |
+ +----------------------------------+-------------------+
+ | NDT Boreal                       |        25.81      |
+ +----------------------------------+-------------------+
+ | BET Tropical                     |        29.60      |
+ +----------------------------------+-------------------+
+ | BET temperate                    |        29.60      |
+ +----------------------------------+-------------------+
+ | BDT tropical                     |        23.45      |
+ +----------------------------------+-------------------+
+ | BDT temperate                    |        23.45      |
+ +----------------------------------+-------------------+
+ | BDT boreal                       |        23.45      |
+ +----------------------------------+-------------------+
+ | BES temperate                    |        36.42      |
+ +----------------------------------+-------------------+
+ | BDS temperate                    |        23.26      |
+ +----------------------------------+-------------------+
+ | BDS boreal                       |        23.26      |
+ +----------------------------------+-------------------+
+ | C\ :sub:`3` arctic grass         |        28.03      |
+ +----------------------------------+-------------------+
+ | C\ :sub:`3` grass                |        28.03      |
+ +----------------------------------+-------------------+
+ | C\ :sub:`4` grass                |        35.36      |
+ +----------------------------------+-------------------+
+ | Temperate Corn                   |        25.00      |
+ +----------------------------------+-------------------+
+ | Spring Wheat                     |        20.00      |
+ +----------------------------------+-------------------+
+ | Temperate Soybean                |        20.00      |
+ +----------------------------------+-------------------+
+ | Cotton                           |        20.00      |
+ +----------------------------------+-------------------+
+ | Rice                             |        20.00      |
+ +----------------------------------+-------------------+
+ | Sugarcane                        |        25.00      |
+ +----------------------------------+-------------------+
+ | Tropical Corn                    |        25.00      |
+ +----------------------------------+-------------------+
+ | Tropical Soybean                 |        20.00      |
+ +----------------------------------+-------------------+
+
+

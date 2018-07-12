@@ -536,6 +536,15 @@ correspond with changes in labile organic C fractions in soil amended
 with :math:`{}^{14}`\ C-glucose. Soil Biology and Biochemistry, 28(4/5):
 453-462.
 
+.. _deKauwe2015:
+
+|br|
+
+de Kauwe, D.A., Kala, J., Lin, Y.-S., Pitman, A.J., Medlyn, B.E., Duursma, R.A.,
+Abramowitz, G., Wang, Y.-P., Miralles, D.G. 2015. A test of an optimal stomatal
+conductance scheme within the CABLE land surface model. Geosci. Model Dev.
+8(2):431-452.
+
 .. _deVries1963:
 
 |br|

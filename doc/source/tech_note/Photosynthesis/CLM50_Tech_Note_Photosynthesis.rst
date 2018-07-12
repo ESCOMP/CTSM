@@ -66,7 +66,8 @@ photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2`
 s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial
 pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric
 pressure (Pa), and :math:`D` is the vapor pressure deficit at the leaf surface (kPa).
-:math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`).
+:math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`)
+and are the same as those used in the CABLE model (:ref:`de Kauwe et al. 2015 <deKauwe2015>`).
 
 The value for :math:`g_{o}=100` :math:`\mu` mol m :sup:`-2` s\ :sup:`-1` for
 C\ :sub:`3` and C\ :sub:`4` plants.
