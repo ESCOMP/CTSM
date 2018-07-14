@@ -3578,8 +3578,8 @@ contains
     bflag = .false.
     b0sun = -1._r8
     b0sha = -1._r8
-    gs0sun = 0._r8
-    gs0sha = 0._r8
+    gs0sun = 0._r8   ! Initialize to zero as good form, not used on first itteration below because of bflag
+    gs0sha = 0._r8   ! Initialize to zero as good form, not used on first itteration below because of bflag
     bsun  = 1._r8
     bsha  = 1._r8
     iter1 = 0
