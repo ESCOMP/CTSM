@@ -3703,6 +3703,8 @@ contains
     bflag = .false.
     b0sun = -1._r8
     b0sha = -1._r8
+    gs0sun = 0._r8   ! Initialize to zero as good form, not used on first itteration below because of bflag
+    gs0sha = 0._r8   ! Initialize to zero as good form, not used on first itteration below because of bflag
     bsun  = 1._r8
     bsha  = 1._r8
     iter1 = 0
@@ -3894,6 +3896,8 @@ contains
     type(temperature_type) , intent(in)       :: temperature_inst
     !------------------------------------------------------------------------------
     ! !LOCAL VARIABLES:
+    real(r8)                :: gs0sun               ! sunlit leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8)                :: gs0sha               ! shaded leaf stomatal conductance (umol H2O/m**2/s)
     integer                 :: phase                ! sun==1, sha==2
     integer , parameter     :: nphs = 2             ! number of phases for sun/shade
     integer , parameter     :: itmax = 20           ! maximum number of iterations
@@ -3985,7 +3989,9 @@ contains
           endif
        enddo
        
-       call ci_func_PHS(x,b(sun), b(sha), fb(sun), fb(sha), ip, iv, ic, bsun, bsha, bflag, gb_mol, gs_mol_sun, gs_mol_sha,&
+       gs0sun = gs_mol_sun
+       gs0sha = gs_mol_sha
+       call ci_func_PHS(x,b(sun), b(sha), fb(sun), fb(sha), ip, iv, ic, bsun, bsha, bflag, gb_mol, gs0sun, gs0sha, &
             gs_mol_sun, gs_mol_sha, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
             qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterstate_inst, soilstate_inst, &
             temperature_inst, waterflux_inst)
