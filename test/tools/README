@@ -13,9 +13,7 @@ To use...
 
 on cheyenne
 
-qcmd -- ./test_driver.sh -i >& run.out &
-execgy 
-./test_driver.sh -i >& run.out &
+qcmd -l walltime=06:00:00 -- ./test_driver.sh -i >& run.out &
 
 Intended for use on NCAR machines cheyenne, geyser (DAV) and hobart.
 

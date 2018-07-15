@@ -199,8 +199,8 @@ export P4_GLOBMEMSIZE=500000000
 
 export CESM_MACH="hobart"
 
-limit stacksize unlimited
-limit coredumpsize unlimited
+ulimit -s unlimited
+ulimit -c unlimited
 
 export CESM_COMP="intel"
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
@@ -210,7 +210,9 @@ export INITMODULES="/usr/share/Modules/init/sh"
 
 . \$INITMODULES
 module purge
-module load compiler/intel/15.0.2.164
+module load compiler/intel/18.0.3
+module load tool/nco/4.7.5
+module load tool/netcdf/4.6.1/intel
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include

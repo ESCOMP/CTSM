@@ -21,6 +21,20 @@ Known bugs introduced in this tag (include github issue ID): [If none, remove th
 Known bugs found since the previous tag (include github issue ID): [If none, remove this line]
 
 
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
 Notes of particular relevance for users
 ---------------------------------------
 
