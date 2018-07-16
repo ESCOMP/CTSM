@@ -54,7 +54,8 @@ Tissue Stoichiometry
 
 As of CLM5, vegetation tissues have a flexible stoichiometry, as
 described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each
-tissue has a target C\:N ratio (see :numref:`Table Plant functional type (PFT) target CN parameters`), and nitrogen is allocated at each
+tissue has a target C\:N ratio, with the target leaf C\:N varying by plant functional type 
+(see :numref:`Table Plant functional type (PFT) target CN parameters`), and nitrogen is allocated at each
 timestep in order to allow the plant to best match the target
 stoichiometry.  Nitrogen downregulation of productivity acts by
 increasing the C\:N ratio of leaves when insufficient nitrogen is
