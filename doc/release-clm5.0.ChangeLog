@@ -1,0 +1,346 @@
+===============================================================
+Tag name:  release-clm5.0.03
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Tue Jun 12 15:32:53 MDT 2018
+One-line Summary: Second release branch tag for CESM2.0 release, fixing DA and tools and README files, identical to clm5.0.dev013
+
+Purpose of this version:
+------------------------
+
+Update cime and cism to newer versions used in release. These bring in some answer
+changes. The cime version updates the orbit for 2000 compsets. The cism version
+changes answers for two fields with NO_EVOLVE and more fields for EVOLVE.
+
+Fixes an important bug needed for use with Data Assimulation. Several changes
+to testing. Adding wallclock as needed, changing a few compsets so science
+supported compsets are used, added tput_tolerance to some tests known to be
+variable.
+
+Many changes to the clm tools for creating input files. Added the version by
+querying "git describe" and adding it as an attribute to NetCDF files. Changes
+to get tools working, and tested. Also changed so that tools can be run in either
+a CTSM checkout or a CESM checkout.
+
+Updated README files so they are accurate.
+
+CTSM Master Tag This Corresponds To: clm5.0.dev013
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+  #188 -- Global PTCLM tools test fails
+  #187 -- PTCLM tools tests fail baseline comparisons due to a seg fault
+  #259 -- Most README files in ctsm are incorrect
+  #386 -- Shorten some currently very long debug tests
+  #387 -- Lots of testmods still set orb_iyear and orb_iyear_align
+  #388 -- Add "git describe" to input files that are created
+  #389 -- Post data-assimilation processing broken with multi-driver 
+  #393 -- Increase wallclock
+  #399 -- minor format update needed in namelist_definition_clm4_5.xml
+  #402 -- Some smaller tests can be slow..
+  #411 -- Refactor tools aren't useful anymore
+  #414 -- PTCLM tests aren't working
+  #415 -- mkprocdata_map tests aren't working because of bad return statement in script type: bug - other
+  #418 -- Path needs to be updated for getco2 script type: bug - other
+
+Science changes since release-clm5.0.01:  None
+
+Software changes since release-clm5.0.01: 
+   Fix an important bug for data assimulation. Work on the CLM tools for creating input files.
+   Some changes to the CLM testing.
+
+Changes to User Interface since release-clm5.0.01: None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+     hobart --- OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (prealpha):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+  regular tests (prebeta):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-5.0.01
+
+Changes answers relative to baseline: Yes
+
+Changes answers relative to baseline: Yes! Because of changes in cism and cime
+
+  Summarize any changes to answers:
+    - what code configurations: All 2000 compsets and some cases with cism
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+   cime   cime_cesm2_0_rel_03
+   cism   release-v2.1.01
+   rtm    release-cesm2.0.00
+   mosart release-cesm2.0.00
+   fates  fates_s1.8.1_a3.0.0
+   PTCLM  PTCLM2_180611
+
+
+CTSM Tag versions pulled over from master development branch: clm5.0.dev013
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.01
+Originator(s):  erik (Erik Kluzek)
+Date:  Tue May 22 10:09:15 MDT 2018
+One-line Summary: First release branch tag for CESM2.0 release, identical to clm5.0.dev012
+
+Purpose of this version:
+------------------------
+
+This is the first release branch tag for the CESM2.0 release for CTSM. There are many changes
+to software mostly to fix a list of issues. There are some changes to the science that change
+answers to fix some small problems, but don't have a large effect on simulations. Externals are
+updated to new versions, fixing issues, and in most cases changing answers. The cime version
+was updated and brings in some new features.
+
+
+CTSM Master Tag This Corresponds To: clm5.0.dev012
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): 
+  #379 -- Problems with Hist decStart restart tests due to variable orbital year
+  #260 -- max daylength doesn't change over time for varying orbital parameters
+  #363 -- PE Layout
+  $374 -- Turn BFBFLAG on for testing (so PE layout changes won't appear to change answers)
+  #382 -- Write statement for VIC
+  $383 -- mkmapdata intel version`
+  #68 --- gnu compiler workaround
+  #364 -- crop f05 datasets
+  #362 -- svn checkout
+  #318 -- quadratic bug
+  #249 -- bypass balance checks for DART
+  #341 -- add model_doi_url
+  #346 -- New mode of operation for init_interp: Copy subgrid areas, too
+  #347 -- endrun message behavior
+  #345 -- Add a cmip6_evolving_icesheet usermods directory
+  #351 -- FATES external to https
+  #310 -- With FUN on soil nitrification flux is not subtracted out of plant uptake of of soil NH4 or NO3
+  #313 -- Issues with initial condition files
+  #298 -- Don't allocate memory for zero-weight PFTs and urban columns
+  #317 -- c14 bombspike and c13 timeseries code can use the wrong year, with irreproducible behavior
+  #320 -- I1850Clm50Sp compset mistakenly uses SGLC
+  #326 -- init_interp can change answers for absorbed radiation in non-existent snow layers
+  #325 -- init_interp can change answers over the CISM domain
+  #213 -- usability issue for CPLHIST that Keith found.
+  #210 -- Recent request to increase number of tapes to 10.
+  #169 -- usability issue for running hybrid or branch cases with crop that keeps biting Mike Mills.
+  #68 --- workaround for gnu compiler bug
+  #46 --- needed for multi-instance
+  #66 --– need to relax tolerance for negative C/N values in order for CLM45 Crop to work
+  #65 --– need to change a check from "> 0" to "> [small val]"
+  #240 -- from Jim
+  #255 -- get PTCLM working
+  #253 -- bad clm40 IC file
+  #304 -- Energy imbalance over land per coupler diagnostics
+  #271 -- Add some land ice fields for cmip6
+  #255 -- PTCLMmkdata doesn't work in the CLM git checkout
+
+CIME Issues fixed (include issue #): [If none, remove this line]
+- ESMCI/cime#2598 (datm doesn't restart properly with variable year orbit)
+
+Science changes since: clm5.0.000
+
+  - Max day length is recalculated every time-step so works with a variable orbit
+  - CISM updates with answer changes
+  - Update 1850 Nitrogen deposition file used when coupled to cam
+  - By default orbit for 1850 is for 1850 conditions and for transient is variable by simulation year
+  - Soil nitrification flux wasn't taken out of plant uptake of either soil NH3 or NO3, with FUN on, and now it is.
+  - FATES version updated with science changes
+  - New initial condition files for most configurations
+  - Bug fixes for energy imbalance associated with surface water and lakes
+
+Softare changes since: clm5.0.000
+
+  - Update PE layouts for f45, f09, and f19
+  - Turn BFBFLAG on for most testing
+  - Some fixes to tools for batch submission
+  - Update cime version
+  - Update mosart and RTM
+  - Add f05 crop datasets
+  - Add pauseResume test and don't do balance checks for two steps after Data Assimulation is done
+  - Don't allocate memory for zero-weight natveg patches and urban
+  - Fix some issues with init_interp for glaciers and snow covered areas
+  - Add some land ice diagnostic vars needed for CMIP6
+  - Fix LND_TUNING_MODE for fully coupled case, update some README files/PTCLM
+
+Changes to User Interface since: clm5.000
+  - New namelist item: init_interp_method
+  - xmlquery will now accept derived attributes.
+  - New XML variables, PAUSE_ACTIVE_XXX.
+  - jobid now added to CaseStatus case_submit entry.
+  - Splits GLC2OCN_RMAPNAME xml variable into
+     GLC2OCN_LIQ_RMAPNAME and GLC2OCN_ICE_RMAPNAME, and similarly for
+     GLC2OCN_RMAPTYPE
+  - New --retry option to create_test.
+    - Add --clean-depends to case.build, this argument can take a component list and will
+      clean all components if one is not provided.
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (prealpha):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+  regular tests (prebeta):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: clm5.0.000
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+        all Clm45 and Clm50
+        all 1850, all IHIST cases, all with CISM, all CLM50-BGC with FUN on
+        all with FATES, all with use_init_interp=T,
+        all CLM40, CLM45, and cLM%0 because of new initial conditions
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+  URL for LMWG diagnostics output for new climate:
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism   updated from cism2_1_46               to release-v2.1.00 (answer changes)
+   rtm    updated from rtm1_0_65                to rtm1_0_66
+   mosart updated from mosart1_0_30             to mosart1_0_31
+   cime   updated from cime5.4.0-alpha.03       to a67dceae95567cc7529c4cfed153017f4b65b210
+                                                   (answer changes due to new orbit)
+   fates  updated from fates_s1.4.1_a3.0.0_rev3 to fates_s1.8.1_a3.0.0 (answer changes due to science updates)
+   PTCLM  updated from PTCLM2_171216c           to PTCLM2_180214
+
+CTSM Tag versions pulled over from master development branch:
+
+   clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
+   clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, 
+                                     turn BFBFLAG for testing
+   clm5.0.dev010     erik 05/15/2018 Update cime version to version in cesm2.0.beta10, 
+                                     changes answers for 1850 compsets because of orbit
+   clm5.0.dev009    sacks 05/10/2018 New init_interp method
+   clm5.0.dev008     erik 04/27/2018 With FUN subtract out soil nitrification flux of plant 
+                                     uptake of soil NH3 and NO3
+   clm5.0.dev007     erik 04/24/2018 Bring in a few answer changing things: FATES, 
+                                     cism updates, IC file fix, 
+                                     testing 1850 compset use 1850 orbit
+   clm5.0.dev006    sacks 04/12/2018 Don't allocate memory for zero-weight natveg 
+                                     patches and urban
+   clm5.0.dev005    sacks 04/10/2018 Two fixes for init_interp
+   clm5.0.dev004     erik 04/09/2018 List of important bug fixes
+   clm5.0.dev003     erik 03/09/2018 Bug fixes for energy imbalance associated 
+                                     with surface water and lakes
+   clm5.0.dev002    sacks 02/25/2018 Add some land ice diagnostic vars needed for CMIP6
+   clm5.0.dev001     erik 02/14/2018 Fix LND_TUNING_MODE for fully coupled case, 
+                                     update some README files/PTCLM
+
+===============================================================
+===============================================================
+Tag name:  clm5.0.000
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Feb 05 2018
+One-line Summary: Initial version of CLM5.0
+
+This is the initial science version of CLM5.0.
+
+Developments for CLM5.0 build on the progress made in CLM4.5. Most major components of the model have been updated with particularly
+notable changes made to soil and plant hydrology, snow density, river modeling, carbon and nitrogen cycling and coupling, and crop
+modeling.
+The updates to CLM science are documented here:
+
+https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#clm5-0
+
+This version has production versions of CLM5.0 CMIP6 land-use change files for 1850, historical, and 2000. It has preliminary
+versions of CMIP6 forcing files for Nitrogen deposition and population density. Further updates are needed for prescribed aerosols,
+and future scenarios.
+
+Spunup initial conditions are provided for several CLM physics and forcing combinations from simulations run at 1-degree resolution
+(fv 0.9x1.25 with g1xv6 ocean mask).
+
+===============================================================
+
