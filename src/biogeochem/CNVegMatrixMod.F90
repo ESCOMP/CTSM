@@ -98,6 +98,7 @@ contains
      
      real(r8):: dt        ! time step (seconds)
      real(r8):: secspyear        ! time step (seconds)
+     real(r8),dimension(1:3*nvegcpool) :: tempdump
  
 !	
 !
@@ -312,6 +313,8 @@ contains
          matrix_ctransfer_grainxf_to_grain_acc            => cnveg_carbonstate_inst%matrix_ctransfer_grainxf_to_grain_acc_patch          , & !
          matrix_ctransfer_livestem_to_deadstem_acc        => cnveg_carbonstate_inst%matrix_ctransfer_livestem_to_deadstem_acc_patch          , & !
          matrix_ctransfer_livecroot_to_deadcroot_acc      => cnveg_carbonstate_inst%matrix_ctransfer_livecroot_to_deadcroot_acc_patch          , & !
+         matrix_ctransfer_fire_livestem_to_deadstem_acc   => cnveg_carbonstate_inst%matrix_ctransfer_fire_livestem_to_deadstem_acc_patch          , & !
+         matrix_ctransfer_fire_livecroot_to_deadcroot_acc => cnveg_carbonstate_inst%matrix_ctransfer_fire_livecroot_to_deadcroot_acc_patch          , & !
 
          matrix_cturnover_leaf_acc                        => cnveg_carbonstate_inst%matrix_cturnover_leaf_acc_patch               , &
          matrix_cturnover_leafst_acc                      => cnveg_carbonstate_inst%matrix_cturnover_leafst_acc_patch               , &
@@ -331,6 +334,43 @@ contains
          matrix_cturnover_deadcroot_acc                   => cnveg_carbonstate_inst%matrix_cturnover_deadcroot_acc_patch               , &
          matrix_cturnover_deadcrootst_acc                 => cnveg_carbonstate_inst%matrix_cturnover_deadcrootst_acc_patch               , &
          matrix_cturnover_deadcrootxf_acc                 => cnveg_carbonstate_inst%matrix_cturnover_deadcrootxf_acc_patch               , &
+         matrix_cturnover_gm_leaf_acc                     => cnveg_carbonstate_inst%matrix_cturnover_gm_leaf_acc_patch               , &
+         matrix_cturnover_gm_leafst_acc                   => cnveg_carbonstate_inst%matrix_cturnover_gm_leafst_acc_patch               , &
+         matrix_cturnover_gm_leafxf_acc                   => cnveg_carbonstate_inst%matrix_cturnover_gm_leafxf_acc_patch               , &
+         matrix_cturnover_gm_froot_acc                    => cnveg_carbonstate_inst%matrix_cturnover_gm_froot_acc_patch               , &
+         matrix_cturnover_gm_frootst_acc                  => cnveg_carbonstate_inst%matrix_cturnover_gm_frootst_acc_patch               , &
+         matrix_cturnover_gm_frootxf_acc                  => cnveg_carbonstate_inst%matrix_cturnover_gm_frootxf_acc_patch               , &
+         matrix_cturnover_gm_livestem_acc                 => cnveg_carbonstate_inst%matrix_cturnover_gm_livestem_acc_patch               , &
+         matrix_cturnover_gm_livestemst_acc               => cnveg_carbonstate_inst%matrix_cturnover_gm_livestemst_acc_patch               , &
+         matrix_cturnover_gm_livestemxf_acc               => cnveg_carbonstate_inst%matrix_cturnover_gm_livestemxf_acc_patch               , &
+         matrix_cturnover_gm_deadstem_acc                 => cnveg_carbonstate_inst%matrix_cturnover_gm_deadstem_acc_patch               , &
+         matrix_cturnover_gm_deadstemst_acc               => cnveg_carbonstate_inst%matrix_cturnover_gm_deadstemst_acc_patch               , &
+         matrix_cturnover_gm_deadstemxf_acc               => cnveg_carbonstate_inst%matrix_cturnover_gm_deadstemxf_acc_patch               , &
+         matrix_cturnover_gm_livecroot_acc                => cnveg_carbonstate_inst%matrix_cturnover_gm_livecroot_acc_patch               , &
+         matrix_cturnover_gm_livecrootst_acc              => cnveg_carbonstate_inst%matrix_cturnover_gm_livecrootst_acc_patch               , &
+         matrix_cturnover_gm_livecrootxf_acc              => cnveg_carbonstate_inst%matrix_cturnover_gm_livecrootxf_acc_patch               , &
+         matrix_cturnover_gm_deadcroot_acc                => cnveg_carbonstate_inst%matrix_cturnover_gm_deadcroot_acc_patch               , &
+         matrix_cturnover_gm_deadcrootst_acc              => cnveg_carbonstate_inst%matrix_cturnover_gm_deadcrootst_acc_patch               , &
+         matrix_cturnover_gm_deadcrootxf_acc              => cnveg_carbonstate_inst%matrix_cturnover_gm_deadcrootxf_acc_patch               , &
+         matrix_cturnover_fire_leaf_acc                   => cnveg_carbonstate_inst%matrix_cturnover_fire_leaf_acc_patch               , &
+         matrix_cturnover_fire_leafst_acc                 => cnveg_carbonstate_inst%matrix_cturnover_fire_leafst_acc_patch               , &
+         matrix_cturnover_fire_leafxf_acc                 => cnveg_carbonstate_inst%matrix_cturnover_fire_leafxf_acc_patch               , &
+         matrix_cturnover_fire_froot_acc                  => cnveg_carbonstate_inst%matrix_cturnover_fire_froot_acc_patch               , &
+         matrix_cturnover_fire_frootst_acc                => cnveg_carbonstate_inst%matrix_cturnover_fire_frootst_acc_patch               , &
+         matrix_cturnover_fire_frootxf_acc                => cnveg_carbonstate_inst%matrix_cturnover_fire_frootxf_acc_patch               , &
+         matrix_cturnover_fire_livestem_acc               => cnveg_carbonstate_inst%matrix_cturnover_fire_livestem_acc_patch               , &
+         matrix_cturnover_fire_livestemst_acc             => cnveg_carbonstate_inst%matrix_cturnover_fire_livestemst_acc_patch               , &
+         matrix_cturnover_fire_livestemxf_acc             => cnveg_carbonstate_inst%matrix_cturnover_fire_livestemxf_acc_patch               , &
+         matrix_cturnover_fire_deadstem_acc               => cnveg_carbonstate_inst%matrix_cturnover_fire_deadstem_acc_patch               , &
+         matrix_cturnover_fire_deadstemst_acc             => cnveg_carbonstate_inst%matrix_cturnover_fire_deadstemst_acc_patch               , &
+         matrix_cturnover_fire_deadstemxf_acc             => cnveg_carbonstate_inst%matrix_cturnover_fire_deadstemxf_acc_patch               , &
+         matrix_cturnover_fire_livecroot_acc              => cnveg_carbonstate_inst%matrix_cturnover_fire_livecroot_acc_patch               , &
+         matrix_cturnover_fire_livecrootst_acc            => cnveg_carbonstate_inst%matrix_cturnover_fire_livecrootst_acc_patch               , &
+         matrix_cturnover_fire_livecrootxf_acc            => cnveg_carbonstate_inst%matrix_cturnover_fire_livecrootxf_acc_patch               , &
+         matrix_cturnover_fire_deadcroot_acc              => cnveg_carbonstate_inst%matrix_cturnover_fire_deadcroot_acc_patch               , &
+         matrix_cturnover_fire_deadcrootst_acc            => cnveg_carbonstate_inst%matrix_cturnover_fire_deadcrootst_acc_patch               , &
+         matrix_cturnover_fire_deadcrootxf_acc            => cnveg_carbonstate_inst%matrix_cturnover_fire_deadcrootxf_acc_patch               , &
+
          matrix_cturnover_grain_acc                       => cnveg_carbonstate_inst%matrix_cturnover_grain_acc_patch               , &
          matrix_cturnover_grainst_acc                     => cnveg_carbonstate_inst%matrix_cturnover_grainst_acc_patch               , &
          matrix_cturnover_grainxf_acc                     => cnveg_carbonstate_inst%matrix_cturnover_grainxf_acc_patch               , &
@@ -597,6 +637,7 @@ contains
             vegmatrixn_old(igrain_xf ,igrain_xf)     = grainn_xfer(p)
          end if
          vegmatrixn_old(iretransn    ,iretransn)     = retransn(p)
+
 
          if (is_beg_curr_year())then
             leafc0(p)                = leafc(p)
@@ -911,7 +952,7 @@ contains
                matrix_calloc_grainst_acc(p)  = matrix_calloc_grainst_acc(p)     + vegmatrixc_input(igrain_st)
             end if
 
-!            print*,'before accumulated deadcrootc_acc',matrix_calloc_deadcroot_acc(p),vegmatrixc_input(ideadcroot),matrix_cturnover_deadcroot_acc(p),vegmatrixc_transfer(ideadcroot,ideadcroot)
+            !print*,'before accumulated deadcrootc_acc',matrix_calloc_leafst_acc(p),vegmatrixc_input(ileaf_st),matrix_cturnover_leafst_acc(p),vegmatrixc_transfer(ileaf_st,ileaf_st)
 
             matrix_ctransfer_leafst_to_leafxf_acc(p)           = matrix_ctransfer_leafst_to_leafxf_acc(p) &
                                                                + vegmatrixc_transfer(ileaf_xf,ileaf_st)
@@ -941,6 +982,14 @@ contains
                                                                + vegmatrixc_transfer(ideadstem,ilivestem)
             matrix_ctransfer_livecroot_to_deadcroot_acc(p)     = matrix_ctransfer_livecroot_to_deadcroot_acc(p) &
                                                                + vegmatrixc_transfer(ideadcroot,ilivecroot)
+            matrix_ctransfer_fire_livestem_to_deadstem_acc(p)  = matrix_ctransfer_fire_livestem_to_deadstem_acc(p) &
+                                                               + matrix_fitransfer(p,ideadstem,ilivestem) &
+                                                               * matrix_fiturnover(p,ilivestem,ilivestem) &
+                                                               * vegmatrixc_old(ilivestem,ilivestem) * dt
+            matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)= matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p) &
+                                                               + matrix_fitransfer(p,ideadcroot,ilivecroot) &
+                                                               * matrix_fiturnover(p,ilivecroot,ilivecroot) &
+                                                               * vegmatrixc_old(ilivecroot,ilivecroot) * dt
             if(ivt(p) >= npcropmin)then
                matrix_ctransfer_grainst_to_grainxf_acc(p)      = matrix_ctransfer_grainst_to_grainxf_acc(p) &
                                                                + vegmatrixc_transfer(igrain_xf,igrain_st)
@@ -983,6 +1032,150 @@ contains
                                                                + vegmatrixc_transfer(ideadcroot_st,ideadcroot_st)
             matrix_cturnover_deadcrootxf_acc(p)                = matrix_cturnover_deadcrootxf_acc(p) &
                                                                + vegmatrixc_transfer(ideadcroot_xf,ideadcroot_xf)
+            matrix_cturnover_gm_leaf_acc(p)                    = matrix_cturnover_gm_leaf_acc(p) &
+                                                               + matrix_gmtransfer(p,ileaf,ileaf) &
+                                                               * matrix_gmturnover(p,ileaf,ileaf) &
+                                                               * vegmatrixc_old(ileaf,ileaf) * dt
+            matrix_cturnover_gm_leafst_acc(p)                  = matrix_cturnover_gm_leafst_acc(p) &
+                                                               + matrix_gmtransfer(p,ileaf_st,ileaf_st) &
+                                                               * matrix_gmturnover(p,ileaf_st,ileaf_st) &
+                                                               * vegmatrixc_old(ileaf_st,ileaf_st) * dt
+            matrix_cturnover_gm_leafxf_acc(p)                  = matrix_cturnover_gm_leafxf_acc(p) &
+                                                               + matrix_gmtransfer(p,ileaf_xf,ileaf_xf) &
+                                                               * matrix_gmturnover(p,ileaf_xf,ileaf_xf) &
+                                                               * vegmatrixc_old(ileaf_xf,ileaf_xf) * dt
+            matrix_cturnover_gm_froot_acc(p)                   = matrix_cturnover_gm_froot_acc(p) &
+                                                               + matrix_gmtransfer(p,ifroot,ifroot) &
+                                                               * matrix_gmturnover(p,ifroot,ifroot) &
+                                                               * vegmatrixc_old(ifroot,ifroot) * dt
+            matrix_cturnover_gm_frootst_acc(p)                 = matrix_cturnover_gm_frootst_acc(p) &
+                                                               + matrix_gmtransfer(p,ifroot_st,ifroot_st) &
+                                                               * matrix_gmturnover(p,ifroot_st,ifroot_st) &
+                                                               * vegmatrixc_old(ifroot_st,ifroot_st) * dt
+            matrix_cturnover_gm_frootxf_acc(p)                 = matrix_cturnover_gm_frootxf_acc(p) &
+                                                               + matrix_gmtransfer(p,ifroot_xf,ifroot_xf) &
+                                                               * matrix_gmturnover(p,ifroot_xf,ifroot_xf) &
+                                                               * vegmatrixc_old(ifroot_xf,ifroot_xf) * dt
+            matrix_cturnover_gm_livestem_acc(p)                = matrix_cturnover_gm_livestem_acc(p) &
+                                                               + matrix_gmtransfer(p,ilivestem,ilivestem) &
+                                                               * matrix_gmturnover(p,ilivestem,ilivestem) &
+                                                               * vegmatrixc_old(ilivestem,ilivestem) * dt
+            matrix_cturnover_gm_livestemst_acc(p)              = matrix_cturnover_gm_livestemst_acc(p) &
+                                                               + matrix_gmtransfer(p,ilivestem_st,ilivestem_st) &
+                                                               * matrix_gmturnover(p,ilivestem_st,ilivestem_st) &
+                                                               * vegmatrixc_old(ilivestem_st,ilivestem_st) * dt
+            matrix_cturnover_gm_livestemxf_acc(p)              = matrix_cturnover_gm_livestemxf_acc(p) &
+                                                               + matrix_gmtransfer(p,ilivestem_xf,ilivestem_xf) &
+                                                               * matrix_gmturnover(p,ilivestem_xf,ilivestem_xf) &
+                                                               * vegmatrixc_old(ilivestem_xf,ilivestem_xf) * dt
+            matrix_cturnover_gm_deadstem_acc(p)                = matrix_cturnover_gm_deadstem_acc(p) &
+                                                               + matrix_gmtransfer(p,ideadstem,ideadstem) &
+                                                               * matrix_gmturnover(p,ideadstem,ideadstem) &
+                                                               * vegmatrixc_old(ideadstem,ideadstem) * dt
+            matrix_cturnover_gm_deadstemst_acc(p)              = matrix_cturnover_gm_deadstemst_acc(p) &
+                                                               + matrix_gmtransfer(p,ideadstem_st,ideadstem_st) &
+                                                               * matrix_gmturnover(p,ideadstem_st,ideadstem_st) &
+                                                               * vegmatrixc_old(ideadstem_st,ideadstem_st) * dt
+            matrix_cturnover_gm_deadstemxf_acc(p)              = matrix_cturnover_gm_deadstemxf_acc(p) &
+                                                               + matrix_gmtransfer(p,ideadstem_xf,ideadstem_xf) &
+                                                               * matrix_gmturnover(p,ideadstem_xf,ideadstem_xf) &
+                                                               * vegmatrixc_old(ideadstem_xf,ideadstem_xf) * dt
+            matrix_cturnover_gm_livecroot_acc(p)                = matrix_cturnover_gm_livecroot_acc(p) &
+                                                               + matrix_gmtransfer(p,ilivecroot,ilivecroot) &
+                                                               * matrix_gmturnover(p,ilivecroot,ilivecroot) &
+                                                               * vegmatrixc_old(ilivecroot,ilivecroot) * dt
+            matrix_cturnover_gm_livecrootst_acc(p)              = matrix_cturnover_gm_livecrootst_acc(p) &
+                                                               + matrix_gmtransfer(p,ilivecroot_st,ilivecroot_st) &
+                                                               * matrix_gmturnover(p,ilivecroot_st,ilivecroot_st) &
+                                                               * vegmatrixc_old(ilivecroot_st,ilivecroot_st) * dt
+            matrix_cturnover_gm_livecrootxf_acc(p)              = matrix_cturnover_gm_livecrootxf_acc(p) &
+                                                               + matrix_gmtransfer(p,ilivecroot_xf,ilivecroot_xf) &
+                                                               * matrix_gmturnover(p,ilivecroot_xf,ilivecroot_xf) &
+                                                               * vegmatrixc_old(ilivecroot_xf,ilivecroot_xf) * dt
+            matrix_cturnover_gm_deadcroot_acc(p)                = matrix_cturnover_gm_deadcroot_acc(p) &
+                                                               + matrix_gmtransfer(p,ideadcroot,ideadcroot) &
+                                                               * matrix_gmturnover(p,ideadcroot,ideadcroot) &
+                                                               * vegmatrixc_old(ideadcroot,ideadcroot) * dt
+            matrix_cturnover_gm_deadcrootst_acc(p)              = matrix_cturnover_gm_deadcrootst_acc(p) &
+                                                               + matrix_gmtransfer(p,ideadcroot_st,ideadcroot_st) &
+                                                               * matrix_gmturnover(p,ideadcroot_st,ideadcroot_st) &
+                                                               * vegmatrixc_old(ideadcroot_st,ideadcroot_st) * dt
+            matrix_cturnover_gm_deadcrootxf_acc(p)              = matrix_cturnover_gm_deadcrootxf_acc(p) &
+                                                               + matrix_gmtransfer(p,ideadcroot_xf,ideadcroot_xf) &
+                                                               * matrix_gmturnover(p,ideadcroot_xf,ideadcroot_xf) &
+                                                               * vegmatrixc_old(ideadcroot_xf,ideadcroot_xf) * dt
+            matrix_cturnover_fire_leaf_acc(p)                    = matrix_cturnover_fire_leaf_acc(p) &
+                                                               + matrix_fitransfer(p,ileaf,ileaf) &
+                                                               * matrix_fiturnover(p,ileaf,ileaf) &
+                                                               * vegmatrixc_old(ileaf,ileaf) * dt
+            matrix_cturnover_fire_leafst_acc(p)                  = matrix_cturnover_fire_leafst_acc(p) &
+                                                               + matrix_fitransfer(p,ileaf_st,ileaf_st) &
+                                                               * matrix_fiturnover(p,ileaf_st,ileaf_st) &
+                                                               * vegmatrixc_old(ileaf_st,ileaf_st) * dt
+            matrix_cturnover_fire_leafxf_acc(p)                  = matrix_cturnover_fire_leafxf_acc(p) &
+                                                               + matrix_fitransfer(p,ileaf_xf,ileaf_xf) &
+                                                               * matrix_fiturnover(p,ileaf_xf,ileaf_xf) &
+                                                               * vegmatrixc_old(ileaf_xf,ileaf_xf) * dt
+            matrix_cturnover_fire_froot_acc(p)                   = matrix_cturnover_fire_froot_acc(p) &
+                                                               + matrix_fitransfer(p,ifroot,ifroot) &
+                                                               * matrix_fiturnover(p,ifroot,ifroot) &
+                                                               * vegmatrixc_old(ifroot,ifroot) * dt
+            matrix_cturnover_fire_frootst_acc(p)                 = matrix_cturnover_fire_frootst_acc(p) &
+                                                               + matrix_fitransfer(p,ifroot_st,ifroot_st) &
+                                                               * matrix_fiturnover(p,ifroot_st,ifroot_st) &
+                                                               * vegmatrixc_old(ifroot_st,ifroot_st) * dt
+            matrix_cturnover_fire_frootxf_acc(p)                 = matrix_cturnover_fire_frootxf_acc(p) &
+                                                               + matrix_fitransfer(p,ifroot_xf,ifroot_xf) &
+                                                               * matrix_fiturnover(p,ifroot_xf,ifroot_xf) &
+                                                               * vegmatrixc_old(ifroot_xf,ifroot_xf) * dt
+            matrix_cturnover_fire_livestem_acc(p)                = matrix_cturnover_fire_livestem_acc(p) &
+                                                               + matrix_fitransfer(p,ilivestem,ilivestem) &
+                                                               * matrix_fiturnover(p,ilivestem,ilivestem) &
+                                                               * vegmatrixc_old(ilivestem,ilivestem) * dt
+            matrix_cturnover_fire_livestemst_acc(p)              = matrix_cturnover_fire_livestemst_acc(p) &
+                                                               + matrix_fitransfer(p,ilivestem_st,ilivestem_st) &
+                                                               * matrix_fiturnover(p,ilivestem_st,ilivestem_st) &
+                                                               * vegmatrixc_old(ilivestem_st,ilivestem_st) * dt
+            matrix_cturnover_fire_livestemxf_acc(p)              = matrix_cturnover_fire_livestemxf_acc(p) &
+                                                               + matrix_fitransfer(p,ilivestem_xf,ilivestem_xf) &
+                                                               * matrix_fiturnover(p,ilivestem_xf,ilivestem_xf) &
+                                                               * vegmatrixc_old(ilivestem_xf,ilivestem_xf) * dt
+            matrix_cturnover_fire_deadstem_acc(p)                = matrix_cturnover_fire_deadstem_acc(p) &
+                                                               + matrix_fitransfer(p,ideadstem,ideadstem) &
+                                                               * matrix_fiturnover(p,ideadstem,ideadstem) &
+                                                               * vegmatrixc_old(ideadstem,ideadstem) * dt
+            matrix_cturnover_fire_deadstemst_acc(p)              = matrix_cturnover_fire_deadstemst_acc(p) &
+                                                               + matrix_fitransfer(p,ideadstem_st,ideadstem_st) &
+                                                               * matrix_fiturnover(p,ideadstem_st,ideadstem_st) &
+                                                               * vegmatrixc_old(ideadstem_st,ideadstem_st) * dt
+            matrix_cturnover_fire_deadstemxf_acc(p)              = matrix_cturnover_fire_deadstemxf_acc(p) &
+                                                               + matrix_fitransfer(p,ideadstem_xf,ideadstem_xf) &
+                                                               * matrix_fiturnover(p,ideadstem_xf,ideadstem_xf) &
+                                                               * vegmatrixc_old(ideadstem_xf,ideadstem_xf) * dt
+            matrix_cturnover_fire_livecroot_acc(p)                = matrix_cturnover_fire_livecroot_acc(p) &
+                                                               + matrix_fitransfer(p,ilivecroot,ilivecroot) &
+                                                               * matrix_fiturnover(p,ilivecroot,ilivecroot) &
+                                                               * vegmatrixc_old(ilivecroot,ilivecroot) * dt
+            matrix_cturnover_fire_livecrootst_acc(p)              = matrix_cturnover_fire_livecrootst_acc(p) &
+                                                               + matrix_fitransfer(p,ilivecroot_st,ilivecroot_st) &
+                                                               * matrix_fiturnover(p,ilivecroot_st,ilivecroot_st) &
+                                                               * vegmatrixc_old(ilivecroot_st,ilivecroot_st) * dt
+            matrix_cturnover_fire_livecrootxf_acc(p)              = matrix_cturnover_fire_livecrootxf_acc(p) &
+                                                               + matrix_fitransfer(p,ilivecroot_xf,ilivecroot_xf) &
+                                                               * matrix_fiturnover(p,ilivecroot_xf,ilivecroot_xf) &
+                                                               * vegmatrixc_old(ilivecroot_xf,ilivecroot_xf) * dt
+            matrix_cturnover_fire_deadcroot_acc(p)                = matrix_cturnover_fire_deadcroot_acc(p) &
+                                                               + matrix_fitransfer(p,ideadcroot,ideadcroot) &
+                                                               * matrix_fiturnover(p,ideadcroot,ideadcroot) &
+                                                               * vegmatrixc_old(ideadcroot,ideadcroot) * dt
+            matrix_cturnover_fire_deadcrootst_acc(p)              = matrix_cturnover_fire_deadcrootst_acc(p) &
+                                                               + matrix_fitransfer(p,ideadcroot_st,ideadcroot_st) &
+                                                               * matrix_fiturnover(p,ideadcroot_st,ideadcroot_st) &
+                                                               * vegmatrixc_old(ideadcroot_st,ideadcroot_st) * dt
+            matrix_cturnover_fire_deadcrootxf_acc(p)              = matrix_cturnover_fire_deadcrootxf_acc(p) &
+                                                               + matrix_fitransfer(p,ideadcroot_xf,ideadcroot_xf) &
+                                                               * matrix_fiturnover(p,ideadcroot_xf,ideadcroot_xf) &
+                                                               * vegmatrixc_old(ideadcroot_xf,ideadcroot_xf) * dt
             if(ivt(p) >= npcropmin)then
                matrix_cturnover_grain_acc(p)                   = matrix_cturnover_grain_acc(p) &
                                                                + vegmatrixn_transfer(igrain,igrain)
@@ -1157,6 +1350,35 @@ contains
          grainc_xfer(p)         = vegmatrixc_new(igrain_xf)
          end if
          
+         if (is_end_curr_year())then
+            tempdump(1)  = leafc(p)
+            tempdump(2)  = leafc_storage(p)
+            tempdump(3)  = leafc_xfer(p)
+            tempdump(4)  = frootc(p)
+            tempdump(5)  = frootc_storage(p)
+            tempdump(6)  = frootc_xfer(p)
+            tempdump(7)  = livestemc(p)
+            tempdump(8)  = livestemc_storage(p)
+            tempdump(9)  = livestemc_xfer(p)
+            tempdump(10) = deadstemc(p)
+            tempdump(11) = deadstemc_storage(p)
+            tempdump(12) = deadstemc_xfer(p)
+            tempdump(13) = livecrootc(p)
+            tempdump(14) = livecrootc_storage(p)
+            tempdump(15) = livecrootc_xfer(p)
+            tempdump(16) = deadcrootc(p)
+            tempdump(17) = deadcrootc_storage(p)
+            tempdump(18) = deadcrootc_xfer(p)
+            where(tempdump .lt. 1.e-8)
+               tempdump = 1.e-8
+            end where
+            
+!!!!!->           write(bounds%begp+1105000000,"(I,18E17.9)"),p,(tempdump(i),i=1,18)
+!            write(bounds%begp+1105000000,"(I,18E17.9)"),p,leafc(p),leafc_storage(p),leafc_xfer(p),frootc(p),frootc_storage(p),frootc_xfer(p),&
+!            livestemc(p),livestemc_storage(p),livestemc_xfer(p),deadstemc(p),deadstemc_storage(p),deadstemc_xfer(p),&
+!            livecrootc(p),livecrootc_storage(p),livecrootc_xfer(p),deadcrootc(p),deadcrootc_storage(p),deadcrootc_xfer(p)
+         end if
+
          if ( use_c13 ) then
           cs13_veg%leafc_patch(p)               = vegmatrixc13_new(ileaf)
           cs13_veg%leafc_storage_patch(p)       = vegmatrixc13_new(ileaf_st)
@@ -1252,6 +1474,15 @@ contains
                   matrix_calloc_acc(igrain_st)  = matrix_calloc_grainst_acc(p)               
                end if
 
+               where(matrix_calloc_acc .lt. 1.e-8)
+                  tempdump(1:18) = 0
+               else where
+                  tempdump(1:18) = matrix_calloc_acc(1:18)
+               end where
+
+!               write(bounds%begp+1101000000,"(I,18E17.9)"),p,matrix_calloc_acc
+!!!!!->               write(bounds%begp+1101000000,"(I,18E17.9)"),p,(tempdump(i),i=1,18)
+
                matrix_ctransfer_acc(ileaf_xf,ileaf_st)           = matrix_ctransfer_leafst_to_leafxf_acc(p)
                matrix_ctransfer_acc(ileaf,ileaf_xf)              = matrix_ctransfer_leafxf_to_leaf_acc(p)
                matrix_ctransfer_acc(ifroot_xf,ifroot_st)         = matrix_ctransfer_frootst_to_frootxf_acc(p)
@@ -1270,6 +1501,56 @@ contains
                end if
                matrix_ctransfer_acc(ideadstem,ilivestem)         = matrix_ctransfer_livestem_to_deadstem_acc(p)
                matrix_ctransfer_acc(ideadcroot,ilivecroot)       = matrix_ctransfer_livecroot_to_deadcroot_acc(p)
+               
+               tempdump(1)  = matrix_ctransfer_acc(ileaf_xf,ileaf_st)
+               tempdump(2)  = matrix_ctransfer_acc(ileaf,ileaf_xf)
+               tempdump(3)  = matrix_ctransfer_acc(ifroot_xf,ifroot_st)
+               tempdump(4)  = matrix_ctransfer_acc(ifroot,ifroot_xf)
+               tempdump(5)  = matrix_ctransfer_acc(ilivestem_xf,ilivestem_st)
+               tempdump(6)  = matrix_ctransfer_acc(ilivestem,ilivestem_xf)
+               tempdump(7)  = matrix_ctransfer_acc(ideadstem_xf,ideadstem_st)
+               tempdump(8)  = matrix_ctransfer_acc(ideadstem,ideadstem_xf)
+               tempdump(9)  = matrix_ctransfer_acc(ilivecroot_xf,ilivecroot_st)
+               tempdump(10) = matrix_ctransfer_acc(ilivecroot,ilivecroot_xf)
+               tempdump(11) = matrix_ctransfer_acc(ideadcroot_xf,ideadcroot_st)
+               tempdump(12) = matrix_ctransfer_acc(ideadcroot,ideadcroot_xf)
+               if(abs(matrix_cturnover_livestem_acc(p))-abs(matrix_cturnover_gm_livestem_acc(p))-abs(matrix_cturnover_fire_livestem_acc(p)) .lt. 1.e-8)then
+                  tempdump(13) = (matrix_ctransfer_acc(ideadstem,ilivestem) - matrix_ctransfer_fire_livestem_to_deadstem_acc(p))/1.e-8
+               else
+                  tempdump(13) = (matrix_ctransfer_acc(ideadstem,ilivestem) - matrix_ctransfer_fire_livestem_to_deadstem_acc(p)) &
+                  / (abs(matrix_cturnover_livestem_acc(p))-abs(matrix_cturnover_gm_livestem_acc(p))-abs(matrix_cturnover_fire_livestem_acc(p)))
+               end if
+               if(abs(matrix_cturnover_livecroot_acc(p))-abs(matrix_cturnover_gm_livecroot_acc(p))-abs(matrix_cturnover_fire_livecroot_acc(p)) .lt. 1.e-8)then
+                  tempdump(14) = (matrix_ctransfer_acc(ideadcroot,ilivecroot) - matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p))/1.e-8
+               else
+                  tempdump(14) = (matrix_ctransfer_acc(ideadcroot,ilivecroot) - matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)) &
+                  / (abs(matrix_cturnover_livecroot_acc(p))-abs(matrix_cturnover_gm_livecroot_acc(p))-abs(matrix_cturnover_fire_livecroot_acc(p)))
+               end if
+               if(abs(matrix_cturnover_fire_livestem_acc(p)) .lt. 1.e-8)then
+                  tempdump(15) = matrix_ctransfer_fire_livestem_to_deadstem_acc(p)/1.e-8
+               else
+                  tempdump(15) = matrix_ctransfer_fire_livestem_to_deadstem_acc(p)/abs(matrix_cturnover_fire_livestem_acc(p))
+               end if
+               if(abs(matrix_cturnover_fire_livecroot_acc(p)) .lt. 1.e-8)then
+                  tempdump(16) = matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)/1.e-8
+               else
+                  tempdump(16) = matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)/abs(matrix_cturnover_fire_livecroot_acc(p))
+               end if
+
+               where(abs(tempdump) .lt. 1.e-8)
+                  tempdump = 0
+               end where
+
+!!!!!->               write(bounds%begp+1102000000,"(I,16E17.9)"),p,(tempdump(i),i=1,16)
+
+!               write(bounds%begp+1102000000,"(I,16E17.9)"),p,matrix_ctransfer_acc(ileaf_xf,ileaf_st),matrix_ctransfer_acc(ileaf,ileaf_xf),&
+!                               matrix_ctransfer_acc(ifroot_xf,ifroot_st),matrix_ctransfer_acc(ifroot,ifroot_xf),&
+!                               matrix_ctransfer_acc(ilivestem_xf,ilivestem_st),matrix_ctransfer_acc(ilivestem,ilivestem_xf),&
+!                               matrix_ctransfer_acc(ideadstem_xf,ideadstem_st),matrix_ctransfer_acc(ideadstem,ideadstem_xf),&
+!                               matrix_ctransfer_acc(ilivecroot_xf,ilivecroot_st),matrix_ctransfer_acc(ilivecroot,ilivecroot_xf),&
+!                               matrix_ctransfer_acc(ideadcroot_xf,ideadcroot_st),matrix_ctransfer_acc(ideadcroot,ideadcroot_xf),&
+!                               matrix_ctransfer_acc(ideadstem,ilivestem), matrix_ctransfer_acc(ideadcroot,ilivecroot),&
+!                               matrix_ctransfer_fire_livestem_to_deadstem_acc(p),matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)
 
                matrix_ctransfer_acc(ileaf,ileaf)                 = matrix_cturnover_leaf_acc(p)               
                matrix_ctransfer_acc(ileaf_st,ileaf_st)           = matrix_cturnover_leafst_acc(p)               
@@ -1294,6 +1575,193 @@ contains
                   matrix_ctransfer_acc(igrain_st,igrain_st)      = matrix_cturnover_grainst_acc(p)               
                   matrix_ctransfer_acc(igrain_xf,igrain_xf)      = matrix_cturnover_grainxf_acc(p)               
                end if
+
+               if(leafc0(p) < 1.e-8)then
+                  tempdump(19) = matrix_cturnover_gm_leaf_acc(p)/1.e-8
+                  tempdump(37) = matrix_cturnover_fire_leaf_acc(p)/1.e-8
+                  tempdump(1)  = matrix_cturnover_leaf_acc(p)/1.e-8-tempdump(19)-tempdump(37)
+               else
+                  tempdump(19) = matrix_cturnover_gm_leaf_acc(p)/leafc0(p)
+                  tempdump(37) = matrix_cturnover_fire_leaf_acc(p)/leafc0(p)
+                  tempdump(1)  = matrix_cturnover_leaf_acc(p)/leafc0(p)-tempdump(19)-tempdump(37)
+               end if
+               if(leafc0_storage(p) < 1.e-8)then
+                  tempdump(20)  = matrix_cturnover_gm_leafst_acc(p)/1.e-8
+                  tempdump(38)  = matrix_cturnover_fire_leafst_acc(p)/1.e-8
+                  tempdump(2)   = matrix_cturnover_leafst_acc(p)/1.e-8-tempdump(20)-tempdump(38)
+               else
+                  tempdump(20)  = matrix_cturnover_gm_leafst_acc(p)/leafc0_storage(p)
+                  tempdump(38)  = matrix_cturnover_fire_leafst_acc(p)/leafc0_storage(p)
+                  tempdump(2)   = matrix_cturnover_leafst_acc(p)/leafc0_storage(p)-tempdump(20)-tempdump(38)
+               end if
+               if(leafc0_xfer(p) < 1.e-8)then
+                  tempdump(21)  = matrix_cturnover_gm_leafxf_acc(p)/1.e-8
+                  tempdump(39)  = matrix_cturnover_fire_leafxf_acc(p)/1.e-8
+                  tempdump(3)   = matrix_cturnover_leafxf_acc(p)/1.e-8-tempdump(21)-tempdump(39)
+               else
+                  tempdump(21)  = matrix_cturnover_gm_leafxf_acc(p)/leafc0_xfer(p)
+                  tempdump(39)  = matrix_cturnover_fire_leafxf_acc(p)/leafc0_xfer(p)
+                  tempdump(3)   = matrix_cturnover_leafxf_acc(p)/leafc0_xfer(p)-tempdump(21)-tempdump(39)
+               end if
+               if(frootc0(p) < 1.e-8)then
+                  tempdump(22) = matrix_cturnover_gm_froot_acc(p)/1.e-8
+                  tempdump(40) = matrix_cturnover_fire_froot_acc(p)/1.e-8
+                  tempdump(4)  = matrix_cturnover_froot_acc(p)/1.e-8-tempdump(22)-tempdump(40)
+               else
+                  tempdump(22) = matrix_cturnover_gm_froot_acc(p)/frootc0(p)
+                  tempdump(40) = matrix_cturnover_fire_froot_acc(p)/frootc0(p)
+                  tempdump(4)  = matrix_cturnover_froot_acc(p)/frootc0(p)-tempdump(22)-tempdump(40)
+               end if
+               if(frootc0_storage(p) < 1.e-8)then
+                  tempdump(23)  = matrix_cturnover_gm_frootst_acc(p)/1.e-8
+                  tempdump(41)  = matrix_cturnover_fire_frootst_acc(p)/1.e-8
+                  tempdump(5)   = matrix_cturnover_frootst_acc(p)/1.e-8-tempdump(23)-tempdump(41)
+               else
+                  tempdump(23)  = matrix_cturnover_gm_frootst_acc(p)/frootc0_storage(p)
+                  tempdump(41)  = matrix_cturnover_fire_frootst_acc(p)/frootc0_storage(p)
+                  tempdump(5)   = matrix_cturnover_frootst_acc(p)/frootc0_storage(p)-tempdump(23)-tempdump(41)
+               end if
+               if(frootc0_xfer(p) < 1.e-8)then
+                  tempdump(24)  = matrix_cturnover_gm_frootxf_acc(p)/1.e-8
+                  tempdump(42)  = matrix_cturnover_fire_frootxf_acc(p)/1.e-8
+                  tempdump(6)   = matrix_cturnover_frootxf_acc(p)/1.e-8-tempdump(24)-tempdump(42)
+               else
+                  tempdump(24)  = matrix_cturnover_gm_frootxf_acc(p)/frootc0_xfer(p)
+                  tempdump(42)  = matrix_cturnover_fire_frootxf_acc(p)/frootc0_xfer(p)
+                  tempdump(6)   = matrix_cturnover_frootxf_acc(p)/frootc0_xfer(p)-tempdump(24)-tempdump(42)
+               end if
+               if(livestemc0(p) < 1.e-8)then
+                  tempdump(25) = matrix_cturnover_gm_livestem_acc(p)/1.e-8
+                  tempdump(43) = matrix_cturnover_fire_livestem_acc(p)/1.e-8
+                  tempdump(7)  = matrix_cturnover_livestem_acc(p)/1.e-8-tempdump(25)-tempdump(43)
+               else
+                  tempdump(25) = matrix_cturnover_gm_livestem_acc(p)/livestemc0(p)
+                  tempdump(43) = matrix_cturnover_fire_livestem_acc(p)/livestemc0(p)
+                  tempdump(7)  = matrix_cturnover_livestem_acc(p)/livestemc0(p)-tempdump(25)-tempdump(43)
+               end if
+               if(livestemc0_storage(p) < 1.e-8)then
+                  tempdump(26)  = matrix_cturnover_gm_livestemst_acc(p)/1.e-8
+                  tempdump(44)  = matrix_cturnover_fire_livestemst_acc(p)/1.e-8
+                  tempdump(8)   = matrix_cturnover_livestemst_acc(p)/1.e-8-tempdump(26)-tempdump(44)
+               else
+                  tempdump(26)  = matrix_cturnover_gm_livestemst_acc(p)/livestemc0_storage(p)
+                  tempdump(44)  = matrix_cturnover_fire_livestemst_acc(p)/livestemc0_storage(p)
+                  tempdump(8)   = matrix_cturnover_livestemst_acc(p)/livestemc0_storage(p)-tempdump(26)-tempdump(44)
+               end if
+               if(livestemc0_xfer(p) < 1.e-8)then
+                  tempdump(27)  = matrix_cturnover_gm_livestemxf_acc(p)/1.e-8
+                  tempdump(45)  = matrix_cturnover_fire_livestemxf_acc(p)/1.e-8
+                  tempdump(9)   = matrix_cturnover_livestemxf_acc(p)/1.e-8-tempdump(27)-tempdump(45)
+               else
+                  tempdump(27)  = matrix_cturnover_gm_livestemxf_acc(p)/livestemc0_xfer(p)
+                  tempdump(45)  = matrix_cturnover_fire_livestemxf_acc(p)/livestemc0_xfer(p)
+                  tempdump(9)   = matrix_cturnover_livestemxf_acc(p)/livestemc0_xfer(p)-tempdump(27)-tempdump(45)
+               end if
+               if(deadstemc0(p) < 1.e-8)then
+                  tempdump(28) = matrix_cturnover_gm_deadstem_acc(p)/1.e-8
+                  tempdump(46) = matrix_cturnover_fire_deadstem_acc(p)/1.e-8
+                  tempdump(10) = matrix_cturnover_deadstem_acc(p)/1.e-8-tempdump(28)-tempdump(46)
+               else
+                  tempdump(28) = matrix_cturnover_gm_deadstem_acc(p)/deadstemc0(p)
+                  tempdump(46) = matrix_cturnover_fire_deadstem_acc(p)/deadstemc0(p)
+                  tempdump(10) = matrix_cturnover_deadstem_acc(p)/deadstemc0(p)-tempdump(28)-tempdump(46)
+               end if
+               if(deadstemc0_storage(p) < 1.e-8)then
+                  tempdump(29)  = matrix_cturnover_gm_deadstemst_acc(p)/1.e-8
+                  tempdump(47)  = matrix_cturnover_fire_deadstemst_acc(p)/1.e-8
+                  tempdump(11)  = matrix_cturnover_deadstemst_acc(p)/1.e-8-tempdump(29)-tempdump(47)
+               else
+                  tempdump(29)  = matrix_cturnover_gm_deadstemst_acc(p)/deadstemc0_storage(p)
+                  tempdump(47)  = matrix_cturnover_fire_deadstemst_acc(p)/deadstemc0_storage(p)
+                  tempdump(11)  = matrix_cturnover_deadstemst_acc(p)/deadstemc0_storage(p)-tempdump(29)-tempdump(47)
+               end if
+               if(deadstemc0_xfer(p) < 1.e-8)then
+                  tempdump(30)  = matrix_cturnover_gm_deadstemxf_acc(p)/1.e-8
+                  tempdump(48)  = matrix_cturnover_fire_deadstemxf_acc(p)/1.e-8
+                  tempdump(12)  = matrix_cturnover_deadstemxf_acc(p)/1.e-8-tempdump(30)-tempdump(48)
+               else
+                  tempdump(30)  = matrix_cturnover_gm_deadstemxf_acc(p)/deadstemc0_xfer(p)
+                  tempdump(48)  = matrix_cturnover_fire_deadstemxf_acc(p)/deadstemc0_xfer(p)
+                  tempdump(12)  = matrix_cturnover_deadstemxf_acc(p)/deadstemc0_xfer(p)-tempdump(30)-tempdump(48)
+               end if
+               if(livecrootc0(p) < 1.e-8)then
+                  tempdump(31) = matrix_cturnover_gm_livecroot_acc(p)/1.e-8
+                  tempdump(49) = matrix_cturnover_fire_livecroot_acc(p)/1.e-8
+                  tempdump(13) = matrix_cturnover_livecroot_acc(p)/1.e-8-tempdump(31)-tempdump(49)
+               else
+                  tempdump(31) = matrix_cturnover_gm_livecroot_acc(p)/livecrootc0(p)
+                  tempdump(49) = matrix_cturnover_fire_livecroot_acc(p)/livecrootc0(p)
+                  tempdump(13) = matrix_cturnover_livecroot_acc(p)/livecrootc0(p)-tempdump(31)-tempdump(49)
+               end if
+               if(livecrootc0_storage(p) < 1.e-8)then
+                  tempdump(32)  = matrix_cturnover_gm_livecrootst_acc(p)/1.e-8
+                  tempdump(50)  = matrix_cturnover_fire_livecrootst_acc(p)/1.e-8
+                  tempdump(14)  = matrix_cturnover_livecrootst_acc(p)/1.e-8-tempdump(32)-tempdump(50)
+               else
+                  tempdump(32)  = matrix_cturnover_gm_livecrootst_acc(p)/livecrootc0_storage(p)
+                  tempdump(50)  = matrix_cturnover_fire_livecrootst_acc(p)/livecrootc0_storage(p)
+                  tempdump(14)  = matrix_cturnover_livecrootst_acc(p)/livecrootc0_storage(p)-tempdump(32)-tempdump(50)
+               end if
+               if(livecrootc0_xfer(p) < 1.e-8)then
+                  tempdump(33)  = matrix_cturnover_gm_livecrootxf_acc(p)/1.e-8
+                  tempdump(51)  = matrix_cturnover_fire_livecrootxf_acc(p)/1.e-8
+                  tempdump(15)  = matrix_cturnover_livecrootxf_acc(p)/1.e-8-tempdump(33)-tempdump(51)
+               else
+                  tempdump(33)  = matrix_cturnover_gm_livecrootxf_acc(p)/livecrootc0_xfer(p)
+                  tempdump(51)  = matrix_cturnover_fire_livecrootxf_acc(p)/livecrootc0_xfer(p)
+                  tempdump(15)  = matrix_cturnover_livecrootxf_acc(p)/livecrootc0_xfer(p)-tempdump(33)-tempdump(51)
+               end if
+               if(deadcrootc0(p) < 1.e-8)then
+                  tempdump(34) = matrix_cturnover_gm_deadcroot_acc(p)/1.e-8
+                  tempdump(52) = matrix_cturnover_fire_deadcroot_acc(p)/1.e-8
+                  tempdump(16) = matrix_cturnover_deadcroot_acc(p)/1.e-8-tempdump(34)-tempdump(52)
+               else
+                  tempdump(34) = matrix_cturnover_gm_deadcroot_acc(p)/deadcrootc0(p)
+                  tempdump(52) = matrix_cturnover_fire_deadcroot_acc(p)/deadcrootc0(p)
+                  tempdump(16) = matrix_cturnover_deadcroot_acc(p)/deadcrootc0(p)-tempdump(34)-tempdump(52)
+               end if
+               if(deadcrootc0_storage(p) < 1.e-8)then
+                  tempdump(35)  = matrix_cturnover_gm_deadcrootst_acc(p)/1.e-8
+                  tempdump(53)  = matrix_cturnover_fire_deadcrootst_acc(p)/1.e-8
+                  tempdump(17)  = matrix_cturnover_deadcrootst_acc(p)/1.e-8-tempdump(35)-tempdump(53)
+               else
+                  tempdump(35)  = matrix_cturnover_gm_deadcrootst_acc(p)/deadcrootc0_storage(p)
+                  tempdump(53)  = matrix_cturnover_fire_deadcrootst_acc(p)/deadcrootc0_storage(p)
+                  tempdump(17)  = matrix_cturnover_deadcrootst_acc(p)/deadcrootc0_storage(p)-tempdump(35)-tempdump(53)
+               end if
+               if(deadcrootc0_xfer(p) < 1.e-8)then
+                  tempdump(36)  = matrix_cturnover_gm_deadcrootxf_acc(p)/1.e-8
+                  tempdump(54)  = matrix_cturnover_fire_deadcrootxf_acc(p)/1.e-8
+                  tempdump(18)  = matrix_cturnover_deadcrootxf_acc(p)/1.e-8-tempdump(36)-tempdump(54)
+               else
+                  tempdump(36)  = matrix_cturnover_gm_deadcrootxf_acc(p)/deadcrootc0_xfer(p)
+                  tempdump(54)  = matrix_cturnover_fire_deadcrootxf_acc(p)/deadcrootc0_xfer(p)
+                  tempdump(18)  = matrix_cturnover_deadcrootxf_acc(p)/deadcrootc0_xfer(p)-tempdump(36)-tempdump(54)
+               end if
+               
+               where(abs(tempdump) .lt. 1.e-8)
+                  tempdump = 0
+               endwhere
+
+!!!!!->               write(bounds%begp+1103000000,"(I,54E17.9)"),p,(tempdump(i),i=1,54)
+!               write(bounds%begp+1103000000,"(I,54E17.9)"),p,matrix_cturnover_leaf_acc(p),matrix_cturnover_leafst_acc(p),matrix_cturnover_leafxf_acc(p),&
+!                               matrix_cturnover_froot_acc(p),matrix_cturnover_frootst_acc(p),matrix_cturnover_frootxf_acc(p),&
+!                               matrix_cturnover_livestem_acc(p),matrix_cturnover_livestemst_acc(p),matrix_cturnover_livestemxf_acc(p),&
+!                               matrix_cturnover_deadstem_acc(p),matrix_cturnover_deadstemst_acc(p),matrix_cturnover_deadstemxf_acc(p),&
+!                               matrix_cturnover_livecroot_acc(p),matrix_cturnover_livecrootst_acc(p),matrix_cturnover_livecrootxf_acc(p),&
+!                               matrix_cturnover_deadcroot_acc(p),matrix_cturnover_deadcrootst_acc(p),matrix_cturnover_deadcrootxf_acc(p),&
+!                               matrix_cturnover_gm_leaf_acc(p),matrix_cturnover_gm_leafst_acc(p),matrix_cturnover_gm_leafxf_acc(p),&
+!                               matrix_cturnover_gm_froot_acc(p),matrix_cturnover_gm_frootst_acc(p),matrix_cturnover_gm_frootxf_acc(p),&
+!                               matrix_cturnover_gm_livestem_acc(p),matrix_cturnover_gm_livestemst_acc(p),matrix_cturnover_gm_livestemxf_acc(p),&
+!                               matrix_cturnover_gm_deadstem_acc(p),matrix_cturnover_gm_deadstemst_acc(p),matrix_cturnover_gm_deadstemxf_acc(p),&
+!                               matrix_cturnover_gm_livecroot_acc(p),matrix_cturnover_gm_livecrootst_acc(p),matrix_cturnover_gm_livecrootxf_acc(p),&
+!                               matrix_cturnover_gm_deadcroot_acc(p),matrix_cturnover_gm_deadcrootst_acc(p),matrix_cturnover_gm_deadcrootxf_acc(p),&
+!                               matrix_cturnover_fire_leaf_acc(p),matrix_cturnover_fire_leafst_acc(p),matrix_cturnover_fire_leafxf_acc(p),&
+!                               matrix_cturnover_fire_froot_acc(p),matrix_cturnover_fire_frootst_acc(p),matrix_cturnover_fire_frootxf_acc(p),&
+!                               matrix_cturnover_fire_livestem_acc(p),matrix_cturnover_fire_livestemst_acc(p),matrix_cturnover_fire_livestemxf_acc(p),&
+!                               matrix_cturnover_fire_deadstem_acc(p),matrix_cturnover_fire_deadstemst_acc(p),matrix_cturnover_fire_deadstemxf_acc(p),&
+!                               matrix_cturnover_fire_livecroot_acc(p),matrix_cturnover_fire_livecrootst_acc(p),matrix_cturnover_fire_livecrootxf_acc(p),&
+!                               matrix_cturnover_fire_deadcroot_acc(p),matrix_cturnover_fire_deadcrootst_acc(p),matrix_cturnover_fire_deadcrootxf_acc(p)            
 
 
                matrix_nalloc_acc(ileaf)         = matrix_nalloc_leaf_acc(p)               
@@ -1391,6 +1859,9 @@ contains
 !              end if
                !print*,'before divided by retransn0,matrix_ntransfer_acc,matrix_nalloc_acc',deadcrootc0(p),matrix_ctransfer_acc(1:nvegnpool,ideadcroot),matrix_calloc_acc(ideadcroot)
                !print*,'end of yr,deadcrootc0',deadcrootc0(p), matrix_ctransfer_acc(1:nvegcpool,ideadcroot)
+               !print*,'before divided by leafc0,transfer out',p,matrix_ctransfer_acc(1:nvegcpool,ileaf_st),leafc0_storage(p)
+               !print*,'before divided by leafc0,tranfer in',p,matrix_ctransfer_acc(ileaf_st,1:nvegcpool),leafc0_storage(p)
+               !print*,'alloc',p,matrix_calloc_acc(:)
                matrix_ctransfer_acc(1:nvegcpool,ileaf)         = matrix_ctransfer_acc(1:nvegcpool,ileaf)         / leafc0(p)
                matrix_ctransfer_acc(1:nvegcpool,ileaf_st)      = matrix_ctransfer_acc(1:nvegcpool,ileaf_st)      / leafc0_storage(p)
                matrix_ctransfer_acc(1:nvegcpool,ileaf_xf)      = matrix_ctransfer_acc(1:nvegcpool,ileaf_xf)      / leafc0_xfer(p)
@@ -1455,47 +1926,53 @@ contains
 !          if(p .eq.7) print*,'input', matrix_alloc(p,ideadstem)* matrix_Cinput(p) * dt, livestemc(p)*((matrix_phtransfer(p,ideadstem,ilivestem)*matrix_phturnover(p,ilivestem,ilivestem)) &
 !                                                                                             + (matrix_fitransfer(p,ideadstem,ilivestem)*matrix_fiturnover(p,ilivestem,ilivestem)))   
  
+!               print*,'leafc_storage_cap',vegmatrixc_rt(ileaf_st)
 !          if(p .eq.7)print*,'output',deadstemc(p)*((matrix_phtransfer(p,iout,ideadstem)*matrix_phturnover(p,ideadstem,ideadstem))+ (matrix_fitransfer(p,iout,ideadstem)*matrix_fiturnover(p,ideadstem,ideadstem)))
-               if(isspinup)then
+               if(is_first_step_of_this_run_segment())then
+!!!!!->                   write(bounds%begp+1104000000,"(2I,4E17.9)"),p,patch%itype(p),patch%wtgcell(p),grc%latdeg(patch%gridcell(p)),grc%londeg(patch%gridcell(p)),grc%area(patch%gridcell(p))
+               end if
+                  
+               if(isspinup .and. .not. is_first_step_of_this_run_segment())then
                leafc(p)                  = vegmatrixc_rt(ileaf)
-!               leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
+               leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
 !               leafc_xfer(p)             = vegmatrixc_rt(ileaf_xf)
                frootc(p)                 = vegmatrixc_rt(ifroot)
-!               frootc_storage(p)         = vegmatrixc_rt(ifroot_st)
+               frootc_storage(p)         = vegmatrixc_rt(ifroot_st)
 !               frootc_xfer(p)            = vegmatrixc_rt(ifroot_xf)
                livestemc(p)              = vegmatrixc_rt(ilivestem)
-!               livestemc_storage(p)      = vegmatrixc_rt(ilivestem_st)
+               livestemc_storage(p)      = vegmatrixc_rt(ilivestem_st)
 !               livestemc_xfer(p)         = vegmatrixc_rt(ilivestem_xf)
                deadstemc(p)              = vegmatrixc_rt(ideadstem)
-!               deadstemc_storage(p)      = vegmatrixc_rt(ideadstem_st)
+               deadstemc_storage(p)      = vegmatrixc_rt(ideadstem_st)
 !               deadstemc_xfer(p)         = vegmatrixc_rt(ideadstem_xf)
                livecrootc(p)              = vegmatrixc_rt(ilivecroot)
-!               livecrootc_storage(p)      = vegmatrixc_rt(ilivecroot_st)
+               livecrootc_storage(p)      = vegmatrixc_rt(ilivecroot_st)
 !               livecrootc_xfer(p)         = vegmatrixc_rt(ilivecroot_xf)   
                deadcrootc(p)              = vegmatrixc_rt(ideadcroot)
-!               deadcrootc_storage(p)      = vegmatrixc_rt(ideadcroot_st)
+               deadcrootc_storage(p)      = vegmatrixc_rt(ideadcroot_st)
 !               deadcrootc_xfer(p)         = vegmatrixc_rt(ideadcroot_xf) 
                if(ivt(p) >= npcropmin)then
                grainc(p)                 = vegmatrixc_rt(igrain)
+               grainc_storage(p)         = vegmatrixc_rt(igrain_st)
                end if
 !               print *, 'leafacc',p,vegmatrixc_rt(:),vegmatrixn_rt(:)
                leafn(p)                  = vegmatrixn_rt(ileaf)
-!               leafn_storage(p)          = vegmatrixn_rt(ileaf_st)
+               leafn_storage(p)          = vegmatrixn_rt(ileaf_st)
 !               leafn_xfer(p)             = vegmatrixn_rt(ileaf_xf)
                frootn(p)                 = vegmatrixn_rt(ifroot)
-!               frootn_storage(p)         = vegmatrixn_rt(ifroot_st)
+               frootn_storage(p)         = vegmatrixn_rt(ifroot_st)
 !               frootn_xfer(p)            = vegmatrixn_rt(ifroot_xf)
                livestemn(p)              = vegmatrixn_rt(ilivestem)
-!               livestemn_storage(p)      = vegmatrixn_rt(ilivestem_st)
+               livestemn_storage(p)      = vegmatrixn_rt(ilivestem_st)
 !               livestemn_xfer(p)         = vegmatrixn_rt(ilivestem_xf)
                deadstemn(p)              = vegmatrixn_rt(ideadstem)
-!               deadstemn_storage(p)      = vegmatrixn_rt(ideadstem_st)
+               deadstemn_storage(p)      = vegmatrixn_rt(ideadstem_st)
 !               deadstemn_xfer(p)         = vegmatrixn_rt(ideadstem_xf)
                livecrootn(p)              = vegmatrixn_rt(ilivecroot)
-!               livecrootn_storage(p)      = vegmatrixn_rt(ilivecroot_st)
+               livecrootn_storage(p)      = vegmatrixn_rt(ilivecroot_st)
 !               livecrootn_xfer(p)         = vegmatrixn_rt(ilivecroot_xf)   
                deadcrootn(p)              = vegmatrixn_rt(ideadcroot)
-!               deadcrootn_storage(p)      = vegmatrixn_rt(ideadcroot_st)
+               deadcrootn_storage(p)      = vegmatrixn_rt(ideadcroot_st)
 !               deadcrootn_xfer(p)         = vegmatrixn_rt(ideadcroot_xf)
                if(ivt(p) >= npcropmin)then
                grainn(p)                  = vegmatrixn_rt(igrain)
@@ -1630,6 +2107,8 @@ contains
                end if
                matrix_ctransfer_livestem_to_deadstem_acc(p) = 0._r8
                matrix_ctransfer_livecroot_to_deadcroot_acc(p) = 0._r8
+               matrix_ctransfer_fire_livestem_to_deadstem_acc(p) = 0._r8
+               matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p) = 0._r8
 
                matrix_cturnover_leaf_acc(p)                = 0._r8
                matrix_cturnover_leafst_acc(p)                = 0._r8
@@ -1649,6 +2128,42 @@ contains
                matrix_cturnover_deadcroot_acc(p)                = 0._r8
                matrix_cturnover_deadcrootst_acc(p)                = 0._r8
                matrix_cturnover_deadcrootxf_acc(p)                = 0._r8
+               matrix_cturnover_gm_leaf_acc(p)                = 0._r8
+               matrix_cturnover_gm_leafst_acc(p)                = 0._r8
+               matrix_cturnover_gm_leafxf_acc(p)                = 0._r8
+               matrix_cturnover_gm_froot_acc(p)                = 0._r8
+               matrix_cturnover_gm_frootst_acc(p)                = 0._r8
+               matrix_cturnover_gm_frootxf_acc(p)                = 0._r8
+               matrix_cturnover_gm_livestem_acc(p)                = 0._r8
+               matrix_cturnover_gm_livestemst_acc(p)                = 0._r8
+               matrix_cturnover_gm_livestemxf_acc(p)                = 0._r8
+               matrix_cturnover_gm_deadstem_acc(p)                = 0._r8
+               matrix_cturnover_gm_deadstemst_acc(p)                = 0._r8
+               matrix_cturnover_gm_deadstemxf_acc(p)                = 0._r8
+               matrix_cturnover_gm_livecroot_acc(p)                = 0._r8
+               matrix_cturnover_gm_livecrootst_acc(p)                = 0._r8
+               matrix_cturnover_gm_livecrootxf_acc(p)                = 0._r8
+               matrix_cturnover_gm_deadcroot_acc(p)                = 0._r8
+               matrix_cturnover_gm_deadcrootst_acc(p)                = 0._r8
+               matrix_cturnover_gm_deadcrootxf_acc(p)                = 0._r8
+               matrix_cturnover_fire_leaf_acc(p)                = 0._r8
+               matrix_cturnover_fire_leafst_acc(p)                = 0._r8
+               matrix_cturnover_fire_leafxf_acc(p)                = 0._r8
+               matrix_cturnover_fire_froot_acc(p)                = 0._r8
+               matrix_cturnover_fire_frootst_acc(p)                = 0._r8
+               matrix_cturnover_fire_frootxf_acc(p)                = 0._r8
+               matrix_cturnover_fire_livestem_acc(p)                = 0._r8
+               matrix_cturnover_fire_livestemst_acc(p)                = 0._r8
+               matrix_cturnover_fire_livestemxf_acc(p)                = 0._r8
+               matrix_cturnover_fire_deadstem_acc(p)                = 0._r8
+               matrix_cturnover_fire_deadstemst_acc(p)                = 0._r8
+               matrix_cturnover_fire_deadstemxf_acc(p)                = 0._r8
+               matrix_cturnover_fire_livecroot_acc(p)                = 0._r8
+               matrix_cturnover_fire_livecrootst_acc(p)                = 0._r8
+               matrix_cturnover_fire_livecrootxf_acc(p)                = 0._r8
+               matrix_cturnover_fire_deadcroot_acc(p)                = 0._r8
+               matrix_cturnover_fire_deadcrootst_acc(p)                = 0._r8
+               matrix_cturnover_fire_deadcrootxf_acc(p)                = 0._r8
                if(ivt(p) >= npcropmin)then
                   matrix_cturnover_grain_acc(p)               = 0._r8 
                   matrix_cturnover_grainst_acc(p)                = 0._r8

@@ -827,18 +827,18 @@ contains
 
     call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
+         soilbiogeochem_carbonflux_inst,bounds%begp)
 
     if ( use_c13 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
-            c13_soilbiogeochem_carbonflux_inst)
+            c13_soilbiogeochem_carbonflux_inst,bounds%begp)
     end if
 
     if ( use_c14 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-            c14_soilbiogeochem_carbonflux_inst)
+            c14_soilbiogeochem_carbonflux_inst,bounds%begp)
 
        call C14Decay(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)

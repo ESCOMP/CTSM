@@ -345,11 +345,11 @@ contains
 
        call init_decomp_cascade_constants()
        if (use_century_decomp) then
-          print*,'before init_decompcascade_bgc'
+!         print*,'before init_decompcascade_bgc'
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
        else 
-          print*,'before init_decompcascade_cn'
+!         print*,'before init_decompcascade_cn'
           call init_decompcascade_cn(bounds, soilbiogeochem_state_inst)
        end if
 

@@ -392,8 +392,8 @@ contains
 
     ! Get time as of beginning of time step
     call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
+   !print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
     !print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
-!    print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
 
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
