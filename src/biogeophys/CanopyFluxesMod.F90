@@ -452,9 +452,7 @@ contains
          t_veg                  => temperature_inst%t_veg_patch                 , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin)                                       
          t_ref2m                => temperature_inst%t_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)                           
          t_ref2m_r              => temperature_inst%t_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface air temperature (Kelvin)                     
-!ABT
          t_skin_patch           => temperature_inst%t_skin_patch                , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)  
-!ABT
 
          frac_h2osfc            => waterstate_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
          fwet                   => waterstate_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
@@ -1238,13 +1236,11 @@ contains
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*tlbef(p)**3*(tlbef(p) + &
               4._r8*dt_veg(p)) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
 
-!ABT
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
          ! The weight is the so-called vegetation emissivity, but not that emv is actually an attentuation 
          ! function that goes to zero as LAI (ELAI + ESAI) go to zero.
 
          t_skin_patch(p)  =  emv(p)*t_veg(p)  +  (1._r8 - emv(p))*sqrt(sqrt(lw_grnd))
-!ABT
 
          ! Derivative of soil energy flux with respect to soil temperature
 

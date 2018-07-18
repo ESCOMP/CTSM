@@ -102,10 +102,8 @@ contains
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
 
          emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
-!ABT
 !         emv                     => temperature_inst%emv_patch              , & ! Input:  [real(r8) (:)   ]  vegetation emissivity
 !         t_veg                   => temperature_inst%t_veg_patch            , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin) 
-!ABT
          t_skin_patch            => temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
          t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  surface water temperature               
          tssbef                  => temperature_inst%t_ssbef_col            , & ! Input:  [real(r8) (:,:) ]  soil/snow temperature before update   
@@ -414,7 +412,6 @@ contains
                  + 4._r8*emg(c)*sb*t_grnd0(c)**3*tinc(c)
 
 
-!ABT
             ! Calculate the skin temperature as a weighted sum of all the surface contributions (surface water table, snow, etc...)
             ! Note: This is the bare ground calculation of skin temperature
             !       The Urban and Vegetation are done in other place.  Urban=Later in this function Veg=CanopyFluxMod
@@ -424,7 +421,6 @@ contains
 !                                           emv(p) *   frac_veg_nosno(p)  * t_veg(p)
 !            end if
              if(frac_veg_nosno(p).eq.0)  t_skin_patch(p) = sqrt(sqrt(lw_grnd))
-!ABT
 
             eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(c)
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
