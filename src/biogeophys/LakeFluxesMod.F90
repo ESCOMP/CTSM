@@ -182,6 +182,7 @@ contains
          
          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col         , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
          h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         t_skin_patch     =>    temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
 
          t_lake           =>    temperature_inst%t_lake_col            , & ! Input:  [real(r8) (:,:) ]  lake temperature (Kelvin)                       
          t_soisno         =>    temperature_inst%t_soisno_col          , & ! Input:  [real(r8) (:,:) ]  soil (or snow) temperature (Kelvin)             
@@ -657,7 +658,7 @@ contains
          t_veg(p) = forc_t(c)
          eflx_lwrad_net(p)  = eflx_lwrad_out(p) - forc_lwrad(c)
          qflx_prec_grnd(p) = forc_rain(c) + forc_snow(c)
-
+         t_skin_patch(p) = t_veg(p)         
       end do
 
     end associate

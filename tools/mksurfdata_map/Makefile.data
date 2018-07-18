@@ -54,17 +54,22 @@ endif
 
 MKSURFDATA = $(BATCHJOBS) $(PWD)/mksurfdata.pl
 
-STANDARD_RES = 360x720cru,48x96,0.9x1.25,1.9x2.5,10x15,ne30np4
+# f19 and f09 are standard resolutions, f10 is used for testing, f45 is used for FATES
+# ne30np4 is standard resolution for SE dycore in CAM, T31 is for paleo, 360x720cru is for same resolution as forcing data
+STANDARD_RES = 360x720cru,48x96,0.9x1.25,1.9x2.5,10x15,4x5,ne30np4
 
+# ne120np4 is for high resolution SE dycore, ne16 is for testing SE dycore
+# T42 is for SCAM
+# f05 is needed for running full chemistry model
 STANDARD = \
 	global-present \
-	global-present-f45 \
+	global-present-f05 \
 	global-present-ne16np4 \
 	global-present-ne120np4 \
 	global-present-T42 \
 	global-historical \
 	global-historical-ne120np4 \
-	global-transient-f45 \
+	global-transient-f05 \
 	global-transient \
 	global-transient-ne120np4
 
@@ -78,7 +83,7 @@ TROPICS = \
 
 CROP = \
 	crop-global-present \
-	crop-global-present-f45 \
+	crop-global-present-f05 \
 	crop-global-present-ne16np4 \
 	crop-global-present-ne120np4 \
 	crop-numa-present \
@@ -86,9 +91,9 @@ CROP = \
 	crop-smallville \
 	crop-smallville-historical \
 	crop-global-historical \
-	crop-global-historical-f45 \
+	crop-global-historical-f05 \
 	crop-global-historical-ne120np4 \
-	crop-global-transient-f45 \
+	crop-global-transient-f05 \
 	crop-global-transient \
 	crop-global-transient-ne120np4
 
@@ -107,9 +112,10 @@ standard : $(STANDARD)
 global-present : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res $(STANDARD_RES) $(BACKGROUND)
 
-global-present-f45 : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850,2000 -res 4x5 $(BACKGROUND)
+global-present-f05 : FORCE
+	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850,2000 -res 0.47x0.63 $(BACKGROUND)
 
+# T42 is needed for SCAM
 global-present-T42 : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res 64x128 $(BACKGROUND)
 
@@ -134,8 +140,8 @@ global-transient : FORCE
 global-transient-ne120np4 : FORCE
 	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2000 -res ne120np4 $(BACKGROUND)
 
-global-transient-f45 : FORCE
-	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2000 -res 4x5 $(BACKGROUND)
+global-transient-f05 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2000 -res 0.47x0.63 $(BACKGROUND)
 
 #
 # tropics
@@ -171,8 +177,8 @@ crop-global-present : FORCE
 crop-global-present-0.125 : FORCE
 	$(MKSURFDATA) -hirespft -glc_nec 10 -y 2000 -r 0.125x0.125 $(BACKGROUND)
 
-crop-global-present-f45 : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850,2000 -res 4x5 $(BACKGROUND)
+crop-global-present-f05 : FORCE
+	$(MKSURFDATA) -glc_nec 10 -y 1850,2000 -res 0.47x0.63 $(BACKGROUND)
 
 crop-numa-present : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 2000 -r 1x1_numaIA $(BACKGROUND)
@@ -202,8 +208,8 @@ crop-smallville-historical : FORCE
 crop-global-historical : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -res $(STANDARD_RES) $(BACKGROUND)
 
-crop-global-historical-f45 : FORCE
-	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 4x5 $(BACKGROUND)
+crop-global-historical-f05 : FORCE
+	$(MKSURFDATA) -glc_nec 10 -y 1850 -r 0.47x0.63 $(BACKGROUND)
 
 crop-global-historical-ne120np4 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -res ne120np4 $(BACKGROUND)
@@ -214,8 +220,8 @@ crop-global-transient: FORCE
 crop-global-transient-ne120np4 : FORCE
 	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res ne120np4 $(BACKGROUND)
 
-crop-global-transient-f45 : FORCE
-	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res 4x5 $(BACKGROUND)
+crop-global-transient-f05 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res 0.47x0.63 $(BACKGROUND)
 #
 # urban
 #
