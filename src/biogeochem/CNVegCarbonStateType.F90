@@ -180,6 +180,8 @@ module CNVegCarbonStateType
      real(r8), pointer :: matrix_ctransfer_grainxf_to_grain_acc_patch           (:) 
      real(r8), pointer :: matrix_ctransfer_livestem_to_deadstem_acc_patch       (:) 
      real(r8), pointer :: matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (:) 
+     real(r8), pointer :: matrix_ctransfer_fire_livestem_to_deadstem_acc_patch       (:) 
+     real(r8), pointer :: matrix_ctransfer_fire_livecroot_to_deadcroot_acc_patch     (:) 
 
      real(r8), pointer :: matrix_cturnover_leaf_acc_patch              (:) ! (gC/m2) leaf C
      real(r8), pointer :: matrix_cturnover_leafst_acc_patch      (:) ! (gC/m2) leaf C storage
@@ -199,6 +201,42 @@ module CNVegCarbonStateType
      real(r8), pointer :: matrix_cturnover_deadcroot_acc_patch         (:) ! (gC/m2) leaf C
      real(r8), pointer :: matrix_cturnover_deadcrootst_acc_patch (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: matrix_cturnover_deadcrootxf_acc_patch    (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_gm_leaf_acc_patch              (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_gm_leafst_acc_patch      (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_gm_leafxf_acc_patch         (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_gm_froot_acc_patch             (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_gm_frootst_acc_patch     (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_gm_frootxf_acc_patch        (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_gm_livestem_acc_patch          (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_gm_livestemst_acc_patch  (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_gm_livestemxf_acc_patch     (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_gm_deadstem_acc_patch          (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_gm_deadstemst_acc_patch  (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_gm_deadstemxf_acc_patch     (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_gm_livecroot_acc_patch         (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_gm_livecrootst_acc_patch (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_gm_livecrootxf_acc_patch    (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_gm_deadcroot_acc_patch         (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_gm_deadcrootst_acc_patch (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_gm_deadcrootxf_acc_patch    (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_fire_leaf_acc_patch              (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_fire_leafst_acc_patch      (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_fire_leafxf_acc_patch         (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_fire_froot_acc_patch             (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_fire_frootst_acc_patch     (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_fire_frootxf_acc_patch        (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_fire_livestem_acc_patch          (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_fire_livestemst_acc_patch  (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_fire_livestemxf_acc_patch     (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_fire_deadstem_acc_patch          (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_fire_deadstemst_acc_patch  (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_fire_deadstemxf_acc_patch     (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_fire_livecroot_acc_patch         (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_fire_livecrootst_acc_patch (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_fire_livecrootxf_acc_patch    (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cturnover_fire_deadcroot_acc_patch         (:) ! (gC/m2) leaf C
+     real(r8), pointer :: matrix_cturnover_fire_deadcrootst_acc_patch (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: matrix_cturnover_fire_deadcrootxf_acc_patch    (:) ! (gC/m2) leaf C transfer
      real(r8), pointer :: matrix_cturnover_grain_acc_patch         (:) ! (gC/m2) leaf C
      real(r8), pointer :: matrix_cturnover_grainst_acc_patch (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: matrix_cturnover_grainxf_acc_patch    (:) ! (gC/m2) leaf C transfer
@@ -496,6 +534,10 @@ contains
        this%matrix_ctransfer_livestem_to_deadstem_acc_patch       (:) = nan
        allocate(this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (begp:endp))
        this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (:) = nan
+       allocate(this%matrix_ctransfer_fire_livestem_to_deadstem_acc_patch       (begp:endp))
+       this%matrix_ctransfer_fire_livestem_to_deadstem_acc_patch       (:) = nan
+       allocate(this%matrix_ctransfer_fire_livecroot_to_deadcroot_acc_patch     (begp:endp))
+       this%matrix_ctransfer_fire_livecroot_to_deadcroot_acc_patch     (:) = nan
 
        allocate(this%matrix_cturnover_leaf_acc_patch              (begp:endp)) ; this%matrix_cturnover_leaf_acc_patch           (:) = nan
        allocate(this%matrix_cturnover_leafst_acc_patch            (begp:endp)) ; this%matrix_cturnover_leafst_acc_patch         (:) = nan
@@ -515,6 +557,42 @@ contains
        allocate(this%matrix_cturnover_deadcroot_acc_patch         (begp:endp)) ; this%matrix_cturnover_deadcroot_acc_patch      (:) = nan
        allocate(this%matrix_cturnover_deadcrootst_acc_patch       (begp:endp)) ; this%matrix_cturnover_deadcrootst_acc_patch    (:) = nan
        allocate(this%matrix_cturnover_deadcrootxf_acc_patch       (begp:endp)) ; this%matrix_cturnover_deadcrootxf_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_gm_leaf_acc_patch              (begp:endp)) ; this%matrix_cturnover_gm_leaf_acc_patch           (:) = nan
+       allocate(this%matrix_cturnover_gm_leafst_acc_patch            (begp:endp)) ; this%matrix_cturnover_gm_leafst_acc_patch         (:) = nan
+       allocate(this%matrix_cturnover_gm_leafxf_acc_patch            (begp:endp)) ; this%matrix_cturnover_gm_leafxf_acc_patch         (:) = nan
+       allocate(this%matrix_cturnover_gm_froot_acc_patch             (begp:endp)) ; this%matrix_cturnover_gm_froot_acc_patch          (:) = nan
+       allocate(this%matrix_cturnover_gm_frootst_acc_patch           (begp:endp)) ; this%matrix_cturnover_gm_frootst_acc_patch        (:) = nan
+       allocate(this%matrix_cturnover_gm_frootxf_acc_patch           (begp:endp)) ; this%matrix_cturnover_gm_frootxf_acc_patch        (:) = nan
+       allocate(this%matrix_cturnover_gm_livestem_acc_patch          (begp:endp)) ; this%matrix_cturnover_gm_livestem_acc_patch       (:) = nan
+       allocate(this%matrix_cturnover_gm_livestemst_acc_patch        (begp:endp)) ; this%matrix_cturnover_gm_livestemst_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_gm_livestemxf_acc_patch        (begp:endp)) ; this%matrix_cturnover_gm_livestemxf_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_gm_deadstem_acc_patch          (begp:endp)) ; this%matrix_cturnover_gm_deadstem_acc_patch       (:) = nan
+       allocate(this%matrix_cturnover_gm_deadstemst_acc_patch        (begp:endp)) ; this%matrix_cturnover_gm_deadstemst_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_gm_deadstemxf_acc_patch        (begp:endp)) ; this%matrix_cturnover_gm_deadstemxf_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_gm_livecroot_acc_patch         (begp:endp)) ; this%matrix_cturnover_gm_livecroot_acc_patch      (:) = nan
+       allocate(this%matrix_cturnover_gm_livecrootst_acc_patch       (begp:endp)) ; this%matrix_cturnover_gm_livecrootst_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_gm_livecrootxf_acc_patch       (begp:endp)) ; this%matrix_cturnover_gm_livecrootxf_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_gm_deadcroot_acc_patch         (begp:endp)) ; this%matrix_cturnover_gm_deadcroot_acc_patch      (:) = nan
+       allocate(this%matrix_cturnover_gm_deadcrootst_acc_patch       (begp:endp)) ; this%matrix_cturnover_gm_deadcrootst_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_gm_deadcrootxf_acc_patch       (begp:endp)) ; this%matrix_cturnover_gm_deadcrootxf_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_fire_leaf_acc_patch              (begp:endp)) ; this%matrix_cturnover_fire_leaf_acc_patch           (:) = nan
+       allocate(this%matrix_cturnover_fire_leafst_acc_patch            (begp:endp)) ; this%matrix_cturnover_fire_leafst_acc_patch         (:) = nan
+       allocate(this%matrix_cturnover_fire_leafxf_acc_patch            (begp:endp)) ; this%matrix_cturnover_fire_leafxf_acc_patch         (:) = nan
+       allocate(this%matrix_cturnover_fire_froot_acc_patch             (begp:endp)) ; this%matrix_cturnover_fire_froot_acc_patch          (:) = nan
+       allocate(this%matrix_cturnover_fire_frootst_acc_patch           (begp:endp)) ; this%matrix_cturnover_fire_frootst_acc_patch        (:) = nan
+       allocate(this%matrix_cturnover_fire_frootxf_acc_patch           (begp:endp)) ; this%matrix_cturnover_fire_frootxf_acc_patch        (:) = nan
+       allocate(this%matrix_cturnover_fire_livestem_acc_patch          (begp:endp)) ; this%matrix_cturnover_fire_livestem_acc_patch       (:) = nan
+       allocate(this%matrix_cturnover_fire_livestemst_acc_patch        (begp:endp)) ; this%matrix_cturnover_fire_livestemst_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_fire_livestemxf_acc_patch        (begp:endp)) ; this%matrix_cturnover_fire_livestemxf_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_fire_deadstem_acc_patch          (begp:endp)) ; this%matrix_cturnover_fire_deadstem_acc_patch       (:) = nan
+       allocate(this%matrix_cturnover_fire_deadstemst_acc_patch        (begp:endp)) ; this%matrix_cturnover_fire_deadstemst_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_fire_deadstemxf_acc_patch        (begp:endp)) ; this%matrix_cturnover_fire_deadstemxf_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_fire_livecroot_acc_patch         (begp:endp)) ; this%matrix_cturnover_fire_livecroot_acc_patch      (:) = nan
+       allocate(this%matrix_cturnover_fire_livecrootst_acc_patch       (begp:endp)) ; this%matrix_cturnover_fire_livecrootst_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_fire_livecrootxf_acc_patch       (begp:endp)) ; this%matrix_cturnover_fire_livecrootxf_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_fire_deadcroot_acc_patch         (begp:endp)) ; this%matrix_cturnover_fire_deadcroot_acc_patch      (:) = nan
+       allocate(this%matrix_cturnover_fire_deadcrootst_acc_patch       (begp:endp)) ; this%matrix_cturnover_fire_deadcrootst_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_fire_deadcrootxf_acc_patch       (begp:endp)) ; this%matrix_cturnover_fire_deadcrootxf_acc_patch    (:) = nan
        allocate(this%matrix_cturnover_grain_acc_patch             (begp:endp)) ; this%matrix_cturnover_grain_acc_patch          (:) = nan
        allocate(this%matrix_cturnover_grainst_acc_patch           (begp:endp)) ; this%matrix_cturnover_grainst_acc_patch        (:) = nan
        allocate(this%matrix_cturnover_grainxf_acc_patch           (begp:endp)) ; this%matrix_cturnover_grainxf_acc_patch        (:) = nan
@@ -1684,6 +1762,8 @@ contains
              this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch   (p) = 0._r8
              this%matrix_ctransfer_livestem_to_deadstem_acc_patch       (p) = 0._r8
              this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (p) = 0._r8
+             this%matrix_ctransfer_fire_livestem_to_deadstem_acc_patch       (p) = 0._r8
+             this%matrix_ctransfer_fire_livecroot_to_deadcroot_acc_patch     (p) = 0._r8
 
              this%matrix_cturnover_leaf_acc_patch  (p) = 0._r8
              this%matrix_cturnover_leafst_acc_patch  (p) = 0._r8
@@ -1703,6 +1783,42 @@ contains
              this%matrix_cturnover_deadcroot_acc_patch  (p) = 0._r8
              this%matrix_cturnover_deadcrootst_acc_patch  (p) = 0._r8
              this%matrix_cturnover_deadcrootxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_leaf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_leafst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_leafxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_froot_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_frootst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_frootxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_livestem_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_livestemst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_livestemxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_deadstem_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_deadstemst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_deadstemxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_livecroot_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_livecrootst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_livecrootxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_deadcroot_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_deadcrootst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_gm_deadcrootxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_leaf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_leafst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_leafxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_froot_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_frootst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_frootxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_livestem_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_livestemst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_livestemxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_deadstem_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_deadstemst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_deadstemxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_livecroot_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_livecrootst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_livecrootxf_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_deadcroot_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_deadcrootst_acc_patch  (p) = 0._r8
+             this%matrix_cturnover_fire_deadcrootxf_acc_patch  (p) = 0._r8
           end if
   
 
@@ -3695,6 +3811,8 @@ contains
           this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch   (i) = value_patch
           this%matrix_ctransfer_livestem_to_deadstem_acc_patch       (i) = value_patch
           this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (i) = value_patch
+          this%matrix_ctransfer_fire_livestem_to_deadstem_acc_patch       (i) = value_patch
+          this%matrix_ctransfer_fire_livecroot_to_deadcroot_acc_patch     (i) = value_patch
 
           this%matrix_cturnover_leaf_acc_patch(i)              = value_patch
           this%matrix_cturnover_leafst_acc_patch(i)      = value_patch
@@ -3714,6 +3832,42 @@ contains
           this%matrix_cturnover_deadcroot_acc_patch(i)              = value_patch
           this%matrix_cturnover_deadcrootst_acc_patch(i)      = value_patch
           this%matrix_cturnover_deadcrootxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_gm_leaf_acc_patch(i)              = value_patch
+          this%matrix_cturnover_gm_leafst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_gm_leafxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_gm_froot_acc_patch(i)              = value_patch
+          this%matrix_cturnover_gm_frootst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_gm_frootxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_gm_livestem_acc_patch(i)              = value_patch
+          this%matrix_cturnover_gm_livestemst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_gm_livestemxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_gm_deadstem_acc_patch(i)              = value_patch
+          this%matrix_cturnover_gm_deadstemst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_gm_deadstemxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_gm_livecroot_acc_patch(i)              = value_patch
+          this%matrix_cturnover_gm_livecrootst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_gm_livecrootxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_gm_deadcroot_acc_patch(i)              = value_patch
+          this%matrix_cturnover_gm_deadcrootst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_gm_deadcrootxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_fire_leaf_acc_patch(i)              = value_patch
+          this%matrix_cturnover_fire_leafst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_fire_leafxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_fire_froot_acc_patch(i)              = value_patch
+          this%matrix_cturnover_fire_frootst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_fire_frootxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_fire_livestem_acc_patch(i)              = value_patch
+          this%matrix_cturnover_fire_livestemst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_fire_livestemxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_fire_deadstem_acc_patch(i)              = value_patch
+          this%matrix_cturnover_fire_deadstemst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_fire_deadstemxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_fire_livecroot_acc_patch(i)              = value_patch
+          this%matrix_cturnover_fire_livecrootst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_fire_livecrootxf_acc_patch(i)         = value_patch   
+          this%matrix_cturnover_fire_deadcroot_acc_patch(i)              = value_patch
+          this%matrix_cturnover_fire_deadcrootst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_fire_deadcrootxf_acc_patch(i)         = value_patch   
 !!!!!!
        end if
        this%gresp_storage_patch(i)      = value_patch
