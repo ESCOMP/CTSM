@@ -308,6 +308,7 @@ contains
          nf%man_n_grz_col, nf%man_n_mix_col, &
          nf%nh3_stores_col, nf%nh3_barns_col, &
          nf%man_n_transf_col, ns%fan_grz_fract_col, &
+         nf%man_n_barns_col, &
          fract_tan, &
          filter_soilc, num_soilc)
 
@@ -711,7 +712,7 @@ contains
        n_manure_spread_col, tan_manure_spread_col, &
        n_manure_graze_col, n_manure_mixed_col, &
        nh3_flux_stores, nh3_flux_barns, man_n_transf, &
-       grz_fract, tan_fract_excr, &
+       grz_fract, man_n_barns, tan_fract_excr, &
        filter_soilc, num_soilc)
     use landunit_varcon, only : max_lunit
     use pftconMod, only : nc4_grass, nc3_nonarctic_grass
@@ -743,6 +744,7 @@ contains
     real(r8), intent(out) :: nh3_flux_stores(bounds%begc:bounds%endc), nh3_flux_barns(bounds%begc:bounds%endc)
     ! total nitrogen flux transferred out of a crop column
     real(r8), intent(out) :: man_n_transf(bounds%begc:bounds%endc)
+    real(r8), intent(out) :: man_n_barns(bounds%begc:bounds%endc)
     ! fraction of manure excreted when grazing
     real(r8), intent(out) :: grz_fract(bounds%begc:bounds%endc)
     ! TAN fraction in excreted N
@@ -765,7 +767,8 @@ contains
     begg = bounds%begg; endg = bounds%endg
     nh3_flux_stores(bounds%begc:bounds%endc) = 0_r8
     nh3_flux_barns(bounds%begc:bounds%endc) = 0_r8
-
+    man_n_barns(bounds%begc:bounds%endc) = 0.0_r8
+    
     totalinput = 0.0
     cumflux = 0.0
     
@@ -840,6 +843,8 @@ contains
                 end if
                 flux_grass_graze = flux_grass_graze + flux_grazing*col%wtgcell(c)
 
+                man_n_barns(c) = flux_avail
+                
                 call eval_fluxes_storage(flux_avail, tempr_ave, windspeed_ave, 0.0_r8, &
                      volat_coef_barns, volat_coef_stores, tan_fract_excr, fluxes_nitr, fluxes_tan, status)
                 if (any(fluxes_nitr > 1e12)) then
