@@ -1,4 +1,233 @@
 ===============================================================
+Tag name:  ctsm1.0.dev004
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Jul 18 02:10:23 MDT 2018
+One-line Summary: Add some new diagnostic fields, fix a few issues, update cmip6 output
+
+Purpose of changes
+------------------
+
+Add some new diagnostic fields. Some needed for CMIP6. Update the CMIP6 user-mods output.
+Fix a couple issues. Get full list of history tapes working correctly. Check for valid range
+of CO2. New IC file interpolated from the previous one for f19_g17_gl4 for 2000 Clm50BgcCrop.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): $210, #427, #429
+   #210 -- increase number of history tapes
+   $427 -- Check for zero CO2
+   #429 -- New IC for present day
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): New history fields
+   TSKIN --- skin temperature
+   TSL ----- temperature of near-surface soil layer
+   GSSUNLN - sunlit leaf stomatal conductance at local noon
+   GSSHALN - shaded leaf stomatal conductance at local noon
+
+Changes made to namelist defaults (e.g., changed parameter values):  None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New finidat file f19_g17_gl4 2000 Clm50BgcCrop 
+    New file is just interpolate from the previous file to a f19_g17_gl4 gridfor Clm50BgcCrop and 2000 simulation year
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CLMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: None
+
+Code reviewed by: self, oleson, abtawfik
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (95 are different because of finidat file change)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- PASS
+    hobart_pgi -------- FAIL
+    hobart_intel ------ PASS
+
+CTSM tag used for the baseline comparisons:  ctsm1.0.dev003
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes -- only 2000 cases because of new IC
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Just 2000 cases
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+
+   #338 -- Radtemp and other new diagnostic fields
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev003
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Sun Jul 15 00:26:46 MDT 2018
+One-line Summary: Update cime/cism to work on upgraded hobart and with glade changes on cheyenne
+
+Purpose of changes
+------------------
+
+Update cime and cism so can work on upgraded hobart. Also fix an issue that the Nag6.2 compiler found
+in CTSM. Also get working with glade changes that happened on cheyenne, DIN_LOC_ROOT_CLMFORC was
+changed to a new directory.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+   #441 -- Changes in glade invalidate previous softlinks and data locations
+   #438 -- Illegal argument aliasing caught by nag6.2
+   #433 -- with hobart upgrade CTSM not working
+
+Known bugs introduced in this tag (include github issue ID):
+   #444 -- PGI fails on cheyenne and hobart
+
+Known bugs found since the previous tag (include github issue ID):
+   #443 -- Wood C:N ratios
+   #440 -- leafcn_max < target leafcn?
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): DIN_LOC_ROOT_CLMFORC on cheyenne
+   DIN_LOC_ROOT_CLMFORC was change on cheyenne
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: path for cheyenne specific test had to be changed
+    Add some gnu tests on hobart
+    Lengthen wallclock on a test
+    Fix path for DA test_mod
+
+Code reviewed by: self
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- FAIL
+    hobart_gnu -------- PASS
+    hobart_intel ------ PASS
+
+CLM tag used for the baseline comparisons:  ctsm1.0.dev002
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cism
+   cism-wrapper to release-cesm2.0.04
+   cime         to cime5.6.10
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ #444 -- Get working on upgraded hobart and with glade changes on cheyenne
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev002
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Jul  6 16:33:03 MDT 2018
