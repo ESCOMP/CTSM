@@ -18,7 +18,7 @@ module SoilTemperatureMod
   use UrbanTimeVarType  , only : urbantv_type 
   use atm2lndType       , only : atm2lnd_type
   use CanopyStateType   , only : canopystate_type
-  use WaterfluxType     , only : waterflux_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use SolarAbsorbedType , only : solarabs_type
@@ -119,7 +119,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilTemperature(bounds, num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
-       atm2lnd_inst, urbanparams_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst,&
+       atm2lnd_inst, urbanparams_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,&
        solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst, urbantv_inst)
     !
     ! !DESCRIPTION:
@@ -164,7 +164,7 @@ contains
     type(canopystate_type) , intent(in)    :: canopystate_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(solarabs_type)    , intent(inout) :: solarabs_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
@@ -324,7 +324,7 @@ contains
            dhsdT( begc:endc ),                                                &
            sabg_lyr_col( begc:endc, -nlevsno+1: ),                            &
            atm2lnd_inst, urbanparams_inst, canopystate_inst, waterdiagnosticbulk_inst, &
-           waterflux_inst, solarabs_inst, energyflux_inst, temperature_inst)
+           waterfluxbulk_inst, solarabs_inst, energyflux_inst, temperature_inst)
 
       ! Determine heat diffusion through the layer interface and factor used in computing
       ! banded diagonal matrix and set up vector r and vectors a, b, c that define banded
@@ -510,11 +510,11 @@ contains
 
       call PhaseChangeH2osfc (bounds, num_nolakec, filter_nolakec, &
            dhsdT(bounds%begc:bounds%endc), &
-           waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, temperature_inst,energyflux_inst)
+           waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst,energyflux_inst)
 
       call Phasechange_beta (bounds, num_nolakec, filter_nolakec, &
            dhsdT(bounds%begc:bounds%endc), &
-           soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, energyflux_inst, temperature_inst)
+           soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst)
 
       if ( IsProgBuildTemp() )then
          call BuildingTemperature(bounds, num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
@@ -818,7 +818,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine PhaseChangeH2osfc (bounds, num_nolakec, filter_nolakec, &
-       dhsdT, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, temperature_inst,energyflux_inst)
+       dhsdT, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst,energyflux_inst)
     !
     ! !DESCRIPTION:
     ! Only freezing is considered.  When water freezes, move ice to bottom snow layer.
@@ -836,7 +836,7 @@ contains
     real(r8)               , intent(in)    :: dhsdT ( bounds%begc: )               ! temperature derivative of "hs" [col               ]
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(energyflux_type) , intent(inout) :: energyflux_inst
     !
@@ -873,7 +873,7 @@ contains
          int_snow                  =>    waterstatebulk_inst%int_snow_col          , & ! Output: [real(r8) (:)   ] integrated snowfall [mm]               
          snow_depth                =>    waterdiagnosticbulk_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ] snow height (m)                          
          
-         qflx_h2osfc_to_ice        =>    waterflux_inst%qflx_h2osfc_to_ice_col , & ! Output: [real(r8) (:)   ] conversion of h2osfc to ice             
+         qflx_h2osfc_to_ice        =>    waterfluxbulk_inst%qflx_h2osfc_to_ice_col , & ! Output: [real(r8) (:)   ] conversion of h2osfc to ice             
          
          fact                      =>    temperature_inst%fact_col      , &
          c_h2osfc                  =>    temperature_inst%c_h2osfc_col  , &
@@ -1035,7 +1035,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Phasechange_beta (bounds, num_nolakec, filter_nolakec, dhsdT, &
-       soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, energyflux_inst, temperature_inst)
+       soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst)
     !
     ! !DESCRIPTION:
     ! Calculation of the phase change within snow and soil layers:
@@ -1065,7 +1065,7 @@ contains
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     !
@@ -1106,11 +1106,11 @@ contains
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
          
-         qflx_snow_drain  =>    waterflux_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
-         qflx_snofrz_lyr  =>    waterflux_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
-         qflx_snofrz      =>    waterflux_inst%qflx_snofrz_col      , & ! Output: [real(r8) (:)   ] column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
-         qflx_snomelt     =>    waterflux_inst%qflx_snomelt_col     , & ! Output: [real(r8) (:)   ] snow melt (mm H2O /s)
-         qflx_snomelt_lyr =>    waterflux_inst%qflx_snomelt_lyr_col , & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
+         qflx_snow_drain  =>    waterfluxbulk_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
+         qflx_snofrz_lyr  =>    waterfluxbulk_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+         qflx_snofrz      =>    waterfluxbulk_inst%qflx_snofrz_col      , & ! Output: [real(r8) (:)   ] column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
+         qflx_snomelt     =>    waterfluxbulk_inst%qflx_snomelt_col     , & ! Output: [real(r8) (:)   ] snow melt (mm H2O /s)
+         qflx_snomelt_lyr =>    waterfluxbulk_inst%qflx_snomelt_lyr_col , & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
          
          eflx_snomelt     =>    energyflux_inst%eflx_snomelt_col    , & ! Output: [real(r8) (:)   ] snow melt heat flux (W/m**2)
          eflx_snomelt_r   =>    energyflux_inst%eflx_snomelt_r_col  , & ! Output: [real(r8) (:)   ] rural snow melt heat flux (W/m**2)
@@ -1414,7 +1414,7 @@ contains
   subroutine ComputeGroundHeatFluxAndDeriv(bounds, num_nolakec, filter_nolakec, &
        hs_h2osfc, hs_top_snow, hs_soil, hs_top, dhsdT, sabg_lyr_col, &
        atm2lnd_inst, urbanparams_inst, canopystate_inst, waterdiagnosticbulk_inst, &
-       waterflux_inst, solarabs_inst, energyflux_inst, temperature_inst)
+       waterfluxbulk_inst, solarabs_inst, energyflux_inst, temperature_inst)
     !
     ! !DESCRIPTION:
     ! Computes ground heat flux on:
@@ -1445,7 +1445,7 @@ contains
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
     type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
-    type(waterflux_type)   , intent(in)    :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(in)    :: waterfluxbulk_inst
     type(solarabs_type)    , intent(inout) :: solarabs_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(temperature_type) , intent(in)    :: temperature_inst
@@ -1484,11 +1484,11 @@ contains
          
          frac_sno_eff            => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
          
-         qflx_ev_snow            => waterflux_inst%qflx_ev_snow_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
-         qflx_ev_soil            => waterflux_inst%qflx_ev_soil_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
-         qflx_ev_h2osfc          => waterflux_inst%qflx_ev_h2osfc_patch     , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]
-         qflx_evap_soi           => waterflux_inst%qflx_evap_soi_patch      , & ! Input:  [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
-         qflx_tran_veg           => waterflux_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         qflx_ev_snow            => waterfluxbulk_inst%qflx_ev_snow_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
+         qflx_ev_soil            => waterfluxbulk_inst%qflx_ev_soil_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
+         qflx_ev_h2osfc          => waterfluxbulk_inst%qflx_ev_h2osfc_patch     , & ! Input:  [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]
+         qflx_evap_soi           => waterfluxbulk_inst%qflx_evap_soi_patch      , & ! Input:  [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
+         qflx_tran_veg           => waterfluxbulk_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          
          emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
          t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  surface water temperature               

@@ -35,7 +35,7 @@ module CanopyFluxesMod
   use SolarAbsorbedType     , only : solarabs_type
   use SurfaceAlbedoType     , only : surfalb_type
   use TemperatureType       , only : temperature_type
-  use WaterfluxType         , only : waterflux_type
+  use WaterFluxBulkType         , only : waterfluxbulk_type
   use WaterStateBulkType        , only : waterstatebulk_type
   use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
   use CanopyHydrologyMod    , only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
@@ -136,7 +136,7 @@ contains
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
        clm_fates, nc, atm2lnd_inst, canopystate_inst,                                    &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
-       temperature_inst, waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, ch4_inst, ozone_inst, photosyns_inst, &
+       temperature_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, ch4_inst, ozone_inst, photosyns_inst, &
        humanindex_inst, soil_water_retention_curve, &
        downreg_patch, leafn_patch, froot_carbon, croot_carbon)
     !
@@ -198,7 +198,7 @@ contains
     type(temperature_type)                 , intent(inout)         :: temperature_inst
     type(waterstatebulk_type)                  , intent(inout)         :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                  , intent(inout)         :: waterdiagnosticbulk_inst
-    type(waterflux_type)                   , intent(inout)         :: waterflux_inst
+    type(waterfluxbulk_type)                   , intent(inout)         :: waterfluxbulk_inst
     type(ch4_type)                         , intent(inout)         :: ch4_inst
     class(ozone_base_type)                 , intent(inout)         :: ozone_inst
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
@@ -479,12 +479,12 @@ contains
          rh_ref2m               => waterdiagnosticbulk_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
          rhaf                   => waterdiagnosticbulk_inst%rh_af_patch                  , & ! Output: [real(r8) (:)   ]  fractional humidity of canopy air [dimensionless]                     
 
-         qflx_tran_veg          => waterflux_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
-         qflx_evap_veg          => waterflux_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)                        
-         qflx_evap_soi          => waterflux_inst%qflx_evap_soi_patch           , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)                              
-         qflx_ev_snow           => waterflux_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]                        
-         qflx_ev_soil           => waterflux_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]                        
-         qflx_ev_h2osfc         => waterflux_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
+         qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
+         qflx_evap_veg          => waterfluxbulk_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)                        
+         qflx_evap_soi          => waterfluxbulk_inst%qflx_evap_soi_patch           , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)                              
+         qflx_ev_snow           => waterfluxbulk_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]                        
+         qflx_ev_soil           => waterfluxbulk_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]                        
+         qflx_ev_h2osfc         => waterfluxbulk_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
 
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
          rssha                  => photosyns_inst%rssha_patch                   , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
@@ -855,7 +855,7 @@ contains
                     bsha(begp:endp), btran(begp:endp), dayl_factor(begp:endp), leafn_patch(begp:endp), &
                     qsatl(begp:endp), qaf(begp:endp),     &
                     atm2lnd_inst, temperature_inst, soilstate_inst, waterdiagnosticbulk_inst, surfalb_inst, solarabs_inst,    &
-                    canopystate_inst, ozone_inst, photosyns_inst, waterflux_inst, froot_carbon(begp:endp), croot_carbon(begp:endp))
+                    canopystate_inst, ozone_inst, photosyns_inst, waterfluxbulk_inst, froot_carbon(begp:endp), croot_carbon(begp:endp))
             else
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
@@ -1271,7 +1271,7 @@ contains
          
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
          call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
-               waterstatebulk_inst,waterdiagnosticbulk_inst,waterflux_inst,solarabs_inst,energyflux_inst)
+               waterstatebulk_inst,waterdiagnosticbulk_inst,waterfluxbulk_inst,solarabs_inst,energyflux_inst)
 
       else
 

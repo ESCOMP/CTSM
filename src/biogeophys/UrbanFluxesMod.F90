@@ -23,7 +23,7 @@ module UrbanFluxesMod
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use FrictionVelocityMod  , only : frictionvel_type
   use EnergyFluxType       , only : energyflux_type
-  use WaterfluxType        , only : waterflux_type
+  use WaterFluxBulkType        , only : waterfluxbulk_type
   use HumanIndexMod        , only : humanindex_type
   use GridcellType         , only : grc                
   use LandunitType         , only : lun                
@@ -53,7 +53,7 @@ contains
   subroutine UrbanFluxes (bounds, num_nourbanl, filter_nourbanl,                        &
        num_urbanl, filter_urbanl, num_urbanc, filter_urbanc, num_urbanp, filter_urbanp, &
        atm2lnd_inst, urbanparams_inst, soilstate_inst, temperature_inst,                &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, frictionvel_inst, energyflux_inst, waterflux_inst,              &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, frictionvel_inst, energyflux_inst, waterfluxbulk_inst,              &
        humanindex_inst) 
     !
     ! !DESCRIPTION: 
@@ -91,7 +91,7 @@ contains
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
     !
@@ -294,10 +294,10 @@ contains
          taux                =>   energyflux_inst%taux_patch                , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)              
          tauy                =>   energyflux_inst%tauy_patch                , & ! Output: [real(r8) (:)   ]  wind (shear) stress: n-s (kg/m/s**2)               
 
-         qflx_evap_soi       =>   waterflux_inst%qflx_evap_soi_patch        , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
-         qflx_tran_veg       =>   waterflux_inst%qflx_tran_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
-         qflx_evap_veg       =>   waterflux_inst%qflx_evap_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)    
-         qflx_evap_tot       =>   waterflux_inst%qflx_evap_tot_patch        , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
+         qflx_evap_soi       =>   waterfluxbulk_inst%qflx_evap_soi_patch        , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
+         qflx_tran_veg       =>   waterfluxbulk_inst%qflx_tran_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+         qflx_evap_veg       =>   waterfluxbulk_inst%qflx_evap_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)    
+         qflx_evap_tot       =>   waterfluxbulk_inst%qflx_evap_tot_patch        , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
 
          begl                =>   bounds%begl                               , &
          endl                =>   bounds%endl                                 &

@@ -21,7 +21,7 @@ module CanopyHydrologyMod
   use AerosolMod      , only : aerosol_type
   use CanopyStateType , only : canopystate_type
   use TemperatureType , only : temperature_type
-  use WaterfluxType   , only : waterflux_type
+  use WaterFluxBulkType   , only : waterfluxbulk_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
   use ColumnType      , only : col                
@@ -142,7 +142,7 @@ contains
    subroutine CanopyHydrology(bounds, &
         num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
         atm2lnd_inst, canopystate_inst, temperature_inst, &
-        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst)
+        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculation of
@@ -176,7 +176,7 @@ contains
      type(aerosol_type)     , intent(inout) :: aerosol_inst
      type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-     type(waterflux_type)   , intent(inout) :: waterflux_inst
+     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: f                                            ! filter index
@@ -256,17 +256,17 @@ contains
           h2osoi_liq           => waterstatebulk_inst%h2osoi_liq_col          , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
           swe_old              => waterdiagnosticbulk_inst%swe_old_col             , & ! Output: [real(r8) (:,:) ]  snow water before update              
 
-          qflx_floodc          => waterflux_inst%qflx_floodc_col          , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
-          qflx_snow_drain       => waterflux_inst%qflx_snow_drain_col     , & ! Input: [real(r8) (:)   ]  drainage from snow pack from previous time step       
-          qflx_snow_h2osfc     => waterflux_inst%qflx_snow_h2osfc_col     , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
-          qflx_snow_grnd_col   => waterflux_inst%qflx_snow_grnd_col       , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
-          qflx_snow_grnd_patch => waterflux_inst%qflx_snow_grnd_patch     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
-          qflx_prec_intr       => waterflux_inst%qflx_prec_intr_patch     , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
-          qflx_prec_grnd       => waterflux_inst%qflx_prec_grnd_patch     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
-          qflx_rain_grnd       => waterflux_inst%qflx_rain_grnd_patch     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
-          qflx_irrig           => waterflux_inst%qflx_irrig_patch         , & ! Input: [real(r8) (:)    ]  irrigation amount (mm/s)           
-          qflx_snowindunload   => waterflux_inst%qflx_snowindunload_patch , & ! Output: [real(r8) (:)   ]  canopy snow unloading from wind [mm/s]    
-          qflx_snotempunload   => waterflux_inst%qflx_snotempunload_patch   & ! Output: [real(r8) (:)   ]  canopy snow unloading from temp. [mm/s]    
+          qflx_floodc          => waterfluxbulk_inst%qflx_floodc_col          , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
+          qflx_snow_drain       => waterfluxbulk_inst%qflx_snow_drain_col     , & ! Input: [real(r8) (:)   ]  drainage from snow pack from previous time step       
+          qflx_snow_h2osfc     => waterfluxbulk_inst%qflx_snow_h2osfc_col     , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
+          qflx_snow_grnd_col   => waterfluxbulk_inst%qflx_snow_grnd_col       , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
+          qflx_snow_grnd_patch => waterfluxbulk_inst%qflx_snow_grnd_patch     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
+          qflx_prec_intr       => waterfluxbulk_inst%qflx_prec_intr_patch     , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
+          qflx_prec_grnd       => waterfluxbulk_inst%qflx_prec_grnd_patch     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
+          qflx_rain_grnd       => waterfluxbulk_inst%qflx_rain_grnd_patch     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
+          qflx_irrig           => waterfluxbulk_inst%qflx_irrig_patch         , & ! Input: [real(r8) (:)    ]  irrigation amount (mm/s)           
+          qflx_snowindunload   => waterfluxbulk_inst%qflx_snowindunload_patch , & ! Output: [real(r8) (:)   ]  canopy snow unloading from wind [mm/s]    
+          qflx_snotempunload   => waterfluxbulk_inst%qflx_snotempunload_patch   & ! Output: [real(r8) (:)   ]  canopy snow unloading from temp. [mm/s]    
           )
 
        ! Compute time step

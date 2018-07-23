@@ -31,7 +31,7 @@ module ch4Mod
   use SoilHydrologyType              , only : soilhydrology_type  
   use SoilStateType                  , only : soilstate_type
   use TemperatureType                , only : temperature_type
-  use WaterfluxType                  , only : waterflux_type
+  use WaterFluxBulkType                  , only : waterfluxbulk_type
   use WaterStateBulkType                 , only : waterstatebulk_type
   use WaterDiagnosticBulkType                 , only : waterdiagnosticbulk_type
   use GridcellType                   , only : grc                
@@ -1626,7 +1626,7 @@ contains
   subroutine ch4 (bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, &
        num_nolakec, filter_nolakec, num_soilp, filter_soilp, &
        atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
-       temperature_inst, energyflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, &
+       temperature_inst, energyflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
        soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, &
        agnpp, bgnpp, annsum_npp, rr)
@@ -1661,7 +1661,7 @@ contains
     type(energyflux_type)                  , intent(inout) :: energyflux_inst
     type(waterstatebulk_type)                  , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                  , intent(in)    :: waterdiagnosticbulk_inst
-    type(waterflux_type)                   , intent(in)    :: waterflux_inst
+    type(waterfluxbulk_type)                   , intent(in)    :: waterfluxbulk_inst
     type(soilbiogeochem_carbonflux_type)   , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(ch4_type)                         , intent(inout) :: ch4_inst
@@ -1727,7 +1727,7 @@ contains
          frac_h2osfc          =>   waterdiagnosticbulk_inst%frac_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          snow_depth           =>   waterdiagnosticbulk_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
          tws                  =>   waterdiagnosticbulk_inst%tws_grc                   , & ! Input:  [real(r8) (:)   ]  total water storage (kg m-2)                                   
-         qflx_surf            =>   waterflux_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+         qflx_surf            =>   waterfluxbulk_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  total surface runoff (mm H2O /s)
 
          conc_o2_sat          =>   ch4_inst%conc_o2_sat_col                  , & ! Input:  [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
          zwt0                 =>   ch4_inst%zwt0_col                         , & ! Input:  [real(r8) (:)   ]  decay factor for finundated (m)                   
@@ -2033,7 +2033,7 @@ contains
               num_soilp, filter_soilp, &
               annsum_npp(begp:endp), jwt(begc:endc), sat, lake, &
               canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-              waterstatebulk_inst, waterflux_inst, ch4_inst)
+              waterstatebulk_inst, waterfluxbulk_inst, ch4_inst)
 
          ! calculate CH4 ebullition losses in each soil layer
          call ch4_ebul (bounds, &
@@ -2081,7 +2081,7 @@ contains
          call ch4_aere (bounds, num_lakec, filter_lakec, 0, dummyfilter, &
               annsum_npp(begp:endp), jwt(begc:endc), sat, lake, &
               canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-              waterstatebulk_inst, waterflux_inst, ch4_inst)
+              waterstatebulk_inst, waterfluxbulk_inst, ch4_inst)
 
          ! calculate CH4 ebullition losses in each lake layer
          call ch4_ebul (bounds, num_lakec, filter_lakec, &
@@ -2760,7 +2760,7 @@ contains
   subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, filter_methp, &
        annsum_npp, jwt, sat, lake, &
        canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-       waterstatebulk_inst, waterflux_inst, ch4_inst)
+       waterstatebulk_inst, waterfluxbulk_inst, ch4_inst)
     !
     ! !DESCRIPTION:
     ! Arctic c3 grass (which is often present in fens) and all vegetation in inundated areas is assumed to have
@@ -2790,7 +2790,7 @@ contains
     type(temperature_type)      , intent(in)    :: temperature_inst
     type(energyflux_type)       , intent(in)    :: energyflux_inst
     type(waterstatebulk_type)       , intent(in)    :: waterstatebulk_inst
-    type(waterflux_type)        , intent(in)    :: waterflux_inst
+    type(waterfluxbulk_type)        , intent(in)    :: waterfluxbulk_inst
     type(ch4_type)              , intent(inout) :: ch4_inst
     !
     ! !LOCAL VARIABLES:
@@ -2847,7 +2847,7 @@ contains
 
          h2osoi_vol    =>    waterstatebulk_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
 
-         qflx_tran_veg =>    waterflux_inst%qflx_tran_veg_patch           , & ! Input:  [real(r8) (:)    ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+         qflx_tran_veg =>    waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Input:  [real(r8) (:)    ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
 
          canopy_cond   =>    energyflux_inst%canopy_cond_patch            , & ! Input:  [real(r8) (:)    ]  tracer conductance for canopy [m/s]               
 

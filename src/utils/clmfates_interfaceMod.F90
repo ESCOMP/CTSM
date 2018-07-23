@@ -37,7 +37,7 @@ module CLMFatesInterfaceMod
    use decompMod         , only : bounds_type
    use WaterStateBulkType    , only : waterstatebulk_type
    use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-   use WaterFluxType     , only : waterflux_type
+   use WaterFluxBulkType     , only : waterfluxbulk_type
    use CanopyStateType   , only : canopystate_type
    use TemperatureType   , only : temperature_type
    use EnergyFluxType    , only : energyflux_type
@@ -2156,14 +2156,14 @@ contains
  ! ======================================================================================
 
  subroutine ComputeRootSoilFlux(this, bounds_clump, num_filterc, filterc, &
-       soilstate_inst, waterflux_inst)
+       soilstate_inst, waterfluxbulk_inst)
 
     class(hlm_fates_interface_type), intent(inout) :: this
     type(bounds_type),intent(in)                   :: bounds_clump
     integer,intent(in)                             :: num_filterc
     integer,intent(in)                             :: filterc(num_filterc)
     type(soilstate_type), intent(inout)            :: soilstate_inst
-    type(waterflux_type), intent(inout)            :: waterflux_inst
+    type(waterfluxbulk_type), intent(inout)            :: waterfluxbulk_inst
     
     ! locals
     integer :: s
@@ -2195,7 +2195,7 @@ contains
     
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
-       waterflux_inst%qflx_rootsoi_col(c,:) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(:)
+       waterfluxbulk_inst%qflx_rootsoi_col(c,:) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(:)
     end do
     
  end subroutine ComputeRootSoilFlux
@@ -2232,7 +2232,7 @@ contains
  ! ======================================================================================
 
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
-                                 soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, &
+                                 soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
                                  solarabs_inst, energyflux_inst)
 
 
@@ -2243,7 +2243,7 @@ contains
    type(soilstate_type)    , intent(inout)        :: soilstate_inst
    type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
    type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
-   type(waterflux_type)    , intent(inout)        :: waterflux_inst
+   type(waterfluxbulk_type)    , intent(inout)        :: waterfluxbulk_inst
    type(solarabs_type)     , intent(inout)        :: solarabs_inst
    type(energyflux_type)   , intent(inout)        :: energyflux_inst
 
@@ -2285,7 +2285,7 @@ contains
          p = ifp+col%patchi(c)
          this%fates(nc)%bc_in(s)%swrad_net_pa(ifp) = solarabs_inst%fsa_patch(p)
          this%fates(nc)%bc_in(s)%lwrad_net_pa(ifp) = energyflux_inst%eflx_lwrad_net_patch(p)
-         this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterflux_inst%qflx_tran_veg_patch(p)
+         this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterfluxbulk_inst%qflx_tran_veg_patch(p)
       end do
    end do
 

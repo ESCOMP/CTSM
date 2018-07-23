@@ -17,7 +17,7 @@ module SaturatedExcessRunoffMod
   use ColumnType   , only : column_type
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType, only : soilstate_type
-  use WaterfluxType, only : waterflux_type
+  use WaterFluxBulkType, only : waterfluxbulk_type
 
   implicit none
   save
@@ -173,12 +173,12 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SaturatedExcessRunoff (this, bounds, num_hydrologyc, filter_hydrologyc, &
-       col, soilhydrology_inst, soilstate_inst, waterflux_inst)
+       col, soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculate surface runoff due to saturated surface
     !
-    ! Sets this%fsat_col and waterflux_inst%qflx_sat_excess_surf_col
+    ! Sets this%fsat_col and waterfluxbulk_inst%qflx_sat_excess_surf_col
     !
     ! !ARGUMENTS:
     class(saturated_excess_runoff_type), intent(inout) :: this
@@ -188,7 +188,7 @@ contains
     type(column_type)        , intent(in)    :: col
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(waterflux_type)     , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
@@ -202,9 +202,9 @@ contains
 
          snl                    =>    col%snl                                , & ! Input:  [integer  (:)   ]  minus number of snow layers
 
-         qflx_sat_excess_surf   =>    waterflux_inst%qflx_sat_excess_surf_col, & ! Output: [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
-         qflx_floodc            =>    waterflux_inst%qflx_floodc_col         , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM
-         qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
+         qflx_sat_excess_surf   =>    waterfluxbulk_inst%qflx_sat_excess_surf_col, & ! Output: [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+         qflx_floodc            =>    waterfluxbulk_inst%qflx_floodc_col         , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM
+         qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
 
          origflag               =>    soilhydrology_inst%origflag            , & ! Input:  logical
          fracice                =>    soilhydrology_inst%fracice_col           & ! Input:  [real(r8) (:,:) ]  fractional impermeability (-)

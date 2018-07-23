@@ -17,7 +17,7 @@ module LakeTemperatureMod
   use SoilStateType     , only : soilstate_type
   use SolarAbsorbedType , only : solarabs_type
   use TemperatureType   , only : temperature_type
-  use WaterfluxType     , only : waterflux_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use ColumnType        , only : col                
@@ -43,7 +43,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine LakeTemperature(bounds, num_lakec, filter_lakec, num_lakep, filter_lakep, &
-       solarabs_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, ch4_inst, &
+       solarabs_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, ch4_inst, &
        energyflux_inst, temperature_inst, lakestate_inst)
     !
     ! !DESCRIPTION:
@@ -130,7 +130,7 @@ contains
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(ch4_type)         , intent(inout) :: ch4_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(temperature_type) , intent(inout) :: temperature_inst
@@ -707,7 +707,7 @@ contains
          cv(bounds%begc:bounds%endc, :), &
          cv_lake(bounds%begc:bounds%endc, :), &
          lhabs(bounds%begc:bounds%endc), &
-         waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, temperature_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst, &
          energyflux_inst, lakestate_inst)
 
     !!!!!!!!!!!!!!!!!!!!!!!
@@ -1237,7 +1237,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine PhaseChange_Lake (bounds, num_lakec, filter_lakec, cv, cv_lake, lhabs, &
-        waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, temperature_inst, energyflux_inst, lakestate_inst)
+        waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst, lakestate_inst)
      !
      ! !DESCRIPTION:
      ! Calculation of the phase change within snow, soil, & lake layers:
@@ -1269,7 +1269,7 @@ contains
      real(r8)               , intent(out)   :: lhabs( bounds%begc: )            ! total per-column latent heat abs. (J/m^2) [col]
      type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-     type(waterflux_type)   , intent(inout) :: waterflux_inst
+     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
      type(temperature_type) , intent(inout) :: temperature_inst
      type(energyflux_type)  , intent(inout) :: energyflux_inst
      type(lakestate_type)   , intent(inout) :: lakestate_inst
@@ -1304,11 +1304,11 @@ contains
 
           lake_icefrac    => lakestate_inst%lake_icefrac_col    , & ! Input:  [real(r8)  (:,:) ] mass fraction of lake layer that is frozen
           
-          qflx_snofrz_lyr => waterflux_inst%qflx_snofrz_lyr_col , & ! Output:  [real(r8)  (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
-          qflx_snomelt_lyr => waterflux_inst%qflx_snomelt_lyr_col, & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
-          qflx_snow_drain => waterflux_inst%qflx_snow_drain_col , & ! Output: [real(r8)  (:)   ] drainage from snow column                           
-          qflx_snomelt    => waterflux_inst%qflx_snomelt_col    , & ! Output: [real(r8)  (:)   ] snow melt (mm H2O /s)                   
-          qflx_snofrz     => waterflux_inst%qflx_snofrz_col     , & ! Output: [real(r8)  (:)   ] column-integrated snow freezing rate (kg m-2 s-1) [+]
+          qflx_snofrz_lyr => waterfluxbulk_inst%qflx_snofrz_lyr_col , & ! Output:  [real(r8)  (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+          qflx_snomelt_lyr => waterfluxbulk_inst%qflx_snomelt_lyr_col, & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
+          qflx_snow_drain => waterfluxbulk_inst%qflx_snow_drain_col , & ! Output: [real(r8)  (:)   ] drainage from snow column                           
+          qflx_snomelt    => waterfluxbulk_inst%qflx_snomelt_col    , & ! Output: [real(r8)  (:)   ] snow melt (mm H2O /s)                   
+          qflx_snofrz     => waterfluxbulk_inst%qflx_snofrz_col     , & ! Output: [real(r8)  (:)   ] column-integrated snow freezing rate (kg m-2 s-1) [+]
 
           t_soisno        => temperature_inst%t_soisno_col      , & ! Input:  [real(r8)  (:,:) ] soil temperature (Kelvin)             
           t_lake          => temperature_inst%t_lake_col        , & ! Input:  [real(r8)  (:,:) ] lake temperature (Kelvin)             

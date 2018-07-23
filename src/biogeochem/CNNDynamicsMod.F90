@@ -20,7 +20,7 @@ module CNNDynamicsMod
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use WaterFluxType                   , only : waterflux_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use CropType                        , only : crop_type
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
@@ -153,7 +153,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFreeLivingFixation(num_soilc, filter_soilc, &
-       waterflux_inst, soilbiogeochem_nitrogenflux_inst)
+       waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)
 
 
     use clm_time_manager , only : get_days_per_year, get_step_size
@@ -164,7 +164,7 @@ contains
     integer                                , intent(in)    :: filter_soilc(:) ! filter for soil columns                                                                                                                                  
    
     type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst 
-    type(waterflux_type)                   , intent(inout) :: waterflux_inst 
+    type(waterfluxbulk_type)                   , intent(inout) :: waterfluxbulk_inst 
     !
     ! !LOCAL VARIABLES:                                                                                                                                                                                                           
     integer  :: c,fc            !indices     
@@ -172,7 +172,7 @@ contains
     real(r8) :: secs_per_year   !seconds per year   
 
        associate(                                                                        &
-                  AnnET            => waterflux_inst%AnnET,                              & ! Input:  [real(:)  ] : Annual average ET flux mmH20/s
+                  AnnET            => waterfluxbulk_inst%AnnET,                              & ! Input:  [real(:)  ] : Annual average ET flux mmH20/s
                   freelivfix_slope => params_inst%freelivfix_slope_wET,                  & ! Input:  [real     ] : slope of fixation with ET
                   freelivfix_inter => params_inst%freelivfix_intercept,                  & ! Input:  [real     ] : intercept of fixation with ET
                   ffix_to_sminn    => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col & ! Output: [real(:)  ] : free living N fixation to soil mineral N (gN/m2/s)

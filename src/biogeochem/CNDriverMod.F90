@@ -30,7 +30,7 @@ module CNDriverMod
   use TemperatureType                 , only : temperature_type
   use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use WaterfluxType                   , only : waterflux_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use atm2lndType                     , only : atm2lnd_type
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type 
@@ -90,7 +90,7 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
        soilbiogeochem_state_inst,                                                          &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
-       atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst,                                      &
+       atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                                      &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,                   &
        nutrient_competition_method, cnfire_method)
@@ -169,7 +169,7 @@ contains
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
-    type(waterflux_type)                    , intent(inout)    :: waterflux_inst
+    type(waterfluxbulk_type)                    , intent(inout)    :: waterfluxbulk_inst
     type(canopystate_type)                  , intent(inout)    :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
@@ -270,7 +270,7 @@ contains
     if(use_fun)then
         call t_startf('CNFLivFixation')
         call CNFreeLivingFixation( num_soilc, filter_soilc, &
-             waterflux_inst, soilbiogeochem_nitrogenflux_inst)
+             waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)
         call t_stopf('CNFLivFixation')
     else
        call t_startf('CNFixation')
@@ -390,7 +390,7 @@ contains
    
      call t_startf('soilbiogeochemcompetition')
      call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
-                                     waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,          &
+                                     waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,          &
                                      cnveg_carbonstate_inst               ,&
                                      cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
                                      soilbiogeochem_carbonflux_inst,&
@@ -820,7 +820,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNDriverLeaching(bounds, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       waterstatebulk_inst, waterflux_inst, &
+       waterstatebulk_inst, waterfluxbulk_inst, &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
     !
@@ -839,7 +839,7 @@ contains
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
-    type(waterflux_type)                    , intent(inout)    :: waterflux_inst
+    type(waterfluxbulk_type)                    , intent(inout)    :: waterfluxbulk_inst
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
@@ -850,7 +850,7 @@ contains
     
     call t_startf('SoilBiogeochemNLeaching')
     call SoilBiogeochemNLeaching(bounds, num_soilc, filter_soilc, &
-         waterstatebulk_inst, waterflux_inst, soilbiogeochem_nitrogenstate_inst, &
+         waterstatebulk_inst, waterfluxbulk_inst, soilbiogeochem_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst)
     call t_stopf('SoilBiogeochemNLeaching')
 

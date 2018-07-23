@@ -18,7 +18,7 @@ Module HydrologyNoDrainageMod
   use SoilStateType     , only : soilstate_type
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
-  use WaterfluxType     , only : waterflux_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use CanopyStateType   , only : canopystate_type
@@ -45,7 +45,7 @@ contains
        num_nosnowc, filter_nosnowc, &
        clm_fates, &
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
-       waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
        aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
     !
@@ -92,7 +92,7 @@ contains
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
-    type(waterflux_type)     , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
     type(aerosol_type)       , intent(inout) :: aerosol_inst
@@ -177,7 +177,7 @@ contains
       ! Determine the change of snow mass and the snow water onto soil
 
       call SnowWater(bounds, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
-           atm2lnd_inst, waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, aerosol_inst)
+           atm2lnd_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, aerosol_inst)
 
       ! mapping soilmoist from CLM to VIC layers for runoff calculations
       if (use_vichydro) then
@@ -190,42 +190,42 @@ contains
 
       call saturated_excess_runoff_inst%SaturatedExcessRunoff(&
            bounds, num_hydrologyc, filter_hydrologyc, col, &
-           soilhydrology_inst, soilstate_inst, waterflux_inst)
+           soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
 
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
-           waterflux_inst, waterdiagnosticbulk_inst)
+           waterfluxbulk_inst, waterdiagnosticbulk_inst)
 
       call infiltration_excess_runoff_inst%InfiltrationExcessRunoff( &
            bounds, num_hydrologyc, filter_hydrologyc, &
-           soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterflux_inst, &
+           soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterfluxbulk_inst, &
            waterdiagnosticbulk_inst)
 
       call RouteInfiltrationExcess(bounds, num_hydrologyc, filter_hydrologyc, &
-           waterflux_inst, soilhydrology_inst)
+           waterfluxbulk_inst, soilhydrology_inst)
 
       call UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
            infiltration_excess_runoff_inst, &
            energyflux_inst, soilhydrology_inst, &
-           waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
+           waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
 
       call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
-           waterflux_inst)
+           waterfluxbulk_inst)
 
       call TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
            num_urbanc, filter_urbanc, &
-           waterflux_inst, soilhydrology_inst, &
+           waterfluxbulk_inst, soilhydrology_inst, &
            waterstatebulk_inst)
 
       call UpdateUrbanPonding(bounds, num_urbanc, filter_urbanc, &
-           waterstatebulk_inst, soilhydrology_inst, waterflux_inst)
+           waterstatebulk_inst, soilhydrology_inst, waterfluxbulk_inst)
 
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
-           filter_hydrologyc, soilstate_inst, canopystate_inst, waterflux_inst, energyflux_inst)
+           filter_hydrologyc, soilstate_inst, canopystate_inst, waterfluxbulk_inst, energyflux_inst)
       
-      if ( use_fates ) call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterflux_inst)
+      if ( use_fates ) call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterfluxbulk_inst)
       
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-           soilhydrology_inst, soilstate_inst, waterflux_inst, waterstatebulk_inst, temperature_inst, &
+           soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, waterstatebulk_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
       if (use_vichydro) then
@@ -236,27 +236,27 @@ contains
 
       if (use_aquifer_layer()) then 
          call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-              soilhydrology_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst) 
+              soilhydrology_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst) 
       else
 
          call PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-              temperature_inst, waterstatebulk_inst, waterflux_inst) 
+              temperature_inst, waterstatebulk_inst, waterfluxbulk_inst) 
 
          call ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-              waterstatebulk_inst, waterflux_inst) 
+              waterstatebulk_inst, waterfluxbulk_inst) 
 
          call RenewCondensation(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc,&
               soilhydrology_inst, soilstate_inst, &
-              waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst)
+              waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst)
          
       endif
 
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
-           aerosol_inst, waterflux_inst, waterstatebulk_inst, topo_inst)
+           aerosol_inst, waterfluxbulk_inst, waterstatebulk_inst, topo_inst)
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &
@@ -264,7 +264,7 @@ contains
 
       ! Combine thin snow elements
       call CombineSnowLayers(bounds, num_snowc, filter_snowc, &
-           aerosol_inst, temperature_inst, waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
+           aerosol_inst, temperature_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
 
       ! Divide thick snow elements
       call DivideSnowLayers(bounds, num_snowc, filter_snowc, &

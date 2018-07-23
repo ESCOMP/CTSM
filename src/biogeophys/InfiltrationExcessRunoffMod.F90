@@ -17,7 +17,7 @@ module InfiltrationExcessRunoffMod
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
-  use WaterfluxType    , only : waterflux_type
+  use WaterFluxBulkType    , only : waterfluxbulk_type
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
 
   implicit none
@@ -169,13 +169,13 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InfiltrationExcessRunoff(this, bounds, num_hydrologyc, filter_hydrologyc, &
-       soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterflux_inst, &
+       soilhydrology_inst, soilstate_inst, saturated_excess_runoff_inst, waterfluxbulk_inst, &
        waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculate surface runoff due to infiltration excess
     !
-    ! Sets waterflux_inst%qflx_infl_excess_col and this%qinmax_col. These are valid within
+    ! Sets waterfluxbulk_inst%qflx_infl_excess_col and this%qinmax_col. These are valid within
     ! the hydrology filter. Both of these give averages over the entire column. However,
     ! qinmax is implicitly 0 over the fraction of the column given by fsat, and
     ! qflx_infl_excess is implicitly 0 over both fsat and frac_h2osfc.
@@ -188,7 +188,7 @@ contains
     type(soilhydrology_type)               , intent(in)    :: soilhydrology_inst
     type(soilstate_type)                   , intent(in)    :: soilstate_inst
     type(saturated_excess_runoff_type)     , intent(in)    :: saturated_excess_runoff_inst
-    type(waterflux_type)                   , intent(in)    :: waterflux_inst
+    type(waterfluxbulk_type)                   , intent(in)    :: waterfluxbulk_inst
     type(waterdiagnosticbulk_type)         , intent(in)    :: waterdiagnosticbulk_inst
     !
     ! !LOCAL VARIABLES:
@@ -203,8 +203,8 @@ contains
 
          fsat             =>   saturated_excess_runoff_inst%fsat_col, & ! Input:  [real(r8) (:)   ]  fractional area with water table at surface       
 
-         qflx_infl_excess =>    waterflux_inst%qflx_infl_excess_col , & ! Output: [real(r8) (:)   ]  infiltration excess runoff (mm H2O /s)
-         qflx_in_soil     =>    waterflux_inst%qflx_in_soil_col     , & ! Input:  [real(r8) (:)   ]  surface input to soil (mm/s)
+         qflx_infl_excess =>    waterfluxbulk_inst%qflx_infl_excess_col , & ! Output: [real(r8) (:)   ]  infiltration excess runoff (mm H2O /s)
+         qflx_in_soil     =>    waterfluxbulk_inst%qflx_in_soil_col     , & ! Input:  [real(r8) (:)   ]  surface input to soil (mm/s)
 
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           )

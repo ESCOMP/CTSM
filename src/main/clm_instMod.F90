@@ -57,7 +57,7 @@ module clm_instMod
   use SurfaceRadiationMod             , only : surfrad_type
   use SurfaceAlbedoType               , only : surfalb_type
   use TemperatureType                 , only : temperature_type
-  use WaterFluxType                   , only : waterflux_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
   use WaterBalanceType                  , only : waterbalance_type
@@ -114,7 +114,7 @@ module clm_instMod
   type(urbanparams_type)                  :: urbanparams_inst
   type(urbantv_type)                      :: urbantv_inst
   type(humanindex_type)                   :: humanindex_inst
-  type(waterflux_type)                    :: waterflux_inst
+  type(waterfluxbulk_type)                    :: waterfluxbulk_inst
   type(waterstatebulk_type)                   :: waterstatebulk_inst
   type(waterdiagnosticbulk_type)                   :: waterdiagnosticbulk_inst
   type(waterbalance_type)                   :: waterbalance_inst
@@ -292,7 +292,7 @@ contains
 
     call waterbalance_inst%Init(bounds)
 
-    call waterflux_inst%Init(bounds)
+    call waterfluxbulk_inst%InitBulk(bounds)
 
     call glacier_smb_inst%Init(bounds)
 
@@ -436,7 +436,7 @@ contains
 
     call temperature_inst%InitAccBuffer(bounds)
     
-    call waterflux_inst%InitAccBuffer(bounds)
+    call waterfluxbulk_inst%InitAccBuffer(bounds)
 
     call energyflux_inst%InitAccBuffer(bounds)
 
@@ -502,7 +502,7 @@ contains
 
     call soilstate_inst%restart (bounds, ncid, flag=flag)
 
-    call waterflux_inst%restart (bounds, ncid, flag=flag)
+    call waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
     call waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
          watsat_col=soilstate_inst%watsat_col(bounds%begc:bounds%endc,:)) 

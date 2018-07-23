@@ -20,7 +20,7 @@ module SnowSnicarMod
   use atm2lndType     , only : atm2lnd_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-  use WaterFluxType   , only : waterflux_type
+  use WaterFluxBulkType   , only : waterfluxbulk_type
   use TemperatureType , only : temperature_type
   use GridcellType    , only : grc       
   use LandunitType    , only : lun       
@@ -990,7 +990,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SnowAge_grain(bounds, &
        num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
-       waterflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst, atm2lnd_inst)
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Updates the snow effective grain size (radius). 
@@ -1037,7 +1037,7 @@ contains
     integer                , intent(in)    :: filter_snowc(:)   ! column filter for snow points
     integer                , intent(in)    :: num_nosnowc       ! number of column non-snow points in column filter
     integer                , intent(in)    :: filter_nosnowc(:) ! column filter for non-snow points
-    type(waterflux_type)   , intent(in)    :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(in)    :: waterfluxbulk_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(temperature_type) , intent(inout) :: temperature_inst
@@ -1078,8 +1078,8 @@ contains
          snl                => col%snl                            , & ! Input:  [integer  (:)   ]  negative number of snow layers (col) [nbr]
          dz                 => col%dz                             , & ! Input:  [real(r8) (:,:) ]  layer thickness (col,lyr) [m]         
 
-         qflx_snow_grnd_col => waterflux_inst%qflx_snow_grnd_col  , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (col) [kg m-2 s-1]
-         qflx_snofrz_lyr    => waterflux_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
+         qflx_snow_grnd_col => waterfluxbulk_inst%qflx_snow_grnd_col  , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (col) [kg m-2 s-1]
+         qflx_snofrz_lyr    => waterfluxbulk_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
 
          frac_sno           => waterdiagnosticbulk_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
          h2osno             => waterstatebulk_inst%h2osno_col         , & ! Input:  [real(r8) (:)   ]  snow water (col) [mm H2O]               

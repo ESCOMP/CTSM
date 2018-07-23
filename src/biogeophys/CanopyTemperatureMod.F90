@@ -26,7 +26,7 @@ module CanopyTemperatureMod
   use FrictionVelocityMod  , only : frictionvel_type
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
-  use WaterfluxType        , only : waterflux_type
+  use WaterFluxBulkType        , only : waterfluxbulk_type
   use WaterStateBulkType       , only : waterstatebulk_type
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use LandunitType         , only : lun                
@@ -48,7 +48,7 @@ contains
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
        clm_fates, &
        atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterflux_inst, energyflux_inst, temperature_inst )
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst )
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of leaf temperature
@@ -95,7 +95,7 @@ contains
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     !
@@ -155,9 +155,9 @@ contains
          qg_h2osfc        =>    waterdiagnosticbulk_inst%qg_h2osfc_col         , & ! Output: [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]
          dqgdT            =>    waterdiagnosticbulk_inst%dqgdT_col             , & ! Output: [real(r8) (:)   ] d(qg)/dT                                 
 
-         qflx_evap_tot    =>    waterflux_inst%qflx_evap_tot_patch    , & ! Output: [real(r8) (:)   ] qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-         qflx_evap_veg    =>    waterflux_inst%qflx_evap_veg_patch    , & ! Output: [real(r8) (:)   ] vegetation evaporation (mm H2O/s) (+ = to atm)
-         qflx_tran_veg    =>    waterflux_inst%qflx_tran_veg_patch    , & ! Output: [real(r8) (:)   ] vegetation transpiration (mm H2O/s) (+ = to atm)
+         qflx_evap_tot    =>    waterfluxbulk_inst%qflx_evap_tot_patch    , & ! Output: [real(r8) (:)   ] qflx_evap_soi + qflx_evap_can + qflx_tran_veg
+         qflx_evap_veg    =>    waterfluxbulk_inst%qflx_evap_veg_patch    , & ! Output: [real(r8) (:)   ] vegetation evaporation (mm H2O/s) (+ = to atm)
+         qflx_tran_veg    =>    waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Output: [real(r8) (:)   ] vegetation transpiration (mm H2O/s) (+ = to atm)
 
          htvp             =>    energyflux_inst%htvp_col              , & ! Output: [real(r8) (:)   ] latent heat of vapor of water (or sublimation) [j/kg]
          cgrnd            =>    energyflux_inst%cgrnd_patch           , & ! Output: [real(r8) (:)   ] deriv. of soil energy flux wrt to soil temp [w/m2/k]

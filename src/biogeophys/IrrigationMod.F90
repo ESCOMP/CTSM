@@ -51,7 +51,7 @@ module IrrigationMod
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-  use WaterfluxType    , only : waterflux_type
+  use WaterFluxBulkType    , only : waterfluxbulk_type
   use GridcellType     , only : grc                
   use ColumnType       , only : col                
   use PatchType        , only : patch                
@@ -734,12 +734,12 @@ contains
   ! ========================================================================
   
   !-----------------------------------------------------------------------
-  subroutine ApplyIrrigation(this, bounds, waterflux_inst)
+  subroutine ApplyIrrigation(this, bounds, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
     !
-    ! Sets waterflux_inst%qflx_irrig_patch and waterflux_inst%qflx_irrig_col.
+    ! Sets waterfluxbulk_inst%qflx_irrig_patch and waterfluxbulk_inst%qflx_irrig_col.
     !
     ! Should be called once, AND ONLY ONCE, per time step.
     !
@@ -748,7 +748,7 @@ contains
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: p  ! patch index
@@ -762,8 +762,8 @@ contains
     ! works correctly.
 
     associate( &
-         qflx_irrig_patch => waterflux_inst%qflx_irrig_patch , & ! Output: [real(r8) (:)] patch irrigation flux (mm H2O/s)
-         qflx_irrig_col   => waterflux_inst%qflx_irrig_col     & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
+         qflx_irrig_patch => waterfluxbulk_inst%qflx_irrig_patch , & ! Output: [real(r8) (:)] patch irrigation flux (mm H2O/s)
+         qflx_irrig_col   => waterfluxbulk_inst%qflx_irrig_col     & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
          )
 
     do p = bounds%begp, bounds%endp

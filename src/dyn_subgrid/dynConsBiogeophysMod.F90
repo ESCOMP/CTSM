@@ -17,7 +17,7 @@ module dynConsBiogeophysMod
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
   use TemperatureType   , only : temperature_type
-  use WaterfluxType     , only : waterflux_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use WaterBalanceType    , only : waterbalance_type
@@ -54,7 +54,7 @@ contains
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, temperature_inst, energyflux_inst)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst)
     !
     ! !DESCRIPTION:
     ! Initialize variables used for dyn_hwcontent, and compute grid cell-level heat
@@ -74,7 +74,7 @@ contains
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)    , intent(inout) :: waterbalance_inst
-    type(waterflux_type)     , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
     type(energyflux_type)    , intent(inout) :: energyflux_inst
     !
@@ -105,7 +105,7 @@ contains
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterflux_inst, temperature_inst, energyflux_inst)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst)
     !
     ! !DESCRIPTION:
     ! Compute grid cell-level heat and water content after land cover change, and compute
@@ -125,7 +125,7 @@ contains
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)    , intent(inout) :: waterbalance_inst
-    type(waterflux_type)     , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
     type(energyflux_type)    , intent(inout) :: energyflux_inst
     !
@@ -176,15 +176,15 @@ contains
          liquid_water_temp2 = temperature_inst%liquid_water_temp2_grc(bounds%begg:bounds%endg), &
          delta_heat = delta_heat(bounds%begg:bounds%endg))
 
-    call waterflux_inst%qflx_liq_dynbal_dribbler%set_curr_delta(bounds, &
+    call waterfluxbulk_inst%qflx_liq_dynbal_dribbler%set_curr_delta(bounds, &
          delta_liq(begg:endg))
-    call waterflux_inst%qflx_liq_dynbal_dribbler%get_curr_flux(bounds, &
-         waterflux_inst%qflx_liq_dynbal_grc(begg:endg))
+    call waterfluxbulk_inst%qflx_liq_dynbal_dribbler%get_curr_flux(bounds, &
+         waterfluxbulk_inst%qflx_liq_dynbal_grc(begg:endg))
 
-    call waterflux_inst%qflx_ice_dynbal_dribbler%set_curr_delta(bounds, &
+    call waterfluxbulk_inst%qflx_ice_dynbal_dribbler%set_curr_delta(bounds, &
          delta_ice(begg:endg))
-    call waterflux_inst%qflx_ice_dynbal_dribbler%get_curr_flux(bounds, &
-         waterflux_inst%qflx_ice_dynbal_grc(begg:endg))
+    call waterfluxbulk_inst%qflx_ice_dynbal_dribbler%get_curr_flux(bounds, &
+         waterfluxbulk_inst%qflx_ice_dynbal_grc(begg:endg))
 
     call energyflux_inst%eflx_dynbal_dribbler%set_curr_delta(bounds, &
          delta_heat(begg:endg))
