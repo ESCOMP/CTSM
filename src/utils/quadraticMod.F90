@@ -36,20 +36,25 @@ contains
      ! !LOCAL VARIABLES:
      real(r8) :: q                        ! Temporary term for quadratic solution
      real(r8) :: root                     ! Term that will have a square root taken
+     character(len=*), parameter :: subname = 'quadratic'
      !------------------------------------------------------------------------------
     
      if (a == 0._r8) then
-        write (iulog,*) 'Quadratic solution error: a = ',a
-        call endrun(msg=errmsg(sourcefile, __LINE__))
+        write (iulog,*) subname//' ERROR: Quadratic solution error: a = ',a
+        write (iulog,*) errmsg(sourcefile, __LINE__)
+        call endrun(msg=subname//' ERROR: Quadratic solution error' )
+        return
      end if
 
      root = b*b - 4._r8*a*c
      if ( root < 0.0 )then
-        if ( sqrt(-root) > epsilon(b) )then
+        if ( -root < 3.0_r8*epsilon(b) )then
            root = 0.0_r8
         else
-           write (iulog,*) 'Quadratic solution error: b^2 - 4ac is negative = ', root
-           call endrun(msg=errmsg(sourcefile, __LINE__))
+           write (iulog,*) subname//' ERROR: Quadratic solution error: b^2 - 4ac is negative = ', root
+           write (iulog,*) errmsg(sourcefile, __LINE__)
+           call endrun( msg=subname//' ERROR: Quadratic solution error: b^2 - 4ac is negative' )
+           return
         end if
      end if
    

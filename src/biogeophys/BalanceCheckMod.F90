@@ -116,6 +116,7 @@ contains
      ! !USES:
      use clm_varcon        , only : spval
      use clm_time_manager  , only : get_step_size, get_nstep
+     use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod
@@ -135,6 +136,7 @@ contains
      integer  :: p,c,l,g,fc                             ! indices
      real(r8) :: dtime                                  ! land model time step (sec)
      integer  :: nstep                                  ! time step number
+     integer  :: DAnstep                                ! time step number since last Data Assimilation (DA)
      logical  :: found                                  ! flag in search loop
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
@@ -178,7 +180,6 @@ contains
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
           qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
           qflx_floodc             =>    waterflux_inst%qflx_floodc_col          , & ! Input:  [real(r8) (:)   ]  total runoff due to flooding            
-          qflx_h2osfc_surf        =>    waterflux_inst%qflx_h2osfc_surf_col     , & ! Input:  [real(r8) (:)   ]  surface water runoff (mm/s)              
           qflx_snow_drain         =>    waterflux_inst%qflx_snow_drain_col      , & ! Input:  [real(r8) (:)   ]  drainage from snow pack                         
           qflx_surf               =>    waterflux_inst%qflx_surf_col            , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)              
           qflx_qrgwl              =>    waterflux_inst%qflx_qrgwl_col           , & ! Input:  [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
@@ -236,6 +237,7 @@ contains
        ! Get step size and time step
 
        nstep = get_nstep()
+       DAnstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
        dtime = get_step_size()
 
        ! Determine column level incoming snow and rain
@@ -269,7 +271,6 @@ contains
                   + qflx_glcice_dyn_water_flux(c) &
                   - qflx_evap_tot(c)         &
                   - qflx_surf(c)             &
-                  - qflx_h2osfc_surf(c)      &
                   - qflx_qrgwl(c)            &
                   - qflx_drain(c)            &
                   - qflx_drain_perched(c)    &
@@ -305,7 +306,7 @@ contains
           if ((col%itype(indexc) == icol_roof .or. &
                col%itype(indexc) == icol_road_imperv .or. &
                col%itype(indexc) == icol_road_perv) .and. &
-               abs(errh2o(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
+               abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
 
              write(iulog,*)'clm urban model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep                 = ',nstep
@@ -317,7 +318,6 @@ contains
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
              write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
-             write(iulog,*)'qflx_h2osfc_surf      = ',qflx_h2osfc_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
              write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
@@ -329,12 +329,12 @@ contains
              write(iulog,*)'deltawb          = ',endwb(indexc)-begwb(indexc)
              write(iulog,*)'deltawb/dtime    = ',(endwb(indexc)-begwb(indexc))/dtime
              write(iulog,*)'deltaflux        = ',forc_rain_col(indexc)+forc_snow_col(indexc) - (qflx_evap_tot(indexc) + &
-                  qflx_surf(indexc)+qflx_h2osfc_surf(indexc)+qflx_drain(indexc))
+                  qflx_surf(indexc)+qflx_drain(indexc))
 
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
 
-          else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
+          else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
 
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep                 = ',nstep
@@ -348,7 +348,6 @@ contains
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
              write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
-             write(iulog,*)'qflx_h2osfc_surf      = ',qflx_h2osfc_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
              write(iulog,*)'qflx_drain_perched    = ',qflx_drain_perched(indexc)*dtime
@@ -433,7 +432,7 @@ contains
                ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                ' errh2osno= ',errh2osno(indexc)
 
-          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
+          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep              = ',nstep
              write(iulog,*)'errh2osno          = ',errh2osno(indexc)
@@ -525,7 +524,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (nstep > 2) ) then
+       if ( found  .and. (DAnstep > 2) ) then
           write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsol        = ',errsol(indexp)
@@ -555,7 +554,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (nstep > 2) ) then
+       if ( found  .and. (DAnstep > 2) ) then
           write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)' 
           write(iulog,*)'nstep        = ',nstep 
           write(iulog,*)'errlon       = ',errlon(indexp)
@@ -578,7 +577,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (nstep > 2) ) then
+       if ( found  .and. (DAnstep > 2) ) then
           write(iulog,*)'WARNING: BalanceCheck: surface flux energy balance error (W/m2)'
           write(iulog,*)'nstep          = ' ,nstep
           write(iulog,*)'errseb         = ' ,errseb(indexp)
@@ -621,7 +620,7 @@ contains
           write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
-          if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
+          if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (DAnstep > 2) ) then
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if

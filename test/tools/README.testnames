@@ -1,13 +1,3 @@
-Test names for the test_system script are given by the test type, resolution, compset, and then machine/compiler
-
-so
-
-   test_type.resolution.compset.machine_compiler
-
-example:
-
-   ERS_D_PT.T31_g37.I_2000_VOC_SNCRFRC_CN.yellowstone_intel
-
 Tests for test_driver are for the CLM tools only.
 
 Test naming conventions for the test_driver.sh script:

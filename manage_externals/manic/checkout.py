@@ -20,7 +20,7 @@ from manic.externals_description import create_externals_description
 from manic.externals_description import read_externals_description_file
 from manic.externals_status import check_safe_to_update_repos
 from manic.sourcetree import SourceTree
-from manic.utils import printlog
+from manic.utils import printlog, fatal_error
 from manic.global_constants import VERSION_SEPERATOR, LOG_FILE_NAME
 
 if sys.hexversion < 0x02070000:
@@ -46,31 +46,38 @@ def commandline_arguments(args=None):
     Returns: processed command line arguments
     """
     description = '''
-%(prog)s manages checking out CESM externals from revision control
-based on a externals description file. By default only the required
-externals are checkout out.
 
-NOTE: %(prog)s *MUST* be run from the root of the source tree.
+%(prog)s manages checking out groups of externals from revision
+control based on a externals description file. By default only the
+required externals are checkout out.
+
+Operations performed by manage_externals utilities are explicit and
+data driven. %(prog)s will always make the working copy *exactly*
+match what is in the externals file when modifying the working copy of
+a repository.
+
+If %(prog)s isn't doing what you expected, double check the contents
+of the externals description file.
 
 Running %(prog)s without the '--status' option will always attempt to
-synchronize the working copy with the externals description.
+synchronize the working copy to exactly match the externals description.
 '''
 
     epilog = '''
 ```
 NOTE: %(prog)s *MUST* be run from the root of the source tree it
-is managing. For example, if you cloned CLM with:
+is managing. For example, if you cloned a repository with:
 
-    $ git clone git@github.com/ncar/clm clm-dev
+    $ git clone git@github.com/{SOME_ORG}/some-project some-project-dev
 
-Then the root of the source tree is /path/to/clm-dev. If you obtained
-CLM via a checkout of CESM:
+Then the root of the source tree is /path/to/some-project-dev. If you
+obtained a sub-project via a checkout of another project:
 
-    $ git clone git@github.com/escomp/cesm cesm-dev
+    $ git clone git@github.com/{SOME_ORG}/some-project some-project-dev
 
-and you need to checkout the CLM externals, then the root of the
-source tree is /path/to/cesm-dev. Do *NOT* run %(prog)s
-from within /path/to/cesm-dev/components/clm.
+and you need to checkout the sub-project externals, then the root of the
+source tree is /path/to/some-project-dev. Do *NOT* run %(prog)s
+from within /path/to/some-project-dev/sub-project
 
 The root of the source tree will be referred to as `${SRC_ROOT}` below.
 
@@ -95,11 +102,14 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     include: modified files, added files, removed files, or missing
     files.
 
+    To avoid this safety check, edit the externals description file
+    and comment out the modified external block.
+
   * Checkout all required components from a user specified externals
     description file:
 
         $ cd ${SRC_ROOT}
-        $ ./manage_externals/%(prog)s --excernals myCESM.xml
+        $ ./manage_externals/%(prog)s --excernals my-externals.cfg
 
   * Status summary of the repositories managed by %(prog)s:
 
@@ -143,12 +153,17 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
 # Externals description file
 
   The externals description contains a list of the external
-  repositories that are used and their version control locations. Each
-  external has:
+  repositories that are used and their version control locations. The
+  file format is the standard ini/cfg configuration file format. Each
+  external is defined by a section containing the component name in
+  square brackets:
 
-  * name (string) : component name, e.g. cime, cism, clm, cam, etc.
+  * name (string) : component name, e.g. [cime], [cism], etc.
 
-  * required (boolean) : whether the component is a required checkout
+  Each section has the following keyword-value pairs:
+
+  * required (boolean) : whether the component is a required checkout,
+    'true' or 'false'.
 
   * local_path (string) : component path *relative* to where
     %(prog)s is called.
@@ -157,42 +172,68 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     manage the component.  Valid values are 'git', 'svn',
     'externals_only'.
 
+    Switching an external between different protocols is not
+    supported, e.g. from svn to git. To switch protocols, you need to
+    manually move the old working copy to a new location.
+
     Note: 'externals_only' will only process the external's own
     external description file without trying to manage a repository
     for the component. This is used for retreiving externals for
-    standalone components like cam and clm.
+    standalone components like cam and clm. If the source root of the
+    externals_only component is the same as the main source root, then
+    the local path must be set to '.', the unix current working
+    directory, e. g. 'local_path = .'
 
   * repo_url (string) : URL for the repository location, examples:
     * https://svn-ccsm-models.cgd.ucar.edu/glc
     * git@github.com:esmci/cime.git
     * /path/to/local/repository
+    * .
+
+    NOTE: To operate on only the local clone and and ignore remote
+    repositories, set the url to '.' (the unix current path),
+    i.e. 'repo_url = .' . This can be used to checkout a local branch
+    instead of the upstream branch.
 
     If a repo url is determined to be a local path (not a network url)
     then user expansion, e.g. ~/, and environment variable expansion,
     e.g. $HOME or $REPO_ROOT, will be performed.
 
     Relative paths are difficult to get correct, especially for mixed
-    use repos like clm. It is advised that local paths expand to
-    absolute paths. If relative paths are used, they should be
-    relative to one level above local_path. If local path is
-    'src/foo', the the relative url should be relative to
-    'src'.
+    use repos. It is advised that local paths expand to absolute paths.
+    If relative paths are used, they should be relative to one level
+    above local_path. If local path is 'src/foo', the the relative url
+    should be relative to 'src'.
 
   * tag (string) : tag to checkout
 
-    This can also be a git SHA-1
+  * hash (string) : the git hash to checkout. Only applies to git
+    repositories.
 
-  * branch (string) : branch to checkout
+  * branch (string) : branch to checkout from the specified
+    repository. Specifying a branch on a remote repository means that
+    %(prog)s will checkout the version of the branch in the remote,
+    not the the version in the local repository (if it exists).
 
-    Note: either tag or branch must be supplied, but not both.
+    Note: one and only one of tag, branch hash must be supplied.
 
-  * externals (string) : relative path to the external's own external
-    description file that should also be used. It is *relative* to the
-    component local_path. For example, the CESM externals description
-    will load clm. CLM has additional externals that must be
-    downloaded to be complete. Those additional externals are managed
-    from the clm source root by the file pointed to by 'externals'.
+  * externals (string) : used to make manage_externals aware of
+    sub-externals required by an external. This is a relative path to
+    the external's root directory. For example, the main externals
+    description has an external checkout out at 'src/useful_library'.
+    useful_library requires additional externals to be complete.
+    Those additional externals are managed from the source root by the
+    externals description file pointed 'useful_library/sub-xternals.cfg',
+    Then the main 'externals' field in the top level repo should point to
+    'sub-externals.cfg'.
 
+  * Lines begining with '#' or ';' are comments and will be ignored.
+
+# Obtaining this tool, reporting issues, etc.
+
+  The master repository for manage_externals is
+  https://github.com/ESMCI/manage_externals. Any issues with this tool
+  should be reported there.
 '''
 
     parser = argparse.ArgumentParser(
@@ -202,6 +243,10 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     #
     # user options
     #
+    parser.add_argument("components", nargs="*",
+                        help="Specific component(s) to checkout. By default"
+                        "all required externals are checked out.")
+
     parser.add_argument('-e', '--externals', nargs='?',
                         default='Externals.cfg',
                         help='The externals description filename. '
@@ -234,8 +279,15 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
                         help='DEVELOPER: output additional debugging '
                         'information to the screen and log file.')
 
-    parser.add_argument('--no-logging', action='store_true',
-                        help='DEVELOPER: disable logging.')
+    logging_group = parser.add_mutually_exclusive_group()
+
+    logging_group.add_argument('--logging', dest='do_logging',
+                               action='store_true',
+                               help='DEVELOPER: enable logging.')
+    logging_group.add_argument('--no-logging', dest='do_logging',
+                               action='store_false', default=False,
+                               help='DEVELOPER: disable logging '
+                               '(this is the default)')
 
     if args:
         options = parser.parse_args(args)
@@ -254,8 +306,13 @@ def main(args):
     Function to call when module is called from the command line.
     Parse externals file and load required repositories or all repositories if
     the --all option is passed.
+
+    Returns a tuple (overall_status, tree_status). overall_status is 0
+    on success, non-zero on failure. tree_status gives the full status
+    *before* executing the checkout command - i.e., the status that it
+    used to determine if it's safe to proceed with the checkout.
     """
-    if not args.no_logging:
+    if args.do_logging:
         logging.basicConfig(filename=LOG_FILE_NAME,
                             format='%(levelname)s : %(asctime)s : %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S',
@@ -270,7 +327,14 @@ def main(args):
 
     root_dir = os.path.abspath(os.getcwd())
     external_data = read_externals_description_file(root_dir, args.externals)
-    external = create_externals_description(external_data)
+    external = create_externals_description(
+        external_data, components=args.components)
+
+    for comp in args.components:
+        if comp not in external.keys():
+            fatal_error(
+                "No component {} found in {}".format(
+                    comp, args.externals))
 
     source_tree = SourceTree(root_dir, external)
     printlog('Checking status of externals: ', end='')
@@ -302,13 +366,23 @@ The following are two options for how to proceed:
 (2) Alternatively, you do not have to rely on {program_name}. Instead, you
     can manually update out-of-sync externals (labeled with 's' above)
     as described in the configuration file {config_file}.
+
+
+The external repositories labeled with '?' above are not under version
+control using the expected protocol. If you are sure you want to switch
+protocols, and you don't have any work you need to save from this
+directory, then run "rm -rf [directory]" before re-running the
+checkout_externals tool.
 """.format(program_name=program_name, config_file=args.externals)
 
             printlog('-' * 70)
             printlog(msg)
             printlog('-' * 70)
         else:
-            source_tree.checkout(args.verbose, load_all)
+            if not args.components:
+                source_tree.checkout(args.verbose, load_all)
+            for comp in args.components:
+                source_tree.checkout(args.verbose, load_all, load_comp=comp)
             printlog('')
 
     logging.info('%s completed without exceptions.', program_name)

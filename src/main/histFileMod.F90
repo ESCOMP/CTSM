@@ -36,7 +36,7 @@ module histFileMod
   !
   ! Constants
   !
-  integer , public, parameter :: max_tapes = 6          ! max number of history tapes
+  integer , public, parameter :: max_tapes = 10         ! max number of history tapes
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
   integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
   integer , public, parameter :: scale_type_strlen = 32 ! maximum number of characters for scale types
@@ -65,7 +65,7 @@ module histFileMod
   integer, public :: &
        hist_ndens(max_tapes) = 2         ! namelist: output density of netcdf history files
   integer, public :: &
-       hist_mfilt(max_tapes) = 30        ! namelist: number of time samples per tape
+       hist_mfilt(max_tapes) = (/ 1, (30, ni=2, max_tapes)/)        ! namelist: number of time samples per tape
   logical, public :: &
        hist_dov2xy(max_tapes) = (/.true.,(.true.,ni=2,max_tapes)/) ! namelist: true=> do grid averaging
   integer, public :: &
@@ -90,6 +90,14 @@ module histFileMod
        hist_fincl5(max_flds) = ' '       ! namelist: list of fields to add
   character(len=max_namlen+2), public :: &
        hist_fincl6(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl7(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl8(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl9(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl10(max_flds) = ' '       ! namelist: list of fields to add
 
   character(len=max_namlen+2), public :: &
        fexcl(max_flds,max_tapes)         ! namelist-equivalence list of fields to remove
@@ -106,6 +114,14 @@ module histFileMod
        hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to remove
   character(len=max_namlen+2), public :: &
        hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl7(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl8(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl9(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl10(max_flds) = ' ' ! namelist: list of fields to remove
 
   logical, private :: if_disphist(max_tapes)   ! restart, true => save history file
   !
@@ -626,20 +642,28 @@ contains
        end if
     end do
 
-    fincl(:,1) = hist_fincl1(:)
-    fincl(:,2) = hist_fincl2(:)
-    fincl(:,3) = hist_fincl3(:)
-    fincl(:,4) = hist_fincl4(:)
-    fincl(:,5) = hist_fincl5(:)
-    fincl(:,6) = hist_fincl6(:)
+    fincl(:,1)  = hist_fincl1(:)
+    fincl(:,2)  = hist_fincl2(:)
+    fincl(:,3)  = hist_fincl3(:)
+    fincl(:,4)  = hist_fincl4(:)
+    fincl(:,5)  = hist_fincl5(:)
+    fincl(:,6)  = hist_fincl6(:)
+    fincl(:,7)  = hist_fincl7(:)
+    fincl(:,8)  = hist_fincl8(:)
+    fincl(:,9)  = hist_fincl9(:)
+    fincl(:,10) = hist_fincl10(:)
 
-    fexcl(:,1) = hist_fexcl1(:)
-    fexcl(:,2) = hist_fexcl2(:)
-    fexcl(:,3) = hist_fexcl3(:)
-    fexcl(:,4) = hist_fexcl4(:)
-    fexcl(:,5) = hist_fexcl5(:)
-    fexcl(:,6) = hist_fexcl6(:)
-
+    fexcl(:,1)  = hist_fexcl1(:)
+    fexcl(:,2)  = hist_fexcl2(:)
+    fexcl(:,3)  = hist_fexcl3(:)
+    fexcl(:,4)  = hist_fexcl4(:)
+    fexcl(:,5)  = hist_fexcl5(:)
+    fexcl(:,6)  = hist_fexcl6(:)
+    fexcl(:,7)  = hist_fexcl7(:)
+    fexcl(:,8)  = hist_fexcl8(:)
+    fexcl(:,9)  = hist_fexcl9(:)
+    fexcl(:,10) = hist_fexcl10(:)
+ 
 
     ! First ensure contents of fincl and fexcl are valid names
 
@@ -3819,19 +3843,27 @@ contains
           call ncd_io('locfnhr', locfnhr(t), 'write', ncid, nt=t)
        end do
        
-       fincl(:,1) = hist_fincl1(:)
-       fincl(:,2) = hist_fincl2(:)
-       fincl(:,3) = hist_fincl3(:)
-       fincl(:,4) = hist_fincl4(:)
-       fincl(:,5) = hist_fincl5(:)
-       fincl(:,6) = hist_fincl6(:)
+       fincl(:,1)  = hist_fincl1(:)
+       fincl(:,2)  = hist_fincl2(:)
+       fincl(:,3)  = hist_fincl3(:)
+       fincl(:,4)  = hist_fincl4(:)
+       fincl(:,5)  = hist_fincl5(:)
+       fincl(:,6)  = hist_fincl6(:)
+       fincl(:,7)  = hist_fincl7(:)
+       fincl(:,8)  = hist_fincl8(:)
+       fincl(:,9)  = hist_fincl9(:)
+       fincl(:,10) = hist_fincl10(:)
 
-       fexcl(:,1) = hist_fexcl1(:)
-       fexcl(:,2) = hist_fexcl2(:)
-       fexcl(:,3) = hist_fexcl3(:)
-       fexcl(:,4) = hist_fexcl4(:)
-       fexcl(:,5) = hist_fexcl5(:)
-       fexcl(:,6) = hist_fexcl6(:)
+       fexcl(:,1)  = hist_fexcl1(:)
+       fexcl(:,2)  = hist_fexcl2(:)
+       fexcl(:,3)  = hist_fexcl3(:)
+       fexcl(:,4)  = hist_fexcl4(:)
+       fexcl(:,5)  = hist_fexcl5(:)
+       fexcl(:,6)  = hist_fexcl6(:)
+       fexcl(:,7)  = hist_fexcl7(:)
+       fexcl(:,8)  = hist_fexcl8(:)
+       fexcl(:,9)  = hist_fexcl9(:)
+       fexcl(:,10) = hist_fexcl10(:)
 
        max_nflds = max_nFields()
 
@@ -4097,19 +4129,27 @@ contains
 
           end do  ! end of tapes loop
 
-          hist_fincl1(:) = fincl(:,1)
-          hist_fincl2(:) = fincl(:,2)
-          hist_fincl3(:) = fincl(:,3)
-          hist_fincl4(:) = fincl(:,4)
-          hist_fincl5(:) = fincl(:,5)
-          hist_fincl6(:) = fincl(:,6)
+          hist_fincl1(:)  = fincl(:,1)
+          hist_fincl2(:)  = fincl(:,2)
+          hist_fincl3(:)  = fincl(:,3)
+          hist_fincl4(:)  = fincl(:,4)
+          hist_fincl5(:)  = fincl(:,5)
+          hist_fincl6(:)  = fincl(:,6)
+          hist_fincl7(:)  = fincl(:,7)
+          hist_fincl8(:)  = fincl(:,8)
+          hist_fincl9(:)  = fincl(:,9)
+          hist_fincl10(:) = fincl(:,10)
 
-          hist_fexcl1(:) = fexcl(:,1)
-          hist_fexcl2(:) = fexcl(:,2)
-          hist_fexcl3(:) = fexcl(:,3)
-          hist_fexcl4(:) = fexcl(:,4)
-          hist_fexcl5(:) = fexcl(:,5)
-          hist_fexcl6(:) = fexcl(:,6)
+          hist_fexcl1(:)  = fexcl(:,1)
+          hist_fexcl2(:)  = fexcl(:,2)
+          hist_fexcl3(:)  = fexcl(:,3)
+          hist_fexcl4(:)  = fexcl(:,4)
+          hist_fexcl5(:)  = fexcl(:,5)
+          hist_fexcl6(:)  = fexcl(:,6)
+          hist_fexcl7(:)  = fexcl(:,7)
+          hist_fexcl8(:)  = fexcl(:,8)
+          hist_fexcl9(:)  = fexcl(:,9)
+          hist_fexcl10(:) = fexcl(:,10)
 
        end if
        

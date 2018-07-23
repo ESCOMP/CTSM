@@ -109,6 +109,7 @@ module SoilTemperatureMod
   private :: PhaseChange_beta    ! Calculation of the phase change within snow and soil layers
   private :: BuildingHAC         ! Building Heating and Cooling for simpler method (introduced in CLM4.5)
 
+  real(r8), private, parameter :: thin_sfclayer = 1.0e-6_r8   ! Threshold for thin surface layer
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -339,8 +340,13 @@ contains
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
-         dz_h2osfc(c) = max(1.0e-6_r8,1.0e-3*h2osfc(c))
-         c_h2osfc(c)  = cpliq*denh2o*dz_h2osfc(c) !"areametric" heat capacity [J/K/m^2]
+         if ( (h2osfc(c) > thin_sfclayer) .and. (frac_h2osfc(c) > thin_sfclayer) ) then 
+            c_h2osfc(c)  = max(thin_sfclayer, cpliq*h2osfc(c)/frac_h2osfc(c)  )
+            dz_h2osfc(c) = max(thin_sfclayer, 1.0e-3*h2osfc(c)/frac_h2osfc(c) )
+         else
+            c_h2osfc(c)  = thin_sfclayer
+            dz_h2osfc(c) = thin_sfclayer
+         endif
       enddo
 
 
@@ -502,7 +508,7 @@ contains
 
       call PhaseChangeH2osfc (bounds, num_nolakec, filter_nolakec, &
            dhsdT(bounds%begc:bounds%endc), &
-           waterstate_inst, waterflux_inst, temperature_inst)
+           waterstate_inst, waterflux_inst, temperature_inst,energyflux_inst)
 
       call Phasechange_beta (bounds, num_nolakec, filter_nolakec, &
            dhsdT(bounds%begc:bounds%endc), &
@@ -793,7 +799,11 @@ contains
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             if (snl(c)+1 < 1 .and. j >= snl(c)+1) then
-               cv(c,j) = cpliq*h2osoi_liq(c,j) + cpice*h2osoi_ice(c,j)
+               if (frac_sno(c) > 0._r8) then
+                  cv(c,j) = max(thin_sfclayer,(cpliq*h2osoi_liq(c,j) + cpice*h2osoi_ice(c,j))/frac_sno(c))
+               else
+                  cv(c,j) = thin_sfclayer
+               endif
             end if
          end do
       end do
@@ -805,14 +815,14 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine PhaseChangeH2osfc (bounds, num_nolakec, filter_nolakec, &
-       dhsdT, waterstate_inst, waterflux_inst, temperature_inst)
+       dhsdT, waterstate_inst, waterflux_inst, temperature_inst,energyflux_inst)
     !
     ! !DESCRIPTION:
     ! Only freezing is considered.  When water freezes, move ice to bottom snow layer.
     !
     ! !USES:
     use clm_time_manager , only : get_step_size
-    use clm_varcon       , only : tfrz, hfus, grav, denice, cnfac, cpice
+    use clm_varcon       , only : tfrz, hfus, grav, denice, cnfac, cpice, cpliq
     use clm_varpar       , only : nlevsno, nlevgrnd
     use clm_varctl       , only : iulog
     !
@@ -824,6 +834,7 @@ contains
     type(waterstate_type)  , intent(inout) :: waterstate_inst
     type(waterflux_type)   , intent(inout) :: waterflux_inst
     type(temperature_type) , intent(inout) :: temperature_inst
+    type(energyflux_type) , intent(inout) :: energyflux_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: j,c,g                       !do loop index
@@ -834,11 +845,10 @@ contains
     real(r8) :: xm(bounds%begc:bounds%endc) !melting or freezing within a time step [kg/m2 ]
     real(r8) :: tinc                        !t(n+1)-t(n) (K)
     real(r8) :: smp                         !frozen water potential (mm)
-    real(r8) :: rho_avg
-    real(r8) :: z_avg
-    real(r8) :: dcv(bounds%begc:bounds%endc)!change in cv due to additional ice
-    real(r8) :: c1
-    real(r8) :: c2
+    real(r8) :: rho_avg                     !average density
+    real(r8) :: z_avg                       !average of snow depth 
+    real(r8) :: c1                          !weight to use for lowest snow layer
+    real(r8) :: c2                          !weight to use for surface water layer
     !-----------------------------------------------------------------------
 
     call t_startf( 'PhaseChangeH2osfc' )
@@ -847,6 +857,7 @@ contains
     SHR_ASSERT_ALL((ubound(dhsdT) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                   & 
+          eflx_h2osfc_to_snow_col  => energyflux_inst%eflx_h2osfc_to_snow_col  , & ! Output: [real(r8) (:)   ] col snow melt to h2osfc heat flux (W/m**2)
          snl                       =>    col%snl                               , & ! Input:  [integer  (:)   ] number of snow layers                    
          dz                        =>    col%dz                                , & ! Input:  [real(r8) (:,:) ] layer thickness (m)                    
          
@@ -879,6 +890,7 @@ contains
          hm(c) = 0._r8
          xm(c) = 0._r8
          qflx_h2osfc_to_ice(c) = 0._r8
+         eflx_h2osfc_to_snow_col(c) = 0._r8
       end do
 
       ! Freezing identification
@@ -891,14 +903,11 @@ contains
             t_h2osfc(c) = tfrz
 
             ! energy absorbed beyond freezing temperature
-            hm(c) = dhsdT(c)*tinc - tinc*c_h2osfc(c)/dtime
+            hm(c) = frac_h2osfc(c)*(dhsdT(c)*tinc - tinc*c_h2osfc(c)/dtime)
 
             ! mass of water converted from liquid to ice
             xm(c) = hm(c)*dtime/hfus  
             temp1 = h2osfc(c) + xm(c)
-
-            ! compute change in cv due to additional ice
-            dcv(c)=cpice*min(abs(xm(c)),h2osfc(c))
 
             z_avg=frac_sno(c)*snow_depth(c)
             if (z_avg > 0._r8) then 
@@ -919,15 +928,37 @@ contains
                ! remove ice from h2osfc
                h2osfc(c) = h2osfc(c) + xm(c)
 
-               xmf_h2osfc(c) = frac_h2osfc(c)*hm(c)
-
+               xmf_h2osfc(c) = hm(c)
                qflx_h2osfc_to_ice(c) = -xm(c)/dtime
+
 
                ! update snow depth
                if (frac_sno(c) > 0 .and. snl(c) < 0) then 
                   snow_depth(c)=h2osno(c)/(rho_avg*frac_sno(c))
                else
                   snow_depth(c)=h2osno(c)/denice
+               endif
+
+               ! adjust temperature of lowest snow layer to account for addition of ice
+               if (snl(c) == 0) then
+                  !initialize for next time step
+                  t_soisno(c,0) = t_h2osfc(c)
+                  eflx_h2osfc_to_snow_col(c) = 0.
+               else
+                  if (snl(c) == -1)then
+                     c1=frac_sno(c)*(dtime/fact(c,0) - dhsdT(c)*dtime)
+                  else
+                     c1=frac_sno(c)/fact(c,0)*dtime
+                  end if
+                  if ( frac_h2osfc(c) /= 0.0_r8 )then
+                     c2=(-cpliq*xm(c) - frac_h2osfc(c)*dhsdT(c)*dtime)
+                  else
+                     c2=0.0_r8
+                  end if
+                  t_soisno(c,0) = (c1*t_soisno(c,0)+ c2*t_h2osfc(c)) &
+                       /(c1 + c2)             
+                  eflx_h2osfc_to_snow_col(c) =(t_h2osfc(c)-t_soisno(c,0))*c2/dtime
+                  
                endif
 
                !=========================  xm > h2osfc  =============================
@@ -949,7 +980,7 @@ contains
                ! cool frozen h2osfc layer with extra heat
                t_h2osfc(c) = t_h2osfc(c) - temp1*hfus/(dtime*dhsdT(c) - c_h2osfc(c))
 
-               xmf_h2osfc(c) = frac_h2osfc(c)*(hm(c) - temp1*hfus/dtime)
+               xmf_h2osfc(c) = (hm(c) - frac_h2osfc(c)*temp1*hfus/dtime)
 
                ! next, determine equilibrium temperature of combined ice/snow layer
                if (snl(c) == 0) then
@@ -1221,7 +1252,11 @@ contains
 
                      !==================================================================
                      if (j == snl(c)+1) then ! top layer                   
-                        hm(c,j) = dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
+                        if(j > 0) then
+                           hm(c,j) = dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
+                        else
+                           hm(c,j) = frac_sno_eff(c)*(dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j))
+                        endif
 
                         if ( j==1 .and. frac_h2osfc(c) /= 0.0_r8 ) then
                            hm(c,j) = hm(c,j) - frac_h2osfc(c)*(dhsdT(c)*tinc(c,j))
@@ -1230,7 +1265,11 @@ contains
                         hm(c,j) = (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) &
                              *dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
                      else ! non-interfacial snow/soil layers                   
-                        hm(c,j) = - tinc(c,j)/fact(c,j)
+                        if(j < 1) then
+                           hm(c,j) = - frac_sno_eff(c)*(tinc(c,j)/fact(c,j))
+                        else
+                           hm(c,j) = - tinc(c,j)/fact(c,j)
+                        endif
                      endif
                   endif
 
@@ -1300,8 +1339,9 @@ contains
                               t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
                                    /(1._r8-(1.0_r8 - frac_h2osfc(c))*fact(c,j)*dhsdT(c))
                            else
-                              t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
+                              t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr &
                                    /(1._r8-fact(c,j)*dhsdT(c))
+
                            endif
 
                         else if (j == 1) then
@@ -1309,7 +1349,11 @@ contains
                            t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
                                 /(1._r8-(1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c))*fact(c,j)*dhsdT(c))
                         else
-                           t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr
+                           if(j > 0) then
+                              t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr
+                           else
+                              if(frac_sno_eff(c) > 0._r8) t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr
+                           endif
                         endif
 
                         if (j <= 0) then    ! snow
@@ -1320,7 +1364,7 @@ contains
                      if (j >= 1) then 
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      else
-                        xmf(c) = xmf(c) + frac_sno_eff(c)*hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
+                        xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif
 
                      if (imelt(c,j) == 1 .AND. j < 1) then

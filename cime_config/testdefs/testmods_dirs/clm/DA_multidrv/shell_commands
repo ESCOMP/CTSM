@@ -1,0 +1,6 @@
+# Test Data Assimilation with multi-driver on
+./xmlchange LND_DATA_ASSIMILATION=TRUE
+./xmlchange MULTI_DRIVER=TRUE
+
+# Set calendar, just because Gregorian is ussually used for DA
+./xmlchange CALENDAR=GREGORIAN

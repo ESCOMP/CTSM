@@ -92,6 +92,14 @@ over-productive.
 If TRUE, separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
+<entry id="run_zero_weight_urban" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, run all urban landunits everywhere where we have valid urban data.
+This forces memory to be allocated and calculations to be run even for 0-weight urban points.
+This has a substantial impact on memory use and performance, and should only be used
+if you're interested in potential urban behavior globally.
+</entry>
+
 <entry id="all_active" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, make ALL pfts, columns and landunits active, even those with 0 weight.
@@ -341,7 +349,7 @@ Index of lower boundary condition for Richards equation.
 lower_boundary_condition = 1 : flux lower boundary condition                                     (use with soilwater_movement_method=adaptive time stepping)
 lower_boundary_condition = 2 : zero-flux lower boundary condition                                (use with soilwater_movement_method=adaptive time stepping)
 lower_boundary_condition = 3 : water table head-based lower boundary condition w/ aquifer layer. (use with soilwater_movement_method=adaptive time stepping)
-lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer                                (only used with soilwater_movement_method=Zeng&Decker 2009)
+lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer                                (only used with soilwater_movement_method=Zeng&amp;Decker 2009)
 
 TODO(bja, 2015-09) these should be strings so they have meaningful names instead of ints. 
 </entry>
@@ -672,7 +680,7 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
 
-<entry id="hist_avgflag_pertape" type="char*1(6)" category="history"
+<entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
        group="clm_inparm" valid_values="A,I,X,M" >
 Per file averaging flag.
     'A' (average over history period)
@@ -681,7 +689,7 @@ Per file averaging flag.
     'M' (minimum over history period)
 </entry>
 
-<entry id="hist_type1d_pertape" type="char*4(6)" category="history"
+<entry id="hist_type1d_pertape" type="char*4(10)" category="history"
        group="clm_inparm" valid_values="GRID,LAND,COLS,PFTS, " >
 Averaging type of output for 1D vector output (when hist_dov2xy is false).
     GRID means average all land-units up to the grid-point level
@@ -690,7 +698,7 @@ Averaging type of output for 1D vector output (when hist_dov2xy is false).
     PFTS means report everything on native PFT level
 </entry>
 
-<entry id="hist_dov2xy" type="logical(6)" category="history"
+<entry id="hist_dov2xy" type="logical(10)" category="history"
        group="clm_inparm" valid_values="" >
 If TRUE, implies output data on a 2D latitude/longitude grid. False means
 output in 1D vector format.  One setting per history tape series.
@@ -732,6 +740,26 @@ Fields to exclude from history tape series  5.
 Fields to exclude from history tape series  6.
 </entry>
 
+<entry id="hist_fexcl7" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  7.
+</entry>
+
+<entry id="hist_fexcl8" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  8.
+</entry>
+
+<entry id="hist_fexcl9" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  9.
+</entry>
+
+<entry id="hist_fexcl10" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series 10.
+</entry>
+
 <entry id="hist_fincl1" type="char*64(1000)" category="history"
        group="clm_inparm" valid_values="" >
 Fields to add to history tape series  1.
@@ -762,27 +790,47 @@ Fields to add to history tape series  5.
 Fields to add to history tape series  6.
 </entry>
 
-<entry id="hist_mfilt" type="integer(6)" category="history"
+<entry id="hist_fincl7" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  7.
+</entry>
+
+<entry id="hist_fincl8" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  8.
+</entry>
+
+<entry id="hist_fincl9" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  9.
+</entry>
+
+<entry id="hist_fincl10" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series 10.
+</entry>
+
+<entry id="hist_mfilt" type="integer(10)" category="history"
        group="clm_inparm" valid_values="" >
 Per tape series  maximum number of time samples.
 </entry>
 
-<entry id="hist_ndens" type="integer(6)" category="history"
+<entry id="hist_ndens" type="integer(10)" category="history"
        group="clm_inparm" valid_values="1,2" >
 Per tape series  history file density (i.e. output precision) 
     1=double precision
     2=single precision
-<default>Default: 2,2,2,2,2,2</default>
+<default>Default: 2,2,2,2,2,2,2,2,2,2</default>
 </entry>
 
-<entry id="hist_nhtfrq" type="integer(6)" category="history"
+<entry id="hist_nhtfrq" type="integer(10)" category="history"
        group="clm_inparm" valid_values="" >
 Per tape series history write frequency. 
     positive means in time steps
     0=monthly
     negative means hours
 (i.e. 5 means every 24 time-steps and -24 means every day
-<default>Default: 0,-24,-24,-24,-24,-24</default>
+<default>Default: 0,-24,-24,-24,-24,-24,-24,-24,-24,-24</default>
 </entry>
 
 <entry id="nsegspc" type="integer" category="clm_performance"
@@ -1034,6 +1082,11 @@ in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 <!--                                                   -->
 <!-- mksurfdata namelist                               -->
 <!--                                                   -->
+<entry id="gitdescribe" type="char*80" category="mksurfdata"
+       group="clmexp" valid_values="" >
+Output of "git describe" to give the tag/commit the version being used corresponds to
+</entry>
+
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
        valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
@@ -1893,25 +1946,21 @@ Enable C14 model
 <entry id="use_c14_bombspike" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Flag to use the atmospheric time series of C14 concentrations from bomb fallout and Seuss effect, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c14_filename" type="char*256" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "Delta14co2_in_air". time variable is in format: years since 1850-01-01 0:0:0.0  units are permil.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="use_c13_timeseries" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Flag to use the atmospheric time series of C13 concentrations from natural abundance and the Seuss Effect, rather than static values.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c13_filename" type="char*256" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0. units are permil.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 
@@ -2008,7 +2057,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
@@ -2366,6 +2414,39 @@ NOTE: Natural vegetation and crop landunits always behave as if this were true. 
 we can't find a column with the same type as a given crop column in the output, then we
 always fill with the closest natural veg patch / column, regardless of the value of this
 flag. So interpolation from non-crop to crop cases can be done without setting this flag.
+</entry>
+
+<entry id="init_interp_method" type="char*64" category="datasets"
+       group="clm_initinterp_inparm"
+       valid_values="general,use_finidat_areas" >
+Method to use for init_interp. Only applies when use_init_interp = .true.
+
+'general': The general-purpose method that can be used when changing
+grids, configurations, etc. This starts off with subgrid areas taken
+from the surface dataset.
+
+'use_finidat_areas': This starts off with subgrid areas taken from the
+input finidat file. This is needed to achieve bit-for-bit results in a
+coupled case (where areas in initialization impact initial fields sent
+to the atmosphere) (but using the 'general' method will typically have
+only a very minor impact on results in this case). For this method to
+work, the input finidat file needs to be at the same resolution as the
+current configuration. So this is a less general form of
+init_interp. However, it can be used when transitioning from a spinup
+run to a transient run, or in other cases where the only difference is
+in internal memory allocation. In order to catch possible problems, this
+uses a different algorithm for finding the input point for each output
+point, which ensures that each active output point is associated with
+exactly one input point with the same latitude, longitude and type. This
+method requires (a) the same grid for input and output, within roundoff;
+(b) any non-zero-weight point in the input must have memory allocated
+for it in this grid cell in the output (this will be satisfied if the
+point is non-zero-weight on the surface dataset or if it's a point for
+which we allocate memory even for zero-weight points); (c) any active
+point in the output (based on the surface dataset and rules for
+determining active points) must have a matching point in this grid cell
+in the input.
+
 </entry>
 
 </namelist_definition>

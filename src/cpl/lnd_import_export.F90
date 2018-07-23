@@ -247,6 +247,9 @@ contains
        else
           co2_ppmv_val = co2_ppmv
        end if
+       if ( (co2_ppmv_val < 10.0_r8) .or. (co2_ppmv_val > 15000.0_r8) )then
+          call endrun( sub//' ERROR: CO2 is outside of an expected range' )
+       end if
        atm2lnd_inst%forc_pco2_grc(g)   = co2_ppmv_val * 1.e-6_r8 * forc_pbot 
        if (use_c13) then
           atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
@@ -378,9 +381,7 @@ contains
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  
        ! I.e. water sent from land to rof is positive
 
-       !  surface runoff is the sum of qflx_over, qflx_h2osfc_surf
-       l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) &
-            + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
+       l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g)
 
        !  subsurface runoff is the sum of qflx_drain and qflx_perched_drain
        l2x(index_l2x_Flrl_rofsub,i) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) &
