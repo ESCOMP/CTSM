@@ -4,6 +4,8 @@ about: Report a problem with the code
 
 ---
 
+### Brief summary of bug
+
 ### General bug information
 
 **CTSM version you are using:** [output of `git describe`]
