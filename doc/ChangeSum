@@ -1,5 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev004     erik 07/18/2018 Add some new diagnostic fields, fix a few issues, update cmip6 output
+  ctsm1.0.dev003     erik 07/15/2018 Update cime/cism to work on upgraded hobart and with glade changes on cheyenne
+  ctsm1.0.dev002     erik 07/06/2018 Fix NFIX flux variables so special land-units are zeroed out, tools update, add some *_MAX fields on mksurfdata_map for transient cases
+  ctsm1.0.dev001    sacks 06/22/2018 Begin separating SoilHydrology flux calculations
    clm5.0.dev013     erik 06/12/2018 cleanup and update cime and cism
    clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
    clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing

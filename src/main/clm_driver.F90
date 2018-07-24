@@ -663,6 +663,7 @@ contains
        call t_startf('bgp2')
        call SoilFluxes(bounds_clump,                                                          &
             filter(nc)%num_urbanl,  filter(nc)%urbanl,                                        &
+            filter(nc)%num_urbanp,  filter(nc)%urbanp,                                        &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                                       &
             atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, waterstate_inst, &
@@ -696,8 +697,9 @@ contains
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
             clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
-            waterflux_inst, waterstate_inst, soilhydrology_inst, aerosol_inst, &
-            canopystate_inst, soil_water_retention_curve, topo_inst)
+            waterflux_inst, waterstate_inst, soilhydrology_inst, saturated_excess_runoff_inst, &
+            infiltration_excess_runoff_inst, &
+            aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterflux_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because
@@ -813,7 +815,7 @@ contains
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-               photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+               photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
                nutrient_competition_method, fireemis_inst)
 
           call t_stopf('ecosysdyn')

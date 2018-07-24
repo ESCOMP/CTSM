@@ -101,7 +101,6 @@ contains
          qflx_snwcp_discarded_liq => waterflux_inst%qflx_snwcp_discarded_liq_col, & ! excess liquid h2o due to snow capping, 
                                                                                     ! which we simply discard in order to reset
                                                                                     ! the snow pack (mm H2O /s) [+]
-         qflx_h2osfc_surf   => waterflux_inst%qflx_h2osfc_surf_col   , & ! surface water runoff (mm/s)  
          qflx_drain_perched => waterflux_inst%qflx_drain_perched_col , & ! sub-surface runoff from perched zwt (mm H2O /s)
          qflx_rsub_sat      => waterflux_inst%qflx_rsub_sat_col      , & ! soil saturation excess [mm h2o/s]  
          qflx_drain         => waterflux_inst%qflx_drain_col         , & ! sub-surface runoff (mm H2O /s) 
@@ -175,7 +174,6 @@ contains
 
             qflx_drain(c)         = 0._r8
             qflx_drain_perched(c) = 0._r8
-            qflx_h2osfc_surf(c)   = 0._r8
             qflx_surf(c)          = 0._r8
             qflx_infl(c)          = 0._r8
             qflx_qrgwl(c) = forc_rain(c) + forc_snow(c) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
@@ -185,8 +183,8 @@ contains
          else if (lun%urbpoi(l) .and. ctype(c) /= icol_road_perv) then
 
             qflx_drain_perched(c) = 0._r8
-            qflx_h2osfc_surf(c)   = 0._r8
             qflx_rsub_sat(c)      = spval
+            qflx_infl(c)          = 0._r8
 
          end if
 
@@ -205,7 +203,7 @@ contains
          c = filter_nolakec(fc)
          l = col%landunit(c)
 
-         qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
+         qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
          if ((lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) .and. col%active(c)) then
             qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
