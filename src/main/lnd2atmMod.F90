@@ -124,7 +124,7 @@ contains
   !------------------------------------------------------------------------
   subroutine lnd2atm(bounds, &
        atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, energyflux_inst, &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, energyflux_inst, &
        solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
        lnd2atm_inst, &
@@ -144,7 +144,7 @@ contains
     type(frictionvel_type)      , intent(in)    :: frictionvel_inst
     type(waterstatebulk_type)       , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)       , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)       , intent(inout) :: waterbalance_inst
+    type(waterbalance_type)       , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)        , intent(inout) :: waterfluxbulk_inst
     type(energyflux_type)       , intent(in)    :: energyflux_inst
     type(solarabs_type)         , intent(in)    :: solarabs_inst
@@ -386,7 +386,7 @@ contains
     ! TODO - this was in BalanceCheckMod - not sure where it belongs?
 
     call c2g( bounds, &
-         waterbalance_inst%endwb_col(bounds%begc:bounds%endc), &
+         waterbalancebulk_inst%endwb_col(bounds%begc:bounds%endc), &
          waterdiagnosticbulk_inst%tws_grc  (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = bounds%begg, bounds%endg

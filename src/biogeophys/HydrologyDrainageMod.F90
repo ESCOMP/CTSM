@@ -40,7 +40,8 @@ contains
        num_urbanc, filter_urbanc,                    &
        num_do_smb_c, filter_do_smb_c,                &
        atm2lnd_inst, glc2lnd_inst, temperature_inst, &
-       soilhydrology_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, &
+       soilhydrology_inst, soilstate_inst, waterstatebulk_inst, &
+       waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
        glacier_smb_inst)
     !
     ! !DESCRIPTION:
@@ -73,7 +74,7 @@ contains
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)    , intent(inout) :: waterbalance_inst
+    type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(glacier_smb_type)   , intent(in)    :: glacier_smb_inst
     !
@@ -88,8 +89,8 @@ contains
          qflx_floodg        => atm2lnd_inst%forc_flood_grc           , & ! Input: rain rate [mm/s]   
          forc_rain          => atm2lnd_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
          forc_snow          => atm2lnd_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
-         begwb              => waterbalance_inst%begwb_col             , & ! Output:water mass end of the time step 
-         endwb              => waterbalance_inst%endwb_col             , & ! Output:water mass end of the time step     
+         begwb              => waterbalancebulk_inst%begwb_col             , & ! Output:water mass end of the time step 
+         endwb              => waterbalancebulk_inst%endwb_col             , & ! Output:water mass end of the time step     
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      
          h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col        , & ! Output: liquid water (kg/m2) 
          h2osoi_vol         => waterstatebulk_inst%h2osoi_vol_col        , & ! Output: volumetric soil water 

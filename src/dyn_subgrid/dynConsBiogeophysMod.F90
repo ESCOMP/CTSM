@@ -54,7 +54,8 @@ contains
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+       waterfluxbulk_inst, temperature_inst, energyflux_inst)
     !
     ! !DESCRIPTION:
     ! Initialize variables used for dyn_hwcontent, and compute grid cell-level heat
@@ -73,7 +74,7 @@ contains
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)    , intent(inout) :: waterbalance_inst
+    type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
     type(energyflux_type)    , intent(inout) :: energyflux_inst
@@ -87,8 +88,8 @@ contains
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
          soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-         liquid_mass = waterbalance_inst%liq1_grc(bounds%begg:bounds%endg), &
-         ice_mass    = waterbalance_inst%ice1_grc(bounds%begg:bounds%endg))
+         liquid_mass = waterbalancebulk_inst%liq1_grc(bounds%begg:bounds%endg), &
+         ice_mass    = waterbalancebulk_inst%ice1_grc(bounds%begg:bounds%endg))
 
     call dyn_heat_content( bounds, &
          num_nolakec, filter_nolakec, &
@@ -105,7 +106,8 @@ contains
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+       waterfluxbulk_inst, temperature_inst, energyflux_inst)
     !
     ! !DESCRIPTION:
     ! Compute grid cell-level heat and water content after land cover change, and compute
@@ -124,7 +126,7 @@ contains
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)    , intent(inout) :: waterbalance_inst
+    type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
     type(energyflux_type)    , intent(inout) :: energyflux_inst
@@ -144,8 +146,8 @@ contains
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
          soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-         liquid_mass = waterbalance_inst%liq2_grc(bounds%begg:bounds%endg), &
-         ice_mass    = waterbalance_inst%ice2_grc(bounds%begg:bounds%endg))
+         liquid_mass = waterbalancebulk_inst%liq2_grc(bounds%begg:bounds%endg), &
+         ice_mass    = waterbalancebulk_inst%ice2_grc(bounds%begg:bounds%endg))
 
     call dyn_heat_content( bounds,                                &
          num_nolakec, filter_nolakec, &
@@ -163,8 +165,8 @@ contains
        end do
     else
        do g = begg, endg
-          delta_liq(g)  = waterbalance_inst%liq2_grc(g) - waterbalance_inst%liq1_grc(g)
-          delta_ice(g)  = waterbalance_inst%ice2_grc(g) - waterbalance_inst%ice1_grc(g)
+          delta_liq(g)  = waterbalancebulk_inst%liq2_grc(g) - waterbalancebulk_inst%liq1_grc(g)
+          delta_ice(g)  = waterbalancebulk_inst%ice2_grc(g) - waterbalancebulk_inst%ice1_grc(g)
           delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
        end do
     end if

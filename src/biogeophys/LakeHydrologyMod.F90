@@ -49,7 +49,8 @@ contains
   subroutine LakeHydrology(bounds, &
        num_lakec, filter_lakec, num_lakep, filter_lakep, &
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
-       atm2lnd_inst, temperature_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, &
+       atm2lnd_inst, temperature_inst, soilstate_inst, waterstatebulk_inst, &
+       waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
        energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
     !
     ! !DESCRIPTION:
@@ -94,7 +95,7 @@ contains
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)  , intent(inout) :: waterbalance_inst
+    type(waterbalance_type)  , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
@@ -148,8 +149,8 @@ contains
          snot_top             =>  temperature_inst%snot_top_col         , & ! Output: [real(r8) (:)   ]  snow temperature in top layer [K]  !TODO
          t_sno_mul_mss        => temperature_inst%t_sno_mul_mss_col     , & ! Output: [real(r8) (:)   ]  col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
 
-         begwb                =>  waterbalance_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
-         endwb                =>  waterbalance_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
+         begwb                =>  waterbalancebulk_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
+         endwb                =>  waterbalancebulk_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
          snw_rds              =>  waterdiagnosticbulk_inst%snw_rds_col           , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
          snw_rds_top          =>  waterdiagnosticbulk_inst%snw_rds_top_col       , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
          h2osno_top           =>  waterdiagnosticbulk_inst%h2osno_top_col        , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    

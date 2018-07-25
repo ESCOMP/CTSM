@@ -156,7 +156,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine dynSubgrid_driver(bounds_proc,                                            &
        urbanparams_inst, soilstate_inst, soilhydrology_inst,           &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst,             &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+       waterfluxbulk_inst, temperature_inst, energyflux_inst,             &
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
@@ -186,7 +187,7 @@ contains
     type(soilhydrology_type)             , intent(inout) :: soilhydrology_inst
     type(waterstatebulk_type)                , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)                , intent(inout) :: waterbalance_inst
+    type(waterbalance_type)                , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)                 , intent(inout) :: waterfluxbulk_inst
     type(temperature_type)               , intent(inout) :: temperature_inst
     type(energyflux_type)                , intent(inout) :: energyflux_inst
@@ -228,7 +229,8 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst)
+            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+            waterfluxbulk_inst, temperature_inst, energyflux_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
        call patch_state_updater%set_old_weights(bounds_clump)
@@ -298,7 +300,8 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst)
+            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+            waterfluxbulk_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, nc, &

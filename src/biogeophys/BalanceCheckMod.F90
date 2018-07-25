@@ -50,7 +50,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst)
+       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step
@@ -64,7 +64,7 @@ contains
     type(soilhydrology_type)  , intent(inout) :: soilhydrology_inst
     type(waterstatebulk_type)     , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)     , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)     , intent(inout) :: waterbalance_inst
+    type(waterbalance_type)     , intent(inout) :: waterbalancebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c, j, fc                  ! indices
@@ -74,7 +74,7 @@ contains
          zi           =>    col%zi                         , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
          zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
          wa           =>    soilhydrology_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
-         begwb        =>    waterbalance_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
+         begwb        =>    waterbalancebulk_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
    do fc = 1, num_nolakec
@@ -98,7 +98,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
-        atm2lnd_inst, solarabs_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalance_inst, &
+        atm2lnd_inst, solarabs_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
         energyflux_inst, canopystate_inst)
      !
      ! !DESCRIPTION:
@@ -130,7 +130,7 @@ contains
      type(waterfluxbulk_type)  , intent(inout) :: waterfluxbulk_inst
      type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
-     type(waterbalance_type) , intent(inout) :: waterbalance_inst
+     type(waterbalance_type) , intent(inout) :: waterbalancebulk_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
      type(canopystate_type), intent(inout) :: canopystate_inst
      !
@@ -154,14 +154,14 @@ contains
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
           h2osno                  =>    waterstatebulk_inst%h2osno_col              , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
-          h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
+          h2osno_old              =>    waterbalancebulk_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
           frac_sno_eff            =>    waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
           frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
           snow_depth              =>    waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
-          begwb                   =>    waterbalance_inst%begwb_col               , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
-          errh2o                  =>    waterbalance_inst%errh2o_col              , & ! Output: [real(r8) (:)   ]  water conservation error (mm H2O)       
-          errh2osno               =>    waterbalance_inst%errh2osno_col           , & ! Output: [real(r8) (:)   ]  error in h2osno (kg m-2)                
-          endwb                   =>    waterbalance_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
+          begwb                   =>    waterbalancebulk_inst%begwb_col               , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
+          errh2o                  =>    waterbalancebulk_inst%errh2o_col              , & ! Output: [real(r8) (:)   ]  water conservation error (mm H2O)       
+          errh2osno               =>    waterbalancebulk_inst%errh2osno_col           , & ! Output: [real(r8) (:)   ]  error in h2osno (kg m-2)                
+          endwb                   =>    waterbalancebulk_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
           total_plant_stored_h2o_col => waterdiagnosticbulk_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
           qflx_rootsoi_col        =>    waterfluxbulk_inst%qflx_rootsoi_col         , & ! Input   [real(r8) (:)   ]  water loss in soil layers to root uptake (mm H2O/s)
                                                                                     !                            (ie transpiration demand, often = transpiration)
