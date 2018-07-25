@@ -92,10 +92,10 @@ contains
   subroutine InitBulk(this, bounds, &
        snow_depth_input_col, waterstatebulk_inst)
 
-    class(waterdiagnosticbulk_type)            :: this
-    type(bounds_type) , intent(in)    :: bounds  
-    real(r8)          , intent(inout) :: snow_depth_input_col(bounds%begc:)
-    class(waterstatebulk_type), intent(in)               :: waterstatebulk_inst
+    class(waterdiagnosticbulk_type) :: this
+    type(bounds_type) , intent(in) :: bounds  
+    real(r8)          , intent(in) :: snow_depth_input_col(bounds%begc:)
+    class(waterstatebulk_type), intent(in) :: waterstatebulk_inst
 
 
     call this%Init(bounds)
@@ -490,7 +490,7 @@ contains
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------
-  subroutine RestartBulk(this, waterstatebulk_inst, bounds, ncid, flag)
+  subroutine RestartBulk(this, bounds, ncid, flag, waterstatebulk_inst)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -507,10 +507,10 @@ contains
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type) :: this
-    class(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    class(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j

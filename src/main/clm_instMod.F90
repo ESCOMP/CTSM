@@ -57,10 +57,7 @@ module clm_instMod
   use SurfaceRadiationMod             , only : surfrad_type
   use SurfaceAlbedoType               , only : surfalb_type
   use TemperatureType                 , only : temperature_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
-  use WaterStateBulkType                  , only : waterstatebulk_type
-  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use WaterBalanceType                  , only : waterbalance_type
+  use WaterType                       , only : water_type
   use UrbanParamsType                 , only : urbanparams_type
   use UrbanTimeVarType                , only : urbantv_type
   use HumanIndexMod                   , only : humanindex_type
@@ -114,10 +111,7 @@ module clm_instMod
   type(urbanparams_type)                  :: urbanparams_inst
   type(urbantv_type)                      :: urbantv_inst
   type(humanindex_type)                   :: humanindex_inst
-  type(waterfluxbulk_type)                    :: waterfluxbulk_inst
-  type(waterstatebulk_type)                   :: waterstatebulk_inst
-  type(waterdiagnosticbulk_type)                   :: waterdiagnosticbulk_inst
-  type(waterbalance_type)                   :: waterbalance_inst
+  type(water_type)                        :: water_inst
   type(atm2lnd_type)                      :: atm2lnd_inst
   type(glc2lnd_type)                      :: glc2lnd_inst
   type(lnd2atm_type)                      :: lnd2atm_inst
@@ -281,18 +275,11 @@ contains
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties
 
-    call waterstatebulk_inst%InitBulk(bounds,         &
-         h2osno_col(begc:endc),                    &
-         soilstate_inst%watsat_col(begc:endc, 1:), &
-         temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:) )
-
-    call waterdiagnosticbulk_inst%InitBulk(bounds,         &
-         snow_depth_col(begc:endc),                &
-         waterstatebulk_inst )
-
-    call waterbalance_inst%Init(bounds)
-
-    call waterfluxbulk_inst%InitBulk(bounds)
+    call water_inst%Init(bounds, &
+         h2osno_col = h2osno_col(begc:endc), &
+         snow_depth_col = snow_depth_col(begc:endc), &
+         watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
+         t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:))
 
     call glacier_smb_inst%Init(bounds)
 
@@ -436,7 +423,7 @@ contains
 
     call temperature_inst%InitAccBuffer(bounds)
     
-    call waterfluxbulk_inst%InitAccBuffer(bounds)
+    call water_inst%InitAccBuffer(bounds)
 
     call energyflux_inst%InitAccBuffer(bounds)
 
@@ -502,18 +489,14 @@ contains
 
     call soilstate_inst%restart (bounds, ncid, flag=flag)
 
-    call waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
-
-    call waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
-         watsat_col=soilstate_inst%watsat_col(bounds%begc:bounds%endc,:)) 
-
-    call waterdiagnosticbulk_inst%restartBulk (waterstatebulk_inst, bounds, ncid, flag=flag) 
+    call water_inst%restart(bounds, ncid, flag=flag, &
+         watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
 
     call aerosol_inst%restart (bounds, ncid,  flag=flag, &
-         h2osoi_ice_col=waterstatebulk_inst%h2osoi_ice_col(bounds%begc:bounds%endc,:), &
-         h2osoi_liq_col=waterstatebulk_inst%h2osoi_liq_col(bounds%begc:bounds%endc,:))
+         h2osoi_ice_col=water_inst%waterstatebulk_inst%h2osoi_ice_col(bounds%begc:bounds%endc,:), &
+         h2osoi_liq_col=water_inst%waterstatebulk_inst%h2osoi_liq_col(bounds%begc:bounds%endc,:))
 
     call surfalb_inst%restart (bounds, ncid, flag=flag, &
          tlai_patch=canopystate_inst%tlai_patch(bounds%begp:bounds%endp), &
@@ -559,7 +542,7 @@ contains
     if (use_fates) then
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
-            waterdiagnosticbulk_inst=waterdiagnosticbulk_inst, &
+            waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
             canopystate_inst=canopystate_inst, &
             frictionvel_inst=frictionvel_inst)
 

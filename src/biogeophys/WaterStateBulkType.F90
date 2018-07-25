@@ -49,11 +49,11 @@ contains
   subroutine InitBulk(this, bounds, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
-    class(waterstatebulk_type)            :: this
-    type(bounds_type) , intent(in)    :: bounds  
-    real(r8)          , intent(inout) :: h2osno_input_col(bounds%begc:)
-    real(r8)          , intent(inout) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
-    real(r8)          , intent(inout) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    class(waterstatebulk_type)     :: this
+    type(bounds_type) , intent(in) :: bounds  
+    real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
+    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
+    real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
 
 
     call this%Init(bounds, &
