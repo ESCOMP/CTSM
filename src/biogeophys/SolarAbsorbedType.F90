@@ -18,10 +18,8 @@ module SolarAbsorbedType
 
      ! Solar reflected
      real(r8), pointer :: fsr_patch              (:)   ! patch solar radiation reflected (W/m**2)         
-! JP add
      real(r8), pointer :: fsrSF_patch              (:)   ! diagnostic snow-free patch solar radiation reflected (W/m**2)         
      real(r8), pointer :: ssre_fsr_patch           (:)   ! snow radiative effect on patch solar radiation reflected (W/m**2)         
-! JP end     
      ! Solar Absorbed
      real(r8), pointer :: fsa_patch              (:)   ! patch solar radiation absorbed (total) (W/m**2)  
      real(r8), pointer :: fsa_u_patch            (:)   ! patch urban solar radiation absorbed (total) (W/m**2)
@@ -61,7 +59,6 @@ module SolarAbsorbedType
      real(r8), pointer :: fsr_nir_d_patch        (:)   ! patch reflected direct beam nir solar radiation (W/m**2) 
      real(r8), pointer :: fsr_nir_i_patch        (:)   ! patch reflected diffuse nir solar radiation (W/m**2)     
      real(r8), pointer :: fsr_nir_d_ln_patch     (:)   ! patch reflected direct beam nir solar radiation at local noon (W/m**2)
-! JP add
      ! optional diagnostic fluxes:
      real(r8), pointer :: fsrSF_nir_d_patch        (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
      real(r8), pointer :: fsrSF_nir_i_patch        (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
@@ -69,7 +66,6 @@ module SolarAbsorbedType
      real(r8), pointer :: ssre_fsr_nir_d_patch        (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
      real(r8), pointer :: ssre_fsr_nir_i_patch        (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
      real(r8), pointer :: ssre_fsr_nir_d_ln_patch     (:)   ! snow-free patch reflected direct beam nir solar radiation at local noon (W/m**2)
-! JP end
    contains
 
      procedure, public  :: Init         
@@ -151,7 +147,6 @@ contains
     allocate(this%fsr_nir_d_patch        (begp:endp))              ; this%fsr_nir_d_patch        (:)   = nan
     allocate(this%fsr_nir_i_patch        (begp:endp))              ; this%fsr_nir_i_patch        (:)   = nan
     allocate(this%fsr_nir_d_ln_patch     (begp:endp))              ; this%fsr_nir_d_ln_patch     (:)   = nan
-! JP add
     allocate(this%fsrSF_patch              (begp:endp))            ; this%fsrSF_patch              (:)   = nan
     allocate(this%fsrSF_nir_d_patch        (begp:endp))            ; this%fsrSF_nir_d_patch        (:)   = nan
     allocate(this%fsrSF_nir_i_patch        (begp:endp))            ; this%fsrSF_nir_i_patch        (:)   = nan
@@ -160,7 +155,6 @@ contains
     allocate(this%ssre_fsr_nir_d_patch     (begp:endp))            ; this%ssre_fsr_nir_d_patch     (:)   = nan
     allocate(this%ssre_fsr_nir_i_patch     (begp:endp))            ; this%ssre_fsr_nir_i_patch     (:)   = nan
     allocate(this%ssre_fsr_nir_d_ln_patch  (begp:endp))            ; this%ssre_fsr_nir_d_ln_patch  (:)   = nan
-! JP end
     allocate(this%fsds_nir_d_patch       (begp:endp))              ; this%fsds_nir_d_patch       (:)   = nan
     allocate(this%fsds_nir_i_patch       (begp:endp))              ; this%fsds_nir_i_patch       (:)   = nan
     allocate(this%fsds_nir_d_ln_patch    (begp:endp))              ; this%fsds_nir_d_ln_patch    (:)   = nan
@@ -174,7 +168,6 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-! JP changed:
     use clm_varctl    , only : use_snicar_frc , use_SSRE
     use clm_varpar    , only : nlevsno
     use histFileMod   , only : hist_addfld1d, hist_addfld2d
@@ -223,9 +216,7 @@ contains
     call hist_addfld1d (fname='SWup', units='W/m^2',  &
          avgflag='A', long_name='upwelling shortwave radiation', &
          ptr_patch=this%fsr_patch, c2l_scale_type='urbanf', default='inactive')
-! JP add
     ! diagnostic fluxes for ESM-SnowMIP
-! JP TODO: rename to match SnowMIP var
     if (use_SSRE) then
        this%fsrSF_patch(begp:endp) = spval
        call hist_addfld1d (fname='FSRSF', units='W/m^2',  &
@@ -237,7 +228,6 @@ contains
             avgflag='A', long_name='surface snow effect on reflected solar radiation', &
             ptr_patch=this%ssre_fsr_patch, c2l_scale_type='urbanf')
     end if
-! JP end
     call hist_addfld1d (fname='FSR_ICE', units='W/m^2',  &
          avgflag='A', long_name='reflected solar radiation (ice landunits only)', &
          ptr_patch=this%fsr_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
@@ -299,7 +289,6 @@ contains
     call hist_addfld1d (fname='FSRNDLN', units='W/m^2',  &
          avgflag='A', long_name='direct nir reflected solar radiation at local noon', &
          ptr_patch=this%fsr_nir_d_ln_patch, c2l_scale_type='urbanf')
-! JP add
     if (use_SSRE) then
        this%fsrSF_nir_d_patch(begp:endp) = spval
        call hist_addfld1d (fname='FSRSFND', units='W/m^2',  &
@@ -331,7 +320,6 @@ contains
             avgflag='A', long_name='surface snow effect on direct nir reflected solar radiation at local noon', &
             ptr_patch=this%ssre_fsr_nir_d_ln_patch, c2l_scale_type='urbanf')
     end if
-! JP end
     this%sub_surf_abs_SW_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOINTABS', units='-', &
          avgflag='A', long_name='Fraction of incoming solar absorbed by lower snow layers', &
