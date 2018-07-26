@@ -663,6 +663,7 @@ contains
        call t_startf('bgp2')
        call SoilFluxes(bounds_clump,                                                          &
             filter(nc)%num_urbanl,  filter(nc)%urbanl,                                        &
+            filter(nc)%num_urbanp,  filter(nc)%urbanp,                                        &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                                       &
             atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, waterstate_inst, &
