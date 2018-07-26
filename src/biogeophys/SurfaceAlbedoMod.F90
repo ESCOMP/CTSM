@@ -13,7 +13,6 @@ module SurfaceAlbedoMod
   use landunit_varcon   , only : istsoil, istcrop, istdlak
   use clm_varcon        , only : grlnd, namep
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
-! JP changed:
   use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE
   use pftconMod         , only : pftcon
   use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
@@ -39,9 +38,7 @@ module SurfaceAlbedoMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: SoilAlbedo    ! Determine ground surface albedo
   private :: TwoStream     ! Two-stream fluxes for canopy radiative transfer
-! JP add
   private :: TwoStreamSF   ! Diagnostic Snow-free Two-stream fluxes for canopy radiative transfer
-! JP end
   !
   ! !PUBLIC DATA MEMBERS:
   ! The CLM default albice values are too high.
@@ -336,10 +333,8 @@ contains
           albsni_hst    =>    surfalb_inst%albsni_hst_col         , & ! Output:  [real(r8) (:,:) ]  snow ground albedo, diffuse, for history files (col,bnd) [frc]
           albd          =>    surfalb_inst%albd_patch             , & ! Output:  [real(r8) (:,:) ]  surface albedo (direct)               
           albi          =>    surfalb_inst%albi_patch             , & ! Output:  [real(r8) (:,:) ]  surface albedo (diffuse)              
-! JP add
           albdSF        =>    surfalb_inst%albdSF_patch           , & ! Output:  [real(r8) (:,:) ]  diagnostic snow-free surface albedo (direct)               
           albiSF        =>    surfalb_inst%albiSF_patch           , & ! Output:  [real(r8) (:,:) ]  diagnostic snow-free surface albedo (diffuse)              
-! JP end
           fabd          =>    surfalb_inst%fabd_patch             , & ! Output:  [real(r8) (:,:) ]  flux absorbed by canopy per unit direct flux
           fabd_sun      =>    surfalb_inst%fabd_sun_patch         , & ! Output:  [real(r8) (:,:) ]  flux absorbed by sunlit canopy per unit direct flux
           fabd_sha      =>    surfalb_inst%fabd_sha_patch         , & ! Output:  [real(r8) (:,:) ]  flux absorbed by shaded canopy per unit direct flux
@@ -403,12 +398,10 @@ contains
           p = filter_nourbanp(fp)
           albd(p,ib) = 1._r8
           albi(p,ib) = 1._r8
-! JP add
           if (use_SSRE) then
              albdSF(p,ib) = 1._r8
              albiSF(p,ib) = 1._r8
           end if
-! JP end
           fabd(p,ib) = 0._r8
           fabd_sun(p,ib) = 0._r8
           fabd_sha(p,ib) = 0._r8
@@ -946,7 +939,6 @@ contains
             rho(bounds%begp:bounds%endp, :), &
             tau(bounds%begp:bounds%endp, :), &
             canopystate_inst, temperature_inst, waterstate_inst, surfalb_inst)
-! JP add
        if (use_SSRE) then
           call TwoStreamSF (bounds, filter_vegsol, num_vegsol, &
                coszen_patch(bounds%begp:bounds%endp), &
@@ -954,7 +946,6 @@ contains
                tau(bounds%begp:bounds%endp, :), &
                canopystate_inst, temperature_inst, waterstate_inst, surfalb_inst)
        end if
-! JP end
     endif
 
     ! Determine values for non-vegetated patches where coszen > 0
@@ -974,12 +965,10 @@ contains
           ftii(p,ib)     = 1._r8
           albd(p,ib)     = albgrd(c,ib)
           albi(p,ib)     = albgri(c,ib)
-! JP add
           if (use_SSRE) then
              albdSF(p,ib)    = albsod(c,ib)
              albiSF(p,ib)    = albsoi(c,ib)
           end if
-! JP end
        end do
     end do
 
@@ -1627,7 +1616,6 @@ contains
 
 end subroutine TwoStream
 
-! JP add: this module for diagnostic
 subroutine TwoStreamSF (bounds, &
         filter_vegsol, num_vegsol, &
         coszen, rho, tau, &
@@ -1718,31 +1706,10 @@ subroutine TwoStreamSF (bounds, &
           nrad         =>    surfalb_inst%nrad_patch             , & ! Input:  [integer  (:)   ]  number of canopy layers, above snow for radiative transfer
           albgrd       =>    surfalb_inst%albgrd_col             , & ! Input:  [real(r8) (:,:) ]  ground albedo (direct) (column-level) 
           albgri       =>    surfalb_inst%albgri_col             , & ! Input:  [real(r8) (:,:) ]  ground albedo (diffuse)(column-level) 
-
-! JP changed:
-          ! fsun_z       =>    surfalb_inst%fsun_z_patch           , & ! Output: [real(r8) (:,:) ]  sunlit fraction of canopy layer       
-          ! vcmaxcintsun =>    surfalb_inst%vcmaxcintsun_patch     , & ! Output: [real(r8) (:)   ]  leaf to canopy scaling coefficient, sunlit leaf vcmax
-          ! vcmaxcintsha =>    surfalb_inst%vcmaxcintsha_patch     , & ! Output: [real(r8) (:)   ]  leaf to canopy scaling coefficient, shaded leaf vcmax
-          ! fabd_sun_z   =>    surfalb_inst%fabd_sun_z_patch       , & ! Output: [real(r8) (:,:) ]  absorbed sunlit leaf direct  PAR (per unit lai+sai) for each canopy layer
-          ! fabd_sha_z   =>    surfalb_inst%fabd_sha_z_patch       , & ! Output: [real(r8) (:,:) ]  absorbed shaded leaf direct  PAR (per unit lai+sai) for each canopy layer
-          ! fabi_sun_z   =>    surfalb_inst%fabi_sun_z_patch       , & ! Output: [real(r8) (:,:) ]  absorbed sunlit leaf diffuse PAR (per unit lai+sai) for each canopy layer
-          ! fabi_sha_z   =>    surfalb_inst%fabi_sha_z_patch       , & ! Output: [real(r8) (:,:) ]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
-          ! albd         =>    surfalb_inst%albd_patch             , & ! Output: [real(r8) (:,:) ]  surface albedo (direct)               
-          ! albi         =>    surfalb_inst%albi_patch             , & ! Output: [real(r8) (:,:) ]  surface albedo (diffuse)              
-          ! fabd         =>    surfalb_inst%fabd_patch             , & ! Output: [real(r8) (:,:) ]  flux absorbed by canopy per unit direct flux
-          ! fabd_sun     =>    surfalb_inst%fabd_sun_patch         , & ! Output: [real(r8) (:,:) ]  flux absorbed by sunlit canopy per unit direct flux
-          ! fabd_sha     =>    surfalb_inst%fabd_sha_patch         , & ! Output: [real(r8) (:,:) ]  flux absorbed by shaded canopy per unit direct flux
-          ! fabi         =>    surfalb_inst%fabi_patch             , & ! Output: [real(r8) (:,:) ]  flux absorbed by canopy per unit diffuse flux
-          ! fabi_sun     =>    surfalb_inst%fabi_sun_patch         , & ! Output: [real(r8) (:,:) ]  flux absorbed by sunlit canopy per unit diffuse flux
-          ! fabi_sha     =>    surfalb_inst%fabi_sha_patch         , & ! Output: [real(r8) (:,:) ]  flux absorbed by shaded canopy per unit diffuse flux
-          ! ftdd         =>    surfalb_inst%ftdd_patch             , & ! Output: [real(r8) (:,:) ]  down direct flux below canopy per unit direct flx
-          ! ftid         =>    surfalb_inst%ftid_patch             , & ! Output: [real(r8) (:,:) ]  down diffuse flux below canopy per unit direct flx
-          ! ftii         =>    surfalb_inst%ftii_patch               & ! Output: [real(r8) (:,:) ]  down diffuse flux below canopy per unit diffuse flx
           albsod       => surfalb_inst%albsod_col                , & ! Input: [real(r8) (:,:) ]  soil albedo (direct)                  
           albsoi       => surfalb_inst%albsoi_col                , & ! Input: [real(r8) (:,:) ]  soil albedo (diffuse
           albdSF       =>    surfalb_inst%albdSF_patch             , & ! Output: [real(r8) (:,:) ]  surface albedo (direct)               
           albiSF       =>    surfalb_inst%albiSF_patch              & ! Output: [real(r8) (:,:) ]  surface albedo (diffuse)
-! JP end 
    )
 
     ! Calculate two-stream parameters that are independent of waveband:
@@ -1818,27 +1785,11 @@ subroutine TwoStreamSF (bounds, &
                  * ((1._r8+chil(p))/2._r8)**2) / omegal
 
           ! Adjust omega, betad, and betai for intercepted snow
+          ! Remove all snow influence Justin Perket 
 
-! JP chagned, remove all snow influence:
-          ! if (snowveg_onrad) then 
-          !    tmp0 =   (1._r8-fcansno(p))*omegal        + fcansno(p)*omegas(ib)
-          !    tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
-          !    tmp2 = ( (1._r8-fcansno(p))*omegal*betail + fcansno(p)*omegas(ib)*betais ) / tmp0
-          ! else
-          !    if (t_veg(p) > tfrz) then                             !no snow
-          !       tmp0 = omegal
-          !       tmp1 = betadl
-          !       tmp2 = betail
-          !    else
-          !       tmp0 =   (1._r8-fwet(p))*omegal        + fwet(p)*omegas(ib)
-          !       tmp1 = ( (1._r8-fwet(p))*omegal*betadl + fwet(p)*omegas(ib)*betads ) / tmp0
-          !       tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
-          !    end if
-          ! end if
           tmp0 = omegal
           tmp1 = betadl
           tmp2 = betail
-! JP end
           omega(p,ib) = tmp0
           betad = tmp1
           betai = tmp2
@@ -1867,14 +1818,10 @@ subroutine TwoStreamSF (bounds, &
           s2 = exp(-t1)
 
           ! Direct beam
-! JP changed: albsod instead of albgrd here:
-          ! u1 = b - c1/albgrd(c,ib)
-          ! u2 = b - c1*albgrd(c,ib)
-          ! u3 = f + c1*albgrd(c,ib)
+          ! albsod instead of albgrd here:
           u1 = b - c1/albsod(c,ib)
           u2 = b - c1*albsod(c,ib)
           u3 = f + c1*albsod(c,ib)
-! JP end
           tmp2 = u1 - avmu(p)*h
           tmp3 = u1 + avmu(p)*h
           d1 = p1*tmp2/s1 - p2*tmp3*s1
@@ -1891,13 +1838,7 @@ subroutine TwoStreamSF (bounds, &
           tmp9 = ( u3 - tmp8*(u2-tmp0) ) * s2
           h5 = - ( tmp8*tmp4/s1 + tmp9 ) / d2
           h6 = ( tmp8*tmp5*s1 + tmp9 ) / d2
-! JP changed:
-          ! albd(p,ib) = h1/sigma + h2 + h3
-          ! ftid(p,ib) = h4*s2/sigma + h5*s1 + h6/s1
-          ! ftdd(p,ib) = s2
-          ! fabd(p,ib) = 1._r8 - albd(p,ib) - (1._r8-albgrd(c,ib))*ftdd(p,ib) - (1._r8-albgri(c,ib))*ftid(p,ib)
           albdSF(p,ib) = h1/sigma + h2 + h3
-! JP end
           a1 = h1 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
              + h2         * (1._r8 - s2*s1) / (twostext(p) + h) &
              + h3         * (1._r8 - s2/s1) / (twostext(p) - h)
@@ -1905,17 +1846,10 @@ subroutine TwoStreamSF (bounds, &
           a2 = h4 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
              + h5         * (1._r8 - s2*s1) / (twostext(p) + h) &
              + h6         * (1._r8 - s2/s1) / (twostext(p) - h)
-! JP removed
-          ! fabd_sun(p,ib) = (1._r8 - omega(p,ib)) * ( 1._r8 - s2 + 1._r8 / avmu(p) * (a1 + a2) )
-          ! fabd_sha(p,ib) = fabd(p,ib) - fabd_sun(p,ib)
-! JP end
           ! Diffuse
-! JP changed: albsoi instead of albgri here:
-          ! u1 = b - c1/albgri(c,ib)
-          ! u2 = b - c1*albgri(c,ib)
+          ! albsoi instead of albgri here:
           u1 = b - c1/albsoi(c,ib)
           u2 = b - c1*albsoi(c,ib)
-! JP end
           tmp2 = u1 - avmu(p)*h
           tmp3 = u1 + avmu(p)*h
           d1 = p1*tmp2/s1 - p2*tmp3*s1
@@ -1926,225 +1860,7 @@ subroutine TwoStreamSF (bounds, &
           h8 = (-c1*tmp3*s1) / d1
           h9 = tmp4 / (d2*s1)
           h10 = (-tmp5*s1) / d2
-! JP changed:
-          ! albi(p,ib) = h7 + h8
-          ! ftii(p,ib) = h9*s1 + h10/s1
-          ! fabi(p,ib) = 1._r8 - albi(p,ib) - (1._r8-albgri(c,ib))*ftii(p,ib)
           albiSF(p,ib) = h7 + h8
-! JP end
-! JP removed:
-          ! a1 = h7 * (1._r8 - s2*s1) / (twostext(p) + h) +  h8 * (1._r8 - s2/s1) / (twostext(p) - h)
-          ! a2 = h9 * (1._r8 - s2*s1) / (twostext(p) + h) + h10 * (1._r8 - s2/s1) / (twostext(p) - h)
-          ! fabi_sun(p,ib) = (1._r8 - omega(p,ib)) / avmu(p) * (a1 + a2)
-          ! fabi_sha(p,ib) = fabi(p,ib) - fabi_sun(p,ib)
-
-          ! ! Repeat two-stream calculations for each canopy layer to calculate derivatives.
-          ! ! tlai_z and tsai_z are the leaf+stem area increment for a layer. Derivatives are
-          ! ! calculated at the center of the layer. Derivatives are needed only for the
-          ! ! visible waveband to calculate absorbed PAR (per unit lai+sai) for each canopy layer.
-          ! ! Derivatives are calculated first per unit lai+sai and then normalized for sunlit
-          ! ! or shaded fraction of canopy layer.
-
-          ! ! Sun/shade big leaf code uses only one layer, with canopy integrated values from above
-          ! ! and also canopy-integrated scaling coefficients
-
-          ! if (ib == 1) then
-          !    if (nlevcan == 1) then
-
-          !       ! sunlit fraction of canopy
-          !       fsun_z(p,1) = (1._r8 - s2) / t1
-
-          !       ! absorbed PAR (per unit sun/shade lai+sai)
-          !       laisum = elai(p)+esai(p)
-          !       fabd_sun_z(p,1) = fabd_sun(p,ib) / (fsun_z(p,1)*laisum)
-          !       fabi_sun_z(p,1) = fabi_sun(p,ib) / (fsun_z(p,1)*laisum)
-          !       fabd_sha_z(p,1) = fabd_sha(p,ib) / ((1._r8 - fsun_z(p,1))*laisum)
-          !       fabi_sha_z(p,1) = fabi_sha(p,ib) / ((1._r8 - fsun_z(p,1))*laisum)
-
-          !       ! leaf to canopy scaling coefficients
-          !       extkn = 0.30_r8
-          !       extkb = twostext(p)
-          !       vcmaxcintsun(p) = (1._r8 - exp(-(extkn+extkb)*elai(p))) / (extkn + extkb)
-          !       vcmaxcintsha(p) = (1._r8 - exp(-extkn*elai(p))) / extkn - vcmaxcintsun(p)
-          !       if (elai(p)  >  0._r8) then
-          !         vcmaxcintsun(p) = vcmaxcintsun(p) / (fsun_z(p,1)*elai(p))
-          !         vcmaxcintsha(p) = vcmaxcintsha(p) / ((1._r8 - fsun_z(p,1))*elai(p))
-          !       else
-          !         vcmaxcintsun(p) = 0._r8
-          !         vcmaxcintsha(p) = 0._r8
-          !       end if
-
-          !    else if (nlevcan > 1) then
-          !       do iv = 1, nrad(p)
-
-          !       ! Cumulative lai+sai at center of layer
-
-          !       if (iv == 1) then
-          !          laisum = 0.5_r8 * (tlai_z(p,iv)+tsai_z(p,iv))
-          !       else
-          !          laisum = laisum + 0.5_r8 * ((tlai_z(p,iv-1)+tsai_z(p,iv-1))+(tlai_z(p,iv)+tsai_z(p,iv)))
-          !       end if
-
-          !       ! Coefficients s1 and s2 depend on cumulative lai+sai. s2 is the sunlit fraction
-
-          !       t1 = min(h*laisum, 40._r8)
-          !       s1 = exp(-t1)
-          !       t1 = min(twostext(p)*laisum, 40._r8)
-          !       s2 = exp(-t1)
-          !       fsun_z(p,iv) = s2
-
-          !       ! ===============
-          !       ! Direct beam
-          !       ! ===============
-
-          !       ! Coefficients h1-h6 and a1,a2 depend of cumulative lai+sai
-
-          !       u1 = b - c1/albgrd(c,ib)
-          !       u2 = b - c1*albgrd(c,ib)
-          !       u3 = f + c1*albgrd(c,ib)
-          !       tmp2 = u1 - avmu(p)*h
-          !       tmp3 = u1 + avmu(p)*h
-          !       d1 = p1*tmp2/s1 - p2*tmp3*s1
-          !       tmp4 = u2 + avmu(p)*h
-          !       tmp5 = u2 - avmu(p)*h
-          !       d2 = tmp4/s1 - tmp5*s1
-          !       h1 = -d*p4 - c1*f
-          !       tmp6 = d - h1*p3/sigma
-          !       tmp7 = ( d - c1 - h1/sigma*(u1+tmp0) ) * s2
-          !       h2 = ( tmp6*tmp2/s1 - p2*tmp7 ) / d1
-          !       h3 = - ( tmp6*tmp3*s1 - p1*tmp7 ) / d1
-          !       h4 = -f*p3 - c1*d
-          !       tmp8 = h4/sigma
-          !       tmp9 = ( u3 - tmp8*(u2-tmp0) ) * s2
-          !       h5 = - ( tmp8*tmp4/s1 + tmp9 ) / d2
-          !       h6 = ( tmp8*tmp5*s1 + tmp9 ) / d2
-
-          !       a1 = h1 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
-          !          + h2         * (1._r8 - s2*s1) / (twostext(p) + h) &
-          !          + h3         * (1._r8 - s2/s1) / (twostext(p) - h)
-
-          !       a2 = h4 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
-          !          + h5         * (1._r8 - s2*s1) / (twostext(p) + h) &
-          !          + h6         * (1._r8 - s2/s1) / (twostext(p) - h)
-
-          !       ! Derivatives for h2, h3, h5, h6 and a1, a2
-
-          !       v = d1
-          !       dv = h * p1 * tmp2 / s1 + h * p2 * tmp3 * s1
-
-          !       u = tmp6 * tmp2 / s1 - p2 * tmp7
-          !       du = h * tmp6 * tmp2 / s1 + twostext(p) * p2 * tmp7
-          !       dh2 = (v * du - u * dv) / (v * v)
-
-          !       u = -tmp6 * tmp3 * s1 + p1 * tmp7
-          !       du = h * tmp6 * tmp3 * s1 - twostext(p) * p1 * tmp7
-          !       dh3 = (v * du - u * dv) / (v * v)
-
-          !       v = d2
-          !       dv = h * tmp4 / s1 + h * tmp5 * s1
-
-          !       u = -h4/sigma * tmp4 / s1 - tmp9
-          !       du = -h * h4/sigma * tmp4 / s1 + twostext(p) * tmp9
-          !       dh5 = (v * du - u * dv) / (v * v)
-
-          !       u = h4/sigma * tmp5 * s1 + tmp9
-          !       du = -h * h4/sigma * tmp5 * s1 - twostext(p) * tmp9
-          !       dh6 = (v * du - u * dv) / (v * v)
-
-          !       da1 = h1/sigma * s2*s2 + h2 * s2*s1 + h3 * s2/s1 &
-          !           + (1._r8 - s2*s1) / (twostext(p) + h) * dh2 &
-          !           + (1._r8 - s2/s1) / (twostext(p) - h) * dh3
-          !       da2 = h4/sigma * s2*s2 + h5 * s2*s1 + h6 * s2/s1 &
-          !           + (1._r8 - s2*s1) / (twostext(p) + h) * dh5 &
-          !           + (1._r8 - s2/s1) / (twostext(p) - h) * dh6
-
-          !       ! Flux derivatives
-
-          !       d_ftid = -twostext(p)*h4/sigma*s2 - h*h5*s1 + h*h6/s1 + dh5*s1 + dh6/s1
-          !       d_fabd = -(dh2+dh3) + (1._r8-albgrd(c,ib))*twostext(p)*s2 - (1._r8-albgri(c,ib))*d_ftid
-          !       d_fabd_sun = (1._r8 - omega(p,ib)) * (twostext(p)*s2 + 1._r8 / avmu(p) * (da1 + da2))
-          !       d_fabd_sha = d_fabd - d_fabd_sun
-
-          !       fabd_sun_z(p,iv) = max(d_fabd_sun, 0._r8)
-          !       fabd_sha_z(p,iv) = max(d_fabd_sha, 0._r8)
-
-          !       ! Flux derivatives are APARsun and APARsha per unit (LAI+SAI). Need
-          !       ! to normalize derivatives by sunlit or shaded fraction to get
-          !       ! APARsun per unit (LAI+SAI)sun and APARsha per unit (LAI+SAI)sha
-
-          !       fabd_sun_z(p,iv) = fabd_sun_z(p,iv) / fsun_z(p,iv)
-          !       fabd_sha_z(p,iv) = fabd_sha_z(p,iv) / (1._r8 - fsun_z(p,iv))
-
-          !       ! ===============
-          !       ! Diffuse
-          !       ! ===============
-
-          !       ! Coefficients h7-h10 and a1,a2 depend of cumulative lai+sai
-
-          !       u1 = b - c1/albgri(c,ib)
-          !       u2 = b - c1*albgri(c,ib)
-          !       tmp2 = u1 - avmu(p)*h
-          !       tmp3 = u1 + avmu(p)*h
-          !       d1 = p1*tmp2/s1 - p2*tmp3*s1
-          !       tmp4 = u2 + avmu(p)*h
-          !       tmp5 = u2 - avmu(p)*h
-          !       d2 = tmp4/s1 - tmp5*s1
-          !       h7 = (c1*tmp2) / (d1*s1)
-          !       h8 = (-c1*tmp3*s1) / d1
-          !       h9 = tmp4 / (d2*s1)
-          !       h10 = (-tmp5*s1) / d2
-
-          !       a1 = h7 * (1._r8 - s2*s1) / (twostext(p) + h) +  h8 * (1._r8 - s2/s1) / (twostext(p) - h)
-          !       a2 = h9 * (1._r8 - s2*s1) / (twostext(p) + h) + h10 * (1._r8 - s2/s1) / (twostext(p) - h)
-
-          !       ! Derivatives for h7, h8, h9, h10 and a1, a2
-
-          !       v = d1
-          !       dv = h * p1 * tmp2 / s1 + h * p2 * tmp3 * s1
-
-          !       u = c1 * tmp2 / s1
-          !       du = h * c1 * tmp2 / s1
-          !       dh7 = (v * du - u * dv) / (v * v)
-
-          !       u = -c1 * tmp3 * s1
-          !       du = h * c1 * tmp3 * s1
-          !       dh8 = (v * du - u * dv) / (v * v)
-
-          !       v = d2
-          !       dv = h * tmp4 / s1 + h * tmp5 * s1
-
-          !       u = tmp4 / s1
-          !       du = h * tmp4 / s1
-          !       dh9 = (v * du - u * dv) / (v * v)
-
-          !       u = -tmp5 * s1
-          !       du = h * tmp5 * s1
-          !       dh10 = (v * du - u * dv) / (v * v)
-
-          !       da1 = h7*s2*s1 +  h8*s2/s1 + (1._r8-s2*s1)/(twostext(p)+h)*dh7 + (1._r8-s2/s1)/(twostext(p)-h)*dh8
-          !       da2 = h9*s2*s1 + h10*s2/s1 + (1._r8-s2*s1)/(twostext(p)+h)*dh9 + (1._r8-s2/s1)/(twostext(p)-h)*dh10
-
-          !       ! Flux derivatives
-
-          !       d_ftii = -h * h9 * s1 + h * h10 / s1 + dh9 * s1 + dh10 / s1
-          !       d_fabi = -(dh7+dh8) - (1._r8-albgri(c,ib))*d_ftii
-          !       d_fabi_sun = (1._r8 - omega(p,ib)) / avmu(p) * (da1 + da2)
-          !       d_fabi_sha = d_fabi - d_fabi_sun
-
-          !       fabi_sun_z(p,iv) = max(d_fabi_sun, 0._r8)
-          !       fabi_sha_z(p,iv) = max(d_fabi_sha, 0._r8)
-
-          !       ! Flux derivatives are APARsun and APARsha per unit (LAI+SAI). Need
-          !       ! to normalize derivatives by sunlit or shaded fraction to get
-          !       ! APARsun per unit (LAI+SAI)sun and APARsha per unit (LAI+SAI)sha
-
-          !       fabi_sun_z(p,iv) = fabi_sun_z(p,iv) / fsun_z(p,iv)
-          !       fabi_sha_z(p,iv) = fabi_sha_z(p,iv) / (1._r8 - fsun_z(p,iv))
-
-          !       end do   ! end of canopy layer loop
-          !    end if
-          ! end if
-! JP end
 
        end do   ! end of pft loop
     end do   ! end of radiation band loop
@@ -2152,7 +1868,6 @@ subroutine TwoStreamSF (bounds, &
      end associate 
 
 end subroutine TwoStreamSF
-! JP end
 
 
 end module SurfaceAlbedoMod
