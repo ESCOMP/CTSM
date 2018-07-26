@@ -1,8 +1,8 @@
 ===============================================================
-Tag name:  release-clm5.0.01
+Tag name:  release-cesm2.0.01
 Originator(s):  erik (Erik Kluzek)
 Date:  Tue May 22 10:09:15 MDT 2018
-One-line Summary: First release branch tag for CESM2.0 release, identical to clm5.0.dev012
+One-line Summary: First release branch tag for CESM2.0 release, identical to release-clm5.0.01/clm5.0.dev012
 
 Purpose of this version:
 ------------------------

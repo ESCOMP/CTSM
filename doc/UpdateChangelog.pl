@@ -41,7 +41,7 @@ EXAMPLES:
 
      To document a new tag
 
-     $ProgName release-elm5.0.09 "Description of this tag"
+     $ProgName release-cesm2.0.09 "Description of this tag"
 EOF
 }
 
@@ -67,7 +67,7 @@ if ( ! $opts{'update'} ) {
    $tag = $ARGV[0];
    $sum = $ARGV[1];
 
-   if ( $tag !~ /release-clm[0-9]\.[0-9]\.([0-9][0-9])/ ) {
+   if ( $tag !~ /release-cesm[0-9]\.[0-9]\.([0-9][0-9])/ ) {
      print "ERROR: bad tagname: $tag\n";
      usage();
    }
@@ -85,7 +85,7 @@ if ( $EDITOR !~ /.+/ ) {
 
 
 my $template      = ".release-ChangeLog_template";
-my $changelog     = "release-clm5.0.ChangeLog";
+my $changelog     = "release-cesm2.0.ChangeLog";
 my $changesum     = "ChangeSum";
 my $changelog_tmp = "ChangeLog.tmp";
 my $changesum_tmp = "ChangeSum.tmp";
@@ -137,7 +137,7 @@ my $update = $opts{'update'};
 my $oldTag = "";
 while( $_ = <CL> ) {
   # If adding a new tag check that new tag name does NOT match any old tag
-  if (  $_ =~ /Tag name:[   ]*(release-clm.+)/ ) {
+  if (  $_ =~ /Tag name:[   ]*(release-cesm.+)/ ) {
      $oldTag = $1;
      if ( (! $opts{'update'}) && ($tag eq $oldTag) ) {
         close( CL );
