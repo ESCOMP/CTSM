@@ -710,6 +710,7 @@ module clm_comp_nuopc
     type(ESMF_Clock)       :: clock
     type(ESMF_Alarm)       :: alarm
     type(ESMF_Time)        :: currTime
+    type(ESMF_Time)        :: nextTime
     type(ESMF_State)       :: importState, exportState
     character(ESMF_MAXSTR) :: cvalue
     integer                :: shrlogunit     ! original log unit
@@ -906,9 +907,12 @@ module clm_comp_nuopc
 
        call t_startf ('clm_run')
 
-       call ESMF_ClockGet( clock, currTime=currTime )
+       ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of 
+       ! the timestep and is preferred for restart file names
+
+       call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeGet( currTime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc )
+       call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
        write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
 
@@ -1072,7 +1076,7 @@ module clm_comp_nuopc
 
       do n = 1, alarmCount
          ! call ESMF_AlarmPrint(alarmList(n), rc=rc)
-         if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+         !if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
          dalarm = ESMF_AlarmCreate(alarmList(n), rc=rc)
          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
          call ESMF_AlarmSet(dalarm, clock=mclock, rc=rc)
