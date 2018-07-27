@@ -13,7 +13,10 @@ module WaterType
   use clm_varpar              , only : nlevsno
   use ncdio_pio               , only : file_desc_t
   use WaterFluxBulkType       , only : waterfluxbulk_type
+  use WaterFluxType           , only : waterflux_type
   use WaterStateBulkType      , only : waterstatebulk_type
+  use WaterStateType          , only : waterstate_type
+  use WaterDiagnosticType     , only : waterdiagnostic_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterBalanceType        , only : waterbalance_type
 
@@ -23,10 +26,23 @@ module WaterType
   !
   ! !PUBLIC TYPES:
   type, public :: water_type
-     type(waterfluxbulk_type)       :: waterfluxbulk_inst
-     type(waterstatebulk_type)      :: waterstatebulk_inst
-     type(waterdiagnosticbulk_type) :: waterdiagnosticbulk_inst
-     type(waterbalance_type)        :: waterbalancebulk_inst
+     private
+
+     ! ------------------------------------------------------------------------
+     ! Public data members
+     ! ------------------------------------------------------------------------
+
+     integer :: n_tracers
+
+     type(waterfluxbulk_type), public       :: waterfluxbulk_inst
+     type(waterstatebulk_type), public      :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type), public :: waterdiagnosticbulk_inst
+     type(waterbalance_type), public        :: waterbalancebulk_inst
+
+     type(waterflux_type), allocatable, public       :: waterflux_tracer_inst(:)
+     type(waterstate_type), allocatable, public      :: waterstate_tracer_inst(:)
+     type(waterdiagnostic_type), allocatable, public :: waterdiagnostic_tracer_inst(:)
+     type(waterbalance_type), allocatable, public    :: waterbalance_tracer_inst(:)
 
    contains
      procedure, public :: Init
@@ -58,6 +74,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
+    integer :: i
 
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
@@ -82,6 +99,31 @@ contains
     call this%waterbalancebulk_inst%Init(bounds)
 
     call this%waterfluxbulk_inst%InitBulk(bounds)
+
+    ! Eventually this will be set more dynamically
+    this%n_tracers = 0
+
+    if (this%n_tracers > 0) then
+       allocate(this%waterflux_tracer_inst(this%n_tracers))
+       allocate(this%waterstate_tracer_inst(this%n_tracers))
+       allocate(this%waterdiagnostic_tracer_inst(this%n_tracers))
+       allocate(this%waterbalance_tracer_inst(this%n_tracers))
+    end if
+
+    do i = 1, this%n_tracers
+
+       call this%waterstate_tracer_inst(i)%Init(bounds, &
+            h2osno_input_col = h2osno_col(begc:endc),       &
+            watsat_col = watsat_col(begc:endc, 1:),   &
+            t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
+
+       call this%waterdiagnostic_tracer_inst(i)%Init(bounds)
+
+       call this%waterbalance_tracer_inst(i)%Init(bounds)
+
+       call this%waterflux_tracer_inst(i)%Init(bounds)
+
+    end do
 
   end subroutine Init
 
