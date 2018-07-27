@@ -37,6 +37,10 @@ module NutrientCompetitionFlexibleCNMod
      private
      real(r8), pointer :: actual_leafcn(:)                    ! leaf CN ratio used by flexible CN
      real(r8), pointer :: actual_storage_leafcn(:)            ! storage leaf CN ratio used by flexible CN
+     real(r8), pointer :: actual_livestemcn(:)                ! live wood CN ratio used by flexible CN
+     real(r8), pointer :: actual_livestemcn_storage(:)        ! storage live wood CN ratio used by flexible CN
+     real(r8), pointer :: npool_to_livestemn(:)               ! npool to live stem n                    
+     real(r8), pointer :: npool_to_livestemn_storage(:)       ! npool to live stem storage n                   
    contains
      ! public methocs
      procedure, public :: Init                                ! Initialization
@@ -98,6 +102,10 @@ contains
 
     allocate(this%actual_leafcn(bounds%begp:bounds%endp))         ; this%actual_leafcn(:)         = nan
     allocate(this%actual_storage_leafcn(bounds%begp:bounds%endp)) ; this%actual_storage_leafcn(:) = nan
+    allocate(this%actual_livestemcn(bounds%begp:bounds%endp))         ; this%actual_livestemcn(:) = nan
+    allocate(this%actual_livestemcn_storage(bounds%begp:bounds%endp)) ; this%actual_livestemcn_storage(:) = nan
+    allocate(this%npool_to_livestemn(bounds%begp:bounds%endp))         ; this%npool_to_livestemn(:)         = nan
+    allocate(this%npool_to_livestemn_storage(bounds%begp:bounds%endp)) ; this%npool_to_livestemn_storage(:) = nan
 
   end subroutine InitAllocate
 
@@ -128,7 +136,25 @@ contains
     this%actual_storage_leafcn(begp:endp) = spval
     call hist_addfld1d (fname='LEAFCN_STORAGE', units='gC/gN', &
          avgflag='A', long_name='Storage Leaf CN ratio used for flexible CN', &
-         ptr_patch=this%actual_storage_leafcn, default='inactive')
+         ptr_patch=this%actual_storage_leafcn, default='active')
+
+    this%actual_livestemcn(begp:endp) = spval
+    call hist_addfld1d (fname='LIVESTEMCN', units='gC/gN', &
+         avgflag='A', long_name='Live wood CN ratio used for flexible CN', &
+         ptr_patch=this%actual_livestemcn )
+    this%actual_livestemcn_storage(begp:endp) = spval
+    call hist_addfld1d (fname='LIVESTEMCN_STORAGE', units='gC/gN', &
+         avgflag='A', long_name='Storage Live wood CN ratio used for flexible CN', &
+         ptr_patch=this%actual_livestemcn_storage, default='active')
+
+    this%npool_to_livestemn(begp:endp) = spval
+    call hist_addfld1d (fname='NPOOL_TO_LIVESTEM', units='gN m^-1 s^-1', &
+         avgflag='A', long_name='NPOOL to live stem N', &
+         ptr_patch=this%npool_to_livestemn )
+    this%npool_to_livestemn_storage(begp:endp) = spval
+    call hist_addfld1d (fname='NPOOL_TO_LIVESTEM_STORAGE', units='gN m^-1 s^-1', &
+         avgflag='A', long_name='NPOOL to live stem N storage', &
+         ptr_patch=this%npool_to_livestemn_storage )
 
   end subroutine InitHistory
 
@@ -767,6 +793,9 @@ contains
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 1) then
 
+         ! WW this is where demand could also be modified based on actual leaf and live wood C:N
+         ! allocation from npool to storage would also have to be modified?
+
             ! computing nitrogen demand for different pools based on carbon allocated and CN ratio
             npool_to_leafn_demand(p)          = (nlc / cnl) * fcur
             npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
@@ -944,7 +973,9 @@ contains
                   / cnveg_nitrogenstate_inst%leafn_storage_patch(p)
                end if
             end if
-            
+
+            !! WW none of this is done in CLM5 w/ FUN because carbon_resp_opt = 0 by default !!
+            !! WW remove this redundant code? 
             if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
                ! computing carbon to nitrogen ratio of different plant parts 
 
@@ -1261,6 +1292,12 @@ contains
     SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(this%actual_leafcn) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((lbound(this%actual_leafcn) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(this%actual_livestemcn) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((lbound(this%actual_livestemcn) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(this%actual_livestemcn_storage) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((lbound(this%actual_livestemcn_storage) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
@@ -1323,8 +1360,10 @@ contains
 
          xsmrpool              => cnveg_carbonstate_inst%xsmrpool_patch             , & ! Input:  [real(r8) (:)   ]  (gC/m2) temporary photosynthate C pool
          leafc                 => cnveg_carbonstate_inst%leafc_patch                , & ! Input:  [real(r8) (:)   ]
+         leafc_storage         => cnveg_carbonstate_inst%leafc_storage_patch        , & ! Input:  [real(r8) (:)   ]
          frootc                => cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:)   ]
          livestemc             => cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:)   ]
+         livestemc_storage     => cnveg_carbonstate_inst%livestemc_storage_patch    , & ! Input:  [real(r8) (:)   ]
          livecrootc            => cnveg_carbonstate_inst%livecrootc_patch           , & ! Input:  [real(r8) (:)   ]
          retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
 
@@ -1352,6 +1391,7 @@ contains
          cpool_to_xsmrpool     => cnveg_carbonflux_inst%cpool_to_xsmrpool_patch     , & ! Output: [real(r8) (:)   ]
 
          leafn                 => cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N
+         leafn_storage         => cnveg_nitrogenstate_inst%leafn_storage_patch      , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N
          plant_ndemand         => cnveg_nitrogenflux_inst%plant_ndemand_patch       , & ! Output: [real(r8) (:)   ]  N flux required to support initial GPP (gN/m2/s)
          avail_retransn        => cnveg_nitrogenflux_inst%avail_retransn_patch      , & ! Output: [real(r8) (:)   ]  N flux available from retranslocation pool (gN/m2/s)
          retransn_to_npool     => cnveg_nitrogenflux_inst%retransn_to_npool_patch   , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
@@ -1360,6 +1400,7 @@ contains
          frootn_to_retransn    => cnveg_nitrogenflux_inst%frootn_to_retransn_patch  , & ! Output: [real(r8) (:)   ]
          livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch,& ! Output: [real(r8) (:)   ]
          livestemn             => cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
+         livestemn_storage     => cnveg_nitrogenstate_inst%livestemn_storage_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
          frootn                => cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N
          sminn_vr              => soilbiogeochem_nitrogenstate_inst%sminn_vr_col    , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N
          btran                 => energyflux_inst%btran_patch                       , & ! Input: [real(r8) (:)    ]  transpiration wetness factor (0 to 1)
@@ -1653,7 +1694,32 @@ contains
             ! leaf CN ratio 
             this%actual_leafcn(p) = leafc(p)  / leafn(p)
          end if
-            
+         ! WW added here to simplify diagnostics            
+         if (leafn_storage(p) < n_min ) then
+            this%actual_storage_leafcn(p) = spval
+         else
+            this%actual_storage_leafcn(p) = leafc_storage(p)  / leafn_storage(p)
+         end if
+
+
+         ! when we have "if (livestemn(p) == 0.0_r8)" below then we
+         ! have floating overflow (out of floating point range)
+         ! error in "actual_livestemcn(p) = livestemc(p) / livestemn(p)"
+         if (woody(ivt(p)) == 1.0_r8) then
+           if (livestemn(p) < n_min ) then
+              ! to avoid division by zero, and to set livestemcn to missing value for history files
+              this%actual_livestemcn(p) = spval
+           else
+              ! livestem CN ratio 
+              this%actual_livestemcn(p) = livestemc(p)  / livestemn(p)
+           end if
+
+          if (livestemn_storage(p) < n_min ) then
+              this%actual_livestemcn_storage(p) = spval
+           else
+              this%actual_livestemcn_storage(p) = livestemc(p)  / livestemn_storage(p)
+           end if
+         end if
 
          if (nscalar_opt) then
 
