@@ -35,8 +35,8 @@
 <stream_fldfilename_ndep phys="clm5_0" use_cn=".true." lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/ndepdata/fndep_clm_hist_simyr1850_0.9x1.25_CMIP6alpha02_c180426.nc</stream_fldfilename_ndep>
  
-<ndep_taxmode            phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
+<ndep_taxmode use_cn=".true." lnd_tuning_mode="clm5_0_cam6.0">cycle</ndep_taxmode>
 
-<ndep_varlist            phys="clm5_0" use_cn=".true." >NDEP_month</ndep_varlist>
+<ndep_varlist use_cn=".true." lnd_tuning_mode="clm5_0_cam6.0">NDEP_month</ndep_varlist>
 
 </namelist_defaults>
