@@ -2764,8 +2764,8 @@ contains
                 end if   
 
               ! WW mods for same target C:N of live & dead wood  
-              ! livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
-                livestemn_to_deadstemn(p) =  ntovr   
+                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   !orig. code, assuming 50% goes to deadstemn 
+              ! livestemn_to_deadstemn(p) =  ntovr   
             end if    
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
@@ -2785,8 +2785,8 @@ contains
                end if   
               
               ! WW mods for same target C:N of live & dead wood  
-              ! livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
-                livecrootn_to_deadcrootn(p) = ntovr    
+                livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   !oric code, assuming 50% goes to deadstemn 
+              ! livecrootn_to_deadcrootn(p) = ntovr    
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
