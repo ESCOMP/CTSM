@@ -2763,7 +2763,9 @@ contains
                    ntovr = ctovr * (livestemn(p) / livestemc(p))   
                 end if   
 
-                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
+              ! WW mods for same target C:N of live & dead wood  
+              ! livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
+                livestemn_to_deadstemn(p) =  ntovr   
             end if    
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
@@ -2781,8 +2783,10 @@ contains
                else    
                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
                end if   
-
-               livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
+              
+              ! WW mods for same target C:N of live & dead wood  
+              ! livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
+                livecrootn_to_deadcrootn(p) = ntovr    
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
