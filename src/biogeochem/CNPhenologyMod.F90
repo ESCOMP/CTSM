@@ -2758,14 +2758,16 @@ contains
             
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
-                   ntovr = 0.0_r8    
+                   ntovr = 0.0_r8   
+                   livestemn_to_deadstemn(p) = 0.0_r8 !for tests 3,4 w/ resorbtion
                 else    
-                   ntovr = ctovr * (livestemn(p) / livestemc(p))   
+                   ntovr = ctovr * (livestemn(p) / livestemc(p))  
+                   livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p)) !for tests 3,4 w/ resorbtion
                 end if   
 
               ! WW mods for same target C:N of live & dead wood  
-                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   !orig. code, assuming 50% goes to deadstemn 
-              ! livestemn_to_deadstemn(p) =  ntovr   
+              ! livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   !for test 0, 2, orig. code, assuming 50% goes to deadstemn 
+              ! livestemn_to_deadstemn(p) =  ntovr           !for test 1, with livewdCN = 500
             end if    
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
@@ -2777,24 +2779,30 @@ contains
             livecrootc_to_deadcrootc(p) = ctovr
             livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
             
-            if (CNratio_floating .eqv. .true.) then    
-              if (livecrootc(p) == 0.0_r8) then    
-                  ntovr = 0.0_r8    
-               else    
-                  ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
-               end if   
-              
+            if (CNratio_floating .eqv. .true.) then
+               if (livecrootc(p) == 0.0_r8) then
+                   ntovr = 0.0_r8
+                   livecrootn_to_deadcrootn(p) = 0.0_r8 !for tests 3,4 w/ resorbtion
+                else
+                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))
+                   livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) !for tests 3,4 w/ resorbtion
+                end if
+
               ! WW mods for same target C:N of live & dead wood  
-                livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   !oric code, assuming 50% goes to deadstemn 
-              ! livecrootn_to_deadcrootn(p) = ntovr    
-            end if    
+              ! livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   !for test 0, 2, orig. code, assuming 50% goes to deadcrootn 
+              ! livecrootn_to_deadcrootn(p) =  ntovr           !for test 1, with livewdCN = 500
+            end if
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
-            if(use_fun)then
-               !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
-               livecrootn_to_retransn(p) = 0.0_r8
-               livestemn_to_retransn(p)  = 0.0_r8
-            endif
+
+! WW tests 3-4
+! allow resorbtion with FUN
+! not sure how this will effect FUN function 
+!           if(use_fun)then
+!              !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
+!              livecrootn_to_retransn(p) = 0.0_r8
+!              livestemn_to_retransn(p)  = 0.0_r8
+!           endif
 
          end if
 
