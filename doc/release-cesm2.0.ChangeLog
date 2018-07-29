@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  release-cesm2.0.02
+Originator(s):  erik (Erik Kluzek)
+Date:  Sat Jul 28 20:40:34 MDT 2018
+One-line Summary: Fix some NFIX variables, update cime/cism for upgraded hobart new glade, new diagnostic fields, update cmip6 output
+
+Purpose of this version:
+------------------------
+
+Add some new diagnostic fields. Some needed for CMIP6. Update the CMIP6 user-mods output.
+Fix a couple issues. Get full list of history tapes working correctly. Check for valid range
+of CO2.
+
+Update cime and cism so can work on upgraded hobart. Also fix an issue that the Nag6.2 compiler found
+in CTSM. Also get working with glade changes that happened on cheyenne, DIN_LOC_ROOT_CLMFORC was
+changed to a new directory.
+
+Nitrogen Fixation flux arrays were being set to missing value over non-vegetated landunits. This sets them to zero everywhere
+and averages in the zero's at the gridcell level for history output. It also reads in restarts with missing values and converts
+them to zero's.
+
+There are also some tools updates, getting the tools working on the new upgraded hobart.cgd.ucar.edu.
+
+And mksurfdata_map is updated to add some *_MAX files on the landuse.timeseries files that will allow us to conserve memory
+for transient cases.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0dev004 or release-clm5.0.04
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+   #210 -- increase number of history tapes
+   $427 -- Check for zero CO2
+   #429 -- New IC for present day
+   #441 -- Changes in glade invalidate previous softlinks and data locations
+   #438 -- Illegal argument aliasing caught by nag6.2
+   #433 -- with hobart upgrade CTSM not working
+   #435 -- intel build for tools
+   #426 -- Nitrogen Fixation flux variables
+   #433 -- hobart broken, got it working for tools
+
+Science changes since: release-cesm2.0.01
+
+   Changes to Nitrogen fixation flux arrays so that they are zero everywhere and the zeros are averaged in for history output.
+
+Software changes since: release-cesm2.0.01
+
+   Get working on updated hobart. Add some new fields to mksurfdata_map tool.
+
+Changes to User Interface since: release-cesm2.0.01
+
+   None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm/fates/clm_short):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- FAIL
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: clm5.0.dev013 or release-cesm2.0.01
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: When FUN is on (so Clm50 with Bgc)
+    - what platforms/compilers: All, also hobart_intel changes answers
+    - nature of change: diagnostic fields change
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime5.6.10
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from release-clm5.0 release branch: release-clm5.0.04
+
+===============================================================
 ===============================================================
 Tag name:  release-cesm2.0.01
 Originator(s):  erik (Erik Kluzek)

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-cesm2.0.0     erik 07/28/2018 Fix some NFIX variables, update cime/cism for upgraded hobart new glade, new diagnostic fields, update cmip6 output
 release-clm5.0.04     erik 07/18/2018 Fix some NFIX variables, update cime/cism for upgraded hobart new glade, new diagnostic fields, update cmip6 output
   ctsm1.0.dev004     erik 07/18/2018 Add some new diagnostic fields, fix a few issues, update cmip6 output
   ctsm1.0.dev003     erik 07/15/2018 Update cime/cism to work on upgraded hobart and with glade changes on cheyenne
