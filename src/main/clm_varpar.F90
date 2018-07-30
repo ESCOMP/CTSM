@@ -157,6 +157,9 @@ contains
     else if ( soil_layerstruct == '20SL_8.5m' ) then
       nlevsoi     =  20 
       nlevgrnd    =  nlevsoi+5
+    else if ( soil_layerstruct == '4SL_2m' ) then
+      nlevsoi     =  4 
+      nlevgrnd    =  4
     endif
     if ( masterproc ) write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct,nlevsoi,nlevgrnd
 
