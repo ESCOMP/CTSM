@@ -818,12 +818,12 @@ contains
     this%leafn_to_retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_TO_RETRANSN', units='gN/m^2/s', &
          avgflag='A', long_name='leaf N to retranslocated N pool', &
-         ptr_patch=this%leafn_to_retransn_patch, default='inactive')
+         ptr_patch=this%leafn_to_retransn_patch, default='active')
 
     this%frootn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='fine root N litterfall', &
-         ptr_patch=this%frootn_to_litter_patch, default='inactive')
+         ptr_patch=this%frootn_to_litter_patch, default='active')
 
     this%retransn_to_npool_patch(begp:endp) = spval
     call hist_addfld1d (fname='RETRANSN_TO_NPOOL', units='gN/m^2/s', &
