@@ -36,6 +36,7 @@ begin
    ; Get input Greenhouse gas file and open it
    ;
    filetype  = "mkghg_bndtvghg";
+   print( querynml+" -namelist clmexp -var "+filetype+" -options rcp="+rcp );
    ghgfile  = systemfunc( querynml+" -namelist clmexp -var "+filetype+" -options rcp="+rcp );
    print( "Use "+filetype+" file: "+ghgfile );
    if ( systemfunc("test -f "+ghgfile+"; echo $?" ) .ne. 0 )then
@@ -51,15 +52,17 @@ begin
    ldate     = systemfunc( "date" );
 
    sim_yr0 = ncg->date(0) / 10000;
-   nyrs    = dimsizes( ncg->date );
-   sim_yr2 = ncg->date(nyrs-1) / 10000;
+   ntime   = dimsizes( ncg->date );
+   sim_yr2 = ncg->date(ntime-1) / 10000;
 
    sim_yr_rng = sim_yr0 + "-" + sim_yr2;
    
+   cmip_vers = "_CMIP6_";
+
    if ( rcp .eq. histrcp )then
-      outco2filename = "fco2_datm_"+sim_yr_rng+"_c"+sdate+".nc";
+      outco2filename = "fco2_datm_"+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
    else
-      outco2filename = "fco2_datm_rcp"+rcp+"_"+sim_yr_rng+"_c"+sdate+".nc";
+      outco2filename = "fco2_datm_rcp"+rcp+"_"+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
    end if
    system( "/bin/rm -f "+outco2filename );
    print( "output file: "+outco2filename );
@@ -67,11 +70,11 @@ begin
    ;
    ; Define dimensions
    ;
-   nlat = 1;
+   nlat = dimsizes(ncg->lat);
    nlon = 1;
    nv   = 4;
    dimnames = (/ "time", "lat", "lon", "nv" /);
-   dsizes   = (/ nyrs, nlat,  nlon, nv /);
+   dsizes   = (/ ntime, nlat,  nlon, nv /);
    is_unlim = (/ True, False, False, False /);
    filedimdef( nco, dimnames, dsizes, is_unlim );
    ;
@@ -79,7 +82,7 @@ begin
    ;
    vars = (/ "lonc", "latc", "lonv", "latv", "mask", "frac", "area", "CO2" /);
    units= (/ "degrees_east", "degrees_north", "degree_east", "degrees_north", "unitless", "unitless",          "radians^2",        "ppmv" /);
-   lname= (/ "Longitude of grid cell center", "Latitude of grid cell center", "Longitudesof grid cell vertices", "Latitudes of grid cell vertices", "Mask of active cells: 1=active", "Fraction of grid cell that is active", "Area of grid cell", "CO2 concentration" /);
+   lname= (/ "Longitude of grid cell center", "Latitude of grid cell center", "Longitudes of grid cell vertices", "Latitudes of grid cell vertices", "Mask of active cells: 1=active", "Fraction of grid cell that is active", "Area of grid cell", "CO2 concentration" /);
    print( "Define variables: "+vars );
    do i= 0, dimsizes(vars)-1
       if ( vars(i) .eq. "lonv" .or. vars(i) .eq. "latv" )then
@@ -95,6 +98,8 @@ begin
       nco->$vars(i)$@units = units(i);
       nco->$vars(i)$@lname = lname(i);
    end do
+   filevardef ( nco, "time", "float",    (/ "time" /) );
+   filevardef ( nco, "date", "integer",  (/ "time" /) );
    varstatic = (/ "mask", "frac", "area" /);
    do i = 0, dimsizes(varstatic)-1
       nco->$varstatic(i)$@coordinate  = "latc lonc";
@@ -108,30 +113,54 @@ begin
    nco@history  = ldate+": Convert by getco2_historical.ncl";
    nco@source   = "Convert from:"+ghgfile;
    nco@Version  = systemfunc( "git describe" );
+   filevarattdef( nco, "time", ncg->time );
+   filevarattdef( nco, "date", ncg->date );
    ;
    ; Set static variables
    ;
-   pi                   = 3.14159265358979323846d00;
-   nco->area            = 4.0*pi;
-   nco->mask            =   1;
-   nco->frac            =   1.0;
-   nco->latv(0,0,0:1)   =  90.0;
-   nco->latc            =   0.0;
-   nco->latv(0,0,2:3)   = -90.0;
-   nco->lonv(0,0,0:3:3) =   0.0;
-   nco->lonc            = 180.0;
-   nco->lonv(0,0,1:2)   = 360.0;
+   pi                      = 3.14159265358979323846;
+   nco->mask               =   1;
+   nco->frac               =   1.0;
+   nco->latc               = (/ ncg->lat/)
+   nco->latv(nlat-1,0,0:1) =  90.0d00;
+   nco->latv(0:nlat-2,0,0) =  ( (/ ncg->lat(0:nlat-2) /) + (/ncg->lat(1:nlat-1) /) )*0.5d00
+   nco->latv(0:nlat-2,0,1) =  (/ nco->latv(0:nlat-2,0,0) /);
+   nco->latv(1:nlat-1,0,2) =  (/ nco->latv(0:nlat-2,0,0) /);
+   nco->latv(1:nlat-1,0,3) =  (/ nco->latv(1:nlat-1,0,2) /);
+   nco->latv(0,0,2:3)      = -90.0d00;
+   nco->lonv(:,0,0)        =   0.0d00;
+   nco->lonv(:,0,3)        =   0.0d00;
+   nco->lonc               = 180.0d00;
+   nco->lonv(:,0,1)        = 360.0d00;
+   nco->lonv(:,0,2)        = 360.0d00;
+   print( "Expected area of first pt: "+gc_qarea( nco->latv(0,0,:), nco->lonv(0,0,:) ) );
+   nco->area               = gc_qarea( dble2flt( (/nco->latv/) ), dble2flt( (/nco->lonv/) ) );
+   print( sum(nco->area) );
+   print( "expected: "+4.0*pi );
    ;
    ; Time and date
    ;
-   nco->time = ncg->time;
-   nco->date = ncg->date;
+   starttime = (/ ncg->time(0)/) - 15
+   print( "Start time is: "+starttime );
+   nco->time = (/ ncg->time /) - starttime;
+   nco->date = (/ ncg->date /);
+   expected_first = sim_yr0*10000 + 116
+   if ( nco->date(0) .ne. expected_first )then
+      print( "Starting date is NOT what is expected: "+nco->date(0)+ " should be:"+expected_first );
+      exit
+   end if
+   nco->time@units = "days since "+sim_yr0+"-01-01 00:00:00" ;
    nco->date@comment = "This variable is NOT used when read by datm, the time coordinate is used";
    ;
    ; CO2
    ;
-   print( "Copy CO2 for "+nyrs+" years of data" );
-   nco->CO2(:,0,0) = (/ ncg->CO2(:) /);
+   print( "Copy CO2 for "+ntime+" months of data" );
+   do y = 0, nlat-1
+     print( "latitude: "+ nco->latc(y,0) );
+     nco->CO2(:,y,0) = (/ ncg->CO2_LBC(:,y) /) * 1.e6;
+   end do
+   print( "Average Global First CO2 ppmv value: Date="+nco->date(0)+" CO2="+avg(nco->CO2(0,:,0)     ) );
+   print( "Average Global Last  CO2 ppmv value: Date="+nco->date(ntime-1)+" CO2="+avg(nco->CO2(ntime-1,:,0)) );
 
    print( "================================================================================================" );
    print( "Successfully created output historical CO2 file: "+outco2filename);
