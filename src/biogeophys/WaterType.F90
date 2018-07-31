@@ -202,6 +202,7 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     !
     ! !LOCAL VARIABLES:
+    integer :: i
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -215,6 +216,17 @@ contains
 
     call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
          waterstatebulk_inst=this%waterstatebulk_inst)
+
+    do i = 1, this%n_tracers
+
+       call this%waterflux_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
+
+       call this%waterstate_tracer_inst(i)%Restart(bounds, ncid, flag=flag, &
+            watsat_col=watsat_col(bounds%begc:bounds%endc,:))
+
+       call this%waterdiagnostic_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
+
+    end do
 
   end subroutine Restart
 
