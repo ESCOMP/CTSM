@@ -118,23 +118,35 @@ begin
    ;
    ; Set static variables
    ;
+   print( "hemisphere clk: "+gc_clkwise( (/ -90.0, -90.0, 0.0, 0.0 /), (/0.0, 360.0, 360.0, 0.0 /) ) );
+   print( "area of globe:  "+2*gc_qarea( (/ -90.0, -90.0, 0.0, 0.0 /), (/0.0, 360.0, 360.0, 0.0 /) ) );
    pi                      = 3.14159265358979323846;
    nco->mask               =   1;
    nco->frac               =   1.0;
    nco->latc               = (/ ncg->lat/)
-   nco->latv(nlat-1,0,0:1) =  90.0d00;
-   nco->latv(0:nlat-2,0,0) =  ( (/ ncg->lat(0:nlat-2) /) + (/ncg->lat(1:nlat-1) /) )*0.5d00
-   nco->latv(0:nlat-2,0,1) =  (/ nco->latv(0:nlat-2,0,0) /);
-   nco->latv(1:nlat-1,0,2) =  (/ nco->latv(0:nlat-2,0,0) /);
+   nco->latv(nlat-1,0,0)   =  90.0d00;
+   nco->latv(nlat-1,0,3)   =  90.0d00;
+   nco->latv(0:nlat-2,0,1) =  ( (/ ncg->lat(0:nlat-2) /) + (/ncg->lat(1:nlat-1) /) )*0.5d00
+   nco->latv(0:nlat-2,0,2) =  (/ nco->latv(0:nlat-2,0,1) /);
+   nco->latv(1:nlat-1,0,0) =  (/ nco->latv(1:nlat-1,0,2) /);
    nco->latv(1:nlat-1,0,3) =  (/ nco->latv(1:nlat-1,0,2) /);
-   nco->latv(0,0,2:3)      = -90.0d00;
+   nco->latv(0,0,1)        = -90.0d00;
+   nco->latv(0,0,2)        = -90.0d00;
    nco->lonv(:,0,0)        =   0.0d00;
    nco->lonv(:,0,3)        =   0.0d00;
    nco->lonc               = 180.0d00;
    nco->lonv(:,0,1)        = 360.0d00;
    nco->lonv(:,0,2)        = 360.0d00;
    print( "Expected area of first pt: "+gc_qarea( nco->latv(0,0,:), nco->lonv(0,0,:) ) );
-   nco->area               = gc_qarea( dble2flt( (/nco->latv/) ), dble2flt( (/nco->lonv/) ) );
+   clkws = gc_clkwise( nco->latv, nco->lonv );
+   if ( any(clkws .eq. False) )then
+      print( "Some varticies are NOT clockwise" );
+      print( clkws );
+      print( nco->latv(0,0,:) )
+      print( nco->lonv(0,0,:) )
+      exit
+   end if
+   nco->area = dble2flt( gc_qarea( nco->latv, nco->lonv ) );
    print( sum(nco->area) );
    print( "expected: "+4.0*pi );
    ;
