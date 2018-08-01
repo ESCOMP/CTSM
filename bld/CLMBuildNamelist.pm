@@ -2137,10 +2137,18 @@ sub setup_logic_humanindex {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'calc_human_stress_indices');
+     if ( ! &value_is_true($nl->get_value('calc_human_stress_indices')) && &value_is_true($nl->get_value('calc_human_stress_indices_all')) ) {
+        $log->fatal_error( "calc_human_stress_indices_all can NOT be set to true if calc_human_stress_indices is false" );
+     } else {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'calc_human_stress_indices');
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'calc_human_stress_indices_all');
+     }
   } else {
      if ( defined($nl->get_value('calc_human_stress_indices')) ) {
         $log->fatal_error( "calc_human_stress_indices can NOT be set, for physics versions less than clm4_5" );
+     }
+     if ( defined($nl->get_value('calc_human_stress_indices_all')) ) {
+        $log->fatal_error( "calc_human_stress_indices_all can NOT be set, for physics versions less than clm4_5" );
      }
   }
 }

@@ -870,7 +870,12 @@ If TRUE, urban traffic flux will be activated (Currently NOT implemented).
 
 <entry id="calc_human_stress_indices" type="logical" category="clm_physics"
        group="clm_humanindex_inparm" valid_values="" >
-If TRUE, human stress indices will be calculated
+If TRUE, a subset of human stress indices will be calculated
+</entry>
+
+<entry id="calc_human_stress_indices_all" type="logical" category="clm_physics"
+       group="clm_humanindex_inparm" valid_values="" >
+If TRUE, all human stress indices will be calculated
 </entry>
 
 <entry id="wrtdia" type="logical" category="history"
