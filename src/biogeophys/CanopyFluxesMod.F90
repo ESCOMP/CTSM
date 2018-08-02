@@ -721,10 +721,8 @@ contains
 
          ! fraction of stem receiving incoming radiation
          fstem(p) = (esai(p))/(elai(p)+esai(p))
-         fstem(p) = k_vert * fstem(p)
-         if(.not.use_biomass_heat_storage) then
-            fstem(p) = 0._r8
-         endif
+         ! when elai = 0, do not multiply by k_vert (i.e. fstem = 1)
+         if(elai(p) > 0._r8) fstem(p) = k_vert * fstem(p)
 
          ! leaf and stem surface area
          sa_leaf(p) = elai(p)
@@ -734,16 +732,20 @@ contains
          sa_stem(p) = params_inst%nstem(patch%itype(p))*(htop(p)*shr_const_pi*params_inst%dbh(patch%itype(p)))
 ! adjust for departure of cylindrical stem model
          sa_stem(p) = k_cyl_area * sa_stem(p)
-         if(.not.use_biomass_heat_storage) then 
-            sa_stem(p) = 0._r8
-         endif
+
 ! do not calculate separate leaf/stem heat capacity for grasses
          if(patch%itype(p) > 11) then
             fstem(p) = 0.0
             sa_stem(p) = 0.0
          endif
 
-! internal longwave fluxes between leaf and stem
+         if(.not.use_biomass_heat_storage) then
+            fstem(p) = 0._r8
+            sa_stem(p) = 0._r8
+            sa_leaf(p) = (elai(p)+esai(p))
+         endif
+
+         ! internal longwave fluxes between leaf and stem
 ! surface area term must be equal, remainder cancels
 ! (use same area of interaction i.e. ignore leaf <-> leaf)
          sa_internal(p) = min(sa_leaf(p),sa_stem(p))
@@ -756,6 +758,11 @@ contains
 ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
          cp_veg(p)  = (0.25_r8 * max(0.01_r8,elai(p))) * (1400._r8 + (params_inst%fbw(patch%itype(p))/(1.-params_inst%fbw(patch%itype(p))))*4188._r8)
 
+! use non-zero, but small, heat capacity
+         if(.not.use_biomass_heat_storage) then
+            cp_veg(p)  = 1.e-3_r8
+         endif
+            
          carea_stem   = shr_const_pi * (params_inst%dbh(patch%itype(p))*0.5)**2
 
 ! cp-stem will have units J/k/ground_area (here assuming 1 stem/m2)
@@ -1128,7 +1135,7 @@ contains
             end if
 
 ! should be the same expression used in Photosynthesis/getqflx
-            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p)*(qsatl(p)-qaf(p))
+            efpot = forc_rho(c)*(elai(p))/rb(p)*(qsatl(p)-qaf(p))
 
             ! When the hydraulic stress parameterization is active calculate rpp
             ! but not transpiration
@@ -1169,7 +1176,7 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-            wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
+            wtlq    = frac_veg_nosno(p)*(elai(p))/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
             snow_depth_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
@@ -1248,7 +1255,7 @@ contains
             ! result in an imbalance in "hvap*qflx_evap_veg" and
             ! "efe + dc2*wtgaq*qsatdt_veg"
 
-            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p) &
+            efpot = forc_rho(c)*(elai(p))/rb(p) &
                  *(wtgaq*(qsatl(p)+qsatldT(p)*dt_veg(p)) &
                  -wtgq0*qg(c)-wtaq0(p)*forc_q(c))
             qflx_evap_veg(p) = rpp*efpot
@@ -1314,7 +1321,11 @@ contains
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta(p) >= 0._r8) then     !stable
-               zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
+               if(use_biomass_heat_storage) then 
+                  zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
+               else
+                  zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
+               endif
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))

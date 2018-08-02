@@ -4754,7 +4754,7 @@ contains
     
     
     cf       = forc_pbot(c)/(rgas*1.e-3_r8*tgcm(p))*1.e6_r8  ! gb->gbmol conversion factor
-    wtl      = (elai(p)+esai(p))*gb_mol
+    wtl      = (elai(p))*gb_mol
     efpot    = forc_rho(c)*wtl*(qsatl-qaf)
     if (havegs) then
 
