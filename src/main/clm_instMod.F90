@@ -49,6 +49,7 @@ module clm_instMod
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
+  use CanopyFluxesMod                 , only : canopyflux_type
   use SoilHydrologyType               , only : soilhydrology_type  
   use SoilStateType                   , only : soilstate_type
   use SolarAbsorbedType               , only : solarabs_type
@@ -99,6 +100,7 @@ module clm_instMod
   type(lakestate_type)                    :: lakestate_inst
   class(ozone_base_type), allocatable     :: ozone_inst
   type(photosyns_type)                    :: photosyns_inst
+  type(canopyflux_type)                   :: canopyflux_inst
   type(soilstate_type)                    :: soilstate_inst
   type(soilhydrology_type)                :: soilhydrology_inst
   type(solarabs_type)                     :: solarabs_inst

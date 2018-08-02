@@ -3616,6 +3616,7 @@ sub setup_logic_canopyfluxes {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_undercanopy_stability' );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_biomass_heat_storage');
   }
 }
 

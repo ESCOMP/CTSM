@@ -65,7 +65,7 @@ module FrictionVelocityMod
      real(r8), pointer, public :: obu_patch        (:)   ! patch Monin-Obukhov length [m]
      real(r8), pointer, public :: zeta_patch       (:)   ! patch dimensionless stability parameter
      real(r8), pointer, public :: vpd_patch        (:)   ! patch vapor pressure deficit [Pa]
-
+     real(r8), pointer, public :: num_iter_patch   (:)   ! patch number of iterations
 
    contains
 
@@ -155,6 +155,7 @@ contains
     allocate(this%obu_patch        (begp:endp)) ; this%obu_patch        (:)   = nan
     allocate(this%zeta_patch       (begp:endp)) ; this%zeta_patch       (:)   = nan
     allocate(this%vpd_patch        (begp:endp)) ; this%vpd_patch        (:)   = nan
+    allocate(this%num_iter_patch   (begp:endp)) ; this%num_iter_patch   (:)   = nan
 
   end subroutine InitAllocate
 
@@ -274,6 +275,10 @@ contains
        call hist_addfld1d (fname='VPD', units='Pa', &
             avgflag='A', long_name='vpd', &
             ptr_patch=this%vpd_patch, default='inactive')
+       this%num_iter_patch(begp:endp) = spval
+       call hist_addfld1d (fname='num_iter', units='unitless', &
+            avgflag='A', long_name='number of iterations', &
+            ptr_patch=this%num_iter_patch, default='inactive')
        this%rb1_patch(begp:endp) = spval
        call hist_addfld1d (fname='RB', units='s/m', &
             avgflag='A', long_name='leaf boundary resistance', &

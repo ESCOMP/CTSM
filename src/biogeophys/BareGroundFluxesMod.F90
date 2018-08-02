@@ -112,6 +112,8 @@ contains
     !------------------------------------------------------------------------------
 
     associate(                                                                       & 
+         hs_canopy              => energyflux_inst%hs_canopy_patch              , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]                    
+         eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]                    
          soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:,:) ]  evaporative soil resistance (s/m)                                                     
          snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
          dz                     => col%dz                                       , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                                     
@@ -202,11 +204,11 @@ contains
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          zetamax                => frictionvel_parms_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
-         z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]                                        
-         z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]                                   
-         z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]                                     
-         ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
-
+         z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]
+         z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]
+         z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]
+         ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)
+         num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
          htvp                   => energyflux_inst%htvp_col                     , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg]                      
          qflx_ev_snow           => waterflux_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]                        
          qflx_ev_soil           => waterflux_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]                        
@@ -251,7 +253,9 @@ contains
          displa(p) = 0._r8
          dlrad(p)  = 0._r8
          ulrad(p)  = 0._r8
-
+         hs_canopy(p) = 0._r8
+         eflx_sh_stem(p) = 0._r8
+ 
          ur(p)    = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p)   = thm(p)-t_grnd(c)
          dqh(p)   = forc_q(c) - qg(c)
@@ -268,6 +272,7 @@ contains
 
          call MoninObukIni(ur(p), thv(c), dthv, zldis(p), z0mg_patch(p), um(p), obu(p))
 
+         num_iter(p) = 0
       end do
 
       ! Perform stability iteration
@@ -304,6 +309,8 @@ contains
             end if
             obu(p) = zldis(p)/zeta
          end do
+
+         num_iter(p) = iter
 
       end do ! end stability iteration
 

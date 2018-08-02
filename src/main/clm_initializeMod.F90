@@ -341,7 +341,7 @@ contains
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
 
-    call readParameters(nutrient_competition_method, photosyns_inst)
+    call readParameters(nutrient_competition_method, photosyns_inst, canopyflux_inst)
 
     ! ------------------------------------------------------------------------
     ! Initialize time manager

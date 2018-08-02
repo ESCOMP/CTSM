@@ -50,6 +50,25 @@ module CanopyFluxesMod
   !
   ! !PUBLIC TYPES:
   implicit none
+  ! 
+  ! !PUBLIC VARIABLES:
+
+  type :: canopyflux_params_type
+     real(r8), allocatable, public  :: dbh          (:)
+     real(r8), allocatable, public  :: fbw          (:)
+     real(r8), allocatable, public  :: nstem        (:)
+     real(r8), allocatable, public  :: rstem        (:)
+     real(r8), allocatable, public  :: wood_density (:)
+  contains
+     procedure, private :: allocParams
+  end type canopyflux_params_type
+  !
+  type(canopyflux_params_type), public, protected :: params_inst  ! params_inst is populated in readParamsMod 
+
+  type, public :: canopyflux_type
+   contains
+     procedure, public  :: ReadParams
+  end type canopyflux_type
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyFluxesReadNML     ! Read in namelist settings
@@ -68,12 +87,83 @@ module CanopyFluxesMod
   logical, private :: snowveg_on     = .false.                ! snowveg_flag = 'ON'
   logical, private :: snowveg_onrad  = .true.                 ! snowveg_flag = 'ON_RAD'
   logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
+  logical, private :: use_biomass_heat_storage  = .false.     ! include biomass heat storage
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine allocParams ( this )
+    !
+    use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
+    implicit none
+
+    ! !ARGUMENTS:
+    class(canopyflux_params_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'allocParams'
+    !-----------------------------------------------------------------------
+
+    ! allocate parameters
+
+    allocate( this%dbh         (0:mxpft) )          ; this%dbh(:)          = nan
+    allocate( this%fbw         (0:mxpft) )          ; this%fbw(:)          = nan
+    allocate( this%nstem       (0:mxpft) )          ; this%nstem(:)        = nan
+    allocate( this%rstem       (0:mxpft) )          ; this%rstem(:)        = nan
+    allocate( this%wood_density(0:mxpft) )          ; this%wood_density(:) = nan
+
+  end subroutine allocParams
+
+  !-----------------------------------------------------------------------
+  subroutine readParams ( this, ncid )
+    !
+    ! !USES:
+    use ncdio_pio , only : file_desc_t,ncd_io
+    implicit none
+
+    ! !ARGUMENTS:
+    class(canopyflux_type) :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'readParams'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
+
+    ! read in parameters
+
+
+    call params_inst%allocParams()
+
+    tString = "dbh"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%dbh=temp1d
+    tString = "fbw"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%fbw=temp1d
+    tString = "nstem"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%nstem=temp1d
+    tString = "rstem"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rstem=temp1d
+    tString = "wood_density"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%wood_density=temp1d
+
+  end subroutine readParams
 
   !------------------------------------------------------------------------
   subroutine CanopyFluxesReadNML(NLFilename)
@@ -99,7 +189,7 @@ contains
     character(len=*), parameter :: nmlname = 'canopyfluxes_inparm'
     !-----------------------------------------------------------------------
 
-    namelist /canopyfluxes_inparm/ use_undercanopy_stability
+    namelist /canopyfluxes_inparm/ use_undercanopy_stability,use_biomass_heat_storage
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -121,6 +211,7 @@ contains
     end if
 
     call shr_mpi_bcast (use_undercanopy_stability, mpicom)
+    call shr_mpi_bcast (use_biomass_heat_storage, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -353,20 +444,19 @@ contains
 
     real(r8) :: cp_veg(bounds%begp:bounds%endp)    !heat capacity of veg
     real(r8) :: cp_stem(bounds%begp:bounds%endp)   !heat capacity of stems
-    real(r8) :: dt_stem(bounds%begp:bounds%endp)
+    real(r8) :: dt_stem(bounds%begp:bounds%endp)   !change in stem temperature
     real(r8) :: fstem(bounds%begp:bounds%endp)     !fraction of stem
-    real(r8) :: bhd(0:mxpft)                       !stem breast-height-diameter
-    real(r8) :: wood_density, carea_stem
     real(r8) :: lw_stem(bounds%begp:bounds%endp)   !internal longwave stem
     real(r8) :: lw_leaf(bounds%begp:bounds%endp)   !internal longwave leaf
     real(r8) :: sa_stem(bounds%begp:bounds%endp)   !surface area stem m2/m2_ground
     real(r8) :: sa_leaf(bounds%begp:bounds%endp)   !surface area leaf m2/m2_ground
     real(r8) :: sa_internal(bounds%begp:bounds%endp)   !min(sa_stem,sa_leaf)
     real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
+    real(r8) :: cp_wood
+    real(r8) :: carea_stem
+    real(r8) :: rstema
     ! biomass parameters
     real(r8), parameter :: c_to_b = 2.0_r8         !(g biomass /g C)
-    real(r8), parameter :: ntree  = 0.4_r8         !(number of trees / m2)
-    real(r8), parameter :: rstem  = 100._r8        !stem resistance (s/m)
 
     real(r8), parameter :: k_vert = 0.1            !vertical distribution of stem
     real(r8), parameter :: k_cyl_vol = 1.0         !departure from cylindrical volume
@@ -541,6 +631,7 @@ contains
          obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Monin-Obukhov length [m]
          zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter 
          vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [Pa]
+         num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
 
          begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                  , &
@@ -621,10 +712,8 @@ contains
          btran(p)  = btran0
          btran2(p)  = btran0
          hs_canopy(p) = 0._r8
+         eflx_sh_stem(p) = 0._r8
       end do
-
-! set bhd (should be done on parameter file)
-      bhd(1:16) = (/0.15,0.15,0.15,0.2,0.2,0.2,0.2,0.1,0.02,0.02,0.02,0.004,0.004,0.004,0.004,0.004/)
 
       ! calculate biomass heat capacities
       do f = 1, fn
@@ -633,34 +722,46 @@ contains
          ! fraction of stem receiving incoming radiation
          fstem(p) = (esai(p))/(elai(p)+esai(p))
          fstem(p) = k_vert * fstem(p)
+         if(.not.use_biomass_heat_storage) then
+            fstem(p) = 0._r8
+         endif
+
          ! leaf and stem surface area
          sa_leaf(p) = elai(p)
 ! double in spirit of full surface area for sensible heat
          sa_leaf(p) = 2.*sa_leaf(p)
-         sa_stem(p) = ntree*(htop(p)*shr_const_pi*bhd(patch%itype(p)))
+
+         sa_stem(p) = params_inst%nstem(patch%itype(p))*(htop(p)*shr_const_pi*params_inst%dbh(patch%itype(p)))
 ! adjust for departure of cylindrical stem model
          sa_stem(p) = k_cyl_area * sa_stem(p)
+         if(.not.use_biomass_heat_storage) then 
+            sa_stem(p) = 0._r8
+         endif
+! do not calculate separate leaf/stem heat capacity for grasses
+         if(patch%itype(p) > 11) then
+            fstem(p) = 0.0
+            sa_stem(p) = 0.0
+         endif
+
 ! internal longwave fluxes between leaf and stem
 ! surface area term must be equal, remainder cancels
 ! (use same area of interaction i.e. ignore leaf <-> leaf)
          sa_internal(p) = min(sa_leaf(p),sa_stem(p))
          sa_internal(p) = k_internal * sa_internal(p)
 
-!scs: specify heat capacity of vegetation
+! calculate specify heat capacity of vegetation
 !(lma * c2b = lma_dry, lma * c2b * (fw/(1-fw)) = lma_wet, sum these) 
 ! lma_dry has units of kg dry mass /m2 here (table 2 of bonan 2017) 
 ! cdry_biomass = 1400 J/kg/K, cwater = 4188 J/kg/K
 ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
-         cp_veg(p)  = (0.25_r8 * elai(p)) * (1400._r8 + (0.7/(1.-0.7))*4188._r8)
+         cp_veg(p)  = (0.25_r8 * max(0.01_r8,elai(p))) * (1400._r8 + (params_inst%fbw(patch%itype(p))/(1.-params_inst%fbw(patch%itype(p))))*4188._r8)
 
-! wood density could vary by pft...
-         wood_density = 5.e2_r8    ! kg/m3 lindroth2010 uses ~4.e2
-         carea_stem   = shr_const_pi * (bhd(patch%itype(p))*0.5)**2
+         carea_stem   = shr_const_pi * (params_inst%dbh(patch%itype(p))*0.5)**2
 
 ! cp-stem will have units J/k/ground_area (here assuming 1 stem/m2)
-         cp_stem(p) = (1400._r8 + (0.7/(1.-0.7))*4188._r8)
+         cp_stem(p) = (1400._r8 + (params_inst%fbw(patch%itype(p))/(1.-params_inst%fbw(patch%itype(p))))*4188._r8)
 ! use weight of dry wood
-         cp_stem(p) = cp_stem(p) * ntree * wood_density * htop(p) * carea_stem
+         cp_stem(p) = params_inst%nstem(patch%itype(p))* cp_stem(p) * params_inst%wood_density(patch%itype(p)) * htop(p) * carea_stem
 ! adjust for departure from cylindrical stem model
          cp_stem(p) = k_cyl_vol * cp_stem(p)
       enddo
@@ -819,6 +920,7 @@ contains
 
          call MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
 
+         num_iter(p) = 0
       end do
 
       ! Set counter for leaf temperature iteration (itlef)
@@ -994,7 +1096,8 @@ contains
             wtg(p) = 1._r8/rah(p,2)             ! ground
             !            wtstem = sa_stem(p)/rb(p)    ! stem
             ! add resistance between internal stem temperature and canopy air 
-            wtstem = sa_stem(p)/(rstem + rb(p))    ! stem
+            rstema = params_inst%rstem(patch%itype(p))*params_inst%dbh(patch%itype(p))
+            wtstem = sa_stem(p)/(rstema + rb(p))    ! stem
 
             wtshi  = 1._r8/(wta+wtl+wtstem+wtg(p))
 
@@ -1179,7 +1282,7 @@ contains
             ! The energy loss due to above two limits is added to
             ! the sensible heat flux.
 
-           eflx_sh_veg(p) = efsh + dc1*wtga(p)*dt_veg(p) + err(p) + erre + hvap*ecidif
+            eflx_sh_veg(p) = efsh + dc1*wtga(p)*dt_veg(p) + err(p) + erre + hvap*ecidif
 
            !  Update SH and lw_leaf for changes in t_veg
             eflx_sh_stem(p) = eflx_sh_stem(p) + forc_rho(c)*cpair*wtstem*(-wtl0(p)*dt_veg(p))
@@ -1211,7 +1314,7 @@ contains
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta(p) >= 0._r8) then     !stable
-               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
+               zeta(p) = min(100._r8,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
@@ -1229,6 +1332,7 @@ contains
          ! Test for convergence
 
          itlef = itlef+1
+         num_iter(p) = itlef
          if (itlef > itmin) then
             do f = 1, fn
                p = filterp(f)
@@ -1246,7 +1350,6 @@ contains
                end if
             end do
          end if
-
       end do ITERATION     ! End stability iteration
       call t_stopf('can_iter')
 

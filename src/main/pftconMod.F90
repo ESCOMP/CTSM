@@ -145,6 +145,12 @@ module pftconMod
      real(r8), allocatable :: root_radius   (:)   ! root radius (m)
      real(r8), allocatable :: root_density  (:)   ! root density (gC/m3)
 
+     real(r8), allocatable :: dbh  (:)            ! diameter at breast height (m)
+     real(r8), allocatable :: fbw  (:)            ! fraction of biomass that is water
+     real(r8), allocatable :: nstem  (:)          ! stem density (#/m2)
+     real(r8), allocatable :: rstem  (:)          ! stem resistance (s/m)
+     real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
+
      !  crop
 
      ! These arrays give information about the merge of unused crop types to the types CLM
@@ -460,6 +466,11 @@ contains
     allocate( this%fun_cn_flex_c (0:mxpft) )
     allocate( this%FUN_fracfixers(0:mxpft) )
     
+    allocate( this%dbh           (0:mxpft) )
+    allocate( this%fbw           (0:mxpft) )
+    allocate( this%nstem         (0:mxpft) )
+    allocate( this%rstem         (0:mxpft) )
+    allocate( this%wood_density  (0:mxpft) )
  
   end subroutine InitAllocate
 
@@ -1375,6 +1386,11 @@ contains
     deallocate( this%fun_cn_flex_c)
     deallocate( this%FUN_fracfixers)
     
+    deallocate( this%dbh)
+    deallocate( this%fbw)
+    deallocate( this%nstem)
+    deallocate( this%rstem)
+    deallocate( this%wood_density)
   end subroutine Clean
 
 end module pftconMod
