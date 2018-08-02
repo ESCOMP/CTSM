@@ -85,6 +85,7 @@ module WaterType
      type(water_info_bulk_type), pointer :: bulk_info
      logical, allocatable :: is_isotope(:)
      type(water_info_container_type), allocatable :: tracer_info(:)
+     integer :: bulk_tracer_index  ! index of the tracer that replicates bulk water (-1 if it doesn't exist)
 
    contains
      procedure, public :: Init
@@ -94,6 +95,7 @@ module WaterType
      procedure, public :: Restart
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
+     procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
 
      procedure, private :: SetupTracerInfo
   end type water_type
@@ -196,14 +198,16 @@ contains
     integer :: tracer_num
 
     ! TODO(wjs, 2018-07-31) Eventually these will be set more dynamically
-    logical, parameter :: enable_isotope_test = .false.  ! If true, add an isotope-like tracer that is equal to bulk water
-    logical, parameter :: enable_isotopes = .false.      ! If true, add isotopes
+    logical, parameter :: enable_bulk_tracer = .false.  ! If true, add an isotope-like tracer that is equal to bulk water
+    logical, parameter :: enable_isotopes = .false.     ! If true, add isotopes
 
     character(len=*), parameter :: subname = 'SetupTracerInfo'
     !-----------------------------------------------------------------------
 
+    this%bulk_tracer_index = -1
+
     num_tracers = 0
-    if (enable_isotope_test) then
+    if (enable_bulk_tracer) then
        num_tracers = num_tracers + 1
     end if
     if (enable_isotopes) then
@@ -217,9 +221,10 @@ contains
     end if
 
     tracer_num = 1
-    if (enable_isotope_test) then
+    if (enable_bulk_tracer) then
        allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('H2OTR'))
        this%is_isotope(tracer_num) = .true.
+       this%bulk_tracer_index = tracer_num
        tracer_num = tracer_num + 1
     end if
     if (enable_isotopes) then
@@ -401,5 +406,27 @@ contains
     end select
 
   end subroutine GetIsotopeInfo
+
+  !-----------------------------------------------------------------------
+  function GetBulkTracerIndex(this) result(index)
+    !
+    ! !DESCRIPTION:
+    ! Get the index of the tracer that replicates bulk water
+    !
+    ! Returns -1 if there is no tracer that replicates bulk water in this run
+    !
+    ! !ARGUMENTS:
+    integer :: index  ! function result
+    class(water_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'GetBulkTracerIndex'
+    !-----------------------------------------------------------------------
+
+    index = this%bulk_tracer_index
+
+  end function GetBulkTracerIndex
+
 
 end module WaterType
