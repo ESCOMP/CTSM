@@ -4,7 +4,8 @@ module WaterBalanceType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module variables for hydrology
+  ! Defines a derived type containing water balance-related variables that apply to both
+  ! bulk water and water tracers.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8

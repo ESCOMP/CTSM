@@ -4,7 +4,12 @@ module WaterDiagnosticBulkType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module variables for hydrology
+  ! Defines a derived type containing water diagnostic variables that just apply to bulk
+  ! water. Diagnostic variables are neither fundamental state variables nor fluxes
+  ! between those fundamental states, but are typically derived from those states and/or
+  ! fluxes. Note that this type extends the base waterdiagnostic_type, so the full
+  ! waterdiagnosticbulk_type contains the union of the fields defined here and the fields
+  ! defined in waterdiagnostic_type.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -15,8 +20,8 @@ module WaterDiagnosticBulkType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use WaterStateBulkType
-  use WaterDiagnosticType
+  use WaterStateBulkType, only : waterstatebulk_type
+  use WaterDiagnosticType, only : waterdiagnostic_type
   use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none

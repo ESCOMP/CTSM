@@ -4,7 +4,10 @@ module WaterStateBulkType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module variables for hydrology
+  ! Defines a derived type containing water state variables that just apply to bulk
+  ! water. Note that this type extends the base waterstate_type, so the full
+  ! waterstatebulk_type contains the union of the fields defined here and the fields
+  ! defined in waterstate_type.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -15,7 +18,7 @@ module WaterStateBulkType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use WaterStateType
+  use WaterStateType , only : waterstate_type
   use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none

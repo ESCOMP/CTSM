@@ -2,6 +2,8 @@ module WaterFluxType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
+  ! Defines a derived type containing water fluxes that apply to both bulk water and
+  ! water tracers.
   !
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8

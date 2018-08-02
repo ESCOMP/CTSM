@@ -2,6 +2,10 @@ module WaterFluxBulkType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
+  ! Defines a derived type containing water fluxes that just apply to bulk water. Note
+  ! that this type extends the base waterflux_type, so the full waterfluxbulk_type
+  ! contains the union of the fields defined here and the fields defined in
+  ! waterflux_type.
   !
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8
@@ -14,7 +18,7 @@ module WaterFluxBulkType
   use PatchType      , only : patch   
   use CNSharedParamsMod           , only : use_fun
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
-  use WaterFluxType     , only : WaterFlux_type
+  use WaterFluxType     , only : waterflux_type
   use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none

@@ -4,7 +4,10 @@ module WaterDiagnosticType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module variables for hydrology
+  ! Defines a derived type containing water diagnostic variables that apply to both bulk
+  ! water and water tracers. Diagnostic variables are neither fundamental state variables
+  ! nor fluxes between those fundamental states, but are typically derived from those
+  ! states and/or fluxes.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
