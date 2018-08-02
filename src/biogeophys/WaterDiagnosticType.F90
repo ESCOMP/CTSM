@@ -60,7 +60,7 @@ contains
 
     class(waterdiagnostic_type)            :: this
     type(bounds_type) , intent(in)    :: bounds  
-    class(water_info_base_type), intent(in), pointer :: info
+    class(water_info_base_type), intent(in), target :: info
 
     this%info => info
 
