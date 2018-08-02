@@ -15,6 +15,7 @@ module WaterStateType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
+  use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   save
@@ -23,6 +24,7 @@ module WaterStateType
   ! !PUBLIC TYPES:
   type, public :: waterstate_type
 
+     class(water_info_base_type), pointer :: info
 
      real(r8), pointer :: h2osno_col             (:)   ! col snow water (mm H2O)
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
@@ -52,16 +54,19 @@ module WaterStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, &
+  subroutine Init(this, bounds, info, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
     class(waterstate_type)         :: this
     type(bounds_type) , intent(in) :: bounds  
+    class(water_info_base_type), intent(in), target :: info
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
 
-    call this%InitAllocate(bounds) 
+    this%info => info
+
+    call this%InitAllocate(bounds)
 
     call this%InitHistory(bounds)
 
@@ -142,63 +147,99 @@ contains
     ! initial snow layer is only created if h2osno > 10mm). 
 
     data2dptr => this%h2osoi_liq_col(:,-nlevsno+1:0)
-    call hist_addfld2d (fname='SNO_LIQH2O', units='kg/m2', type2d='levsno',  &
-         avgflag='A', long_name='Snow liquid water content', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SNO_LIQH2O'), &
+         units='kg/m2', type2d='levsno',  &
+         avgflag='A', &
+         long_name=this%info%lname('Snow liquid water content'), &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     data2dptr => this%h2osoi_ice_col(:,-nlevsno+1:0)
-    call hist_addfld2d (fname='SNO_ICE', units='kg/m2', type2d='levsno',  &
-         avgflag='A', long_name='Snow ice content', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SNO_ICE'), &
+         units='kg/m2', type2d='levsno',  &
+         avgflag='A', &
+         long_name=this%info%lname('Snow ice content'), &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     data2dptr => this%h2osoi_vol_col(begc:endc,1:nlevsoi)
-    call hist_addfld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levsoi', &
-         avgflag='A', long_name='volumetric soil water (vegetated landunits only)', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('H2OSOI'),  &
+         units='mm3/mm3', type2d='levsoi', &
+         avgflag='A', &
+         long_name=this%info%lname('volumetric soil water (vegetated landunits only)'), &
          ptr_col=this%h2osoi_vol_col, l2g_scale_type='veg')
 
-!    this%h2osoi_liq_col(begc:endc,:) = spval
-!    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levgrnd', &
-!         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
-!         ptr_col=this%h2osoi_liq_col, l2g_scale_type='veg')
+    ! this%h2osoi_liq_col(begc:endc,:) = spval
+    ! call hist_addfld2d ( &
+    !      fname=this%info%fname('SOILLIQ'),  &
+    !      units='kg/m2', type2d='levgrnd', &
+    !      avgflag='A', &
+    !      long_name=this%info%lname('soil liquid water (vegetated landunits only)'), &
+    !      ptr_col=this%h2osoi_liq_col, l2g_scale_type='veg')
 
     data2dptr => this%h2osoi_liq_col(begc:endc,1:nlevsoi) 
-    call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levsoi', &
-         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SOILLIQ'),  &
+         units='kg/m2', type2d='levsoi', &
+         avgflag='A', &
+         long_name=this%info%lname('soil liquid water (vegetated landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
 
     data2dptr => this%h2osoi_ice_col(begc:endc,1:nlevsoi)
-    call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levsoi', &
-         avgflag='A', long_name='soil ice (vegetated landunits only)', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SOILICE'),  &
+         units='kg/m2', type2d='levsoi', &
+         avgflag='A', &
+         long_name=this%info%lname('soil ice (vegetated landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
 
     this%h2ocan_patch(begp:endp) = spval 
-    call hist_addfld1d (fname='H2OCAN', units='mm',  &
-         avgflag='A', long_name='intercepted water', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OCAN'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('intercepted water'), &
          ptr_patch=this%h2ocan_patch, set_lake=0._r8)
 
     this%snocan_patch(begp:endp) = spval 
-    call hist_addfld1d (fname='SNOCAN', units='mm',  &
-         avgflag='A', long_name='intercepted snow', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOCAN'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('intercepted snow'), &
          ptr_patch=this%snocan_patch, set_lake=0._r8)
 
     this%liqcan_patch(begp:endp) = spval 
-    call hist_addfld1d (fname='LIQCAN', units='mm',  &
-         avgflag='A', long_name='intercepted liquid water', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('LIQCAN'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('intercepted liquid water'), &
          ptr_patch=this%liqcan_patch, set_lake=0._r8)
 
-    call hist_addfld1d (fname='H2OSNO',  units='mm',  &
-         avgflag='A', long_name='snow depth (liquid water)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OSNO'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow depth (liquid water)'), &
          ptr_col=this%h2osno_col, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='H2OSNO_ICE', units='mm',  &
-         avgflag='A', long_name='snow depth (liquid water, ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OSNO_ICE'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow depth (liquid water, ice landunits only)'), &
          ptr_col=this%h2osno_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
 
     this%h2osfc_col(begc:endc) = spval
-    call hist_addfld1d (fname='H2OSFC',  units='mm',  &
-         avgflag='A', long_name='surface water depth', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OSFC'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('surface water depth'), &
          ptr_col=this%h2osfc_col)
 
 
@@ -443,45 +484,66 @@ contains
 
     SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
 
-    call restartvar(ncid=ncid, flag=flag, varname='H2OSFC', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('H2OSFC'), &
+         xtype=ncd_double,  &
          dim1name='column', &
-         long_name='surface water', units='kg/m2', &
+         long_name=this%info%lname('surface water'), &
+         units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2osfc_col)
     if (flag=='read' .and. .not. readvar) then
        this%h2osfc_col(bounds%begc:bounds%endc) = 0.0_r8
     end if
 
-    call restartvar(ncid=ncid, flag=flag, varname='H2OSNO', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('H2OSNO'), &
+         xtype=ncd_double,  &
          dim1name='column', &
-         long_name='snow water', units='kg/m2', &
+         long_name=this%info%lname('snow water'), &
+         units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2osno_col)
 
-    call restartvar(ncid=ncid, flag=flag, varname='H2OSOI_LIQ', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('H2OSOI_LIQ'), &
+         xtype=ncd_double,  &
          dim1name='column', dim2name='levtot', switchdim=.true., &
-         long_name='liquid water', units='kg/m2', &
+         long_name=this%info%lname('liquid water'), &
+         units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_liq_col)
 
-    call restartvar(ncid=ncid, flag=flag, varname='H2OSOI_ICE', xtype=ncd_double,   &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('H2OSOI_ICE'), &
+         xtype=ncd_double,   &
          dim1name='column', dim2name='levtot', switchdim=.true., &
-         long_name='ice lens', units='kg/m2', &
+         long_name=this%info%lname('ice lens'), &
+         units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
-    call restartvar(ncid=ncid, flag=flag, varname='H2OCAN', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('H2OCAN'), &
+         xtype=ncd_double,  &
          dim1name='pft', &
-         long_name='canopy water', units='kg/m2', &
+         long_name=this%info%lname('canopy water'), &
+         units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2ocan_patch)
 
-    call restartvar(ncid=ncid, flag=flag, varname='SNOCAN', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('SNOCAN'), &
+         xtype=ncd_double,  &
          dim1name='pft', &
-         long_name='canopy snow water', units='kg/m2', &
+         long_name=this%info%lname('canopy snow water'), &
+         units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%snocan_patch)
 
     ! NOTE(wjs, 2015-07-01) In old restart files, there was no LIQCAN variable. However,
     ! H2OCAN had similar meaning. So if we can't find LIQCAN, use H2OCAN to initialize
     ! liqcan_patch.
-    call restartvar(ncid=ncid, flag=flag, varname='LIQCAN:H2OCAN', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('LIQCAN:H2OCAN'), &
+         xtype=ncd_double,  &
          dim1name='pft', &
-         long_name='canopy liquid water', units='kg/m2', &
+         long_name=this%info%lname('canopy liquid water'), &
+         units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%liqcan_patch)
 
 

@@ -15,6 +15,7 @@ module WaterDiagnosticType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
+  use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   save
@@ -22,6 +23,8 @@ module WaterDiagnosticType
   !
   ! !PUBLIC TYPES:
   type, public :: waterdiagnostic_type
+
+     class(water_info_base_type), pointer :: info
 
      real(r8), pointer :: snowice_col            (:)   ! col average snow ice lens
      real(r8), pointer :: snowliq_col            (:)   ! col average snow liquid water
@@ -53,11 +56,13 @@ module WaterDiagnosticType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, info)
 
     class(waterdiagnostic_type)            :: this
     type(bounds_type) , intent(in)    :: bounds  
+    class(water_info_base_type), intent(in), pointer :: info
 
+    this%info => info
 
     call this%InitAllocate(bounds) 
 
@@ -139,13 +144,19 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     this%h2osoi_liqice_10cm_col(begc:endc) = spval
-    call hist_addfld1d (fname='SOILWATER_10CM',  units='kg/m2', &
-         avgflag='A', long_name='soil liquid water + ice in top 10cm of soil (veg landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SOILWATER_10CM'),  &
+         units='kg/m2', &
+         avgflag='A', &
+         long_name=this%info%lname('soil liquid water + ice in top 10cm of soil (veg landunits only)'), &
          ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
 
     this%tws_grc(begg:endg) = spval
-    call hist_addfld1d (fname='TWS',  units='mm',  &
-         avgflag='A', long_name='total water storage', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('TWS'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('total water storage'), &
          ptr_lnd=this%tws_grc)
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
@@ -158,8 +169,11 @@ contains
 
 
     this%q_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='Q2M', units='kg/kg',  &
-         avgflag='A', long_name='2m specific humidity', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('Q2M'), &
+         units='kg/kg',  &
+         avgflag='A', &
+         long_name=this%info%lname('2m specific humidity'), &
          ptr_patch=this%q_ref2m_patch)
 
 
@@ -167,22 +181,34 @@ contains
     ! Snow properties - these will be vertically averaged over the snow profile
 
     this%snowliq_col(begc:endc) = spval
-    call hist_addfld1d (fname='SNOWLIQ',  units='kg/m2',  &
-         avgflag='A', long_name='snow liquid water', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOWLIQ'),  &
+         units='kg/m2',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow liquid water'), &
          ptr_col=this%snowliq_col, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='SNOWLIQ_ICE',  units='kg/m2',  &
-         avgflag='A', long_name='snow liquid water (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOWLIQ_ICE'),  &
+         units='kg/m2',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow liquid water (ice landunits only)'), &
          ptr_col=this%snowliq_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
     this%snowice_col(begc:endc) = spval
-    call hist_addfld1d (fname='SNOWICE',  units='kg/m2', &
-         avgflag='A', long_name='snow ice', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOWICE'),  &
+         units='kg/m2', &
+         avgflag='A', &
+         long_name=this%info%lname('snow ice'), &
          ptr_col=this%snowice_col, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='SNOWICE_ICE',  units='kg/m2', &
-         avgflag='A', long_name='snow ice (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOWICE_ICE'),  &
+         units='kg/m2', &
+         avgflag='A', &
+         long_name=this%info%lname('snow ice (ice landunits only)'), &
          ptr_col=this%snowice_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
@@ -282,17 +308,21 @@ contains
 
     ! TWS is needed when methane is on and the TWS_inversion is used to get exact
     ! restart.
-    call restartvar(ncid=ncid, flag=flag, varname='TWS', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('TWS'), &
+         xtype=ncd_double,  &
          dim1name=nameg, &
-         long_name='Total Water Storage', units='mm', &
+         long_name=this%info%lname('Total Water Storage'), &
+         units='mm', &
          interpinic_flag='interp', readvar=readvar, data=this%tws_grc)
 
 
-    call restartvar(ncid=ncid, flag=flag, varname='qaf', xtype=ncd_double, dim1name='landunit',                       &
-         long_name='urban canopy specific humidity', units='kg/kg',                                                   &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('qaf'), &
+         xtype=ncd_double, dim1name='landunit', &
+         long_name=this%info%lname('urban canopy specific humidity'), &
+         units='kg/kg', &
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
-
-
 
   end subroutine Restart
 

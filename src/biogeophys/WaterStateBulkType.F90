@@ -16,6 +16,7 @@ module WaterStateBulkType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterStateType
+  use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   save
@@ -46,17 +47,18 @@ module WaterStateBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, &
+  subroutine InitBulk(this, bounds, info, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
     class(waterstatebulk_type)     :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
+    class(water_info_base_type), intent(in), target :: info
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
 
 
-    call this%Init(bounds, &
+    call this%Init(bounds, info, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
     call this%InitBulkAllocate(bounds) 
@@ -133,19 +135,28 @@ contains
     ! Snow properties - these will be vertically averaged over the snow profile
 
     this%int_snow_col(begc:endc) = spval
-    call hist_addfld1d (fname='INT_SNOW',  units='mm',  &
-         avgflag='A', long_name='accumulated swe (vegetated landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('INT_SNOW'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('accumulated swe (vegetated landunits only)'), &
          ptr_col=this%int_snow_col, l2g_scale_type='veg', &
          default='inactive')
 
-    call hist_addfld1d (fname='INT_SNOW_ICE',  units='mm',  &
-         avgflag='A', long_name='accumulated swe (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('INT_SNOW_ICE'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('accumulated swe (ice landunits only)'), &
          ptr_col=this%int_snow_col, l2g_scale_type='ice', &
          default='inactive')
 
     this%snow_persistence_col(begc:endc) = spval
-    call hist_addfld1d (fname='SNOW_PERSISTENCE',  units='seconds',  &
-         avgflag='I', long_name='Length of time of continuous snow cover (nat. veg. landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_PERSISTENCE'),  &
+         units='seconds',  &
+         avgflag='I', &
+         long_name=this%info%lname('Length of time of continuous snow cover (nat. veg. landunits only)'), &
          ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
 
 
@@ -242,17 +253,23 @@ contains
          watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 
 
 
-    call restartvar(ncid=ncid, flag=flag, varname='INT_SNOW', xtype=ncd_double,  & 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('INT_SNOW'), &
+         xtype=ncd_double,  &
          dim1name='column', &
-         long_name='accuumulated snow', units='mm', &
+         long_name=this%info%lname('accuumulated snow'), &
+         units='mm', &
          interpinic_flag='interp', readvar=readvar, data=this%int_snow_col)
     if (flag=='read' .and. .not. readvar) then
        this%int_snow_col(:) = 0.0_r8
     end if
 
-    call restartvar(ncid=ncid, flag=flag, varname='SNOW_PERS', xtype=ncd_double,  & 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('SNOW_PERS'), &
+         xtype=ncd_double,  &
          dim1name='column', &
-         long_name='continuous snow cover time', units='sec', &
+         long_name=this%info%lname('continuous snow cover time'), &
+         units='sec', &
          interpinic_flag='interp', readvar=readvar, data=this%snow_persistence_col)    
     if (flag=='read' .and. .not. readvar) then
          this%snow_persistence_col(:) = 0.0_r8

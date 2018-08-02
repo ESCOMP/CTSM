@@ -14,6 +14,7 @@ module WaterFluxBulkType
   use PatchType      , only : patch   
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterFluxType     , only : WaterFlux_type
+  use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   private
@@ -92,12 +93,13 @@ module WaterFluxBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds)
+  subroutine InitBulk(this, bounds, info)
 
     class(waterfluxbulk_type) :: this
     type(bounds_type), intent(in)    :: bounds  
+    class(water_info_base_type), intent(in), target :: info
 
-    call this%Init(bounds)
+    call this%Init(bounds, info)
     call this%InitBulkAllocate(bounds) ! same as "call initAllocate_type(hydro, bounds)"
     call this%InitBulkHistory(bounds)
     call this%InitBulkCold(bounds)
@@ -208,65 +210,101 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     this%qflx_snow_drain_col(begc:endc) = spval
-    call hist_addfld1d (fname='QFLX_SNOW_DRAIN',  units='mm/s',  &
-         avgflag='A', long_name='drainage from snow pack', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_SNOW_DRAIN'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('drainage from snow pack'), &
          ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QFLX_SNOW_DRAIN_ICE', units='mm/s',  &
-         avgflag='A', long_name='drainage from snow pack melt (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_SNOW_DRAIN_ICE'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('drainage from snow pack melt (ice landunits only)'), &
          ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
     this%qflx_snomelt_lyr_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%qflx_snomelt_lyr_col(begc:endc,-nlevsno+1:0)
-    call hist_addfld2d (fname='SNO_MELT',  units='mm/s', type2d='levsno', &
-         avgflag='A', long_name='snow melt rate in each snow layer', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SNO_MELT'),  &
+         units='mm/s', type2d='levsno', &
+         avgflag='A', &
+         long_name=this%info%lname('snow melt rate in each snow layer'), &
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, default='inactive')
 
-    call hist_addfld2d (fname='SNO_MELT_ICE',  units='mm/s', type2d='levsno', &
-         avgflag='A', long_name='snow melt rate in each snow layer (ice landunits only)', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SNO_MELT_ICE'),  &
+         units='mm/s', type2d='levsno', &
+         avgflag='A', &
+         long_name=this%info%lname('snow melt rate in each snow layer (ice landunits only)'), &
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, &
          l2g_scale_type='ice', default='inactive')
 
 
     this%qflx_h2osfc_to_ice_col(begc:endc) = spval
-    call hist_addfld1d (fname='QH2OSFC_TO_ICE',  units='mm/s',  &
-         avgflag='A', long_name='surface water converted to ice', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QH2OSFC_TO_ICE'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('surface water converted to ice'), &
          ptr_col=this%qflx_h2osfc_to_ice_col, default='inactive')
 
-    call hist_addfld2d (fname='QROOTSINK',  units='mm/s', type2d='levsoi', &
-         avgflag='A', long_name='water flux from soil to root in each soil-layer', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('QROOTSINK'),  &
+         units='mm/s', type2d='levsoi', &
+         avgflag='A', &
+         long_name=this%info%lname('water flux from soil to root in each soil-layer'), &
          ptr_col=this%qflx_rootsoi_col, set_spec=spval, l2g_scale_type='veg', default='inactive')
 
     this%qflx_ev_snow_patch(begp:endp) = spval
 
     this%qflx_snowindunload_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QSNO_WINDUNLOAD', units='mm/s',  &
-         avgflag='A', long_name='canopy snow wind unloading', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNO_WINDUNLOAD'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('canopy snow wind unloading'), &
          ptr_patch=this%qflx_snowindunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
     this%qflx_snotempunload_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QSNO_TEMPUNLOAD', units='mm/s',  &
-         avgflag='A', long_name='canopy snow temp unloading', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNO_TEMPUNLOAD'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('canopy snow temp unloading'), &
          ptr_patch=this%qflx_snotempunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
     this%qflx_irrig_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QIRRIG', units='mm/s', &
-         avgflag='A', long_name='water added through irrigation', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QIRRIG'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('water added through irrigation'), &
          ptr_patch=this%qflx_irrig_patch)
 
     this%qflx_h2osfc_surf_col(begc:endc) = spval
-    call hist_addfld1d (fname='QH2OSFC',  units='mm/s',  &
-         avgflag='A', long_name='surface water runoff', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QH2OSFC'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('surface water runoff'), &
          ptr_col=this%qflx_h2osfc_surf_col)
 
     this%qflx_drain_perched_col(begc:endc) = spval
-    call hist_addfld1d (fname='QDRAI_PERCH',  units='mm/s',  &
-         avgflag='A', long_name='perched wt drainage', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRAI_PERCH'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('perched wt drainage'), &
          ptr_col=this%qflx_drain_perched_col, c2l_scale_type='urbanf')
 
     this%qflx_phs_neg_col(begc:endc) = spval
-    call hist_addfld1d (fname='QPHSNEG',  units='mm/s',  &
-         avgflag='A', long_name='net negative hydraulic redistribution flux', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QPHSNEG'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('net negative hydraulic redistribution flux'), &
          ptr_col=this%qflx_phs_neg_col, default='inactive')
 
     ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at any
@@ -276,13 +314,19 @@ contains
     ! annual value of the change in h2osno. 
 
     this%snow_sources_col(begc:endc) = spval
-    call hist_addfld1d (fname='SNOW_SOURCES',  units='mm/s',  &
-         avgflag='A', long_name='snow sources (liquid water)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_SOURCES'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow sources (liquid water)'), &
          ptr_col=this%snow_sources_col, c2l_scale_type='urbanf')
 
     this%snow_sinks_col(begc:endc) = spval
-    call hist_addfld1d (fname='SNOW_SINKS',  units='mm/s',  &
-         avgflag='A', long_name='snow sinks (liquid water)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_SINKS'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow sinks (liquid water)'), &
          ptr_col=this%snow_sinks_col, c2l_scale_type='urbanf')
          
   end subroutine InitBulkHistory
@@ -343,9 +387,12 @@ contains
     call this%restart ( bounds, ncid, flag=flag )
     ! needed for SNICAR
 
-    call restartvar(ncid=ncid, flag=flag, varname='qflx_snow_drain:qflx_snow_melt', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('qflx_snow_drain:qflx_snow_melt'), &
+         xtype=ncd_double,  &
          dim1name='column', &
-         long_name='drainage from snow column', units='mm/s', &
+         long_name=this%info%lname('drainage from snow column'), &
+         units='mm/s', &
          interpinic_flag='interp', readvar=readvar, data=this%qflx_snow_drain_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize qflx_snow_drain to zero

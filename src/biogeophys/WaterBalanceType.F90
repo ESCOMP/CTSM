@@ -15,6 +15,7 @@ module WaterBalanceType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
+  use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   save
@@ -23,6 +24,7 @@ module WaterBalanceType
   ! !PUBLIC TYPES:
   type, public :: waterbalance_type
 
+     class(water_info_base_type), pointer :: info
 
      real(r8), pointer :: h2osno_old_col         (:)   ! col snow mass for previous time step (kg/m2) (new)
      real(r8), pointer :: liq1_grc               (:)   ! grc initial gridcell total h2o liq content
@@ -55,11 +57,13 @@ module WaterBalanceType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, info)
 
     class(waterbalance_type)            :: this
     type(bounds_type) , intent(in)    :: bounds  
+    class(water_info_base_type), intent(in), target :: info
 
+    this%info => info
 
     call this%InitAllocate(bounds) 
 
@@ -138,36 +142,53 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     this%liq1_grc(begg:endg) = spval
-    call hist_addfld1d (fname='LIQUID_CONTENT1',  units='mm',  &
-         avgflag='A', long_name='initial gridcell total liq content', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('LIQUID_CONTENT1'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('initial gridcell total liq content'), &
          ptr_lnd=this%liq1_grc)
 
     this%liq2_grc(begg:endg) = spval
-    call hist_addfld1d (fname='LIQUID_CONTENT2',  units='mm',  &  
-         avgflag='A', long_name='post landuse change gridcell total liq content', &              
+    call hist_addfld1d ( &
+         fname=this%info%fname('LIQUID_CONTENT2'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('post landuse change gridcell total liq content'), &
          ptr_lnd=this%liq2_grc, default='inactive')     
 
     this%ice1_grc(begg:endg) = spval
-    call hist_addfld1d (fname='ICE_CONTENT1',  units='mm',  &  
-         avgflag='A', long_name='initial gridcell total ice content', &              
+    call hist_addfld1d ( &
+         fname=this%info%fname('ICE_CONTENT1'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('initial gridcell total ice content'), &
          ptr_lnd=this%ice1_grc)     
 
     this%ice2_grc(begg:endg) = spval
-    call hist_addfld1d (fname='ICE_CONTENT2',  units='mm',  &  
-         avgflag='A', long_name='post land cover change total ice content', &              
+    call hist_addfld1d ( &
+         fname=this%info%fname('ICE_CONTENT2'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('post land cover change total ice content'), &
          ptr_lnd=this%ice2_grc, default='inactive')
 
 
     this%errh2o_col(begc:endc) = spval
-    call hist_addfld1d (fname='ERRH2O', units='mm',  &
-         avgflag='A', long_name='total water conservation error', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('ERRH2O'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('total water conservation error'), &
          ptr_col=this%errh2o_col)
 
     this%errh2osno_col(begc:endc) = spval
-    call hist_addfld1d (fname='ERRH2OSNO',  units='mm',  &
-         avgflag='A', long_name='imbalance in snow depth (liquid water)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('ERRH2OSNO'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('imbalance in snow depth (liquid water)'), &
          ptr_col=this%errh2osno_col, c2l_scale_type='urbanf')
-
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------

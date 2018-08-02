@@ -14,12 +14,15 @@ module WaterFluxType
   use PatchType      , only : patch   
   use CNSharedParamsMod           , only : use_fun             
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
+  use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   private
   !
   ! !PUBLIC TYPES:
   type, public :: waterflux_type
+
+     class(water_info_base_type), pointer :: info
 
      ! water fluxes are in units or mm/s
 
@@ -102,10 +105,13 @@ module WaterFluxType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, info)
 
     class(waterflux_type) :: this
     type(bounds_type), intent(in)    :: bounds  
+    class(water_info_base_type), intent(in), target :: info
+
+    this%info => info
 
     call this%InitAllocate(bounds) ! same as "call initAllocate_type(hydro, bounds)"
     call this%InitHistory(bounds)
@@ -215,205 +221,320 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     this%qflx_top_soil_col(begc:endc) = spval
-    call hist_addfld1d (fname='QTOPSOIL',  units='mm/s',  &
-         avgflag='A', long_name='water input to surface', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QTOPSOIL'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('water input to surface'), &
          ptr_col=this%qflx_top_soil_col, c2l_scale_type='urbanf', default='inactive')
 
     this%qflx_infl_col(begc:endc) = spval
-    call hist_addfld1d (fname='QINFL',  units='mm/s',  &
-         avgflag='A', long_name='infiltration', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QINFL'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('infiltration'), &
          ptr_col=this%qflx_infl_col, c2l_scale_type='urbanf')
 
     this%qflx_surf_col(begc:endc) = spval
-    call hist_addfld1d (fname='QOVER',  units='mm/s',  &
-         avgflag='A', long_name='total surface runoff (includes QH2OSFC)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QOVER'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('total surface runoff (includes QH2OSFC)'), &
          ptr_col=this%qflx_surf_col, c2l_scale_type='urbanf')
 
     this%qflx_qrgwl_col(begc:endc) = spval
-    call hist_addfld1d (fname='QRGWL',  units='mm/s',  &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QRGWL'),  &
+         units='mm/s',  &
          avgflag='A', &
-         long_name='surface runoff at glaciers (liquid only), wetlands, lakes; also includes melted ice runoff from QSNWCPICE', &
+         long_name=this%info%lname('surface runoff at glaciers (liquid only), wetlands, lakes; also includes melted ice runoff from QSNWCPICE'), &
          ptr_col=this%qflx_qrgwl_col, c2l_scale_type='urbanf')
 
     this%qflx_drain_col(begc:endc) = spval
-    call hist_addfld1d (fname='QDRAI',  units='mm/s',  &
-         avgflag='A', long_name='sub-surface drainage', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRAI'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('sub-surface drainage'), &
          ptr_col=this%qflx_drain_col, c2l_scale_type='urbanf')
 
     this%qflx_liq_dynbal_grc(begg:endg) = spval
-    call hist_addfld1d (fname='QFLX_LIQ_DYNBAL',  units='mm/s',  &  
-         avgflag='A', long_name='liq dynamic land cover change conversion runoff flux', &              
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_LIQ_DYNBAL'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('liq dynamic land cover change conversion runoff flux'), &
          ptr_lnd=this%qflx_liq_dynbal_grc)     
 
     this%qflx_ice_dynbal_grc(begg:endg) = spval
-    call hist_addfld1d (fname='QFLX_ICE_DYNBAL',  units='mm/s',  &
-         avgflag='A', long_name='ice dynamic land cover change conversion runoff flux', &                                   
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_ICE_DYNBAL'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('ice dynamic land cover change conversion runoff flux'), &
          ptr_lnd=this%qflx_ice_dynbal_grc)
 
     this%qflx_runoff_col(begc:endc) = spval
-    call hist_addfld1d (fname='QRUNOFF',  units='mm/s',  &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QRUNOFF'),  &
+         units='mm/s',  &
          avgflag='A', &
-         long_name='total liquid runoff not including correction for land use change', &
+         long_name=this%info%lname('total liquid runoff not including correction for land use change'), &
          ptr_col=this%qflx_runoff_col, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QRUNOFF_ICE', units='mm/s', avgflag='A', &
-         long_name='total liquid runoff not incl corret for LULCC (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QRUNOFF_ICE'), &
+         units='mm/s', avgflag='A', &
+         long_name=this%info%lname('total liquid runoff not incl corret for LULCC (ice landunits only)'), &
          ptr_col=this%qflx_runoff_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
     this%qflx_runoff_u_col(begc:endc) = spval
-    call hist_addfld1d (fname='QRUNOFF_U', units='mm/s',  &
-         avgflag='A', long_name='Urban total runoff', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QRUNOFF_U'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('Urban total runoff'), &
          ptr_col=this%qflx_runoff_u_col, set_nourb=spval, c2l_scale_type='urbanf', default='inactive')
 
     this%qflx_runoff_r_col(begc:endc) = spval
-    call hist_addfld1d (fname='QRUNOFF_R', units='mm/s',  &
-         avgflag='A', long_name='Rural total runoff', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QRUNOFF_R'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('Rural total runoff'), &
          ptr_col=this%qflx_runoff_r_col, set_spec=spval, default='inactive')
 
     this%qflx_snomelt_col(begc:endc) = spval
-    call hist_addfld1d (fname='QSNOMELT',  units='mm/s',  &
-         avgflag='A', long_name='snow melt rate', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOMELT'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow melt rate'), &
          ptr_col=this%qflx_snomelt_col, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QSNOMELT_ICE', units='mm/s',  &
-         avgflag='A', long_name='snow melt (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOMELT_ICE'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow melt (ice landunits only)'), &
          ptr_col=this%qflx_snomelt_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
 
     this%qflx_snofrz_col(begc:endc) = spval
-    call hist_addfld1d (fname='QSNOFRZ', units='kg/m2/s', &
-         avgflag='A', long_name='column-integrated snow freezing rate', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOFRZ'), &
+         units='kg/m2/s', &
+         avgflag='A', &
+         long_name=this%info%lname('column-integrated snow freezing rate'), &
          ptr_col=this%qflx_snofrz_col, set_lake=spval, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QSNOFRZ_ICE', units='mm/s',  &
-         avgflag='A', long_name='column-integrated snow freezing rate (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOFRZ_ICE'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('column-integrated snow freezing rate (ice landunits only)'), &
          ptr_col=this%qflx_snofrz_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
     this%qflx_snofrz_lyr_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%qflx_snofrz_lyr_col(begc:endc,-nlevsno+1:0)
-    call hist_addfld2d (fname='SNO_FRZ',  units='kg/m2/s', type2d='levsno', &
-         avgflag='A', long_name='snow freezing rate in each snow layer', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SNO_FRZ'),  &
+         units='kg/m2/s', type2d='levsno', &
+         avgflag='A', &
+         long_name=this%info%lname('snow freezing rate in each snow layer'), &
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, default='inactive')
 
-    call hist_addfld2d (fname='SNO_FRZ_ICE',  units='mm/s', type2d='levsno', &
-         avgflag='A', long_name='snow freezing rate in each snow layer (ice landunits only)', &
+    call hist_addfld2d ( &
+         fname=this%info%fname('SNO_FRZ_ICE'),  &
+         units='mm/s', type2d='levsno', &
+         avgflag='A', &
+         long_name=this%info%lname('snow freezing rate in each snow layer (ice landunits only)'), &
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, &
          l2g_scale_type='ice', default='inactive')
 
     this%qflx_prec_intr_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QINTR', units='mm/s',  &
-         avgflag='A', long_name='interception', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QINTR'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('interception'), &
          ptr_patch=this%qflx_prec_intr_patch, set_lake=0._r8)
 
     this%qflx_prec_grnd_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QDRIP', units='mm/s',  &
-         avgflag='A', long_name='throughfall', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRIP'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('throughfall'), &
          ptr_patch=this%qflx_prec_grnd_patch, c2l_scale_type='urbanf')
 
     this%qflx_evap_soi_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QSOIL', units='mm/s',  &
-         avgflag='A', long_name= 'Ground evaporation (soil/snow evaporation + soil/snow sublimation - dew)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSOIL'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname( 'Ground evaporation (soil/snow evaporation + soil/snow sublimation - dew)'), &
          ptr_patch=this%qflx_evap_soi_patch, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QSOIL_ICE', units='mm/s',  &
-         avgflag='A', long_name='Ground evaporation (ice landunits only)', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSOIL_ICE'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('Ground evaporation (ice landunits only)'), &
          ptr_patch=this%qflx_evap_soi_patch, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
     this%qflx_evap_can_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QVEGE', units='mm/s',  &
-         avgflag='A', long_name='canopy evaporation', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QVEGE'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('canopy evaporation'), &
          ptr_patch=this%qflx_evap_can_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
     this%qflx_tran_veg_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QVEGT', units='mm/s',  &
-         avgflag='A', long_name='canopy transpiration', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QVEGT'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('canopy transpiration'), &
          ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QSNOEVAP', units='mm/s',  &
-         avgflag='A', long_name='evaporation from snow', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOEVAP'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('evaporation from snow'), &
          ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
     this%qflx_snwcp_liq_col(begc:endc) = spval
-    call hist_addfld1d (fname='QSNOCPLIQ', units='mm H2O/s', &
-         avgflag='A', long_name='excess liquid h2o due to snow capping not including correction for land use change', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOCPLIQ'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('excess liquid h2o due to snow capping not including correction for land use change'), &
          ptr_col=this%qflx_snwcp_liq_col, c2l_scale_type='urbanf')
 
     this%qflx_snwcp_ice_col(begc:endc) = spval
-    call hist_addfld1d (fname='QSNWCPICE', units='mm H2O/s', &
-         avgflag='A', long_name='excess solid h2o due to snow capping not including correction for land use change', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNWCPICE'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('excess solid h2o due to snow capping not including correction for land use change'), &
          ptr_col=this%qflx_snwcp_ice_col, c2l_scale_type='urbanf')
 
     this%qflx_glcice_col(begc:endc) = spval
-    call hist_addfld1d (fname='QICE',  units='mm/s',  &
-         avgflag='A', long_name='ice growth/melt', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QICE'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('ice growth/melt'), &
          ptr_col=this%qflx_glcice_col, l2g_scale_type='ice')
 
     this%qflx_glcice_frz_col(begc:endc) = spval
-    call hist_addfld1d (fname='QICE_FRZ',  units='mm/s',  &
-         avgflag='A', long_name='ice growth', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QICE_FRZ'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('ice growth'), &
          ptr_col=this%qflx_glcice_frz_col, l2g_scale_type='ice')
 
     this%qflx_glcice_melt_col(begc:endc) = spval
-    call hist_addfld1d (fname='QICE_MELT',  units='mm/s',  &
-         avgflag='A', long_name='ice melt', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QICE_MELT'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('ice melt'), &
          ptr_col=this%qflx_glcice_melt_col, l2g_scale_type='ice')
 
     this%qflx_rain_grnd_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_RAIN_GRND', units='mm H2O/s', &
-         avgflag='A', long_name='rain on ground after interception', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_RAIN_GRND'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('rain on ground after interception'), &
          ptr_patch=this%qflx_rain_grnd_patch, default='inactive', c2l_scale_type='urbanf')
 
     this%qflx_snow_grnd_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_SNOW_GRND', units='mm H2O/s', &
-         avgflag='A', long_name='snow on ground after interception', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_SNOW_GRND'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('snow on ground after interception'), &
          ptr_patch=this%qflx_snow_grnd_patch, default='inactive', c2l_scale_type='urbanf')
 
     this%qflx_evap_grnd_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_EVAP_GRND', units='mm H2O/s', &
-         avgflag='A', long_name='ground surface evaporation', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_EVAP_GRND'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('ground surface evaporation'), &
          ptr_patch=this%qflx_evap_grnd_patch, default='inactive', c2l_scale_type='urbanf')
 
     this%qflx_evap_veg_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_EVAP_VEG', units='mm H2O/s', &
-         avgflag='A', long_name='vegetation evaporation', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_EVAP_VEG'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('vegetation evaporation'), &
          ptr_patch=this%qflx_evap_veg_patch, default='inactive', c2l_scale_type='urbanf')
 
     this%qflx_evap_tot_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_EVAP_TOT', units='mm H2O/s', &
-         avgflag='A', long_name='qflx_evap_soi + qflx_evap_can + qflx_tran_veg', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_EVAP_TOT'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('qflx_evap_soi + qflx_evap_can + qflx_tran_veg'), &
          ptr_patch=this%qflx_evap_tot_patch, c2l_scale_type='urbanf')
 
     this%qflx_dew_grnd_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_DEW_GRND', units='mm H2O/s', &
-         avgflag='A', long_name='ground surface dew formation', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_DEW_GRND'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('ground surface dew formation'), &
          ptr_patch=this%qflx_dew_grnd_patch, c2l_scale_type='urbanf')
 
     this%qflx_sub_snow_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_SUB_SNOW', units='mm H2O/s', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_SUB_SNOW'), &
+         units='mm H2O/s', &
          avgflag='A', &
-         long_name='sublimation rate from snow pack (also includes bare ice sublimation from glacier columns)', &
+         long_name=this%info%lname('sublimation rate from snow pack (also includes bare ice sublimation from glacier columns)'), &
          ptr_patch=this%qflx_sub_snow_patch, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QFLX_SUB_SNOW_ICE', units='mm H2O/s', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_SUB_SNOW_ICE'), &
+         units='mm H2O/s', &
          avgflag='A', &
-         long_name='sublimation rate from snow pack (also includes bare ice sublimation from glacier columns) '// &
-         '(ice landunits only)', &
+         long_name=this%info%lname('sublimation rate from snow pack (also includes bare ice sublimation from glacier columns) '// &
+         '(ice landunits only)'), &
          ptr_patch=this%qflx_sub_snow_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
     this%qflx_dew_snow_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_DEW_SNOW', units='mm H2O/s', &
-         avgflag='A', long_name='surface dew added to snow pacK', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_DEW_SNOW'), &
+         units='mm H2O/s', &
+         avgflag='A', &
+         long_name=this%info%lname('surface dew added to snow pacK'), &
          ptr_patch=this%qflx_dew_snow_patch, c2l_scale_type='urbanf')
 
     this%qflx_rsub_sat_col(begc:endc) = spval
-    call hist_addfld1d (fname='QDRAI_XS',  units='mm/s',  &
-         avgflag='A', long_name='saturation excess drainage', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRAI_XS'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('saturation excess drainage'), &
          ptr_col=this%qflx_rsub_sat_col, c2l_scale_type='urbanf')
 
     this%AnnET(begc:endc) = spval
-    call hist_addfld1d (fname='AnnET',  units='mm/s',  &
-         avgflag='A', long_name='Annual ET', &
+    call hist_addfld1d ( &
+         fname=this%info%fname('AnnET'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('Annual ET'), &
          ptr_col=this%AnnET, c2l_scale_type='urbanf', default='inactive')
 
   end subroutine InitHistory
@@ -584,18 +705,24 @@ contains
     !-----------------------------------------------------------------------
 
     ! needed for SNICAR
-    call restartvar(ncid=ncid, flag=flag, varname='qflx_snofrz_lyr', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('qflx_snofrz_lyr'), &
+         xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
-         long_name='snow layer ice freezing rate', units='kg m-2 s-1', &
+         long_name=this%info%lname('snow layer ice freezing rate'), &
+         units='kg m-2 s-1', &
          interpinic_flag='interp', readvar=readvar, data=this%qflx_snofrz_lyr_col)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize qflx_snofrz_lyr to zero
        this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:0) = 0._r8
     endif
 
-    call restartvar(ncid=ncid, flag=flag, varname='AnnET', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('AnnET'), &
+         xtype=ncd_double,  &
          dim1name='column', &
-         long_name='Annual ET ', units='mm/s', &
+         long_name=this%info%lname('Annual ET '), &
+         units='mm/s', &
          interpinic_flag='interp', readvar=readvar, data=this%AnnET)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize qflx_snow_drain to zero
