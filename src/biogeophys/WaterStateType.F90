@@ -539,7 +539,7 @@ contains
     ! H2OCAN had similar meaning. So if we can't find LIQCAN, use H2OCAN to initialize
     ! liqcan_patch.
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('LIQCAN:H2OCAN'), &
+         varname=this%info%fname('LIQCAN')//':'//this%info%fname('H2OCAN'), &
          xtype=ncd_double,  &
          dim1name='pft', &
          long_name=this%info%lname('canopy liquid water'), &

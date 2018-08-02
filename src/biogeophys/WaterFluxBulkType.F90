@@ -388,7 +388,7 @@ contains
     ! needed for SNICAR
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('qflx_snow_drain:qflx_snow_melt'), &
+         varname=this%info%fname('qflx_snow_drain')//':'//this%info%fname('qflx_snow_melt'), &
          xtype=ncd_double,  &
          dim1name='column', &
          long_name=this%info%lname('drainage from snow column'), &
