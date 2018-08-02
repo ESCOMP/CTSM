@@ -12,7 +12,6 @@ module WaterFluxType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch   
-  use CNSharedParamsMod           , only : use_fun             
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
   !
@@ -82,10 +81,6 @@ module WaterFluxType
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
      real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
 
-     ! ET accumulation
-     real(r8), pointer :: AnnEt                    (:)   ! Annual average ET flux mmH20/s
-
-
    contains
  
      
@@ -95,9 +90,6 @@ module WaterFluxType
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
-     procedure, public  :: InitAccBuffer
-     procedure, public  :: InitAccVars
-     procedure, public  :: UpdateAccVars
 
   end type waterflux_type
   !------------------------------------------------------------------------
@@ -193,7 +185,6 @@ contains
 
     allocate(this%qflx_liq_dynbal_grc      (begg:endg))              ; this%qflx_liq_dynbal_grc      (:)   = nan
     allocate(this%qflx_ice_dynbal_grc      (begg:endg))              ; this%qflx_ice_dynbal_grc      (:)   = nan
-    allocate(this%AnnET                    (begc:endc))              ; this%AnnET                    (:)   = nan
 
   end subroutine InitAllocate
 
@@ -529,128 +520,10 @@ contains
          long_name=this%info%lname('saturation excess drainage'), &
          ptr_col=this%qflx_rsub_sat_col, c2l_scale_type='urbanf')
 
-    this%AnnET(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('AnnET'),  &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('Annual ET'), &
-         ptr_col=this%AnnET, c2l_scale_type='urbanf', default='inactive')
-
   end subroutine InitHistory
   
   
   
-   !-----------------------------------------------------------------------
-    subroutine InitAccBuffer (this, bounds)
-    !
-    ! !DESCRIPTION:
-    ! Initialize accumulation buffer for all required module accumulated fields
-    ! This routine set defaults values that are then overwritten by the
-    ! restart file for restart or branch runs
-    !
-    ! !USES 
-    use clm_varcon  , only : spval
-    use accumulMod  , only : init_accum_field
-    !
-    ! !ARGUMENTS:
-    class(waterflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
-    !---------------------------------------------------------------------
-
-    if (use_fun) then
-   
-       call init_accum_field (name='AnnET', units='MM H2O/S', &
-            desc='365-day running mean of total ET', accum_type='runmean', accum_period=-365, &
-            subgrid_type='column', numlev=1, init_value=0._r8)
-
-    end if
-
-  end subroutine InitAccBuffer
-
-  !-----------------------------------------------------------------------
-    !
-     subroutine InitAccVars (this, bounds)
-    ! !DESCRIPTION:
-    ! Initialize module variables that are associated with
-    ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
-    ! is read in and the accumulation buffer is obtained)
-    !
-    ! !USES 
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
-    !
-    ! !ARGUMENTS:
-    class(waterflux_type) :: this
-    type(bounds_type), intent(in) :: bounds  
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: begc, endc
-    integer  :: nstep
-    integer  :: ier
-    real(r8), pointer :: rbufslp(:)  ! temporary
-    !---------------------------------------------------------------------
-    begc = bounds%begc; endc = bounds%endc
-
-    ! Allocate needed dynamic memory for single level patch field
-    allocate(rbufslp(begc:endc), stat=ier)
-
-    ! Determine time step
-    nstep = get_nstep()
-
-    if (use_fun) then
-       call extract_accum_field ('AnnET', rbufslp, nstep)
-       this%qflx_evap_tot_col(begc:endc) = rbufslp(begc:endc)
-    end if
-
-    deallocate(rbufslp)
-
-  end subroutine InitAccVars
-  
-  
-  !-----------------------------------------------------------------------
-  subroutine UpdateAccVars (this, bounds)
-    !
-    ! USES
-    use clm_time_manager, only : get_nstep
-    use accumulMod      , only : update_accum_field, extract_accum_field
-    !
-    ! !ARGUMENTS:
-    class(waterflux_type)                 :: this
-    type(bounds_type)      , intent(in) :: bounds  
-    !
-    ! !LOCAL VARIABLES:
-    integer :: g,c,p                     ! indices
-    integer :: dtime                     ! timestep size [seconds]
-    integer :: nstep                     ! timestep number
-    integer :: ier                       ! error status
-    integer :: begc, endc
-    real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
-    !---------------------------------------------------------------------
-
-    begc = bounds%begc; endc = bounds%endc
-
-    nstep = get_nstep()
-
-    ! Allocate needed dynamic memory for single level patch field
-
-    allocate(rbufslp(begc:endc), stat=ier)
-    
-    do c = begc,endc
-       rbufslp(c) = this%qflx_evap_tot_col(c)
-    end do
-    if (use_fun) then
-       ! Accumulate and extract AnnET (accumulates total ET as 365-day running mean)
-       call update_accum_field  ('AnnET', rbufslp, nstep)
-       call extract_accum_field ('AnnET', this%AnnET, nstep)
-    
-    end if
-
-    deallocate(rbufslp)
-    
-  end subroutine UpdateAccVars
-
 
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds)
@@ -674,8 +547,6 @@ contains
     this%qflx_dew_grnd_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_snow_col (bounds%begc:bounds%endc) = 0.0_r8
 
-    this%AnnEt(bounds%begc:bounds%endc)                 = 0._r8
-  
     ! needed for CNNLeaching 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
@@ -717,18 +588,6 @@ contains
        this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:0) = 0._r8
     endif
 
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('AnnET'), &
-         xtype=ncd_double,  &
-         dim1name='column', &
-         long_name=this%info%lname('Annual ET '), &
-         units='mm/s', &
-         interpinic_flag='interp', readvar=readvar, data=this%AnnET)
-    if (flag == 'read' .and. .not. readvar) then
-       ! initial run, not restart: initialize qflx_snow_drain to zero
-       this%AnnET(bounds%begc:bounds%endc) = 0._r8
-    endif
-   
   end subroutine Restart
 
 end module WaterFluxType
