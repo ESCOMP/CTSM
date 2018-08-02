@@ -20,7 +20,9 @@ list(APPEND clm_sources
   UrbanParamsType.F90
   WaterDiagnosticBulkType.F90
   WaterDiagnosticType.F90
-  WaterfluxType.F90
+  WaterFluxType.F90
+  WaterFluxBulkType.F90
+  WaterInfoBaseType.F90
   WaterStateBulkType.F90
   WaterStateType.F90
   )

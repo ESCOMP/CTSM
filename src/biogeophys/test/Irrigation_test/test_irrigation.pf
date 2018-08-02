@@ -8,7 +8,7 @@ module test_irrigation
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varpar, only : nlevsoi, nlevgrnd
   use landunit_varcon, only : istsoil
-  use WaterfluxType, only : waterflux_type
+  use WaterFluxBulkType, only : waterfluxbulk_type
   use PatchType     , only : patch
   use ColumnType    , only : col
   use GridcellType  , only : grc
@@ -27,7 +27,7 @@ module test_irrigation
      integer :: numf
      integer, allocatable :: filter(:)
      type(irrigation_type) :: irrigation
-     type(waterflux_type) :: waterflux
+     type(waterfluxbulk_type) :: waterflux
 
      ! Irrigation parameters
      type(irrigation_params_type) :: irrigation_params
