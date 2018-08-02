@@ -1,0 +1,28 @@
+language: c
+sudo: false
+dist: trusty
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+        apt:
+          packages:
+            - cmake3
+            - gfortran
+
+before_install:
+  - echo "before install"
+
+install:
+  - cd ${TRAVIS_BUILD_DIR}
+  - mkdir -p build && cd build
+  - cmake ..
+  - make
+
+before_script:
+  - echo "before script"
+
+script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - ./build/prog
