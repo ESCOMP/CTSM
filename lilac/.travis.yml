@@ -1,4 +1,4 @@
-language: c
+language: cpp
 sudo: false
 dist: trusty
 
@@ -8,11 +8,14 @@ matrix:
       compiler: gcc
         apt:
           packages:
-            - cmake3
             - gfortran
+            - cmake
+            - cmake-data
 
 before_install:
-  - echo "before install"
+  - ./install_python.sh
+  - ./install_esmf.sh
+  - ./install_pfunit.sh
 
 install:
   - cd ${TRAVIS_BUILD_DIR}
