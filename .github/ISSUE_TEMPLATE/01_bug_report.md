@@ -4,6 +4,10 @@ about: Report a problem with the code
 
 ---
 
+### Brief summary of bug
+
+[Give a one or two sentence summary. This could be the same as the issue title if you feel that is a sufficient summary.]
+
 ### General bug information
 
 **CTSM version you are using:** [output of `git describe`]

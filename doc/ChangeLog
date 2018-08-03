@@ -1,4 +1,163 @@
 ===============================================================
+Tag name:  ctsm1.0.dev005
+Originator(s):  sacks (Bill Sacks), mvr (Mathew Rothstein)
+Date: Fri Aug  3 07:54:59 MDT 2018
+One-line Summary: Rework water data types to accommodate isotopes and other tracers
+
+Purpose of changes
+------------------
+
+This tag reworks the various water data types to allow having multiple
+instances of variables that are needed for isotopes and other water
+tracers.
+
+Specific changes include:
+
+(1) Separated "water state" variables into state, diagnostic and balance
+    check-related variables. This separation was not essential for the
+    work here, but was desired by Martyn Clark and others.
+
+(2) For each of water state, diagnostic and flux variables, separated
+    variables into those needed for both bulk and tracers vs. those only
+    needed for bulk. This way, we can have multiple instances of the
+    variables needed by tracers, but only a single instance of variables
+    that only apply to bulk water. This follows the design laid out in
+    https://github.com/escomp/ctsm/pull/395. The separation was based
+    largely on what was done in the old water isotope branch; we didn't
+    put a lot of thought into this, because the new design allows us to
+    easily migrate variables between bulk-only and bulk-and-tracer as
+    needed.
+
+(3) Moved water fluxes that were defined in science modules back into
+    waterflux_type or waterfluxbulk_type. This was needed for (2); there
+    is more discussion on this in
+    https://github.com/escomp/ctsm/pull/395 and the log message for
+    commit 711e5cd7.
+
+(4) Introduced a top-level water_type that holds instances of all of the
+    other water-related objects. This follows the design laid out in
+    https://github.com/escomp/ctsm/pull/395. This is particularly
+    valuable for the tracer instances: the logic related to number of
+    tracers can be encapsulated in water_type, rather than infiltrating
+    clm_instMod.
+
+(5) Added placeholders for water tracer instances
+
+(6) Added infrastructure to generate history / restart field names for
+    the tracer instances. Eventually, the isotope class can also hold
+    information specific to each isotope.
+
+This work was a joint effort between Mathew Rothstein and myself; Mat
+gets much of the credit for the actual refactoring done here.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #358 (Separate WaterStateType into multiple types)
+- Fixes #434 (Separate WaterFluxType into a base class and a class that just applies to bulk)
+- Fixes #359 (Set up infrastructure for multiple instances of WaterState and WaterFlux types)
+- Fixes #458 (Implement handling of history and restart variables for water tracers)
+
+Known bugs introduced in this tag (include github issue ID):
+- #464 (Some lines longer than 132 characters)
+- #456 (Remove backwards compatibility check for snw_rds) (not a
+  newly-introduced issue, but it's more important to fix this with the
+  separation of waterstate_type)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Water tracers are not yet functional - they are just placeholders
+- Whether to use water tracers and which water tracers to use are
+  currently hard-coded; eventually, this should be namelist-controlled
+
+Changes to tests or testing: none
+
+Code reviewed by: Mathew Rothstein and Bill Sacks worked together on
+these changes and reviewed each other's changes to some extent. The
+high-level design was also reviewed and co-developed by Mariana
+Vertenstein. Martyn Clark contributed substantially to the breakout of
+water state into state, diagnostic and balance check-related variables.
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev004
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - bit-for-bit
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/escomp/ctsm/pull/395 (documents the high-level design)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev004
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Jul 18 02:10:23 MDT 2018
