@@ -6,11 +6,11 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-        apt:
-          packages:
-            - gfortran
-            - cmake
-            - cmake-data
+      apt:
+        packages:
+          - gfortran
+          - cmake
+          - cmake-data
 
 before_install:
   - ./install_python.sh
