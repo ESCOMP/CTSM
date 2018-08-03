@@ -13,9 +13,9 @@ matrix:
           - cmake-data
 
 before_install:
-  - ./install_python.sh
-  - ./install_esmf.sh
-  - ./install_pfunit.sh
+  - ./ci/install_python.sh
+  - ./ci/install_esmf.sh
+  - ./ci/install_pfunit.sh
 
 install:
   - cd ${TRAVIS_BUILD_DIR}
