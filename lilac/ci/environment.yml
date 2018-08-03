@@ -1,4 +1,3 @@
-name: lilac
 channels:
   - conda-forge
 dependencies:
