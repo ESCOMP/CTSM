@@ -3,8 +3,6 @@
 set -e
 set -x
 
-cd ${HOME}
-
 # Install miniconda
 wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ${HOME}/miniconda.sh
 bash ~/miniconda.sh -b -p $HOME/miniconda
