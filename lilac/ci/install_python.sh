@@ -12,7 +12,8 @@ conda clean -tipy
 conda config --set always_yes yes --set changeps1 no
 conda --version
 
-conda create --file ci/environment.yml --name lilac
+conda env create -f ci/environment.yml --name lilac
+
 source activate lilac
 
 cd ${TRAVIS_BUILD_DIR}
