@@ -4,7 +4,7 @@ set -x
 
 cd ${HOME}
 
-ESMF_COMPILER=$FC
+export ESMF_COMPILER="/usr/bin/gfortran-6"
 alias gfortran="/usr/bin/gfortran-6"
 
 git clone https://git.code.sf.net/p/esmf/esmf deps/esmf
