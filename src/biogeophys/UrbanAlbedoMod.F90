@@ -16,7 +16,8 @@ module UrbanAlbedoMod
   use clm_varctl        , only : iulog
   use abortutils        , only : endrun  
   use UrbanParamsType   , only : urbanparams_type
-  use WaterstateType    , only : waterstate_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use SolarAbsorbedType , only : solarabs_type
   use SurfaceAlbedoType , only : surfalb_type
   use LandunitType      , only : lun                
@@ -46,7 +47,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine UrbanAlbedo (bounds, num_urbanl, filter_urbanl, &
        num_urbanc, filter_urbanc, num_urbanp, filter_urbanp, &
-       waterstate_inst, urbanparams_inst, solarabs_inst, surfalb_inst) 
+       waterstatebulk_inst, waterdiagnosticbulk_inst, urbanparams_inst, solarabs_inst, surfalb_inst) 
     !
     ! !DESCRIPTION: 
     ! Determine urban landunit component albedos
@@ -70,7 +71,8 @@ contains
     integer                , intent(in)    :: filter_urbanc(:) ! urban column filter
     integer                , intent(in)    :: num_urbanp       ! number of urban patches in clump
     integer                , intent(in)    :: filter_urbanp(:) ! urban pft filter
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(urbanparams_type) , intent(inout) :: urbanparams_inst
     type(solarabs_type)    , intent(inout) :: solarabs_inst
     type(surfalb_type)     , intent(inout) :: surfalb_inst
@@ -119,7 +121,7 @@ contains
          canyon_hwr         => lun%canyon_hwr                       , & ! Input:  [real(r8) (:)   ]  ratio of building height to street width          
          wtroad_perv        => lun%wtroad_perv                      , & ! Input:  [real(r8) (:)   ]  weight of pervious road wrt total road            
          
-         frac_sno           => waterstate_inst%frac_sno_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
          
          alb_roof_dir       => urbanparams_inst%alb_roof_dir        , & ! Output: [real(r8) (:,:) ]  direct roof albedo                              
          alb_roof_dif       => urbanparams_inst%alb_roof_dif        , & ! Output: [real(r8) (:,:) ]  diffuse roof albedo                             
@@ -314,7 +316,7 @@ contains
                  albsnd_roof(begl:endl, :), &
                  albsnd_improad(begl:endl, :), &
                  albsnd_perroad(begl:endl, :), &
-                 waterstate_inst)
+                 waterstatebulk_inst)
 
             ic = 1
             call SnowAlbedo(bounds, &
@@ -324,7 +326,7 @@ contains
                  albsni_roof(begl:endl, :), &
                  albsni_improad(begl:endl, :), &
                  albsni_perroad(begl:endl, :), &
-                 waterstate_inst)
+                 waterstatebulk_inst)
          end if
 
          ! Combine snow-free and snow albedos
@@ -434,7 +436,7 @@ contains
   subroutine SnowAlbedo (bounds          , &
        num_urbanc, filter_urbanc, coszen, ind , &
        albsn_roof, albsn_improad, albsn_perroad, &
-       waterstate_inst)
+       waterstatebulk_inst)
     !
     ! !DESCRIPTION:
     ! Determine urban snow albedos
@@ -451,7 +453,7 @@ contains
     real(r8), intent(out):: albsn_roof    ( bounds%begl: , 1: ) ! roof snow albedo by waveband [landunit, numrad]
     real(r8), intent(out):: albsn_improad ( bounds%begl: , 1: ) ! impervious road snow albedo by waveband [landunit, numrad]
     real(r8), intent(out):: albsn_perroad ( bounds%begl: , 1: ) ! pervious road snow albedo by waveband [landunit, numrad]
-    type(waterstate_type), intent(in) :: waterstate_inst
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: fc,c,l              ! indices
@@ -473,7 +475,7 @@ contains
     SHR_ASSERT_ALL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
 
     associate(                            & 
-         h2osno =>  waterstate_inst%h2osno_col & ! Input:  [real(r8) (:) ]  snow water (mm H2O)                               
+         h2osno =>  waterstatebulk_inst%h2osno_col & ! Input:  [real(r8) (:) ]  snow water (mm H2O)                               
          )
       
       do fc = 1,num_urbanc

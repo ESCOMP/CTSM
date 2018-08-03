@@ -18,8 +18,9 @@ module SnowSnicarMod
   use decompMod       , only : bounds_type
   use AerosolMod      , only : snw_rds_min
   use atm2lndType     , only : atm2lnd_type
-  use WaterStateType  , only : waterstate_type
-  use WaterFluxType   , only : waterflux_type
+  use WaterStateBulkType  , only : waterstatebulk_type
+  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType   , only : waterfluxbulk_type
   use TemperatureType , only : temperature_type
   use GridcellType    , only : grc       
   use LandunitType    , only : lun       
@@ -155,7 +156,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SNICAR_RT (flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,  &
                         coszen, flg_slr_in, h2osno_liq, h2osno_ice, snw_rds,   &
-                        mss_cnc_aer_in, albsfc, albout, flx_abs, waterstate_inst)
+                        mss_cnc_aer_in, albsfc, albout, flx_abs, waterstatebulk_inst, waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Determine reflectance of, and vertically-resolved solar absorption in, 
@@ -194,7 +195,8 @@ contains
     real(r8)          , intent(in)  :: albsfc         ( bounds%begc: , 1: )               ! albedo of surface underlying snow (col,bnd) [frc]
     real(r8)          , intent(out) :: albout         ( bounds%begc: , 1: )               ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
     real(r8)          , intent(out) :: flx_abs        ( bounds%begc: , -nlevsno+1: , 1: ) ! absorbed flux in each layer per unit flux incident (col, lyr, bnd)
-    type(waterstate_type) , intent(in)  :: waterstate_inst
+    type(waterstatebulk_type) , intent(in)  :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type) , intent(in)  :: waterdiagnosticbulk_inst
     !
     ! !LOCAL VARIABLES:
     !
@@ -323,8 +325,8 @@ contains
     associate(& 
          snl         =>   col%snl                           , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
 
-         h2osno      =>   waterstate_inst%h2osno_col        , & ! Input:  [real(r8) (:)]  snow liquid water equivalent (col) [kg/m2]
-         frac_sno    =>   waterstate_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+         h2osno      =>   waterstatebulk_inst%h2osno_col        , & ! Input:  [real(r8) (:)]  snow liquid water equivalent (col) [kg/m2]
+         frac_sno    =>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
          )
 
       ! Define constants
@@ -988,7 +990,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SnowAge_grain(bounds, &
        num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
-       waterflux_inst, waterstate_inst, temperature_inst, atm2lnd_inst)
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Updates the snow effective grain size (radius). 
@@ -1035,8 +1037,9 @@ contains
     integer                , intent(in)    :: filter_snowc(:)   ! column filter for snow points
     integer                , intent(in)    :: num_nosnowc       ! number of column non-snow points in column filter
     integer                , intent(in)    :: filter_nosnowc(:) ! column filter for non-snow points
-    type(waterflux_type)   , intent(in)    :: waterflux_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterfluxbulk_type)   , intent(in)    :: waterfluxbulk_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     !
@@ -1075,16 +1078,16 @@ contains
          snl                => col%snl                            , & ! Input:  [integer  (:)   ]  negative number of snow layers (col) [nbr]
          dz                 => col%dz                             , & ! Input:  [real(r8) (:,:) ]  layer thickness (col,lyr) [m]         
 
-         qflx_snow_grnd_col => waterflux_inst%qflx_snow_grnd_col  , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (col) [kg m-2 s-1]
-         qflx_snofrz_lyr    => waterflux_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
+         qflx_snow_grnd_col => waterfluxbulk_inst%qflx_snow_grnd_col  , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (col) [kg m-2 s-1]
+         qflx_snofrz_lyr    => waterfluxbulk_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
 
-         frac_sno           => waterstate_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
-         h2osno             => waterstate_inst%h2osno_col         , & ! Input:  [real(r8) (:)   ]  snow water (col) [mm H2O]               
-         h2osoi_liq         => waterstate_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water content (col,lyr) [kg m-2]
-         h2osoi_ice         => waterstate_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice content (col,lyr) [kg m-2]        
-         snw_rds            => waterstate_inst%snw_rds_col        , & ! Output: [real(r8) (:,:) ]  effective grain radius (col,lyr) [microns, m-6]
-         snw_rds_top        => waterstate_inst%snw_rds_top_col    , & ! Output: [real(r8) (:)   ]  effective grain radius, top layer (col) [microns, m-6]
-         sno_liq_top        => waterstate_inst%sno_liq_top_col    , & ! Output: [real(r8) (:)   ]  liquid water fraction (mass) in top snow layer (col) [frc]
+         frac_sno           => waterdiagnosticbulk_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+         h2osno             => waterstatebulk_inst%h2osno_col         , & ! Input:  [real(r8) (:)   ]  snow water (col) [mm H2O]               
+         h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water content (col,lyr) [kg m-2]
+         h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice content (col,lyr) [kg m-2]        
+         snw_rds            => waterdiagnosticbulk_inst%snw_rds_col        , & ! Output: [real(r8) (:,:) ]  effective grain radius (col,lyr) [microns, m-6]
+         snw_rds_top        => waterdiagnosticbulk_inst%snw_rds_top_col    , & ! Output: [real(r8) (:)   ]  effective grain radius, top layer (col) [microns, m-6]
+         sno_liq_top        => waterdiagnosticbulk_inst%sno_liq_top_col    , & ! Output: [real(r8) (:)   ]  liquid water fraction (mass) in top snow layer (col) [frc]
 
          t_soisno           => temperature_inst%t_soisno_col      , & ! Input:  [real(r8) (:,:) ]  soil and snow temperature (col,lyr) [K]
          t_grnd             => temperature_inst%t_grnd_col        , & ! Input:  [real(r8) (:)   ]  ground temperature (col) [K]            
