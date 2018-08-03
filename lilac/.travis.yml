@@ -10,11 +10,13 @@ matrix:
       compiler: gcc
       apt:
         packages:
-          - gfortran
+          - gfortran-6
           - cmake
           - cmake-data
 
 before_install:
+  - export CC=/usr/bin/gcc-6
+  - export FC=/usr/bin/gfortran-6
   - ./ci/install_python.sh
   - ./ci/install_esmf.sh
   - ./ci/install_pfunit.sh
