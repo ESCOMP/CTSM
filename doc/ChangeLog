@@ -60,6 +60,11 @@ Issues fixed (include CTSM Issue #):
 - Fixes #359 (Set up infrastructure for multiple instances of WaterState and WaterFlux types)
 - Fixes #458 (Implement handling of history and restart variables for water tracers)
 
+Known bugs introduced in this tag (include github issue ID):
+- #464 (Some lines longer than 132 characters)
+- #456 (Remove backwards compatibility check for snw_rds) (not a
+  newly-introduced issue, but it's more important to fix this with the
+  separation of waterstate_type)
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
