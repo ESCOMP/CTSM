@@ -9,7 +9,7 @@ cd deps/esmf
 export ESMF_DIR=$PWD
 export ESMF_INSTALL_PREFIX=/usr/esmf
 export ESMFMKFILE=${ESMF_INSTALL_PREFIX}/esmf.mk
-gmake -j8 lib
-gmake install
+make -j8 lib
+make install
 
 cd ${TRAVIS_BUILD_DIR}
