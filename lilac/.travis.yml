@@ -1,6 +1,8 @@
 language: cpp
 sudo: false
 dist: trusty
+notifications:
+  email: false
 
 matrix:
   include:
