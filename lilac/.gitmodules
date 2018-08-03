@@ -1,3 +1,6 @@
 [submodule "external/pfunit"]
 	path = external/pfunit
 	url = https://github.com/laristra/pfunit.git
+[submodule "external/esmf"]
+	path = external/esmf
+	url = https://git.code.sf.net/p/esmf/esmf
