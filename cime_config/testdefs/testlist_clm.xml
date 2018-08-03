@@ -657,14 +657,6 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="ERP_P36x2_Lm36" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrigOn_reduceOutput">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:60:00</option>
-    </options>
-  </test>
   <test name="ERP_P180x2_D" grid="f19_g17" compset="I2000Clm50SpRtmFl" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -753,6 +745,7 @@
   <test name="ERP_P72x2_Lm36" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
