@@ -4,6 +4,8 @@ set -x
 
 cd ${HOME}
 
+export CC=""/usr/bin/gcc-6""
+export FC="/usr/bin/gfortran-6"
 export ESMF_COMPILER="/usr/bin/gfortran-6"
 alias gfortran="/usr/bin/gfortran-6"
 
