@@ -227,7 +227,8 @@ contains
       end do
 
       ! calculate moisture stress/resistance for soil evaporation
-      call calc_soilevap_resis(bounds, num_nolakec, filter_nolakec, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst)
+      call calc_soilevap_resis(bounds, num_nolakec, filter_nolakec, &
+           soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst)
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)

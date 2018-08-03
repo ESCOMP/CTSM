@@ -1124,7 +1124,8 @@ contains
 
    !=====================================================================================
 
-   subroutine init_coldstart(this, waterstatebulk_inst, waterdiagnosticbulk_inst, canopystate_inst, soilstate_inst, frictionvel_inst)
+   subroutine init_coldstart(this, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+        canopystate_inst, soilstate_inst, frictionvel_inst)
 
 
      ! Arguments
