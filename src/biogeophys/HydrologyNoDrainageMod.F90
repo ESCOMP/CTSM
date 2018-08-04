@@ -223,7 +223,9 @@ contains
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterfluxbulk_inst, energyflux_inst)
       
-      if ( use_fates ) call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterfluxbulk_inst)
+      if ( use_fates ) then
+         call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterfluxbulk_inst)
+      end if
       
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, waterstatebulk_inst, temperature_inst, &
@@ -235,9 +237,10 @@ contains
               soilhydrology_inst, waterstatebulk_inst)
       end if
 
-      if (use_aquifer_layer()) then 
+      if (use_aquifer_layer()) then
          call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-              soilhydrology_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst) 
+              soilhydrology_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, &
+              waterdiagnosticbulk_inst, waterfluxbulk_inst)
       else
 
          call PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
