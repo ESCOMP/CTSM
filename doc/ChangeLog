@@ -1,4 +1,140 @@
 ===============================================================
+Tag name:  ctsm1.0.dev006
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Aug  4 07:48:09 MDT 2018
+One-line Summary: Minor bug fixes, cleanup, documentation and enhancements
+
+Purpose of changes
+------------------
+
+A collection of minor bug fixes, code cleanup, documentation and
+enhancements, all bit-for-bit. See list of issues fixed below for
+details.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #24 (ncd_io_1d_log_glob is broken)
+- Fixes #120 (Incorrect comments in Biogeophysics1Mod.F90
+- Fixes #217 (Change some cheyenne_gnu tests to cheyenne_intel)
+- Fixes #245 (Put all .gitignore entries in top-level file)
+- Fixes #272 (Code should error on missing mxsoil_color when SOIL_COLOR
+  is used)
+- Fixes #283 (Add more helpful message about need to do init_interp with
+  wrong number of vertical layers)
+- Fixes #367 (For cmip6 runs: Turn on cpl hist output needed to drive a
+  TG compset)
+- Fixes #412 (Fix documentation of init_interp_method)
+- Fixes #419 (Do not allow SOYFIXN diagnostic field with FUN)
+- Fixes #464 (Some lines longer than 132 characters)
+- Fixes #465 (Remove backwards compatibility check for snw_rds)
+- Fixes #467 (Increase wallclock limit for test)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Changed a single-point test from gnu to intel to get better debugging
+   information
+   (SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianGs.cheyenne_intel.clm-cropMonthOutput)
+- For some single-point tests on both gnu and intel: removed one
+  compiler, keeping the tests on just one
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    NLCOMP failures as expected for tests with the cmip6 test mod
+
+    Some long single-point gnu tests failed due to running out of
+    wallclock time; I have removed these, just keeping them on intel
+    (along with removing a few other tests after I ran the testing - see
+    commit 5c226bdf):
+
+       FAIL ERS_Lm54_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-cropMonthOutput RUN time=4803
+       FAIL ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropGs.cheyenne_gnu.clm-cropMonthOutput RUN time=6024
+
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev005
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - bit-for-bit
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- #392 (Remove old code for snw_rds restart that looks no longer needed)
+- (Other changes not documented in PRs)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev005
 Originator(s):  sacks (Bill Sacks), mvr (Mathew Rothstein)
 Date: Fri Aug  3 07:54:59 MDT 2018
