@@ -177,6 +177,7 @@ contains
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use HumanIndexMod      , only : calc_human_stress_indices, calc_human_stress_indices_all, &
+                                    calc_human_stress_indices_fast, &
                                     Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
@@ -1194,8 +1195,8 @@ contains
          rh_ref2m_r(p) = rh_ref2m(p)
 
          ! Human Heat Stress
-         if ( calc_human_stress_indices )then
-
+         if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all .or. &
+              trim(calc_human_stress_indices) == calc_human_stress_indices_fast )then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
             call Wet_BulbS(tc_ref2m(p),rh_ref2m(p), wbt_ref2m(p))
@@ -1204,7 +1205,7 @@ contains
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            if ( calc_human_stress_indices_all ) then
+            if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all ) then
                call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
                              teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
                call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
@@ -1217,7 +1218,7 @@ contains
             swbgt_ref2m_r(p)          = swbgt_ref2m(p)
             humidex_ref2m_r(p)        = humidex_ref2m(p)
             discomf_index_ref2mS_r(p) = discomf_index_ref2mS(p)
-            if ( calc_human_stress_indices_all ) then
+            if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all ) then
                teq_ref2m_r(p)            = teq_ref2m(p)
                ept_ref2m_r(p)            = ept_ref2m(p)
                wb_ref2m_r(p)             = wb_ref2m(p)

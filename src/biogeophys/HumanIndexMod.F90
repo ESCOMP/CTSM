@@ -39,8 +39,10 @@ module HumanIndexMod
 
 !
 ! !PUBLIC MEMBER DATA:
-  logical, public :: calc_human_stress_indices = .true.      ! If should calculate the subset of human stress indices
-  logical, public :: calc_human_stress_indices_all = .false. ! If should calculate the complete set of human stress indices
+  character(len= *), parameter, public :: calc_human_stress_indices_all  = 'ALL'
+  character(len= *), parameter, public :: calc_human_stress_indices_fast = 'FAST'
+  character(len= *), parameter, public :: calc_human_stress_indices_none = 'NONE'
+  character(len= 16), public           :: calc_human_stress_indices = calc_human_stress_indices_fast
   type,    public :: humanindex_type   
      real(r8), pointer :: tc_ref2m_patch              (:) ! Patch 2 m height surface air temperature (C)
      real(r8), pointer :: vap_ref2m_patch             (:) ! Patch 2 m height vapor pressure (Pa)
@@ -152,7 +154,8 @@ subroutine Init(this, bounds )
     type(bounds_type) :: bounds_tmp
 !EOP
 !-----------------------------------------------------------------------
-    if ( calc_human_stress_indices ) then
+    if (trim(calc_human_stress_indices) == calc_human_stress_indices_all .or. &
+        trim(calc_human_stress_indices) == calc_human_stress_indices_fast) then
        call this%InitAllocate ( bounds )
        call this%InitHistory (  bounds )
     else
@@ -205,7 +208,7 @@ subroutine InitAllocate(this, bounds)
     allocate(this%discomf_index_ref2mS_r_patch (begp:endp))                    ; this%discomf_index_ref2mS_r_patch(:)  = nan
     allocate(this%discomf_index_ref2mS_u_patch (begp:endp))                    ; this%discomf_index_ref2mS_u_patch(:)  = nan
 
-    if ( calc_human_stress_indices_all ) then
+    if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all ) then
 
     allocate(this%wb_ref2m_patch               (begp:endp))                    ; this%wb_ref2m_patch              (:)  = nan
     allocate(this%wb_ref2m_r_patch             (begp:endp))                    ; this%wb_ref2m_r_patch            (:)  = nan
@@ -317,7 +320,7 @@ subroutine InitHistory(this, bounds)
             avgflag='A', long_name='Rural 2 m NWS Heat Index', &
             ptr_patch=this%nws_hi_ref2m_r_patch, set_spec=spval)
 
-    if ( calc_human_stress_indices_all )then
+    if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all )then
 
     this%appar_temp_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='APPAR_TEMP', units='C',  &
@@ -502,7 +505,7 @@ end subroutine InitHistory
     character(len=32) :: subname = 'UrbanReadNML'  ! subroutine name
 !EOP
 !-----------------------------------------------------------------------
-    namelist / clm_humanindex_inparm / calc_human_stress_indices, calc_human_stress_indices_all
+    namelist / clm_humanindex_inparm / calc_human_stress_indices
 
     ! ----------------------------------------------------------------------
     ! Read namelist from input namelist filename
@@ -528,7 +531,6 @@ end subroutine InitHistory
 
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(calc_human_stress_indices, mpicom)
-    call shr_mpi_bcast(calc_human_stress_indices_all, mpicom)
 
   end subroutine HumanIndexReadNML
 
