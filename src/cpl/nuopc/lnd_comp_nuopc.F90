@@ -1,4 +1,4 @@
-module clm_comp_nuopc
+module lnd_comp_nuopc
 
   !----------------------------------------------------------------------------
   ! This is the NUOPC cap for CTSM
@@ -73,7 +73,7 @@ module clm_comp_nuopc
   !--------------------------------------------------------------------------
   ! Private module data
   !--------------------------------------------------------------------------
- 
+
   character(CXX)             :: flds_l2x = ''
   character(CXX)             :: flds_x2l = ''
   real(r8), allocatable      :: x2l(:,:)
@@ -86,7 +86,7 @@ module clm_comp_nuopc
   integer                    :: compid               ! component id
 
   !----- formats -----
-  character(*),parameter :: modName =  "(clm_comp_nuopc)"
+  character(*),parameter :: modName =  "(lnd_comp_nuopc)"
   character(*),parameter :: u_FILE_u = __FILE__
 
   !===============================================================================
@@ -174,7 +174,7 @@ module clm_comp_nuopc
     integer                :: ierr       ! error code
     integer                :: shrlogunit ! original log unit
     integer                :: shrloglev  ! original log level
-    integer                :: n,nflds       
+    integer                :: n,nflds
     logical                :: isPresent
     character(len=512)     :: diro
     character(len=512)     :: logfile
@@ -218,7 +218,7 @@ module clm_comp_nuopc
 
     call NUOPC_CompAttributeGet(gcomp, name="inst_index", value=cvalue, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) inst_index 
+    read(cvalue,*) inst_index
 
     call ESMF_AttributeGet(gcomp, name="inst_suffix", isPresent=isPresent, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -250,7 +250,7 @@ module clm_comp_nuopc
     call shr_file_setLogUnit (iulog)
 
     !--------------------------------
-    ! create import and export field list 
+    ! create import and export field list
     !--------------------------------
 
     call shr_nuopc_fldList_Concat(fldListFr(complnd), fldListTo(complnd), flds_l2x, flds_x2l, flds_scalar_name)
@@ -305,11 +305,11 @@ module clm_comp_nuopc
     type(ESMF_Time)         :: stopTime              ! Stop time
     type(ESMF_Time)         :: refTime               ! Ref time
     type(ESMF_TimeInterval) :: timeStep              ! Model timestep
-    type(ESMF_Calendar)     :: esmf_calendar         ! esmf calendar     
+    type(ESMF_Calendar)     :: esmf_calendar         ! esmf calendar
     type(ESMF_CalKind_Flag) :: esmf_caltype          ! esmf calendar type
     integer                 :: ref_ymd               ! reference date (YYYYMMDD)
     integer                 :: ref_tod               ! reference time of day (sec)
-    integer                 :: yy,mm,dd              ! Temporaries for time query 
+    integer                 :: yy,mm,dd              ! Temporaries for time query
     integer                 :: start_ymd             ! start date (YYYYMMDD)
     integer                 :: start_tod             ! start time of day (sec)
     integer                 :: stop_ymd              ! stop date (YYYYMMDD)
@@ -375,7 +375,7 @@ module clm_comp_nuopc
 #if (defined _MEMTRACE)
     if (masterproc) then
        lbnum=1
-       call memmon_dump_fort('memmon.out','clm_comp_nuopc_InitializeRealize:start::',lbnum)
+       call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:start::',lbnum)
     endif
 #endif
 
@@ -691,7 +691,7 @@ module clm_comp_nuopc
     if(masterproc) then
        write(iulog,*) TRIM(Sub) // ':end::'
        lbnum=1
-       call memmon_dump_fort('memmon.out','clm_comp_nuopc_InitializeRealize:end::',lbnum)
+       call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:end::',lbnum)
        call memmon_reset_addr()
     endif
 #endif
@@ -758,7 +758,7 @@ module clm_comp_nuopc
 #if (defined _MEMTRACE)
     if(masterproc) then
        lbnum=1
-       call memmon_dump_fort('memmon.out','clm_comp_nuopc_ModelAdvance:start::',lbnum)
+       call memmon_dump_fort('memmon.out','lnd_comp_nuopc_ModelAdvance:start::',lbnum)
     endif
 #endif
 
@@ -802,8 +802,8 @@ module clm_comp_nuopc
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) mvelpp
 
-    ! TODO: Determine if we're running with prognostic ROF and GLC models. 
-    ! This won't change throughout the run, but we can't count on this being set in 
+    ! TODO: Determine if we're running with prognostic ROF and GLC models.
+    ! This won't change throughout the run, but we can't count on this being set in
     ! initialization, so need to get it in the run method.
     ! This seems to imply an order dependence - for now simply set this to false for debugging - since
     ! are running without a river model for the first test
@@ -907,7 +907,7 @@ module clm_comp_nuopc
 
        call t_startf ('clm_run')
 
-       ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of 
+       ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
        ! the timestep and is preferred for restart file names
 
        call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
@@ -994,7 +994,7 @@ module clm_comp_nuopc
 #if (defined _MEMTRACE)
     if(masterproc) then
        lbnum=1
-       call memmon_dump_fort('memmon.out','clm_comp_nuopc_ModelAdvance:end::',lbnum)
+       call memmon_dump_fort('memmon.out','lnd_comp_nuopc_ModelAdvance:end::',lbnum)
        call memmon_reset_addr()
     endif
 #endif
@@ -1050,9 +1050,9 @@ module clm_comp_nuopc
       return
     endif
 
-    !--------------------------------                                                                                 
-    ! force model clock currtime and timestep to match driver and set stoptime                                        
-    !--------------------------------                                                                                 
+    !--------------------------------
+    ! force model clock currtime and timestep to match driver and set stoptime
+    !--------------------------------
 
     mstoptime = mcurrtime + dtimestep
 
@@ -1086,9 +1086,9 @@ module clm_comp_nuopc
       deallocate(alarmList)
     endif
 
-    !--------------------------------                                                                                 
-    ! Advance model clock to trigger alarms then reset model clock back to currtime                                   
-    !--------------------------------                                                                                 
+    !--------------------------------
+    ! Advance model clock to trigger alarms then reset model clock back to currtime
+    !--------------------------------
 
     call ESMF_ClockAdvance(mclock,rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1107,8 +1107,8 @@ module clm_comp_nuopc
     integer, intent(out) :: rc
 
     ! local variables
-    character(*), parameter :: F00   = "('(clm_comp_nuopc) ',8a)"
-    character(*), parameter :: F91   = "('(clm_comp_nuopc) ',73('-'))"
+    character(*), parameter :: F00   = "('(lnd_comp_nuopc) ',8a)"
+    character(*), parameter :: F91   = "('(lnd_comp_nuopc) ',73('-'))"
     character(len=*),parameter  :: subname=trim(modName)//':(ModelFinalize) '
     !-------------------------------------------------------------------------------
 
@@ -1131,4 +1131,4 @@ module clm_comp_nuopc
 
   !===============================================================================
 
-end module clm_comp_nuopc
+end module lnd_comp_nuopc
