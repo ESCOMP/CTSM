@@ -1,4 +1,108 @@
 ===============================================================
+Tag name:  release-clm5.0.05
+Originator(s):  erik (Erik Kluzek)
+Date:  Sun Aug  5 23:31:45 MDT 2018
+One-line Summary: Update 1850 ndep file, and last year for transient streams
+
+Purpose of this version:
+------------------------
+
+Update to latest Nitrogen Deposition file from simulations with WACCM for 1850.
+Also fix an issue with the last year for historical transient cases.
+
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): $461
+   #461 -- increase year last for streams
+
+Science changes since: release-clm5.0.04
+   New ndep file, and updated last year for transient streams
+
+Software changes since: None
+
+Changes to User Interface since: None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+     hobart --- OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (fates):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (clm_short):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.04
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:  for 1850 Bgc cases and after 2005 for transient cases
+    - what platforms/compilers:  All
+    - nature of change: similar climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime5.6.10
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ 
+   #471 -- update ndep and last year of streams
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.04
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Jul 18 04:04:57 MDT 2018
