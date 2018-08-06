@@ -112,13 +112,14 @@ contains
     allocate(isoicol(bounds%begc:bounds%endc)) 
 
     ! Determine soil color and number of soil color classes 
-    ! if number of soil color classes is not on input dataset set it to 8
 
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
 
     call ncd_io(ncid=ncid, varname='mxsoil_color', flag='read', data=mxsoil_color, readvar=readvar)
-    if ( .not. readvar ) mxsoil_color = 8  
+    if ( .not. readvar ) then
+       call endrun(msg=' ERROR: mxsoil_color NOT on surfdata file '//errMsg(sourcefile, __LINE__))
+    end if
 
     allocate(soic2d(bounds%begg:bounds%endg)) 
     call ncd_io(ncid=ncid, varname='SOIL_COLOR', flag='read', data=soic2d, dim1name=grlnd, readvar=readvar)
