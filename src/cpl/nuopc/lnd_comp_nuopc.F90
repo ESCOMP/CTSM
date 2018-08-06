@@ -4,59 +4,70 @@ module lnd_comp_nuopc
   ! This is the NUOPC cap for CTSM
   !----------------------------------------------------------------------------
 
-  use shr_kind_mod          , only : R8=>SHR_KIND_R8, CXX=>SHR_KIND_CXX, CL=>SHR_KIND_CL
+  use ESMF
+  use NUOPC                 , only : NUOPC_CompDerive, NUOPC_CompSetEntryPoint, NUOPC_CompSpecialize
+  use NUOPC                 , only : NUOPC_CompFilterPhaseMap, NUOPC_IsUpdated, NUOPC_IsAtTime
+  use NUOPC                 , only : NUOPC_CompAttributeGet, NUOPC_Advertise
+  use NUOPC                 , only : NUOPC_SetAttribute, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
+  use NUOPC_Model           , only : model_routine_SS           => SetServices
+  use NUOPC_Model           , only : model_label_Advance        => label_Advance
+  use NUOPC_Model           , only : model_label_DataInitialize => label_DataInitialize
+  use NUOPC_Model           , only : model_label_SetRunClock    => label_SetRunClock
+  use NUOPC_Model           , only : model_label_Finalize       => label_Finalize
+  use NUOPC_Model           , only : NUOPC_ModelGet
+  use med_constants_mod     , only : IN, R8, I8, CXX, CS,CL
   use shr_sys_mod           , only : shr_sys_abort
+  use shr_log_mod           , only : shr_log_Unit
   use shr_file_mod          , only : shr_file_getlogunit, shr_file_setlogunit
   use shr_file_mod          , only : shr_file_getloglevel, shr_file_setloglevel
   use shr_file_mod          , only : shr_file_setIO, shr_file_getUnit
   use shr_string_mod        , only : shr_string_listGetNum
   use shr_orb_mod           , only : shr_orb_decl
+  use shr_const_mod         , only : shr_const_pi
   use shr_cal_mod           , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
-  use esmFlds               , only : fldListFr, fldListTo, complnd, compname
-  use esmFlds               , only : flds_scalar_name, flds_scalar_num
-  use esmFlds               , only : flds_scalar_index_nx, flds_scalar_index_ny
-  use esmFlds               , only : flds_scalar_index_nextsw_cday
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Realize
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Concat
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Getnumflds
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Getfldinfo
+  use shr_nuopc_scalars_mod , only : flds_scalar_name
+  use shr_nuopc_scalars_mod , only : flds_scalar_num
+  use shr_nuopc_scalars_mod , only : flds_scalar_index_nx
+  use shr_nuopc_scalars_mod , only : flds_scalar_index_ny
+  use shr_nuopc_scalars_mod , only : flds_scalar_index_nextsw_cday
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_chkerr
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_Clock_TimePrint
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_SetScalar
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_GetScalar
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_Diagnose
+  use shr_nuopc_grid_mod    , only : shr_nuopc_grid_Meshinit
   use shr_nuopc_grid_mod    , only : shr_nuopc_grid_ArrayToState
   use shr_nuopc_grid_mod    , only : shr_nuopc_grid_StateToArray
+  use shr_nuopc_time_mod    , only : shr_nuopc_time_AlarmInit
 
-  use ESMF
-  use NUOPC
-  use NUOPC_Model, &
-    model_routine_SS        => SetServices,       &
-    model_label_Advance     => label_Advance,     &
-    model_label_SetRunClock => label_SetRunClock, &
-    model_label_Finalize    => label_Finalize
+  ! TODO: remove these
+  use esmFlds               , only : fldListFr, fldListTo, complnd, compname
+  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Realize
+  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Concat
+  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Getnumflds
+  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Getfldinfo
 
-  use lnd_import_export , only : lnd_import, lnd_export
-  use clm_cpl_indices   , only : clm_cpl_indices_set
-  use perf_mod          , only : t_startf, t_stopf, t_barrierf
-  use spmdMod           , only : masterproc, mpicom, spmd_init
-  use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
-  use domainMod         , only : ldomain
-  use controlMod        , only : control_setNL
-  use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
-  use clm_varctl        , only : inst_index, inst_suffix, inst_name
-  use clm_varctl        , only : single_column, clm_varctl_set, iulog
-  use clm_varctl        , only : nsrStartup, nsrContinue, nsrBranch
-  use clm_time_manager  , only : set_timemgr_init, advance_timestep
-  use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
-  use clm_time_manager  , only : get_nstep, get_step_size
-  use clm_time_manager  , only : get_curr_date, get_curr_calday
-  use clm_initializeMod , only : initialize1, initialize2
-  use clm_initializeMod , only : atm2lnd_inst
-  use clm_initializeMod , only : glc2lnd_inst
-  use clm_initializeMod , only : lnd2atm_inst
-  use clm_initializeMod , only : lnd2glc_inst
-  use clm_driver        , only : clm_drv
+  use lnd_import_export     , only : lnd_import, lnd_export
+  use clm_cpl_indices       , only : clm_cpl_indices_set
+  use perf_mod              , only : t_startf, t_stopf, t_barrierf
+  use spmdMod               , only : masterproc, mpicom, spmd_init
+  use decompMod             , only : bounds_type, ldecomp, get_proc_bounds
+  use domainMod             , only : ldomain
+  use controlMod            , only : control_setNL
+  use clm_varorb            , only : eccen, obliqr, lambm0, mvelpp
+  use clm_varctl            , only : inst_index, inst_suffix, inst_name
+  use clm_varctl            , only : single_column, clm_varctl_set, iulog
+  use clm_varctl            , only : nsrStartup, nsrContinue, nsrBranch
+  use clm_time_manager      , only : set_timemgr_init, advance_timestep
+  use clm_time_manager      , only : set_nextsw_cday, update_rad_dtime
+  use clm_time_manager      , only : get_nstep, get_step_size
+  use clm_time_manager      , only : get_curr_date, get_curr_calday
+  use clm_initializeMod     , only : initialize1, initialize2
+  use clm_initializeMod     , only : atm2lnd_inst
+  use clm_initializeMod     , only : glc2lnd_inst
+  use clm_initializeMod     , only : lnd2atm_inst
+  use clm_initializeMod     , only : lnd2glc_inst
+  use clm_driver            , only : clm_drv
 
   implicit none
   private ! except
@@ -865,7 +876,7 @@ module lnd_comp_nuopc
        ! Determine if time to write restart
        !--------------------------------
 
-       call ESMF_ClockGetAlarm(clock, alarmname='seq_timemgr_alarm_restart', alarm=alarm, rc=rc)
+       call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
        if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
@@ -881,7 +892,7 @@ module lnd_comp_nuopc
        ! Determine if time to stop
        !--------------------------------
 
-       call ESMF_ClockGetAlarm(clock, alarmname='seq_timemgr_alarm_stop', alarm=alarm, rc=rc)
+       call ESMF_ClockGetAlarm(clock, alarmname='alarm_stop', alarm=alarm, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
        if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
@@ -1004,7 +1015,6 @@ module lnd_comp_nuopc
   !===============================================================================
 
   subroutine ModelSetRunClock(gcomp, rc)
-    implicit none
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
@@ -1013,17 +1023,25 @@ module lnd_comp_nuopc
     type(ESMF_Time)          :: mcurrtime, dcurrtime
     type(ESMF_Time)          :: mstoptime
     type(ESMF_TimeInterval)  :: mtimestep, dtimestep
-    character(len=128)       :: mtimestring, dtimestring
-    type(ESMF_Alarm),pointer :: alarmList(:)
-    type(ESMF_Alarm)         :: dalarm
-    integer                  :: alarmcount, n
+    character(len=256)       :: cvalue
+    character(len=256)       :: restart_option ! Restart option units
+    integer                  :: restart_n      ! Number until restart interval
+    integer                  :: restart_ymd    ! Restart date (YYYYMMDD)
+    type(ESMF_ALARM)         :: restart_alarm
+    character(len=256)       :: stop_option    ! Stop option units
+    integer                  :: stop_n         ! Number until stop interval
+    integer                  :: stop_ymd       ! Stop date (YYYYMMDD)
+    type(ESMF_ALARM)         :: stop_alarm
+    integer                  :: dbrc
+    character(len=128)       :: name
+    integer                  :: alarmcount
     character(len=*),parameter :: subname=trim(modName)//':(ModelSetRunClock) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
     if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
-    ! query the Component for its clock, importState and exportState
+    ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -1034,57 +1052,75 @@ module lnd_comp_nuopc
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
-    ! check that the current time in the model and driver are the same
-    !--------------------------------
-
-    if (mcurrtime /= dcurrtime) then
-      call ESMF_TimeGet(dcurrtime, timeString=dtimestring, rc=rc)
-      if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-      call ESMF_TimeGet(mcurrtime, timeString=mtimestring, rc=rc)
-      if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-      call ESMF_LogWrite(subname//" ERROR in time consistency; "//trim(dtimestring)//" ne "//trim(mtimestring),  &
-           ESMF_LOGMSG_ERROR, rc=dbrc)
-      rc=ESMF_Failure
-      return
-    endif
-
-    !--------------------------------
     ! force model clock currtime and timestep to match driver and set stoptime
     !--------------------------------
 
     mstoptime = mcurrtime + dtimestep
-
     call ESMF_ClockSet(mclock, currTime=dcurrtime, timeStep=dtimestep, stopTime=mstoptime, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
-    ! copy alarms from driver to model clock if model clock has no alarms (do this only once!)
+    ! set restart and stop alarms
     !--------------------------------
 
     call ESMF_ClockGetAlarmList(mclock, alarmlistflag=ESMF_ALARMLIST_ALL, alarmCount=alarmCount, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     if (alarmCount == 0) then
-      call ESMF_ClockGetAlarmList(dclock, alarmlistflag=ESMF_ALARMLIST_ALL, alarmCount=alarmCount, rc=rc)
-      if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-      allocate(alarmList(alarmCount))
-      call ESMF_ClockGetAlarmList(dclock, alarmlistflag=ESMF_ALARMLIST_ALL, alarmList=alarmList, rc=rc)
-      if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_GridCompGet(gcomp, name=name, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_LogWrite(subname//'setting alarms for' // trim(name), ESMF_LOGMSG_INFO, rc=dbrc)
 
-      do n = 1, alarmCount
-         ! call ESMF_AlarmPrint(alarmList(n), rc=rc)
-         !if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-         dalarm = ESMF_AlarmCreate(alarmList(n), rc=rc)
-         if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-         call ESMF_AlarmSet(dalarm, clock=mclock, rc=rc)
-         if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-      enddo
+       !----------------
+       ! Restart alarm
+       !----------------
+       call NUOPC_CompAttributeGet(gcomp, name="restart_option", value=restart_option, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-      deallocate(alarmList)
-    endif
+       call NUOPC_CompAttributeGet(gcomp, name="restart_n", value=cvalue, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) restart_n
+
+       call NUOPC_CompAttributeGet(gcomp, name="restart_ymd", value=cvalue, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) restart_ymd
+
+       call shr_nuopc_time_alarmInit(mclock, restart_alarm, restart_option, &
+            opt_n   = restart_n,           &
+            opt_ymd = restart_ymd,         &
+            RefTime = mcurrTime,           &
+            alarmname = 'alarm_restart', rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_AlarmSet(restart_alarm, clock=mclock, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------
+       ! Stop alarm
+       !----------------
+       call NUOPC_CompAttributeGet(gcomp, name="stop_option", value=stop_option, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call NUOPC_CompAttributeGet(gcomp, name="stop_n", value=cvalue, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) stop_n
+
+       call NUOPC_CompAttributeGet(gcomp, name="stop_ymd", value=cvalue, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) stop_ymd
+
+       call shr_nuopc_time_alarmInit(mclock, stop_alarm, stop_option, &
+            opt_n   = stop_n,           &
+            opt_ymd = stop_ymd,         &
+            RefTime = mcurrTime,           &
+            alarmname = 'alarm_stop', rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_AlarmSet(stop_alarm, clock=mclock, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    end if
 
     !--------------------------------
     ! Advance model clock to trigger alarms then reset model clock back to currtime
