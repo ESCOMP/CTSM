@@ -1,4 +1,152 @@
 ===============================================================
+Tag name:  ctsm1.0.dev007
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Aug  5 21:03:28 MDT 2018
+One-line Summary: Avoid glacier dynamic landunit adjustments in first time step
+
+Purpose of changes
+------------------
+
+Always avoid generating dynamic landunit adjustments for glacier area
+changes in the first timestep of a startup or hybrid run - not just for
+cold start or interpolated start. See the detailed discussion in
+https://github.com/ESCOMP/ctsm/issues/340 for rationale.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #340 (Avoid generating dynamic landunit adjustment fluxes for
+  glacier changes in the first timestep)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    ok means tests pass; baseline failures as expected in these two
+    tests that do not use init_interp:
+
+    FAIL ERI_N2_Ld9.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev006
+    FAIL SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev006
+
+    (The glacier area on the finidat file used in these tests -
+    clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c180715.nc
+    - seems to have come from an finidat_interp_dest file, and thus does
+    not match the glacier area from CISM.)
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev006
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Startup / Hybrid runs that include CISM
+     (even NOEVOLVE) and do not use init_interp, due to:
+     - different PE layout in new case vs. the one that generated the
+       finidat (roundoff-level diffs)
+     - different glacier area on finidat file vs. what's in CISM
+       (greater than roundoff-level diffs)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Roundoff-level for different PE layout, larger than roundoff but
+      should be same climate when there is different glacier area on the
+      finidat file vs. what's in CISM
+
+      The differences arise from dynamic landunit adjustments of the
+      below-ground C and N states in the old code, as CTSM adjusts its
+      areas to match CISM's. In the new code, there are no C and N
+      adjustments in the first time step from this adjustment.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- #470 (Avoid glacier dynamic landunit adjustments in first time step)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev006
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Aug  4 07:48:09 MDT 2018
