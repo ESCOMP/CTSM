@@ -1,4 +1,110 @@
 ===============================================================
+Tag name:  release-clm5.0.06
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Aug  7 14:49:04 MDT 2018
+One-line Summary: Bring in some simple fixes from ctsm1.0.dev006 and avoid glacier adjustment at startup from ctsm1.0.dev007
+
+Purpose of this version:
+------------------------
+
+Bring in a list of simple fixes that came to CTSM master. Also change so glacier initialization is *ALWAYS* done
+at startup (time step zero) even if it isn't cold or interpolated initial conditions. Also synchronize some of the 
+files in the doc directory with the files in ctsm/master.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev007 (minus ctsm1.0.dev005 and ctsm1.0.dev001)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): 
+- Fixes #340 (Avoid generating dynamic landunit adjustment fluxes for
+  glacier changes in the first timestep)
+- Fixes #24 (ncd_io_1d_log_glob is broken)
+- Fixes #120 (Incorrect comments in Biogeophysics1Mod.F90
+- Fixes #245 (Put all .gitignore entries in top-level file)
+- Fixes #272 (Code should error on missing mxsoil_color when SOIL_COLOR
+  is used)
+- Fixes #283 (Add more helpful message about need to do init_interp with
+  wrong number of vertical layers)
+- Fixes #367 (For cmip6 runs: Turn on cpl hist output needed to drive a
+  TG compset)
+- Fixes #412 (Fix documentation of init_interp_method)
+- Fixes #419 (Do not allow SOYFIXN diagnostic field with FUN)
+- Fixes #465 (Remove backwards compatibility check for snw_rds)
+
+Science changes since: release-clm5.0.05 (always do glacier initialization at startup even if NOT cold or interpolated startup)
+
+Software changes since: release-clm5.0.05
+   remove ncd_io_1d_log_glob, remove a backwards compatability check for snw_rds on restart file
+
+Changes to User Interface since: release-clm5.0.05
+   Add another field to cmip6_outputA, Remove SOYFIXN history field when FUN is on
+   Add error for missing mxsoil_color, better error message for wrong # of vertical soil layers,
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.05
+
+Changes answers relative to baseline: possibly at startup
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: startup with Glacier model and NOT a cold or interpolated start
+    - what platforms/compilers: All
+    - nature of change: nearly identical
+
+  Only tests that showed differences in answers were:
+
+     ERI_N2_Ld9.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-default
+     SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime5.6.10
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev006, ctsm1.0.dev007
+
+  ctsm1.0.dev007    sacks 08/05/2018 Avoid glacier dynamic landunit adjustments in first time step
+  ctsm1.0.dev006    sacks 08/04/2018 Minor bug fixes, cleanup, documentation and enhancements
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #473 -- Always do glacier startup even if not cold or interpoalted start (ctsm1.0.dev007)
+  #468 -- Minor bug fixes (ctsm1.0.dev006)
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.05
 Originator(s):  erik (Erik Kluzek)
 Date:  Sun Aug  5 23:31:45 MDT 2018
