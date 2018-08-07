@@ -2432,20 +2432,24 @@ to the atmosphere) (but using the 'general' method will typically have
 only a very minor impact on results in this case). For this method to
 work, the input finidat file needs to be at the same resolution as the
 current configuration. So this is a less general form of
-init_interp. However, it can be used when transitioning from a spinup
-run to a transient run, or in other cases where the only difference is
-in internal memory allocation. In order to catch possible problems, this
-uses a different algorithm for finding the input point for each output
-point, which ensures that each active output point is associated with
-exactly one input point with the same latitude, longitude and type. This
-method requires (a) the same grid for input and output, within roundoff;
-(b) any non-zero-weight point in the input must have memory allocated
-for it in this grid cell in the output (this will be satisfied if the
-point is non-zero-weight on the surface dataset or if it's a point for
-which we allocate memory even for zero-weight points); (c) any active
-point in the output (based on the surface dataset and rules for
-determining active points) must have a matching point in this grid cell
-in the input.
+init_interp. However, it can be used in cases where the only difference
+is in internal memory allocation. In order to catch possible problems,
+this uses a different algorithm for finding the input point for each
+output point, which ensures that each active output point is associated
+with exactly one input point with the same latitude, longitude and
+type. This method requires (a) the same grid for input and output,
+within roundoff; (b) any non-zero-weight point in the input must have
+memory allocated for it in this grid cell in the output (this will be
+satisfied if the point is non-zero-weight on the surface dataset or if
+it's a point for which we allocate memory even for zero-weight points);
+(c) any active point in the output (based on the surface dataset and
+rules for determining active points) must have a matching point in this
+grid cell in the input. (Note that this generally can NOT be used when
+transitioning from a spinup run to a transient run, because spinup runs
+typically have irrigation off and transient runs have irrigation on, and
+the presence/absence of irrigation affects the subgrid structure; if it
+weren't for that difference, then this option would be useful for this
+use case.)
 
 </entry>
 

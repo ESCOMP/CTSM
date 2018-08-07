@@ -502,7 +502,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false."
->hgrid=1.9x2.5 maxpft=79 mask=gx1v6 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <!--
@@ -577,10 +577,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 -->
 
 <!-- Present day crop spinup at 2-degree with irrigation on -->
-<finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." use_fates=".false."
+<finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."  use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.IGM2000GSWP3CLM50BGCCROPIRR.2011-01-01.1.9x2.5_gx1v6_gl5_simyr2000_c170419.nc
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+>lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c180715.nc
 </finidat>
 
 <!-- FATES on for 2000 (MUST be an exact match - can't interpolate files for FATES -->
@@ -971,7 +971,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_ndep>
 
 <stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2000</stream_year_last_ndep>
+<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2015</stream_year_last_ndep>
 
 <stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2100</stream_year_last_ndep>
@@ -1064,13 +1064,13 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
 
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_last_popdens>
+<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2016</stream_year_last_popdens>
 
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_last_popdens>
+<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2016</stream_year_last_popdens>
 
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_popdens>
+<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2016</stream_year_last_popdens>
 
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
 
@@ -1104,13 +1104,13 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_last_urbantv>
+<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2000" >2106</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_last_urbantv>
+<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_urbantv>
+<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >2106</stream_year_last_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
