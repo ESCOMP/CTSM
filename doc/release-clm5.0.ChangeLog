@@ -1,4 +1,17 @@
 ===============================================================
+Tag name:  release-clm5.0.07
+Originator(s):  erik (Erik Kluzek)
+Date:  Wed Aug  8 14:02:04 MDT 2018
+One-line Summary: Bring in some simple fixes from ctsm1.0.dev006 and avoid glacier adjustment at startup from ctsm1.0.dev007
+
+Purpose of this version:
+------------------------
+
+This is a duplicate of the previous tag, since the previous tag ended up being off of the release-clm5.0 branch.
+All the details of the tag are the same as the previous one.
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.06
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Aug  7 14:49:04 MDT 2018
