@@ -36,8 +36,10 @@ module dynSubgridDriverMod
   use PhotosynthesisMod            , only : photosyns_type
   use SoilHydrologyType            , only : soilhydrology_type  
   use SoilStateType                , only : soilstate_type
-  use WaterfluxType                , only : waterflux_type
-  use WaterstateType               , only : waterstate_type
+  use WaterFluxBulkType                , only : waterfluxbulk_type
+  use WaterStateBulkType               , only : waterstatebulk_type
+  use WaterDiagnosticBulkType               , only : waterdiagnosticbulk_type
+  use WaterBalanceType               , only : waterbalance_type
   use TemperatureType              , only : temperature_type
   use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
@@ -154,7 +156,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine dynSubgrid_driver(bounds_proc,                                            &
        urbanparams_inst, soilstate_inst, soilhydrology_inst,           &
-       waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+       waterfluxbulk_inst, temperature_inst, energyflux_inst,             &
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
@@ -182,8 +185,10 @@ contains
     type(urbanparams_type)               , intent(in)    :: urbanparams_inst
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(soilhydrology_type)             , intent(inout) :: soilhydrology_inst
-    type(waterstate_type)                , intent(inout) :: waterstate_inst
-    type(waterflux_type)                 , intent(inout) :: waterflux_inst
+    type(waterstatebulk_type)                , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)                , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterbalance_type)                , intent(inout) :: waterbalancebulk_inst
+    type(waterfluxbulk_type)                 , intent(inout) :: waterfluxbulk_inst
     type(temperature_type)               , intent(inout) :: temperature_inst
     type(energyflux_type)                , intent(inout) :: energyflux_inst
     type(canopystate_type)               , intent(inout) :: canopystate_inst
@@ -224,7 +229,8 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-            waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
+            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+            waterfluxbulk_inst, temperature_inst, energyflux_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
        call patch_state_updater%set_old_weights(bounds_clump)
@@ -288,13 +294,14 @@ contains
 
        call initialize_new_columns(bounds_clump, &
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
-            temperature_inst, waterstate_inst, soilhydrology_inst)
+            temperature_inst, waterstatebulk_inst, soilhydrology_inst)
 
        call dyn_hwcontent_final(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, soilhydrology_inst, &
-            waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
+            waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+            waterfluxbulk_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, nc, &

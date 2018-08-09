@@ -19,8 +19,8 @@ module CNNDynamicsMod
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use WaterStateType                  , only : waterstate_type
-  use WaterFluxType                   , only : waterflux_type
+  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use CropType                        , only : crop_type
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
@@ -153,7 +153,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFreeLivingFixation(num_soilc, filter_soilc, &
-       waterflux_inst, soilbiogeochem_nitrogenflux_inst)
+       waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)
 
 
     use clm_time_manager , only : get_days_per_year, get_step_size
@@ -164,7 +164,7 @@ contains
     integer                                , intent(in)    :: filter_soilc(:) ! filter for soil columns                                                                                                                                  
    
     type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst 
-    type(waterflux_type)                   , intent(inout) :: waterflux_inst 
+    type(waterfluxbulk_type)                   , intent(inout) :: waterfluxbulk_inst 
     !
     ! !LOCAL VARIABLES:                                                                                                                                                                                                           
     integer  :: c,fc            !indices     
@@ -172,7 +172,7 @@ contains
     real(r8) :: secs_per_year   !seconds per year   
 
        associate(                                                                        &
-                  AnnET            => waterflux_inst%AnnET,                              & ! Input:  [real(:)  ] : Annual average ET flux mmH20/s
+                  AnnET            => waterfluxbulk_inst%AnnET,                              & ! Input:  [real(:)  ] : Annual average ET flux mmH20/s
                   freelivfix_slope => params_inst%freelivfix_slope_wET,                  & ! Input:  [real     ] : slope of fixation with ET
                   freelivfix_inter => params_inst%freelivfix_intercept,                  & ! Input:  [real     ] : intercept of fixation with ET
                   ffix_to_sminn    => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col & ! Output: [real(:)  ] : free living N fixation to soil mineral N (gN/m2/s)
@@ -293,7 +293,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNSoyfix (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       waterstate_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
+       waterdiagnosticbulk_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
        soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -312,7 +312,7 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
     type(crop_type)                         , intent(in)    :: crop_inst
     type(cnveg_state_type)                  , intent(in)    :: cnveg_state_inst
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
@@ -331,7 +331,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                      & 
-         wf               =>  waterstate_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
+         wf               =>  waterdiagnosticbulk_inst%wf_col                      ,         & ! Input:  [real(r8) (:) ]  soil water as frac. of whc for top 0.5 m          
 
          hui              =>  crop_inst%gddplant_patch                    ,         & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
          croplive         =>  crop_inst%croplive_patch                    ,         & ! Input:  [logical  (:) ]  true if planted and not harvested                  
