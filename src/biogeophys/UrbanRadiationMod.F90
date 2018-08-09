@@ -17,7 +17,7 @@ module UrbanRadiationMod
   use abortutils        , only : endrun  
   use UrbanParamsType   , only : urbanparams_type
   use atm2lndType       , only : atm2lnd_type
-  use WaterStateType    , only : waterstate_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use TemperatureType   , only : temperature_type
   use SolarAbsorbedType , only : solarabs_type 
   use SurfaceAlbedoType , only : surfalb_type
@@ -50,7 +50,7 @@ contains
        num_urbanl, filter_urbanl                                      , &
        num_urbanc, filter_urbanc                                      , &
        num_urbanp, filter_urbanp                                      , &
-       atm2lnd_inst, waterstate_inst, temperature_inst, urbanparams_inst, &
+       atm2lnd_inst, waterdiagnosticbulk_inst, temperature_inst, urbanparams_inst, &
        solarabs_inst, surfalb_inst, energyflux_inst)
     !
     ! !DESCRIPTION: 
@@ -74,7 +74,7 @@ contains
     integer                , intent(in)    :: num_urbanp         ! number of urban patches in clump
     integer                , intent(in)    :: filter_urbanp(:)   ! urban pft filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
     type(solarabs_type)    , intent(inout) :: solarabs_inst
@@ -126,7 +126,7 @@ contains
          forc_solar         =>    atm2lnd_inst%forc_solar_grc                , & ! Input:  [real(r8) (:)   ]  incident solar radiation (W/m**2)                 
          forc_lwrad         =>    atm2lnd_inst%forc_lwrad_not_downscaled_grc , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)   
 
-         frac_sno           =>    waterstate_inst%frac_sno_col               , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno           =>    waterdiagnosticbulk_inst%frac_sno_col               , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
 
          t_ref2m            =>    temperature_inst%t_ref2m_patch             , & ! Input:  [real(r8) (:)   ]  2 m height surface air temperature (K)            
          t_grnd             =>    temperature_inst%t_grnd_col                , & ! Input:  [real(r8) (:)   ]  ground temperature (K)                            

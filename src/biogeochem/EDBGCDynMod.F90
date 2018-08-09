@@ -22,8 +22,7 @@ module EDBGCDynMod
   use SoilStateType                   , only : soilstate_type
   use SoilHydrologyType               , only : soilhydrology_type
   use TemperatureType                 , only : temperature_type
-  use WaterstateType                  , only : waterstate_type
-  use WaterfluxType                   , only : waterflux_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use atm2lndType                     , only : atm2lnd_type
   use SoilStateType                   , only : soilstate_type
   use ch4Mod                          , only : ch4_type
@@ -48,7 +47,7 @@ contains
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
        c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
        c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
-       atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
+       atm2lnd_inst, waterfluxbulk_inst,                                      &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
     !
     ! !DESCRIPTION:
@@ -103,8 +102,7 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
-    type(waterflux_type)                    , intent(in)    :: waterflux_inst
+    type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(canopystate_type)                  , intent(in)    :: canopystate_inst
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst

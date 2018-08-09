@@ -950,7 +950,7 @@ contains
             ptr_patch=this%fert_patch)
     end if
 
-    if (use_crop) then
+    if (use_crop .and. .not. use_fun) then
        this%soyfixn_patch(begp:endp) = spval
        call hist_addfld1d (fname='SOYFIXN', units='gN/m^2/s', &
             avgflag='A', long_name='soybean fixation', &

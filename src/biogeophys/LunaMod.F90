@@ -25,7 +25,7 @@ module LunaMod
   use GridcellType          , only : grc     
   use SolarAbsorbedType     , only : solarabs_type
   use SurfaceAlbedoType     , only : surfalb_type
-  use WaterstateType        , only : waterstate_type
+  use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
   !use EDPhotosynthesisMod  , only : vcmaxc, jmaxc
   
   
@@ -146,7 +146,7 @@ module LunaMod
   ! this subroutine updates the photosynthetic capacity as determined by Vcmax25 and Jmax25
   subroutine Update_Photosynthesis_Capacity(bounds, fn, filterp, &
     dayl_factor, atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst, &
-    surfalb_inst, solarabs_inst, waterstate_inst, frictionvel_inst)
+    surfalb_inst, solarabs_inst, waterdiagnosticbulk_inst, frictionvel_inst)
     !
     ! !DESCRIPTION:
     ! Calculates Nitrogen fractionation within the leaf, based on optimum calculated fractions in rubisco, cholorophyll, 
@@ -184,7 +184,7 @@ module LunaMod
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(surfalb_type)     , intent(in)    :: surfalb_inst
     type(solarabs_type)    , intent(inout) :: solarabs_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
 
     
@@ -265,7 +265,7 @@ module LunaMod
     t_veg_night   => temperature_inst%t_veg_night_patch               , & ! Input:  [real(r8) (:)   ] nighttime mean vegetation temperature (Kelvin)
     t_veg10_day   => temperature_inst%t_veg10_day_patch               , & ! Input:  [real(r8) (:)   ] 10-day mean daytime vegetation temperature (Kelvin)  
     t_veg10_night => temperature_inst%t_veg10_night_patch             , & ! Input:  [real(r8) (:)   ] 10-day mean nighttime vegetation temperature (Kelvin)
-    rh10_p	  => waterstate_inst%rh10_af_patch                    , & ! Input:  [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (unitless)
+    rh10_p	  => waterdiagnosticbulk_inst%rh10_af_patch                    , & ! Input:  [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (unitless)
     rb10_p        => frictionvel_inst%rb10_patch                      , & ! Input:  [real(r8) (:)   ] 10-day mean boundary layer resistance at the pacth (s/m)
     gpp_day       => photosyns_inst%fpsn24_patch                      , & ! Input:  [real(r8) (:)   ] patch 24 hours mean gpp(umol CO2/m**2 ground/day) for canopy layer
     vcmx25_z      => photosyns_inst%vcmx25_z_patch                    , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 (umol/m2 leaf/s) for canopy layer 
@@ -452,7 +452,7 @@ end subroutine Update_Photosynthesis_Capacity
 
 subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     rb,rh, temperature_inst, photosyns_inst, &
-    surfalb_inst, solarabs_inst, waterstate_inst, frictionvel_inst)
+    surfalb_inst, solarabs_inst, waterdiagnosticbulk_inst, frictionvel_inst)
     !
     ! !DESCRIPTION:
     ! Accumulate the 10-day running mean climates for LUNA model 
@@ -481,7 +481,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(surfalb_type)     , intent(in)    :: surfalb_inst
     type(solarabs_type)    , intent(inout) :: solarabs_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
     
     ! !LOCAL VARIABLES:
@@ -509,7 +509,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     ndaysteps     => temperature_inst%ndaysteps_patch                 , & ! Input:  [integer  (:)   ] number of daytime steps in 24 hours from mid-night, LUNA specific
     t_veg10_day   => temperature_inst%t_veg10_day_patch               , & ! Output: [real(r8) (:)   ] 10-day mean vegetation temperature (Kelvin)  
     t_veg10_night => temperature_inst%t_veg10_night_patch             , & ! Output: [real(r8) (:)   ] 10-day mean vegetation temperature (Kelvin)
-    rh10_p	  => waterstate_inst%rh10_af_patch                    , & ! Output: [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (s/m)
+    rh10_p	  => waterdiagnosticbulk_inst%rh10_af_patch                    , & ! Output: [real(r8) (:)   ] 10-day mean canopy air relative humidity at the pacth (s/m)
     rb10_p        => frictionvel_inst%rb10_patch                      , & ! Output: [real(r8) (:)   ] 10-day mean boundary layer resistance at the pacth (s/m)
     par240d_z     => solarabs_inst%par240d_z_patch                    , & ! Output:  [real(r8) (:,:) ] 10-day running mean of daytime patch absorbed PAR for leaves in canopy layer (W/m**2) 
     par240x_z     => solarabs_inst%par240x_z_patch                      & ! Output:  [real(r8) (:,:) ] 10-day running mean of maximum patch absorbed PAR for leaves in canopy layer (W/m**2)
