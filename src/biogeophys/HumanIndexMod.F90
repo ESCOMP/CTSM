@@ -43,6 +43,9 @@ module HumanIndexMod
   character(len= *), parameter, public :: calc_human_stress_indices_fast = 'FAST'
   character(len= *), parameter, public :: calc_human_stress_indices_none = 'NONE'
   character(len= 16), public           :: calc_human_stress_indices = calc_human_stress_indices_fast
+  logical, public :: all_human_stress_indices  = .false. ! If should calculate the full set of human stress indices
+  logical, public :: fast_human_stress_indices = .true.  ! If should calculate the fast (limited) set of human 
+                                                         !  stress indices
   type,    public :: humanindex_type   
      real(r8), pointer :: tc_ref2m_patch              (:) ! Patch 2 m height surface air temperature (C)
      real(r8), pointer :: vap_ref2m_patch             (:) ! Patch 2 m height vapor pressure (Pa)
@@ -154,8 +157,17 @@ subroutine Init(this, bounds )
     type(bounds_type) :: bounds_tmp
 !EOP
 !-----------------------------------------------------------------------
-    if (trim(calc_human_stress_indices) == calc_human_stress_indices_all .or. &
-        trim(calc_human_stress_indices) == calc_human_stress_indices_fast) then
+    if (trim(calc_human_stress_indices) == calc_human_stress_indices_all) then
+       all_human_stress_indices  = .true.
+       fast_human_stress_indices = .false.
+    else if (trim(calc_human_stress_indices) == calc_human_stress_indices_fast) then
+       all_human_stress_indices  = .false.
+       fast_human_stress_indices = .true.
+    else if (trim(calc_human_stress_indices) == calc_human_stress_indices_none) then
+       all_human_stress_indices  = .false.
+       fast_human_stress_indices = .false.
+    end if
+    if (all_human_stress_indices .or. fast_human_stress_indices) then
        call this%InitAllocate ( bounds )
        call this%InitHistory (  bounds )
     else
@@ -208,7 +220,7 @@ subroutine InitAllocate(this, bounds)
     allocate(this%discomf_index_ref2mS_r_patch (begp:endp))                    ; this%discomf_index_ref2mS_r_patch(:)  = nan
     allocate(this%discomf_index_ref2mS_u_patch (begp:endp))                    ; this%discomf_index_ref2mS_u_patch(:)  = nan
 
-    if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all ) then
+    if ( all_human_stress_indices ) then
 
     allocate(this%wb_ref2m_patch               (begp:endp))                    ; this%wb_ref2m_patch              (:)  = nan
     allocate(this%wb_ref2m_r_patch             (begp:endp))                    ; this%wb_ref2m_r_patch            (:)  = nan
@@ -320,7 +332,7 @@ subroutine InitHistory(this, bounds)
             avgflag='A', long_name='Rural 2 m NWS Heat Index', &
             ptr_patch=this%nws_hi_ref2m_r_patch, set_spec=spval)
 
-    if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all )then
+    if ( all_human_stress_indices )then
 
     this%appar_temp_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='APPAR_TEMP', units='C',  &

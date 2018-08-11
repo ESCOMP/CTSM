@@ -69,8 +69,7 @@ contains
     use QSatMod             , only : QSat
     use clm_varpar          , only : maxpatch_urb, nlevurb, nlevgrnd
     use clm_time_manager    , only : get_curr_date, get_step_size, get_nstep
-    use HumanIndexMod       , only : calc_human_stress_indices, calc_human_stress_indices_all, &
-                                     calc_human_stress_indices_fast, &
+    use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                      SwampCoolEff, KtoC, VaporPres
@@ -870,8 +869,7 @@ contains
          rh_ref2m_u(p) = rh_ref2m(p)
 
          ! Human Heat Stress
-         if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all .or. &
-              trim(calc_human_stress_indices) == calc_human_stress_indices_fast )then
+         if ( all_human_stress_indices .or. fast_human_stress_indices )then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
             call Wet_BulbS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p))
@@ -880,7 +878,7 @@ contains
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all ) then
+            if ( all_human_stress_indices ) then
                call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(g), rh_ref2m(p), q_ref2m(p), &
                              teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
                call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
@@ -894,7 +892,7 @@ contains
             swbgt_ref2m_u(p)          = swbgt_ref2m(p)
             humidex_ref2m_u(p)        = humidex_ref2m(p)
             discomf_index_ref2mS_u(p) = discomf_index_ref2mS(p)
-            if ( trim(calc_human_stress_indices) == calc_human_stress_indices_all ) then
+            if ( all_human_stress_indices ) then
                teq_ref2m_u(p)            = teq_ref2m(p)
                ept_ref2m_u(p)            = ept_ref2m(p)
                wb_ref2m_u(p)             = wb_ref2m(p)
