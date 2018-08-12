@@ -78,7 +78,8 @@ module glc2lndMod
      ! - set_glc2lnd_fields
      ! - update_glc2lnd_fracs
      ! - update_glc2lnd_topo
-     procedure, public  :: set_glc2lnd_fields       ! set coupling fields sent from glc to lnd
+     procedure, public  :: set_glc2lnd_fields_mct   ! set coupling fields sent from glc to lnd
+     procedure, public  :: set_glc2lnd_fields_nuopc ! set coupling fields sent from glc to lnd
      procedure, public  :: update_glc2lnd_fracs     ! update subgrid fractions based on input from GLC
      procedure, public  :: update_glc2lnd_topo      ! update topographic heights
 
@@ -239,7 +240,7 @@ contains
   end subroutine Clean
 
   !-----------------------------------------------------------------------
-  subroutine set_glc2lnd_fields(this, bounds, glc_present, x2l, &
+  subroutine set_glc2lnd_fields_mct(this, bounds, glc_present, x2l, &
        index_x2l_Sg_ice_covered, index_x2l_Sg_topo, index_x2l_Flgg_hflx, &
        index_x2l_Sg_icemask, index_x2l_Sg_icemask_coupled_fluxes)
     !
@@ -264,7 +265,7 @@ contains
     integer :: g
     integer :: icemec_class
 
-    character(len=*), parameter :: subname = 'set_glc2lnd_fields'
+    character(len=*), parameter :: subname = 'set_glc2lnd_fields_mct'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT((ubound(x2l, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
@@ -293,7 +294,63 @@ contains
        end if
     end if
 
-  end subroutine set_glc2lnd_fields
+  end subroutine set_glc2lnd_fields_mct
+
+  !-----------------------------------------------------------------------
+  subroutine set_glc2lnd_fields_nuopc(this, bounds, glc_present, &
+       frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc)
+    !
+    ! !DESCRIPTION:
+    ! Set coupling fields sent from glc to lnd
+    !
+    ! If glc_present is true, then the given fields are all assumed to be valid; if
+    ! glc_present is false, then these fields are ignored.
+    !
+    ! !ARGUMENTS:
+    class(glc2lnd_type), intent(inout) :: this
+    type(bounds_type)  , intent(in)    :: bounds
+    logical  , intent(in) :: glc_present                              ! true if running with a non-stub glc model
+    real(r8) , intent(in) :: frac_grc(:, bounds%begg: )               ! ice-covered field for each elevation class
+    real(r8) , intent(in) :: topo_grc(:, bounds%begg: )               ! topo field for each elevation class 
+    real(r8) , intent(in) :: hflx_grc(:, bounds%begg: )               ! heat flux field for each elevation class
+    real(r8) , intent(in) :: icemask_grc(bounds%begg: )               ! icemask field 
+    real(r8) , intent(in) :: icemask_coupled_fluxes_grc(bounds%begg:) ! icemask_coupled_fluxes field 
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g
+    integer :: icemec_class
+
+    character(len=*), parameter :: subname = 'set_glc2lnd_fields_nuopc'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT((ubound(frac_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(topo_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(hflx_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(icemask_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(icemask_coupled_fluxes_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
+
+    if (glc_present) then
+       do g = bounds%begg, bounds%endg
+          do icemec_class = 0, maxpatch_glcmec
+             this%frac_grc(g,icemec_class)  = frac_grc(g,icemec_class)
+             this%topo_grc(g,icemec_class)  = topo_grc(g,icemec_class)
+             this%hflx_grc(g,icemec_class)  = hflx_grc(g,icemec_class)
+          end do
+          this%icemask_grc(g)  = icemask_grc(g)
+          this%icemask_coupled_fluxes_grc(g)  = icemask_coupled_fluxes_grc(g)
+       end do
+
+       call this%check_glc2lnd_icemask(bounds)
+       call this%check_glc2lnd_icemask_coupled_fluxes(bounds)
+       call this%update_glc2lnd_dyn_runoff_routing(bounds)
+    else
+       if (glc_do_dynglacier) then
+          call endrun(' ERROR: With glc_present false (e.g., a stub glc model), glc_do_dynglacier must be false '// &
+               errMsg(sourcefile, __LINE__))
+       end if
+    end if
+
+  end subroutine set_glc2lnd_fields_nuopc
 
   !-----------------------------------------------------------------------
   subroutine for_test_set_glc2lnd_fields_directly(this, bounds, &

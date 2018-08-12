@@ -6,24 +6,20 @@ module lnd_comp_nuopc
 
   use ESMF
   use NUOPC                 , only : NUOPC_CompDerive, NUOPC_CompSetEntryPoint, NUOPC_CompSpecialize
-  use NUOPC                 , only : NUOPC_CompFilterPhaseMap, NUOPC_IsUpdated, NUOPC_IsAtTime
-  use NUOPC                 , only : NUOPC_CompAttributeGet, NUOPC_Advertise
-  use NUOPC                 , only : NUOPC_SetAttribute, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
+  use NUOPC                 , only : NUOPC_CompFilterPhaseMap, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
   use NUOPC_Model           , only : model_routine_SS           => SetServices
   use NUOPC_Model           , only : model_label_Advance        => label_Advance
   use NUOPC_Model           , only : model_label_DataInitialize => label_DataInitialize
   use NUOPC_Model           , only : model_label_SetRunClock    => label_SetRunClock
   use NUOPC_Model           , only : model_label_Finalize       => label_Finalize
   use NUOPC_Model           , only : NUOPC_ModelGet
-  use med_constants_mod     , only : IN, R8, I8, CXX, CS,CL
+  use shr_kind_mod          , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod           , only : shr_sys_abort
   use shr_log_mod           , only : shr_log_Unit
   use shr_file_mod          , only : shr_file_getlogunit, shr_file_setlogunit
   use shr_file_mod          , only : shr_file_getloglevel, shr_file_setloglevel
   use shr_file_mod          , only : shr_file_setIO, shr_file_getUnit
-  use shr_string_mod        , only : shr_string_listGetNum
   use shr_orb_mod           , only : shr_orb_decl
-  use shr_const_mod         , only : shr_const_pi
   use shr_cal_mod           , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use shr_nuopc_scalars_mod , only : flds_scalar_name
   use shr_nuopc_scalars_mod , only : flds_scalar_num
@@ -31,24 +27,14 @@ module lnd_comp_nuopc
   use shr_nuopc_scalars_mod , only : flds_scalar_index_ny
   use shr_nuopc_scalars_mod , only : flds_scalar_index_nextsw_cday
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_chkerr
-  use shr_nuopc_methods_mod , only : shr_nuopc_methods_Clock_TimePrint
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_SetScalar
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_GetScalar
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_Diagnose
   use shr_nuopc_grid_mod    , only : shr_nuopc_grid_Meshinit
-  use shr_nuopc_grid_mod    , only : shr_nuopc_grid_ArrayToState
-  use shr_nuopc_grid_mod    , only : shr_nuopc_grid_StateToArray
   use shr_nuopc_time_mod    , only : shr_nuopc_time_AlarmInit
 
-  ! TODO: remove these
-  use esmFlds               , only : fldListFr, fldListTo, complnd, compname
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Realize
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Concat
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Getnumflds
-  use shr_nuopc_fldList_mod , only : shr_nuopc_fldList_Getfldinfo
-
-  use lnd_import_export     , only : lnd_import, lnd_export
-  use clm_cpl_indices       , only : clm_cpl_indices_set
+  use lnd_import_export     , only : advertise_fields, realize_fields
+  use lnd_import_export     , only : import_fields, export_fields
   use perf_mod              , only : t_startf, t_stopf, t_barrierf
   use spmdMod               , only : masterproc, mpicom, spmd_init
   use decompMod             , only : bounds_type, ldecomp, get_proc_bounds
@@ -85,24 +71,14 @@ module lnd_comp_nuopc
   ! Private module data
   !--------------------------------------------------------------------------
 
-  character(CXX)             :: flds_l2x = ''
-  character(CXX)             :: flds_x2l = ''
-  real(r8), allocatable      :: x2l(:,:)
-  real(r8), allocatable      :: l2x(:,:)
-  integer                    :: nflds_l2x
-  integer                    :: nflds_x2l
-  character(len=*),parameter :: grid_option = "mesh" ! grid_de, grid_arb, grid_reg, mesh
   integer, parameter         :: dbug = 10
   integer                    :: dbrc
-  integer                    :: compid               ! component id
+  character(*),parameter     :: modName =  "(lnd_comp_nuopc)"
+  character(*),parameter     :: u_FILE_u = __FILE__
 
-  !----- formats -----
-  character(*),parameter :: modName =  "(lnd_comp_nuopc)"
-  character(*),parameter :: u_FILE_u = __FILE__
-
-  !===============================================================================
-  contains
-  !===============================================================================
+!===============================================================================
+contains
+!===============================================================================
 
   subroutine SetServices(gcomp, rc)
     type(ESMF_GridComp)  :: gcomp
@@ -189,8 +165,7 @@ module lnd_comp_nuopc
     logical                :: isPresent
     character(len=512)     :: diro
     character(len=512)     :: logfile
-    logical                :: activefld
-    character(ESMF_MAXSTR) :: stdname, shortname
+    integer                :: compid      ! component id
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
@@ -212,11 +187,12 @@ module lnd_comp_nuopc
     ! initialize CLM MPI stuff
     !----------------------------------------------------------------------------
 
+    call mpi_comm_dup(lmpicom, mpicom, ierr)
+
+    ! TODO: do we really need this config variable any more
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) compid  ! convert from string to integer
-
-    call mpi_comm_dup(lmpicom, mpicom, ierr)
 
     call spmd_init( mpicom, compid )
 
@@ -260,37 +236,12 @@ module lnd_comp_nuopc
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
 
-    !--------------------------------
-    ! create import and export field list
-    !--------------------------------
+    !----------------------------------------------------------------------------
+    ! advertise fields
+    !----------------------------------------------------------------------------
 
-    call shr_nuopc_fldList_Concat(fldListFr(complnd), fldListTo(complnd), flds_l2x, flds_x2l, flds_scalar_name)
-
-    !--------------------------------
-    ! advertise import and export fields
-    !--------------------------------
-
-    nflds = shr_nuopc_fldList_Getnumflds(fldListFr(complnd))
-    do n = 1,nflds
-       call shr_nuopc_fldList_Getfldinfo(fldListFr(complnd), n, activefld, stdname, shortname)
-       if (activefld) then
-          call NUOPC_Advertise(exportState, standardName=stdname, shortname=shortname, name=shortname, &
-               TransferOfferGeomObject='will provide', rc=rc)
-          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
-       call ESMF_LogWrite(subname//':Fr_'//trim(compname(complnd))//': '//trim(shortname), ESMF_LOGMSG_INFO)
-    end do
-
-    nflds = shr_nuopc_fldList_Getnumflds(fldListTo(complnd))
-    do n = 1,nflds
-       call shr_nuopc_fldList_Getfldinfo(fldListTo(complnd), n, activefld, stdname, shortname)
-       if (activefld) then
-          call NUOPC_Advertise(importState, standardName=stdname, shortname=shortname, name=shortname, &
-               TransferOfferGeomObject='will provide', rc=rc)
-          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
-       call ESMF_LogWrite(subname//':To_'//trim(compname(complnd))//': '//trim(shortname), ESMF_LOGMSG_INFO)
-    end do
+    call advertise_fields(gcomp, rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
     ! reset shr logging to original values
@@ -378,10 +329,6 @@ module lnd_comp_nuopc
     !----------------------
     ! Determine field indices of import/export arrays
     !----------------------
-
-    call clm_cpl_indices_set(flds_x2l, flds_l2x)
-    nflds_l2x = shr_string_listGetNum(flds_l2x)
-    nflds_x2l = shr_string_listGetNum(flds_x2l)
 
 #if (defined _MEMTRACE)
     if (masterproc) then
@@ -543,12 +490,6 @@ module lnd_comp_nuopc
     call get_proc_bounds( bounds )
     lsize = bounds%endg - bounds%begg + 1
 
-    allocate(l2x(nflds_l2x,lsize))
-    allocate(x2l(nflds_x2l,lsize))
-
-    l2x(:,:)  = 0._r8
-    x2l(:,:)  = 0._r8
-
     !--------------------------------
     ! generate the mesh
     ! grid_option specifies grid or mesh
@@ -596,13 +537,7 @@ module lnd_comp_nuopc
     ! realize the actively coupled fields
     !--------------------------------
 
-    call shr_nuopc_fldList_Realize(importState, fldListTo(complnd), flds_scalar_name, flds_scalar_num, &
-         mesh=Emesh, tag=subname//':ciceImport', rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call shr_nuopc_fldList_Realize(exportState, fldListFr(complnd), flds_scalar_name, flds_scalar_num, &
-         mesh=Emesh, tag=subname//':ciceExport', rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call realize_fields(gcomp,  Emesh, rc)
 
     !--------------------------------
     ! Finish initializing clm
@@ -634,15 +569,10 @@ module lnd_comp_nuopc
     ! Create land export state
     !--------------------------------
 
-    call lnd_export(bounds, lnd2atm_inst, lnd2glc_inst, l2x, flds_l2x)
+    call export_fields(gcomp, bounds, lnd2atm_inst, lnd2glc_inst, rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !--------------------------------
     ! Get calendar day of nextsw calculation
-    !--------------------------------
-
-    ! TODO: for nuopc at startup will set nextsw_cday to the currtime - and this will simplify the whole
-    ! initialization dependence with the atmosphere - does this make sense?
-
     if (nsrest == nsrStartup) then
        call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -653,15 +583,7 @@ module lnd_comp_nuopc
 
     call set_nextsw_cday(nextsw_cday)
 
-    !--------------------------------
-    ! Pack export state
-    ! Copy from l2x to exportState
-    ! Set the coupling scalars
-    !--------------------------------
-
-    call shr_nuopc_grid_ArrayToState(l2x, flds_l2x, exportState, grid_option, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
+    ! Set scalars in export state
     call shr_nuopc_methods_State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, mpicom, &
          flds_scalar_name, flds_scalar_num, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -679,6 +601,9 @@ module lnd_comp_nuopc
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
 
+    call shr_file_setLogLevel(shrloglev)
+    call shr_file_setLogUnit (shrlogunit)
+
 #ifdef USE_ESMF_METADATA
     convCIM  = "CIM"
     purpComp = "Model Component Simulation Description"
@@ -693,11 +618,6 @@ module lnd_comp_nuopc
     call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", convention=convCIM, purpose=purpComp, rc=rc)
 #endif
 
-    call shr_file_setLogLevel(shrloglev)
-    call shr_file_setLogUnit (shrlogunit)
-
-    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
-
 #if (defined _MEMTRACE)
     if(masterproc) then
        write(iulog,*) TRIM(Sub) // ':end::'
@@ -706,6 +626,8 @@ module lnd_comp_nuopc
        call memmon_reset_addr()
     endif
 #endif
+
+    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine InitializeRealize
 
@@ -780,10 +702,6 @@ module lnd_comp_nuopc
     call NUOPC_ModelGet(gcomp, modelClock=clock, importState=importState, exportState=exportState, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (dbug > 1) then
-      call shr_nuopc_methods_Clock_TimePrint(clock,subname//'clock',rc=rc)
-    endif
-
     !--------------------------------
     ! Determine time of next atmospheric shortwave calculation
     !--------------------------------
@@ -813,32 +731,30 @@ module lnd_comp_nuopc
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) mvelpp
 
-    ! TODO: Determine if we're running with prognostic ROF and GLC models.
-    ! This won't change throughout the run, but we can't count on this being set in
-    ! initialization, so need to get it in the run method.
-    ! This seems to imply an order dependence - for now simply set this to false for debugging - since
-    ! are running without a river model for the first test
+    ! Need to obtain glc_present and rof_present from config attributes - which is currently not
+    ! done  - for now set them to false
+    ! call NUOPC_CompAttributeGet(gcomp, name='glc_present', value=cvalue, rc=rc)
+    ! if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! read(cvalue,*) glc_present
+    
+    ! call NUOPC_CompAttributeGet(gcomp, name='rof_present', value=cvalue, rc=rc)
+    ! if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! read(cvalue,*) rof_prognostic  
+    ! TODO: is this right?? what is the right flag for this - do we
+    ! really need to know if the rof is prognostic
 
-    rof_prognostic = .false. !THIS MUST BE FIXED before a prognostic river model is added with a nuopc cap
-    glc_present    = .false. !THIS MUST BE FIXED before a prognostic ice-sheet model is added with a nuopc cap
+    glc_present = .false. !***TODO***
+    rof_prognostic = .false. !***TODO***
 
     !--------------------------------
     ! Unpack export state
     !--------------------------------
 
-    call get_proc_bounds(bounds)
-
     call t_startf ('lc_lnd_import')
 
-    call shr_nuopc_grid_StateToArray(importState, x2l, flds_x2l, grid_option, rc=rc)
+    call get_proc_bounds(bounds)
+    call import_fields( gcomp, bounds, glc_present, atm2lnd_inst, glc2lnd_inst, rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call lnd_import( bounds, &
-         x2l=x2l, &
-         flds_x2l=flds_x2l, &
-         glc_present=glc_present, &
-         atm2lnd_inst=atm2lnd_inst, &
-         glc2lnd_inst=glc2lnd_inst )
 
     call t_stopf ('lc_lnd_import')
 
@@ -937,11 +853,7 @@ module lnd_comp_nuopc
 
        call t_startf ('lc_lnd_export')
 
-       ! create array l2x
-       call lnd_export(bounds, lnd2atm_inst, lnd2glc_inst, l2x, flds_l2x)
-
-       ! map l2x to export state
-       call shr_nuopc_grid_ArrayToState(l2x, flds_l2x, exportState, grid_option, rc=rc)
+       call export_fields(gcomp, bounds, lnd2atm_inst, lnd2glc_inst, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call t_stopf ('lc_lnd_export')

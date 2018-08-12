@@ -1,55 +1,42 @@
 module lnd_import_export
 
-  use shr_kind_mod     , only : r8 => shr_kind_r8, cl=>shr_kind_cl
-  use abortutils       , only : endrun
-  use decompmod        , only : bounds_type
-  use lnd2atmType      , only : lnd2atm_type
-  use lnd2glcMod       , only : lnd2glc_type
-  use atm2lndType      , only : atm2lnd_type
-  use glc2lndMod       , only : glc2lnd_type
-  use spmdMod          , only : masterproc, iam
-  use shr_infnan_mod   , only : isnan => shr_infnan_isnan
-  use shr_string_mod   , only : shr_string_listGetName
-  use domainMod        , only : ldomain
-  use clm_varctl       , only : iulog
-  use clm_time_manager , only : get_nstep, get_step_size
+  use shr_kind_mod , only: r8 => shr_kind_r8, cl=>shr_kind_cl
+  use abortutils   , only: endrun
+  use decompmod    , only: bounds_type
+  use lnd2atmType  , only: lnd2atm_type
+  use lnd2glcMod   , only: lnd2glc_type
+  use atm2lndType  , only: atm2lnd_type
+  use glc2lndMod   , only: glc2lnd_type 
   use clm_cpl_indices
-
+  !
   implicit none
+  !===============================================================================
 
-  private
-
-  ! except
-
-  public :: lnd_import
-  public :: lnd_export
-
-  integer     ,parameter :: debug = 0 ! internal debug level
-  character(*),parameter :: F01 = "('(lnd_import_export) ',a,i4,2x,i5,2x,i8,2x,d21.14)"
-
-!===============================================================================
 contains
-!===============================================================================
 
-  subroutine lnd_import( bounds, x2l, flds_x2l, glc_present, atm2lnd_inst, glc2lnd_inst)
+  !===============================================================================
+  subroutine lnd_import( bounds, x2l, glc_present, atm2lnd_inst, glc2lnd_inst)
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
-    ! Convert the input data from the coupler to the land model
-    !---------------------------------------------------------------------------
+    ! Convert the input data from the coupler to the land model 
     !
     ! !USES:
-    use clm_varctl      , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
+    use seq_flds_mod    , only: seq_flds_x2l_fields
+    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
+    use clm_varctl      , only: ndep_from_cpl 
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
+    use shr_string_mod  , only: shr_string_listGetName
+    use domainMod       , only: ldomain
+    use shr_infnan_mod  , only : isnan => shr_infnan_isnan
     !
     ! !ARGUMENTS:
-    type(bounds_type)  , intent(in)    :: bounds       ! bounds
-    real(r8)           , intent(in)    :: x2l(:,:)     ! driver import state to land model
-    character(len=*)   , intent(in)    :: flds_x2l     ! colon separated list of input fields
-    logical            , intent(in)    :: glc_present  ! .true. => running with a non-stub GLC model
-    type(atm2lnd_type) , intent(inout) :: atm2lnd_inst ! clm internal input data type
-    type(glc2lnd_type) , intent(inout) :: glc2lnd_inst ! clm internal input data type
+    type(bounds_type)  , intent(in)    :: bounds   ! bounds
+    real(r8)           , intent(in)    :: x2l(:,:) ! driver import state to land model
+    logical            , intent(in)    :: glc_present       ! .true. => running with a non-stub GLC model
+    type(atm2lnd_type) , intent(inout) :: atm2lnd_inst      ! clm internal input data type
+    type(glc2lnd_type) , intent(inout) :: glc2lnd_inst      ! clm internal input data type
     !
     ! !LOCAL VARIABLES:
     integer  :: g,i,k,nstep,ier      ! indices, number of steps, and error code
@@ -104,49 +91,12 @@ contains
        call endrun( sub//' ERROR: must have nonzero index_x2l_Sa_co2diag for co2_type equal to diagnostic' )
     end if
 
-    ! Write debug output if appropriate
-    if (masterproc .and. debug > 0) then
-       do g = bounds%begg,bounds%endg
-          i = 1 + (g - bounds%begg)
-          write(iulog,F01)'import: nstep, n, Sa_z        = ',get_nstep(), i, x2l(index_x2l_Sa_z,i)
-          write(iulog,F01)'import: nstep, n, Sa_topo     = ',get_nstep(), i, x2l(index_x2l_Sa_topo,i)
-          write(iulog,F01)'import: nstep, n, Sa_u        = ',get_nstep(), i, x2l(index_x2l_Sa_u,i)
-          write(iulog,F01)'import: nstep, n, Sa_v        = ',get_nstep(), i, x2l(index_x2l_Sa_v,i)
-          write(iulog,F01)'import: nstep, n, Fa_swndr    = ',get_nstep(), i, x2l(index_x2l_Faxa_swndr,i)
-          write(iulog,F01)'import: nstep, n, Fa_swvdr    = ',get_nstep(), i, x2l(index_x2l_Faxa_swvdr,i)
-          write(iulog,F01)'import: nstep, n, Fa_swndf    = ',get_nstep(), i, x2l(index_x2l_Faxa_swndf,i)
-          write(iulog,F01)'import: nstep, n, Fa_swvdf    = ',get_nstep(), i, x2l(index_x2l_Faxa_swvdf,i)
-          write(iulog,F01)'import: nstep, n, Sa_ptem     = ',get_nstep(), i, x2l(index_x2l_Sa_ptem,i)
-          write(iulog,F01)'import: nstep, n, Sa_shum     = ',get_nstep(), i, x2l(index_x2l_Sa_shum,i)
-          write(iulog,F01)'import: nstep, n, Sa_pbot     = ',get_nstep(), i, x2l(index_x2l_Sa_pbot,i)
-          write(iulog,F01)'import: nstep, n, Sa_tbot     = ',get_nstep(), i, x2l(index_x2l_Sa_tbot,i)
-          write(iulog,F01)'import: nstep, n, Fa_lwdn     = ',get_nstep(), i, x2l(index_x2l_Faxa_lwdn,i)
-          write(iulog,F01)'import: nstep, n, Fa_rainc    = ',get_nstep(), i, x2l(index_x2l_Faxa_rainc,i)
-          write(iulog,F01)'import: nstep, n, Fa_rainl    = ',get_nstep(), i, x2l(index_x2l_Faxa_rainl,i)
-          write(iulog,F01)'import: nstep, n, Fa_snowc    = ',get_nstep(), i, x2l(index_x2l_Faxa_snowc,i)
-          write(iulog,F01)'import: nstep, n, Fa_snowl    = ',get_nstep(), i, x2l(index_x2l_Faxa_snowl,i)
-          write(iulog,F01)'import: nstep, n, Fa_bcphidry = ',get_nstep(), i, x2l(index_x2l_Faxa_bcphidry,i)
-          write(iulog,F01)'import: nstep, n, Fa_fcphodry = ',get_nstep(), i, x2l(index_x2l_Faxa_bcphodry,i)
-          write(iulog,F01)'import: nstep, n, Fa_bcphiwet = ',get_nstep(), i, x2l(index_x2l_Faxa_bcphiwet,i)
-          write(iulog,F01)'import: nstep, n, Fa_ocphidry = ',get_nstep(), i, x2l(index_x2l_Faxa_ocphidry,i)
-          write(iulog,F01)'import: nstep, n, Fa_ocphodry = ',get_nstep(), i, x2l(index_x2l_Faxa_ocphodry,i)
-          write(iulog,F01)'import: nstep, n, Fa_ocphiwet = ',get_nstep(), i, x2l(index_x2l_Faxa_ocphiwet,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet1  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet1,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry1  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry1,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet2  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet2,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry2  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry2,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet3  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet3,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry3  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry3,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet4  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstwet4,i)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry4  = ',get_nstep(), i, x2l(index_x2l_Faxa_dstdry4,i)
-       end do
-    end if
-
     ! Note that the precipitation fluxes received  from the coupler
     ! are in units of kg/s/m^2. To convert these precipitation rates
     ! in units of mm/sec, one must divide by 1000 kg/m^3 and multiply
     ! by 1000 mm/m resulting in an overall factor of unity.
     ! Below the units are therefore given in mm/s.
+
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
@@ -155,7 +105,7 @@ contains
        ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
        ! change the sign to indicate addition of water to system.
 
-       atm2lnd_inst%forc_flood_grc(g)   = -x2l(index_x2l_Flrr_flood,i)
+       atm2lnd_inst%forc_flood_grc(g)   = -x2l(index_x2l_Flrr_flood,i)  
 
        atm2lnd_inst%volr_grc(g)   = x2l(index_x2l_Flrr_volr,i) * (ldomain%area(g) * 1.e6_r8)
        atm2lnd_inst%volrmch_grc(g)= x2l(index_x2l_Flrr_volrmch,i) * (ldomain%area(g) * 1.e6_r8)
@@ -221,7 +171,7 @@ contains
        forc_t = atm2lnd_inst%forc_t_not_downscaled_grc(g)
        forc_q = atm2lnd_inst%forc_q_not_downscaled_grc(g)
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-
+       
        atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
        atm2lnd_inst%forc_hgt_t_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of temperature [m]
        atm2lnd_inst%forc_hgt_q_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of humidity [m]
@@ -273,7 +223,7 @@ contains
           write(iulog,*) 'Which are NaNs = ', isnan(x2l(:,i))
           do k = 1, size(x2l(:,i))
              if ( isnan(x2l(k,i)) )then
-                call shr_string_listGetName( flds_x2l, k, fname )
+                call shr_string_listGetName( seq_flds_x2l_fields, k, fname )
                 write(iulog,*) trim(fname)
              end if
           end do
@@ -293,11 +243,11 @@ contains
        if (co2_type_idx == 1) then
           co2_ppmv_val = co2_ppmv_prog
        else if (co2_type_idx == 2) then
-          co2_ppmv_val = co2_ppmv_diag
+          co2_ppmv_val = co2_ppmv_diag 
        else
           co2_ppmv_val = co2_ppmv
        end if
-       atm2lnd_inst%forc_pco2_grc(g)   = co2_ppmv_val * 1.e-6_r8 * forc_pbot
+       atm2lnd_inst%forc_pco2_grc(g)   = co2_ppmv_val * 1.e-6_r8 * forc_pbot 
        if (use_c13) then
           atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
        end if
@@ -328,30 +278,36 @@ contains
 
   !===============================================================================
 
-  subroutine lnd_export( bounds, lnd2atm_inst, lnd2glc_inst, l2x, flds_l2x)
+  subroutine lnd_export( bounds, lnd2atm_inst, lnd2glc_inst, l2x)
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
-    ! Convert the data to be sent from the clm model to the coupler
-    !---------------------------------------------------------------------------
-    !
+    ! Convert the data to be sent from the clm model to the coupler 
+    ! 
     ! !USES:
+    use shr_kind_mod       , only : r8 => shr_kind_r8
+    use seq_flds_mod       , only : seq_flds_l2x_fields
+    use clm_varctl         , only : iulog
+    use clm_time_manager   , only : get_nstep, get_step_size  
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
+    use domainMod          , only : ldomain
+    use shr_string_mod     , only : shr_string_listGetName
+    use shr_infnan_mod     , only : isnan => shr_infnan_isnan
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in)    :: bounds       ! bounds
+    implicit none
+    type(bounds_type) , intent(in)    :: bounds  ! bounds
     type(lnd2atm_type), intent(inout) :: lnd2atm_inst ! clm land to atmosphere exchange data type
     type(lnd2glc_type), intent(inout) :: lnd2glc_inst ! clm land to atmosphere exchange data type
-    real(r8)          , intent(out)   :: l2x(:,:)     ! land to coupler export state on land grid
-    character(len=*)  , intent(in)    :: flds_l2x     ! colon separated list of export fields
+    real(r8)          , intent(out)   :: l2x(:,:)! land to coupler export state on land grid
     !
     ! !LOCAL VARIABLES:
     integer  :: g,i,k ! indices
     integer  :: ier   ! error status
     integer  :: nstep ! time step index
-    integer  :: dtime ! time step
+    integer  :: dtime ! time step   
     integer  :: num   ! counter
     character(len=32) :: fname       ! name of field that is NaN
     character(len=32), parameter :: sub = 'lnd_export'
@@ -379,13 +335,8 @@ contains
        l2x(index_l2x_Fall_lwup,i)   = -lnd2atm_inst%eflx_lwrad_out_grc(g)
        l2x(index_l2x_Fall_evap,i)   = -lnd2atm_inst%qflx_evap_tot_grc(g)
        l2x(index_l2x_Fall_swnet,i)  =  lnd2atm_inst%fsa_grc(g)
-
        if (index_l2x_Fall_fco2_lnd /= 0) then
-          l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%net_carbon_exchange_grc(g)
-       end if
-
-       if (index_l2x_Sl_lfrin /= 0 ) then
-          l2x(index_l2x_Sl_lfrin,i) = ldomain%frac(g)
+          l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%net_carbon_exchange_grc(g)  
        end if
 
        ! Additional fields for DUST, PROGSSLT, dry-deposition and VOC
@@ -420,20 +371,20 @@ contains
        end if
 
        if (index_l2x_Fall_methane /= 0) then
-          l2x(index_l2x_Fall_methane,i) = -lnd2atm_inst%flux_ch4_grc(g)
+          l2x(index_l2x_Fall_methane,i) = -lnd2atm_inst%flux_ch4_grc(g) 
        endif
 
-       ! sign convention is positive downward with
-       ! hierarchy of atm/glc/lnd/rof/ice/ocn.
+       ! sign convention is positive downward with 
+       ! hierarchy of atm/glc/lnd/rof/ice/ocn.  
        ! I.e. water sent from land to rof is positive
 
        !  surface runoff is the sum of qflx_over, qflx_h2osfc_surf
        l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) &
-                                    + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
+            + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
 
        !  subsurface runoff is the sum of qflx_drain and qflx_perched_drain
        l2x(index_l2x_Flrl_rofsub,i) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) &
-                                    + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
+            + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
 
        !  qgwl sent individually to coupler
        l2x(index_l2x_Flrl_rofgwl,i) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g)
@@ -460,7 +411,7 @@ contains
           write(iulog,*) 'Which are NaNs = ', isnan(l2x(:,i))
           do k = 1, size(l2x(:,i))
              if ( isnan(l2x(k,i)) )then
-                call shr_string_listGetName( flds_l2x, k, fname )
+                call shr_string_listGetName( seq_flds_l2x_fields, k, fname )
                 write(iulog,*) trim(fname)
              end if
           end do
@@ -469,45 +420,6 @@ contains
        end if
 
     end do
-
-    if (masterproc .and. debug > 0) then
-       do g = bounds%begg,bounds%endg
-          i = 1 + (g-bounds%begg)
-          write(iulog,F01)'export:  nstep, n, Sl_5       = ', get_nstep(), i,l2x(index_l2x_Sl_t,i)
-          write(iulog,F01)'export:  nstep, n, Sl_snowh   = ', get_nstep(), i,l2x(index_l2x_Sl_snowh,i)
-          write(iulog,F01)'export:  nstep, n, Sl_avsdr   = ', get_nstep(), i,l2x(index_l2x_Sl_avsdr,i)
-          write(iulog,F01)'export:  nstep, n, Sl_anidr   = ', get_nstep(), i,l2x(index_l2x_Sl_anidr,i)
-          write(iulog,F01)'export:  nstep, n, Sl_avsdf   = ', get_nstep(), i,l2x(index_l2x_Sl_avsdf,i)
-          write(iulog,F01)'export:  nstep, n, Sl_anidf   = ', get_nstep(), i,l2x(index_l2x_Sl_anidf,i)
-          write(iulog,F01)'export:  nstep, n, Sl_tref    = ', get_nstep(), i,l2x(index_l2x_Sl_tref,i)
-          write(iulog,F01)'export:  nstep, n, Sl_qref    = ', get_nstep(), i,l2x(index_l2x_Sl_qref,i)
-          write(iulog,F01)'export:  nstep, n, Sl_u10     = ', get_nstep(), i,l2x(index_l2x_Sl_u10,i)
-          write(iulog,F01)'export:  nstep, n, Fl_taux    = ', get_nstep(), i,l2x(index_l2x_Fall_taux,i)
-          write(iulog,F01)'export:  nstep, n, Fl_tauy    = ', get_nstep(), i,l2x(index_l2x_Fall_tauy,i)
-          write(iulog,F01)'export:  nstep, n, Fl_lat     = ', get_nstep(), i,l2x(index_l2x_Fall_lat,i)
-          write(iulog,F01)'export:  nstep, n, Fl_sen     = ', get_nstep(), i,l2x(index_l2x_Fall_sen,i)
-          write(iulog,F01)'export:  nstep, n, Fl_lwup    = ', get_nstep(), i,l2x(index_l2x_Fall_lwup,i)
-          write(iulog,F01)'export:  nstep, n, Fl_evap    = ', get_nstep(), i,l2x(index_l2x_Fall_evap,i)
-          write(iulog,F01)'export:  nstep, n, Fl_swnet   = ', get_nstep(), i,l2x(index_l2x_Fall_swnet,i)
-          write(iulog,F01)'export:  nstep, n, Sl_ram1    = ', get_nstep(), i,l2x(index_l2x_Sl_ram1,i)
-          write(iulog,F01)'export:  nstep, n, Sl_fv      = ', get_nstep(), i,l2x(index_l2x_Sl_fv,i)
-          if (index_l2x_Sl_soilw     /= 0 ) then
-             write(iulog,F01)'export:  nstep, n, Sl_soilw   = ', get_nstep(), i,l2x(index_l2x_Sl_soilw,i)
-          end if
-          if (index_l2x_Fall_flxdst1 /= 0) then
-             write(iulog,F01)'export:  nstep, n, Fl_flxdst1 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst1,i)
-             write(iulog,F01)'export:  nstep, n, Fl_flxdst2 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst2,i)
-             write(iulog,F01)'export:  nstep, n, Fl_flxdst3 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst3,i)
-             write(iulog,F01)'export:  nstep, n, Fl_flxdst4 = ', get_nstep(), i,l2x(index_l2x_Fall_flxdst4,i)
-          end if
-          write(iulog,F01)'export:  nstep, n, Sl_fv       = ', get_nstep(), i,l2x(index_l2x_Sl_fv,i)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofsur = ', get_nstep(), i,l2x(index_l2x_Flrl_rofsur,i)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofsub = ', get_nstep(), i,l2x(index_l2x_Flrl_rofsub,i)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofgwl = ', get_nstep(), i,l2x(index_l2x_Flrl_rofgwl,i)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofi   = ', get_nstep(), i,l2x(index_l2x_Flrl_rofi,i)
-          write(iulog,F01)'export:  nstep, n, Flrl_irrig  = ', get_nstep(), i,l2x(index_l2x_Flrl_irrig,i)
-       end do
-    end if
 
   end subroutine lnd_export
 

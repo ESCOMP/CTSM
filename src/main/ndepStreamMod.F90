@@ -264,7 +264,6 @@ contains
     ! Set domain data type for internal clm grid
     use clm_varcon  , only : re
     use domainMod   , only : ldomain
-    use shr_flds_mod, only : shr_flds_dom_coord, shr_flds_dom_other
     use mct_mod     , only : mct_ggrid, mct_gsMap_lsize, mct_gGrid_init
     use mct_mod     , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
     use mct_mod     , only : mct_gGrid_importRAttr
@@ -286,8 +285,8 @@ contains
     ! Note that in addition land carries around landfrac for the purposes of domain checking
     !
     lsize = mct_gsMap_lsize(gsmap_lnd_gdc2glo, mpicom)
-    call mct_gGrid_init( GGrid=dom_clm, CoordChars=trim(shr_flds_dom_coord), &
-                         OtherChars=trim(shr_flds_dom_other), lsize=lsize )
+    call mct_gGrid_init( GGrid=dom_clm, &
+         CoordChars='lat:lon:hgt', OtherChars='area:aream:mask:frac', lsize=lsize )
     !
     ! Allocate memory
     !

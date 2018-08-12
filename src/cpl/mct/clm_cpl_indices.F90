@@ -4,23 +4,24 @@ module clm_cpl_indices
   !    Module containing the indices for the fields passed between CLM and
   !    the driver. Includes the River Transport Model fields (RTM) and the
   !    fields needed by the land-ice component (sno).
-  !-----------------------------------------------------------------------
-
+  !
   ! !USES:
+  
   use shr_sys_mod,    only : shr_sys_abort
   implicit none
-  private                              ! By default make data private
 
+  SAVE
+  private                              ! By default make data private
+  !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: clm_cpl_indices_set        ! Set the coupler indices
-
+  !
   ! !PUBLIC DATA MEMBERS:
-  integer , public :: glc_nec     ! number of elevation classes for glacier_mec landunits
+  !
+  integer , public :: glc_nec     ! number of elevation classes for glacier_mec landunits 
                                   ! (from coupler) - must equal maxpatch_glcmec from namelist
 
   ! lnd -> drv (required)
-
-  integer, public ::index_l2x_Sl_lfrin        ! land fraction obtained from ldomain
 
   integer, public ::index_l2x_Flrl_rofsur     ! lnd->rtm input liquid surface fluxes
   integer, public ::index_l2x_Flrl_rofgwl     ! lnd->rtm input liquid gwl fluxes
@@ -47,11 +48,11 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_sen        ! sensible        heat flux
   integer, public ::index_l2x_Fall_lwup       ! upward longwave heat flux
   integer, public ::index_l2x_Fall_evap       ! evaporation     water flux
-  integer, public ::index_l2x_Fall_swnet      ! heat flux       shortwave net
+  integer, public ::index_l2x_Fall_swnet      ! heat flux       shortwave net       
   integer, public ::index_l2x_Fall_fco2_lnd   ! co2 flux **For testing set to 0
-  integer, public ::index_l2x_Fall_flxdst1    ! dust flux size bin 1
-  integer, public ::index_l2x_Fall_flxdst2    ! dust flux size bin 2
-  integer, public ::index_l2x_Fall_flxdst3    ! dust flux size bin 3
+  integer, public ::index_l2x_Fall_flxdst1    ! dust flux size bin 1    
+  integer, public ::index_l2x_Fall_flxdst2    ! dust flux size bin 2    
+  integer, public ::index_l2x_Fall_flxdst3    ! dust flux size bin 3    
   integer, public ::index_l2x_Fall_flxdst4    ! dust flux size bin 4
   integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
   integer, public ::index_l2x_Fall_flxfire    ! Fire fluxes
@@ -100,10 +101,9 @@ module clm_cpl_indices
   integer, public ::index_x2l_Faxa_dstwet4    ! flux: Size 4 dust -- wet deposition
   integer, public ::index_x2l_Faxa_dstdry1    ! flux: Size 1 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry2    ! flux: Size 2 dust -- dry deposition
-  
   integer, public ::index_x2l_Faxa_dstdry3    ! flux: Size 3 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry4    ! flux: Size 4 dust -- dry deposition
-
+ 
   integer, public ::index_x2l_Faxa_nhx        ! flux nhx from atm
   integer, public ::index_x2l_Faxa_noy        ! flux noy from atm
 
@@ -113,12 +113,12 @@ module clm_cpl_indices
 
   ! In the following, index 0 is bare land, other indices are glc elevation classes
   integer, allocatable, public ::index_x2l_Sg_ice_covered(:) ! Fraction of glacier from glc model
-  integer, allocatable, public ::index_x2l_Sg_topo(:)        ! Topo height from glc model
+  integer, allocatable, public ::index_x2l_Sg_topo(:)        ! Topo height from glc model 
   integer, allocatable, public ::index_x2l_Flgg_hflx(:)      ! Heat flux from glc model
-
+  
   integer, public ::index_x2l_Sg_icemask
   integer, public ::index_x2l_Sg_icemask_coupled_fluxes
-
+  
   integer, public :: nflds_x2l = 0
 
   !-----------------------------------------------------------------------
@@ -126,29 +126,33 @@ module clm_cpl_indices
 contains
 
   !-----------------------------------------------------------------------
-  subroutine clm_cpl_indices_set(flds_x2l, flds_l2x)
+  subroutine clm_cpl_indices_set( )
     !
-    ! !DESCRIPTION:
+    ! !DESCRIPTION: 
     ! Set the coupler indices needed by the land model coupler
     ! interface.
     !
     ! !USES:
-    use mct_mod           , only: mct_aVect, mct_aVect_init, mct_avect_indexra
-    use mct_mod           , only: mct_aVect_clean, mct_avect_nRattr
-    use seq_drydep_mod    , only: drydep_fields_token, lnd_drydep
-    use shr_megan_mod     , only: shr_megan_fields_token, shr_megan_mechcomps_n
-    use shr_fire_emis_mod , only: shr_fire_emis_fields_token, shr_fire_emis_ztop_token, shr_fire_emis_mechcomps_n
-    use clm_varctl        , only: ndep_from_cpl
-    use glc_elevclass_mod , only: glc_get_num_elevation_classes, glc_elevclass_as_string
+    use seq_flds_mod   , only: seq_flds_x2l_fields, seq_flds_l2x_fields
+    use mct_mod        , only: mct_aVect, mct_aVect_init, mct_avect_indexra
+    use mct_mod        , only: mct_aVect_clean, mct_avect_nRattr
+    use seq_drydep_mod , only: drydep_fields_token, lnd_drydep
+    use shr_megan_mod  , only: shr_megan_fields_token, shr_megan_mechcomps_n
+    use shr_fire_emis_mod,only: shr_fire_emis_fields_token, shr_fire_emis_ztop_token, shr_fire_emis_mechcomps_n
+    use clm_varctl     , only:  ndep_from_cpl
+    use glc_elevclass_mod, only: glc_get_num_elevation_classes, glc_elevclass_as_string
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: flds_x2l
-    character(len=*), intent(in) :: flds_l2x
+    implicit none
+    !
+    ! !REVISION HISTORY:
+    ! Author: Mariana Vertenstein
+    ! 01/2011, Erik Kluzek:         Added protex headers
     !
     ! !LOCAL VARIABLES:
     type(mct_aVect)   :: l2x      ! temporary, land to coupler
     type(mct_aVect)   :: x2l      ! temporary, coupler to land
-    integer           :: num
+    integer           :: num 
     character(len=:), allocatable :: nec_str  ! string version of glc elev. class number
     character(len=64) :: name
     character(len=32) :: subname = 'clm_cpl_indices_set'  ! subroutine name
@@ -157,17 +161,15 @@ contains
     ! Determine attribute vector indices
 
     ! create temporary attribute vectors
-    call mct_aVect_init(x2l, rList=flds_x2l, lsize=1)
+    call mct_aVect_init(x2l, rList=seq_flds_x2l_fields, lsize=1)
     nflds_x2l = mct_avect_nRattr(x2l)
 
-    call mct_aVect_init(l2x, rList=flds_l2x, lsize=1)
+    call mct_aVect_init(l2x, rList=seq_flds_l2x_fields, lsize=1)
     nflds_l2x = mct_avect_nRattr(l2x)
 
     !-------------------------------------------------------------
-    ! clm -> drv
+    ! clm -> drv 
     !-------------------------------------------------------------
-
-    index_l2x_Sl_lfrin      = mct_avect_indexra(l2x,'Sl_lfrin', perrwith='quiet')
 
     index_l2x_Flrl_rofsur   = mct_avect_indexra(l2x,'Flrl_rofsur')
     index_l2x_Flrl_rofgwl   = mct_avect_indexra(l2x,'Flrl_rofgwl')
