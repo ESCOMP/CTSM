@@ -28,7 +28,7 @@ module clm_initializeMod
   use clm_instMod       
   ! 
   implicit none
-  public   ! By default everything is public 
+  private  ! By default everything is private 
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization

@@ -17,7 +17,7 @@ module surfrdMod
   use clm_varctl      , only : use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
-  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid
+  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
   use pio
   use spmdMod                         
   !
@@ -29,6 +29,9 @@ module surfrdMod
   public :: surfrd_get_globmask  ! Reads global land mask (needed for setting domain decomp)
   public :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
   public :: surfrd_get_data      ! Read surface dataset and determine subgrid weights
+
+  ! !PUBLIC DATA:
+  integer, public  :: numcft     ! length of crop dimension on the file
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: surfrd_special             ! Read the special landunits
@@ -589,13 +592,13 @@ contains
   end subroutine surfrd_special
 
 !-----------------------------------------------------------------------
-  subroutine surfrd_cftformat( ncid, begg, endg, wt_cft, cftsize, natpft_size )
+  subroutine surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cftsize, natpft_size )
     !
     ! !DESCRIPTION:
     !     Handle generic crop types for file format where they are on their own
     !     crop landunit and read in as Crop Function Types.
     ! !USES:
-    use clm_instur      , only : fert_cft, wt_nat_patch
+    use clm_instur      , only : wt_nat_patch
     use clm_varpar      , only : cft_size, cft_lb, natpft_lb
     ! !ARGUMENTS:
     implicit none
@@ -603,19 +606,23 @@ contains
     integer          , intent(in)    :: begg, endg
     integer          , intent(in)    :: cftsize      ! CFT size
     real(r8), pointer, intent(inout) :: wt_cft(:,:)  ! CFT weights
+    real(r8), pointer, intent(inout) :: fert_cft(:,:)! Fertilizer
     integer          , intent(in)    :: natpft_size  ! natural PFT size
     !
     ! !LOCAL VARIABLES:
-    logical  :: readvar                        ! is variable on dataset
-    real(r8),pointer :: array2D(:,:)              ! local array
+    logical  :: readvar                              ! is variable on dataset
+    real(r8),pointer :: array2D(:,:)                 ! local array
     character(len=32) :: subname = 'surfrd_cftformat'! subroutine name
 !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((lbound(wt_cft) == (/begg, cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_cft, dim=1) == (/endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_cft, dim=2) >= (/cftsize+1-cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_nat_patch) >= (/endg,natpft_size-1+natpft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((lbound(wt_cft)          == (/begg, cft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_cft, dim=1)   == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_cft, dim=2)   >= (/cftsize+1-cft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((lbound(fert_cft)        == (/begg, cft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fert_cft, dim=1) == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), errMsg(sourcefile, __LINE__))
 
-    call check_dim(ncid, 'cft', cftsize)
+    call check_dim(ncid, 'cft',    cftsize)
     call check_dim(ncid, 'natpft', natpft_size)
 
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
@@ -702,7 +709,7 @@ contains
     !
     ! !USES:
     use clm_varctl      , only : create_crop_landunit, use_fates
-    use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb
+    use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
     use surfrdUtilsMod  , only : convert_cft_to_pft
@@ -719,14 +726,13 @@ contains
     logical  :: readvar                              ! is variable on dataset
     logical  :: cft_dim_exists                       ! does the dimension 'cft' exist on the dataset?
     real(r8),pointer :: arrayl(:)                    ! local array
-    real(r8),pointer :: array2D(:,:)                 ! local 2D array
+    real(r8),pointer :: array2DCFT(:,:)              ! local 2D array for CFTs
+    real(r8),pointer :: array2DFERT(:,:)             ! local 2D array for fertilizer
     character(len=32) :: subname = 'surfrd_veg_all'  ! subroutine name
 !-----------------------------------------------------------------------
     !
     ! Read in variables that are handled the same for all formats
     !
-    ! Check dimension size
-    call check_dim(ncid, 'lsmpft', numpft+1)
 
     ! This temporary array is needed because ncd_io expects a pointer, so we can't
     ! directly pass wt_lunit(begg:endg,istsoil)
@@ -746,24 +752,55 @@ contains
 
     ! Check the file format for CFT's and handle accordingly
     call ncd_inqdid(ncid, 'cft', dimid, cft_dim_exists)
-    if ( cft_dim_exists .and. create_crop_landunit )then
-       call surfrd_cftformat( ncid, begg, endg, wt_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
-    else if ( (.not. cft_dim_exists) .and. (.not. create_crop_landunit) )then
-       if ( masterproc ) write(iulog,*) "WARNING: The PFT format is an unsupported format that will be removed in th future!"
-       call surfrd_pftformat( begg, endg, ncid )                                 ! Format where crop is part of the natural veg. landunit
-    else if ( cft_dim_exists .and. .not. create_crop_landunit )then
-       if ( masterproc ) write(iulog,*) "WARNING: New CFT-based format surface datasets should be run with create_crop_landunit=T"
-       if ( use_fates ) then
-          if ( masterproc ) write(iulog,*) "WARNING: When fates is on we allow new CFT based surface datasets ", &
-                                           "to be used with create_crop_land FALSE"
-          cftsize = 2
-          allocate(array2D(begg:endg,cft_lb:cftsize-1+cft_lb))
-          call surfrd_cftformat( ncid, begg, endg, array2D, cftsize, natpft_size-cftsize ) ! Read crops in as CFT's
-          call convert_cft_to_pft( begg, endg, cftsize, array2D )                          ! Convert from CFT to natural veg. landunit
-          deallocate(array2D)
+    if ( cft_dim_exists ) then
+       call ncd_inqdlen(ncid, dimid, numcft, 'cft')
+       ! Full crop on file and in CLM
+       if ( create_crop_landunit .and. cft_size > 2 )then
+          call check_dim(ncid, 'lsmpft', numpft+1) ! Check dimension size
+          call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
+       ! Generic crop in file and generic crop in model
+       else if ( create_crop_landunit .and. numcft == 2 .and. cft_size == 2 )then
+          call check_dim(ncid, 'lsmpft', numpft+1) ! Check dimension size
+          call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
+       ! Full crop in file, but model is only with generic crop
+       else if ( create_crop_landunit .and. cft_size == 2 .and. numcft > 2 )then
+          call check_dim(ncid, 'lsmpft', numpft+numcft-2+1) ! Check dimension size
+          cftsize = numcft
+          allocate(array2DCFT (begg:endg,cft_lb:cftsize-1+cft_lb))
+          allocate(array2DFERT(begg:endg,cft_lb:cftsize-1+cft_lb))
+          call surfrd_cftformat( ncid, begg, endg, array2DCFT, array2DFERT, cftsize, natpft_size )
+          call collapse_crop_types(array2DCFT(begg:endg, :), array2DFERT(begg:endg, :), cftsize, begg, endg, &
+                                   verbose=.true., sumto=100._r8)
+          wt_cft  (begg:,cft_lb:) = array2DCFT (begg:,cft_lb:cft_ub)
+          fert_cft(begg:,cft_lb:) = array2DFERT(begg:,cft_lb:cft_ub)
+          deallocate(array2DCFT)
+          deallocate(array2DFERT)
+       else if ( .not. create_crop_landunit )then
+          call check_dim(ncid, 'lsmpft', numpft+1) ! Check dimension size
+          if ( masterproc ) write(iulog,*) "WARNING: New CFT-based format surface datasets should be run with ", &
+                                           "create_crop_landunit=T"
+          if ( use_fates ) then
+             if ( masterproc ) write(iulog,*) "WARNING: When fates is on we allow new CFT based surface datasets ", &
+                                              "to be used with create_crop_land FALSE"
+             cftsize = 2
+             allocate(array2DCFT (begg:endg,cft_lb:cftsize-1+cft_lb))
+             allocate(array2DFERT(begg:endg,cft_lb:cftsize-1+cft_lb))
+             call surfrd_cftformat( ncid, begg, endg, array2DCFT, array2DFERT, cftsize, natpft_size-cftsize ) ! Read crops in as CFT's
+             call convert_cft_to_pft( begg, endg, cftsize, array2DCFT )                          ! Convert from CFT to natural veg. landunit
+             fert_cft(begg:,cft_lb:) = 0.0_r8
+          else
+             call endrun( msg=' ERROR: New format surface datasets require create_crop_landunit TRUE'//errMsg(sourcefile, __LINE__))
+          end if
        else
-          call endrun( msg=' ERROR: New format surface datasets require create_crop_landunit TRUE'//errMsg(sourcefile, __LINE__))
+          call endrun( msg=' ERROR: Problem figuring out how to handle new format input fsurdat file'//errMsg(sourcefile, __LINE__))
        end if
+    else if ( (.not. cft_dim_exists) .and. (.not. create_crop_landunit) )then
+       if ( masterproc ) write(iulog,*) "WARNING: The PFT format is an unsupported format that will be removed in the future!"
+       ! Check dimension size
+       call check_dim(ncid, 'lsmpft', numpft+1)
+       call surfrd_pftformat( begg, endg, ncid )                                 ! Format where crop is part of the natural veg. landunit
+    else 
+       call endrun( msg=' ERROR: Problem figuring out format of input fsurdat file'//errMsg(sourcefile, __LINE__))
     end if
 
     ! Do some checking
@@ -786,7 +823,7 @@ contains
 
     ! Collapse crop landunits down when prognostic crops are on
     if (use_crop) then
-       call collapse_crop_types(wt_cft(begg:endg, :), fert_cft(begg:endg, :), begg, endg, verbose=.true.)
+       call collapse_crop_types(wt_cft(begg:endg, :), fert_cft(begg:endg, :), cft_size, begg, endg, verbose=.true.)
     end if
 
   end subroutine surfrd_veg_all

@@ -31,7 +31,7 @@ module surfrdUtilsMod
 contains
   
   !-----------------------------------------------------------------------
-  subroutine check_sums_equal_1(arr, lb, name, caller, ier)
+  subroutine check_sums_equal_1(arr, lb, name, caller, ier, sumto)
     !
     ! !DESCRIPTION:
     ! Confirm that sum(arr(n,:)) == 1 for all n. If this isn't true for any n, abort with a message.
@@ -42,19 +42,23 @@ contains
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
     integer, optional, intent(out):: ier         ! Return an error code rather than abort
+    real(r8), optional, intent(out):: sumto      ! The value the array should sum to (1.0 if not provided)
     !
     ! !LOCAL VARIABLES:
     logical :: found
     integer :: nl
     integer :: nindx
     real(r8), parameter :: eps = 1.e-13_r8
+    real(r8) :: TotalSum
     !-----------------------------------------------------------------------
 
+    TotalSum = 1._r8
+    if ( present(sumto) ) TotalSum = sumto
     if( present(ier) ) ier = 0
     found = .false.
 
     do nl = lbound(arr, 1), ubound(arr, 1)
-       if (abs(sum(arr(nl,:)) - 1._r8) > eps) then
+       if (abs(sum(arr(nl,:)) - TotalSum) > eps) then
           found = .true.
           nindx = nl
           exit
@@ -62,7 +66,7 @@ contains
     end do
 
     if (found) then
-       write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not 1.0 at nl=', nindx
+       write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not ', TotalSum, ' at nl=', nindx
        write(iulog,*) 'sum is: ', sum(arr(nindx,:))
        if( present(ier) ) then
           ier = -10
@@ -140,7 +144,7 @@ contains
   end subroutine convert_cft_to_pft
 
   !-----------------------------------------------------------------------
-  subroutine collapse_crop_types(wt_cft, fert_cft, begg, endg, verbose)
+  subroutine collapse_crop_types(wt_cft, fert_cft, cftsize, begg, endg, verbose, sumto)
     !
     ! !DESCRIPTION:
     ! Collapse unused crop types into types used in this run.
@@ -148,8 +152,8 @@ contains
     ! Should only be called if using prognostic crops - otherwise, wt_cft is meaningless
     !
     ! !USES:
-    use clm_varctl , only : irrigate
-    use clm_varpar , only : cft_lb, cft_ub, cft_size
+    use clm_varctl , only : irrigate, use_crop
+    use clm_varpar , only : cft_lb, cft_ub
     use pftconMod  , only : nc3crop, nc3irrig, npcropmax, pftcon
     !
     ! !ARGUMENTS:
@@ -158,11 +162,13 @@ contains
     ! available yet when this is called
     integer, intent(in) :: begg     ! Beginning grid cell index
     integer, intent(in) :: endg     ! Ending grid cell index
+    integer, intent(in) :: cftsize  ! CFT size
 
-    ! Weight and fertilizer of each CFT in each grid cell; dimensioned [g, cft_lb:cft_ub]
+    ! Weight and fertilizer of each CFT in each grid cell; dimensioned [g, cft_lb:cft_lb_cftsize-1]
     ! This array is modified in-place
     real(r8), intent(inout) :: wt_cft(begg:, cft_lb:)
     real(r8), intent(inout) :: fert_cft(begg:, cft_lb:)
+    real(r8), intent(in), optional :: sumto                   ! What weights should sum to for one grid-cell
 
     logical, intent(in) :: verbose  ! If true, print some extra information
     !
@@ -172,16 +178,21 @@ contains
     real(r8) :: wt_cft_to
     real(r8) :: wt_cft_from
     real(r8) :: wt_cft_merge
+    real(r8) :: TotalSum       ! What the total is expected to sum to
 
     character(len=*), parameter :: subname = 'collapse_crop_types'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cft_ub/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
 
-    if (cft_size <= 0) then
-       call endrun(msg = subname//' can only be called if cft_size > 0' // &
+    if (cftsize <= 0) then
+       call endrun(msg = subname//' can only be called if cftsize > 0' // &
             errMsg(sourcefile, __LINE__))
     end if
+
+    TotalSum = 1.0_r8
+    if ( present(sumto) ) TotalSum = sumto
 
     ! ------------------------------------------------------------------------
     ! If not using irrigation, merge irrigated CFTs into rainfed CFTs
@@ -205,17 +216,19 @@ contains
           wt_cft(g, nc3irrig:npcropmax:2)  = 0._r8
        end do
 
-       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': irrigation')
+       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': irrigation', sumto=TotalSum)
     end if
 
     ! ------------------------------------------------------------------------
     ! Merge CFTs into the list of crops that CLM knows how to model
     ! ------------------------------------------------------------------------
 
-    if (verbose .and. masterproc) then
+    if (verbose .and. masterproc .and. use_crop) then
        write(iulog, *) trim(subname) // ' merging wheat, barley, and rye into temperate cereals'
        write(iulog, *) trim(subname) // ' clm knows how to model corn, temperate cereals, and soybean'
        write(iulog, *) trim(subname) // ' all other crops are lumped with the generic crop pft'
+    else if (verbose .and. masterproc .and. .not. use_crop) then
+       write(iulog, *) trim(subname) // ' merging prognostic crops into C3 generic crops'
     end if
 
     do g = begg, endg
@@ -235,7 +248,17 @@ contains
 
     end do
 
-    call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': mergetoclmpft')
+    call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': mergetoclmpft', sumto=TotalSum)
+    if ( .not. use_crop )then
+       if ( any(wt_cft(begg:endg,cft_ub+1:) /= 0.0_r8) )then
+          call endrun(msg = subname//' without prognostic crops (use_crop=F) and weight of CFT of prognostic crop'//&
+               ' is not zero as expected' // errMsg(sourcefile, __LINE__))
+       end if
+       if ( any(fert_cft(begg:endg,cft_ub+1:) /= 0.0_r8) )then
+          call endrun(msg = subname//' without prognostic crops (use_crop=F) and fertilizer of prognostic crop'// &
+               ' is not zero as expected' // errMsg(sourcefile, __LINE__))
+       end if
+    end if
 
   end subroutine collapse_crop_types
 

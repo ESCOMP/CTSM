@@ -124,9 +124,11 @@ contains
     ! !USES:
     use CropType          , only : crop_type
     use landunit_varcon   , only : istcrop
-    use clm_varpar        , only : cft_lb, cft_ub
+    use clm_varpar        , only : cft_size, cft_lb, cft_ub
+    use surfrdMod         , only : numcft
     use surfrdUtilsMod    , only : collapse_crop_types
     use subgridWeightsMod , only : set_landunit_weight
+    implicit none
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
@@ -164,7 +166,9 @@ contains
     allocate(fertcft_cur(bounds%begg:bounds%endg, cft_lb:cft_ub))
     call fertcft%get_current_data(fertcft_cur)
 
-    call collapse_crop_types(wtcft_cur, fertcft_cur, bounds%begg, bounds%endg, verbose = .false.)
+    if ( cft_size > 2 )then
+       call collapse_crop_types(wtcft_cur, fertcft_cur, cft_size, bounds%begg, bounds%endg, verbose = .false.)
+    end if
 
     allocate(col_set(bounds%begc:bounds%endc))
     col_set(:) = .false.

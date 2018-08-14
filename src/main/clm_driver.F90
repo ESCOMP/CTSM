@@ -71,13 +71,13 @@ module clm_driver
   use DaylengthMod           , only : UpdateDaylength
   use perf_mod
   !
-  use clm_initializeMod      , only : nutrient_competition_method
+  use clm_instMod            , only : nutrient_competition_method
   use GridcellType           , only : grc                
   use LandunitType           , only : lun                
   use ColumnType             , only : col                
   use PatchType              , only : patch                
   use clm_instMod
-  use clm_initializeMod      , only : soil_water_retention_curve
+  use clm_instMod            , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   !
   ! !PUBLIC TYPES:
