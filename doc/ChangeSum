@@ -3,6 +3,7 @@ Tag                   Who      Date  Summary
 release-clm5.0.08     erik 09/28/2018 Updated CMIP6 ndep file for historical transient Bgc cases, 1850_control same as before
 release-clm5.0.07     erik 08/08/2018 Bring in some simple fixes from ctsm1.0.dev006 and avoid glacier adjustment at startup from ctsm1.0.dev007
 release-clm5.0.06     erik 08/07/2018 Bring in some simple fixes from ctsm1.0.dev006 and avoid glacier adjustment at startup from ctsm1.0.dev007
+  ctsm1.0.dev008     erik 08/14/2018 Update 1850 ndep file and last year for streams for Historical transient cases (same as release-clm5.0.05)
 release-clm5.0.05     erik 08/05/2018 Update 1850 ndep file, and last year for transient streams
   ctsm1.0.dev007    sacks 08/05/2018 Avoid glacier dynamic landunit adjustments in first time step
   ctsm1.0.dev006    sacks 08/04/2018 Minor bug fixes, cleanup, documentation and enhancements
