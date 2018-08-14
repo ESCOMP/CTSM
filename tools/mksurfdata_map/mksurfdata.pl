@@ -62,6 +62,7 @@ my %opts = (
                merge_gis=>undef,
                inlandwet=>undef,
                help=>0,
+               fast=>0,
                no_surfdata=>0,
                pft_override=>undef,
                pft_frc=>undef,
@@ -115,6 +116,7 @@ OPTIONS
      -dynpft "filename"            Dynamic PFT/harvesting file to use 
                                    (rather than create it on the fly) 
                                    (must be consistent with first year)
+     -fast                         Toggle fast mode which doesn't use the large mapping files
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
      -merge_gis                    If you want to use the glacier dataset that merges in
                                    the Greenland Ice Sheet data that CISM uses (typically
@@ -423,6 +425,7 @@ EOF
         "hirespft"     => \$opts{'hirespft'},
         "l|dinlc=s"    => \$opts{'csmdata'},
         "d|debug"      => \$opts{'debug'},
+        "fast"         => \$opts{'fast'},
         "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
         "exedir=s"     => \$opts{'exedir'},
