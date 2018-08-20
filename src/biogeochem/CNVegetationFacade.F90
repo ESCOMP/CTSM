@@ -63,8 +63,9 @@ module CNVegetationFacade
   use CanopyStateType                 , only : canopystate_type
   use PhotosynthesisMod               , only : photosyns_type
   use atm2lndType                     , only : atm2lnd_type
-  use WaterstateType                  , only : waterstate_type
-  use WaterfluxType                   , only : waterflux_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
+  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type 
   use CropType                        , only : crop_type
@@ -72,7 +73,7 @@ module CNVegetationFacade
   use CNDVType                        , only : dgvs_type
   use CNDVDriverMod                   , only : CNDVDriver, CNDVHIST
   use EnergyFluxType                  , only : energyflux_type
-  use SoilHydrologyType               , only : soilhydrology_type
+  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use FrictionVelocityMod             , only : frictionvel_type
   use SoilBiogeochemStateType         , only : soilBiogeochem_state_type
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
@@ -782,9 +783,9 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_state_inst,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-       atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
+       atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-       photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+       photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
        nutrient_competition_method, fireemis_inst)
     !
     ! !DESCRIPTION:
@@ -815,15 +816,16 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
-    type(waterflux_type)                    , intent(inout) :: waterflux_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)                    , intent(inout) :: waterfluxbulk_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
     type(crop_type)                         , intent(inout) :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
-    type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
+    type(saturated_excess_runoff_type)      , intent(in)    :: saturated_excess_runoff_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
@@ -851,9 +853,9 @@ contains
          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_state_inst,                                               &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-         atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
+         atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
          canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-         this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+         this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
          nutrient_competition_method, this%cnfire_method)
 
     ! fire carbon emissions 
@@ -870,7 +872,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine EcosystemDynamicsPostDrainage(this, bounds, num_allc, filter_allc, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, doalb, crop_inst, &
-       waterstate_inst, waterflux_inst, frictionvel_inst, canopystate_inst, &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, frictionvel_inst, canopystate_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -894,8 +896,9 @@ contains
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(crop_type)                         , intent(in)    :: crop_inst
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
-    type(waterflux_type)                    , intent(inout) :: waterflux_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)                    , intent(inout) :: waterfluxbulk_inst
     type(frictionvel_type)                  , intent(in)    :: frictionvel_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
@@ -918,7 +921,7 @@ contains
     call CNDriverLeaching(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
-         waterstate_inst, waterflux_inst, &
+         waterstatebulk_inst, waterfluxbulk_inst, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
 
@@ -969,7 +972,7 @@ contains
 
     if (doalb) then   
        call CNVegStructUpdate(num_soilp, filter_soilp, &
-            waterstate_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
+            waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
             crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
     end if
 
@@ -985,6 +988,7 @@ contains
     ! Should only be called if use_cn is true
     !
     ! !USES:
+    use clm_time_manager   , only : get_nstep_since_startup_or_lastDA_restart_or_pause
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this
@@ -995,15 +999,15 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer              :: nstep                   ! time step number
+    integer              :: DA_nstep                   ! time step number
 
     character(len=*), parameter :: subname = 'BalanceCheck'
     !-----------------------------------------------------------------------
 
-    nstep = get_nstep()
-    if (nstep < 2 )then
+    DA_nstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
+    if (DA_nstep < 2 )then
        if (masterproc) then
-          write(iulog,*) '--WARNING-- skipping CN balance check for first timestep'
+          write(iulog,*) '--WARNING-- skipping CN balance check for first timesteps after startup or data assimilation'
        end if
     else
 

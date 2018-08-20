@@ -12,6 +12,7 @@ list(APPEND clm_sources "${clm_genf90_sources}")
 list(APPEND clm_sources
   GetGlobalValuesMod_stub.F90
   histFileMod_stub.F90
+  ncdio_dim.F90
   ncdio_pio_fake.F90
   ncdio_var.F90
   )

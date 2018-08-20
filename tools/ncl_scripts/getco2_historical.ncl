@@ -7,8 +7,6 @@
 ;
 ;  Erik Kluzek
 ;  Mar/03/2010
-;  $Id$
-;  $HeadURL;
 ;
 begin
   ; ===========================================================================================================
@@ -28,7 +26,7 @@ begin
    if ( ismissing(clmroot) )then
       querynml = "../../"+querynml;
    else
-      querynml = clmroot+"/components/clm/"+querynml;
+      querynml = clmroot+"/"+querynml;
    end if
    histrcp = -999.9
    if ( ismissing(rcp) )then
@@ -109,8 +107,7 @@ begin
    fileattdef ( nco, ncg );
    nco@history  = ldate+": Convert by getco2_historical.ncl";
    nco@source   = "Convert from:"+ghgfile;
-   nco@Version  = "$HeadURL$";
-   nco@Revision = "$Id$";
+   nco@Version  = systemfunc( "git describe" );
    ;
    ; Set static variables
    ;

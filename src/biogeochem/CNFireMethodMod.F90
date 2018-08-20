@@ -96,7 +96,7 @@ module CNFireMethodMod
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea_interface (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       atm2lnd_inst, energyflux_inst, soilhydrology_inst, waterstate_inst, &
+       atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
@@ -107,8 +107,8 @@ module CNFireMethodMod
     use decompMod                          , only : bounds_type
     use atm2lndType                        , only : atm2lnd_type
     use EnergyFluxType                     , only : energyflux_type
-    use SoilHydrologyType                  , only : soilhydrology_type
-    use WaterstateType                     , only : waterstate_type
+    use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
+    use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
     use CNVegStateType                     , only : cnveg_state_type
     use CNVegCarbonStateType               , only : cnveg_carbonstate_type
     import :: cnfire_method_type
@@ -122,8 +122,8 @@ module CNFireMethodMod
     integer                               , intent(in)    :: filter_soilp(:) !  filter for soil patches
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
-    type(soilhydrology_type)              , intent(in)    :: soilhydrology_inst
-    type(waterstate_type)                 , intent(in)    :: waterstate_inst
+    type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
+    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)

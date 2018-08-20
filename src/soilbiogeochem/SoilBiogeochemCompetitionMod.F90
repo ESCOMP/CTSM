@@ -25,8 +25,8 @@ module SoilBiogeochemCompetitionMod
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
   !use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use WaterStateType                  , only : waterstate_type
-  use WaterfluxType                   , only : waterflux_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
@@ -165,8 +165,8 @@ contains
   end subroutine SoilBiogeochemCompetitionInit
 
   !-----------------------------------------------------------------------
-   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstate_inst, &
-                                         waterflux_inst, temperature_inst,soilstate_inst,                          &
+   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
+                                         waterfluxbulk_inst, temperature_inst,soilstate_inst,                          &
                                          cnveg_state_inst,cnveg_carbonstate_inst,                                  &
                                          cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
                                          soilbiogeochem_carbonflux_inst,                                           &              
@@ -188,8 +188,8 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)  ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)  ! filter for soil patches
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
-    type(waterflux_type)                    , intent(in)    :: waterflux_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
+    type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
     type(cnveg_state_type)                  , intent(inout) :: cnveg_state_inst
@@ -366,8 +366,8 @@ contains
 
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
-                      waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
+            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst, &
+                      waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
                       soilbiogeochem_nitrogenstate_inst)
@@ -554,13 +554,14 @@ contains
                   fpi_nh4_vr(c,j) = 1.0_r8
                   actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j)
                   !RF added new term. 
+
+                  f_nit_vr(c,j) = pot_f_nit_vr(c,j)
+                  
                   if ( .not. local_use_fun ) then
                      smin_nh4_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
                   else
-                     smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j)
-                  
+                     smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
                   end if
-                  f_nit_vr(c,j) = pot_f_nit_vr(c,j)
 
                else
 
@@ -572,6 +573,9 @@ contains
                   ! RF microbes compete based on the hypothesised plant demand. 
                      actual_immob_nh4_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(potential_immob_vr(c,j)* &
                           compet_decomp_nh4 / sum_nh4_demand_scaled(c,j)), potential_immob_vr(c,j))
+
+                     f_nit_vr(c,j) =  min((smin_nh4_vr(c,j)/dt)*(pot_f_nit_vr(c,j)*compet_nit / &
+                          sum_nh4_demand_scaled(c,j)), pot_f_nit_vr(c,j))
                                                  
                      if ( .not. local_use_fun ) then
                          smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(plant_ndemand(c)* &
@@ -579,11 +583,9 @@ contains
                           
                      else
                         ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
-                        smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j)
+                        smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
                      end if
                     
-                     f_nit_vr(c,j) =  min((smin_nh4_vr(c,j)/dt)*(pot_f_nit_vr(c,j)*compet_nit / &
-                          sum_nh4_demand_scaled(c,j)), pot_f_nit_vr(c,j))
                   else
                      actual_immob_nh4_vr(c,j) = 0.0_r8
                      smin_nh4_to_plant_vr(c,j) = 0.0_r8
@@ -622,6 +624,9 @@ contains
                   nlimit_no3(c,j) = 0
                   fpi_no3_vr(c,j) = 1.0_r8 -  fpi_nh4_vr(c,j)
                   actual_immob_no3_vr(c,j) = (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))
+
+                  f_denit_vr(c,j) = pot_f_denit_vr(c,j)
+
                   if(.not.local_use_fun)then
                      smin_no3_to_plant_vr(c,j) = (plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))
                   else
@@ -631,12 +636,9 @@ contains
                      smin_no3_to_plant_vr(c,j) = plant_ndemand(c)*nuptake_prof(c,j)
                      ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
                      if ( local_use_fun ) then
-                        smin_no3_to_plant_vr(c,j) = smin_no3_vr(c,j)/dt - actual_immob_no3_vr(c,j)
+                        smin_no3_to_plant_vr(c,j) = smin_no3_vr(c,j)/dt - actual_immob_no3_vr(c,j) - f_denit_vr(c,j)
                      end if
                   endif
-                  
-
-                  f_denit_vr(c,j) = pot_f_denit_vr(c,j)
                 
                else 
 
@@ -661,15 +663,16 @@ contains
                         actual_immob_no3_vr(c,j) = min((smin_no3_vr(c,j)/dt)*((potential_immob_vr(c,j)- &
                         actual_immob_nh4_vr(c,j))*compet_decomp_no3 / sum_no3_demand_scaled(c,j)), &
                                   potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))
+
+                        f_denit_vr(c,j) = min((smin_no3_vr(c,j)/dt)*(pot_f_denit_vr(c,j)*compet_denit / &
+                        sum_no3_demand_scaled(c,j)), pot_f_denit_vr(c,j))
         
                         smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j)/dt)*((plant_ndemand(c)* &
                                   nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))*compet_plant_no3 / sum_no3_demand_scaled(c,j))
                                   
                         ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
-                        smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j) / dt) - actual_immob_no3_vr(c,j)
+                        smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j) / dt) - actual_immob_no3_vr(c,j) - f_denit_vr(c,j)
                         
-                        f_denit_vr(c,j) = min((smin_no3_vr(c,j)/dt)*(pot_f_denit_vr(c,j)*compet_denit / &
-                        sum_no3_demand_scaled(c,j)), pot_f_denit_vr(c,j))
   
                      end if ! use_fun
 
@@ -731,8 +734,8 @@ contains
 
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
-                      waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
+            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst,&
+                      waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
                       soilbiogeochem_nitrogenstate_inst)

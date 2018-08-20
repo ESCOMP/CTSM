@@ -1,4 +1,4 @@
-components/clm/tools/mkmapdata/README		Feb/28/2014
+$CTSMROOT/tools/mkmapdata/README		Jun/08/2018
 
 The routines in this directory create a mapping dataset from
 SCRIP grid files to map from one grid to another. These mapping files
@@ -12,7 +12,7 @@ two versions, one with mpiuni and one with mpi. Both versions
 also need to be built with NetCDF rather than the default
 IO version.
 
-Currently uses: ESMF6.2.0
+Currently uses: ESMF7.0.0
 
 Do the following for help with the different options to the script...
 
@@ -43,9 +43,8 @@ and --src_type UGRID.
 
    http://www.earthsystemmodeling.org/
 
-You may need more than one version to do everything above. On yellowstone
-we use ESMF6.1.1 for the normal operations and ESMF6.2.0-bs18 for
-the operations that need --netcdf4 and/or -src_type UGRID.
+You may need more than one version to do everything above. On cheyenne
+we use ESMF7.0.0.
 
 The version of NetCDF used with ESMF needs to be version 4.1 or higher
 and compiled with the NetCDF4 file format enabled (with HDF5 compression).
@@ -76,11 +75,13 @@ That will enable the --netcdf4 and --64bit_offset options to be used.
 
 Important files:
 
-  regridbatch.sh ------- Script to run mkmapdata.sh for many resolutions
+  regridbatch.sh ------- Script to run mkmapdata.sh for many resolutions on cheyenne
+  regridgeyser.sh ------ Script to run mkmapdata.sh for many resolutions on geyser
   mvNimport.sh --------- Script to copy and import mapping files in for many resolutions
   mkmapdata.sh --------- Script to create mapping datasets for a given resolution
 
   mknoocnmap.pl -------- Script to create unity mapping dataset for single-point
                          or regional studies over land-only (no ocean).
   mkunitymap.ncl ------- NCL script to create a unity map -- ran by above script
+  rmdups.ncl ----------- NCL script to remove duplicate mapping points
 

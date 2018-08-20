@@ -14,9 +14,10 @@ module HydrologyDrainageMod
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
   use TemperatureType   , only : temperature_type
-  use WaterfluxType     , only : waterflux_type
-  use WaterstateType    , only : waterstate_type
-  use IrrigationMod     , only : irrigation_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use WaterBalanceType    , only : waterbalance_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake
   use LandunitType      , only : lun                
@@ -39,8 +40,9 @@ contains
        num_urbanc, filter_urbanc,                    &
        num_do_smb_c, filter_do_smb_c,                &
        atm2lnd_inst, glc2lnd_inst, temperature_inst, &
-       soilhydrology_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
-       irrigation_inst, glacier_smb_inst)
+       soilhydrology_inst, soilstate_inst, waterstatebulk_inst, &
+       waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
+       glacier_smb_inst)
     !
     ! !DESCRIPTION:
     ! Calculates soil/snow hydrology with drainage (subsurface runoff)
@@ -70,9 +72,10 @@ contains
     type(temperature_type)   , intent(in)    :: temperature_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
-    type(waterstate_type)    , intent(inout) :: waterstate_inst
-    type(waterflux_type)     , intent(inout) :: waterflux_inst
-    type(irrigation_type)    , intent(in)    :: irrigation_inst
+    type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
+    type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(glacier_smb_type)   , intent(in)    :: glacier_smb_inst
     !
     ! !LOCAL VARIABLES:
@@ -86,35 +89,34 @@ contains
          qflx_floodg        => atm2lnd_inst%forc_flood_grc           , & ! Input: rain rate [mm/s]   
          forc_rain          => atm2lnd_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
          forc_snow          => atm2lnd_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
-         begwb              => waterstate_inst%begwb_col             , & ! Output:water mass end of the time step 
-         endwb              => waterstate_inst%endwb_col             , & ! Output:water mass end of the time step     
-         h2osoi_ice         => waterstate_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      
-         h2osoi_liq         => waterstate_inst%h2osoi_liq_col        , & ! Output: liquid water (kg/m2) 
-         h2osoi_vol         => waterstate_inst%h2osoi_vol_col        , & ! Output: volumetric soil water 
+         begwb              => waterbalancebulk_inst%begwb_col             , & ! Output:water mass end of the time step 
+         endwb              => waterbalancebulk_inst%endwb_col             , & ! Output:water mass end of the time step     
+         h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      
+         h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col        , & ! Output: liquid water (kg/m2) 
+         h2osoi_vol         => waterstatebulk_inst%h2osoi_vol_col        , & ! Output: volumetric soil water 
                                                                          ! (0<=h2osoi_vol<=watsat) [m3/m3]
-         qflx_evap_tot      => waterflux_inst%qflx_evap_tot_col      , & ! Input: qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
-         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col     , & ! Input: excess solid h2o due to snow 
+         qflx_evap_tot      => waterfluxbulk_inst%qflx_evap_tot_col      , & ! Input: qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
+         qflx_snwcp_ice     => waterfluxbulk_inst%qflx_snwcp_ice_col     , & ! Input: excess solid h2o due to snow 
                                                                          ! capping (outgoing) (mm H2O /s) [+]
-         qflx_snwcp_discarded_ice => waterflux_inst%qflx_snwcp_discarded_ice_col, & ! excess solid h2o due to snow capping, 
+         qflx_snwcp_discarded_ice => waterfluxbulk_inst%qflx_snwcp_discarded_ice_col, & ! excess solid h2o due to snow capping, 
                                                                                     ! which we simply discard in order to reset
                                                                                     ! the snow pack (mm H2O /s) [+]
-         qflx_snwcp_discarded_liq => waterflux_inst%qflx_snwcp_discarded_liq_col, & ! excess liquid h2o due to snow capping, 
+         qflx_snwcp_discarded_liq => waterfluxbulk_inst%qflx_snwcp_discarded_liq_col, & ! excess liquid h2o due to snow capping, 
                                                                                     ! which we simply discard in order to reset
                                                                                     ! the snow pack (mm H2O /s) [+]
-         qflx_h2osfc_surf   => waterflux_inst%qflx_h2osfc_surf_col   , & ! surface water runoff (mm/s)  
-         qflx_drain_perched => waterflux_inst%qflx_drain_perched_col , & ! sub-surface runoff from perched zwt (mm H2O /s)
-         qflx_rsub_sat      => waterflux_inst%qflx_rsub_sat_col      , & ! soil saturation excess [mm h2o/s]  
-         qflx_drain         => waterflux_inst%qflx_drain_col         , & ! sub-surface runoff (mm H2O /s) 
-         qflx_surf          => waterflux_inst%qflx_surf_col          , & ! surface runoff (mm H2O /s)      
-         qflx_infl          => waterflux_inst%qflx_infl_col          , & ! infiltration (mm H2O /s)   
-         qflx_qrgwl         => waterflux_inst%qflx_qrgwl_col         , & ! qflx_surf at glaciers, wetlands, lakes
-         qflx_runoff        => waterflux_inst%qflx_runoff_col        , & ! total runoff 
+         qflx_drain_perched => waterfluxbulk_inst%qflx_drain_perched_col , & ! sub-surface runoff from perched zwt (mm H2O /s)
+         qflx_rsub_sat      => waterfluxbulk_inst%qflx_rsub_sat_col      , & ! soil saturation excess [mm h2o/s]  
+         qflx_drain         => waterfluxbulk_inst%qflx_drain_col         , & ! sub-surface runoff (mm H2O /s) 
+         qflx_surf          => waterfluxbulk_inst%qflx_surf_col          , & ! surface runoff (mm H2O /s)      
+         qflx_infl          => waterfluxbulk_inst%qflx_infl_col          , & ! infiltration (mm H2O /s)   
+         qflx_qrgwl         => waterfluxbulk_inst%qflx_qrgwl_col         , & ! qflx_surf at glaciers, wetlands, lakes
+         qflx_runoff        => waterfluxbulk_inst%qflx_runoff_col        , & ! total runoff 
                                                                          ! (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_runoff_u      => waterflux_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
-         qflx_runoff_r      => waterflux_inst%qflx_runoff_r_col      , & ! Rural total runoff 
+         qflx_runoff_u      => waterfluxbulk_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+         qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff 
                                                                          ! (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_ice_runoff_snwcp => waterflux_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
-         qflx_irrig         => irrigation_inst%qflx_irrig_col          & ! irrigation flux (mm H2O /s)   
+         qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
+         qflx_irrig         => waterfluxbulk_inst%qflx_irrig_col          & ! irrigation flux (mm H2O /s)   
          )
 
       ! Determine time step and step size
@@ -123,26 +125,26 @@ contains
 
       if (use_vichydro) then
          call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc, &
-              soilhydrology_inst, waterstate_inst)
+              soilhydrology_inst, waterstatebulk_inst)
       endif
 
       if (use_aquifer_layer()) then 
          call Drainage(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc,&
               temperature_inst, soilhydrology_inst, soilstate_inst, &
-              waterstate_inst, waterflux_inst)
+              waterstatebulk_inst, waterfluxbulk_inst)
       else
          
          call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc,&
               soilhydrology_inst, soilstate_inst, &
-              waterstate_inst, waterflux_inst)
+              waterstatebulk_inst, waterfluxbulk_inst)
 
          
          call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc,&
               soilhydrology_inst, soilstate_inst, &
-              waterstate_inst, waterflux_inst)
+              waterstatebulk_inst, waterfluxbulk_inst)
 
       endif
 
@@ -158,7 +160,7 @@ contains
       end do
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-           soilhydrology_inst, waterstate_inst, endwb(bounds%begc:bounds%endc))
+           soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))
 
 
       
@@ -175,7 +177,6 @@ contains
 
             qflx_drain(c)         = 0._r8
             qflx_drain_perched(c) = 0._r8
-            qflx_h2osfc_surf(c)   = 0._r8
             qflx_surf(c)          = 0._r8
             qflx_infl(c)          = 0._r8
             qflx_qrgwl(c) = forc_rain(c) + forc_snow(c) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
@@ -185,8 +186,8 @@ contains
          else if (lun%urbpoi(l) .and. ctype(c) /= icol_road_perv) then
 
             qflx_drain_perched(c) = 0._r8
-            qflx_h2osfc_surf(c)   = 0._r8
             qflx_rsub_sat(c)      = spval
+            qflx_infl(c)          = 0._r8
 
          end if
 
@@ -197,6 +198,7 @@ contains
       ! qflx_qrgwl and qflx_ice_runoff_snwcp, but before the ues of qflx_qrgwl in
       ! qflx_runoff.
       call glacier_smb_inst%AdjustRunoffTerms(bounds, num_do_smb_c, filter_do_smb_c, &
+           waterfluxbulk_inst, &
            glc2lnd_inst, &
            qflx_qrgwl = qflx_qrgwl(bounds%begc:bounds%endc), &
            qflx_ice_runoff_snwcp = qflx_ice_runoff_snwcp(bounds%begc:bounds%endc))
@@ -205,7 +207,7 @@ contains
          c = filter_nolakec(fc)
          l = col%landunit(c)
 
-         qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
+         qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
          if ((lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) .and. col%active(c)) then
             qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)

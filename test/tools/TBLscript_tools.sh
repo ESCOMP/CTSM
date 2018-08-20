@@ -63,10 +63,12 @@ if [ -n "${BL_ROOT}" ]; then
     echo "TBLscript_tools.sh: generating baseline data from root $BL_ROOT - results in $BL_TESTDIR"
 
     echo "TBLscript_tools.sh: calling ****baseline**** TSMtools.sh for smoke test"
-    bl_dir=`/bin/ls -1d ${BL_ROOT}/components/clm/test/tools`
+    bl_dir=`/bin/ls -1d ${BL_ROOT}/test/tools`
     env CLM_TESTDIR=${BL_TESTDIR} \
         CLM_SCRIPTDIR=$bl_dir \
         CLM_ROOT=$BL_ROOT \
+        CTSM_ROOT=$BL_ROOT \
+        CIME_ROOT=$BL_ROOT/cime \
         $bl_dir/TSMscript_tools.sh $1 $2 $3
     rc=$?
     if [ $rc -ne 0 ]; then

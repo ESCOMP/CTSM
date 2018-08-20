@@ -35,8 +35,9 @@ module CanopyFluxesMod
   use SolarAbsorbedType     , only : solarabs_type
   use SurfaceAlbedoType     , only : surfalb_type
   use TemperatureType       , only : temperature_type
-  use WaterfluxType         , only : waterflux_type
-  use WaterstateType        , only : waterstate_type
+  use WaterFluxBulkType         , only : waterfluxbulk_type
+  use WaterStateBulkType        , only : waterstatebulk_type
+  use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
   use CanopyHydrologyMod    , only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
@@ -135,7 +136,7 @@ contains
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
        clm_fates, nc, atm2lnd_inst, canopystate_inst,                                    &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
-       temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
+       temperature_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, ch4_inst, ozone_inst, photosyns_inst, &
        humanindex_inst, soil_water_retention_curve, &
        downreg_patch, leafn_patch, froot_carbon, croot_carbon)
     !
@@ -195,8 +196,9 @@ contains
     type(surfalb_type)                     , intent(in)            :: surfalb_inst
     type(soilstate_type)                   , intent(inout)         :: soilstate_inst
     type(temperature_type)                 , intent(inout)         :: temperature_inst
-    type(waterstate_type)                  , intent(inout)         :: waterstate_inst
-    type(waterflux_type)                   , intent(inout)         :: waterflux_inst
+    type(waterstatebulk_type)                  , intent(inout)         :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)                  , intent(inout)         :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)                   , intent(inout)         :: waterfluxbulk_inst
     type(ch4_type)                         , intent(inout)         :: ch4_inst
     class(ozone_base_type)                 , intent(inout)         :: ozone_inst
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
@@ -452,37 +454,38 @@ contains
          t_veg                  => temperature_inst%t_veg_patch                 , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin)                                       
          t_ref2m                => temperature_inst%t_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)                           
          t_ref2m_r              => temperature_inst%t_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface air temperature (Kelvin)                     
+         t_skin_patch           => temperature_inst%t_skin_patch                , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)  
 
-         frac_h2osfc            => waterstate_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
-         fwet                   => waterstate_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
-         fdry                   => waterstate_inst%fdry_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]                         
-         frac_sno               => waterstate_inst%frac_sno_eff_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)                           
-         snow_depth             => waterstate_inst%snow_depth_col               , & ! Input:  [real(r8) (:)   ]  snow height (m)                                                       
-         qg_snow                => waterstate_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]                             
-         qg_soil                => waterstate_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]                             
-         qg_h2osfc              => waterstate_inst%qg_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]                           
-         qg                     => waterstate_inst%qg_col                       , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface [kg/kg]                           
-         dqgdT                  => waterstate_inst%dqgdT_col                    , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                                        
-         h2osoi_ice             => waterstate_inst%h2osoi_ice_col               , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                                    
-         h2osoi_vol             => waterstate_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] by F. Li and S. Levis
-         h2osoi_liq             => waterstate_inst%h2osoi_liq_col               , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                                                
-         h2osoi_liqvol          => waterstate_inst%h2osoi_liqvol_col            , & ! Output: [real(r8) (:,:) ]  volumetric liquid water (v/v) 
-         h2ocan                 => waterstate_inst%h2ocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O)                                                 
-         snocan                 => waterstate_inst%snocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)                                                 
-         liqcan                 => waterstate_inst%liqcan_patch                 , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)                                                 
-         snounload              => waterstate_inst%snounload_patch              , & ! Output: [real(r8) (:)   ]  canopy snow unloading mass (mm H2O)
+         frac_h2osfc            => waterdiagnosticbulk_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
+         fwet                   => waterdiagnosticbulk_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
+         fdry                   => waterdiagnosticbulk_inst%fdry_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]                         
+         frac_sno               => waterdiagnosticbulk_inst%frac_sno_eff_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)                           
+         snow_depth             => waterdiagnosticbulk_inst%snow_depth_col               , & ! Input:  [real(r8) (:)   ]  snow height (m)                                                       
+         qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]                             
+         qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]                             
+         qg_h2osfc              => waterdiagnosticbulk_inst%qg_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]                           
+         qg                     => waterdiagnosticbulk_inst%qg_col                       , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface [kg/kg]                           
+         dqgdT                  => waterdiagnosticbulk_inst%dqgdT_col                    , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                                        
+         h2osoi_ice             => waterstatebulk_inst%h2osoi_ice_col               , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                                    
+         h2osoi_vol             => waterstatebulk_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] by F. Li and S. Levis
+         h2osoi_liq             => waterstatebulk_inst%h2osoi_liq_col               , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                                                
+         h2osoi_liqvol          => waterdiagnosticbulk_inst%h2osoi_liqvol_col            , & ! Output: [real(r8) (:,:) ]  volumetric liquid water (v/v) 
+         h2ocan                 => waterstatebulk_inst%h2ocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O)                                                 
+         snocan                 => waterstatebulk_inst%snocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)                                                 
+         liqcan                 => waterstatebulk_inst%liqcan_patch                 , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)                                                 
+         snounload              => waterdiagnosticbulk_inst%snounload_patch              , & ! Output: [real(r8) (:)   ]  canopy snow unloading mass (mm H2O)
 
-         q_ref2m                => waterstate_inst%q_ref2m_patch                , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)                          
-         rh_ref2m_r             => waterstate_inst%rh_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
-         rh_ref2m               => waterstate_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
-         rhaf                   => waterstate_inst%rh_af_patch                  , & ! Output: [real(r8) (:)   ]  fractional humidity of canopy air [dimensionless]                     
+         q_ref2m                => waterdiagnosticbulk_inst%q_ref2m_patch                , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)                          
+         rh_ref2m_r             => waterdiagnosticbulk_inst%rh_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
+         rh_ref2m               => waterdiagnosticbulk_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
+         rhaf                   => waterdiagnosticbulk_inst%rh_af_patch                  , & ! Output: [real(r8) (:)   ]  fractional humidity of canopy air [dimensionless]                     
 
-         qflx_tran_veg          => waterflux_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
-         qflx_evap_veg          => waterflux_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)                        
-         qflx_evap_soi          => waterflux_inst%qflx_evap_soi_patch           , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)                              
-         qflx_ev_snow           => waterflux_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]                        
-         qflx_ev_soil           => waterflux_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]                        
-         qflx_ev_h2osfc         => waterflux_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
+         qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
+         qflx_evap_veg          => waterfluxbulk_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)                        
+         qflx_evap_soi          => waterfluxbulk_inst%qflx_evap_soi_patch           , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)                              
+         qflx_ev_snow           => waterfluxbulk_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]                        
+         qflx_ev_soil           => waterfluxbulk_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]                        
+         qflx_ev_h2osfc         => waterfluxbulk_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
 
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
          rssha                  => photosyns_inst%rssha_patch                   , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
@@ -643,8 +646,8 @@ contains
       ! --------------------------------------------------------------------------
       
       if(use_fates)then
-         call clm_fates%wrap_btran(nc, fn, filterc_tmp(1:fn), soilstate_inst, waterstate_inst, &
-               temperature_inst, energyflux_inst, soil_water_retention_curve)
+         call clm_fates%wrap_btran(nc, fn, filterc_tmp(1:fn), soilstate_inst, &
+               waterdiagnosticbulk_inst, temperature_inst, energyflux_inst, soil_water_retention_curve)
          
       else
          
@@ -657,7 +660,8 @@ contains
             energyflux_inst=energyflux_inst,   &
             soilstate_inst=soilstate_inst,     &
             temperature_inst=temperature_inst, &
-            waterstate_inst=waterstate_inst,   &
+            waterstatebulk_inst=waterstatebulk_inst,   &
+            waterdiagnosticbulk_inst=waterdiagnosticbulk_inst,   &
               soil_water_retention_curve=soil_water_retention_curve)
 
      
@@ -851,8 +855,9 @@ contains
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), bsun(begp:endp), &
                     bsha(begp:endp), btran(begp:endp), dayl_factor(begp:endp), leafn_patch(begp:endp), &
                     qsatl(begp:endp), qaf(begp:endp),     &
-                    atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, surfalb_inst, solarabs_inst,    &
-                    canopystate_inst, ozone_inst, photosyns_inst, waterflux_inst, froot_carbon(begp:endp), croot_carbon(begp:endp))
+                    atm2lnd_inst, temperature_inst, soilstate_inst, waterdiagnosticbulk_inst, surfalb_inst, solarabs_inst, &
+                    canopystate_inst, ozone_inst, photosyns_inst, waterfluxbulk_inst, &
+                    froot_carbon(begp:endp), croot_carbon(begp:endp))
             else
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
@@ -1235,6 +1240,12 @@ contains
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*tlbef(p)**3*(tlbef(p) + &
               4._r8*dt_veg(p)) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
 
+         ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
+         ! The weight is the so-called vegetation emissivity, but not that emv is actually an attentuation 
+         ! function that goes to zero as LAI (ELAI + ESAI) go to zero.
+
+         t_skin_patch(p)  =  emv(p)*t_veg(p)  +  (1._r8 - emv(p))*sqrt(sqrt(lw_grnd))
+
          ! Derivative of soil energy flux with respect to soil temperature
 
          cgrnds(p) = cgrnds(p) + cpair*forc_rho(c)*wtg(p)*wtal(p)
@@ -1268,7 +1279,7 @@ contains
          
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
          call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
-               waterstate_inst,waterflux_inst,solarabs_inst,energyflux_inst)
+               waterstatebulk_inst,waterdiagnosticbulk_inst,waterfluxbulk_inst,solarabs_inst,energyflux_inst)
 
       else
 
@@ -1315,7 +1326,7 @@ contains
                     photosyns_inst, &
                     surfalb_inst, &
                     solarabs_inst, &
-                    waterstate_inst,&
+                    waterdiagnosticbulk_inst,&
                     frictionvel_inst) 
                
                call Update_Photosynthesis_Capacity(bounds, fn, filterp, &
@@ -1326,7 +1337,7 @@ contains
                     photosyns_inst, &
                     surfalb_inst, &
                     solarabs_inst, &
-                    waterstate_inst,&
+                    waterdiagnosticbulk_inst,&
                     frictionvel_inst)        
                
                call Clear24_Climate_LUNA(bounds, fn, filterp, &

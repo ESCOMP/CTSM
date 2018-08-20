@@ -1008,6 +1008,8 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
      call ncd_def_spatial_var(ncid=ncid, varname='PCT_CROP', xtype=xtype, &
           lev1name='time', &
           long_name='total percent crop landunit', units='unitless')
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_CROP_MAX', xtype=xtype, &
+          long_name='maximum total percent crop landunit during time period', units='unitless')
   end if
 
   ! PCT_NAT_PFT
@@ -1019,6 +1021,9 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
      call ncd_def_spatial_var(ncid=ncid, varname='PCT_NAT_PFT', xtype=xtype, &
           lev1name='natpft', lev2name='time', &
           long_name='percent plant functional type on the natural veg landunit (% of landunit)', units='unitless')
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_NAT_PFT_MAX', xtype=xtype, &
+          lev1name='natpft', &
+          long_name='maximum percent plant functional type during time period (% of landunit)', units='unitless')
   end if
 
   ! PCT_CFT
@@ -1031,6 +1036,9 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
         call ncd_def_spatial_var(ncid=ncid, varname='PCT_CFT', xtype=xtype, &
              lev1name='cft', lev2name='time', &
              long_name='percent crop functional type on the crop landunit (% of landunit)', units='unitless')
+        call ncd_def_spatial_var(ncid=ncid, varname='PCT_CFT_MAX', xtype=xtype, &
+             lev1name='cft', &
+             long_name='maximum percent crop functional type during time period (% of landunit)', units='unitless')
      end if
   end if
 
