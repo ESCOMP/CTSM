@@ -1112,7 +1112,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine TwoStream (bounds, &
-        filter_vegsol, num_vegsol, &SFonly)
+        filter_vegsol, num_vegsol, &
         coszen, rho, tau, &
         canopystate_inst, temperature_inst, waterdiagnosticbulk_inst, surfalb_inst, &
         SFonly)
@@ -1497,11 +1497,13 @@ contains
                end if
             end if
           else
+! SF only 
              ! albsod instead of albgrd here:
              u1 = b - c1/albsod(c,ib)
              u2 = b - c1*albsod(c,ib)
              u3 = f + c1*albsod(c,ib)
           end if
+          do iv = 1, nrad(p)
           tmp2 = u1 - avmu(p)*h
           tmp3 = u1 + avmu(p)*h
           d1 = p1*tmp2/s1 - p2*tmp3*s1
@@ -1654,6 +1656,7 @@ contains
   
           end if
 
+          end do ! end of iv loop
        end do   ! end of pft loop
     end do   ! end of radiation band loop
 
