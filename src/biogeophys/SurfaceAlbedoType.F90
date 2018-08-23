@@ -8,7 +8,7 @@ module SurfaceAlbedoType
   use decompMod      , only : bounds_type
   use clm_varpar     , only : numrad, nlevcan, nlevsno
   use abortutils     , only : endrun
-  use clm_varctl , only : use_SSRE
+  use clm_varctl     , only : use_SSRE
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -20,8 +20,8 @@ module SurfaceAlbedoType
      real(r8), pointer :: coszen_col           (:)   ! col cosine of solar zenith angle
      real(r8), pointer :: albd_patch           (:,:) ! patch surface albedo (direct)   (numrad)                    
      real(r8), pointer :: albi_patch           (:,:) ! patch surface albedo (diffuse)  (numrad)                    
-     real(r8), pointer :: albdSF_patch           (:,:) ! patch snow-free surface albedo (direct)   (numrad)  
-     real(r8), pointer :: albiSF_patch           (:,:) ! patch snow-free surface albedo (diffuse)  (numrad)
+     real(r8), pointer :: albdSF_patch         (:,:) ! patch snow-free surface albedo (direct)   (numrad)  
+     real(r8), pointer :: albiSF_patch         (:,:) ! patch snow-free surface albedo (diffuse)  (numrad)
      real(r8), pointer :: albgrd_pur_col       (:,:) ! col pure snow ground direct albedo     (numrad)             
      real(r8), pointer :: albgri_pur_col       (:,:) ! col pure snow ground diffuse albedo    (numrad)             
      real(r8), pointer :: albgrd_bc_col        (:,:) ! col ground direct  albedo without BC   (numrad)             
@@ -168,6 +168,7 @@ contains
     ! History fields initialization
     !
     ! !USES:
+    use shr_kind_mod  , only: cs => shr_kind_CS
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
     use clm_varcon    , only: spval
     use histFileMod   , only: hist_addfld1d, hist_addfld2d
@@ -179,6 +180,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begp, endp
     integer :: begc, endc
+    character(len=cs) :: defaultoutput
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
@@ -200,14 +202,6 @@ contains
          ptr_col=this%albgri_col, default='inactive')
 
     if (use_SSRE) then
-       this%albd_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='ALBD', units='proportion', type2d='numrad', &
-            avgflag='A', long_name='surface albedo (direct)', &
-            ptr_patch=this%albd_patch, default='active', c2l_scale_type='urbanf')
-       this%albi_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='ALBI', units='proportion', type2d='numrad', &
-            avgflag='A', long_name='surface albedo (indirect)', &
-            ptr_patch=this%albi_patch, default='active', c2l_scale_type='urbanf')
        this%albdSF_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='ALBDSF', units='proportion', type2d='numrad', &
             avgflag='A', long_name='diagnostic snow-free surface albedo (direct)', &
@@ -216,17 +210,20 @@ contains
        call hist_addfld2d (fname='ALBISF', units='proportion', type2d='numrad', &
             avgflag='A', long_name='diagnostic snow-free surface albedo (indirect)', &
             ptr_patch=this%albiSF_patch, default='active', c2l_scale_type='urbanf')
+       defaultoutput = "active"
     else
-       this%albd_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='ALBD', units='proportion', type2d='numrad', &
-            avgflag='A', long_name='surface albedo (direct)', &
-            ptr_patch=this%albd_patch, default='inactive', c2l_scale_type='urbanf')
-
-       this%albi_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='ALBI', units='proportion', type2d='numrad', &
-            avgflag='A', long_name='surface albedo (indirect)', &
-            ptr_patch=this%albi_patch, default='inactive', c2l_scale_type='urbanf')
+       defaultoutput = "inactive"
     end if
+    this%albd_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='ALBD', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='surface albedo (direct)', &
+         ptr_patch=this%albd_patch, default=defaultoutput, c2l_scale_type='urbanf')
+
+    this%albi_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='ALBI', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='surface albedo (indirect)', &
+         ptr_patch=this%albi_patch, default=defaultoutput, c2l_scale_type='urbanf')
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
