@@ -1322,21 +1322,21 @@ contains
              tmp1 = betadl
              tmp2 = betail
           else
-          if (snowveg_onrad) then
-             tmp0 =   (1._r8-fcansno(p))*omegal        + fcansno(p)*omegas(ib)
-             tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
-             tmp2 = ( (1._r8-fcansno(p))*omegal*betail + fcansno(p)*omegas(ib)*betais ) / tmp0
-          else
-             if (t_veg(p) > tfrz) then                             !no snow
-                tmp0 = omegal
-                tmp1 = betadl
-                tmp2 = betail
+             if (snowveg_onrad) then
+                tmp0 =   (1._r8-fcansno(p))*omegal        + fcansno(p)*omegas(ib)
+                tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
+                tmp2 = ( (1._r8-fcansno(p))*omegal*betail + fcansno(p)*omegas(ib)*betais ) / tmp0
              else
-                tmp0 =   (1._r8-fwet(p))*omegal        + fwet(p)*omegas(ib)
-                tmp1 = ( (1._r8-fwet(p))*omegal*betadl + fwet(p)*omegas(ib)*betads ) / tmp0
-                tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
+                if (t_veg(p) > tfrz) then                             !no snow
+                   tmp0 = omegal
+                   tmp1 = betadl
+                   tmp2 = betail
+                else
+                   tmp0 =   (1._r8-fwet(p))*omegal        + fwet(p)*omegas(ib)
+                   tmp1 = ( (1._r8-fwet(p))*omegal*betadl + fwet(p)*omegas(ib)*betads ) / tmp0
+                   tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
+                end if
              end if
-          end if
           end if  ! end SFonly
 
           omega(p,ib) = tmp0
@@ -1395,12 +1395,13 @@ contains
           tmp9 = ( u3 - tmp8*(u2-tmp0) ) * s2
           h5 = - ( tmp8*tmp4/s1 + tmp9 ) / d2
           h6 = ( tmp8*tmp5*s1 + tmp9 ) / d2
-          if ( lSFonly ) albdSF(p,ib) = h1/sigma + h2 + h3
           if ( .not. lSFonly )then
             albd(p,ib) = h1/sigma + h2 + h3
             ftid(p,ib) = h4*s2/sigma + h5*s1 + h6/s1
             ftdd(p,ib) = s2
             fabd(p,ib) = 1._r8 - albd(p,ib) - (1._r8-albgrd(c,ib))*ftdd(p,ib) - (1._r8-albgri(c,ib))*ftid(p,ib)
+          else
+            albdSF(p,ib) = h1/sigma + h2 + h3
           end if
           
 
