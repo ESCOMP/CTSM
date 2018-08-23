@@ -939,6 +939,10 @@ contains
             tau(bounds%begp:bounds%endp, :), &
             canopystate_inst, temperature_inst, waterstate_inst, surfalb_inst)
        if (use_SSRE) then
+          if ( nlevcan > 1 )then
+             call endrun( 'ERROR: use_ssre option was NOT developed with allowance for multi-layer canopy: '// &
+                          'nlevcan can ONLY be 1 in when use_ssre is on')
+          end if
           call TwoStream (bounds, filter_vegsol, num_vegsol, &
                coszen_patch(bounds%begp:bounds%endp), &
                rho(bounds%begp:bounds%endp, :), &
@@ -1333,7 +1337,7 @@ contains
                 tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
              end if
           end if
-          end if
+          end if  ! end SFonly
 
           omega(p,ib) = tmp0
           betad = tmp1
@@ -1365,64 +1369,83 @@ contains
           ! Direct beam
           if ( .not. lSFonly )then
 ! 
-            u1 = b - c1/albgrd(c,ib)
-            u2 = b - c1*albgrd(c,ib)
-            u3 = f + c1*albgrd(c,ib)
-            tmp2 = u1 - avmu(p)*h
-            tmp3 = u1 + avmu(p)*h
-            d1 = p1*tmp2/s1 - p2*tmp3*s1
-            tmp4 = u2 + avmu(p)*h
-            tmp5 = u2 - avmu(p)*h
-            d2 = tmp4/s1 - tmp5*s1
-            h1 = -d*p4 - c1*f
-            tmp6 = d - h1*p3/sigma
-            tmp7 = ( d - c1 - h1/sigma*(u1+tmp0) ) * s2
-            h2 = ( tmp6*tmp2/s1 - p2*tmp7 ) / d1
-            h3 = - ( tmp6*tmp3*s1 - p1*tmp7 ) / d1
-            h4 = -f*p3 - c1*d
-            tmp8 = h4/sigma
-            tmp9 = ( u3 - tmp8*(u2-tmp0) ) * s2
-            h5 = - ( tmp8*tmp4/s1 + tmp9 ) / d2
-            h6 = ( tmp8*tmp5*s1 + tmp9 ) / d2
-  
+             u1 = b - c1/albgrd(c,ib)
+             u2 = b - c1*albgrd(c,ib)
+             u3 = f + c1*albgrd(c,ib)
+          else
+             ! SF only 
+             ! albsod instead of albgrd here:
+             u1 = b - c1/albsod(c,ib)
+             u2 = b - c1*albsod(c,ib)
+             u3 = f + c1*albsod(c,ib)
+          end if
+          tmp2 = u1 - avmu(p)*h
+          tmp3 = u1 + avmu(p)*h
+          d1 = p1*tmp2/s1 - p2*tmp3*s1
+          tmp4 = u2 + avmu(p)*h
+          tmp5 = u2 - avmu(p)*h
+          d2 = tmp4/s1 - tmp5*s1
+          h1 = -d*p4 - c1*f
+          tmp6 = d - h1*p3/sigma
+          tmp7 = ( d - c1 - h1/sigma*(u1+tmp0) ) * s2
+          h2 = ( tmp6*tmp2/s1 - p2*tmp7 ) / d1
+          h3 = - ( tmp6*tmp3*s1 - p1*tmp7 ) / d1
+          h4 = -f*p3 - c1*d
+          tmp8 = h4/sigma
+          tmp9 = ( u3 - tmp8*(u2-tmp0) ) * s2
+          h5 = - ( tmp8*tmp4/s1 + tmp9 ) / d2
+          h6 = ( tmp8*tmp5*s1 + tmp9 ) / d2
+          if ( lSFonly ) albdSF(p,ib) = h1/sigma + h2 + h3
+          if ( .not. lSFonly )then
             albd(p,ib) = h1/sigma + h2 + h3
             ftid(p,ib) = h4*s2/sigma + h5*s1 + h6/s1
             ftdd(p,ib) = s2
             fabd(p,ib) = 1._r8 - albd(p,ib) - (1._r8-albgrd(c,ib))*ftdd(p,ib) - (1._r8-albgri(c,ib))*ftid(p,ib)
-  
-            a1 = h1 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
-               + h2         * (1._r8 - s2*s1) / (twostext(p) + h) &
-               + h3         * (1._r8 - s2/s1) / (twostext(p) - h)
-  
-            a2 = h4 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
-               + h5         * (1._r8 - s2*s1) / (twostext(p) + h) &
-               + h6         * (1._r8 - s2/s1) / (twostext(p) - h)
-  
+          end if
+          
+
+          a1 = h1 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
+             + h2         * (1._r8 - s2*s1) / (twostext(p) + h) &
+             + h3         * (1._r8 - s2/s1) / (twostext(p) - h)
+
+          a2 = h4 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
+             + h5         * (1._r8 - s2*s1) / (twostext(p) + h) &
+             + h6         * (1._r8 - s2/s1) / (twostext(p) - h)
+          if ( .not. lSFonly )then
             fabd_sun(p,ib) = (1._r8 - omega(p,ib)) * ( 1._r8 - s2 + 1._r8 / avmu(p) * (a1 + a2) )
             fabd_sha(p,ib) = fabd(p,ib) - fabd_sun(p,ib)
-  
-            ! Diffuse
-  
+          end if
+
+          ! Diffuse
+          if ( .not. lSFonly )then
             u1 = b - c1/albgri(c,ib)
             u2 = b - c1*albgri(c,ib)
-            tmp2 = u1 - avmu(p)*h
-            tmp3 = u1 + avmu(p)*h
-            d1 = p1*tmp2/s1 - p2*tmp3*s1
-            tmp4 = u2 + avmu(p)*h
-            tmp5 = u2 - avmu(p)*h
-            d2 = tmp4/s1 - tmp5*s1
-            h7 = (c1*tmp2) / (d1*s1)
-            h8 = (-c1*tmp3*s1) / d1
-            h9 = tmp4 / (d2*s1)
-            h10 = (-tmp5*s1) / d2
+          else
+            u1 = b - c1/albsoi(c,ib)
+            u2 = b - c1*albsoi(c,ib)
+          end if
+          tmp2 = u1 - avmu(p)*h
+          tmp3 = u1 + avmu(p)*h
+          d1 = p1*tmp2/s1 - p2*tmp3*s1
+          tmp4 = u2 + avmu(p)*h
+          tmp5 = u2 - avmu(p)*h
+          d2 = tmp4/s1 - tmp5*s1
+          h7 = (c1*tmp2) / (d1*s1)
+          h8 = (-c1*tmp3*s1) / d1
+          h9 = tmp4 / (d2*s1)
+          h10 = (-tmp5*s1) / d2
+
   
+          if ( lSFonly )then
+            albiSF(p,ib) = h7 + h8
+          else
             albi(p,ib) = h7 + h8
             ftii(p,ib) = h9*s1 + h10/s1
             fabi(p,ib) = 1._r8 - albi(p,ib) - (1._r8-albgri(c,ib))*ftii(p,ib)
-  
+
             a1 = h7 * (1._r8 - s2*s1) / (twostext(p) + h) +  h8 * (1._r8 - s2/s1) / (twostext(p) - h)
             a2 = h9 * (1._r8 - s2*s1) / (twostext(p) + h) + h10 * (1._r8 - s2/s1) / (twostext(p) - h)
-  
+
             fabi_sun(p,ib) = (1._r8 - omega(p,ib)) / avmu(p) * (a1 + a2)
             fabi_sha(p,ib) = fabi(p,ib) - fabi_sun(p,ib)
   
@@ -1462,7 +1485,7 @@ contains
                     vcmaxcintsha(p) = 0._r8
                   end if
   
-               else if (nlevcan > 1) then
+               else if (nlevcan > 1)then
                   do iv = 1, nrad(p)
   
                   ! Cumulative lai+sai at center of layer
@@ -1490,43 +1513,7 @@ contains
                   u1 = b - c1/albgrd(c,ib)
                   u2 = b - c1*albgrd(c,ib)
                   u3 = f + c1*albgrd(c,ib)
-                  end do   ! end of canopy layer loop
-               end if
-            end if
-          else
-! SF only 
-             ! albsod instead of albgrd here:
-             u1 = b - c1/albsod(c,ib)
-             u2 = b - c1*albsod(c,ib)
-             u3 = f + c1*albsod(c,ib)
-          end if
-          do iv = 1, nrad(p)
-          tmp2 = u1 - avmu(p)*h
-          tmp3 = u1 + avmu(p)*h
-          d1 = p1*tmp2/s1 - p2*tmp3*s1
-          tmp4 = u2 + avmu(p)*h
-          tmp5 = u2 - avmu(p)*h
-          d2 = tmp4/s1 - tmp5*s1
-          h1 = -d*p4 - c1*f
-          tmp6 = d - h1*p3/sigma
-          tmp7 = ( d - c1 - h1/sigma*(u1+tmp0) ) * s2
-          h2 = ( tmp6*tmp2/s1 - p2*tmp7 ) / d1
-          h3 = - ( tmp6*tmp3*s1 - p1*tmp7 ) / d1
-          h4 = -f*p3 - c1*d
-          tmp8 = h4/sigma
-          tmp9 = ( u3 - tmp8*(u2-tmp0) ) * s2
-          h5 = - ( tmp8*tmp4/s1 + tmp9 ) / d2
-          h6 = ( tmp8*tmp5*s1 + tmp9 ) / d2
-          if ( lSFonly ) albdSF(p,ib) = h1/sigma + h2 + h3
-          a1 = h1 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
-             + h2         * (1._r8 - s2*s1) / (twostext(p) + h) &
-             + h3         * (1._r8 - s2/s1) / (twostext(p) - h)
-
-          a2 = h4 / sigma * (1._r8 - s2*s2) / (2._r8 * twostext(p)) &
-             + h5         * (1._r8 - s2*s1) / (twostext(p) + h) &
-             + h6         * (1._r8 - s2/s1) / (twostext(p) - h)
   
-          if ( .not. lSFonly )then
                   ! Derivatives for h2, h3, h5, h6 and a1, a2
   
                   v = d1
@@ -1584,26 +1571,6 @@ contains
                   u1 = b - c1/albgri(c,ib)
                   u2 = b - c1*albgri(c,ib)
 
-          else
-             ! Diffuse
-             ! albsoi instead of albgri here:
-             u1 = b - c1/albsoi(c,ib)
-             u2 = b - c1*albsoi(c,ib)
-          end if
-          tmp2 = u1 - avmu(p)*h
-          tmp3 = u1 + avmu(p)*h
-          d1 = p1*tmp2/s1 - p2*tmp3*s1
-          tmp4 = u2 + avmu(p)*h
-          tmp5 = u2 - avmu(p)*h
-          d2 = tmp4/s1 - tmp5*s1
-          h7 = (c1*tmp2) / (d1*s1)
-          h8 = (-c1*tmp3*s1) / d1
-          h9 = tmp4 / (d2*s1)
-          h10 = (-tmp5*s1) / d2
-          if ( lSFonly )then
-              albiSF(p,ib) = h7 + h8
-          else
-  
                   a1 = h7 * (1._r8 - s2*s1) / (twostext(p) + h) +  h8 * (1._r8 - s2/s1) / (twostext(p) - h)
                   a2 = h9 * (1._r8 - s2*s1) / (twostext(p) + h) + h10 * (1._r8 - s2/s1) / (twostext(p) - h)
   
@@ -1651,9 +1618,11 @@ contains
                   fabi_sun_z(p,iv) = fabi_sun_z(p,iv) / fsun_z(p,iv)
                   fabi_sha_z(p,iv) = fabi_sha_z(p,iv) / (1._r8 - fsun_z(p,iv))
   
-          end if
+                  end do ! end of iv loop
+               end if ! nlevcan
+            end if   ! first band
+          end if  ! NOT lSFonly
 
-          end do ! end of iv loop
        end do   ! end of pft loop
     end do   ! end of radiation band loop
 
