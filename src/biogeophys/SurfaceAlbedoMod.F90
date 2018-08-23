@@ -938,6 +938,7 @@ contains
             rho(bounds%begp:bounds%endp, :), &
             tau(bounds%begp:bounds%endp, :), &
             canopystate_inst, temperature_inst, waterstate_inst, surfalb_inst)
+       ! Run TwoStream again just to calculate the Snow Free (SF) albedo's
        if (use_SSRE) then
           if ( nlevcan > 1 )then
              call endrun( 'ERROR: use_ssre option was NOT developed with allowance for multi-layer canopy: '// &
@@ -1145,7 +1146,7 @@ contains
      type(temperature_type) , intent(in)    :: temperature_inst
      type(waterstate_type)  , intent(in)    :: waterstate_inst
      type(surfalb_type)     , intent(inout) :: surfalb_inst
-     logical, optional      , intent(in)    :: SFonly
+     logical, optional      , intent(in)    :: SFonly                              ! If should just calculate the Snow Free albedos
      !
      ! !LOCAL VARIABLES:
      integer  :: fp,p,c,iv        ! array indices
@@ -1181,7 +1182,7 @@ contains
      real(r8) :: laisum                                            ! cumulative lai+sai for canopy layer (at middle of layer)
      real(r8) :: extkb                                             ! direct beam extinction coefficient
      real(r8) :: extkn                                             ! nitrogen allocation coefficient
-     logical  :: lSFonly                                           ! Local version of SFonly flag
+     logical  :: lSFonly                                           ! Local version of SFonly (Snow Free) flag
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
@@ -1212,7 +1213,7 @@ contains
           albgrd       =>    surfalb_inst%albgrd_col             , & ! Input:  [real(r8) (:,:) ]  ground albedo (direct) (column-level) 
           albgri       =>    surfalb_inst%albgri_col             , & ! Input:  [real(r8) (:,:) ]  ground albedo (diffuse)(column-level) 
 
-          ! For non-SF
+          ! For non-Snow Free
           fsun_z       =>    surfalb_inst%fsun_z_patch           , & ! Output: [real(r8) (:,:) ]  sunlit fraction of canopy layer       
           vcmaxcintsun =>    surfalb_inst%vcmaxcintsun_patch     , & ! Output: [real(r8) (:)   ]  leaf to canopy scaling coefficient, sunlit leaf vcmax
           vcmaxcintsha =>    surfalb_inst%vcmaxcintsha_patch     , & ! Output: [real(r8) (:)   ]  leaf to canopy scaling coefficient, shaded leaf vcmax
@@ -1232,7 +1233,7 @@ contains
           ftid         =>    surfalb_inst%ftid_patch             , & ! Output: [real(r8) (:,:) ]  down diffuse flux below canopy per unit direct flx
           ftii         =>    surfalb_inst%ftii_patch             , & ! Output: [real(r8) (:,:) ]  down diffuse flux below canopy per unit diffuse flx
 
-          ! Needed for SF
+          ! Needed for SF Snow free case
           albsod       =>    surfalb_inst%albsod_col             , & ! Input: [real(r8) (:,:) ]  soil albedo (direct)                  
           albsoi       =>    surfalb_inst%albsoi_col             , & ! Input: [real(r8) (:,:) ]  soil albedo (diffuse
           albdSF       =>    surfalb_inst%albdSF_patch           , & ! Output: [real(r8) (:,:) ]  surface albedo (direct)               
@@ -1315,8 +1316,9 @@ contains
           betail = 0.5_r8 * ((rho(p,ib)+tau(p,ib)) + (rho(p,ib)-tau(p,ib)) &
                  * ((1._r8+chil(p))/2._r8)**2) / omegal
 
-          if ( lSFonly ) then
-             ! Keep omega, betad, and betai as they are
+          if ( lSFonly .or. ( (.not. snowveg_onrad) .and. (t_veg(p) > tfrz) ) ) then
+             ! Keep omega, betad, and betai as they are (for Snow free case or
+             ! when there is no snow
              tmp0 = omegal
              tmp1 = betadl
              tmp2 = betail
@@ -1327,17 +1329,11 @@ contains
                 tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
                 tmp2 = ( (1._r8-fcansno(p))*omegal*betail + fcansno(p)*omegas(ib)*betais ) / tmp0
              else
-                if (t_veg(p) > tfrz) then                             !no snow
-                   tmp0 = omegal
-                   tmp1 = betadl
-                   tmp2 = betail
-                else
-                   tmp0 =   (1._r8-fwet(p))*omegal        + fwet(p)*omegas(ib)
-                   tmp1 = ( (1._r8-fwet(p))*omegal*betadl + fwet(p)*omegas(ib)*betads ) / tmp0
-                   tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
-                end if
+                tmp0 =   (1._r8-fwet(p))*omegal        + fwet(p)*omegas(ib)
+                tmp1 = ( (1._r8-fwet(p))*omegal*betadl + fwet(p)*omegas(ib)*betads ) / tmp0
+                tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
              end if
-          end if  ! end SFonly
+          end if  ! end Snow free
 
           omega(p,ib) = tmp0
           betad = tmp1
@@ -1372,7 +1368,7 @@ contains
              u2 = b - c1*albgrd(c,ib)
              u3 = f + c1*albgrd(c,ib)
           else
-             ! SF only 
+             ! Snow Free (SF) only 
              ! albsod instead of albgrd here:
              u1 = b - c1/albsod(c,ib)
              u2 = b - c1*albsod(c,ib)
@@ -1421,6 +1417,8 @@ contains
             u1 = b - c1/albgri(c,ib)
             u2 = b - c1*albgri(c,ib)
           else
+             ! Snow Free (SF) only 
+             ! albsoi instead of albgri here:
             u1 = b - c1/albsoi(c,ib)
             u2 = b - c1*albsoi(c,ib)
           end if
@@ -1436,9 +1434,11 @@ contains
           h10 = (-tmp5*s1) / d2
 
   
+          ! Final Snow Free albedo
           if ( lSFonly )then
             albiSF(p,ib) = h7 + h8
           else
+            ! For non snow Free case, adjustments continue
             albi(p,ib) = h7 + h8
             ftii(p,ib) = h9*s1 + h10/s1
             fabi(p,ib) = 1._r8 - albi(p,ib) - (1._r8-albgri(c,ib))*ftii(p,ib)

@@ -60,12 +60,12 @@ module SolarAbsorbedType
      real(r8), pointer :: fsr_nir_i_patch        (:)   ! patch reflected diffuse nir solar radiation (W/m**2)     
      real(r8), pointer :: fsr_nir_d_ln_patch     (:)   ! patch reflected direct beam nir solar radiation at local noon (W/m**2)
      ! optional diagnostic fluxes:
-     real(r8), pointer :: fsrSF_nir_d_patch        (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
-     real(r8), pointer :: fsrSF_nir_i_patch        (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
-     real(r8), pointer :: fsrSF_nir_d_ln_patch     (:)   ! snow-free patch reflected direct beam nir solar radiation at local noon (W/m**2)
-     real(r8), pointer :: ssre_fsr_nir_d_patch        (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
-     real(r8), pointer :: ssre_fsr_nir_i_patch        (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
-     real(r8), pointer :: ssre_fsr_nir_d_ln_patch     (:)   ! snow-free patch reflected direct beam nir solar radiation at local noon (W/m**2)
+     real(r8), pointer :: fsrSF_nir_d_patch      (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
+     real(r8), pointer :: fsrSF_nir_i_patch      (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
+     real(r8), pointer :: fsrSF_nir_d_ln_patch   (:)   ! snow-free patch reflected direct beam nir solar radiation at local noon (W/m**2)
+     real(r8), pointer :: ssre_fsr_nir_d_patch   (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
+     real(r8), pointer :: ssre_fsr_nir_i_patch   (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
+     real(r8), pointer :: ssre_fsr_nir_d_ln_patch(:)   ! snow-free patch reflected direct beam nir solar radiation at local noon (W/m**2)
    contains
 
      procedure, public  :: Init         
@@ -216,18 +216,6 @@ contains
     call hist_addfld1d (fname='SWup', units='W/m^2',  &
          avgflag='A', long_name='upwelling shortwave radiation', &
          ptr_patch=this%fsr_patch, c2l_scale_type='urbanf', default='inactive')
-    ! diagnostic fluxes for ESM-SnowMIP
-    if (use_SSRE) then
-       this%fsrSF_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FSRSF', units='W/m^2',  &
-            avgflag='A', long_name='reflected solar radiation', &
-            ptr_patch=this%fsrSF_patch, c2l_scale_type='urbanf')
-
-       this%ssre_fsr_patch(begp:endp) = spval
-       call hist_addfld1d (fname='SSRE_FSR', units='W/m^2',  &
-            avgflag='A', long_name='surface snow effect on reflected solar radiation', &
-            ptr_patch=this%ssre_fsr_patch, c2l_scale_type='urbanf')
-    end if
     call hist_addfld1d (fname='FSR_ICE', units='W/m^2',  &
          avgflag='A', long_name='reflected solar radiation (ice landunits only)', &
          ptr_patch=this%fsr_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
@@ -289,7 +277,17 @@ contains
     call hist_addfld1d (fname='FSRNDLN', units='W/m^2',  &
          avgflag='A', long_name='direct nir reflected solar radiation at local noon', &
          ptr_patch=this%fsr_nir_d_ln_patch, c2l_scale_type='urbanf')
+    ! diagnostic fluxes for ESM-SnowMIP
     if (use_SSRE) then
+       this%fsrSF_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSRSF', units='W/m^2',  &
+            avgflag='A', long_name='reflected solar radiation', &
+            ptr_patch=this%fsrSF_patch, c2l_scale_type='urbanf')
+
+       this%ssre_fsr_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SSRE_FSR', units='W/m^2',  &
+            avgflag='A', long_name='surface snow effect on reflected solar radiation', &
+            ptr_patch=this%ssre_fsr_patch, c2l_scale_type='urbanf')
        this%fsrSF_nir_d_patch(begp:endp) = spval
        call hist_addfld1d (fname='FSRSFND', units='W/m^2',  &
             avgflag='A', long_name='direct nir reflected solar radiation', &
