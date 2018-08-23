@@ -1315,13 +1315,13 @@ contains
           betail = 0.5_r8 * ((rho(p,ib)+tau(p,ib)) + (rho(p,ib)-tau(p,ib)) &
                  * ((1._r8+chil(p))/2._r8)**2) / omegal
 
-          ! Adjust omega, betad, and betai for intercepted snow
-          ! Remove all snow influence Justin Perket 
           if ( lSFonly ) then
+             ! Keep omega, betad, and betai as they are
              tmp0 = omegal
              tmp1 = betadl
              tmp2 = betail
           else
+             ! Adjust omega, betad, and betai for intercepted snow
              if (snowveg_onrad) then
                 tmp0 =   (1._r8-fcansno(p))*omegal        + fcansno(p)*omegas(ib)
                 tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
@@ -1368,7 +1368,6 @@ contains
 
           ! Direct beam
           if ( .not. lSFonly )then
-! 
              u1 = b - c1/albgrd(c,ib)
              u2 = b - c1*albgrd(c,ib)
              u3 = f + c1*albgrd(c,ib)
@@ -1489,135 +1488,135 @@ contains
                else if (nlevcan > 1)then
                   do iv = 1, nrad(p)
   
-                  ! Cumulative lai+sai at center of layer
+                     ! Cumulative lai+sai at center of layer
   
-                  if (iv == 1) then
-                     laisum = 0.5_r8 * (tlai_z(p,iv)+tsai_z(p,iv))
-                  else
-                     laisum = laisum + 0.5_r8 * ((tlai_z(p,iv-1)+tsai_z(p,iv-1))+(tlai_z(p,iv)+tsai_z(p,iv)))
-                  end if
+                     if (iv == 1) then
+                        laisum = 0.5_r8 * (tlai_z(p,iv)+tsai_z(p,iv))
+                     else
+                        laisum = laisum + 0.5_r8 * ((tlai_z(p,iv-1)+tsai_z(p,iv-1))+(tlai_z(p,iv)+tsai_z(p,iv)))
+                     end if
   
-                  ! Coefficients s1 and s2 depend on cumulative lai+sai. s2 is the sunlit fraction
+                     ! Coefficients s1 and s2 depend on cumulative lai+sai. s2 is the sunlit fraction
+     
+                     t1 = min(h*laisum, 40._r8)
+                     s1 = exp(-t1)
+                     t1 = min(twostext(p)*laisum, 40._r8)
+                     s2 = exp(-t1)
+                     fsun_z(p,iv) = s2
   
-                  t1 = min(h*laisum, 40._r8)
-                  s1 = exp(-t1)
-                  t1 = min(twostext(p)*laisum, 40._r8)
-                  s2 = exp(-t1)
-                  fsun_z(p,iv) = s2
+                     ! ===============
+                     ! Direct beam
+                     ! ===============
   
-                  ! ===============
-                  ! Direct beam
-                  ! ===============
+                     ! Coefficients h1-h6 and a1,a2 depend of cumulative lai+sai
   
-                  ! Coefficients h1-h6 and a1,a2 depend of cumulative lai+sai
+                     u1 = b - c1/albgrd(c,ib)
+                     u2 = b - c1*albgrd(c,ib)
+                     u3 = f + c1*albgrd(c,ib)
   
-                  u1 = b - c1/albgrd(c,ib)
-                  u2 = b - c1*albgrd(c,ib)
-                  u3 = f + c1*albgrd(c,ib)
+                     ! Derivatives for h2, h3, h5, h6 and a1, a2
   
-                  ! Derivatives for h2, h3, h5, h6 and a1, a2
+                     v = d1
+                     dv = h * p1 * tmp2 / s1 + h * p2 * tmp3 * s1
   
-                  v = d1
-                  dv = h * p1 * tmp2 / s1 + h * p2 * tmp3 * s1
+                     u = tmp6 * tmp2 / s1 - p2 * tmp7
+                     du = h * tmp6 * tmp2 / s1 + twostext(p) * p2 * tmp7
+                     dh2 = (v * du - u * dv) / (v * v)
   
-                  u = tmp6 * tmp2 / s1 - p2 * tmp7
-                  du = h * tmp6 * tmp2 / s1 + twostext(p) * p2 * tmp7
-                  dh2 = (v * du - u * dv) / (v * v)
+                     u = -tmp6 * tmp3 * s1 + p1 * tmp7
+                     du = h * tmp6 * tmp3 * s1 - twostext(p) * p1 * tmp7
+                     dh3 = (v * du - u * dv) / (v * v)
   
-                  u = -tmp6 * tmp3 * s1 + p1 * tmp7
-                  du = h * tmp6 * tmp3 * s1 - twostext(p) * p1 * tmp7
-                  dh3 = (v * du - u * dv) / (v * v)
+                     v = d2
+                     dv = h * tmp4 / s1 + h * tmp5 * s1
+     
+                     u = -h4/sigma * tmp4 / s1 - tmp9
+                     du = -h * h4/sigma * tmp4 / s1 + twostext(p) * tmp9
+                     dh5 = (v * du - u * dv) / (v * v)
   
-                  v = d2
-                  dv = h * tmp4 / s1 + h * tmp5 * s1
+                     u = h4/sigma * tmp5 * s1 + tmp9
+                     du = -h * h4/sigma * tmp5 * s1 - twostext(p) * tmp9
+                     dh6 = (v * du - u * dv) / (v * v)
   
-                  u = -h4/sigma * tmp4 / s1 - tmp9
-                  du = -h * h4/sigma * tmp4 / s1 + twostext(p) * tmp9
-                  dh5 = (v * du - u * dv) / (v * v)
+                     da1 = h1/sigma * s2*s2 + h2 * s2*s1 + h3 * s2/s1 &
+                         + (1._r8 - s2*s1) / (twostext(p) + h) * dh2 &
+                         + (1._r8 - s2/s1) / (twostext(p) - h) * dh3
+                     da2 = h4/sigma * s2*s2 + h5 * s2*s1 + h6 * s2/s1 &
+                         + (1._r8 - s2*s1) / (twostext(p) + h) * dh5 &
+                         + (1._r8 - s2/s1) / (twostext(p) - h) * dh6
   
-                  u = h4/sigma * tmp5 * s1 + tmp9
-                  du = -h * h4/sigma * tmp5 * s1 - twostext(p) * tmp9
-                  dh6 = (v * du - u * dv) / (v * v)
+                     ! Flux derivatives
+     
+                     d_ftid = -twostext(p)*h4/sigma*s2 - h*h5*s1 + h*h6/s1 + dh5*s1 + dh6/s1
+                     d_fabd = -(dh2+dh3) + (1._r8-albgrd(c,ib))*twostext(p)*s2 - (1._r8-albgri(c,ib))*d_ftid
+                     d_fabd_sun = (1._r8 - omega(p,ib)) * (twostext(p)*s2 + 1._r8 / avmu(p) * (da1 + da2))
+                     d_fabd_sha = d_fabd - d_fabd_sun
   
-                  da1 = h1/sigma * s2*s2 + h2 * s2*s1 + h3 * s2/s1 &
-                      + (1._r8 - s2*s1) / (twostext(p) + h) * dh2 &
-                      + (1._r8 - s2/s1) / (twostext(p) - h) * dh3
-                  da2 = h4/sigma * s2*s2 + h5 * s2*s1 + h6 * s2/s1 &
-                      + (1._r8 - s2*s1) / (twostext(p) + h) * dh5 &
-                      + (1._r8 - s2/s1) / (twostext(p) - h) * dh6
+                     fabd_sun_z(p,iv) = max(d_fabd_sun, 0._r8)
+                     fabd_sha_z(p,iv) = max(d_fabd_sha, 0._r8)
   
-                  ! Flux derivatives
+                     ! Flux derivatives are APARsun and APARsha per unit (LAI+SAI). Need
+                     ! to normalize derivatives by sunlit or shaded fraction to get
+                     ! APARsun per unit (LAI+SAI)sun and APARsha per unit (LAI+SAI)sha
   
-                  d_ftid = -twostext(p)*h4/sigma*s2 - h*h5*s1 + h*h6/s1 + dh5*s1 + dh6/s1
-                  d_fabd = -(dh2+dh3) + (1._r8-albgrd(c,ib))*twostext(p)*s2 - (1._r8-albgri(c,ib))*d_ftid
-                  d_fabd_sun = (1._r8 - omega(p,ib)) * (twostext(p)*s2 + 1._r8 / avmu(p) * (da1 + da2))
-                  d_fabd_sha = d_fabd - d_fabd_sun
+                     fabd_sun_z(p,iv) = fabd_sun_z(p,iv) / fsun_z(p,iv)
+                     fabd_sha_z(p,iv) = fabd_sha_z(p,iv) / (1._r8 - fsun_z(p,iv))
   
-                  fabd_sun_z(p,iv) = max(d_fabd_sun, 0._r8)
-                  fabd_sha_z(p,iv) = max(d_fabd_sha, 0._r8)
+                     ! ===============
+                     ! Diffuse
+                     ! ===============
   
-                  ! Flux derivatives are APARsun and APARsha per unit (LAI+SAI). Need
-                  ! to normalize derivatives by sunlit or shaded fraction to get
-                  ! APARsun per unit (LAI+SAI)sun and APARsha per unit (LAI+SAI)sha
+                     ! Coefficients h7-h10 and a1,a2 depend of cumulative lai+sai
   
-                  fabd_sun_z(p,iv) = fabd_sun_z(p,iv) / fsun_z(p,iv)
-                  fabd_sha_z(p,iv) = fabd_sha_z(p,iv) / (1._r8 - fsun_z(p,iv))
-  
-                  ! ===============
-                  ! Diffuse
-                  ! ===============
-  
-                  ! Coefficients h7-h10 and a1,a2 depend of cumulative lai+sai
-  
-                  u1 = b - c1/albgri(c,ib)
-                  u2 = b - c1*albgri(c,ib)
+                     u1 = b - c1/albgri(c,ib)
+                     u2 = b - c1*albgri(c,ib)
 
-                  a1 = h7 * (1._r8 - s2*s1) / (twostext(p) + h) +  h8 * (1._r8 - s2/s1) / (twostext(p) - h)
-                  a2 = h9 * (1._r8 - s2*s1) / (twostext(p) + h) + h10 * (1._r8 - s2/s1) / (twostext(p) - h)
+                     a1 = h7 * (1._r8 - s2*s1) / (twostext(p) + h) +  h8 * (1._r8 - s2/s1) / (twostext(p) - h)
+                     a2 = h9 * (1._r8 - s2*s1) / (twostext(p) + h) + h10 * (1._r8 - s2/s1) / (twostext(p) - h)
+     
+                     ! Derivatives for h7, h8, h9, h10 and a1, a2
   
-                  ! Derivatives for h7, h8, h9, h10 and a1, a2
+                     v = d1
+                     dv = h * p1 * tmp2 / s1 + h * p2 * tmp3 * s1
+     
+                     u = c1 * tmp2 / s1
+                     du = h * c1 * tmp2 / s1
+                     dh7 = (v * du - u * dv) / (v * v)
   
-                  v = d1
-                  dv = h * p1 * tmp2 / s1 + h * p2 * tmp3 * s1
+                     u = -c1 * tmp3 * s1
+                     du = h * c1 * tmp3 * s1
+                     dh8 = (v * du - u * dv) / (v * v)
   
-                  u = c1 * tmp2 / s1
-                  du = h * c1 * tmp2 / s1
-                  dh7 = (v * du - u * dv) / (v * v)
+                     v = d2
+                     dv = h * tmp4 / s1 + h * tmp5 * s1
   
-                  u = -c1 * tmp3 * s1
-                  du = h * c1 * tmp3 * s1
-                  dh8 = (v * du - u * dv) / (v * v)
+                     u = tmp4 / s1
+                     du = h * tmp4 / s1
+                     dh9 = (v * du - u * dv) / (v * v)
   
-                  v = d2
-                  dv = h * tmp4 / s1 + h * tmp5 * s1
+                     u = -tmp5 * s1
+                     du = h * tmp5 * s1
+                     dh10 = (v * du - u * dv) / (v * v)
   
-                  u = tmp4 / s1
-                  du = h * tmp4 / s1
-                  dh9 = (v * du - u * dv) / (v * v)
+                     da1 = h7*s2*s1 +  h8*s2/s1 + (1._r8-s2*s1)/(twostext(p)+h)*dh7 + (1._r8-s2/s1)/(twostext(p)-h)*dh8
+                     da2 = h9*s2*s1 + h10*s2/s1 + (1._r8-s2*s1)/(twostext(p)+h)*dh9 + (1._r8-s2/s1)/(twostext(p)-h)*dh10
   
-                  u = -tmp5 * s1
-                  du = h * tmp5 * s1
-                  dh10 = (v * du - u * dv) / (v * v)
+                     ! Flux derivatives
   
-                  da1 = h7*s2*s1 +  h8*s2/s1 + (1._r8-s2*s1)/(twostext(p)+h)*dh7 + (1._r8-s2/s1)/(twostext(p)-h)*dh8
-                  da2 = h9*s2*s1 + h10*s2/s1 + (1._r8-s2*s1)/(twostext(p)+h)*dh9 + (1._r8-s2/s1)/(twostext(p)-h)*dh10
+                     d_ftii = -h * h9 * s1 + h * h10 / s1 + dh9 * s1 + dh10 / s1
+                     d_fabi = -(dh7+dh8) - (1._r8-albgri(c,ib))*d_ftii
+                     d_fabi_sun = (1._r8 - omega(p,ib)) / avmu(p) * (da1 + da2)
+                     d_fabi_sha = d_fabi - d_fabi_sun
   
-                  ! Flux derivatives
+                     fabi_sun_z(p,iv) = max(d_fabi_sun, 0._r8)
+                     fabi_sha_z(p,iv) = max(d_fabi_sha, 0._r8)
   
-                  d_ftii = -h * h9 * s1 + h * h10 / s1 + dh9 * s1 + dh10 / s1
-                  d_fabi = -(dh7+dh8) - (1._r8-albgri(c,ib))*d_ftii
-                  d_fabi_sun = (1._r8 - omega(p,ib)) / avmu(p) * (da1 + da2)
-                  d_fabi_sha = d_fabi - d_fabi_sun
+                     ! Flux derivatives are APARsun and APARsha per unit (LAI+SAI). Need
+                     ! to normalize derivatives by sunlit or shaded fraction to get
+                     ! APARsun per unit (LAI+SAI)sun and APARsha per unit (LAI+SAI)sha
   
-                  fabi_sun_z(p,iv) = max(d_fabi_sun, 0._r8)
-                  fabi_sha_z(p,iv) = max(d_fabi_sha, 0._r8)
-  
-                  ! Flux derivatives are APARsun and APARsha per unit (LAI+SAI). Need
-                  ! to normalize derivatives by sunlit or shaded fraction to get
-                  ! APARsun per unit (LAI+SAI)sun and APARsha per unit (LAI+SAI)sha
-  
-                  fabi_sun_z(p,iv) = fabi_sun_z(p,iv) / fsun_z(p,iv)
-                  fabi_sha_z(p,iv) = fabi_sha_z(p,iv) / (1._r8 - fsun_z(p,iv))
+                     fabi_sun_z(p,iv) = fabi_sun_z(p,iv) / fsun_z(p,iv)
+                     fabi_sha_z(p,iv) = fabi_sha_z(p,iv) / (1._r8 - fsun_z(p,iv))
   
                   end do ! end of iv loop
                end if ! nlevcan
