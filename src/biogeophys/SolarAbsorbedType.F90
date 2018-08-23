@@ -17,9 +17,9 @@ module SolarAbsorbedType
   type, public :: solarabs_type
 
      ! Solar reflected
-     real(r8), pointer :: fsr_patch              (:)   ! patch solar radiation reflected (W/m**2)         
-     real(r8), pointer :: fsrSF_patch              (:)   ! diagnostic snow-free patch solar radiation reflected (W/m**2)         
-     real(r8), pointer :: ssre_fsr_patch           (:)   ! snow radiative effect on patch solar radiation reflected (W/m**2)         
+     real(r8), pointer :: fsr_patch              (:)   ! patch solar radiation reflected (W/m**2)
+     real(r8), pointer :: fsrSF_patch            (:)   ! diagnostic snow-free patch solar radiation reflected (W/m**2)
+     real(r8), pointer :: ssre_fsr_patch         (:)   ! snow radiative effect on patch solar radiation reflected (W/m**2)
      ! Solar Absorbed
      real(r8), pointer :: fsa_patch              (:)   ! patch solar radiation absorbed (total) (W/m**2)  
      real(r8), pointer :: fsa_u_patch            (:)   ! patch urban solar radiation absorbed (total) (W/m**2)
@@ -54,17 +54,17 @@ module SolarAbsorbedType
      ! Currently needed by lake code 
      ! TODO (MV 8/20/2014) should be moved in the future
      real(r8), pointer :: fsds_nir_d_patch       (:)   ! patch incident direct beam nir solar radiation (W/m**2)
-     real(r8), pointer :: fsds_nir_i_patch       (:)   ! patch incident diffuse nir solar radiation (W/m**2)    
+     real(r8), pointer :: fsds_nir_i_patch       (:)   ! patch incident diffuse nir solar radiation (W/m**2)
      real(r8), pointer :: fsds_nir_d_ln_patch    (:)   ! patch incident direct beam nir solar radiation at local noon (W/m**2)
-     real(r8), pointer :: fsr_nir_d_patch        (:)   ! patch reflected direct beam nir solar radiation (W/m**2) 
-     real(r8), pointer :: fsr_nir_i_patch        (:)   ! patch reflected diffuse nir solar radiation (W/m**2)     
+     real(r8), pointer :: fsr_nir_d_patch        (:)   ! patch reflected direct beam nir solar radiation (W/m**2)
+     real(r8), pointer :: fsr_nir_i_patch        (:)   ! patch reflected diffuse nir solar radiation (W/m**2)
      real(r8), pointer :: fsr_nir_d_ln_patch     (:)   ! patch reflected direct beam nir solar radiation at local noon (W/m**2)
      ! optional diagnostic fluxes:
-     real(r8), pointer :: fsrSF_nir_d_patch      (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
-     real(r8), pointer :: fsrSF_nir_i_patch      (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
+     real(r8), pointer :: fsrSF_nir_d_patch      (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2)
+     real(r8), pointer :: fsrSF_nir_i_patch      (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)
      real(r8), pointer :: fsrSF_nir_d_ln_patch   (:)   ! snow-free patch reflected direct beam nir solar radiation at local noon (W/m**2)
-     real(r8), pointer :: ssre_fsr_nir_d_patch   (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2) 
-     real(r8), pointer :: ssre_fsr_nir_i_patch   (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)     
+     real(r8), pointer :: ssre_fsr_nir_d_patch   (:)   ! snow-free patch reflected direct beam nir solar radiation (W/m**2)
+     real(r8), pointer :: ssre_fsr_nir_i_patch   (:)   ! snow-free patch reflected diffuse nir solar radiation (W/m**2)
      real(r8), pointer :: ssre_fsr_nir_d_ln_patch(:)   ! snow-free patch reflected direct beam nir solar radiation at local noon (W/m**2)
    contains
 
@@ -147,14 +147,14 @@ contains
     allocate(this%fsr_nir_d_patch        (begp:endp))              ; this%fsr_nir_d_patch        (:)   = nan
     allocate(this%fsr_nir_i_patch        (begp:endp))              ; this%fsr_nir_i_patch        (:)   = nan
     allocate(this%fsr_nir_d_ln_patch     (begp:endp))              ; this%fsr_nir_d_ln_patch     (:)   = nan
-    allocate(this%fsrSF_patch              (begp:endp))            ; this%fsrSF_patch              (:)   = nan
-    allocate(this%fsrSF_nir_d_patch        (begp:endp))            ; this%fsrSF_nir_d_patch        (:)   = nan
-    allocate(this%fsrSF_nir_i_patch        (begp:endp))            ; this%fsrSF_nir_i_patch        (:)   = nan
-    allocate(this%fsrSF_nir_d_ln_patch     (begp:endp))            ; this%fsrSF_nir_d_ln_patch     (:)   = nan
-    allocate(this%ssre_fsr_patch           (begp:endp))            ; this%ssre_fsr_patch           (:)   = nan
-    allocate(this%ssre_fsr_nir_d_patch     (begp:endp))            ; this%ssre_fsr_nir_d_patch     (:)   = nan
-    allocate(this%ssre_fsr_nir_i_patch     (begp:endp))            ; this%ssre_fsr_nir_i_patch     (:)   = nan
-    allocate(this%ssre_fsr_nir_d_ln_patch  (begp:endp))            ; this%ssre_fsr_nir_d_ln_patch  (:)   = nan
+    allocate(this%fsrSF_patch            (begp:endp))              ; this%fsrSF_patch            (:)   = nan
+    allocate(this%fsrSF_nir_d_patch      (begp:endp))              ; this%fsrSF_nir_d_patch      (:)   = nan
+    allocate(this%fsrSF_nir_i_patch      (begp:endp))              ; this%fsrSF_nir_i_patch      (:)   = nan
+    allocate(this%fsrSF_nir_d_ln_patch   (begp:endp))              ; this%fsrSF_nir_d_ln_patch   (:)   = nan
+    allocate(this%ssre_fsr_patch         (begp:endp))              ; this%ssre_fsr_patch         (:)   = nan
+    allocate(this%ssre_fsr_nir_d_patch   (begp:endp))              ; this%ssre_fsr_nir_d_patch   (:)   = nan
+    allocate(this%ssre_fsr_nir_i_patch   (begp:endp))              ; this%ssre_fsr_nir_i_patch   (:)   = nan
+    allocate(this%ssre_fsr_nir_d_ln_patch(begp:endp))              ; this%ssre_fsr_nir_d_ln_patch(:)   = nan
     allocate(this%fsds_nir_d_patch       (begp:endp))              ; this%fsds_nir_d_patch       (:)   = nan
     allocate(this%fsds_nir_i_patch       (begp:endp))              ; this%fsds_nir_i_patch       (:)   = nan
     allocate(this%fsds_nir_d_ln_patch    (begp:endp))              ; this%fsds_nir_d_ln_patch    (:)   = nan

@@ -20,7 +20,7 @@ module SurfaceAlbedoType
      real(r8), pointer :: coszen_col           (:)   ! col cosine of solar zenith angle
      real(r8), pointer :: albd_patch           (:,:) ! patch surface albedo (direct)   (numrad)                    
      real(r8), pointer :: albi_patch           (:,:) ! patch surface albedo (diffuse)  (numrad)                    
-     real(r8), pointer :: albdSF_patch         (:,:) ! patch snow-free surface albedo (direct)   (numrad)  
+     real(r8), pointer :: albdSF_patch         (:,:) ! patch snow-free surface albedo (direct)   (numrad)
      real(r8), pointer :: albiSF_patch         (:,:) ! patch snow-free surface albedo (diffuse)  (numrad)
      real(r8), pointer :: albgrd_pur_col       (:,:) ! col pure snow ground direct albedo     (numrad)             
      real(r8), pointer :: albgri_pur_col       (:,:) ! col pure snow ground diffuse albedo    (numrad)             
