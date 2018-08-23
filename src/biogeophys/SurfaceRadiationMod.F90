@@ -55,12 +55,12 @@ module SurfaceRadiationMod
      real(r8), pointer, private  :: fsr_vis_i_patch       (:) ! patch reflected diffuse vis solar radiation (W/m**2)
      real(r8), pointer, private  :: fsr_vis_d_ln_patch    (:) ! patch reflected direct beam vis solar radiation at local noon (W/m**2)
      ! diagnostic fluxes:
-     real(r8), pointer, private  :: fsrSF_vis_d_patch       (:) ! snow-free patch reflected direct beam vis solar radiation (W/m**2)
-     real(r8), pointer, private  :: fsrSF_vis_i_patch       (:) ! snow-free patch reflected diffuse vis solar radiation (W/m**2)
-     real(r8), pointer, private  :: fsrSF_vis_d_ln_patch    (:) ! snow-free patch reflected direct beam vis solar radiation at local noon (W/m**2)
-     real(r8), pointer, private  :: ssre_fsr_vis_d_patch    (:) ! snow radiative effect
-     real(r8), pointer, private  :: ssre_fsr_vis_i_patch    (:) ! snow radiative effect
-     real(r8), pointer, private  :: ssre_fsr_vis_d_ln_patch (:) ! snow radiative effect
+     real(r8), pointer, private  :: fsrSF_vis_d_patch     (:) ! snow-free patch reflected direct beam vis solar radiation (W/m**2)
+     real(r8), pointer, private  :: fsrSF_vis_i_patch     (:) ! snow-free patch reflected diffuse vis solar radiation (W/m**2)
+     real(r8), pointer, private  :: fsrSF_vis_d_ln_patch  (:) ! snow-free patch reflected direct beam vis solar radiation at local noon (W/m**2)
+     real(r8), pointer, private  :: ssre_fsr_vis_d_patch  (:) ! snow radiative effect
+     real(r8), pointer, private  :: ssre_fsr_vis_i_patch  (:) ! snow radiative effect
+     real(r8), pointer, private  :: ssre_fsr_vis_d_ln_patch(:)! snow radiative effect
      real(r8), pointer, private  :: fsds_sno_vd_patch     (:) ! patch incident visible, direct radiation on snow  (for history files)  [W/m2]
      real(r8), pointer, private  :: fsds_sno_nd_patch     (:) ! patch incident near-IR, direct radiation on snow  (for history files)  [W/m2]
      real(r8), pointer, private  :: fsds_sno_vi_patch     (:) ! patch incident visible, diffuse radiation on snow (for history files) [W/m2]
@@ -128,11 +128,11 @@ contains
     allocate(this%fsr_vis_d_patch       (begp:endp))              ; this%fsr_vis_d_patch       (:)   = nan
     allocate(this%fsr_vis_d_ln_patch    (begp:endp))              ; this%fsr_vis_d_ln_patch    (:)   = nan
     allocate(this%fsr_vis_i_patch       (begp:endp))              ; this%fsr_vis_i_patch       (:)   = nan
-    allocate(this%fsrSF_vis_d_patch       (begp:endp))              ; this%fsrSF_vis_d_patch       (:)   = nan
-    allocate(this%fsrSF_vis_d_ln_patch    (begp:endp))              ; this%fsrSF_vis_d_ln_patch    (:)   = nan
-    allocate(this%fsrSF_vis_i_patch       (begp:endp))              ; this%fsrSF_vis_i_patch       (:)   = nan
+    allocate(this%fsrSF_vis_d_patch     (begp:endp))              ; this%fsrSF_vis_d_patch     (:)   = nan
+    allocate(this%fsrSF_vis_d_ln_patch  (begp:endp))              ; this%fsrSF_vis_d_ln_patch  (:)   = nan
+    allocate(this%fsrSF_vis_i_patch     (begp:endp))              ; this%fsrSF_vis_i_patch     (:)   = nan
     allocate(this%ssre_fsr_vis_d_patch  (begp:endp))              ; this%ssre_fsr_vis_d_patch  (:)   = nan
-    allocate(this%ssre_fsr_vis_d_ln_patch  (begp:endp))           ; this%ssre_fsr_vis_d_ln_patch  (:)   = nan
+    allocate(this%ssre_fsr_vis_d_ln_patch(begp:endp))             ; this%ssre_fsr_vis_d_ln_patch(:)  = nan
     allocate(this%ssre_fsr_vis_i_patch  (begp:endp))              ; this%ssre_fsr_vis_i_patch  (:)   = nan
     allocate(this%fsr_sno_vd_patch      (begp:endp))              ; this%fsr_sno_vd_patch      (:)   = nan
     allocate(this%fsr_sno_nd_patch      (begp:endp))              ; this%fsr_sno_nd_patch      (:)   = nan
@@ -563,8 +563,8 @@ contains
           albsoi          =>    surfalb_inst%albsoi_col           , & ! Input:  [real(r8) (:,:) ] diffuse soil albedo (col,bnd) [frc] 
           albd            =>    surfalb_inst%albd_patch           , & ! Input:  [real(r8) (:,:) ] surface albedo (direct)               
           albi            =>    surfalb_inst%albi_patch           , & ! Input:  [real(r8) (:,:) ] surface albedo (diffuse)              
-          albdSF          =>    surfalb_inst%albdSF_patch         , & ! Input:  [real(r8) (:,:) ] snow-free surface albedo (direct)               
-          albiSF          =>    surfalb_inst%albiSF_patch         , & ! Input:  [real(r8) (:,:) ] snow-free surface albedo (diffuse)              
+          albdSF          =>    surfalb_inst%albdSF_patch         , & ! Input:  [real(r8) (:,:) ] snow-free surface albedo (direct)
+          albiSF          =>    surfalb_inst%albiSF_patch         , & ! Input:  [real(r8) (:,:) ] snow-free surface albedo (diffuse)
           fabd            =>    surfalb_inst%fabd_patch           , & ! Input:  [real(r8) (:,:) ] flux absorbed by canopy per unit direct flux
           fabd_sun        =>    surfalb_inst%fabd_sun_patch       , & ! Input:  [real(r8) (:,:) ] flux absorbed by sunlit canopy per unit direct flux
           fabd_sha        =>    surfalb_inst%fabd_sha_patch       , & ! Input:  [real(r8) (:,:) ] flux absorbed by shaded canopy per unit direct flux
@@ -602,26 +602,25 @@ contains
           fsds_nir_d      =>    solarabs_inst%fsds_nir_d_patch    , & ! Output: [real(r8) (:)   ] incident direct beam nir solar radiation (W/m**2)
           fsds_nir_d_ln   =>    solarabs_inst%fsds_nir_d_ln_patch , & ! Output: [real(r8) (:)   ] incident direct beam nir solar rad at local noon (W/m**2)
           fsds_nir_i      =>    solarabs_inst%fsds_nir_i_patch    , & ! Output: [real(r8) (:)   ] incident diffuse nir solar radiation (W/m**2)
-          fsrSF_nir_d       =>    solarabs_inst%fsrSF_nir_d_patch     , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar radiation (W/m**2)
-          fsrSF_nir_i       =>    solarabs_inst%fsrSF_nir_i_patch     , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse nir solar radiation (W/m**2)
-          fsrSF_nir_d_ln    =>    solarabs_inst%fsrSF_nir_d_ln_patch  , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar rad at local noon (W/m**2)
-          ssre_fsr_nir_d       =>    solarabs_inst%ssre_fsr_nir_d_patch     , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar radiation (W/m**2)
-          ssre_fsr_nir_i       =>    solarabs_inst%ssre_fsr_nir_i_patch     , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse nir solar radiation (W/m**2)
-          ssre_fsr_nir_d_ln    =>    solarabs_inst%ssre_fsr_nir_d_ln_patch  , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar rad at local noon (W/m**2)
-! end
+          fsrSF_nir_d     =>    solarabs_inst%fsrSF_nir_d_patch   , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar radiation (W/m**2)
+          fsrSF_nir_i     =>    solarabs_inst%fsrSF_nir_i_patch   , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse nir solar radiation (W/m**2)
+          fsrSF_nir_d_ln  =>    solarabs_inst%fsrSF_nir_d_ln_patch, & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar rad at local noon (W/m**2)
+          ssre_fsr_nir_d  =>    solarabs_inst%ssre_fsr_nir_d_patch, & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar radiation (W/m**2)
+          ssre_fsr_nir_i  =>    solarabs_inst%ssre_fsr_nir_i_patch, & ! Output: [real(r8) (:)   ] snow-free reflected diffuse nir solar radiation (W/m**2)
+          ssre_fsr_nir_d_ln=>   solarabs_inst%ssre_fsr_nir_d_ln_patch,&!Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar rad at local noon (W/m**2)
           fsa_r           =>    solarabs_inst%fsa_r_patch         , & ! Output: [real(r8) (:)   ] rural solar radiation absorbed (total) (W/m**2)
-          sub_surf_abs_SW =>    solarabs_inst%sub_surf_abs_SW_patch , & ! Output: [real(r8) (:)   ] fraction of solar radiation absorbed below first snow layer (W/M**2)
+          sub_surf_abs_SW =>    solarabs_inst%sub_surf_abs_SW_patch,& ! Output: [real(r8) (:)   ] fraction of solar radiation absorbed below first snow layer (W/M**2)
 
           parveg_ln       =>    surfrad_inst%parveg_ln_patch      , & ! Output: [real(r8) (:)   ] absorbed par by vegetation at local noon (W/m**2)
           fsr_vis_d       =>    surfrad_inst%fsr_vis_d_patch      , & ! Output: [real(r8) (:)   ] reflected direct beam vis solar radiation (W/m**2)
           fsr_vis_i       =>    surfrad_inst%fsr_vis_i_patch      , & ! Output: [real(r8) (:)   ] reflected diffuse vis solar radiation (W/m**2)
-          fsrSF_vis_d       =>    surfrad_inst%fsrSF_vis_d_patch      , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar radiation (W/m**2)
-          fsrSF_vis_i       =>    surfrad_inst%fsrSF_vis_i_patch      , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse vis solar radiation (W/m**2)
-          ssre_fsr_vis_d       =>    surfrad_inst%ssre_fsr_vis_d_patch      , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar radiation (W/m**2)
-          ssre_fsr_vis_i       =>    surfrad_inst%ssre_fsr_vis_i_patch      , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse vis solar radiation (W/m**2)
+          fsrSF_vis_d     =>    surfrad_inst%fsrSF_vis_d_patch    , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar radiation (W/m**2)
+          fsrSF_vis_i     =>    surfrad_inst%fsrSF_vis_i_patch    , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse vis solar radiation (W/m**2)
+          ssre_fsr_vis_d  =>    surfrad_inst%ssre_fsr_vis_d_patch , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar radiation (W/m**2)
+          ssre_fsr_vis_i  =>    surfrad_inst%ssre_fsr_vis_i_patch , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse vis solar radiation (W/m**2)
           fsds_vis_i_ln   =>    surfrad_inst%fsds_vis_i_ln_patch  , & ! Output: [real(r8) (:)   ] incident diffuse beam vis solar rad at local noon (W/m**2)
           fsr_vis_d_ln    =>    surfrad_inst%fsr_vis_d_ln_patch   , & ! Output: [real(r8) (:)   ] reflected direct beam vis solar rad at local noon (W/m**2)
-          fsrSF_vis_d_ln    =>    surfrad_inst%fsrSF_vis_d_ln_patch   , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar rad at local noon (W/m**2)
+          fsrSF_vis_d_ln  =>    surfrad_inst%fsrSF_vis_d_ln_patch , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar rad at local noon (W/m**2)
           fsds_vis_d      =>    surfrad_inst%fsds_vis_d_patch     , & ! Output: [real(r8) (:)   ] incident direct beam vis solar radiation (W/m**2)
           fsds_vis_i      =>    surfrad_inst%fsds_vis_i_patch     , & ! Output: [real(r8) (:)   ] incident diffuse vis solar radiation (W/m**2)
           fsds_vis_d_ln   =>    surfrad_inst%fsds_vis_d_ln_patch  , & ! Output: [real(r8) (:)   ] incident direct beam vis solar rad at local noon (W/m**2)
