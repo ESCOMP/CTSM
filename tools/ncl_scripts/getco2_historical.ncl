@@ -1,8 +1,8 @@
 ;
 ; Take the greenhouse gas file used by CAM for historical (and future) representations of
 ; greenhouse gases, and convert it to a format that can be used by streams.
-; So include domain data for a single point that covers the globe, as well
-; as CO2 data over that single point. In the process we also discard the other
+; So include domain data for a single point (or latitude bands) that covers the globe, as well
+; as CO2 data over those latitude bands. In the process we also discard the other
 ; greenhouse gases, as the datm can only pass CO2.
 ;
 ;  Erik Kluzek
@@ -57,11 +57,11 @@ begin
 
    sim_yr_rng = sim_yr0 + "-" + sim_yr2;
    
-   cmip_vers = "_CMIP6_";
-
    if ( rcp .eq. histrcp )then
+      cmip_vers = "_CMIP6_";
       outco2filename = "fco2_datm_"+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
    else
+      cmip_vers = "_CMIP5_";
       outco2filename = "fco2_datm_rcp"+rcp+"_"+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
    end if
    system( "/bin/rm -f "+outco2filename );
@@ -70,7 +70,11 @@ begin
    ;
    ; Define dimensions
    ;
-   nlat = dimsizes(ncg->lat);
+   if ( isfilevar(ncg, "lat") )then
+      nlat = dimsizes(ncg->lat);
+   else
+      nlat = 1
+   end if
    nlon = 1;
    nv   = 4;
    dimnames = (/ "time", "lat", "lon", "nv" /);
@@ -121,13 +125,19 @@ begin
    pi                      = 3.14159265358979323846d00;
    nco->mask               =   1;
    nco->frac               =   1.0;
-   nco->latc               = (/ ncg->lat/)
+   if ( nlat .gt. 1 )then
+      nco->latc               = (/ ncg->lat/);
+   else
+      nco->latc               = (/ 0.0d00 /);
+   end if
    nco->latv(nlat-1,0,0)   =  90.0d00;
    nco->latv(nlat-1,0,3)   =  90.0d00;
-   nco->latv(0:nlat-2,0,0) =  ( (/ ncg->lat(0:nlat-2) /) + (/ncg->lat(1:nlat-1) /) )*0.5d00
-   nco->latv(0:nlat-2,0,3) =  (/ nco->latv(0:nlat-2,0,0) /);
-   nco->latv(1:nlat-1,0,1) =  (/ nco->latv(0:nlat-2,0,0) /);
-   nco->latv(1:nlat-1,0,2) =  (/ nco->latv(1:nlat-1,0,1) /);
+   if ( nlat .gt. 1 )then
+     nco->latv(0:nlat-2,0,0) =  ( (/ ncg->lat(0:nlat-2) /) + (/ncg->lat(1:nlat-1) /) )*0.5d00
+     nco->latv(0:nlat-2,0,3) =  (/ nco->latv(0:nlat-2,0,0) /);
+     nco->latv(1:nlat-1,0,1) =  (/ nco->latv(0:nlat-2,0,0) /);
+     nco->latv(1:nlat-1,0,2) =  (/ nco->latv(1:nlat-1,0,1) /);
+   end if
    nco->latv(0,0,1)        = -90.0d00;
    nco->latv(0,0,2)        = -90.0d00;
    nco->lonv(:,0,0)        =   0.0d00;
@@ -151,25 +161,33 @@ begin
    ;
    ; Time and date
    ;
-   starttime = (/ ncg->time(0)/) - 15
-   print( "Start time is: "+starttime );
-   nco->time = (/ ncg->time /) - starttime;
    nco->date = (/ ncg->date /);
-   expected_first = sim_yr0*10000 + 116
-   if ( nco->date(0) .ne. expected_first )then
-      print( "Starting date is NOT what is expected: "+nco->date(0)+ " should be:"+expected_first );
-      exit
+   if ( nlat .gt. 1 )then
+      starttime = (/ ncg->time(0)/) - 15
+      print( "Start time is: "+starttime );
+      nco->time = (/ ncg->time /) - starttime;
+      expected_first = sim_yr0*10000 + 116
+      if ( nco->date(0) .ne. expected_first )then
+         print( "Starting date is NOT what is expected: "+nco->date(0)+ " should be:"+expected_first );
+         exit
+      end if
+      nco->time@units = "days since "+sim_yr0+"-01-01 00:00:00" ;
+   else
+      nco->time = dble2flt( ncg->time );
    end if
-   nco->time@units = "days since "+sim_yr0+"-01-01 00:00:00" ;
    nco->date@comment = "This variable is NOT used when read by datm, the time coordinate is used";
    ;
    ; CO2
    ;
-   print( "Copy CO2 for "+ntime+" months of data" );
-   do y = 0, nlat-1
-     print( "latitude: "+ nco->latc(y,0) );
-     nco->CO2(:,y,0) = (/ ncg->CO2_LBC(:,y) /) * 1.e6;
-   end do
+   print( "Copy CO2 for "+ntime+" time samples of data" );
+   if ( nlat .gt. 1 )then
+      do y = 0, nlat-1
+        print( "latitude: "+ nco->latc(y,0) );
+        nco->CO2(:,y,0) = (/ ncg->CO2_LBC(:,y) /) * 1.e6;
+      end do
+   else
+      nco->CO2(:,0,0) = (/ ncg->CO2(:) /);
+   end if
    print( "Average Global First CO2 ppmv value: Date="+nco->date(0)+" CO2="+avg(nco->CO2(0,:,0)     ) );
    print( "Average Global Last  CO2 ppmv value: Date="+nco->date(ntime-1)+" CO2="+avg(nco->CO2(ntime-1,:,0)) );
 
