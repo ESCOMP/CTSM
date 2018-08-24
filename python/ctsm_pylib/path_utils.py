@@ -60,6 +60,15 @@ def path_to_cime(standalone_only=False):
     raise RuntimeError("Cannot find cime within standalone CTSM checkout, "
                        "or within CESM checkout rooted at {}".format(cesm_path))
 
+def prepend_to_python_path(path):
+    """Adds the given path to python's sys.path
+
+    The path is added near the beginning, so that it takes precedence over existing
+    entries in the path
+    """
+    # Insert at location 1 rather than 0, because 0 is special
+    sys.path.insert(1, path)
+
 def add_cime_lib_to_path(standalone_only=False):
     """Adds the CIME python library to the python path, to allow importing
     modules from that library
@@ -69,7 +78,7 @@ def add_cime_lib_to_path(standalone_only=False):
     """
     cime_lib_path = os.path.join(path_to_cime(standalone_only=standalone_only),
                                  'scripts', 'lib')
-    sys.path.append(cime_lib_path)
+    prepend_to_python_path(cime_lib_path)
 
 # ========================================================================
 # Private functions
