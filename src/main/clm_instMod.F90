@@ -91,34 +91,34 @@ module clm_instMod
   !-----------------------------------------
 
   ! Physics types 
-  type(aerosol_type)                      :: aerosol_inst
-  type(canopystate_type)                  :: canopystate_inst
-  type(energyflux_type)                   :: energyflux_inst
-  type(frictionvel_type)                  :: frictionvel_inst
-  type(glacier_smb_type)                  :: glacier_smb_inst
-  type(infiltration_excess_runoff_type)   :: infiltration_excess_runoff_inst
-  type(irrigation_type)                   :: irrigation_inst
-  type(lakestate_type)                    :: lakestate_inst
-  class(ozone_base_type), allocatable     :: ozone_inst
-  type(photosyns_type)                    :: photosyns_inst
-  type(soilstate_type)                    :: soilstate_inst
-  type(soilhydrology_type)                :: soilhydrology_inst
-  type(saturated_excess_runoff_type)      :: saturated_excess_runoff_inst
-  type(solarabs_type)                     :: solarabs_inst
-  type(surfalb_type)                      :: surfalb_inst
-  type(surfrad_type)                      :: surfrad_inst
-  type(temperature_type)                  :: temperature_inst
-  type(urbanparams_type)                  :: urbanparams_inst
-  type(urbantv_type)                      :: urbantv_inst
-  type(humanindex_type)                   :: humanindex_inst
-  type(water_type)                        :: water_inst
-  type(atm2lnd_type)                      :: atm2lnd_inst
-  type(glc2lnd_type)                      :: glc2lnd_inst
-  type(lnd2atm_type)                      :: lnd2atm_inst
-  type(lnd2glc_type)                      :: lnd2glc_inst
-  type(glc_behavior_type), target         :: glc_behavior
-  type(topo_type)                         :: topo_inst
-  class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
+  type(aerosol_type), public              :: aerosol_inst
+  type(canopystate_type), public          :: canopystate_inst
+  type(energyflux_type), public           :: energyflux_inst
+  type(frictionvel_type), public          :: frictionvel_inst
+  type(glacier_smb_type), public          :: glacier_smb_inst
+  type(infiltration_excess_runoff_type), public :: infiltration_excess_runoff_inst
+  type(irrigation_type), public           :: irrigation_inst
+  type(lakestate_type), public            :: lakestate_inst
+  class(ozone_base_type), public, allocatable :: ozone_inst
+  type(photosyns_type), public            :: photosyns_inst
+  type(soilstate_type), public            :: soilstate_inst
+  type(soilhydrology_type), public        :: soilhydrology_inst
+  type(saturated_excess_runoff_type), public :: saturated_excess_runoff_inst
+  type(solarabs_type), public             :: solarabs_inst
+  type(surfalb_type), public              :: surfalb_inst
+  type(surfrad_type), public              :: surfrad_inst
+  type(temperature_type), public          :: temperature_inst
+  type(urbanparams_type), public          :: urbanparams_inst
+  type(urbantv_type), public              :: urbantv_inst
+  type(humanindex_type), public           :: humanindex_inst
+  type(water_type), public                :: water_inst
+  type(atm2lnd_type), public              :: atm2lnd_inst
+  type(glc2lnd_type), public              :: glc2lnd_inst
+  type(lnd2atm_type), public              :: lnd2atm_inst
+  type(lnd2glc_type), public              :: lnd2glc_inst
+  type(glc_behavior_type), target, public :: glc_behavior
+  type(topo_type), public                 :: topo_inst
+  class(soil_water_retention_curve_type), public, allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
   ! Eventually bgc_vegetation_inst will be an allocatable instance of an abstract
