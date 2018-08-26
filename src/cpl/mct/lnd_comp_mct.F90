@@ -580,7 +580,6 @@ contains
     use spmdMod     , only: iam
     use mct_mod     , only: mct_gGrid_importIAttr
     use mct_mod     , only: mct_gGrid_importRAttr, mct_gGrid_init, mct_gsMap_orderedPoints
-    use seq_flds_mod, only: seq_flds_dom_coord, seq_flds_dom_other
     !
     ! !ARGUMENTS: 
     type(bounds_type), intent(in)  :: bounds  ! bounds
@@ -598,8 +597,8 @@ contains
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
     ! Note that in addition land carries around landfrac for the purposes of domain checking
     ! 
-    call mct_gGrid_init( GGrid=dom_l, CoordChars=trim(seq_flds_dom_coord), &
-       OtherChars=trim(seq_flds_dom_other), lsize=lsize )
+    call mct_gGrid_init(GGrid=dom_l, &
+         CoordChars='lat:lon:hgt', OtherChars='area:aream:mask:frac', lsize=lsize )
     !
     ! Allocate memory
     !

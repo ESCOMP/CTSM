@@ -260,13 +260,14 @@ contains
 
     end do
 
-    call glc2lnd_inst%set_glc2lnd_fields( &
+    ! NOTE(wjs, 2017-12-13) the x2l argument doesn't have the typical bounds
+    ! subsetting (bounds%begg:bounds%endg). This mirrors the lack of these bounds in
+    ! the call to lnd_import from lnd_run_mct. This is okay as long as this code is
+    ! outside a clump loop.
+
+    call glc2lnd_inst%set_glc2lnd_fields_mct( &
          bounds = bounds, &
          glc_present = glc_present, &
-         ! NOTE(wjs, 2017-12-13) the x2l argument doesn't have the typical bounds
-         ! subsetting (bounds%begg:bounds%endg). This mirrors the lack of these bounds in
-         ! the call to lnd_import from lnd_run_mct. This is okay as long as this code is
-         ! outside a clump loop.
          x2l = x2l, &
          index_x2l_Sg_ice_covered = index_x2l_Sg_ice_covered, &
          index_x2l_Sg_topo = index_x2l_Sg_topo, &

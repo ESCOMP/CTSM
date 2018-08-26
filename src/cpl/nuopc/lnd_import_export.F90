@@ -39,6 +39,8 @@ module lnd_import_export
 
   private :: fldlist_add
   private :: fldlist_realize
+  private :: state_getimport
+  private :: state_setexport
   private :: state_getfldptr
   private :: check_for_nans
 
@@ -51,13 +53,14 @@ module lnd_import_export
   integer                :: fldsFrLnd_num = 0
   type (fld_list_type)   :: fldsToLnd(fldsMax)
   type (fld_list_type)   :: fldsFrLnd(fldsMax)
-
-  character(len=cxx)     :: drydep_fields       ! List of dry-deposition fields
-  character(len=cxx)     :: megan_voc_fields    ! List of MEGAN VOC emission fields
-  character(len=cxx)     :: fire_emis_fields    ! List of fire emission fields
-  character(len=cx)      :: carma_fields        ! List of CARMA fields from lnd->atm
-  character(len=cx)      :: ndep_fields         ! List of nitrogen deposition fields from atm->lnd/ocn
-
+  character(len=cxx)     :: drydep_fields    ! List of dry-deposition fields
+  character(len=cxx)     :: megan_voc_fields ! List of MEGAN VOC emission fields
+  character(len=cxx)     :: fire_emis_fields ! List of fire emission fields
+  character(len=cx)      :: carma_fields     ! List of CARMA fields from lnd->atm
+  character(len=cx)      :: ndep_fields      ! List of nitrogen deposition fields from atm->lnd/ocn
+  logical                :: flds_co2a        ! use case
+  logical                :: flds_co2b        ! use case
+  logical                :: flds_co2c        ! use case
   integer                :: glc_nec
   integer, parameter     :: dbug = 10
   integer, parameter     :: debug_import = 1 ! internal debug level
@@ -85,9 +88,6 @@ contains
     character(len=2)       :: nec_str
     integer                :: dbrc
     integer                :: n, num
-    logical                :: flds_co2a      ! use case
-    logical                :: flds_co2b      ! use case
-    logical                :: flds_co2c      ! use case
     logical                :: add_ndep_fields
     character(len=128)     :: fldname
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
@@ -168,8 +168,12 @@ contains
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_flxdst2'  )
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_flxdst3'  )
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_flxdst4'  )
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_fco2_lnd' )
    !call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_methane'  )
+
+    ! co2 fields from land 
+    if (flds_co2b .or. flds_co2c) then
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_fco2_lnd' )
+    end if
 
     ! Dry Deposition fluxes from land - ALSO initialize drydep here
     call seq_drydep_readnl("drv_flds_in", mpicom, masterproc, drydep_fields)
@@ -400,6 +404,8 @@ contains
     real(r8)                  :: forc_rainl(bounds%begg:bounds%endg)    ! rainxy Atm flux mm/s
     real(r8)                  :: forc_snowc(bounds%begg:bounds%endg)    ! snowfxy Atm flux  mm/s
     real(r8)                  :: forc_snowl(bounds%begg:bounds%endg)    ! snowfxl Atm flux  mm/s
+    real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
+    real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
     real(r8)                  :: frac_grc(bounds%begg:bounds%endg, 0:glc_nec)
     real(r8)                  :: topo_grc(bounds%begg:bounds%endg, 0:glc_nec)
     real(r8)                  :: hflx_grc(bounds%begg:bounds%endg, 0:glc_nec)
@@ -444,207 +450,125 @@ contains
     ! Required atmosphere input fields
     !--------------------------
 
-    call state_getfldptr(importState, 'Sa_z', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_z', bounds, output=atm2lnd_inst%forc_hgt_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_hgt_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Sa_topo', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_topo', bounds, output=atm2lnd_inst%forc_topo_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_topo_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Sa_u', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_u', bounds, output=atm2lnd_inst%forc_u_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_u_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Sa_v', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_v', bounds, output=atm2lnd_inst%forc_v_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_v_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Sa_ptem', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_ptem', bounds, output=atm2lnd_inst%forc_th_not_downscaled_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_th_not_downscaled_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Sa_shum', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_shum', bounds, output=atm2lnd_inst%forc_q_not_downscaled_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_q_not_downscaled_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Sa_pbot', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_pbot', bounds, output=atm2lnd_inst%forc_pbot_not_downscaled_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_pbot_not_downscaled_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Sa_tbot', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sa_tbot', bounds, output=atm2lnd_inst%forc_t_not_downscaled_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_t_not_downscaled_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_rainc', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_rainc', bounds, output=forc_rainc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       forc_rainc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_snowl', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_rainl', bounds, output=forc_rainl, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       forc_snowl(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_snowc', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_snowc', bounds, output=forc_snowc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       forc_snowc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_rainl', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_snowl', bounds, output=forc_snowl, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       forc_rainl(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_lwdn', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_lwdn', bounds, output=atm2lnd_inst%forc_lwrad_not_downscaled_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_swndr', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_swvdr', bounds, output=atm2lnd_inst%forc_solad_grc(:,1), rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_solad_grc(g,2) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_swvdr', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_swndr', bounds, output=atm2lnd_inst%forc_solad_grc(:,2), rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_solad_grc(g,1) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_swndf', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_swvdf', bounds, output=atm2lnd_inst%forc_solai_grc(:,1), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_solai_grc(g,2) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_swvdf', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_swndf', bounds, output=atm2lnd_inst%forc_solai_grc(:,2), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_solai_grc(g,1) = dataPtr(g-begg+1)
-    end do
 
     ! Atmosphere prognostic/prescribed aerosol fields
 
-    call state_getfldptr(importState, 'Faxa_bcphidry', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_bcphidry', bounds, output=atm2lnd_inst%forc_aer_grc(:,1), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,1) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_bcphodry', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_bcphodry', bounds, output=atm2lnd_inst%forc_aer_grc(:,2), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,2) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_bcphiwet', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_bcphiwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,3), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,3) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_ocphidry', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_ocphidry', bounds, output=atm2lnd_inst%forc_aer_grc(:,4), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,4) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_ocphodry', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_ocphodry', bounds, output=atm2lnd_inst%forc_aer_grc(:,5), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,5) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_ocphiwet', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_ocphiwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,6), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,6) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstwet1', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstwet1', bounds, output=atm2lnd_inst%forc_aer_grc(:,7), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,7) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstdry1', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstdry1', bounds, output=atm2lnd_inst%forc_aer_grc(:,8), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,8) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstwet2', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstwet2', bounds, output=atm2lnd_inst%forc_aer_grc(:,9), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,9) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstdry2', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstdry2', bounds, output=atm2lnd_inst%forc_aer_grc(:,10), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,10) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstwet3', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstwet3', bounds, output=atm2lnd_inst%forc_aer_grc(:,11), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,11) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstdry3', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstdry3', bounds, output=atm2lnd_inst%forc_aer_grc(:,12), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,12) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstwet4', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstwet4', bounds, output=atm2lnd_inst%forc_aer_grc(:,13), rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,13) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState, 'Faxa_dstdry4', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Faxa_dstdry4', bounds, output=atm2lnd_inst%forc_aer_grc(:,14), rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_getimport(importState, 'Sa_methane', bounds, output=atm2lnd_inst%forc_pch4_grc, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! The mediator is sending ndep in units if kgN/m2/s - and ctsm uses units of gN/m2/sec
+    ! so the following conversion needs to happen
+    call state_getimport(importState, 'Faxa_nhx', bounds, output=forc_nhx, rc=rc )
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_noy', bounds, output=forc_noy, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
-       atm2lnd_inst%forc_aer_grc(g,14) = dataPtr(g-begg+1)
+       atm2lnd_inst%forc_ndep_grc(g) = (forc_nhx(g) + forc_noy(g))*1000._r8
     end do
 
     !--------------------------
-    ! Atmosphere co2 
+    ! Atmosphere co2
     !--------------------------
 
-    fldName = 'Sa_co2prog'  
+    fldName = 'Sa_co2prog'
     call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
     if ( shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'prognostic') then
        call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
     end if
-    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-    if ( shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
+    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
        call state_getfldptr(importState, trim(fldname), dataPtr, begg, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg,endg
@@ -662,9 +586,7 @@ contains
     if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'diagnostic') then
        call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
     end if
-    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-    if ( shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
+    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
        call state_getfldptr(importState, trim(fldname), dataPtr, begg, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg,endg
@@ -694,41 +616,6 @@ contains
     end do
 
     !--------------------------
-    ! Atmosphere methane
-    !--------------------------
-
-    call ESMF_StateGet(importState, 'Sa_methane', itemFlag, rc=rc)
-    if ( shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
-       call state_getfldptr(importState, 'Sa_methane', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          atm2lnd_inst%forc_pch4_grc(g) = dataPtr(g-begg+1)
-       end do
-    end if
-
-    !--------------------------
-    ! Atmosphere nitrogen deposition
-    !--------------------------
-
-    ! The mediator is sending ndep in units if kgN/m2/s - and clm
-    ! uses units of gN/m2/sec - so the following conversion needs to happen
-
-    call ESMF_StateGet(importState, 'Faxa_nhx', itemFlag1, rc=rc)
-    if ( shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_StateGet(importState, 'Faxa_noy', itemFlag2, rc=rc)
-    if ( shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if ( itemflag1 /= ESMF_STATEITEM_NOTFOUND .and. itemflag2 /= ESMF_STATEITEM_NOTFOUND) then
-       call state_getfldptr(importState, 'Faxa_nhx', dataPtr1, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_getfldptr(importState, 'Faxa_noy', dataPtr2, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          atm2lnd_inst%forc_ndep_grc(g) = (dataPtr1(g-begg+1) + dataPtr2(g-begg+1))*1000._r8
-       end do
-    end if
-
-    !--------------------------
     ! Flooding back from river
     !--------------------------
 
@@ -736,22 +623,22 @@ contains
     ! so water sent from rof to land is negative,
     ! change the sign to indicate addition of water to system.
 
-    call state_getfldptr(importState, 'Flrr_flood', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Flrr_flood', bounds, output=atm2lnd_inst%forc_flood_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
-       atm2lnd_inst%forc_flood_grc(g) = -dataPtr(g-begg+1)
+       atm2lnd_inst%forc_flood_grc(:) = -atm2lnd_inst%forc_flood_grc(:)
     end do
 
-    call state_getfldptr(importState, 'Flrr_volr', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Flrr_volr', bounds, output=atm2lnd_inst%volr_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
-       atm2lnd_inst%volr_grc(g) = dataPtr(g-begg+1) * (ldomain%area(g) * 1.e6_r8)
+       atm2lnd_inst%volr_grc(g) = atm2lnd_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
     end do
 
-    call state_getfldptr(importState, 'Flrr_volrmch', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Flrr_volrmch', bounds, output=atm2lnd_inst%volrmch_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
-       atm2lnd_inst%volrmch_grc(g) = dataPtr(g-begg+1) * (ldomain%area(g) * 1.e6_r8)
+       atm2lnd_inst%volrmch_grc(g) = atm2lnd_inst%volrmch_grc(g) * (ldomain%area(g) * 1.e6_r8)
     end do
 
     !--------------------------
@@ -765,42 +652,27 @@ contains
     do num = 0,glc_nec
        nec_str = glc_elevclass_as_string(num)
 
-       call state_getfldptr(importState, 'Sg_ice_covered'//nec_str, dataPtr, begg, rc=rc )
+       call state_getimport(importState, 'Sg_ice_covered'//nec_str, bounds, frac_grc(:,num), rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          frac_grc(g,num) = dataPtr(g-begg+1)
-       end do
 
-       call state_getfldptr(importState, 'Sg_topo'//nec_str, dataPtr, begg, rc=rc )
+       call state_getimport(importState, 'Sg_topo'//nec_str, bounds, topo_grc(:,num), rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          topo_grc(g,num) = dataPtr(g-begg+1)
-       end do
 
-       call state_getfldptr(importState, 'Flgg_hflx'//nec_str, dataPtr, begg, rc=rc )
+       call state_getimport(importState, 'Flgg_hflx'//nec_str, bounds, hflx_grc(:,num), rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          hflx_grc(g,num) = dataPtr(g-begg+1)
-       end do
     end do
 
-    call state_getfldptr(importState,'Sg_icemask', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sg_icemask',  bounds, icemask_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       icemask_grc(g) = dataPtr(g-begg+1)
-    end do
 
-    call state_getfldptr(importState,'Sg_icemask_coupled_fluxes', dataPtr, begg, rc=rc )
+    call state_getimport(importState, 'Sg_icemask_coupled_fluxes',  bounds, icemask_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       icemask_coupled_fluxes_grc(g) = dataPtr(g-begg+1)
-    end do
 
     call glc2lnd_inst%set_glc2lnd_fields_nuopc( bounds, glc_present, &
          frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc)
 
     !--------------------------
-    ! Derived quantities 
+    ! Derived quantities
     !--------------------------
 
     do g = begg, endg
@@ -874,49 +746,6 @@ contains
     ! atm2lnd_inst%forc_rh_grc(g) = min( 100.0_r8, atm2lnd_inst%forc_rh_grc(g) )
     ! atm2lnd_inst%forc_rh_grc(g) = max(   0.0_r8, atm2lnd_inst%forc_rh_grc(g) )
 
-    !--------------------------
-    ! Debug output
-    !--------------------------
-
-    if (masterproc .and. debug_import > 0 .and. get_nstep() < 5) then
-       do g = bounds%begg,bounds%endg
-          i = 1 + (g-bounds%begg)
-          write(iulog,F01)'import: nstep, n, Sa_z        = ',get_nstep(), i, atm2lnd_inst%forc_hgt_grc(g)
-          write(iulog,F01)'import: nstep, n, Sa_topo     = ',get_nstep(), i, atm2lnd_inst%forc_topo_grc(g)
-          write(iulog,F01)'import: nstep, n, Sa_u        = ',get_nstep(), i, atm2lnd_inst%forc_u_grc(g)
-          write(iulog,F01)'import: nstep, n, Sa_v        = ',get_nstep(), i, atm2lnd_inst%forc_v_grc(g)
-          write(iulog,F01)'import: nstep, n, Fa_swndr    = ',get_nstep(), i, atm2lnd_inst%forc_solad_grc(g,2)
-          write(iulog,F01)'import: nstep, n, Fa_swvdr    = ',get_nstep(), i, atm2lnd_inst%forc_solad_grc(g,1)
-          write(iulog,F01)'import: nstep, n, Fa_swndf    = ',get_nstep(), i, atm2lnd_inst%forc_solai_grc(g,2)
-          write(iulog,F01)'import: nstep, n, Fa_swvdf    = ',get_nstep(), i, atm2lnd_inst%forc_solai_grc(g,1)
-          write(iulog,F01)'import: nstep, n, Sa_ptem     = ',get_nstep(), i, atm2lnd_inst%forc_th_not_downscaled_grc(g)
-          write(iulog,F01)'import: nstep, n, Sa_shum     = ',get_nstep(), i, atm2lnd_inst%forc_q_not_downscaled_grc(g)
-          write(iulog,F01)'import: nstep, n, Sa_pbot     = ',get_nstep(), i, atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-          write(iulog,F01)'import: nstep, n, Sa_tbot     = ',get_nstep(), i, atm2lnd_inst%forc_t_not_downscaled_grc(g)
-          write(iulog,F01)'import: nstep, n, Fa_lwdn     = ',get_nstep(), i, atm2lnd_inst%forc_lwrad_not_downscaled_grc(g)
-          write(iulog,F01)'import: nstep, n, Fa_rainc    = ',get_nstep(), i, forc_rainc(g)
-          write(iulog,F01)'import: nstep, n, Fa_rainl    = ',get_nstep(), i, forc_rainl(g)
-          write(iulog,F01)'import: nstep, n, Fa_snowc    = ',get_nstep(), i, forc_snowc(g)
-          write(iulog,F01)'import: nstep, n, Fa_snowl    = ',get_nstep(), i, forc_snowl(g)
-          write(iulog,F01)'import: nstep, n, Fa_bcphidry = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,1)
-          write(iulog,F01)'import: nstep, n, Fa_fcphodry = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,2)
-          write(iulog,F01)'import: nstep, n, Fa_bcphiwet = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,3)
-          write(iulog,F01)'import: nstep, n, Fa_ocphidry = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,4)
-          write(iulog,F01)'import: nstep, n, Fa_ocphodry = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,5)
-          write(iulog,F01)'import: nstep, n, Fa_ocphiwet = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,6)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet1  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,7)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry1  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,8)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet2  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,9)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry2  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,10)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet3  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,11)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry3  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,12)
-          write(iulog,F01)'import: nstep, n, Fa_dstwet4  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,13)
-          write(iulog,F01)'import: nstep, n, Fa_dstdry4  = ',get_nstep(), i, atm2lnd_inst%forc_aer_grc(g,14)
-          write(iulog,F01)'import: nstep, n, Fa_co2      = ',get_nstep(), i, atm2lnd_inst%forc_pco2_grc(g) 
-          write(iulog,F01)'import: nstep, n, Fa_ndep     = ',get_nstep(), i, atm2lnd_inst%forc_ndep_grc(g)
-       end do
-    end if
-
   end subroutine import_fields
 
   !===============================================================================
@@ -936,12 +765,10 @@ contains
 
     ! local variables
     type(ESMF_State)          :: exportState
-    type(ESMF_StateItem_Flag) :: itemFlag
     character(len=128)        :: fldname
     character(len=2)          :: nec_str
     integer                   :: i, g, num
-    integer                   :: begg, endg
-    real(r8), pointer         :: dataPtr(:)
+    real(r8)                  :: array(bounds%begg:bounds%endg) 
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
     !---------------------------------------------------------------------------
 
@@ -951,267 +778,140 @@ contains
     call NUOPC_ModelGet(gcomp, exportState=exportState, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Set bounds
-    begg = bounds%begg; endg=bounds%endg
+    ! Set field pointers in export set
 
-    call state_getfldptr(exportState, 'Sl_lfrin', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_lfrin', bounds, input=ldomain%frac, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = ldomain%frac(g)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_t', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_t', bounds, input=lnd2atm_inst%t_rad_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = lnd2atm_inst%t_rad_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_snowh', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_snowh', bounds, input=lnd2atm_inst%h2osno_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1)= lnd2atm_inst%h2osno_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_avsdr', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_avsdr', bounds, input=lnd2atm_inst%albd_grc(bounds%begg:,1), rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = lnd2atm_inst%albd_grc(g,1)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_anidr', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_anidr', bounds, input=lnd2atm_inst%albd_grc(bounds%begg:,2), rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) =  lnd2atm_inst%albd_grc(g,2)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_avsdf', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_avsdf', bounds, input=lnd2atm_inst%albi_grc(bounds%begg:,1), rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) =  lnd2atm_inst%albi_grc(g,1)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_anidf', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_anidf', bounds, input=lnd2atm_inst%albi_grc(bounds%begg:,2), rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) =  lnd2atm_inst%albi_grc(g,2)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_tref', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_tref', bounds, input=lnd2atm_inst%t_ref2m_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) =  lnd2atm_inst%t_ref2m_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_qref', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_qref', bounds, input=lnd2atm_inst%q_ref2m_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) =  lnd2atm_inst%q_ref2m_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Sl_u10', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Sl_u10', bounds, input=lnd2atm_inst%u_ref10m_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) =  lnd2atm_inst%u_ref10m_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Fall_taux', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_taux', bounds, input=lnd2atm_inst%taux_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = -lnd2atm_inst%taux_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Fall_tauy', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_tauy', bounds, input=lnd2atm_inst%tauy_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = -lnd2atm_inst%tauy_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Fall_lat', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_lat', bounds, input=lnd2atm_inst%eflx_lh_tot_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = -lnd2atm_inst%eflx_lh_tot_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Fall_sen', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_sen', bounds, input=lnd2atm_inst%eflx_sh_tot_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = -lnd2atm_inst%eflx_sh_tot_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Fall_lwup', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_lwup', bounds, input=lnd2atm_inst%eflx_lwrad_out_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = -lnd2atm_inst%eflx_lwrad_out_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Fall_evap', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_evap', bounds, input=lnd2atm_inst%qflx_evap_tot_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = -lnd2atm_inst%qflx_evap_tot_grc(g)
-    end do
 
-    call state_getfldptr(exportState, 'Fall_swnet', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_swnet', bounds, input=lnd2atm_inst%fsa_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) =  lnd2atm_inst%fsa_grc(g)
-    end do
 
-    if (NUOPC_IsConnected(exportState,  fieldName='Sl_ram1')) then
-       call state_getfldptr(exportState,'Sl_ram1', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Fall_flxdst1', bounds, input=lnd2atm_inst%flxdst_grc(:,1), minus=.true., rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_setexport(exportState, 'Fall_flxdst2', bounds, input=lnd2atm_inst%flxdst_grc(:,2), minus=.true., rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_setexport(exportState, 'Fall_flxdst3', bounds, input=lnd2atm_inst%flxdst_grc(:,3), minus=.true., rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_setexport(exportState, 'Fall_flxdst4', bounds, input=lnd2atm_inst%flxdst_grc(:,4), minus=.true., rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%flux_ch4_grc, minus=.true., rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_setexport(exportState, 'Sl_ram1', bounds, input=lnd2atm_inst%ram1_grc, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_setexport(exportState, 'Sl_fv', bounds, input=lnd2atm_inst%fv_grc, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call state_setexport(exportState, 'Sl_soilw', bounds, input=lnd2atm_inst%h2osoi_vol_grc(:,1), rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! co2 from land
+    if (flds_co2b .or. flds_co2c) then
+       call state_setexport(exportState, 'Fall_fco2_lnd', bounds, lnd2atm_inst%net_carbon_exchange_grc, minus=.true., rc=rc)   
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = lnd2atm_inst%ram1_grc(g)
-       end do
-    end if
-    if (NUOPC_IsConnected(exportState, fieldName='Sl_fv')) then
-       call state_getfldptr(exportState,'Sl_fv', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = lnd2atm_inst%fv_grc(g)
-       end do
-    end if
-
-    call ESMF_StateGet(exportState, 'Sl_soilw', itemFlag, rc=rc)
-    if ( shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
-       call state_getfldptr(exportState,'Sl_soilw', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = lnd2atm_inst%h2osoi_vol_grc(g,1)
-       end do
-    end if
-
-    call ESMF_StateGet(exportState, 'Fall_flxdst1', itemFlag, rc=rc) 
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
-       call state_getfldptr(exportState,'Fall_flxdst1', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = -lnd2atm_inst%flxdst_grc(g,1)
-       end do
-    end if
-
-    call ESMF_StateGet(exportState, 'Fall_flxdst2', itemFlag, rc=rc) 
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
-       call state_getfldptr(exportState,'Fall_flxdst2', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = -lnd2atm_inst%flxdst_grc(g,2)
-       end do
-    end if
-
-    call ESMF_StateGet(exportState, 'Fall_flxdst3', itemFlag, rc=rc) 
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
-       call state_getfldptr(exportState,'Fall_flxdst3', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = -lnd2atm_inst%flxdst_grc(g,3)
-       end do
-    end if
-
-    call ESMF_StateGet(exportState, 'Fall_flxdst4', itemFlag, rc=rc) 
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
-       call state_getfldptr(exportState,'Fall_flxdst4', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = -lnd2atm_inst%flxdst_grc(g,4)
-       end do
     end if
 
     ! dry dep velocities
     do num = 1, shr_string_listGetNum(drydep_fields)
-       call  shr_string_listGetName(drydep_fields, num, fldname)
-       if (NUOPC_IsConnected(exportState,  fieldName=trim(fldname))) then
-          call state_getfldptr(exportState, trim(fldname), dataPtr, begg, rc=rc )
-          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-          do g = begg,endg
-             dataPtr(1+g-begg) = lnd2atm_inst%ddvel_grc(g,num)
-          end do
-       end if
+       call shr_string_listGetName(drydep_fields, num, fldname)
+       call state_setexport(exportState, trim(fldname), bounds, input=lnd2atm_inst%ddvel_grc(:,num), rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     end do
 
     ! MEGAN VOC emis fluxes
     do num = 1, shr_megan_mechcomps_n
-       call  shr_string_listGetName(megan_voc_fields, num, fldname)
-       if (NUOPC_IsConnected(exportState,  fieldName=trim(fldname))) then
-          call state_getfldptr(exportState, trim(fldname), dataPtr, begg, rc=rc )
-          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-          do g = begg,endg
-             dataPtr(g-begg+1) = -lnd2atm_inst%flxvoc_grc(g,num)
-          end do
-       end if
+       call shr_string_listGetName(megan_voc_fields, num, fldname)
+       call state_setexport(exportState, trim(fldname), bounds, input=lnd2atm_inst%flxvoc_grc(:,num), minus=.true.,rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     end do
 
     ! fire emis fluxes
     do num = 1, shr_string_listGetNum(fire_emis_fields)
-       call  shr_string_listGetName(fire_emis_fields, num, fldname)
-       if (NUOPC_IsConnected(exportState,  fieldName=trim(fldname))) then
-          call state_getfldptr(exportState, trim(fldname), dataPtr, begg, rc=rc )
-          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-          do g = begg,endg
-             dataPtr(g-begg+1) = -lnd2atm_inst%fireflx_grc(g,num)
-          end do
-       end if
+       call shr_string_listGetName(fire_emis_fields, num, fldname)
+       call state_setexport(exportState, trim(fldname), bounds, input=lnd2atm_inst%fireflx_grc(:,num), minus=.true.,rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     end do
-    if (NUOPC_IsConnected(exportState,  fieldName=shr_fire_emis_ztop_token)) then
-       call state_getfldptr(exportState, trim(shr_fire_emis_ztop_token), dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = lnd2atm_inst%fireztop_grc(g)
-       end do
-    end if
-
-    ! methane
-    call ESMF_StateGet(exportState, 'Fall_methane', itemFlag, rc=rc) 
+    call state_setexport(exportState, trim(shr_fire_emis_ztop_token), bounds, input=lnd2atm_inst%fireztop_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then 
-       call state_getfldptr(exportState, 'Fall_methane', dataPtr, begg, rc=rc )
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = -lnd2atm_inst%flux_ch4_grc(g)
-       end do
-    end if
 
     ! sign convention is positive downward with hierarchy of atm/glc/lnd/rof/ice/ocn.
     ! i.e. water sent from land to rof is positive
 
     ! surface runoff is the sum of qflx_over, qflx_h2osfc_surf
-    call state_getfldptr(exportState, 'Flrl_rofsur', dataPtr, begg, rc=rc )
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
+    do g = bounds%begg,bounds%endg
+       array(g) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
     end do
+    call state_setexport(exportState, 'Flrl_rofsur', bounds, input=array, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !  subsurface runoff is the sum of qflx_drain and qflx_perched_drain
-    call state_getfldptr(exportState, 'Flrl_rofsub', dataPtr, begg, rc=rc )
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
+    ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
+    do g = bounds%begg,bounds%endg
+       array(g) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
     end do
+    call state_setexport(exportState, 'Flrl_rofsub', bounds, input=array, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !  qgwl sent individually to coupler
-    call state_getfldptr(exportState, 'Flrl_rofgwl', dataPtr, begg, rc=rc )
+    ! qgwl sent individually to coupler
+    call state_setexport(exportState, 'Flrl_rofgwl', bounds, input=lnd2atm_inst%qflx_rofliq_qgwl_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g)
-    end do
 
     ! ice  sent individually to coupler
-    call state_getfldptr(exportState, 'Flrl_rofi', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Flrl_rofi', bounds, input=lnd2atm_inst%qflx_rofice_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = lnd2atm_inst%qflx_rofice_grc(g)
-    end do
 
     ! irrigation flux to be removed from main channel storage (negative)
-    call state_getfldptr(exportState, 'Flrl_irrig', dataPtr, begg, rc=rc )
+    call state_setexport(exportState, 'Flrl_irrig', bounds, input=lnd2atm_inst%qirrig_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       dataPtr(g-begg+1) = - lnd2atm_inst%qirrig_grc(g)
-    end do
 
     ! glc fields
     ! We could avoid setting these fields if glc_present is .false., if that would
@@ -1221,63 +921,15 @@ contains
     do num = 0,glc_nec
        nec_str = glc_elevclass_as_string(num)
 
-       fldname = 'Sl_tsrf' // nec_str
-       call state_getfldptr(exportState, trim(fldname), dataPtr, begg, rc=rc )
+       call state_setexport(exportState, 'Sl_tsrf'//nec_str, bounds, input=lnd2glc_inst%tsrf_grc(:,num), rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = lnd2glc_inst%tsrf_grc(g,num)
-       end do
 
-       fldname = 'Sl_topo' // nec_str
-       call state_getfldptr(exportState, trim(fldname), dataPtr, begg, rc=rc )
+       call state_setexport(exportState, 'Sl_topo'//nec_str, bounds, input=lnd2glc_inst%topo_grc(:,num), rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = lnd2glc_inst%topo_grc(g,num)
-       end do
 
-       fldname = 'Flgl_qice' // nec_str
-       call state_getfldptr(exportState, trim(fldname), dataPtr, begg, rc=rc )
+       call state_setexport(exportState, 'Flgl_qice'//nec_str, bounds, input=lnd2glc_inst%qice_grc(:,num), rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          dataPtr(g-begg+1) = lnd2glc_inst%qice_grc(g,num)
-       end do
     end do
-
-    if (masterproc .and. debug_export > 0 .and. get_nstep() < 5) then
-       do g = begg,endg
-          i = 1 + (g-bounds%begg)
-          write(iulog,F01)'export:  nstep, n, Sl_t       =  ', get_nstep(), i, lnd2atm_inst%t_rad_grc(g)
-          write(iulog,F01)'export:  nstep, n, Sl_snowh   =  ', get_nstep(), i, lnd2atm_inst%h2osno_grc(g)
-          write(iulog,F01)'export:  nstep, n, Sl_avsdr   =  ', get_nstep(), i, lnd2atm_inst%albd_grc(g,1)
-          write(iulog,F01)'export:  nstep, n, Sl_anidr   =  ', get_nstep(), i, lnd2atm_inst%albd_grc(g,2)
-          write(iulog,F01)'export:  nstep, n, Sl_avsdf   =  ', get_nstep(), i, lnd2atm_inst%albi_grc(g,1)
-          write(iulog,F01)'export:  nstep, n, Sl_anidf   =  ', get_nstep(), i, lnd2atm_inst%albi_grc(g,2)
-          write(iulog,F01)'export:  nstep, n, Sl_tref    =  ', get_nstep(), i, lnd2atm_inst%t_ref2m_grc(g)
-          write(iulog,F01)'export:  nstep, n, Sl_qref    =  ', get_nstep(), i, lnd2atm_inst%q_ref2m_grc(g)
-          write(iulog,F01)'export:  nstep, n, Sl_u10     =  ', get_nstep(), i, lnd2atm_inst%u_ref10m_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_taux    =  ', get_nstep(), i,-lnd2atm_inst%taux_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_tauy    =  ', get_nstep(), i,-lnd2atm_inst%tauy_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_lat     =  ', get_nstep(), i,-lnd2atm_inst%eflx_lh_tot_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_sen     =  ', get_nstep(), i,-lnd2atm_inst%eflx_sh_tot_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_lwup    =  ', get_nstep(), i,-lnd2atm_inst%eflx_lwrad_out_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_evap    =  ', get_nstep(), i,-lnd2atm_inst%qflx_evap_tot_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_swnet   =  ', get_nstep(), i, lnd2atm_inst%fsa_grc(g)
-          write(iulog,F01)'export:  nstep, n, Sl_ram1    =  ', get_nstep(), i, lnd2atm_inst%ram1_grc(g)
-          write(iulog,F01)'export:  nstep, n, Sl_fv      =  ', get_nstep(), i, lnd2atm_inst%fv_grc(g)
-          write(iulog,F01)'export:  nstep, n, Fl_flxdst1 =  ', get_nstep(), i, lnd2atm_inst%flxdst_grc(g,1)
-          write(iulog,F01)'export:  nstep, n, Fl_flxdst2 =  ', get_nstep(), i, lnd2atm_inst%flxdst_grc(g,2)
-          write(iulog,F01)'export:  nstep, n, Fl_flxdst3 =  ', get_nstep(), i,-lnd2atm_inst%flxdst_grc(g,3)
-          write(iulog,F01)'export:  nstep, n, Fl_flxdst4 =  ', get_nstep(), i,-lnd2atm_inst%flxdst_grc(g,4)
-          write(iulog,F01)'export:  nstep, n, Sl_fv       = ', get_nstep(), i, lnd2atm_inst%fv_grc(g)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofsur = ', get_nstep(), i, lnd2atm_inst%qflx_rofliq_qsur_grc(g) + &
-                                                                               lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofsub = ', get_nstep(), i, lnd2atm_inst%qflx_rofliq_qsub_grc(g) + &
-                                                                               lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofgwl = ', get_nstep(), i, lnd2atm_inst%qflx_rofliq_qgwl_grc(g)
-          write(iulog,F01)'export:  nstep, n, Flrl_rofi   = ', get_nstep(), i, lnd2atm_inst%qflx_rofice_grc(g)
-          write(iulog,F01)'export:  nstep, n, Flrl_irrig  = ', get_nstep(), i,-lnd2atm_inst%qirrig_grc(g)
-       end do
-    end if
 
   end subroutine export_fields
 
@@ -1405,87 +1057,120 @@ contains
 
   !===============================================================================
 
-  subroutine state_set(State, fldname, bounds, array_import, array_export, rc)
-    ! ----------------------------------------------
-    ! Get pointer to a state field
-    ! ----------------------------------------------
-    use ESMF , only : ESMF_State, ESMF_Field, ESMF_Mesh, ESMF_FieldStatus_Flag
-    use ESMF , only : ESMF_StateGet, ESMF_FieldGet, ESMF_MeshGet
-    use ESMF , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_FAILURE
-    use ESMF , only : operator(/=)
+  subroutine state_getimport(state, fldname, bounds, output, rc)
 
-    type(ESMF_State)    , intent(in)  :: State
-    type(bounds_type)   , intent(in)  :: bounds       
-    character(len=*)    , intent(in)  :: fldname
-    real(r8), optional  , intent(out) :: array_import(bounds%begg:bounds%endg)
-    real(r8), optional  , intent(in)  :: array_export(bounds%begg:bounds%endg)
-    integer             , intent(out) :: rc
+    ! ----------------------------------------------
+    ! Map import state field to output array
+    ! ----------------------------------------------
+
+    ! input/output variables
+    type(ESMF_State)    , intent(in)    :: state
+    type(bounds_type)   , intent(in)    :: bounds
+    character(len=*)    , intent(in)    :: fldname
+    real(r8)            , intent(out)   :: output(bounds%begg:bounds%endg)
+    integer             , intent(out)   :: rc
 
     ! local variables
-    integer                     :: g 
+    integer                     :: g, i
     real(R8), pointer           :: fldptr(:)
-    type(ESMF_FieldStatus_Flag) :: status
-    type(ESMF_Field)            :: lfield
-    type(ESMF_Mesh)             :: lmesh
+    type(ESMF_StateItem_Flag)   :: itemFlag
     integer                     :: dbrc
-    integer                     :: nnodes, nelements
-    character(len=*), parameter :: subname='(lnd_import_export:State_GetFldPtr)'
+    character(len=*), parameter :: subname='(lnd_import_export:state_getimport)'
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
 
-    if (dbug > 10) then
-      call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO, rc=dbrc)
-    endif
-
-    call ESMF_StateGet(State, itemName=trim(fldname), field=lfield, rc=rc)
+    ! Determine if field with name fldname exists in state
+    call ESMF_StateGet(state, trim(fldname), itemFlag, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_FieldGet(lfield, status=status, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! if field exists then create output array - else do nothing
+    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
 
-    if (status /= ESMF_FIELDSTATUS_COMPLETE) then
-       call ESMF_LogWrite(trim(subname)//": ERROR data not allocated ", ESMF_LOGMSG_INFO, rc=rc)
-       rc = ESMF_FAILURE
-       return
-    else
-       call ESMF_FieldGet(lfield, mesh=lmesh, rc=rc)
+       ! get field pointer
+       call state_getfldptr(state, trim(fldname), fldptr, bounds%begg, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       call ESMF_MeshGet(lmesh, numOwnedNodes=nnodes, numOwnedElements=nelements, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! determine output array
+       do g = bounds%begg, bounds%endg
+          output(g) = fldptr(g - bounds%begg + 1)
+       end do
 
-       if (nnodes == 0 .and. nelements == 0) then
-          call ESMF_LogWrite(trim(subname)//": no local nodes or elements ", ESMF_LOGMSG_INFO, rc=dbrc)
-          rc = ESMF_FAILURE
-          return
+       ! write debug output if appropriate
+       if (masterproc .and. debug_import > 0 .and. get_nstep() < 5) then
+          do g = bounds%begg,bounds%endg
+             i = 1 + g - bounds%begg
+             write(iulog,F01)'import: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,output(g)
+          end do
        end if
 
-       call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    endif  ! status
-
-    ! Now determine either array_in (for import state or array_out for export state)
-    ! and check for nans
-
-    if (present(array_import)) then
-       do g = bounds%begg, bounds%endg
-          array_import(g) = fldptr(g-bounds%begg+1)
-       end do
-    else if (present(array_export)) then
-       do g = bounds%begg, bounds%endg
-          fldptr(g-bounds%begg+1) = array_export(g)
-       end do
-    else
-       call shr_sys_abort(trim(subname)//"either array_in or array_out must be present")
+       ! check for nans
+       call check_for_nans(fldptr, trim(fldname), bounds%begg)
     end if
-    call check_for_nans(fldptr, trim(fldname), bounds%begg)
 
-    if (dbug > 10) then
-      call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO, rc=dbrc)
-    endif
+  end subroutine state_getimport
 
-  end subroutine state_set  
+  !===============================================================================
+
+  subroutine state_setexport(state, fldname, bounds, input, minus, rc)
+
+    ! ----------------------------------------------
+    ! Map input array to export state field 
+    ! ----------------------------------------------
+
+    ! input/output variables
+    type(ESMF_State)    , intent(inout) :: state
+    type(bounds_type)   , intent(in)    :: bounds
+    character(len=*)    , intent(in)    :: fldname
+    real(r8)            , intent(in)    :: input(bounds%begg:bounds%endg)
+    logical, optional   , intent(in)    :: minus
+    integer             , intent(out)   :: rc
+
+    ! local variables
+    integer                     :: g, i
+    real(R8), pointer           :: fldptr(:)
+    type(ESMF_StateItem_Flag)   :: itemFlag
+    integer                     :: dbrc
+    character(len=*), parameter :: subname='(lnd_import_export:state_setexport)'
+    ! ----------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Determine if field with name fldname exists in state
+    call ESMF_StateGet(state, trim(fldname), itemFlag, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! if field exists then create output array - else do nothing
+    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
+
+       ! get field pointer
+       call state_getfldptr(state, trim(fldname), fldptr, bounds%begg, rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! set fldptr values to input array
+       if (present(minus)) then
+          do g = bounds%begg, bounds%endg
+             fldptr(g-bounds%begg+1) = - input(g)
+          end do
+       else
+          do g = bounds%begg, bounds%endg
+             fldptr(g-bounds%begg+1) = input(g)
+          end do
+       end if
+
+       ! write debug output if appropriate
+       if (masterproc .and. debug_import > 0 .and. get_nstep() < 5) then
+          do g = bounds%begg,bounds%endg
+             i = 1 + g - bounds%begg
+             write(iulog,F01)'export: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,input(g)
+          end do
+       end if
+
+       ! check for nans
+       call check_for_nans(fldptr, trim(fldname), bounds%begg)
+    end if
+
+  end subroutine state_setexport
 
   !===============================================================================
 
@@ -1499,7 +1184,7 @@ contains
 
     type(ESMF_State),  intent(in)    :: State
     character(len=*),  intent(in)    :: fldname
-    integer,           intent(in)    :: begg            
+    integer,           intent(in)    :: begg
     real(R8), pointer, intent(out)   :: fldptr(:)
     integer,           intent(out)   :: rc
 
@@ -1571,7 +1256,7 @@ contains
        write(iulog,*) 'Which are NaNs = ', isnan(array)
        do i = 1, size(array)
           if (isnan(array(i))) then
-             write(iulog,*) "NaN found in field", trim(fname), ' at gridcell index ',begg+i-1 
+             write(iulog,*) "NaN found in field", trim(fname), ' at gridcell index ',begg+i-1
           end if
        end do
        call shr_sys_abort(' ERROR: One or more of the output from CLM to the coupler are NaN ' )
