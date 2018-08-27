@@ -2,10 +2,10 @@
 
 <namelist_defaults>
 
-<use_case_desc            >Simulate transient land-use, and aerosol deposition changes from 1850 to 2005</use_case_desc>
-<use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
-<use_case_desc phys="clm4_0" bgc="cndv" >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
-<use_case_desc use_cn=".true." >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
+<use_case_desc            >Simulate transient land-use, and aerosol deposition changes from 1850 to 2015</use_case_desc>
+<use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2015</use_case_desc>
+<use_case_desc phys="clm4_0" bgc="cndv" >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2015</use_case_desc>
+<use_case_desc use_cn=".true." >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2015</use_case_desc>
 
 <sim_year>1850</sim_year>
 
@@ -36,15 +36,15 @@
 <model_year_align_ndep  phys="clm5_0" use_cn=".true."   >1850</model_year_align_ndep>
 
 <stream_year_first_popdens phys="clm4_5" cnfireson=".true."   >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm4_5" cnfireson=".true."   >2010</stream_year_last_popdens>
+<stream_year_last_popdens  phys="clm4_5" cnfireson=".true."   >2016</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm4_5" cnfireson=".true."   >1850</model_year_align_popdens>
 
 <stream_year_first_popdens phys="clm5_0" cnfireson=".true."   >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm5_0" cnfireson=".true."   >2010</stream_year_last_popdens>
+<stream_year_last_popdens  phys="clm5_0" cnfireson=".true."   >2016</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm5_0" cnfireson=".true."   >1850</model_year_align_popdens>
 
 <stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0"  >2005</stream_year_last_urbantv>
+<stream_year_last_urbantv  phys="clm5_0"  >2106</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm5_0"  >1850</model_year_align_urbantv>
 
 </namelist_defaults>

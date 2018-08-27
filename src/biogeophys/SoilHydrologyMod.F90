@@ -22,9 +22,9 @@ module SoilHydrologyMod
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
-  use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
-  use WaterfluxType     , only : waterflux_type
-  use WaterstateType    , only : waterstate_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use TemperatureType   , only : temperature_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
@@ -122,7 +122,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
-       soilhydrology_inst, soilstate_inst, waterstate_inst)
+       soilhydrology_inst, soilstate_inst, waterstatebulk_inst)
     !
     ! !DESCRIPTION:
     ! Set diagnostic variables related to the fraction of water and ice in each layer
@@ -136,7 +136,7 @@ contains
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
-    type(waterstate_type)    , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type), intent(in)    :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: j, fc, c
@@ -152,8 +152,8 @@ contains
          watsat           =>    soilstate_inst%watsat_col           , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
          eff_porosity     =>    soilstate_inst%eff_porosity_col     , & ! Output: [real(r8) (:,:) ]  effective porosity = porosity - vol_ice
 
-         h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col      , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
-         h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col      , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)
 
          origflag         =>    soilhydrology_inst%origflag         , & ! Input:  logical
          icefrac          =>    soilhydrology_inst%icefrac_col      , & ! Output: [real(r8) (:,:) ]                                                  
@@ -188,7 +188,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
-        waterflux_inst, saturated_excess_runoff_inst, waterstate_inst)
+        waterfluxbulk_inst, waterdiagnosticbulk_inst)
      !
      ! !DESCRIPTION:
      ! Set various input fluxes of water
@@ -197,9 +197,8 @@ contains
      type(bounds_type)          , intent(in)    :: bounds
      integer                    , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
      integer                    , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
-     type(waterflux_type)       , intent(inout) :: waterflux_inst
-     type(saturated_excess_runoff_type) , intent(in) :: saturated_excess_runoff_inst
-     type(waterstate_type)      , intent(in)    :: waterstate_inst
+     type(waterfluxbulk_type)       , intent(inout) :: waterfluxbulk_inst
+     type(waterdiagnosticbulk_type)     , intent(in) :: waterdiagnosticbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
@@ -212,20 +211,19 @@ contains
      associate( &
           snl                     =>    col%snl                                   , & ! Input:  [integer  (:)   ]  minus number of snow layers
 
-          qflx_top_soil           =>    waterflux_inst%qflx_top_soil_col          , & ! Output: [real(r8) (:)]  net water input into soil from top (mm/s)
-          qflx_in_soil            =>    waterflux_inst%qflx_in_soil_col           , & ! Output: [real(r8) (:)]  surface input to soil (mm/s)
-          qflx_top_soil_to_h2osfc =>   waterflux_inst%qflx_top_soil_to_h2osfc_col , & ! Output: [real(r8) (:)]  portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
-          qflx_rain_plus_snomelt  =>    waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input:  [real(r8) (:)]  rain plus snow melt falling on the soil (mm/s)
-          qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col       , & ! Input:  [real(r8) (:)]  snow falling on surface water (mm/s)
-          qflx_floodc             =>    waterflux_inst%qflx_floodc_col            , & ! Input:  [real(r8) (:)]  column flux of flood water from RTM
-          qflx_ev_soil            =>    waterflux_inst%qflx_ev_soil_col           , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
-          qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]
-          qflx_ev_h2osfc          =>    waterflux_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
+          qflx_top_soil           =>    waterfluxbulk_inst%qflx_top_soil_col          , & ! Output: [real(r8) (:)]  net water input into soil from top (mm/s)
+          qflx_in_soil            =>    waterfluxbulk_inst%qflx_in_soil_col           , & ! Output: [real(r8) (:)]  surface input to soil (mm/s)
+          qflx_top_soil_to_h2osfc =>   waterfluxbulk_inst%qflx_top_soil_to_h2osfc_col , & ! Output: [real(r8) (:)]  portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
+          qflx_rain_plus_snomelt  =>    waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Input:  [real(r8) (:)]  rain plus snow melt falling on the soil (mm/s)
+          qflx_snow_h2osfc        =>    waterfluxbulk_inst%qflx_snow_h2osfc_col       , & ! Input:  [real(r8) (:)]  snow falling on surface water (mm/s)
+          qflx_floodc             =>    waterfluxbulk_inst%qflx_floodc_col            , & ! Input:  [real(r8) (:)]  column flux of flood water from RTM
+          qflx_ev_soil            =>    waterfluxbulk_inst%qflx_ev_soil_col           , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
+          qflx_evap_grnd          =>    waterfluxbulk_inst%qflx_evap_grnd_col         , & ! Input:  [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]
+          qflx_ev_h2osfc          =>    waterfluxbulk_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
+          qflx_sat_excess_surf    =>    waterfluxbulk_inst%qflx_sat_excess_surf_col   , & ! Input:  [real(r8) (:)]  surface runoff due to saturated surface (mm H2O /s)
 
-          qflx_sat_excess_surf    => saturated_excess_runoff_inst%qflx_sat_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
-
-          frac_sno                =>    waterstate_inst%frac_sno_eff_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
-          frac_h2osfc             =>    waterstate_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+          frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_eff_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_h2osfc             =>    waterdiagnosticbulk_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           )
 
      do fc = 1, num_hydrologyc
@@ -261,7 +259,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine RouteInfiltrationExcess(bounds, num_hydrologyc, filter_hydrologyc, &
-        waterflux_inst, infiltration_excess_runoff_inst, soilhydrology_inst)
+        waterfluxbulk_inst, soilhydrology_inst)
      !
      ! !DESCRIPTION:
      ! Route the infiltration excess runoff flux
@@ -272,8 +270,7 @@ contains
      type(bounds_type)        , intent(in)    :: bounds               
      integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
-     type(infiltration_excess_runoff_type), intent(in) :: infiltration_excess_runoff_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
      !
      ! !LOCAL VARIABLES:
@@ -283,13 +280,12 @@ contains
      !-----------------------------------------------------------------------
 
      associate( &
-          qflx_in_soil_limited    => waterflux_inst%qflx_in_soil_limited_col              , & ! Output: [real(r8) (:)   ] surface input to soil, limited by max infiltration rate (mm H2O /s)
-          qflx_in_h2osfc          => waterflux_inst%qflx_in_h2osfc_col                    , & ! Output: [real(r8) (:)   ] total surface input to h2osfc
-          qflx_infl_excess_surf   => waterflux_inst%qflx_infl_excess_surf_col             , & ! Output: [real(r8) (:)   ] surface runoff due to infiltration excess (mm H2O /s)
-          qflx_in_soil            => waterflux_inst%qflx_in_soil_col                      , & ! Input:  [real(r8) (:)   ] surface input to soil (mm/s)
-          qflx_top_soil_to_h2osfc => waterflux_inst%qflx_top_soil_to_h2osfc_col           , & ! Input:  [real(r8) (:)   ] portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
-
-          qflx_infl_excess        => infiltration_excess_runoff_inst%qflx_infl_excess_col , & ! Input:  [real(r8) (:)   ] infiltration excess runoff (mm H2O /s)
+          qflx_in_soil_limited    => waterfluxbulk_inst%qflx_in_soil_limited_col              , & ! Output: [real(r8) (:)   ] surface input to soil, limited by max infiltration rate (mm H2O /s)
+          qflx_in_h2osfc          => waterfluxbulk_inst%qflx_in_h2osfc_col                    , & ! Output: [real(r8) (:)   ] total surface input to h2osfc
+          qflx_infl_excess_surf   => waterfluxbulk_inst%qflx_infl_excess_surf_col             , & ! Output: [real(r8) (:)   ] surface runoff due to infiltration excess (mm H2O /s)
+          qflx_in_soil            => waterfluxbulk_inst%qflx_in_soil_col                      , & ! Input:  [real(r8) (:)   ] surface input to soil (mm/s)
+          qflx_top_soil_to_h2osfc => waterfluxbulk_inst%qflx_top_soil_to_h2osfc_col           , & ! Input:  [real(r8) (:)   ] portion of qflx_top_soil going to h2osfc, minus evaporation (mm/s)
+          qflx_infl_excess        => waterfluxbulk_inst%qflx_infl_excess_col                  , & ! Input:  [real(r8) (:)   ] infiltration excess runoff (mm H2O /s)
 
           h2osfcflag              => soilhydrology_inst%h2osfcflag                          & ! Input:  integer
           )
@@ -322,7 +318,7 @@ contains
    subroutine UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
         infiltration_excess_runoff_inst, &
         energyflux_inst, soilhydrology_inst, &
-        waterflux_inst, waterstate_inst)
+        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate fluxes out of h2osfc and update the h2osfc state
@@ -339,8 +335,9 @@ contains
      type(infiltration_excess_runoff_type), intent(in) :: infiltration_excess_runoff_inst
      type(energyflux_type)    , intent(in)    :: energyflux_inst
      type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type)    , intent(in) :: waterdiagnosticbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: c,l,fc                                     ! indices
@@ -351,13 +348,13 @@ contains
      associate(                                                        & 
           qinmax           =>    infiltration_excess_runoff_inst%qinmax_col , & ! Input:  [real(r8) (:)] maximum infiltration rate (mm H2O /s)
 
-          frac_h2osfc      =>    waterstate_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-          frac_h2osfc_nosnow  => waterstate_inst%frac_h2osfc_nosnow_col,    & ! Input: [real(r8) (:)   ] col fractional area with surface water greater than zero (if no snow present)
-          h2osfc           =>    waterstate_inst%h2osfc_col          , & ! Output: [real(r8) (:)   ]  surface water (mm)                                
+          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+          frac_h2osfc_nosnow  => waterdiagnosticbulk_inst%frac_h2osfc_nosnow_col,    & ! Input: [real(r8) (:)   ] col fractional area with surface water greater than zero (if no snow present)
+          h2osfc           =>    waterstatebulk_inst%h2osfc_col          , & ! Output: [real(r8) (:)   ]  surface water (mm)                                
 
-          qflx_in_h2osfc   => waterflux_inst%qflx_in_h2osfc_col      , & ! Input:  [real(r8) (:)   ] total surface input to h2osfc
-          qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)                       
-          qflx_h2osfc_drain => waterflux_inst%qflx_h2osfc_drain_col  , & ! Output: [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
+          qflx_in_h2osfc   => waterfluxbulk_inst%qflx_in_h2osfc_col      , & ! Input:  [real(r8) (:)   ] total surface input to h2osfc
+          qflx_h2osfc_surf =>    waterfluxbulk_inst%qflx_h2osfc_surf_col , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)                       
+          qflx_h2osfc_drain => waterfluxbulk_inst%qflx_h2osfc_drain_col  , & ! Output: [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
 
           h2osfc_thresh    =>    soilhydrology_inst%h2osfc_thresh_col, & ! Input:  [real(r8) (:)   ]  level at which h2osfc "percolates"                
           h2osfcflag       =>    soilhydrology_inst%h2osfcflag         & ! Input:  integer
@@ -415,7 +412,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
-        waterflux_inst)
+        waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate total infiltration
@@ -424,7 +421,7 @@ contains
      type(bounds_type)        , intent(in)    :: bounds
      integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
@@ -433,9 +430,9 @@ contains
      !-----------------------------------------------------------------------
 
      associate( &
-          qflx_infl            => waterflux_inst%qflx_infl_col            , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)
-          qflx_in_soil_limited => waterflux_inst%qflx_in_soil_limited_col , & ! Input:  [real(r8) (:)   ] surface input to soil, limited by max infiltration rate (mm H2O /s)
-          qflx_h2osfc_drain    => waterflux_inst%qflx_h2osfc_drain_col      & ! Input:  [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
+          qflx_infl            => waterfluxbulk_inst%qflx_infl_col            , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)
+          qflx_in_soil_limited => waterfluxbulk_inst%qflx_in_soil_limited_col , & ! Input:  [real(r8) (:)   ] surface input to soil, limited by max infiltration rate (mm H2O /s)
+          qflx_h2osfc_drain    => waterfluxbulk_inst%qflx_h2osfc_drain_col      & ! Input:  [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
           )
 
      do fc = 1, num_hydrologyc
@@ -572,7 +569,8 @@ contains
    !-----------------------------------------------------------------------
    subroutine TotalSurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, &
-        waterflux_inst, soilhydrology_inst, saturated_excess_runoff_inst, waterstate_inst)
+        waterfluxbulk_inst, soilhydrology_inst, &
+        waterstatebulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate total surface runoff
@@ -588,10 +586,9 @@ contains
      integer              , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      integer              , intent(in)    :: num_urbanc           ! number of column urban points in column filter
      integer              , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
-     type(waterflux_type) , intent(inout) :: waterflux_inst
+     type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
-     type(saturated_excess_runoff_type), intent(in) :: saturated_excess_runoff_inst
-     type(waterstate_type), intent(in)    :: waterstate_inst
+     type(waterstatebulk_type), intent(in)    :: waterstatebulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: fc, c
@@ -603,18 +600,17 @@ contains
      associate( &
           snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
 
-          qflx_surf        =>    waterflux_inst%qflx_surf_col        , & ! Output: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
-          qflx_infl_excess_surf => waterflux_inst%qflx_infl_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to infiltration excess (mm H2O /s)
-          qflx_h2osfc_surf =>    waterflux_inst%qflx_h2osfc_surf_col,  & ! Input:  [real(r8) (:)   ]  surface water runoff (mm H2O /s)
-          qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
-          qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col   , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
-          qflx_floodc      =>    waterflux_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
+          qflx_surf        =>    waterfluxbulk_inst%qflx_surf_col        , & ! Output: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+          qflx_infl_excess_surf => waterfluxbulk_inst%qflx_infl_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to infiltration excess (mm H2O /s)
+          qflx_h2osfc_surf =>    waterfluxbulk_inst%qflx_h2osfc_surf_col,  & ! Input:  [real(r8) (:)   ]  surface water runoff (mm H2O /s)
+          qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
+          qflx_evap_grnd   =>    waterfluxbulk_inst%qflx_evap_grnd_col   , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
+          qflx_floodc      =>    waterfluxbulk_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
+          qflx_sat_excess_surf => waterfluxbulk_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
           xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Output: [real(r8) (:)   ]  excess soil water above urban ponding limit
 
-          qflx_sat_excess_surf => saturated_excess_runoff_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
-
-          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
           )
 
      dtime = get_step_size()
@@ -665,7 +661,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine UpdateUrbanPonding(bounds, num_urbanc, filter_urbanc, &
-        waterstate_inst, soilhydrology_inst, waterflux_inst)
+        waterstatebulk_inst, soilhydrology_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Update the state variable representing ponding on urban surfaces
@@ -674,9 +670,9 @@ contains
      type(bounds_type)        , intent(in)    :: bounds
      integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
      integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
      type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
-     type(waterflux_type)     , intent(in)    :: waterflux_inst
+     type(waterfluxbulk_type)     , intent(in)    :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: fc, c
@@ -688,12 +684,12 @@ contains
      associate( &
          snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
 
-         h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
+         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
 
          xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Input:  [real(r8) (:)   ]  excess soil water above urban ponding limit
 
-         qflx_rain_plus_snomelt => waterflux_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
-         qflx_evap_grnd   =>    waterflux_inst%qflx_evap_grnd_col     & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
+         qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
+         qflx_evap_grnd   =>    waterfluxbulk_inst%qflx_evap_grnd_col     & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
          )
 
      dtime = get_step_size()
@@ -719,7 +715,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-        soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst) 
+        soilhydrology_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst) 
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
@@ -737,8 +733,9 @@ contains
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(temperature_type)   , intent(in)    :: temperature_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: c,j,fc,i                                ! indices
@@ -785,14 +782,14 @@ contains
 
           t_soisno           =>    temperature_inst%t_soisno_col         , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
 
-          h2osfc             =>    waterstate_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
-          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
-          h2osoi_vol         =>    waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-          frac_h2osfc        =>    waterstate_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
+          h2osfc             =>    waterstatebulk_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
+          h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+          frac_h2osfc        =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
 
-          qflx_dew_grnd      =>    waterflux_inst%qflx_dew_grnd_col      , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]      
-          qflx_dew_snow      =>    waterflux_inst%qflx_dew_snow_col      , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]    
+          qflx_dew_grnd      =>    waterfluxbulk_inst%qflx_dew_grnd_col      , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]      
+          qflx_dew_snow      =>    waterfluxbulk_inst%qflx_dew_snow_col      , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]    
 
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                        
           hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
@@ -807,10 +804,10 @@ contains
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical  
           
-          qflx_sub_snow      =>    waterflux_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]   
-          qflx_drain         =>    waterflux_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)                    
-          qflx_drain_perched =>    waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s)         
-          qflx_rsub_sat      =>    waterflux_inst%qflx_rsub_sat_col        & ! Output: [real(r8) (:)   ]  soil saturation excess [mm h2o/s]                 
+          qflx_sub_snow      =>    waterfluxbulk_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]   
+          qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)                    
+          qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s)         
+          qflx_rsub_sat      =>    waterfluxbulk_inst%qflx_rsub_sat_col        & ! Output: [real(r8) (:)   ]  soil saturation excess [mm h2o/s]                 
           )
 
        ! Get time step
@@ -1025,7 +1022,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine Drainage(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,  &
-        temperature_inst, soilhydrology_inst, soilstate_inst, waterstate_inst, waterflux_inst)
+        temperature_inst, soilhydrology_inst, soilstate_inst, waterstatebulk_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate subsurface drainage
@@ -1043,8 +1040,8 @@ contains
      type(temperature_type)   , intent(in)    :: temperature_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      character(len=32) :: subname = 'Drainage'           ! subroutine name
@@ -1106,7 +1103,7 @@ contains
 
           t_soisno           =>    temperature_inst%t_soisno_col         , & ! Input:  [real(r8) (:,:) ] soil temperature (Kelvin)                       
 
-          h2osfc             =>    waterstate_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ] surface water (mm)                                
+          h2osfc             =>    waterstatebulk_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ] surface water (mm)                                
 
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
           hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity at saturation (mm H2O /s)
@@ -1133,18 +1130,18 @@ contains
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
           h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  integer
           
-          qflx_snwcp_liq     =>    waterflux_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
-          qflx_ice_runoff_xs =>    waterflux_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
-          qflx_dew_grnd      =>    waterflux_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]      
-          qflx_dew_snow      =>    waterflux_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]    
-          qflx_sub_snow      =>    waterflux_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ] sublimation rate from snow pack (mm H2O /s) [+]   
-          qflx_drain         =>    waterflux_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
-          qflx_qrgwl         =>    waterflux_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
-          qflx_rsub_sat      =>    waterflux_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ] soil saturation excess [mm h2o/s]                 
-          qflx_drain_perched =>    waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ] perched wt sub-surface runoff (mm H2O /s)         
+          qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
+          qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
+          qflx_dew_grnd      =>    waterfluxbulk_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]      
+          qflx_dew_snow      =>    waterfluxbulk_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]    
+          qflx_sub_snow      =>    waterfluxbulk_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ] sublimation rate from snow pack (mm H2O /s) [+]   
+          qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
+          qflx_qrgwl         =>    waterfluxbulk_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
+          qflx_rsub_sat      =>    waterfluxbulk_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ] soil saturation excess [mm h2o/s]                 
+          qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ] perched wt sub-surface runoff (mm H2O /s)         
 
-          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
           )
 
        ! Get time step
@@ -1592,7 +1589,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CLMVICMap(bounds, numf, filter, &
-       soilhydrology_inst, waterstate_inst)
+       soilhydrology_inst, waterstatebulk_inst)
      !
      ! !DESCRIPTION:
      ! Performs  the mapping from CLM layers to VIC layers
@@ -1614,7 +1611,7 @@ contains
      type(bounds_type)        , intent(in)    :: bounds    
      integer                  , intent(in)    :: numf      ! number of column soil points in column filter
      integer                  , intent(in)    :: filter(:) ! column filter for soil points
-     type(waterstate_type)    , intent(in)    :: waterstate_inst 
+     type(waterstatebulk_type)    , intent(in)    :: waterstatebulk_inst 
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      !
      ! !LOCAL VARIABLES
@@ -1630,9 +1627,9 @@ contains
           zi            => col%zi                               , & ! Input:  [real(r8) (:,:)   ] interface level below a "z" level (m)  
           z             => col%z                                , & ! Input:  [real(r8) (:,:)   ] layer thickness (m)                    
 
-          h2osoi_liq    => waterstate_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:)   ] liquid water (kg/m2)                   
-          h2osoi_ice    => waterstate_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:)   ] ice lens (kg/m2)                       
-          h2osoi_vol    => waterstate_inst%h2osoi_vol_col       , & ! Input:  [real(r8) (:,:)   ] volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+          h2osoi_liq    => waterstatebulk_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:)   ] liquid water (kg/m2)                   
+          h2osoi_ice    => waterstatebulk_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:)   ] ice lens (kg/m2)                       
+          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col       , & ! Input:  [real(r8) (:,:)   ] volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
 
           depth         => soilhydrology_inst%depth_col         , & ! Input:  [real(r8) (:,:)   ] layer depth of upper layer (m)         
           porosity      => soilhydrology_inst%porosity_col      , & ! Input:  [real(r8) (:,:)   ] soil porisity (1-bulk_density/soil_density)
@@ -1705,7 +1702,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-        temperature_inst, waterstate_inst, waterflux_inst) 
+        temperature_inst, waterstatebulk_inst, waterfluxbulk_inst) 
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
@@ -1723,8 +1720,8 @@ contains
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(temperature_type)   , intent(in)    :: temperature_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: c,j,fc,i                                ! indices
@@ -1743,9 +1740,9 @@ contains
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           t_soisno           =>    temperature_inst%t_soisno_col         , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
 
-          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
-          h2osoi_vol         =>    waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
+          h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Output: [real(r8) (:)   ]  perched water table depth (m)                     
@@ -1827,7 +1824,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-        waterstate_inst, waterflux_inst)
+        waterstatebulk_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate subsurface drainage from perched saturated zone
@@ -1845,8 +1842,8 @@ contains
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      character(len=32) :: subname = 'PerchedLateralFlow' ! subroutine name
@@ -1884,10 +1881,10 @@ contains
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Input:  [real(r8) (:)   ] perched water table depth (m)                     
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
           
-          qflx_drain_perched =>    waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ] perched wt sub-surface runoff (mm H2O /s)         
+          qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ] perched wt sub-surface runoff (mm H2O /s)         
 
-          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
           )
 
        ! Get time step
@@ -1987,7 +1984,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-        waterstate_inst, waterflux_inst) 
+        waterstatebulk_inst, waterfluxbulk_inst) 
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
@@ -2004,8 +2001,8 @@ contains
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: c,j,fc,i                                ! indices
@@ -2020,9 +2017,9 @@ contains
           dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)           
-          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
-          h2osoi_vol         =>    waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
+          h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
           zwt                =>    soilhydrology_inst%zwt_col              & ! Output: [real(r8) (:)   ]  water table depth (m)                             
           )
@@ -2084,7 +2081,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc,soilhydrology_inst, soilstate_inst, &
-        waterstate_inst, waterflux_inst)
+        waterstatebulk_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate subsurface drainage
@@ -2103,8 +2100,8 @@ contains
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      character(len=32) :: subname = 'Drainage'           ! subroutine name
@@ -2149,12 +2146,12 @@ contains
 
      associate(                                                            & 
           nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
-          h2osno             =>    waterstate_inst%h2osno_col            , & ! Input:  [real(r8) (:)   ] surface water (mm)                                
+          h2osno             =>    waterstatebulk_inst%h2osno_col            , & ! Input:  [real(r8) (:)   ] surface water (mm)                                
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
           zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ] interface level below a "z" level (m)           
           dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
           snl                =>    col%snl                               , & ! Input:  [integer  (:)   ] number of snow layers                              
-          h2osfc             =>    waterstate_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ] surface water (mm)                                
+          h2osfc             =>    waterstatebulk_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ] surface water (mm)                                
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
           hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity at saturation (mm H2O /s)
           sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
@@ -2179,16 +2176,16 @@ contains
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
           h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  integer
           
-          qflx_snwcp_liq     =>    waterflux_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
-          qflx_ice_runoff_xs =>    waterflux_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
-          qflx_dew_grnd      =>    waterflux_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]      
-          qflx_dew_snow      =>    waterflux_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]    
-          qflx_sub_snow      =>    waterflux_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ] sublimation rate from snow pack (mm H2O /s) [+]   
-          qflx_drain         =>    waterflux_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
-          qflx_qrgwl         =>    waterflux_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
-          qflx_rsub_sat      =>    waterflux_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ] soil saturation excess [mm h2o/s]                 
-          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
+          qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
+          qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
+          qflx_dew_grnd      =>    waterfluxbulk_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]      
+          qflx_dew_snow      =>    waterfluxbulk_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]    
+          qflx_sub_snow      =>    waterfluxbulk_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ] sublimation rate from snow pack (mm H2O /s) [+]   
+          qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
+          qflx_qrgwl         =>    waterfluxbulk_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
+          qflx_rsub_sat      =>    waterfluxbulk_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ] soil saturation excess [mm h2o/s]                 
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
           )
 
        ! Get time step
@@ -2411,7 +2408,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine RenewCondensation(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-        waterstate_inst, waterflux_inst) 
+        waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst) 
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
@@ -2427,8 +2424,9 @@ contains
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
-     type(waterstate_type)    , intent(inout) :: waterstate_inst
-     type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
+     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: c,j,fc,i                                ! indices
@@ -2437,12 +2435,12 @@ contains
 
      associate(                                                            & 
           snl                =>    col%snl                               , & ! Input:  [integer  (:)   ]  number of snow layers                              
-          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
-          frac_h2osfc        =>    waterstate_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
-          qflx_dew_grnd      =>    waterflux_inst%qflx_dew_grnd_col      , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]      
-          qflx_dew_snow      =>    waterflux_inst%qflx_dew_snow_col      , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]    
-          qflx_sub_snow      =>    waterflux_inst%qflx_sub_snow_col       & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]   
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
+          frac_h2osfc        =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
+          qflx_dew_grnd      =>    waterfluxbulk_inst%qflx_dew_grnd_col      , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]      
+          qflx_dew_snow      =>    waterfluxbulk_inst%qflx_dew_snow_col      , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]    
+          qflx_sub_snow      =>    waterfluxbulk_inst%qflx_sub_snow_col       & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]   
           )
 
        ! Get time step
