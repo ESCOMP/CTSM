@@ -15,7 +15,7 @@ def get_user():
     """Return the current user name (string)"""
     return getpass.getuser()
 
-def get_machine():
+def get_machine_name():
     """Return the current machine name (string)"""
     full_hostname = socket.gethostname()
     hostname = full_hostname.split('.')[0]
