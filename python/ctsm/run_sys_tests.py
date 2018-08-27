@@ -6,6 +6,7 @@ import logging
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.machine_utils import get_machine_name, get_user
 from ctsm.machine import create_machine
+from ctsm.machine_defaults import MACHINE_DEFAULTS
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ def main(description):
     process_logging_args(args)
     logger.info('Running on machine: {}'.format(args.machine_name))
     machine = create_machine(machine_name=args.machine_name,
+                             defaults=MACHINE_DEFAULTS,
                              scratch_dir=args.testroot_base,
                              account=args.account,
                              job_launcher_queue=args.job_launcher_queue,
@@ -91,7 +93,9 @@ def _commandline_args(description):
 
     machine_name = get_machine_name()
 
-    default_machine = create_machine(machine_name, allow_missing_entries=True)
+    default_machine = create_machine(machine_name,
+                                     defaults=MACHINE_DEFAULTS,
+                                     allow_missing_entries=True)
 
     tests_to_run = parser.add_mutually_exclusive_group(required=True)
 

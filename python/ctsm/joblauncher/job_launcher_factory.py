@@ -6,12 +6,14 @@ from __future__ import print_function
 import logging
 from ctsm.joblauncher.job_launcher_no_batch import JobLauncherNoBatch
 from ctsm.joblauncher.job_launcher_qsub import JobLauncherQsub
+from ctsm.joblauncher.job_launcher_fake import JobLauncherFake
 
 logger = logging.getLogger(__name__)
 
 # Possible values of job_launcher_type
 JOB_LAUNCHER_NOBATCH = "no_batch"
 JOB_LAUNCHER_QSUB = "qsub"
+JOB_LAUNCHER_FAKE = "fake"
 
 def create_job_launcher(job_launcher_type, account=None, queue=None, walltime=None,
                         required_args=None, extra_args=None,
@@ -28,13 +30,16 @@ def create_job_launcher(job_launcher_type, account=None, queue=None, walltime=No
         called for the sake of getting default values.
     """
 
-    if job_launcher_type is JOB_LAUNCHER_NOBATCH:
+    if job_launcher_type == JOB_LAUNCHER_FAKE:
+        return JobLauncherFake()
+
+    if job_launcher_type == JOB_LAUNCHER_NOBATCH:
         return JobLauncherNoBatch()
 
     if account is None and not allow_missing_entries:
         raise RuntimeError("Could not find an account code")
 
-    if job_launcher_type is JOB_LAUNCHER_QSUB:
+    if job_launcher_type == JOB_LAUNCHER_QSUB:
         if not allow_missing_entries:
             _assert_not_none(queue, 'queue', job_launcher_type)
             _assert_not_none(walltime, 'walltime', job_launcher_type)
