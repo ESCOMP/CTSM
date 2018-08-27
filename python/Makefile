@@ -28,7 +28,7 @@ else
 endif
 
 PYLINT=pylint
-PYLINT_ARGS=-j 2
+PYLINT_ARGS=-j 2 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
 	ctsm
 
