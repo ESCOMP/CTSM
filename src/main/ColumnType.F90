@@ -65,6 +65,7 @@ module ColumnType
      real(r8), pointer :: lakedepth            (:)   ! variable lake depth (m)                             
      integer , pointer :: nbedrock             (:)   ! variable depth to bedrock index
      ! hillslope hydrology variables
+     integer,  pointer :: col_ndx              (:)   ! column index of column (hillslope hydrology)
      integer,  pointer :: colu                 (:)   ! column index of uphill column (hillslope hydrology)
      integer,  pointer :: cold                 (:)   ! column index of downhill column (hillslope hydrology)
      integer,  pointer :: hillslope_ndx        (:)   ! hillslope identifier
@@ -134,6 +135,7 @@ contains
     allocate(this%lakedepth   (begc:endc))                     ; this%lakedepth   (:)   = spval  
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan
     allocate(this%z_lake      (begc:endc,nlevlak))             ; this%z_lake      (:,:) = nan
+    allocate(this%col_ndx    (begc:endc))                      ; this%col_ndx(:) = ispval  
     allocate(this%colu       (begc:endc))                      ; this%colu   (:) = ispval  
     allocate(this%cold       (begc:endc))                      ; this%cold   (:) = ispval  
     allocate(this%hillslope_ndx(begc:endc))                    ; this%hillslope_ndx (:) = ispval  
@@ -185,6 +187,7 @@ contains
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)
     deallocate(this%hydrologically_active)
+    deallocate(this%col_ndx    )
     deallocate(this%colu       )
     deallocate(this%cold       )
   end subroutine Clean

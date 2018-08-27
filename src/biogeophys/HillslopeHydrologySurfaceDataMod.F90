@@ -376,7 +376,8 @@ contains
              do c = lun%coli(l), lun%colf(l)
                 ! ci should span [1:nhillcolumns(l)]
                 ci = c-lun%coli(l)+1
-                ! relative separation should be the same
+                col%col_ndx(c) = c 
+                ! relative separation should be the same internally and externally
                 if (col_dndx(l,ci) <= -999) then
                    ! lowermost column of hillslope has no downstream neighbor
 !scs                   col%cold(c) = col_dndx(l,ci)
