@@ -1,6 +1,6 @@
 """A JobLauncher for systems that use qsub"""
 
-from ctsm_pylib.joblauncher.job_launcher_base import JobLauncherBase
+from ctsm.joblauncher.job_launcher_base import JobLauncherBase
 
 class JobLauncherQsub(JobLauncherBase):
 

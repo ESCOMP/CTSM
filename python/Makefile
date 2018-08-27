@@ -30,7 +30,7 @@ endif
 PYLINT=pylint
 PYLINT_ARGS=-j 2
 PYLINT_SRC = \
-	ctsm_pylib
+	ctsm
 
 .PHONY: test
 test: FORCE
@@ -40,6 +40,9 @@ test: FORCE
 lint: FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(PYLINT_SRC)
 
+.PHONY: clean
+clean: FORCE
+	find . -name '*.pyc' -exec rm {} \;
 
 FORCE:
 

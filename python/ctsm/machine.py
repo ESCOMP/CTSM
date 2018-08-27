@@ -8,8 +8,8 @@ out-of-the-box on other machines, add code here.
 import logging
 import os
 from collections import namedtuple
-from ctsm_pylib.joblauncher.job_launcher_factory import create_job_launcher, JOB_LAUNCHER_NOBATCH, JOB_LAUNCHER_QSUB
-from ctsm_pylib.machine_utils import get_user
+from ctsm.joblauncher.job_launcher_factory import create_job_launcher, JOB_LAUNCHER_NOBATCH, JOB_LAUNCHER_QSUB
+from ctsm.machine_utils import get_user
 from CIME.utils import get_charge_account
 
 logger = logging.getLogger(__name__)

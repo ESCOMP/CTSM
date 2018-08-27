@@ -3,9 +3,9 @@
 from __future__ import print_function
 import argparse
 import logging
-from ctsm_pylib.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from ctsm_pylib.machine_utils import get_machine_name, get_user
-from ctsm_pylib.machine import create_machine
+from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from ctsm.machine_utils import get_machine_name, get_user
+from ctsm.machine import create_machine
 
 logger = logging.getLogger(__name__)
 

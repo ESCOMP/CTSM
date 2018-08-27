@@ -9,7 +9,7 @@ import shutil
 import os
 import six
 from six_additions import mock
-from ctsm_pylib import path_utils
+from ctsm import path_utils
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -60,7 +60,7 @@ class TestPathUtils(unittest.TestCase):
         actual_path_to_cime = os.path.join(ctsm_path, 'cime')
         os.makedirs(actual_path_to_cime)
 
-        with mock.patch('ctsm_pylib.path_utils.path_to_ctsm_root',
+        with mock.patch('ctsm.path_utils.path_to_ctsm_root',
                         return_value=ctsm_path):
             path_to_cime = path_utils.path_to_cime(standalone_only=True)
 
@@ -71,7 +71,7 @@ class TestPathUtils(unittest.TestCase):
         ctsm_path = os.path.join(self._testdir, 'ctsm')
         os.makedirs(ctsm_path)
 
-        with mock.patch('ctsm_pylib.path_utils.path_to_ctsm_root',
+        with mock.patch('ctsm.path_utils.path_to_ctsm_root',
                         return_value=ctsm_path):
             with six.assertRaisesRegex(self, RuntimeError, "Cannot find cime"):
                 _ = path_utils.path_to_cime(standalone_only=True)
@@ -84,7 +84,7 @@ class TestPathUtils(unittest.TestCase):
         """
         ctsm_path, _ = self._make_cesm_dirs()
 
-        with mock.patch('ctsm_pylib.path_utils.path_to_ctsm_root',
+        with mock.patch('ctsm.path_utils.path_to_ctsm_root',
                         return_value=ctsm_path):
             with six.assertRaisesRegex(self, RuntimeError, "Cannot find cime"):
                 _ = path_utils.path_to_cime(standalone_only=True)
@@ -95,7 +95,7 @@ class TestPathUtils(unittest.TestCase):
         """
         ctsm_path, actual_path_to_cime = self._make_cesm_dirs()
 
-        with mock.patch('ctsm_pylib.path_utils.path_to_ctsm_root',
+        with mock.patch('ctsm.path_utils.path_to_ctsm_root',
                         return_value=ctsm_path):
             path_to_cime = path_utils.path_to_cime()
 
@@ -109,7 +109,7 @@ class TestPathUtils(unittest.TestCase):
         os.makedirs(ctsm_path)
         os.makedirs(self._cime_path_in_cesm())
 
-        with mock.patch('ctsm_pylib.path_utils.path_to_ctsm_root',
+        with mock.patch('ctsm.path_utils.path_to_ctsm_root',
                         return_value=ctsm_path):
             with six.assertRaisesRegex(self, RuntimeError,
                                        "Cannot find cime.*don't seem to be within a CESM checkout"):
@@ -121,7 +121,7 @@ class TestPathUtils(unittest.TestCase):
         ctsm_path = self._ctsm_path_in_cesm()
         os.makedirs(ctsm_path)
 
-        with mock.patch('ctsm_pylib.path_utils.path_to_ctsm_root',
+        with mock.patch('ctsm.path_utils.path_to_ctsm_root',
                         return_value=ctsm_path):
             with six.assertRaisesRegex(self, RuntimeError,
                                        "Cannot find cime.*or within CESM checkout"):
@@ -136,7 +136,7 @@ class TestPathUtils(unittest.TestCase):
         actual_path_to_cime = os.path.join(ctsm_path, 'cime')
         os.makedirs(actual_path_to_cime)
 
-        with mock.patch('ctsm_pylib.path_utils.path_to_ctsm_root',
+        with mock.patch('ctsm.path_utils.path_to_ctsm_root',
                         return_value=ctsm_path):
             path_to_cime = path_utils.path_to_cime()
 
