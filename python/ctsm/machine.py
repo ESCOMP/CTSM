@@ -8,9 +8,10 @@ out-of-the-box on other machines, add code here.
 import logging
 import os
 from collections import namedtuple
-from ctsm.joblauncher.job_launcher_factory import create_job_launcher, JOB_LAUNCHER_NOBATCH, JOB_LAUNCHER_QSUB
+from ctsm.joblauncher.job_launcher_factory import \
+    create_job_launcher, JOB_LAUNCHER_NOBATCH, JOB_LAUNCHER_QSUB
 from ctsm.machine_utils import get_user
-from CIME.utils import get_charge_account
+from CIME.utils import get_charge_account  # pylint:disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +53,8 @@ def create_machine(machine_name, scratch_dir=None, account=None,
         if not allow_missing_entries:
             # This isn't exactly a missing entry, but the times we don't care about this
             # warning tend to be the same as the times when allow_missing_entries is true
-            logger.warning("machine {} not recognized; using generic no-batch settings".format(
-                machine_name))
+            logger.warning("machine %s not recognized; using generic no-batch settings",
+                           machine_name)
         job_launcher_type = JOB_LAUNCHER_NOBATCH
         if scratch_dir is None and not allow_missing_entries:
             raise RuntimeError("For generic machine, must specify scratch directory")

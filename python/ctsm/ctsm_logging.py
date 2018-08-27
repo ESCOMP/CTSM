@@ -25,7 +25,6 @@ A guide to logging in ctsm python scripts:
 """
 
 import logging
-import argparse
 
 logger = logging.getLogger(__name__)
 

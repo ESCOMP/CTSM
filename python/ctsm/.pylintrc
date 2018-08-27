@@ -139,7 +139,12 @@ disable=print-statement,
         xreadlines-attribute,
         deprecated-sys-function,
         exception-escape,
-        comprehension-escape
+        comprehension-escape,
+# --- default list is above here, our own list is below here ---
+# Allow more arguments to functions:
+        too-many-arguments,
+# Allow inheriting from object for the sake of python 2/3 compatibility (we need explicit inheritance from object in python2 to give new-style classes):
+        useless-object-inheritance
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -216,8 +221,9 @@ spelling-store-unknown-words=no
 
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,
-      XXX,
-      TODO
+      XXX
+# Removing TODO so we can use that to note long-term to do items
+      # TODO
 
 
 [TYPECHECK]
@@ -416,7 +422,10 @@ good-names=i,
            k,
            ex,
            Run,
-           _
+           _,
+# --- default list is above here, our own list is below here ---
+# Allow logger as a global name in each module, because this seems to follow general recommended convention:
+           logger
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no

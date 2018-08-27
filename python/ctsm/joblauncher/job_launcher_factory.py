@@ -3,9 +3,9 @@
 
 from __future__ import print_function
 
+import logging
 from ctsm.joblauncher.job_launcher_no_batch import JobLauncherNoBatch
 from ctsm.joblauncher.job_launcher_qsub import JobLauncherQsub
-import logging
 
 logger = logging.getLogger(__name__)
 
