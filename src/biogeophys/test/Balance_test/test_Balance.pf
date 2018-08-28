@@ -1,0 +1,50 @@
+module test_balance
+
+   ! Some tests of the balance check system
+
+  use pfunit_mod
+  
+  use shr_kind_mod  , only : r8 => shr_kind_r8
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestSubgridMod
+  use ncdio_pio   ! use the fake version of this module
+  use BalanceCheckMod
+
+  implicit none
+  save
+
+  @TestCase
+  type, extends(TestCase) :: TestBalance
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestBalance
+
+contains
+
+  subroutine setUp(this)
+    class(TestBalance), intent(inout) :: this
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestBalance), intent(inout) :: this
+
+    call unittest_timemgr_teardown()
+
+  end subroutine tearDown
+
+  @Test
+  subroutine test_balance_init( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 1800
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( nskip, 2, message="Ensure standard balance check is 2 time-steps" )
+  end subroutine test_balance_init
+
+end module test_balance

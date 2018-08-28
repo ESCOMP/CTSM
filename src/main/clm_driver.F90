@@ -929,6 +929,7 @@ contains
        call BalanceCheck(bounds_clump, &
             atm2lnd_inst, solarabs_inst, waterflux_inst, &
             waterstate_inst, irrigation_inst, glacier_smb_inst, &
+            surfalb_inst, &
             energyflux_inst, canopystate_inst)
        call t_stopf('balchk')
 
