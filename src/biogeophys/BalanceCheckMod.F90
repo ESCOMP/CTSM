@@ -69,7 +69,7 @@ contains
     !-----------------------------------------------------------------------
     dtime = get_step_size()
     ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded up
-    skip_steps = min(2, nint( (skip_size / dtime) + 0.4_r8) )
+    skip_steps = max(2, nint( (skip_size / dtime) + 0.4_r8) )
   end subroutine BalanceCheckInit
 
   !-----------------------------------------------------------------------
