@@ -64,7 +64,12 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     # Settings that depend on both machine and job launcher type
     # ------------------------------------------------------------------------
 
-    job_launcher_required_args = None
+    # Required args are ones that cannot be overridden by the user. So it doesn't make
+    # sense to have these in the argument list for this function: they should only come
+    # from the defaults structure. If the user wants to provide their own arguments, those
+    # should be provided via extra_args.
+    job_launcher_required_args = ''
+
     if mach_defaults is not None:
         these_defaults = mach_defaults.job_launcher_defaults.get(job_launcher_type)
         if these_defaults is not None:

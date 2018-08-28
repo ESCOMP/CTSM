@@ -26,6 +26,9 @@ class JobLauncherBase(object):
             overridden by the user
         extra_args: str or None: arguments to the job launcher that can be set or
             overridden by the user
+
+        (required_args and extra_args are separated so that extra_args can be completely
+        replaced without affecting required_args)
         """
         self._queue = queue
         self._walltime = walltime
@@ -67,7 +70,8 @@ class JobLauncherBase(object):
         raise NotImplementedError
 
     def __repr__(self):
-        return ("(queue='{queue}', "
+        return (type(self).__name__ +
+                "(queue='{queue}', "
                 "walltime='{walltime}', "
                 "account='{account}', "
                 "required_args='{required_args}', "
