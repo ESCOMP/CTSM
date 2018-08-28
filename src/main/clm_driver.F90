@@ -962,7 +962,7 @@ contains
        call BalanceCheck(bounds_clump, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterbalancebulk_inst, &
+            water_inst%waterbalancebulk_inst, surfalb_inst, &
             energyflux_inst, canopystate_inst)
        call t_stopf('balchk')
 
