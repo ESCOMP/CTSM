@@ -61,13 +61,14 @@ def path_to_cime(standalone_only=False):
                        "or within CESM checkout rooted at {}".format(cesm_path))
 
 def prepend_to_python_path(path):
-    """Adds the given path to python's sys.path
+    """Adds the given path to python's sys.path if it isn't already in the path
 
     The path is added near the beginning, so that it takes precedence over existing
     entries in the path
     """
-    # Insert at location 1 rather than 0, because 0 is special
-    sys.path.insert(1, path)
+    if not path in sys.path:
+        # Insert at location 1 rather than 0, because 0 is special
+        sys.path.insert(1, path)
 
 def add_cime_lib_to_path(standalone_only=False):
     """Adds the CIME python library to the python path, to allow importing
