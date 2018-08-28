@@ -868,9 +868,13 @@ If TRUE, urban traffic flux will be activated (Currently NOT implemented).
 1 = prognostic calculation of interior building temp (clm5_0)
 </entry>
 
-<entry id="calc_human_stress_indices" type="logical" category="clm_physics"
-       group="clm_humanindex_inparm" valid_values="" >
-If TRUE, human stress indices will be calculated
+<entry id="calc_human_stress_indices" type="char*16" category="clm_physics"
+       group="clm_humanindex_inparm" valid_values="ALL,FAST,NONE" >
+Human heat stress indices:
+    ALL  = All indices will be calculated
+    FAST = A subset of indices will be calculated (will not include the computationally 
+           expensive wet bulb calculation and associated indices)
+    NONE = No indices will be calculated
 </entry>
 
 <entry id="wrtdia" type="logical" category="history"
