@@ -11,19 +11,10 @@ else
 PYTHON=python
 endif
 
-# common args for running tests
-TEST_ARGS=-m unittest discover
-
-ifeq ($(debug), not-set)
-    ifeq ($(verbose), not-set)
-        # summary only output
-        TEST_ARGS+=--buffer
-    else
-        # show individual test summary
-        TEST_ARGS+=--buffer --verbose
-    endif
-else
-    # show detailed test output
+ifneq ($(debug), not-set)
+    TEST_ARGS+=--debug
+endif
+ifneq ($(verbose), not-set)
     TEST_ARGS+=--verbose
 endif
 
@@ -34,7 +25,7 @@ PYLINT_SRC = \
 
 .PHONY: test
 test: FORCE
-	$(PYTHON) $(TEST_ARGS)
+	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS)
 
 .PHONY: lint
 lint: FORCE

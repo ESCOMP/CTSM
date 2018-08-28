@@ -7,8 +7,10 @@ import unittest
 import tempfile
 import shutil
 import os
+
 import six
 from six_additions import mock
+from ctsm import unit_testing
 from ctsm import path_utils
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
@@ -143,4 +145,5 @@ class TestPathUtils(unittest.TestCase):
         self.assertEqual(path_to_cime, actual_path_to_cime)
 
 if __name__ == '__main__':
+    unit_testing.setup_for_tests()
     unittest.main()

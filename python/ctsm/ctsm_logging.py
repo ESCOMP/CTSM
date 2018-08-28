@@ -22,6 +22,9 @@ A guide to logging in ctsm python scripts:
 
   (1) At the very start of a script / application, call setup_logging() with the desired
       arguments
+
+- In unit tests, to avoid messages about loggers not being set up, you should call
+  setup_logging_for_tests (this is typically done via unit_testing.setup_for_tests)
 """
 
 import logging
@@ -37,6 +40,12 @@ def setup_logging_pre_config():
     This sets initial options that may be changed later by process_logging_args.
     """
     setup_logging(level=logging.WARNING)
+
+def setup_logging_for_tests(enable_critical=False):
+    """Setup logging as appropriate for unit tests"""
+    setup_logging(level=logging.CRITICAL)
+    if not enable_critical:
+        logging.disable(logging.CRITICAL)
 
 def setup_logging(level=logging.WARNING):
     """Setup logging for a script / application
