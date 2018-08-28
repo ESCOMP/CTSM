@@ -44,7 +44,33 @@ contains
     call unittest_timemgr_setup(dtime=dtime)
     call BalanceCheckInit()
     nskip = GetBalanceCheckSkipSteps()
-    @assertEqual( nskip, 2, message="Ensure standard balance check is 2 time-steps" )
+    @assertEqual( 2, nskip, message="Ensure standard balance check is 2 time-steps" )
   end subroutine test_balance_init
+
+  @Test
+  subroutine test_balance_longstep( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 7200
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( 2, nskip, message="Ensure even with a long time-step skip is 2 time-steps" )
+  end subroutine test_balance_longstep
+
+  @Test
+  subroutine test_balance_shortstep( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 36
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( 100, nskip, message="Ensure with a short step correct number of skip steps is done" )
+  end subroutine test_balance_shortstep
 
 end module test_balance
