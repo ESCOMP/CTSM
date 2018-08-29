@@ -74,12 +74,16 @@ def add_cime_lib_to_path(standalone_only=False):
     """Adds the CIME python library to the python path, to allow importing
     modules from that library
 
+    Returns the path to the top-level cime directory
+
     For documentation on standalone_only: See documentation in
     path_to_cime
     """
-    cime_lib_path = os.path.join(path_to_cime(standalone_only=standalone_only),
+    cime_path = path_to_cime(standalone_only=standalone_only)
+    cime_lib_path = os.path.join(cime_path,
                                  'scripts', 'lib')
     prepend_to_python_path(cime_lib_path)
+    return cime_path
 
 # ========================================================================
 # Private functions

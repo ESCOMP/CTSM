@@ -10,6 +10,7 @@ from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, proces
 from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
+from ctsm.path_utils import path_to_cime
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,15 @@ logger = logging.getLogger(__name__)
 # Public functions
 # ========================================================================
 
-def main(description):
+def main(description, cime_path):
     """Main function called when run_sys_tests is run from the command-line
 
     Args:
     description (str): description printed to usage message
+    cime_path (str): path to the cime that we're using (this is passed in explicitly
+        rather than relying on calling path_to_cime so that we can be absolutely sure that
+        the scripts called here are coming from the same cime as the cime library we're
+        using).
     """
     setup_logging_pre_config()
     args = _commandline_args(description)
@@ -36,7 +41,7 @@ def main(description):
                              job_launcher_extra_args=args.job_launcher_extra_args)
     logger.debug("Machine info: %s", machine)
 
-    run_sys_tests(machine=machine, dry_run=args.dry_run,
+    run_sys_tests(machine=machine, cime_path=cime_path, dry_run=args.dry_run,
                   suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
                   testid_base=args.testid_base, testroot_base=args.testroot_base,
                   compare_name=args.compare, generate_name=args.generate,
@@ -44,7 +49,7 @@ def main(description):
                   walltime=args.walltime, queue=args.queue,
                   extra_create_test_args=args.extra_create_test_args)
 
-def run_sys_tests(machine, dry_run=False,
+def run_sys_tests(machine, cime_path, dry_run=False,
                   suite_name=None, testfile=None, testlist=None,
                   testid_base=None, testroot_base=None,
                   compare_name=None, generate_name=None,
@@ -77,7 +82,8 @@ def run_sys_tests(machine, dry_run=False,
                                              queue=queue,
                                              extra_create_test_args=extra_create_test_args)
     if suite_name:
-        _run_test_suite(suite_name=suite_name, machine=machine,
+        _run_test_suite(cime_path=cime_path,
+                        suite_name=suite_name, machine=machine,
                         testid_base=testid_base, testroot=testroot,
                         create_test_args=create_test_args)
     else:
@@ -87,7 +93,8 @@ def run_sys_tests(machine, dry_run=False,
             test_args = testlist
         else:
             raise RuntimeError("None of suite_name, testfile or testlist were provided")
-        _run_create_test(test_args=test_args, machine=machine,
+        _run_create_test(cime_path=cime_path,
+                         test_args=test_args, machine=machine,
                          testid=testid_base, testroot=testroot,
                          create_test_args=create_test_args)
 
@@ -231,8 +238,6 @@ def _make_testroot(testroot, testid_base, dry_run):
     """
     # FIXME(wjs, 2018-08-24) Finish implementing this:
     #
-    # - Make a link
-    #
     # - I think this is also where we should create the cs.status scripts
     logger.info("Making directory: %s", testroot)
     if not dry_run:
@@ -258,7 +263,7 @@ def _get_create_test_args(compare_name, generate_name, baseline_root,
     args.extend(extra_create_test_args.split())
     return args
 
-def _run_test_suite(suite_name, machine, testid_base, testroot, create_test_args):
+def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, create_test_args):
 
     compilers = _get_compilers_for_suite(suite_name, machine.name)
     for compiler in compilers:
@@ -266,7 +271,8 @@ def _run_test_suite(suite_name, machine, testid_base, testroot, create_test_args
                      '--xml-machine', machine.name,
                      '--xml-compiler', compiler]
         testid = testid_base + '_' + compiler[0:2]
-        _run_create_test(test_args=test_args, machine=machine,
+        _run_create_test(cime_path=cime_path,
+                         test_args=test_args, machine=machine,
                          testid=testid, testroot=testroot,
                          create_test_args=create_test_args)
 
@@ -275,11 +281,23 @@ def _get_compilers_for_suite(suite_name, machine_name):
     # in query_testlists. If no tests are found for this suite and machine, raise an exception.
     return []
 
-def _run_create_test(test_args, machine, testid, testroot, create_test_args):
-    # FIXME(wjs, 2018-08-24) Finish this implementation
-    create_test_cmd = _build_create_test_cmd()
+def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args):
+    # FIXME(wjs, 2018-08-24) Finish this implementation: still need more arguments to
+    # _build_create_test_cmd
+    create_test_cmd = _build_create_test_cmd(cime_path=cime_path,
+                                             test_args=test_args,
+                                             testid=testid,
+                                             testroot=testroot)
+    machine.job_launcher.run_command(create_test_cmd)
 
-def _build_create_test_cmd():
-    """Builds and returns the create_test command"""
-    # FIXME(wjs, 2018-08-24) Implement this
-    return ""
+def _build_create_test_cmd(cime_path, test_args, testid, testroot):
+    """Builds and returns the create_test command
+
+    This is a list, where each element of the list is one argument
+    """
+    # FIXME(wjs, 2018-08-24) Implement this more generally (still need more arguments)
+    command = [os.path.join(cime_path, 'scripts', 'create_test'),
+               '--test-id', testid,
+               '--test-root', testroot]
+    command.extend(test_args)
+    return command

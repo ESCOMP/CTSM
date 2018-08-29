@@ -8,7 +8,10 @@ import unittest
 import tempfile
 import shutil
 import os
+import re
 from datetime import datetime
+
+import six
 from six_additions import mock
 
 from ctsm import add_cime_to_path #pylint:disable=unused-import
@@ -54,17 +57,29 @@ class TestRunSysTests(unittest.TestCase):
                         minute=5,
                         second=6)
 
+    def _cime_path(self):
+        # For the sake of paths to scripts used in run_sys_tests: Pretend that cime exists
+        # under the current directory, even though it doesn't
+        return os.path.join(self._curdir, 'cime')
+
     @staticmethod
-    def _expected_testroot():
-        """Returns an expected testroot based on values set in _fake_now and _MACHINE_NAME"""
-        return 'tests_0203-0405fa'
+    def _expected_testid():
+        """Returns an expected testid based on values set in _fake_now and _MACHINE_NAME"""
+        return '0203-0405fa'
+
+    def _expected_testroot(self):
+        """Returns an expected testroot based on values set in _fake_now and _MACHINE_NAME
+
+        This just returns the name of the testroot directory, not the full path"""
+        return 'tests_{}'.format(self._expected_testid())
 
     def test_testroot_setup(self):
         """Ensure that the appropriate test root directory is created and populated"""
         machine = self._make_machine()
         with mock.patch('ctsm.run_sys_tests.datetime') as mock_date:
             mock_date.now.side_effect = self._fake_now
-            run_sys_tests(machine=machine, testlist=['foo'])
+            run_sys_tests(machine=machine, cime_path=self._cime_path(),
+                          testlist=['foo'])
 
         expected_dir = os.path.join(self._scratch,
                                     self._expected_testroot())
@@ -73,7 +88,41 @@ class TestRunSysTests(unittest.TestCase):
                                      self._expected_testroot())
         self.assertTrue(os.path.islink(expected_link))
         self.assertEqual(os.readlink(expected_link), expected_dir)
-        # FIXME(wjs, 2018-08-28) Make sure it's populated with a cs.status file
+
+    def test_createTestCommand_testnames(self):
+        """The correct create_test command should be run when providing a list of test names
+
+        This test does basic checking of the standard arguments to create_test
+        """
+        machine = self._make_machine()
+        with mock.patch('ctsm.run_sys_tests.datetime') as mock_date:
+            mock_date.now.side_effect = self._fake_now
+            run_sys_tests(machine=machine, cime_path=self._cime_path(),
+                          testlist=['test1', 'test2'])
+
+        all_commands = machine.job_launcher.get_commands()
+        self.assertEqual(len(all_commands), 1)
+        command = all_commands[0]
+        expected_create_test = os.path.join(self._cime_path(), 'scripts', 'create_test')
+        six.assertRegex(self, command, r'^ *{}'.format(re.escape(expected_create_test)))
+        six.assertRegex(self, command, r'--test-id +{}'.format(self._expected_testid()))
+        expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
+        six.assertRegex(self, command, r'--test-root +{}'.format(expected_testroot_path))
+        six.assertRegex(self, command, r'test1 +test2 *$')
+
+        # FIXME(wjs, 2018-08-29) Similar to the above test, but with testid_base, testroot_base specified and some optional args specified (compare_name, generate_name, baseline_root, walltime, queue, extra_create_test_args; also account?)
+
+                          # compare_name='mycompare',
+                          # generate_name='mygenerate',
+                          # baseline_root='myblroot',
+                          # walltime='3:45:67',
+                          # queue='runqueue',
+                          # extra_create_test_args='--some extra --createtest args'
+
+        # cime/scripts/create_test --generate $newtag --compare $oldtag --baseline-root $baselineroot --test-id ${testid}_${compiler:0:1} --project ${account} --walltime ${walltime} --queue ${queue} ${extra_create_test_args} --test-root ${testroot} testname1 testname2
+
+
+    # FIXME(wjs, 2018-08-29) Test with a test suite
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()
