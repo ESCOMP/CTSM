@@ -3,8 +3,11 @@
 from __future__ import print_function
 import argparse
 import logging
+import os
+from datetime import datetime
+
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from ctsm.machine_utils import get_machine_name, get_user
+from ctsm.machine_utils import get_machine_name, get_user, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 
@@ -33,9 +36,10 @@ def main(description):
                              job_launcher_extra_args=args.job_launcher_extra_args)
     logger.debug("Machine info: {}".format(machine))
     # FIXME(wjs, 2018-08-24) Fill this in with real arguments
-    run_sys_tests(machine=machine, suite_name='aux_clm')
+    run_sys_tests(machine=machine, dry_run=args.dry_run, suite_name='aux_clm')
 
-def run_sys_tests(machine, suite_name=None, testfile=None, testlist=None,
+def run_sys_tests(machine, dry_run=False,
+                  suite_name=None, testfile=None, testlist=None,
                   testid_base=None, test_root_base=None,
                   compare_name=None, generate_name=None, baselineroot=None,
                   account=None, walltime=None, queue=None,
@@ -56,7 +60,7 @@ def run_sys_tests(machine, suite_name=None, testfile=None, testlist=None,
     if test_root_base is None:
         test_root_base = _get_test_root_base(machine)
     test_root = _get_test_root(test_root_base, testid_base)
-    _make_test_root(test_root)
+    _make_test_root(test_root, testid_base, dry_run)
 
     create_test_args = _get_create_test_args(compare_name=compare_name,
                                              generate_name=generate_name,
@@ -175,6 +179,10 @@ def _commandline_args(description):
                         help='Extra arguments for the command that launches the create_test command.\n'
                         'Default for this machine: {}'.format(default_machine.job_launcher.get_extra_args()))
 
+    parser.add_argument('--dry-run', action='store_true',
+                        help='Print what would happen, but do not run any commands.\n'
+                        '(Generally should be run with --verbose.)\n')
+
     parser.add_argument('--machine-name', default=machine_name,
                         help='Name of machine for which create_test is run.\n'
                         'This typically is not needed, but can be provided for the sake of testing this script.\n'
@@ -188,30 +196,34 @@ def _commandline_args(description):
 
 def _get_testid_base(machine_name):
     """Returns a base testid based on the current date and time and the machine name"""
-    # FIXME(wjs, 2018-08-24) Implement this: use the current month, day, hour & minute
-    # plus the first two characters of the machine name
-    return ""
+    now = datetime.now()
+    now_str = now.strftime("%m%d-%H%M")
+    machine_start = machine_name[0:2]
+    return '{}{}'.format(now_str, machine_start)
 
 def _get_test_root_base(machine):
-    # FIXME(wjs, 2018-08-24) Implement this
-    return ""
+    return machine.scratch_dir
 
 def _get_test_root(test_root_base, testid_base):
     """Get the path to the test root, given a base test id"""
-    # FIXME(wjs, 2018-08-24) Implement this
-    return ""
+    return os.path.join(test_root_base, _get_testdir_name(testid_base))
 
-def _make_test_root(test_root):
+def _get_testdir_name(testid_base):
+    return 'tests_{}'.format(testid_base)
+
+def _make_test_root(test_root, testid_base, dry_run):
     """Make the testroot directory at the given location, as well as a link in the current
     directory
     """
-    # FIXME(wjs, 2018-08-24) Implement this.
+    # FIXME(wjs, 2018-08-24) Finish implementing this:
     #
-    # This will echo an equivalent shell command, then (if dry_run is False) execute the
-    # python equivalent.
+    # - Make a link
     #
-    # I think this is also where we should create the cs.status scripts
-    pass
+    # - I think this is also where we should create the cs.status scripts
+    logger.info("Making directory: {}".format(test_root))
+    if not dry_run:
+        os.makedirs(test_root)
+        make_link(test_root, _get_testdir_name(testid_base))
 
 def _get_create_test_args(compare_name, generate_name, baselineroot,
                           account, walltime, queue,
