@@ -29,6 +29,9 @@ def main(description):
     testsuite = unittest.defaultTestLoader.discover(
         start_dir=mydir,
         pattern=args.pattern)
+    # NOTE(wjs, 2018-08-29) We may want to change the meaning of '--debug'
+    # vs. '--verbose': I could imagine having --verbose set buffer=False, and --debug
+    # additionally sets the logging level to much higher - e.g., debug level.
     testrunner = unittest.TextTestRunner(buffer=(not args.debug),
                                          verbosity=verbosity)
     testrunner.run(testsuite)

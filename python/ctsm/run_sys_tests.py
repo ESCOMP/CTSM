@@ -10,7 +10,6 @@ from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, proces
 from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
-from ctsm.path_utils import path_to_cime
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,8 @@ def main(description, cime_path):
                              job_launcher_extra_args=args.job_launcher_extra_args)
     logger.debug("Machine info: %s", machine)
 
-    run_sys_tests(machine=machine, cime_path=cime_path, dry_run=args.dry_run,
+    run_sys_tests(machine=machine, cime_path=cime_path,
+                  skip_testroot_creation=args.skip_testroot_creation, dry_run=args.dry_run,
                   suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
                   testid_base=args.testid_base, testroot_base=args.testroot_base,
                   compare_name=args.compare, generate_name=args.generate,
@@ -49,13 +49,15 @@ def main(description, cime_path):
                   walltime=args.walltime, queue=args.queue,
                   extra_create_test_args=args.extra_create_test_args)
 
-def run_sys_tests(machine, cime_path, dry_run=False,
+def run_sys_tests(machine, cime_path,
+                  skip_testroot_creation=False, dry_run=False,
                   suite_name=None, testfile=None, testlist=None,
                   testid_base=None, testroot_base=None,
                   compare_name=None, generate_name=None,
                   baseline_root=None,
                   walltime=None, queue=None,
                   extra_create_test_args=''):
+    # FIXME(wjs, 2018-08-29) finish documenting Args
     """Implementation of run_sys_tests command
 
     Args:
@@ -72,7 +74,8 @@ def run_sys_tests(machine, cime_path, dry_run=False,
     if testroot_base is None:
         testroot_base = _get_testroot_base(machine)
     testroot = _get_testroot(testroot_base, testid_base)
-    _make_testroot(testroot, testid_base, dry_run)
+    if not skip_testroot_creation:
+        _make_testroot(testroot, testid_base, dry_run)
 
     create_test_args = _get_create_test_args(compare_name=compare_name,
                                              generate_name=generate_name,
@@ -199,6 +202,10 @@ def _commandline_args(description):
                         'Default for this machine: {}'.format(
                             default_machine.job_launcher.get_extra_args()))
 
+    parser.add_argument('--skip-testroot-creation', action='store_true',
+                        help='Do not create the directory that will hold the tests.\n'
+                        'This should be used if the desired testroot directory already exists.')
+
     parser.add_argument('--dry-run', action='store_true',
                         help='Print what would happen, but do not run any commands.\n'
                         '(Generally should be run with --verbose.)\n')
@@ -239,6 +246,8 @@ def _make_testroot(testroot, testid_base, dry_run):
     # FIXME(wjs, 2018-08-24) Finish implementing this:
     #
     # - I think this is also where we should create the cs.status scripts
+    if os.path.exists(testroot):
+        raise RuntimeError("{} already exists".format(testroot))
     logger.info("Making directory: %s", testroot)
     if not dry_run:
         os.makedirs(testroot)
