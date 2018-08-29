@@ -62,6 +62,14 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
         if job_launcher_type is None:
             job_launcher_type = JOB_LAUNCHER_NOBATCH
         if scratch_dir is None and not allow_missing_entries:
+            # NOTE(wjs, 2018-08-29) If we start using this more generally, we might have
+            # contexts where we don't need a scratch directory. In that case, we
+            # can/should get rid of this RuntimeError, and allow scratch_dir to remain
+            # None. We could then turn Machine into a real class (rather than a
+            # namedtuple), with getter methods. The getter methods would then raise a
+            # RuntimeError if you tried to get a value that was None. This way, you'd only
+            # have an exception from having something set to None if you actually need
+            # that value for this application.
             raise RuntimeError("For generic machine, must specify scratch directory")
 
     # ------------------------------------------------------------------------
