@@ -141,8 +141,12 @@ disable=print-statement,
         exception-escape,
         comprehension-escape,
 # --- default list is above here, our own list is below here ---
-# Allow more arguments to functions:
+# While pylint's recommendations to keep the number of arguments, local
+# variables and branches low is generally a good one, I don't want it to
+# be enforced, because there are times when it's okay to break these:
         too-many-arguments,
+        too-many-branches,
+        too-many-locals,
 # Allow inheriting from object for the sake of python 2/3 compatibility (we need explicit inheritance from object in python2 to give new-style classes):
         useless-object-inheritance
 

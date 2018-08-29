@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from ctsm.machine_utils import get_machine_name, get_user, make_link
+from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 
@@ -26,7 +26,7 @@ def main(description):
     setup_logging_pre_config()
     args = _commandline_args(description)
     process_logging_args(args)
-    logger.info('Running on machine: {}'.format(args.machine_name))
+    logger.info('Running on machine: %s', args.machine_name)
     machine = create_machine(machine_name=args.machine_name,
                              defaults=MACHINE_DEFAULTS,
                              scratch_dir=args.testroot_base,
@@ -34,7 +34,7 @@ def main(description):
                              job_launcher_queue=args.job_launcher_queue,
                              job_launcher_walltime=args.job_launcher_walltime,
                              job_launcher_extra_args=args.job_launcher_extra_args)
-    logger.debug("Machine info: {}".format(machine))
+    logger.debug("Machine info: %s", machine)
 
     run_sys_tests(machine=machine, dry_run=args.dry_run,
                   suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
@@ -122,20 +122,20 @@ def _commandline_args(description):
     compare = parser.add_mutually_exclusive_group(required=True)
 
     compare.add_argument('-c', '--compare', metavar='COMPARE_NAME',
-                        help='Baseline name (often tag) to compare against\n'
-                        '(required unless --skip-compare is given)')
+                         help='Baseline name (often tag) to compare against\n'
+                         '(required unless --skip-compare is given)')
 
     compare.add_argument('--skip-compare', action='store_true',
-                        help='Do not compare against baselines')
+                         help='Do not compare against baselines')
 
     generate = parser.add_mutually_exclusive_group(required=True)
 
     generate.add_argument('-g', '--generate', metavar='GENERATE_NAME',
-                        help='Baseline name (often tag) to generate\n'
-                        '(required unless --skip-generate is given)')
+                          help='Baseline name (often tag) to generate\n'
+                          '(required unless --skip-generate is given)')
 
     generate.add_argument('--skip-generate', action='store_true',
-                        help='Do not generate baselines')
+                          help='Do not generate baselines')
 
     parser.add_argument('--account',
                         help='Account number to use for job submission.\n'
@@ -149,18 +149,20 @@ def _commandline_args(description):
 
     parser.add_argument('--testroot-base',
                         help='Path in which testroot should be put.\n'
-                        'For supported machines, this can be left out; for non-supported machines, it must be provided.\n'
+                        'For supported machines, this can be left out;\n'
+                        'for non-supported machines, it must be provided.\n'
                         'Default for this machine: {}'.format(default_machine.scratch_dir))
 
     parser.add_argument('--baseline-root',
                         help='Path in which baselines should be compared and generated.\n'
-                        'Default is to use the default for this machine.\n')
+                        'Default is to use the default for this machine.')
 
     parser.add_argument('--walltime',
                         help='Walltime for each test.\n'
                         'If running a test suite, you can generally leave this unset,\n'
                         'because it is set in the file defining the test suite.\n'
-                        'For other uses, providing this helps decrease the time spent waiting in the queue.')
+                        'For other uses, providing this helps decrease the time spent\n'
+                        'waiting in the queue.')
 
     parser.add_argument('--queue',
                         help='Queue to which tests are submitted.\n'
@@ -174,17 +176,21 @@ def _commandline_args(description):
                         help='Queue to which the create_test command is submitted.\n'
                         'Only applies on machines for which we submit the create_test command\n'
                         'rather than running it on the login node.\n'
-                        'Default for this machine: {}'.format(default_machine.job_launcher.get_queue()))
+                        'Default for this machine: {}'.format(
+                            default_machine.job_launcher.get_queue()))
 
     parser.add_argument('--job-launcher-walltime',
                         help='Walltime for the create_test command.\n'
                         'Only applies on machines for which we submit the create_test command\n'
                         'rather than running it on the login node.\n'
-                        'Default for this machine: {}'.format(default_machine.job_launcher.get_walltime()))
+                        'Default for this machine: {}'.format(
+                            default_machine.job_launcher.get_walltime()))
 
     parser.add_argument('--job-launcher-extra-args',
-                        help='Extra arguments for the command that launches the create_test command.\n'
-                        'Default for this machine: {}'.format(default_machine.job_launcher.get_extra_args()))
+                        help='Extra arguments for the command that launches the\n'
+                        'create_test command.\n'
+                        'Default for this machine: {}'.format(
+                            default_machine.job_launcher.get_extra_args()))
 
     parser.add_argument('--dry-run', action='store_true',
                         help='Print what would happen, but do not run any commands.\n'
@@ -192,7 +198,8 @@ def _commandline_args(description):
 
     parser.add_argument('--machine-name', default=machine_name,
                         help='Name of machine for which create_test is run.\n'
-                        'This typically is not needed, but can be provided for the sake of testing this script.\n'
+                        'This typically is not needed, but can be provided\n'
+                        'for the sake of testing this script.\n'
                         'Defaults to current machine: {}'.format(machine_name))
 
     add_logging_args(parser)
@@ -227,7 +234,7 @@ def _make_testroot(testroot, testid_base, dry_run):
     # - Make a link
     #
     # - I think this is also where we should create the cs.status scripts
-    logger.info("Making directory: {}".format(testroot))
+    logger.info("Making directory: %s", testroot)
     if not dry_run:
         os.makedirs(testroot)
         make_link(testroot, _get_testdir_name(testid_base))
@@ -276,4 +283,3 @@ def _build_create_test_cmd():
     """Builds and returns the create_test command"""
     # FIXME(wjs, 2018-08-24) Implement this
     return ""
-

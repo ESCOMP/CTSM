@@ -19,10 +19,14 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
                    job_launcher_queue=None, job_launcher_walltime=None,
                    job_launcher_extra_args=None,
                    allow_missing_entries=False):
-    # FIXME(wjs, 2018-08-27) finish documenting the interface
-    """
+    """Create a machine object (of type Machine, as given above)
 
-    Args:
+    This uses the provided (non-None) arguments to override any defaults provided via the
+    'defaults' argument.
+
+    Non-straightforward Args:
+    machine_name (str): name of machine; this is used to index into the 'defaults'
+        argument, and is used as the machine name in the returned object
     defaults: dict of MachineDefaults (as defined in machine_defaults)
     job_launcher_type: one of the JOB_LAUNCHER constants defined in job_launcher_factory,
         or None. If None, we pick the default for this machine.
