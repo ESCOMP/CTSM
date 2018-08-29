@@ -35,14 +35,21 @@ def main(description):
                              job_launcher_walltime=args.job_launcher_walltime,
                              job_launcher_extra_args=args.job_launcher_extra_args)
     logger.debug("Machine info: {}".format(machine))
-    # FIXME(wjs, 2018-08-24) Fill this in with real arguments
-    run_sys_tests(machine=machine, dry_run=args.dry_run, suite_name='aux_clm')
+
+    run_sys_tests(machine=machine, dry_run=args.dry_run,
+                  suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
+                  testid_base=args.testid_base, testroot_base=args.testroot_base,
+                  compare_name=args.compare, generate_name=args.generate,
+                  baseline_root=args.baseline_root,
+                  walltime=args.walltime, queue=args.queue,
+                  extra_create_test_args=args.extra_create_test_args)
 
 def run_sys_tests(machine, dry_run=False,
                   suite_name=None, testfile=None, testlist=None,
-                  testid_base=None, test_root_base=None,
-                  compare_name=None, generate_name=None, baselineroot=None,
-                  account=None, walltime=None, queue=None,
+                  testid_base=None, testroot_base=None,
+                  compare_name=None, generate_name=None,
+                  baseline_root=None,
+                  walltime=None, queue=None,
                   extra_create_test_args=''):
     """Implementation of run_sys_tests command
 
@@ -57,21 +64,21 @@ def run_sys_tests(machine, dry_run=False,
 
     if testid_base is None:
         testid_base = _get_testid_base(machine.name)
-    if test_root_base is None:
-        test_root_base = _get_test_root_base(machine)
-    test_root = _get_test_root(test_root_base, testid_base)
-    _make_test_root(test_root, testid_base, dry_run)
+    if testroot_base is None:
+        testroot_base = _get_testroot_base(machine)
+    testroot = _get_testroot(testroot_base, testid_base)
+    _make_testroot(testroot, testid_base, dry_run)
 
     create_test_args = _get_create_test_args(compare_name=compare_name,
                                              generate_name=generate_name,
-                                             baselineroot=baselineroot,
-                                             account=account,
+                                             baseline_root=baseline_root,
+                                             account=machine.account,
                                              walltime=walltime,
                                              queue=queue,
                                              extra_create_test_args=extra_create_test_args)
     if suite_name:
         _run_test_suite(suite_name=suite_name, machine=machine,
-                        testid_base=testid_base, test_root=test_root,
+                        testid_base=testid_base, testroot=testroot,
                         create_test_args=create_test_args)
     else:
         if testfile:
@@ -81,7 +88,7 @@ def run_sys_tests(machine, dry_run=False,
         else:
             raise RuntimeError("None of suite_name, testfile or testlist were provided")
         _run_create_test(test_args=test_args, machine=machine,
-                         testid=testid_base, test_root=test_root,
+                         testid=testid_base, testroot=testroot,
                          create_test_args=create_test_args)
 
 # ========================================================================
@@ -159,7 +166,7 @@ def _commandline_args(description):
                         help='Queue to which tests are submitted.\n'
                         'If not provided, uses machine default.')
 
-    parser.add_argument('--extra-create-test-args',
+    parser.add_argument('--extra-create-test-args', default='',
                         help='String giving extra arguments to pass to create_test')
 
 
@@ -201,17 +208,17 @@ def _get_testid_base(machine_name):
     machine_start = machine_name[0:2]
     return '{}{}'.format(now_str, machine_start)
 
-def _get_test_root_base(machine):
+def _get_testroot_base(machine):
     return machine.scratch_dir
 
-def _get_test_root(test_root_base, testid_base):
+def _get_testroot(testroot_base, testid_base):
     """Get the path to the test root, given a base test id"""
-    return os.path.join(test_root_base, _get_testdir_name(testid_base))
+    return os.path.join(testroot_base, _get_testdir_name(testid_base))
 
 def _get_testdir_name(testid_base):
     return 'tests_{}'.format(testid_base)
 
-def _make_test_root(test_root, testid_base, dry_run):
+def _make_testroot(testroot, testid_base, dry_run):
     """Make the testroot directory at the given location, as well as a link in the current
     directory
     """
@@ -220,12 +227,12 @@ def _make_test_root(test_root, testid_base, dry_run):
     # - Make a link
     #
     # - I think this is also where we should create the cs.status scripts
-    logger.info("Making directory: {}".format(test_root))
+    logger.info("Making directory: {}".format(testroot))
     if not dry_run:
-        os.makedirs(test_root)
-        make_link(test_root, _get_testdir_name(testid_base))
+        os.makedirs(testroot)
+        make_link(testroot, _get_testdir_name(testid_base))
 
-def _get_create_test_args(compare_name, generate_name, baselineroot,
+def _get_create_test_args(compare_name, generate_name, baseline_root,
                           account, walltime, queue,
                           extra_create_test_args):
     args = []
@@ -233,8 +240,8 @@ def _get_create_test_args(compare_name, generate_name, baselineroot,
         args.extend(['--compare', compare_name])
     if generate_name:
         args.extend(['--generate', generate_name])
-    if baselineroot:
-        args.extend(['--baseline-root', baselineroot])
+    if baseline_root:
+        args.extend(['--baseline-root', baseline_root])
     if account:
         args.extend(['--project', account])
     if walltime:
@@ -244,7 +251,7 @@ def _get_create_test_args(compare_name, generate_name, baselineroot,
     args.extend(extra_create_test_args.split())
     return args
 
-def _run_test_suite(suite_name, machine, testid_base, test_root, create_test_args):
+def _run_test_suite(suite_name, machine, testid_base, testroot, create_test_args):
 
     compilers = _get_compilers_for_suite(suite_name, machine.name)
     for compiler in compilers:
@@ -253,7 +260,7 @@ def _run_test_suite(suite_name, machine, testid_base, test_root, create_test_arg
                      '--xml-compiler', compiler]
         testid = testid_base + '_' + compiler[0:2]
         _run_create_test(test_args=test_args, machine=machine,
-                         testid=testid, test_root=test_root,
+                         testid=testid, testroot=testroot,
                          create_test_args=create_test_args)
 
 def _get_compilers_for_suite(suite_name, machine_name):
@@ -261,7 +268,7 @@ def _get_compilers_for_suite(suite_name, machine_name):
     # in query_testlists. If no tests are found for this suite and machine, raise an exception.
     return []
 
-def _run_create_test(test_args, machine, testid, test_root, create_test_args):
+def _run_create_test(test_args, machine, testid, testroot, create_test_args):
     # FIXME(wjs, 2018-08-24) Finish this implementation
     create_test_cmd = _build_create_test_cmd()
 
