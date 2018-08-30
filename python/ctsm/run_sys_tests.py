@@ -247,7 +247,7 @@ can be repeated multiple times).
 def _get_testid_base(machine_name):
     """Returns a base testid based on the current date and time and the machine name"""
     now = datetime.now()
-    now_str = now.strftime("%m%d-%H%M")
+    now_str = now.strftime("%m%d-%H%M%S")
     machine_start = machine_name[0:2]
     return '{}{}'.format(now_str, machine_start)
 

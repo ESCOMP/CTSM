@@ -66,7 +66,7 @@ class TestRunSysTests(unittest.TestCase):
     @staticmethod
     def _expected_testid():
         """Returns an expected testid based on values set in _fake_now and _MACHINE_NAME"""
-        return '0203-0405fa'
+        return '0203-040506fa'
 
     def _expected_testroot(self):
         """Returns an expected testroot based on values set in _fake_now and _MACHINE_NAME
