@@ -1,4 +1,8 @@
-create_pFUnit_test(daylength test_daylength_exe
-  "test_daylength.pf" "")
+set (pfunit_sources
+  test_daylength.pf
+  test_compute_max_daylength.pf)
 
-target_link_libraries(test_daylength_exe clm csm_share esmf_wrf_timemgr)
+create_pFUnit_test(Daylength test_Daylength_exe
+  "${pfunit_sources}" "")
+
+target_link_libraries(test_Daylength_exe clm csm_share esmf_wrf_timemgr)

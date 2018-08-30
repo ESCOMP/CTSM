@@ -1,0 +1,120 @@
+module test_truncate_small_values
+
+  ! Tests of NumericsMod: truncate_small_values
+
+  use pfunit_mod
+  use NumericsMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSimpleSubgridSetupsMod
+  use unittestSubgridMod
+  use unittestFilterBuilderMod, only : filter_from_range
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestTSV
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestTSV
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestTSV), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestTSV), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  @Test
+  subroutine truncates_correct_points(this)
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(3)
+    real(r8) :: data(3)
+    real(r8) :: data_saved(3)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_n_veg_patches(pwtcol = [0.1_r8, 0.8_r8, 0.1_r8], pft_types = [1, 2, 3])
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    ! point 2 should be truncated, others should not be truncated
+    data_baseline = [1._r8, 1._r8, 1._r8]
+    data = [0.5_r8, 1.e-16_r8, -1._r8]
+    data_saved = data
+
+    call truncate_small_values( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(data_saved(1), data(1))
+    @assertEqual(data_saved(3), data(3))
+    @assertEqual(0._r8, data(2))
+
+  end subroutine truncates_correct_points
+
+  @Test
+  subroutine truncates_large_magnitude(this)
+    ! Make sure we're just relying on relative rather than absolute magnitudes by
+    ! confirming that it can truncate a value with large magnitude.
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(1)
+    real(r8) :: data(1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_single_veg_patch(pft_type = 1)
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    data_baseline = [1.e30_r8]
+    data = [1.e10_r8]
+
+    call truncate_small_values( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(0._r8, data(1))
+  end subroutine truncates_large_magnitude
+
+  @Test
+  subroutine does_not_truncate_small_magnitude(this)
+    ! Make sure we're just relying on relative rather than absolute magnitudes by
+    ! confirming that it does not truncate a value with small magnitude.
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(1)
+    real(r8) :: data(1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_single_veg_patch(pft_type = 1)
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    data_baseline = [1.e-30_r8]
+    data = [1.e-31_r8]
+
+    call truncate_small_values( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(1.e-31_r8, data(1))
+  end subroutine does_not_truncate_small_magnitude
+
+end module test_truncate_small_values

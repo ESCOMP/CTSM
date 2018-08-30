@@ -15,15 +15,18 @@ module controlMod
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
   use abortutils                       , only: endrun
-  use spmdMod                          , only: masterproc
+  use spmdMod                          , only: masterproc, mpicom
+  use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
-  use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fexcl1, hist_fexcl2, hist_fexcl3
-  use histFileMod                      , only: hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fincl7, hist_fincl8
+  use histFileMod                      , only: hist_fincl9, hist_fincl10
+  use histFileMod                      , only: hist_fexcl1, hist_fexcl2, hist_fexcl3,  hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use histFileMod                      , only: hist_fexcl7, hist_fexcl8, hist_fexcl9, hist_fexcl10
   use initInterpMod                    , only: initInterp_readnl
   use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact
   use CanopyfluxesMod                  , only: perchroot, perchroot_alt
@@ -157,8 +160,12 @@ contains
          hist_nhtfrq,  hist_ndens, hist_mfilt, &
          hist_fincl1,  hist_fincl2, hist_fincl3, &
          hist_fincl4,  hist_fincl5, hist_fincl6, &
+         hist_fincl7,  hist_fincl8,              &
+         hist_fincl9,  hist_fincl10,             &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
-         hist_fexcl4,  hist_fexcl5, hist_fexcl6
+         hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
+         hist_fexcl7,  hist_fexcl8,              &
+         hist_fexcl9,  hist_fexcl10
     namelist /clm_inparm/ hist_wrtch4diag
 
     ! BGC info
@@ -322,9 +329,7 @@ contains
        ! History and restart files
 
        do i = 1, max_tapes
-          if (hist_nhtfrq(i) == 0) then
-             hist_mfilt(i) = 1
-          else if (hist_nhtfrq(i) < 0) then
+          if (hist_nhtfrq(i) < 0) then
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
@@ -438,7 +443,10 @@ contains
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
 
-    call initInterp_readnl( NLFilename )
+    call mpi_bcast (use_init_interp, 1, MPI_LOGICAL, 0, mpicom, ierr)
+    if (use_init_interp) then
+       call initInterp_readnl( NLFilename )
+    end if
 
     !I call init_hydrology to set up default hydrology sub-module methods.
     !For future version, I suggest to  put the following two calls inside their
@@ -547,9 +555,6 @@ contains
     ! reads restart/history data from the disk and distributes 
     ! it to all processors, or collects data from
     ! all processors and writes it to disk.
-    !
-    ! !USES:
-    use spmdMod,    only : mpicom, MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
     !
     ! !ARGUMENTS:
     !
@@ -731,12 +736,20 @@ contains
     call mpi_bcast (hist_fexcl4, max_namlen*size(hist_fexcl4), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl5, max_namlen*size(hist_fexcl5), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl6, max_namlen*size(hist_fexcl6), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl7, max_namlen*size(hist_fexcl7), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl8, max_namlen*size(hist_fexcl8), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl9, max_namlen*size(hist_fexcl9), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl10,max_namlen*size(hist_fexcl10),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl1, (max_namlen+2)*size(hist_fincl1), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl2, (max_namlen+2)*size(hist_fincl2), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl3, (max_namlen+2)*size(hist_fincl3), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl4, (max_namlen+2)*size(hist_fincl4), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl5, (max_namlen+2)*size(hist_fincl5), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl6, (max_namlen+2)*size(hist_fincl6), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl7, (max_namlen+2)*size(hist_fincl7), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl8, (max_namlen+2)*size(hist_fincl8), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl9, (max_namlen+2)*size(hist_fincl9), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl10,(max_namlen+2)*size(hist_fincl10),MPI_CHARACTER, 0, mpicom, ier)
 
     ! restart file variables
 

@@ -41,7 +41,7 @@ EXAMPLES:
 
      To document a new tag
 
-     $ProgName clm4_5_2_r097 "Description of this tag"
+     $ProgName ctsm1.0.dev012 "Description of this tag"
 EOF
 }
 
@@ -67,7 +67,7 @@ if ( ! $opts{'update'} ) {
    $tag = $ARGV[0];
    $sum = $ARGV[1];
 
-   if ( $tag !~ /clm[0-9]\.[0-9]\.(dev[0-9][0-9][0-9]|[0-9][0-9])/ ) {
+   if ( $tag !~ /ctsm[0-9]\.[0-9]\.(dev[0-9][0-9][0-9]|[0-9][0-9])/ ) {
      print "ERROR: bad tagname: $tag\n";
      usage();
    }
@@ -137,7 +137,7 @@ my $update = $opts{'update'};
 my $oldTag = "";
 while( $_ = <CL> ) {
   # If adding a new tag check that new tag name does NOT match any old tag
-  if (  $_ =~ /Tag name:[   ]*(clm.+)/ ) {
+  if (  $_ =~ /Tag name:[   ]*(ctsm.+)/ ) {
      $oldTag = $1;
      if ( (! $opts{'update'}) && ($tag eq $oldTag) ) {
         close( CL );

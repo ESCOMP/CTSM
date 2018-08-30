@@ -57,7 +57,8 @@ echo "TCBscripttools.sh: run the build scriptmake:"
 echo "        ${cfgdir}/$2"
 
 if [ "$debug" != "YES" ]; then
-    export CESM_ROOT=${CLM_ROOT}
+    export CTSM_ROOT=${CLM_ROOT}
+    export CIME_ROOT=${CLM_ROOT}/cime
     ${cfgdir}/$2  >> test.log 2>&1
     rc=$(( $rc + $? ))
     status="PASS"

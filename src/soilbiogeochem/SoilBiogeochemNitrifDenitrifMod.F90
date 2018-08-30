@@ -16,7 +16,7 @@ module SoilBiogeochemNitrifDenitrifMod
   use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
   use SoilStatetype                   , only : soilstate_type
-  use WaterStateType                  , only : waterstate_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
   use TemperatureType                 , only : temperature_type
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
@@ -186,7 +186,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemNitrifDenitrif(bounds, num_soilc, filter_soilc, &
-       soilstate_inst, waterstate_inst, temperature_inst, ch4_inst, &
+       soilstate_inst, waterstatebulk_inst, temperature_inst, ch4_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -201,7 +201,7 @@ contains
     integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type)    , intent(in)    :: soilbiogeochem_carbonflux_inst
@@ -246,8 +246,8 @@ contains
          sucsat                        =>    soilstate_inst%sucsat_col                                          , & ! Input:  [real(r8) (:,:)  ]  minimum soil suction (mm)                       
          soilpsi                       =>    soilstate_inst%soilpsi_col                                         , & ! Input:  [real(r8) (:,:)  ]  soil water potential in each soil layer (MPa)   
          
-         h2osoi_vol                    =>    waterstate_inst%h2osoi_vol_col                                     , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-         h2osoi_liq                    =>    waterstate_inst%h2osoi_liq_col                                     , & ! Input:  [real(r8) (:,:)  ]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
+         h2osoi_vol                    =>    waterstatebulk_inst%h2osoi_vol_col                                     , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+         h2osoi_liq                    =>    waterstatebulk_inst%h2osoi_liq_col                                     , & ! Input:  [real(r8) (:,:)  ]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
          
          t_soisno                      =>    temperature_inst%t_soisno_col                                      , & ! Input:  [real(r8) (:,:)  ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          
