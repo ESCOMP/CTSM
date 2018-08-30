@@ -110,7 +110,7 @@ contains
     call subgrid_get_info_crop(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
    
-    call subgrid_get_info_cohort(gi,ncohorts)
+    call subgrid_get_info_cohort(gi, ncols_temp, ncohorts)
 
   contains
     subroutine accumulate_counters
@@ -230,7 +230,7 @@ contains
 
   ! -----------------------------------------------------------------------------
 
-  subroutine subgrid_get_info_cohort(gi, ncohorts)
+  subroutine subgrid_get_info_cohort(gi, ncols, ncohorts)
     !
     ! !DESCRIPTION:
     ! Obtain cohort counts per each gridcell.
@@ -240,6 +240,7 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
+    integer, intent(in)  :: ncols     ! number of nat veg columns in this grid cell
     integer, intent(out) :: ncohorts  ! number of cohorts in this grid cell
     !
     ! !LOCAL VARIABLES:

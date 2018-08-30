@@ -266,6 +266,7 @@ contains
                 npatches_added = npatches_added + 1
              end if
           end do
+       enddo
     end if
 
     SHR_ASSERT(nlunits_added == nlunits, errMsg(sourcefile, __LINE__))
