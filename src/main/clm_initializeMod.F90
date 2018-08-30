@@ -217,7 +217,7 @@ contains
 
     call initGridCells(glc_behavior)
 
-    if(use_hillslope) then 
+    if(use_hillslope) then
        ! Specify hillslope (column-level) connectivity
        call initHillslopes()
 

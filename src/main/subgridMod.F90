@@ -156,7 +156,9 @@ contains
 
     nlunits = 1
     if(use_hillslope) then 
-       ncols = nhillcol(gi)
+!       ncols = nhillcol(gi)
+! ensure ncols is > 0
+       ncols = max(nhillcol(gi),1)
     else
        ncols = 1
     endif

@@ -304,6 +304,8 @@ contains
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
           hill_slope(l,:) = fhillslope_in(g,:)
+!scs: hack for lack of data
+!          hill_slope(l,:) = 0.001_r8
        enddo
        
        call ncd_io(ncid=ncid, varname='h_area', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
@@ -398,7 +400,6 @@ contains
                 col%hill_slope(c) = hill_slope(l,ci)
 ! area of column
                 col%hill_area(c) = hill_area(l,ci)
-
              enddo
 
              ! Now that column areas are determined, column weights can be recalculated
@@ -407,15 +408,59 @@ contains
              do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
                 hillslope_area = hillslope_area &
-                     + col%hill_area(c)*(pct_hillslope(l,nh)*0.01_r8)
+                     + col%hill_area(c)*real(pct_hillslope(l,nh),r8)*0.01_r8
              enddo
-             do c = lun%coli(l), lun%colf(l)
+
+! if missing hillslope information on surface dataset, fill data
+! and recalculate hillslope_area before setting column weights
+             if (hillslope_area == 0._r8) then
+                do c = lun%coli(l), lun%colf(l)
+                   col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6 ! km2 to m2
+                   col%hill_distance(c) = sqrt(col%hill_area(c))
+                   col%hill_width(c) = sqrt(col%hill_area(c))
+                   col%hill_elev(c) = col%topo_std(c)
+                   col%hill_slope(c) = tan((rpi/180.)*col%topo_slope(c))
+                   nh = col%hillslope_ndx(c)
+                   pct_hillslope(l,nh) = 100/nhillslope
+                   hillslope_area = hillslope_area &
+                        + col%hill_area(c)*real(pct_hillslope(l,nh),r8)*0.01_r8
+                enddo
+             endif
+
+            do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
                 col%wtlunit(c) = col%hill_area(c) &
                      * (pct_hillslope(l,nh)*0.01_r8)/hillslope_area      
              enddo
-             
-             !  Set column bedrock index
+   
+
+!!$             ! area weighted by pct_hillslope
+!!$             i=0
+!!$             do c = lun%coli(l), lun%colf(l)
+!!$                if(col%active(c)) i=i+1
+!!$
+!!$if(l==4398) write(iulog,'(a12,3i8,f20.17,2f18.2,f20.17)') 'colweights: ', l, c, pct_hillslope(l,col%hillslope_ndx(c)),col%wtlunit(c),col%hill_area(c),hillslope_area,col%hill_area(c)/hillslope_area
+!!$             enddo
+!!$!             write(iulog,'(a12,3i8)') 'numcol: ', l, i,lun%ncolumns(l)
+!!$             ! area weighted by pct_hillslope
+!!$
+!!$!!!     ensure col wts sum to 1, re-use hillslope_area to normalize
+!!$             hillslope_area = 0._r8
+!!$             do c = lun%coli(l), lun%colf(l)
+!!$                hillslope_area = hillslope_area &
+!!$                     + col%wtlunit(c)
+!!$             enddo
+!!$
+!!$             if (hillslope_area > 1._r8) then
+!!$                write(iulog,'(a12,i8,f18.14)') 'wtsgt1: ', l,hillslope_area
+!!$                do c = lun%coli(l), lun%colf(l)
+!!$                   col%wtlunit(c)=col%wtlunit(c)/hillslope_area
+!!$             enddo
+!!$          endif
+!!!
+
+
+            !  Set column bedrock index
              !thin soil for non-riparian columns, thick for riparian
 if(1==2) then
              do c =  lun%coli(l), lun%colf(l)

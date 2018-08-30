@@ -3094,8 +3094,8 @@ contains
           !call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
           !     long_name='1d grid index of corresponding column', ncid=ncid)
 
-          !call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
-          !     long_name='1d landunit index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
+               long_name='1d landunit index of corresponding column', ncid=ncid)
           ! ----------------------------------------------------------------
 
           call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name=namec, &
@@ -3245,6 +3245,10 @@ contains
        ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
        !call ncd_io(varname='cols1d_gi'     , data=col%gridcell, dim1name=namec, ncid=ncid, flag='write')
        !call ncd_io(varname='cols1d_li'     , data=col%landunit, dim1name=namec, ncid=ncid, flag='write')
+       do c = bounds%begc,bounds%endc
+         icarr(c) =  GetGlobalIndex(decomp_index=col%landunit(c), clmlevel=namel)
+       enddo
+       call ncd_io(varname='cols1d_li'       , data=icarr  , dim1name=namec, ncid=ncid, flag='write')
        ! ----------------------------------------------------------------
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_wtlunit', data=col%wtlunit , dim1name=namec, ncid=ncid, flag='write')
