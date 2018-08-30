@@ -586,7 +586,7 @@ contains
 
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
-    call waterflux_inst%initAccVars(bounds_proc)
+    call water_inst%initAccVars(bounds_proc)
     call energyflux_inst%initAccVars(bounds_proc)
     call canopystate_inst%initAccVars(bounds_proc)
 
@@ -619,7 +619,7 @@ contains
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
-            waterstate_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
+            water_inst%waterstatebulk_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
        call t_stopf('init_map2gc')
     end if
 
@@ -634,7 +634,7 @@ contains
        call t_startf('init_lnd2glc')
        call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-            temperature_inst, glacier_smb_inst, topo_inst, &
+            temperature_inst, water_inst%waterfluxbulk_inst, topo_inst, &
             init=.true.)
        call t_stopf('init_lnd2glc')
     end do
@@ -654,7 +654,9 @@ contains
     ! --------------------------------------------------------------
    
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
-       call clm_fates%init_coldstart(waterstate_inst,canopystate_inst,soilstate_inst, frictionvel_inst)
+       call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
+            water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
+            soilstate_inst, frictionvel_inst)
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through

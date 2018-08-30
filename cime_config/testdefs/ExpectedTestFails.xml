@@ -2,13 +2,14 @@
 
 <expectedFails>
   <category name="aux_clm">
-    <entry issue="#169"     >PEND ERP_D_Ld10.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_decStart SHAREDLIB_BUILD</entry>
+    <entry issue="#404"     >FAIL ERP_D_Ld10_P36x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_decStart RUN</entry>
     <entry issue="#158"     >FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-monthly RUN</entry>
-    <entry issue="#158"     >FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.cheyenne_intel.clm-monthly RUN</entry>
-    <entry issue="#339"     >FAIL ERS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-default COMPARE_base_rest</entry>
     <entry issue="#384"     >FAIL ERP_D_Ld5.f09_g17.I2000Clm50Vic.cheyenne_intel.clm-vrtlay RUN</entry>
+    <entry issue="#442"     >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
+    <entry issue="#442"     >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
   </category>
   <category name="fates">
+    <entry issue="NGEET/fates#315">FAIL ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-Fates COMPARE_base_rest</entry>
     <entry issue="NGEET/fates#315">FAIL ERP_Ld9.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-FatesAllVars COMPARE_base_rest</entry>
     <entry issue="NGEET/fates#315">FAIL ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-FatesLogging COMPARE_base_rest</entry>
     <entry issue="NGEET/fates#315">FAIL ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-Fates COMPARE_base_rest</entry>

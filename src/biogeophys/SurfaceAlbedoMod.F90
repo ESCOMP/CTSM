@@ -21,7 +21,8 @@ module SurfaceAlbedoMod
   use LakeStateType     , only : lakestate_type
   use SurfaceAlbedoType , only : surfalb_type
   use TemperatureType   , only : temperature_type
-  use WaterstateType    , only : waterstate_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use GridcellType      , only : grc                
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
@@ -112,13 +113,14 @@ contains
     allocate(isoicol(bounds%begc:bounds%endc)) 
 
     ! Determine soil color and number of soil color classes 
-    ! if number of soil color classes is not on input dataset set it to 8
 
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
 
     call ncd_io(ncid=ncid, varname='mxsoil_color', flag='read', data=mxsoil_color, readvar=readvar)
-    if ( .not. readvar ) mxsoil_color = 8  
+    if ( .not. readvar ) then
+       call endrun(msg=' ERROR: mxsoil_color NOT on surfdata file '//errMsg(sourcefile, __LINE__))
+    end if
 
     allocate(soic2d(bounds%begg:bounds%endg)) 
     call ncd_io(ncid=ncid, varname='SOIL_COLOR', flag='read', data=soic2d, dim1name=grlnd, readvar=readvar)
@@ -178,7 +180,7 @@ contains
         num_urbanp   , filter_urbanp,  &
         nextsw_cday  , declinp1,       &
         clm_fates,                     &
-        aerosol_inst, canopystate_inst, waterstate_inst, &
+        aerosol_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
         lakestate_inst, temperature_inst, surfalb_inst)
     !
     ! !DESCRIPTION:
@@ -224,7 +226,8 @@ contains
     type(hlm_fates_interface_type), intent(inout)  :: clm_fates
     type(aerosol_type)     , intent(in)            :: aerosol_inst
     type(canopystate_type) , intent(in)            :: canopystate_inst
-    type(waterstate_type)  , intent(in)            :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in)            :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(in)            :: waterdiagnosticbulk_inst
     type(lakestate_type)   , intent(in)            :: lakestate_inst
     type(temperature_type) , intent(in)            :: temperature_inst
     type(surfalb_type)     , intent(inout)         :: surfalb_inst
@@ -292,11 +295,11 @@ contains
           elai          =>    canopystate_inst%elai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided leaf area index with burying by snow
           esai          =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided stem area index with burying by snow
 
-          frac_sno      =>    waterstate_inst%frac_sno_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
-          h2osno        =>    waterstate_inst%h2osno_col          , & ! Input:  [real(r8)  (:)   ]  snow water (mm H2O)                     
-          h2osoi_liq    =>    waterstate_inst%h2osoi_liq_col      , & ! Input:  [real(r8)  (:,:) ]  liquid water content (col,lyr) [kg/m2]
-          h2osoi_ice    =>    waterstate_inst%h2osoi_ice_col      , & ! Input:  [real(r8)  (:,:) ]  ice lens content (col,lyr) [kg/m2]    
-          snw_rds       =>    waterstate_inst%snw_rds_col         , & ! Input:  [real(r8)  (:,:) ]  snow grain radius (col,lyr) [microns] 
+          frac_sno      =>    waterdiagnosticbulk_inst%frac_sno_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
+          h2osno        =>    waterstatebulk_inst%h2osno_col          , & ! Input:  [real(r8)  (:)   ]  snow water (mm H2O)                     
+          h2osoi_liq    =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8)  (:,:) ]  liquid water content (col,lyr) [kg/m2]
+          h2osoi_ice    =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8)  (:,:) ]  ice lens content (col,lyr) [kg/m2]    
+          snw_rds       =>    waterdiagnosticbulk_inst%snw_rds_col         , & ! Input:  [real(r8)  (:,:) ]  snow grain radius (col,lyr) [microns] 
 
           mss_cnc_bcphi =>    aerosol_inst%mss_cnc_bcphi_col      , & ! Input:  [real(r8)  (:,:) ]  mass concentration of hydrophilic BC (col,lyr) [kg/kg]
           mss_cnc_bcpho =>    aerosol_inst%mss_cnc_bcpho_col      , & ! Input:  [real(r8)  (:,:) ]  mass concentration of hydrophobic BC (col,lyr) [kg/kg]
@@ -424,7 +427,7 @@ contains
          coszen_col(bounds%begc:bounds%endc), &
          albsnd(bounds%begc:bounds%endc, :), &
          albsni(bounds%begc:bounds%endc, :), &  
-         lakestate_inst, temperature_inst, waterstate_inst, surfalb_inst)
+         lakestate_inst, temperature_inst, waterstatebulk_inst, surfalb_inst)
 
     ! set variables to pass to SNICAR.
 
@@ -497,7 +500,7 @@ contains
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsnd_bc(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstate_inst)
+               waterstatebulk_inst, waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -510,7 +513,7 @@ contains
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsni_bc(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstate_inst)
+               waterstatebulk_inst, waterdiagnosticbulk_inst)
 
        ! 2. OC input array:
        !  set BC and dust concentrations, so OC_FRC=[(BC+OC+dust)-(BC+dust)]
@@ -534,7 +537,7 @@ contains
                          albsfc(bounds%begc:bounds%endc, :), &
                          albsnd_oc(bounds%begc:bounds%endc, :), &
                   foo_snw(bounds%begc:bounds%endc, :, :), &
-                  waterstate_inst)
+                  waterstatebulk_inst, waterdiagnosticbulk_inst)
 
              flg_slr = 2; ! diffuse
           call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -547,7 +550,7 @@ contains
                          albsfc(bounds%begc:bounds%endc, :), &
                          albsni_oc(bounds%begc:bounds%endc, :), &
                   foo_snw(bounds%begc:bounds%endc, :, :), &
-                  waterstate_inst)
+                  waterstatebulk_inst, waterdiagnosticbulk_inst)
        endif
 
        ! 3. DUST input array:
@@ -571,7 +574,7 @@ contains
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsnd_dst(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstate_inst)
+               waterstatebulk_inst, waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -584,7 +587,7 @@ contains
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsni_dst(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstate_inst)
+               waterstatebulk_inst, waterdiagnosticbulk_inst)
 
        ! 4. ALL AEROSOL FORCING CALCULATION
        ! (pure snow albedo)
@@ -599,7 +602,7 @@ contains
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsnd_pur(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstate_inst)
+               waterstatebulk_inst, waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -612,7 +615,7 @@ contains
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsni_pur(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstate_inst)
+               waterstatebulk_inst, waterdiagnosticbulk_inst)
     end if
 
     ! CLIMATE FEEDBACK CALCULATIONS, ALL AEROSOLS:
@@ -627,7 +630,7 @@ contains
                    albsfc(bounds%begc:bounds%endc, :), &
                    albsnd(bounds%begc:bounds%endc, :), &
             flx_absd_snw(bounds%begc:bounds%endc, :, :), &
-            waterstate_inst)
+            waterstatebulk_inst, waterdiagnosticbulk_inst)
 
        flg_slr = 2; ! diffuse
     call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -640,7 +643,7 @@ contains
                    albsfc(bounds%begc:bounds%endc, :), &
                    albsni(bounds%begc:bounds%endc, :), &
             flx_absi_snw(bounds%begc:bounds%endc, :, :), &
-            waterstate_inst)
+            waterstatebulk_inst, waterdiagnosticbulk_inst)
 
     ! ground albedos and snow-fraction weighting of snow absorption factors
     do ib = 1, nband
@@ -930,7 +933,7 @@ contains
             coszen_patch(bounds%begp:bounds%endp), &
             rho(bounds%begp:bounds%endp, :), &
             tau(bounds%begp:bounds%endp, :), &
-            canopystate_inst, temperature_inst, waterstate_inst, surfalb_inst)
+            canopystate_inst, temperature_inst, waterdiagnosticbulk_inst, surfalb_inst)
 
     endif
 
@@ -962,7 +965,7 @@ contains
    subroutine SoilAlbedo (bounds, &
         num_nourbanc, filter_nourbanc, &
         coszen, albsnd, albsni, &
-        lakestate_inst, temperature_inst, waterstate_inst, surfalb_inst)
+        lakestate_inst, temperature_inst, waterstatebulk_inst, surfalb_inst)
      !
      ! !DESCRIPTION:
      ! Determine ground surface albedo, accounting for snow
@@ -981,7 +984,7 @@ contains
      real(r8), intent(in) :: albsnd( bounds%begc: , 1: ) ! snow albedo (direct) [col, numrad]
      real(r8), intent(in) :: albsni( bounds%begc: , 1: ) ! snow albedo (diffuse) [col, numrad]
      type(temperature_type) , intent(in)    :: temperature_inst
-     type(waterstate_type)  , intent(in)    :: waterstate_inst
+     type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
      type(lakestate_type)   , intent(in)    :: lakestate_inst
      type(surfalb_type)     , intent(inout) :: surfalb_inst
      !
@@ -1006,7 +1009,7 @@ contains
 
           t_grnd       => temperature_inst%t_grnd_col     , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)             
 
-          h2osoi_vol   => waterstate_inst%h2osoi_vol_col  , & ! Input:  [real(r8) (:,:) ]  volumetric soil water [m3/m3]         
+          h2osoi_vol   => waterstatebulk_inst%h2osoi_vol_col  , & ! Input:  [real(r8) (:,:) ]  volumetric soil water [m3/m3]         
 
           lake_icefrac => lakestate_inst%lake_icefrac_col , & ! Input:  [real(r8) (:,:) ]  mass fraction of lake layer that is frozen
           
@@ -1093,7 +1096,7 @@ contains
    subroutine TwoStream (bounds, &
         filter_vegsol, num_vegsol, &
         coszen, rho, tau, &
-        canopystate_inst, temperature_inst, waterstate_inst, surfalb_inst)
+        canopystate_inst, temperature_inst, waterdiagnosticbulk_inst, surfalb_inst)
      !
      ! !DESCRIPTION:
      ! Two-stream fluxes for canopy radiative transfer
@@ -1120,7 +1123,7 @@ contains
      real(r8), intent(in)  :: tau( bounds%begp: , 1: ) ! leaf/stem tran weighted by fraction LAI and SAI [pft, numrad]
      type(canopystate_type) , intent(in)    :: canopystate_inst
      type(temperature_type) , intent(in)    :: temperature_inst
-     type(waterstate_type)  , intent(in)    :: waterstate_inst
+     type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
      type(surfalb_type)     , intent(inout) :: surfalb_inst
      !
      ! !LOCAL VARIABLES:
@@ -1169,8 +1172,8 @@ contains
 
           t_veg        =>    temperature_inst%t_veg_patch        , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)         
 
-          fwet         =>    waterstate_inst%fwet_patch          , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1) 
-          fcansno      =>    waterstate_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
+          fwet         =>    waterdiagnosticbulk_inst%fwet_patch          , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1) 
+          fcansno      =>    waterdiagnosticbulk_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
 
           elai         =>    canopystate_inst%elai_patch         , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
           esai         =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow

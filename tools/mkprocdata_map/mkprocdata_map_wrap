@@ -248,4 +248,3 @@ EOF
 fi
 
 echo "Successfully regridded data"
-return 0

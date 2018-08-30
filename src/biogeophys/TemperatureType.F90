@@ -219,6 +219,7 @@ contains
 
     allocate(this%tsl_col                  (begc:endc))                      ; this%tsl_col                  (:)   = nan
     allocate(this%t_sno_mul_mss_col        (begc:endc))                      ; this%t_sno_mul_mss_col        (:)   = nan
+    allocate(this%tsl_col                  (begc:endc))                      ; this%tsl_col                  (:)   = nan
     allocate(this%t_soi10cm_col            (begc:endc))                      ; this%t_soi10cm_col            (:)   = nan
     allocate(this%t_soi17cm_col            (begc:endc))                      ; this%t_soi17cm_col            (:)   = spval
     allocate(this%dt_grnd_col              (begc:endc))                      ; this%dt_grnd_col              (:)   = nan

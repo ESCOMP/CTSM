@@ -294,7 +294,7 @@ contains
     integer        :: begc, endc
     character(24)  :: fieldname
     character(100) :: longname
-    character(8)   :: vr_suffix
+    character(8)   :: vr_suffix,default
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -316,15 +316,20 @@ contains
          avgflag='A', long_name='atmospheric N deposition to soil mineral N', &
          ptr_col=this%ndep_to_sminn_col)
 
+    if (use_fun) then
+       default = 'inactive'
+    else
+       default = 'active'
+    end if
     this%nfix_to_sminn_col(begc:endc) = spval
     call hist_addfld1d (fname='NFIX_TO_SMINN', units='gN/m^2/s', &
          avgflag='A', long_name='symbiotic/asymbiotic N fixation to soil mineral N', &
-         ptr_col=this%nfix_to_sminn_col)
+         ptr_col=this%nfix_to_sminn_col, default=default)
 
     this%ffix_to_sminn_col(begc:endc) = spval
     call hist_addfld1d (fname='FFIX_TO_SMINN', units='gN/m^2/s', &
          avgflag='A', long_name='free living  N fixation to soil mineral N', &
-         ptr_col=this%ffix_to_sminn_col)
+         ptr_col=this%ffix_to_sminn_col, default=default)
 
     do l = 1, ndecomp_cascade_transitions
        ! vertically integrated fluxes
