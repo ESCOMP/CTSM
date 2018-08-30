@@ -41,11 +41,12 @@ class TestRunSysTests(unittest.TestCase):
         os.chdir(self._original_wd)
         shutil.rmtree(self._curdir, ignore_errors=True)
 
-    def _make_machine(self):
+    def _make_machine(self, account=None):
         machine = create_machine(machine_name=self._MACHINE_NAME,
                                  defaults=MACHINE_DEFAULTS,
                                  job_launcher_type=JOB_LAUNCHER_FAKE,
-                                 scratch_dir=self._scratch)
+                                 scratch_dir=self._scratch,
+                                 account=account)
         return machine
 
     @staticmethod
@@ -92,7 +93,12 @@ class TestRunSysTests(unittest.TestCase):
     def test_createTestCommand_testnames(self):
         """The correct create_test command should be run when providing a list of test names
 
-        This test does basic checking of the standard arguments to create_test
+        This test covers two things:
+
+        (1) The use of a testlist argument
+
+        (2) The standard arguments to create_test (the path to create_test, the arguments
+        --test-id and --test-root, and the absence of --compare and --generate)
         """
         machine = self._make_machine()
         with mock.patch('ctsm.run_sys_tests.datetime') as mock_date:
@@ -104,27 +110,51 @@ class TestRunSysTests(unittest.TestCase):
         self.assertEqual(len(all_commands), 1)
         command = all_commands[0]
         expected_create_test = os.path.join(self._cime_path(), 'scripts', 'create_test')
-        six.assertRegex(self, command, r'^ *{}'.format(re.escape(expected_create_test)))
-        six.assertRegex(self, command, r'--test-id +{}'.format(self._expected_testid()))
+        six.assertRegex(self, command, r'^ *{}\b'.format(re.escape(expected_create_test)))
+        six.assertRegex(self, command, r'--test-id +{}\b'.format(self._expected_testid()))
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
-        six.assertRegex(self, command, r'--test-root +{}'.format(expected_testroot_path))
+        six.assertRegex(self, command, r'--test-root +{}\b'.format(expected_testroot_path))
         six.assertRegex(self, command, r'test1 +test2 *$')
-        assertNotRegex(self, command, r'--compare')
-        assertNotRegex(self, command, r'--generate')
+        assertNotRegex(self, command, r'--compare\b')
+        assertNotRegex(self, command, r'--generate\b')
 
-        # FIXME(wjs, 2018-08-29) Similar to the above test, but with testid_base, testroot_base specified and some optional args specified (compare_name, generate_name, baseline_root, walltime, queue, extra_create_test_args; also account?)
+    def test_createTestCommand_testfileAndExtraArgs(self):
+        """The correct create_test command should be run with a testfile and extra arguments
 
-                          # compare_name='mycompare',
-                          # generate_name='mygenerate',
-                          # baseline_root='myblroot',
-                          # walltime='3:45:67',
-                          # queue='runqueue',
-                          # extra_create_test_args='--some extra --createtest args'
+        This test covers two things:
 
-        # cime/scripts/create_test --generate $newtag --compare $oldtag --baseline-root $baselineroot --test-id ${testid}_${compiler:0:1} --project ${account} --walltime ${walltime} --queue ${queue} ${extra_create_test_args} --test-root ${testroot} testname1 testname2
+        (1) The use of a testfile argument
 
+        (2) The use of a bunch of optional arguments that are passed along to create_test
+        """
+        machine = self._make_machine(account='myaccount')
+        testroot = os.path.join(self._scratch, 'my', 'testroot')
+        run_sys_tests(machine=machine, cime_path=self._cime_path(),
+                      testfile='/path/to/testfile',
+                      testid_base='mytestid',
+                      testroot_base=testroot,
+                      compare_name='mycompare',
+                      generate_name='mygenerate',
+                      baseline_root='myblroot',
+                      walltime='3:45:67',
+                      queue='runqueue',
+                      extra_create_test_args='--some extra --createtest args')
 
-    # FIXME(wjs, 2018-08-29) Test with a test suite
+        all_commands = machine.job_launcher.get_commands()
+        self.assertEqual(len(all_commands), 1)
+        command = all_commands[0]
+        six.assertRegex(self, command, r'--test-id +mytestid\b')
+        six.assertRegex(self, command, r'--test-root +{}\b'.format(testroot))
+        six.assertRegex(self, command, r'--testfile +/path/to/testfile\b')
+        six.assertRegex(self, command, r'--compare +mycompare\b')
+        six.assertRegex(self, command, r'--generate +mygenerate\b')
+        six.assertRegex(self, command, r'--baseline-root +myblroot\b')
+        six.assertRegex(self, command, r'--walltime +3:45:67\b')
+        six.assertRegex(self, command, r'--queue +runqueue\b')
+        six.assertRegex(self, command, r'--project +myaccount\b')
+        six.assertRegex(self, command, r'--some +extra +--createtest +args\b')
+
+    # FIXME(wjs, 2018-08-29) Test with a test suite, with 2 compilers in it
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()

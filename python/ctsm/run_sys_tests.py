@@ -291,22 +291,21 @@ def _get_compilers_for_suite(suite_name, machine_name):
     return []
 
 def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args):
-    # FIXME(wjs, 2018-08-24) Finish this implementation: still need more arguments to
-    # _build_create_test_cmd
     create_test_cmd = _build_create_test_cmd(cime_path=cime_path,
                                              test_args=test_args,
                                              testid=testid,
-                                             testroot=testroot)
+                                             testroot=testroot,
+                                             create_test_args=create_test_args)
     machine.job_launcher.run_command(create_test_cmd)
 
-def _build_create_test_cmd(cime_path, test_args, testid, testroot):
+def _build_create_test_cmd(cime_path, test_args, testid, testroot, create_test_args):
     """Builds and returns the create_test command
 
     This is a list, where each element of the list is one argument
     """
-    # FIXME(wjs, 2018-08-24) Implement this more generally (still need more arguments)
     command = [os.path.join(cime_path, 'scripts', 'create_test'),
                '--test-id', testid,
                '--test-root', testroot]
     command.extend(test_args)
+    command.extend(create_test_args)
     return command
