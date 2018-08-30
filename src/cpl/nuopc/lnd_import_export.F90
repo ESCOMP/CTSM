@@ -212,7 +212,7 @@ contains
 
     ! CARMA volumetric soil water from land
     ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
-    call shr_carma_readnl('drv_flds_in', mpicom, masterproc, carma_fields)
+    call shr_carma_readnl('drv_flds_in', carma_fields)
     if (carma_fields /= ' ') then
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_soilw') ! optional for carma
     end if
