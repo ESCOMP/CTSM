@@ -326,8 +326,8 @@ contains
     SHR_ASSERT((ubound(frac_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
     SHR_ASSERT((ubound(topo_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
     SHR_ASSERT((ubound(hflx_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(icemask_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(icemask_coupled_fluxes_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
+!    SHR_ASSERT((ubound(icemask_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
+!    SHR_ASSERT((ubound(icemask_coupled_fluxes_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
 
     if (glc_present) then
        do g = bounds%begg, bounds%endg

@@ -88,7 +88,7 @@ contains
     character(len=2)       :: nec_str
     integer                :: dbrc
     integer                :: n, num
-    logical                :: add_ndep_fields
+    integer                :: drydep_nflds, ndep_nflds, megan_nflds, emis_nflds
     character(len=128)     :: fldname
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
@@ -176,7 +176,10 @@ contains
     end if
 
     ! Dry Deposition fluxes from land - ALSO initialize drydep here
-    call seq_drydep_readnl("drv_flds_in", mpicom, masterproc, drydep_fields)
+    call seq_drydep_readnl("drv_flds_in", drydep_fields, drydep_nflds)
+    if(n_drydep .ne. drydep_nflds) then
+       call shr_sys_abort('ERROR: drydep field count mismatch')
+    endif
     do n = 1, n_drydep
        call shr_string_listGetName(drydep_fields, n, fldname)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, trim(fldname))
@@ -184,14 +187,21 @@ contains
     call seq_drydep_init( )
 
     ! MEGAN VOC emissions fluxes from land
-    call shr_megan_readnl('drv_flds_in', mpicom, masterproc, megan_voc_fields)
-    do n = 1, shr_megan_mechcomps_n
+    megan_nflds=0
+    call shr_megan_readnl('drv_flds_in', megan_voc_fields, megan_nflds)
+    if(shr_megan_mechcomps_n .ne. megan_nflds) then
+       call shr_sys_abort('ERROR: megan field count mismatch')
+    endif
+    do n = 1, megan_nflds
        call shr_string_listGetName(megan_voc_fields, n, fldname)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, trim(fldname))
     end do
 
     ! Fire emissions fluxes from land
-    call shr_fire_emis_readnl('drv_flds_in', mpicom, masterproc, fire_emis_fields)
+    call shr_fire_emis_readnl('drv_flds_in', fire_emis_fields, emis_nflds)
+    if(shr_fire_emis_mechcomps_n .ne. emis_nflds) then
+       call shr_sys_abort('ERROR: fire_emis field count mismatch')
+    endif
     if (shr_fire_emis_mechcomps_n > 0) then
        do n = 1, shr_fire_emis_mechcomps_n
           call shr_string_listGetName(fire_emis_fields, n, fldname)
@@ -275,9 +285,9 @@ contains
     end if
 
     ! from atm - nitrogen deposition
-    call shr_ndep_readnl("drv_flds_in", mpicom, masterproc, ndep_fields, add_ndep_fields)
-    if (add_ndep_fields) then
-       do n = 1, shr_string_listGetNum(ndep_fields)
+    call shr_ndep_readnl("drv_flds_in", ndep_fields, ndep_nflds)
+    if (ndep_nflds>0) then
+       do n = 1, ndep_nflds
           call  shr_string_listGetName(ndep_fields, n, fldname)
           call fldlist_add(fldsToLnd_num, fldsToLnd, trim(fldname))
        end do
