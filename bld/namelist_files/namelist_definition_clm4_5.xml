@@ -92,6 +92,14 @@ over-productive.
 If TRUE, separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
+<entry id="run_zero_weight_urban" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, run all urban landunits everywhere where we have valid urban data.
+This forces memory to be allocated and calculations to be run even for 0-weight urban points.
+This has a substantial impact on memory use and performance, and should only be used
+if you're interested in potential urban behavior globally.
+</entry>
+
 <entry id="all_active" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, make ALL pfts, columns and landunits active, even those with 0 weight.
@@ -346,7 +354,7 @@ Index of lower boundary condition for Richards equation.
 lower_boundary_condition = 1 : flux lower boundary condition                                     (use with soilwater_movement_method=adaptive time stepping)
 lower_boundary_condition = 2 : zero-flux lower boundary condition                                (use with soilwater_movement_method=adaptive time stepping)
 lower_boundary_condition = 3 : water table head-based lower boundary condition w/ aquifer layer. (use with soilwater_movement_method=adaptive time stepping)
-lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer                                (only used with soilwater_movement_method=Zeng&Decker 2009)
+lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer                                (only used with soilwater_movement_method=Zeng&amp;Decker 2009)
 
 TODO(bja, 2015-09) these should be strings so they have meaningful names instead of ints. 
 </entry>
@@ -461,8 +469,7 @@ Allowed values are:
    but no virtual columns
 'virtual': grid cells have virtual columns: values are computed for every glacier
    elevation class, even those with 0 area (in order to provide surface mass
-   balance for every glacier elevation class). In addition, surface mass balance is
-   computed for the vegetated column in this region.
+   balance for every glacier elevation class).
 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
    whose elevation matches the atmosphere's topographic height (so that there is no
    adjustment due to downscaling)
@@ -481,8 +488,11 @@ Allowed values are:
 'remains_in_place': any melted ice remains in place as liquid until it refreezes;
    thus, ice melt does not result in any runoff
 IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not
-generate generate SMB (because negative SMB would be pretty much meaningless in
-those regions). Thus, you cannot use this behavior where GLC is operating.
+compute SMB (because negative SMB would be pretty much meaningless in
+those regions). Thus, you cannot use this behavior where GLC is
+operating.
+Regions with the 'replaced_by_ice' behavior also compute SMB for the
+vegetated column.
 </entry>
 
 <entry id="glacier_region_ice_runoff_behavior" type="char*32(10)" category="clm_physics"
@@ -587,15 +597,48 @@ set to 3 meaning branch.
 
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the ED
-(ED = 'on' is EXPERIMENTAL NOT SUPPORTED!)
+Toggle to turn on the FATES model
+(use_fates= '.true.' is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
 <entry id="use_fates_spitfire" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on spit fire (only relevant if ED is being used).
+Toggle to turn on spitfire module for modeling fire (only relevant if FATES is being used).
 </entry>
 
+<entry id="use_fates_logging" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the logging module (only relevant if FATES is being used).
+</entry>
+
+<entry id="use_fates_planthydro" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on plant hydraulics (only relevant if FATES is on).
+(use_fates_planthydro=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+<entry id="use_fates_ed_st3" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on Static Stand Structure Mode (only relevant if FATES is being used).
+(use_fates_ed_st3=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+<entry id="use_fates_ed_prescribed_phys" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on prescribed physiology (only relevant if FATES is being used).
+</entry>
+
+<entry id="use_fates_inventory_init" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on inventory initialization to startup FATES (only relevant if FATES is being used).
+(use_fates_inventory_init=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+<entry id="fates_inventory_ctrl_filename" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname to the inventory initialization control file.
+(Required, if use_fates_inventory_init=T)
+</entry>
 
 <entry id="use_luna" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
@@ -647,7 +690,7 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
 
-<entry id="hist_avgflag_pertape" type="char*1(6)" category="history"
+<entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
        group="clm_inparm" valid_values="A,I,X,M" >
 Per file averaging flag.
     'A' (average over history period)
@@ -656,7 +699,7 @@ Per file averaging flag.
     'M' (minimum over history period)
 </entry>
 
-<entry id="hist_type1d_pertape" type="char*4(6)" category="history"
+<entry id="hist_type1d_pertape" type="char*4(10)" category="history"
        group="clm_inparm" valid_values="GRID,LAND,COLS,PFTS, " >
 Averaging type of output for 1D vector output (when hist_dov2xy is false).
     GRID means average all land-units up to the grid-point level
@@ -665,7 +708,7 @@ Averaging type of output for 1D vector output (when hist_dov2xy is false).
     PFTS means report everything on native PFT level
 </entry>
 
-<entry id="hist_dov2xy" type="logical(6)" category="history"
+<entry id="hist_dov2xy" type="logical(10)" category="history"
        group="clm_inparm" valid_values="" >
 If TRUE, implies output data on a 2D latitude/longitude grid. False means
 output in 1D vector format.  One setting per history tape series.
@@ -707,6 +750,26 @@ Fields to exclude from history tape series  5.
 Fields to exclude from history tape series  6.
 </entry>
 
+<entry id="hist_fexcl7" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  7.
+</entry>
+
+<entry id="hist_fexcl8" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  8.
+</entry>
+
+<entry id="hist_fexcl9" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series  9.
+</entry>
+
+<entry id="hist_fexcl10" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history tape series 10.
+</entry>
+
 <entry id="hist_fincl1" type="char*64(1000)" category="history"
        group="clm_inparm" valid_values="" >
 Fields to add to history tape series  1.
@@ -737,27 +800,47 @@ Fields to add to history tape series  5.
 Fields to add to history tape series  6.
 </entry>
 
-<entry id="hist_mfilt" type="integer(6)" category="history"
+<entry id="hist_fincl7" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  7.
+</entry>
+
+<entry id="hist_fincl8" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  8.
+</entry>
+
+<entry id="hist_fincl9" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series  9.
+</entry>
+
+<entry id="hist_fincl10" type="char*64(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history tape series 10.
+</entry>
+
+<entry id="hist_mfilt" type="integer(10)" category="history"
        group="clm_inparm" valid_values="" >
 Per tape series  maximum number of time samples.
 </entry>
 
-<entry id="hist_ndens" type="integer(6)" category="history"
+<entry id="hist_ndens" type="integer(10)" category="history"
        group="clm_inparm" valid_values="1,2" >
 Per tape series  history file density (i.e. output precision) 
     1=double precision
     2=single precision
-<default>Default: 2,2,2,2,2,2</default>
+<default>Default: 2,2,2,2,2,2,2,2,2,2</default>
 </entry>
 
-<entry id="hist_nhtfrq" type="integer(6)" category="history"
+<entry id="hist_nhtfrq" type="integer(10)" category="history"
        group="clm_inparm" valid_values="" >
 Per tape series history write frequency. 
     positive means in time steps
     0=monthly
     negative means hours
 (i.e. 5 means every 24 time-steps and -24 means every day
-<default>Default: 0,-24,-24,-24,-24,-24</default>
+<default>Default: 0,-24,-24,-24,-24,-24,-24,-24,-24,-24</default>
 </entry>
 
 <entry id="nsegspc" type="integer" category="clm_performance"
@@ -881,13 +964,13 @@ Maximum nitrification rate constant (1/s)
 <entry id="use_vertsoilc" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 Turn on vertical soil carbon.
-Requires the CN or ED model to work (either CN or CNDV).
+Requires the CN or FATES model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_century_decomp" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 Use parameters for decomposition from the CENTURY Carbon model
-Requires the CN or ED model to work (either CN or CNDV).
+Requires the CN or FATES model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_extralakelayers" type="logical" category="physics"
@@ -1009,6 +1092,11 @@ in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 <!--                                                   -->
 <!-- mksurfdata namelist                               -->
 <!--                                                   -->
+<entry id="gitdescribe" type="char*80" category="mksurfdata"
+       group="clmexp" valid_values="" >
+Output of "git describe" to give the tag/commit the version being used corresponds to
+</entry>
+
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
        valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
@@ -1685,16 +1773,16 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,cruncep">
+       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
 Land mask description
 </entry> 
 
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUNCEP,clm5_0_cam5.5,clm5_0_GSW3P">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1">
 General configuration of model version and atmospheric forcing to tune the model to run under.
-This sets the model to run with constants that were set to run well under the configuration
-of model version and atmospheric forcing. To run well constants would need to be changed
+This sets the model to run with constants and initial conditions that were set to run well under 
+the configuration of model version and atmospheric forcing. To run well constants would need to be changed
 to run with a different type of atmospheric forcing.
 </entry> 
 
@@ -1868,25 +1956,21 @@ Enable C14 model
 <entry id="use_c14_bombspike" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Flag to use the atmospheric time series of C14 concentrations from bomb fallout and Seuss effect, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c14_filename" type="char*256" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "Delta14co2_in_air". time variable is in format: years since 1850-01-01 0:0:0.0  units are permil.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="use_c13_timeseries" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Flag to use the atmospheric time series of C13 concentrations from natural abundance and the Seuss Effect, rather than static values.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c13_filename" type="char*256" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0. units are permil.
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 
@@ -1983,7 +2067,6 @@ Vcmax calculation for Photosynthesis
     vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
     vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
     vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
-(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
@@ -2341,6 +2424,43 @@ NOTE: Natural vegetation and crop landunits always behave as if this were true. 
 we can't find a column with the same type as a given crop column in the output, then we
 always fill with the closest natural veg patch / column, regardless of the value of this
 flag. So interpolation from non-crop to crop cases can be done without setting this flag.
+</entry>
+
+<entry id="init_interp_method" type="char*64" category="datasets"
+       group="clm_initinterp_inparm"
+       valid_values="general,use_finidat_areas" >
+Method to use for init_interp. Only applies when use_init_interp = .true.
+
+'general': The general-purpose method that can be used when changing
+grids, configurations, etc. This starts off with subgrid areas taken
+from the surface dataset.
+
+'use_finidat_areas': This starts off with subgrid areas taken from the
+input finidat file. This is needed to achieve bit-for-bit results in a
+coupled case (where areas in initialization impact initial fields sent
+to the atmosphere) (but using the 'general' method will typically have
+only a very minor impact on results in this case). For this method to
+work, the input finidat file needs to be at the same resolution as the
+current configuration. So this is a less general form of
+init_interp. However, it can be used in cases where the only difference
+is in internal memory allocation. In order to catch possible problems,
+this uses a different algorithm for finding the input point for each
+output point, which ensures that each active output point is associated
+with exactly one input point with the same latitude, longitude and
+type. This method requires (a) the same grid for input and output,
+within roundoff; (b) any non-zero-weight point in the input must have
+memory allocated for it in this grid cell in the output (this will be
+satisfied if the point is non-zero-weight on the surface dataset or if
+it's a point for which we allocate memory even for zero-weight points);
+(c) any active point in the output (based on the surface dataset and
+rules for determining active points) must have a matching point in this
+grid cell in the input. (Note that this generally can NOT be used when
+transitioning from a spinup run to a transient run, because spinup runs
+typically have irrigation off and transient runs have irrigation on, and
+the presence/absence of irrigation affects the subgrid structure; if it
+weren't for that difference, then this option would be useful for this
+use case.)
+
 </entry>
 
 </namelist_definition>

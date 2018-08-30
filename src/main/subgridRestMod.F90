@@ -6,6 +6,7 @@ module subgridRestMod
   ! !USES:
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
+  use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
   use abortutils         , only : endrun
   use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, ldecomp
   use domainMod          , only : ldomain
@@ -98,8 +99,6 @@ contains
     ! they can be computed using other info on the restart file (particularly subgrid
     ! weights).
     !
-    ! !USES:
-    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds ! bounds
     type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
@@ -116,6 +115,8 @@ contains
     integer , pointer :: ilarr(:)    ! temporary
     integer , pointer :: icarr(:)    ! temporary
     integer , pointer :: iparr(:)    ! temporary
+
+    real(r8), pointer :: elevclass_bounds(:)
 
     real(r8), pointer :: temp2d_r(:,:) ! temporary for multi-level variables
     integer , pointer :: temp2d_i(:,:) ! temporary for multi-level variables
@@ -436,6 +437,18 @@ contains
 
     deallocate(rparr, iparr)
 
+    ! ------------------------------------------------------------------------
+    ! Write other subgrid-related metadata
+    ! ------------------------------------------------------------------------
+
+    allocate(elevclass_bounds(0:glc_get_num_elevation_classes()))
+    elevclass_bounds = glc_get_elevclass_bounds()
+    call restartvar(ncid=ncid, flag=flag, varname='glc_elevclass_bounds', xtype=ncd_double, &
+         dim1name='glc_nec1', is_spatial = .false., &
+         long_name='glacier elevation class bounds', units='m', &
+         interpinic_flag='skip', readvar=readvar, data=elevclass_bounds)
+    deallocate(elevclass_bounds)
+
   end subroutine subgridRest_write_only
 
   !-----------------------------------------------------------------------
@@ -465,32 +478,32 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='land1d_wtxy', xtype=ncd_double, &
          dim1name='landunit',                                                      &
          long_name='landunit weight relative to corresponding gridcell',           &
-         interpinic_flag='skip', readvar=readvar, data=lun%wtgcell)
+         interpinic_flag='area', readvar=readvar, data=lun%wtgcell)
 
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtxy', xtype=ncd_double,  &
          dim1name='column',                                                         &
          long_name='column weight relative to corresponding gridcell', units=' ',   &
-         interpinic_flag='skip', readvar=readvar, data=col%wtgcell)
+         interpinic_flag='area', readvar=readvar, data=col%wtgcell)
 
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtlnd', xtype=ncd_double, &
          dim1name='column',                                                         &
          long_name='column weight relative to corresponding landunit', units=' ',   &
-         interpinic_flag='skip', readvar=readvar, data=col%wtlunit)
+         interpinic_flag='area', readvar=readvar, data=col%wtlunit)
 
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtxy', xtype=ncd_double,  &
          dim1name='pft',                                                            &
          long_name='pft weight relative to corresponding gridcell', units='',       &  
-         interpinic_flag='skip', readvar=readvar, data=patch%wtgcell)
+         interpinic_flag='area', readvar=readvar, data=patch%wtgcell)
 
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtlnd', xtype=ncd_double, &
          dim1name='pft',                                                            &
          long_name='pft weight relative to corresponding landunit', units='',       & 
-         interpinic_flag='skip', readvar=readvar, data=patch%wtlunit)
+         interpinic_flag='area', readvar=readvar, data=patch%wtlunit)
 
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtcol', xtype=ncd_double, &
          dim1name='pft',                                                            &
          long_name='pft weight relative to corresponding column', units='',         &
-         interpinic_flag='skip', readvar=readvar, data=patch%wtcol)
+         interpinic_flag='area', readvar=readvar, data=patch%wtcol)
 
     ! Snow column variables
 

@@ -13,7 +13,7 @@ module test_init_columns
   use clm_varpar      , only : nlevsno, nlevgrnd
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use TemperatureType , only : temperature_type
-  use WaterstateType  , only : waterstate_type
+  use WaterstateBulkType  , only : waterstatebulk_type
   use SoilHydrologyType, only : soilhydrology_type
   use dynColumnTemplateMod, only : TEMPLATE_NONE_FOUND
 
@@ -29,7 +29,7 @@ module test_init_columns
   ! instances of the class. Then the setup and cleanup routines here should be turned
   ! into setup & teardown methods of the class.
   type(temperature_type) :: temperature_vars
-  type(waterstate_type)  :: waterstate_vars
+  type(waterstatebulk_type)  :: waterstatebulk_vars
   type(soilhydrology_type) :: soilhydrology_vars
 
 contains
@@ -76,9 +76,9 @@ contains
 
     nlevgrnd=10
     allocate(temperature_vars%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    allocate(waterstate_vars%h2osoi_liq_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    allocate(waterstate_vars%h2osoi_ice_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    allocate(waterstate_vars%h2osoi_vol_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
+    allocate(waterstatebulk_vars%h2osoi_liq_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
+    allocate(waterstatebulk_vars%h2osoi_ice_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
+    allocate(waterstatebulk_vars%h2osoi_vol_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
     allocate(soilhydrology_vars%wa_col(bounds%begc:bounds%endc))
     do lev = -nlevsno+1, nlevgrnd
        do c = bounds%begc, bounds%endc
@@ -86,9 +86,9 @@ contains
 
           ! Also need to initialize some waterstate_type variables, but we don't have any
           ! assertions on them in this test
-          waterstate_vars%h2osoi_liq_col(c, lev) = 0._r8
-          waterstate_vars%h2osoi_ice_col(c, lev) = 0._r8
-          waterstate_vars%h2osoi_vol_col(c, lev) = 0._r8
+          waterstatebulk_vars%h2osoi_liq_col(c, lev) = 0._r8
+          waterstatebulk_vars%h2osoi_ice_col(c, lev) = 0._r8
+          waterstatebulk_vars%h2osoi_vol_col(c, lev) = 0._r8
        end do
     end do
 
@@ -105,9 +105,9 @@ contains
 
     deallocate(cactive_prior)
     deallocate(temperature_vars%t_soisno_col)
-    deallocate(waterstate_vars%h2osoi_liq_col)
-    deallocate(waterstate_vars%h2osoi_ice_col)
-    deallocate(waterstate_vars%h2osoi_vol_col)
+    deallocate(waterstatebulk_vars%h2osoi_liq_col)
+    deallocate(waterstatebulk_vars%h2osoi_ice_col)
+    deallocate(waterstatebulk_vars%h2osoi_vol_col)
     deallocate(soilhydrology_vars%wa_col)
 
   end subroutine cleanup
@@ -166,7 +166,7 @@ contains
     col%active(lun%coli(l2)+2) = .false.
     t_soisno_expected = temperature_vars%t_soisno_col
     call initialize_new_columns(bounds, cactive_prior, &
-         temperature_vars, waterstate_vars, soilhydrology_vars)
+         temperature_vars, waterstatebulk_vars, soilhydrology_vars)
     @assertEqual(t_soisno_expected, temperature_vars%t_soisno_col)
     call cleanup()
   end subroutine test_initialize_new_columns_none
@@ -183,7 +183,7 @@ contains
     cactive_prior(:) = .false.
     t_soisno_expected = temperature_vars%t_soisno_col
     call initialize_new_columns(bounds, cactive_prior, &
-         temperature_vars, waterstate_vars, soilhydrology_vars)
+         temperature_vars, waterstatebulk_vars, soilhydrology_vars)
     @assertEqual(t_soisno_expected, temperature_vars%t_soisno_col)
     call cleanup()
   end subroutine test_initialize_new_columns_TEMPLATE_NONE_FOUND
@@ -210,7 +210,7 @@ contains
     t_soisno_expected(dest_col,1:) = temperature_vars%t_soisno_col(source_col,1:)
 
     call initialize_new_columns(bounds, cactive_prior, &
-         temperature_vars, waterstate_vars, soilhydrology_vars)
+         temperature_vars, waterstatebulk_vars, soilhydrology_vars)
 
     @assertEqual(t_soisno_expected, temperature_vars%t_soisno_col)
     call cleanup()

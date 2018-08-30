@@ -1,7 +1,4 @@
 !===============================================================================
-! SVN $Id: shr_timer_mod.F90 6752 2007-10-04 21:02:15Z jwolfe $
-! SVN $URL: https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_101231/shr/shr_timer_mod.F90 $
-!===============================================================================
 
 module shr_timer_mod
 

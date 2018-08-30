@@ -682,7 +682,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,cruncep">
+       valid_values="USGS,gx3v7,gx1v6,gz1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
 Land mask description
 </entry> 
 
@@ -698,7 +698,7 @@ NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
 
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_0_default">
+       valid_values="clm4_0_default,clm4_0_CRUv7,clm4_0_GSWP3v1,clm4_0_cam6.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants that were set to run well under the configuration
 of model version and atmospheric forcing. To run well constants would need to be changed

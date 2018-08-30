@@ -193,7 +193,7 @@ contains
          cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)          * m
          if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * 10._r8
-           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8        
+           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8
          else
            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
            cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m

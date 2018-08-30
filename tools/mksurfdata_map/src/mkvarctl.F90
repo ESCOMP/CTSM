@@ -72,6 +72,7 @@ module mkvarctl
   character(len=256), public :: map_ftopostats  = ' ' ! Mapping file for topography statistics
   character(len=256), public :: map_fvic        = ' ' ! Mapping file for VIC parameters
   character(len=256), public :: map_fch4        = ' ' ! Mapping file for inversion-derived CH4 parameters
+  character(len=80) , public :: gitdescribe     = ' ' ! Description of model version from git
 !
 ! Variables to override data read in with
 ! (all_urban is mostly for single-point mode, but could be used for sensitivity studies)

@@ -53,17 +53,23 @@
     <type>char</type>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
-    <desc>Tuning parameters should be optimized for what CLM model version and what meteorlogical forcing combination?
+    <desc>Tuning parameters and initial conditions should be optimized for what CLM model version and what meteorlogical forcing combination?
     </desc>
     <default_value>UNSET</default_value>
-    <valid_values>clm4_0_default,clm5_0_cam5.5,clm5_0_GSW3P,clm4_5_CRUNCEP</valid_values>
+    <valid_values>clm4_0_CRUv7,clm4_0_GSWP3v1,clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
     <values>
-      <value compset="_CLM40"      >clm4_0_default</value>
-      <value compset="_CLM45"      >clm4_5_CRUNCEP</value>
-      <value compset="_CLM50"      >clm5_0_cam5.5</value>
-      <value compset="DATM.+_CLM50" >clm5_0_GSW3P</value>
-      <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSW3P</value>
-      <value compset="CAM.+_CLM50" >clm5_0_cam5.5</value>
+      <value compset=             "CLM40" >clm4_0_CRUv7</value>
+      <value compset="DATM%CRU_CLM40"     >clm4_0_CRUv7</value>
+      <value compset="DATM%CRUv7.+_CLM40" >clm4_0_CRUv7</value>
+      <value compset="DATM%GSWP3.+_CLM40" >clm4_0_GSWP3v1</value>
+      <value compset=             "CLM45" >clm4_5_CRUv7</value>
+      <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
+      <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSWP3v1</value>
+      <value compset="CAM.+_CLM45"        >clm4_5_cam6.0</value>
+      <value compset=             "CLM50" >clm5_0_CRUv7</value>
+      <value compset="DATM%CRUv7.+_CLM50" >clm5_0_CRUv7</value>
+      <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSWP3v1</value>
+      <value compset="CAM.+_CLM50"        >clm5_0_cam6.0</value>
     </values>
   </entry>
 
@@ -94,15 +100,15 @@
     <default_value>UNSET</default_value>
     <values>
       <!-- Use rcp4.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
-      <value compset="2000.*"		>2000_control</value>
-      <value compset="1850.*_"		>1850_control</value>
-      <value compset="HIST.*_"		>20thC_transient</value>
-      <value compset="RCP6.*_"		>1850-2100_rcp6_transient</value>
-      <value compset="RCP4.*_"		>1850-2100_rcp4.5_transient</value>
-      <value compset="RCP2.*_"		>1850-2100_rcp2.6_transient</value>
-      <value compset="RCP8.*_"		>1850-2100_rcp8.5_transient</value>
-      <value compset="AMIP.*_"		>20thC_transient</value>
-      <value compset="PIPD_"           >1850-2100_rcp4.5_transient</value>
+      <value compset="^2000_"		>2000_control</value>
+      <value compset="^1850_"		>1850_control</value>
+      <value compset="^HIST_"		>20thC_transient</value>
+      <value compset="^RCP6_"		>1850-2100_rcp6_transient</value>
+      <value compset="^RCP4_"		>1850-2100_rcp4.5_transient</value>
+      <value compset="^RCP2_"		>1850-2100_rcp2.6_transient</value>
+      <value compset="^RCP8_"		>1850-2100_rcp8.5_transient</value>
+      <value compset="^AMIP_"		>20thC_transient</value>
+      <value compset="^PIPD_"           >1850-2100_rcp4.5_transient</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>

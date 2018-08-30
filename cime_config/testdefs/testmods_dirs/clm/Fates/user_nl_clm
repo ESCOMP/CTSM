@@ -1,0 +1,11 @@
+!!finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/iclm45fates-finit-s1.4.0-a3.0.0-1x1br.clm2.r.0111-01-01-00000.nc'
+hist_mfilt        = 365
+hist_nhtfrq       = -24
+hist_empty_htapes = .true.
+use_fates_spitfire= .true.
+hist_fincl1       = 'NPP','GPP','BTRAN','H2OSOI','TLAI','LITTER_IN','LITTER_OUT',
+   'FIRE_AREA','SCORCH_HEIGHT','FIRE_INTENSITY','FIRE_TFC_ROS','fire_fuel_mef',
+   'fire_fuel_bulkd','fire_fuel_sav','FIRE_NESTEROV_INDEX','PFTbiomass',
+   'PFTleafbiomass','FIRE_ROS','WIND','AREA_TREES','AREA_PLANT',
+   'TOTSOMC','TOTLITC','T_SCALAR','NEP','NBP','HR','TOTECOSYSC','NPLANT_SCAG','NPLANT_SCPF',
+   'BA_SCLS','NPP_BY_AGE','CWD_AG_CWDSC','PARSUN_Z_CNLF','PARSUN_Z_CNLFPFT','PARSHA_Z_CAN'

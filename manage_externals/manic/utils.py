@@ -10,15 +10,15 @@ from __future__ import print_function
 
 import logging
 import os
-import string
 import subprocess
 import sys
+from threading import Timer
 
-from .global_constants import LOCAL_PATH_INDICATOR, LOG_FILE_NAME
+from .global_constants import LOCAL_PATH_INDICATOR
 
 # ---------------------------------------------------------------------
 #
-# screen and logging output
+# screen and logging output and functions to massage text for output
 #
 # ---------------------------------------------------------------------
 
@@ -48,11 +48,59 @@ def printlog(msg, **kwargs):
     sys.stdout.flush()
 
 
+def last_n_lines(the_string, n_lines, truncation_message=None):
+    """Returns the last n lines of the given string
+
+    Args:
+        the_string: str
+        n_lines: int
+        truncation_message: str, optional
+
+    Returns a string containing the last n lines of the_string
+
+    If truncation_message is provided, the returned string begins with
+    the given message if and only if the string is greater than n lines
+    to begin with.
+    """
+
+    lines = the_string.splitlines(True)
+    if len(lines) <= n_lines:
+        return_val = the_string
+    else:
+        lines_subset = lines[-n_lines:]
+        str_truncated = ''.join(lines_subset)
+        if truncation_message:
+            str_truncated = truncation_message + '\n' + str_truncated
+        return_val = str_truncated
+
+    return return_val
+
+
+def indent_string(the_string, indent_level):
+    """Indents the given string by a given number of spaces
+
+    Args:
+       the_string: str
+       indent_level: int
+
+    Returns a new string that is the same as the_string, except that
+    each line is indented by 'indent_level' spaces.
+
+    In python3, this can be done with textwrap.indent.
+    """
+
+    lines = the_string.splitlines(True)
+    padding = ' ' * indent_level
+    lines_indented = [padding + line for line in lines]
+    return ''.join(lines_indented)
+
 # ---------------------------------------------------------------------
 #
 # error handling
 #
 # ---------------------------------------------------------------------
+
+
 def fatal_error(message):
     """
     Error output function
@@ -73,9 +121,9 @@ def str_to_bool(bool_str):
     """
     value = None
     str_lower = bool_str.lower()
-    if (str_lower == 'true') or (str_lower == 't'):
+    if str_lower in ('true', 't'):
         value = True
-    elif (str_lower == 'false') or (str_lower == 'f'):
+    elif str_lower in ('false', 'f'):
         value = False
     if value is None:
         msg = ('ERROR: invalid boolean string value "{0}". '
@@ -153,6 +201,32 @@ def expand_local_url(url, field):
 # subprocess
 #
 # ---------------------------------------------------------------------
+
+# Give the user a helpful message if we detect that a command seems to
+# be hanging.
+_HANGING_SEC = 300
+
+
+def _hanging_msg(working_directory, command):
+    print("""
+
+Command '{command}'
+from directory {working_directory}
+has taken {hanging_sec} seconds. It may be hanging.
+
+The command will continue to run, but you may want to abort
+manage_externals with ^C and investigate. A possible cause of hangs is
+when svn or git require authentication to access a private
+repository. On some systems, svn and git requests for authentication
+information will not be displayed to the user. In this case, the program
+will appear to hang. Ensure you can run svn and git manually and access
+all repositories without entering your authentication information.
+
+""".format(command=command,
+           working_directory=working_directory,
+           hanging_sec=_HANGING_SEC))
+
+
 def execute_subprocess(commands, status_to_caller=False,
                        output_to_caller=False):
     """Wrapper around subprocess.check_output to handle common
@@ -167,15 +241,19 @@ def execute_subprocess(commands, status_to_caller=False,
     status as an error and raises an exception.
 
     """
-    msg = 'In directory: {0}\nexecute_subprocess running command:'.format(
-        os.getcwd())
+    cwd = os.getcwd()
+    msg = 'In directory: {0}\nexecute_subprocess running command:'.format(cwd)
     logging.info(msg)
-    logging.info(commands)
+    commands_str = ' '.join(commands)
+    logging.info(commands_str)
     return_to_caller = status_to_caller or output_to_caller
     status = -1
     output = ''
+    hanging_timer = Timer(_HANGING_SEC, _hanging_msg,
+                          kwargs={"working_directory": cwd,
+                                  "command": commands_str})
+    hanging_timer.start()
     try:
-        logging.info(' '.join(commands))
         output = subprocess.check_output(commands, stderr=subprocess.STDOUT,
                                          universal_newlines=True)
         log_process_output(output)
@@ -199,15 +277,17 @@ def execute_subprocess(commands, status_to_caller=False,
         # responsibility determine if an error occurred and handle it
         # appropriately.
         if not return_to_caller:
-            msg = failed_command_msg(
-                'Called process did not run successfully.\n'
-                'Returned status: {0}'.format(error.returncode),
-                commands)
+            msg_context = ('Process did not run successfully; '
+                           'returned status {0}'.format(error.returncode))
+            msg = failed_command_msg(msg_context, commands,
+                                     output=error.output)
             logging.error(error)
             logging.error(msg)
             log_process_output(error.output)
             fatal_error(msg)
         status = error.returncode
+    finally:
+        hanging_timer.cancel()
 
     if status_to_caller and output_to_caller:
         ret_value = (status, output)
@@ -221,17 +301,30 @@ def execute_subprocess(commands, status_to_caller=False,
     return ret_value
 
 
-def failed_command_msg(msg_context, command):
+def failed_command_msg(msg_context, command, output=None):
     """Template for consistent error messages from subprocess calls.
+
+    If 'output' is given, it should provide the output from the failed
+    command
     """
-    error_msg = string.Template("""$context
-Failed command:
-    $command
-Please check the log file "$log" for more details.""")
-    values = {
-        'context': msg_context,
-        'command': ' '.join(command),
-        'log': LOG_FILE_NAME,
-    }
-    msg = error_msg.substitute(values)
-    return msg
+
+    if output:
+        output_truncated = last_n_lines(output, 20,
+                                        truncation_message='[... Output truncated for brevity ...]')
+        errmsg = ('Failed with output:\n' +
+                  indent_string(output_truncated, 4) +
+                  '\nERROR: ')
+    else:
+        errmsg = ''
+
+    command_str = ' '.join(command)
+    errmsg += """In directory
+    {cwd}
+{context}:
+    {command}
+""".format(cwd=os.getcwd(), context=msg_context, command=command_str)
+
+    if output:
+        errmsg += 'See above for output from failed command.\n'
+
+    return errmsg
