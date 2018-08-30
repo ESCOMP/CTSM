@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-"""Python driver for running CTSM system tests
-
-Automatically detects the machine and launches the appropriate components of a test suite
-on that machine.
-"""
+"""Driver for running CTSM system tests"""
 
 from __future__ import print_function
 
@@ -23,5 +19,4 @@ cime_path = add_cime_lib_to_path(standalone_only=True)
 from ctsm.run_sys_tests import main
 
 if __name__ == "__main__":
-    main(description=__doc__,
-         cime_path=cime_path)
+    main(cime_path=cime_path)

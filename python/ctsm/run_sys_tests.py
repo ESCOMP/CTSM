@@ -17,18 +17,17 @@ logger = logging.getLogger(__name__)
 # Public functions
 # ========================================================================
 
-def main(description, cime_path):
+def main(cime_path):
     """Main function called when run_sys_tests is run from the command-line
 
     Args:
-    description (str): description printed to usage message
     cime_path (str): path to the cime that we're using (this is passed in explicitly
         rather than relying on calling path_to_cime so that we can be absolutely sure that
         the scripts called here are coming from the same cime as the cime library we're
         using).
     """
     setup_logging_pre_config()
-    args = _commandline_args(description)
+    args = _commandline_args()
     process_logging_args(args)
     logger.info('Running on machine: %s', args.machine_name)
     machine = create_machine(machine_name=args.machine_name,
@@ -105,9 +104,32 @@ def run_sys_tests(machine, cime_path,
 # Private functions
 # ========================================================================
 
-def _commandline_args(description):
+def _commandline_args():
     """Parse and return command-line arguments
     """
+
+    description = """
+Driver for running CTSM system tests
+
+Typical usage:
+
+./run_sys_tests -s aux_clm -c COMPARE_NAME -g GENERATE_NAME
+
+    This automatically detects the machine and launches the appropriate components of the
+    aux_clm test suite on that machine. This script also implements other aspects of the
+    typical CTSM system testing workflow, such as running create_test via qsub on
+    cheyenne, and setting up a directory to hold all of the tests in the test suite.
+
+    Note that the -c/--compare and -g/--generate arguments are required, unless you specify
+    --skip-compare and/or --skip-generate.
+
+    Any other test suite can be given as well: clm_short, aux_glc, etc.
+
+This can also be used to run tests listed in a text file (via the -f/--testfile argument),
+or tests listed individually on the command line (via the -t/--testname argument, which
+can be repeated multiple times).
+"""
+
     parser = argparse.ArgumentParser(
         description=description,
         formatter_class=argparse.RawTextHelpFormatter)
