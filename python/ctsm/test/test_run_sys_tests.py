@@ -12,7 +12,7 @@ import re
 from datetime import datetime
 
 import six
-from six_additions import mock
+from six_additions import mock, assertNotRegex
 
 from ctsm import add_cime_to_path #pylint:disable=unused-import
 from ctsm import unit_testing
@@ -109,6 +109,8 @@ class TestRunSysTests(unittest.TestCase):
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
         six.assertRegex(self, command, r'--test-root +{}'.format(expected_testroot_path))
         six.assertRegex(self, command, r'test1 +test2 *$')
+        assertNotRegex(self, command, r'--compare')
+        assertNotRegex(self, command, r'--generate')
 
         # FIXME(wjs, 2018-08-29) Similar to the above test, but with testid_base, testroot_base specified and some optional args specified (compare_name, generate_name, baseline_root, walltime, queue, extra_create_test_args; also account?)
 
