@@ -633,6 +633,7 @@ contains
          obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Monin-Obukhov length [m]
          zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter 
          vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [Pa]
+         num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
 
          begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                  , &
@@ -722,10 +723,8 @@ contains
 
          ! fraction of stem receiving incoming radiation
          fstem(p) = (esai(p))/(elai(p)+esai(p))
-         fstem(p) = k_vert * fstem(p)
-         if(.not.use_biomass_heat_storage) then
-            fstem(p) = 0._r8
-         endif
+         ! when elai = 0, do not multiply by k_vert (i.e. fstem = 1)
+         if(elai(p) > 0._r8) fstem(p) = k_vert * fstem(p)
 
          ! leaf and stem surface area
          sa_leaf(p) = elai(p)
@@ -735,16 +734,20 @@ contains
          sa_stem(p) = params_inst%nstem(patch%itype(p))*(htop(p)*shr_const_pi*params_inst%dbh(patch%itype(p)))
 ! adjust for departure of cylindrical stem model
          sa_stem(p) = k_cyl_area * sa_stem(p)
-         if(.not.use_biomass_heat_storage) then 
-            sa_stem(p) = 0._r8
-         endif
-! do not calculate separate leaf/stem heat capacity for grasses
+
+         ! do not calculate separate leaf/stem heat capacity for grasses
          if(patch%itype(p) > 11) then
             fstem(p) = 0.0
             sa_stem(p) = 0.0
          endif
 
-! internal longwave fluxes between leaf and stem
+         if(.not.use_biomass_heat_storage) then
+            fstem(p) = 0._r8
+            sa_stem(p) = 0._r8
+            sa_leaf(p) = (elai(p)+esai(p))
+         endif
+
+         ! internal longwave fluxes between leaf and stem
 ! surface area term must be equal, remainder cancels
 ! (use same area of interaction i.e. ignore leaf <-> leaf)
          sa_internal(p) = min(sa_leaf(p),sa_stem(p))
@@ -756,6 +759,11 @@ contains
 ! cdry_biomass = 1400 J/kg/K, cwater = 4188 J/kg/K
 ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
          cp_veg(p)  = (0.25_r8 * max(0.01_r8,elai(p))) * (1400._r8 + (params_inst%fbw(patch%itype(p))/(1.-params_inst%fbw(patch%itype(p))))*4188._r8)
+
+! use non-zero, but small, heat capacity
+         if(.not.use_biomass_heat_storage) then
+            cp_veg(p)  = 1.e-3_r8
+         endif
 
          carea_stem   = shr_const_pi * (params_inst%dbh(patch%itype(p))*0.5)**2
 
@@ -921,6 +929,7 @@ contains
          ! Initialize Monin-Obukhov length and wind speed
 
          call MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
+         num_iter(p) = 0
 
       end do
 
@@ -1339,6 +1348,7 @@ contains
          ! Test for convergence
 
          itlef = itlef+1
+         num_iter(p) = itlef
          if (itlef > itmin) then
             do f = 1, fn
                p = filterp(f)
