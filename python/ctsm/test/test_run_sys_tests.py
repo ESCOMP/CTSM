@@ -154,7 +154,33 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r'--project +myaccount\b')
         six.assertRegex(self, command, r'--some +extra +--createtest +args\b')
 
-    # FIXME(wjs, 2018-08-29) Test with a test suite, with 2 compilers in it
+    def test_createTestCommand_testsuite(self):
+        """The correct create_test commands should be run with a test suite
+
+        This tests that multiple create_test commands are run, one with each compiler in
+        the given test suite for the given machine
+        """
+        machine = self._make_machine()
+        with mock.patch('ctsm.run_sys_tests.datetime') as mock_date, \
+             mock.patch('ctsm.run_sys_tests.get_tests_from_xml') as mock_get_tests:
+            mock_date.now.side_effect = self._fake_now
+            mock_get_tests.return_value = [{'compiler': 'intel'},
+                                           {'compiler': 'pgi'},
+                                           {'compiler': 'intel'}]
+            run_sys_tests(machine=machine, cime_path=self._cime_path(),
+                          suite_name='my_suite')
+
+        all_commands = machine.job_launcher.get_commands()
+        self.assertEqual(len(all_commands), 2)
+        for command in all_commands:
+            six.assertRegex(self, command, r'--xml-category +{}\b'.format('my_suite'))
+            six.assertRegex(self, command, r'--xml-machine +{}\b'.format(self._MACHINE_NAME))
+
+        six.assertRegex(self, all_commands[0], r'--xml-compiler +intel\b')
+        six.assertRegex(self, all_commands[1], r'--xml-compiler +pgi\b')
+
+        six.assertRegex(self, all_commands[0], r'--test-id +{}_in'.format(self._expected_testid()))
+        six.assertRegex(self, all_commands[1], r'--test-id +{}_pg'.format(self._expected_testid()))
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()

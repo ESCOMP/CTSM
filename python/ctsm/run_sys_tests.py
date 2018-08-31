@@ -11,6 +11,8 @@ from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 
+from CIME.test_utils import get_tests_from_xml
+
 logger = logging.getLogger(__name__)
 
 # ========================================================================
@@ -308,9 +310,15 @@ def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, creat
                          create_test_args=create_test_args)
 
 def _get_compilers_for_suite(suite_name, machine_name):
-    # FIXME(wjs, 2018-08-24) Implement this. Use cime.test_status, similar to what's done
-    # in query_testlists. If no tests are found for this suite and machine, raise an exception.
-    return []
+    test_data = get_tests_from_xml(
+        xml_machine = machine_name,
+        xml_category = suite_name)
+    if not test_data:
+        raise RuntimeError('No tests found for suite {} on machine {}'.format(
+            suite_name, machine_name))
+    compilers = sorted(set([one_test['compiler'] for one_test in test_data]))
+    logger.info("Running with compilers: %s", compilers)
+    return compilers
 
 def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args):
     create_test_cmd = _build_create_test_cmd(cime_path=cime_path,
