@@ -115,8 +115,8 @@ contains
     real(r8) :: qsatgdT      ! d(qsatg)/dT
     real(r8) :: fac          ! soil wetness of surface layer
     real(r8) :: psit         ! negative potential of soil
-    real(r8) :: hr           ! relative humidity
-    real(r8) :: hr_road_perv ! relative humidity for urban pervious road
+    real(r8) :: hr           ! alpha soil
+    real(r8) :: hr_road_perv ! alpha soil for urban pervious road
     real(r8) :: wx           ! partial volume of ice and water of surface layer
     real(r8) :: fac_fc       ! soil wetness of surface layer relative to field capacity
     real(r8) :: eff_porosity ! effective porosity in layer
@@ -230,7 +230,8 @@ contains
       end do
 
       ! calculate moisture stress/resistance for soil evaporation
-      call calc_soilevap_resis(bounds, num_nolakec, filter_nolakec, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst)
+      call calc_soilevap_resis(bounds, num_nolakec, filter_nolakec, &
+           soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst)
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)

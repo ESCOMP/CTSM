@@ -12,7 +12,6 @@ module clm_driver
   use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
-  use clm_varctl             , only : is_cold_start, is_interpolated_start
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -166,14 +165,19 @@ contains
     nclumps = get_proc_clumps()
 
     ! ========================================================================
-    ! In the first time step of a run that used cold start or init_interp, glacier areas
-    ! will start at whatever is specified on the surface dataset, because coupling fields
-    ! from GLC aren't received until the run loop. Thus, CLM will see a potentially large,
-    ! fictitious glacier area change in the first time step after cold start or
-    ! init_interp. We don't want this fictitious area change to result in any state or
-    ! flux adjustments. Thus, we apply this area change here, at the start of the driver
-    ! loop, so that in dynSubgrid_driver, it will look like there is no glacier area
-    ! change in the first time step.
+    ! In the first time step of a startup or hybrid run, we want to update CLM's glacier
+    ! areas to match those given by GLC. This is because, in initialization, we do not yet
+    ! know GLC's glacier areas, so CLM's glacier areas are based on the surface dataset
+    ! (for a cold start or init_interp run) or the initial conditions file (in a
+    ! non-init_interp, non-cold start run) - which may not match GLC's glacier areas for
+    ! this configuration. (Coupling fields from GLC aren't received until the run loop.)
+    ! Thus, CLM will see a potentially large, fictitious glacier area change in the first
+    ! time step. We don't want this fictitious area change to result in any state or flux
+    ! adjustments. Thus, we apply this area change here, at the start of the driver loop,
+    ! so that in dynSubgrid_driver, it will look like there is no glacier area change in
+    ! the first time step. (See
+    ! https://github.com/ESCOMP/ctsm/issues/340#issuecomment-410483131 for more
+    ! discussion on this.)
     !
     ! This needs to happen very early in the run loop, before any balance checks are
     ! initialized, because - by design - this doesn't conserve mass at the grid cell
@@ -197,8 +201,7 @@ contains
     ! are passed to CLM in initialization, then this code block can be removed.
     ! ========================================================================
 
-    need_glacier_initialization = (is_first_step() .and. &
-         (is_cold_start .or. is_interpolated_start))
+    need_glacier_initialization = is_first_step()
 
     if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)

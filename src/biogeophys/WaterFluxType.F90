@@ -253,7 +253,8 @@ contains
          fname=this%info%fname('QRGWL'),  &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('surface runoff at glaciers (liquid only), wetlands, lakes; also includes melted ice runoff from QSNWCPICE'), &
+         long_name=this%info%lname( &
+         'surface runoff at glaciers (liquid only), wetlands, lakes; also includes melted ice runoff from QSNWCPICE'), &
          ptr_col=this%qflx_qrgwl_col, c2l_scale_type='urbanf')
 
     this%qflx_drain_col(begc:endc) = spval

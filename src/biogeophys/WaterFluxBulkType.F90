@@ -361,9 +361,6 @@ contains
     ! filter, so that they are flagged as missing value outside that filter.
     this%qflx_glcice_dyn_water_flux_col(bounds%begc:bounds%endc) = 0._r8
 
-    this%AnnEt(bounds%begc:bounds%endc)                 = 0._r8
-
-
   end subroutine InitBulkCold
 
    !-----------------------------------------------------------------------
@@ -426,7 +423,7 @@ contains
 
     if (use_fun) then
        call extract_accum_field ('AnnET', rbufslp, nstep)
-       this%qflx_evap_tot_col(begc:endc) = rbufslp(begc:endc)
+       this%AnnEt(begc:endc) = rbufslp(begc:endc)
     end if
 
     deallocate(rbufslp)
@@ -508,18 +505,6 @@ contains
        this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
     endif
     
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('AnnET'), &
-         xtype=ncd_double,  &
-         dim1name='column', &
-         long_name=this%info%lname('Annual ET'), &
-         units='mm/s', &
-         interpinic_flag='interp', readvar=readvar, data=this%AnnET)
-    if (flag == 'read' .and. .not. readvar) then
-       ! initial run, not restart: initialize qflx_snow_drain to zero
-       this%AnnET(bounds%begc:bounds%endc) = 0._r8
-    endif
-
     call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
     call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)
 

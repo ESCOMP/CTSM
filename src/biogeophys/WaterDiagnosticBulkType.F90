@@ -15,6 +15,7 @@ module WaterDiagnosticBulkType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
+  use abortutils     , only : endrun
   use clm_varctl     , only : use_cn, iulog, use_luna
   use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
@@ -485,7 +486,6 @@ contains
     use clm_varctl      , only : fsurdat, iulog
     use clm_varctl        , only : use_bedrock
     use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
     use fileutils       , only : getfil
     use ncdio_pio       , only : file_desc_t, ncd_io
     !
@@ -583,7 +583,7 @@ contains
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------
-  subroutine RestartBulk(this, bounds, ncid, flag, waterstatebulk_inst)
+  subroutine RestartBulk(this, bounds, ncid, flag)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -603,10 +603,8 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    class(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,l,j
     logical  :: readvar
     !------------------------------------------------------------------------
 
@@ -695,32 +693,17 @@ contains
          units='um', &
          interpinic_flag='interp', readvar=readvar, data=this%snw_rds_col)
     if (flag == 'read' .and. .not. readvar) then
-
-       ! initial run, not restart: initialize snw_rds
+       ! NOTE(wjs, 2018-08-03) There was some code here that looked like it was just for
+       ! the sake of backwards compatibility, dating back to 2014 or earlier. I was
+       ! tempted to just remove it, but on the off-chance that this conditional is still
+       ! ever entered, I'm putting an endrun call here to notify users of this removed
+       ! code.
        if (masterproc) then
           write(iulog,*) "SNICAR: This is an initial run (not a restart), and grain size/aerosol " // &
-               "mass data are not defined in initial condition file. Initialize snow " // &
-               "effective radius to fresh snow value, and snow/aerosol masses to zero."
+               "mass data are not defined in initial condition file. This situation is no longer handled."
        endif
-
-       do c= bounds%begc, bounds%endc
-          if (col%snl(c) < 0) then
-             this%snw_rds_col(c,col%snl(c)+1:0) = snw_rds_min
-             this%snw_rds_col(c,-nlevsno+1:col%snl(c)) = 0._r8
-             this%snw_rds_top_col(c) = snw_rds_min
-             this%sno_liq_top_col(c) = waterstatebulk_inst%h2osoi_liq_col(c,col%snl(c)+1) / &
-                                      (waterstatebulk_inst%h2osoi_liq_col(c,col%snl(c)+1)+waterstatebulk_inst%h2osoi_ice_col(c,col%snl(c)+1))
-          elseif (waterstatebulk_inst%h2osno_col(c) > 0._r8) then
-             this%snw_rds_col(c,0) = snw_rds_min
-             this%snw_rds_col(c,-nlevsno+1:-1) = 0._r8
-             this%snw_rds_top_col(c) = spval
-             this%sno_liq_top_col(c) = spval
-          else
-             this%snw_rds_col(c,:) = 0._r8
-             this%snw_rds_top_col(c) = spval
-             this%sno_liq_top_col(c) = spval
-          endif
-       enddo
+       call endrun(msg = "Absent snw_rds on initial conditions file no longer handled. "// &
+            errMsg(sourcefile, __LINE__))
     endif
 
     if (use_cn) then
