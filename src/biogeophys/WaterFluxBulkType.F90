@@ -29,8 +29,6 @@ module WaterFluxBulkType
 
      ! water fluxes are in units or mm/s
 
-     real(r8), pointer :: qflx_irrig_patch         (:)   ! patch irrigation flux (mm H2O/s) [+]
-     real(r8), pointer :: qflx_irrig_col           (:)   ! col irrigation flux (mm H2O/s) [+]
      real(r8), pointer :: qflx_phs_neg_col         (:)   ! col sum of negative hydraulic redistribution fluxes (mm H2O/s) [+]
 
      ! In the snow capping parametrization excess mass above h2osno_max is removed.  A breakdown of mass into liquid 
@@ -65,7 +63,6 @@ module WaterFluxBulkType
      real(r8), pointer :: qflx_in_h2osfc_col(:)          ! col total surface input to h2osfc
      real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
      real(r8), pointer :: qflx_snow_h2osfc_col     (:)   ! col snow falling on surface water
-     real(r8), pointer :: qflx_drain_perched_col   (:)   ! col sub-surface runoff from perched wt (mm H2O /s)
      real(r8), pointer :: qflx_deficit_col         (:)   ! col water deficit to keep non-negative liquid water content (mm H2O)   
      real(r8), pointer :: qflx_snomelt_lyr_col     (:,:) ! col snow melt in each layer (mm H2O /s)
      real(r8), pointer :: qflx_snow_drain_col      (:)   ! col drainage from snow pack
@@ -105,7 +102,7 @@ contains
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info)
 
-    class(waterfluxbulk_type) :: this
+    class(waterfluxbulk_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
 
@@ -125,7 +122,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(waterfluxbulk_type) :: this
+    class(waterfluxbulk_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -138,7 +135,6 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
-    allocate(this%qflx_irrig_patch         (begp:endp))              ; this%qflx_irrig_patch         (:)   = nan
 
     allocate(this%qflx_snowindunload_patch (begp:endp))              ; this%qflx_snowindunload_patch (:)   = nan
     allocate(this%qflx_snowindunload_col   (begp:endp))              ; this%qflx_snowindunload_col   (:)   = nan
@@ -146,7 +142,6 @@ contains
     allocate(this%qflx_snotempunload_col   (begp:endp))              ; this%qflx_snotempunload_col   (:)   = nan
 	
 
-    allocate(this%qflx_irrig_col           (begc:endc))              ; this%qflx_irrig_col           (:)   = nan
     allocate(this%qflx_snwcp_discarded_liq_col(begc:endc))           ; this%qflx_snwcp_discarded_liq_col(:) = nan
     allocate(this%qflx_snwcp_discarded_ice_col(begc:endc))           ; this%qflx_snwcp_discarded_ice_col(:) = nan
     allocate(this%qflx_glcice_dyn_water_flux_col(begc:endc))         ; this%qflx_glcice_dyn_water_flux_col (:) = nan
@@ -176,7 +171,6 @@ contains
     allocate(this%qflx_snow_h2osfc_col     (begc:endc))              ; this%qflx_snow_h2osfc_col     (:)   = nan
     allocate(this%qflx_snomelt_lyr_col     (begc:endc,-nlevsno+1:0)) ; this%qflx_snomelt_lyr_col     (:,:) = nan
     allocate(this%qflx_snow_drain_col      (begc:endc))              ; this%qflx_snow_drain_col      (:)   = nan
-    allocate(this%qflx_drain_perched_col   (begc:endc))              ; this%qflx_drain_perched_col   (:)   = nan
     allocate(this%qflx_deficit_col         (begc:endc))              ; this%qflx_deficit_col         (:)   = nan
     allocate(this%qflx_ice_runoff_snwcp_col(begc:endc))              ; this%qflx_ice_runoff_snwcp_col(:)   = nan
     allocate(this%qflx_ice_runoff_xs_col   (begc:endc))              ; this%qflx_ice_runoff_xs_col   (:)   = nan
@@ -205,7 +199,7 @@ contains
     use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
-    class(waterfluxbulk_type) :: this
+    class(waterfluxbulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -286,14 +280,6 @@ contains
          long_name=this%info%lname('canopy snow temp unloading'), &
          ptr_patch=this%qflx_snotempunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
-    this%qflx_irrig_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QIRRIG'), &
-         units='mm/s', &
-         avgflag='A', &
-         long_name=this%info%lname('water added through irrigation'), &
-         ptr_patch=this%qflx_irrig_patch)
-
     this%qflx_h2osfc_surf_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QH2OSFC'),  &
@@ -301,14 +287,6 @@ contains
          avgflag='A', &
          long_name=this%info%lname('surface water runoff'), &
          ptr_col=this%qflx_h2osfc_surf_col)
-
-    this%qflx_drain_perched_col(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QDRAI_PERCH'),  &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('perched wt drainage'), &
-         ptr_col=this%qflx_drain_perched_col, c2l_scale_type='urbanf')
 
     this%qflx_phs_neg_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -360,7 +338,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(waterfluxbulk_type) :: this
+    class(waterfluxbulk_type), intent(in) :: this
     type(bounds_type) , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -401,7 +379,7 @@ contains
     use accumulMod  , only : init_accum_field
     !
     ! !ARGUMENTS:
-    class(waterfluxbulk_type) :: this
+    class(waterfluxbulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !---------------------------------------------------------------------
 
@@ -429,7 +407,7 @@ contains
     use clm_time_manager , only : get_nstep
     !
     ! !ARGUMENTS:
-    class(waterfluxbulk_type) :: this
+    class(waterfluxbulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -448,7 +426,7 @@ contains
 
     if (use_fun) then
        call extract_accum_field ('AnnET', rbufslp, nstep)
-       this%qflx_evap_tot_col(begc:endc) = rbufslp(begc:endc)
+       this%AnnET(begc:endc) = rbufslp(begc:endc)
     end if
 
     deallocate(rbufslp)
@@ -464,7 +442,7 @@ contains
     use accumulMod      , only : update_accum_field, extract_accum_field
     !
     ! !ARGUMENTS:
-    class(waterfluxbulk_type)                 :: this
+    class(waterfluxbulk_type), intent(in):: this
     type(bounds_type)      , intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -506,7 +484,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterfluxbulk_type)            :: this
+    class(waterfluxbulk_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -546,5 +524,4 @@ contains
     call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine RestartBulk
-
 end module WaterFluxBulkType

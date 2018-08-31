@@ -619,7 +619,7 @@ contains
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
-            water_inst%waterstatebulk_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
+            water_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
        call t_stopf('init_map2gc')
     end if
 
@@ -687,6 +687,9 @@ contains
     call t_stopf('init_wlog')
 
     call t_stopf('clm_init2')
+
+    if (water_inst%num_tracers > 0) &
+       print*,'tracerconsistencycheck= ',water_inst%TracerConsistencyCheck(bounds_proc)
 
   end subroutine initialize2
 

@@ -18,11 +18,15 @@ list(APPEND clm_sources
   TemperatureType.F90
   TotalWaterAndHeatMod.F90
   UrbanParamsType.F90
+  Wateratm2lndBulkType.F90
+  Wateratm2lndType.F90
   WaterDiagnosticBulkType.F90
   WaterDiagnosticType.F90
   WaterFluxType.F90
   WaterFluxBulkType.F90
   WaterInfoBaseType.F90
+  WaterInfoBulkType.F90
+  WaterIsotopesMod.F90
   WaterStateBulkType.F90
   WaterStateType.F90
   )

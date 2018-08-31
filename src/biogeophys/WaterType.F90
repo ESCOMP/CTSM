@@ -39,6 +39,10 @@ module WaterType
   use WaterInfoBaseType       , only : water_info_base_type
   use WaterInfoBulkType       , only : water_info_bulk_type
   use WaterInfoIsotopeType    , only : water_info_isotope_type
+  use Waterlnd2atmType    , only : waterlnd2atm_type
+  use Waterlnd2atmBulkType    , only : waterlnd2atmbulk_type
+  use Wateratm2lndType    , only : wateratm2lnd_type
+  use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
 
   implicit none
   private
@@ -70,11 +74,15 @@ module WaterType
      type(waterstatebulk_type), public      :: waterstatebulk_inst
      type(waterdiagnosticbulk_type), public :: waterdiagnosticbulk_inst
      type(waterbalance_type), public        :: waterbalancebulk_inst
+     type(waterlnd2atmbulk_type), public        :: waterlnd2atmbulk_inst
+     type(wateratm2lndbulk_type), public        :: wateratm2lndbulk_inst
 
      type(waterflux_type), allocatable, public       :: waterflux_tracer_inst(:)
      type(waterstate_type), allocatable, public      :: waterstate_tracer_inst(:)
      type(waterdiagnostic_type), allocatable, public :: waterdiagnostic_tracer_inst(:)
      type(waterbalance_type), allocatable, public    :: waterbalance_tracer_inst(:)
+     type(waterlnd2atm_type), allocatable, public :: waterlnd2atm_tracer_inst(:)
+     type(wateratm2lnd_type), allocatable, public :: wateratm2lnd_tracer_inst(:)
 
      ! ------------------------------------------------------------------------
      ! Private data members
@@ -96,6 +104,7 @@ module WaterType
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
+     procedure, public :: TracerConsistencyCheck
 
      procedure, private :: SetupTracerInfo
   end type water_type
@@ -154,6 +163,12 @@ contains
     call this%waterfluxbulk_inst%InitBulk(bounds, &
          this%bulk_info)
 
+    call this%waterlnd2atmbulk_inst%InitBulk(bounds, &
+         this%bulk_info)
+
+    call this%wateratm2lndbulk_inst%InitBulk(bounds, &
+         this%bulk_info)
+
     call this%SetupTracerInfo()
 
     if (this%num_tracers > 0) then
@@ -161,6 +176,8 @@ contains
        allocate(this%waterstate_tracer_inst(this%num_tracers))
        allocate(this%waterdiagnostic_tracer_inst(this%num_tracers))
        allocate(this%waterbalance_tracer_inst(this%num_tracers))
+       allocate(this%waterlnd2atm_tracer_inst(this%num_tracers))
+       allocate(this%wateratm2lnd_tracer_inst(this%num_tracers))
     end if
 
     do i = 1, this%num_tracers
@@ -178,6 +195,12 @@ contains
             this%tracer_info(i)%info)
 
        call this%waterflux_tracer_inst(i)%Init(bounds, &
+            this%tracer_info(i)%info)
+
+       call this%waterlnd2atm_tracer_inst(i)%Init(bounds, &
+            this%tracer_info(i)%info)
+
+       call this%wateratm2lnd_tracer_inst(i)%Init(bounds, &
             this%tracer_info(i)%info)
 
     end do
@@ -257,6 +280,7 @@ contains
     !-----------------------------------------------------------------------
 
     call this%waterfluxbulk_inst%InitAccBuffer(bounds)
+    call this%wateratm2lndbulk_inst%InitAccBuffer(bounds)
 
   end subroutine InitAccBuffer
 
@@ -276,6 +300,7 @@ contains
     !-----------------------------------------------------------------------
 
     call this%waterfluxbulk_inst%initAccVars(bounds)
+    call this%wateratm2lndbulk_inst%initAccVars(bounds)
 
   end subroutine InitAccVars
 
@@ -297,6 +322,7 @@ contains
     !-----------------------------------------------------------------------
 
     call this%waterfluxbulk_inst%UpdateAccVars(bounds)
+    call this%wateratm2lndbulk_inst%UpdateAccVars(bounds)
 
   end subroutine UpdateAccVars
 
@@ -331,6 +357,10 @@ contains
     call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
          waterstatebulk_inst=this%waterstatebulk_inst)
 
+    call this%waterlnd2atmbulk_inst%restartBulk (bounds, ncid, flag=flag)
+
+    call this%wateratm2lndbulk_inst%restartBulk (bounds, ncid, flag=flag)
+
     do i = 1, this%num_tracers
 
        call this%waterflux_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
@@ -339,6 +369,10 @@ contains
             watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
        call this%waterdiagnostic_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
+
+       call this%waterlnd2atm_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
+
+       call this%wateratm2lnd_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
 
     end do
 
@@ -427,6 +461,42 @@ contains
     index = this%bulk_tracer_index
 
   end function GetBulkTracerIndex
+
+  function TracerConsistencyCheck(this,bounds) result(wiso_inconsistency)
+    !
+    ! !DESCRIPTION:
+    ! Check consistency of water tracers with that of bulk water
+    !
+    ! Returns -1 if there is no tracer that replicates bulk water in this run
+    !
+    ! !ARGUMENTS:
+    logical :: wiso_inconsistency  ! function result
+    class(water_type), intent(in) :: this
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+    character(len=*), parameter :: subname = 'TracerConsistencyCheck'
+    !-----------------------------------------------------------------------
+
+    !for now, simply checking bulk vs the bulk tracer, but may eventually 
+    !want to loop over all tracers in some situations
+    i = this%GetBulkTracerIndex()
+    if (i < 0) then
+       write(iulog,*) subname, ' Error: requesting tracer consistency check with bulk tracer not enabled'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+
+    wiso_inconsistency = .false.  !default
+
+    wiso_inconsistency = wiso_inconsistency .or. this%waterbalancebulk_inst%TracerConsistencyCheck(bounds,this%waterbalance_tracer_inst(i))
+    wiso_inconsistency = wiso_inconsistency .or. this%waterstatebulk_inst%TracerConsistencyCheck(bounds,this%waterstate_tracer_inst(i))
+    wiso_inconsistency = wiso_inconsistency .or. this%waterdiagnosticbulk_inst%TracerConsistencyCheck(bounds,this%waterdiagnostic_tracer_inst(i))
+    wiso_inconsistency = wiso_inconsistency .or. this%waterfluxbulk_inst%TracerConsistencyCheck(bounds,this%waterflux_tracer_inst(i))
+    wiso_inconsistency = wiso_inconsistency .or. this%waterlnd2atmbulk_inst%TracerConsistencyCheck(bounds,this%waterlnd2atm_tracer_inst(i))
+    wiso_inconsistency = wiso_inconsistency .or. this%wateratm2lndbulk_inst%TracerConsistencyCheck(bounds,this%wateratm2lnd_tracer_inst(i))
+
+  end function TracerConsistencyCheck
 
 
 end module WaterType

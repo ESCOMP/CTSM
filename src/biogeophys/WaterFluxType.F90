@@ -16,6 +16,7 @@ module WaterFluxType
   use PatchType      , only : patch   
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterIsotopesMod, only : WisoCompareBulkToTracer
   !
   implicit none
   private
@@ -67,6 +68,7 @@ module WaterFluxType
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_surf_col            (:)   ! col total surface runoff (mm H2O /s)
      real(r8), pointer :: qflx_drain_col           (:)   ! col sub-surface runoff (mm H2O /s)
+     real(r8), pointer :: qflx_drain_perched_col   (:)   ! col sub-surface runoff from perched wt (mm H2O /s)                                                                                                      
      real(r8), pointer :: qflx_top_soil_col        (:)   ! col net water input into soil from top (mm/s)
      real(r8), pointer :: qflx_floodc_col          (:)   ! col flood water flux at column level
      real(r8), pointer :: qflx_sl_top_soil_col     (:)   ! col liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
@@ -83,12 +85,17 @@ module WaterFluxType
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
      real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
 
+     real(r8), pointer :: qflx_irrig_patch         (:)   ! patch irrigation flux (mm H2O/s) [+]           
+     real(r8), pointer :: qflx_irrig_col           (:)   ! col irrigation flux (mm H2O/s) [+]             
+
+
    contains
  
      
      
      procedure, public  :: Init
      procedure, public  :: Restart      
+     procedure, public :: TracerConsistencyCheck
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -101,7 +108,7 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, info)
 
-    class(waterflux_type) :: this
+    class(waterflux_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
 
@@ -122,7 +129,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(waterflux_type) :: this
+    class(waterflux_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -173,6 +180,7 @@ contains
     allocate(this%qflx_infl_col            (begc:endc))              ; this%qflx_infl_col            (:)   = nan
     allocate(this%qflx_surf_col            (begc:endc))              ; this%qflx_surf_col            (:)   = nan
     allocate(this%qflx_drain_col           (begc:endc))              ; this%qflx_drain_col           (:)   = nan
+    allocate(this%qflx_drain_perched_col   (begc:endc))              ; this%qflx_drain_perched_col   (:)   = nan
     allocate(this%qflx_top_soil_col        (begc:endc))              ; this%qflx_top_soil_col        (:)   = nan
     allocate(this%qflx_snomelt_col         (begc:endc))              ; this%qflx_snomelt_col         (:)   = nan
     allocate(this%qflx_snofrz_col          (begc:endc))              ; this%qflx_snofrz_col          (:)   = nan
@@ -188,6 +196,9 @@ contains
     allocate(this%qflx_liq_dynbal_grc      (begg:endg))              ; this%qflx_liq_dynbal_grc      (:)   = nan
     allocate(this%qflx_ice_dynbal_grc      (begg:endg))              ; this%qflx_ice_dynbal_grc      (:)   = nan
 
+    allocate(this%qflx_irrig_patch         (begp:endp))              ; this%qflx_irrig_patch         (:)   = nan
+    allocate(this%qflx_irrig_col           (begc:endc))              ; this%qflx_irrig_col           (:)   = nan
+
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -198,7 +209,7 @@ contains
     use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
-    class(waterflux_type) :: this
+    class(waterflux_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -252,6 +263,14 @@ contains
          avgflag='A', &
          long_name=this%info%lname('sub-surface drainage'), &
          ptr_col=this%qflx_drain_col, c2l_scale_type='urbanf')
+
+    this%qflx_drain_perched_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRAI_PERCH'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('perched wt drainage'), &
+         ptr_col=this%qflx_drain_perched_col, c2l_scale_type='urbanf')
 
     this%qflx_liq_dynbal_grc(begg:endg) = spval
     call hist_addfld1d ( &
@@ -522,6 +541,14 @@ contains
          long_name=this%info%lname('saturation excess drainage'), &
          ptr_col=this%qflx_rsub_sat_col, c2l_scale_type='urbanf')
 
+    this%qflx_irrig_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QIRRIG'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('water added through irrigation'), &
+         ptr_patch=this%qflx_irrig_patch)
+
   end subroutine InitHistory
   
   
@@ -534,7 +561,7 @@ contains
     use landunit_varcon, only : istsoil, istcrop
     !
     ! !ARGUMENTS:
-    class(waterflux_type) :: this
+    class(waterflux_type), intent(in) :: this
     type(bounds_type) , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -568,7 +595,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterflux_type)            :: this
+    class(waterflux_type), intent(in):: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -591,5 +618,327 @@ contains
     endif
 
   end subroutine Restart
+
+  function TracerConsistencyCheck(this,bounds,tracer) result(wiso_inconsistency)
+    !
+    ! !DESCRIPTION:
+    ! Check consistency of water tracer with that of bulk water
+    !
+    ! !ARGUMENTS:
+
+    logical :: wiso_inconsistency  ! function result
+    class(waterflux_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    class(waterflux_type), intent(in) :: tracer
+    !
+    ! !LOCAL VARIABLES:
+    integer l
+    !-----------------------------------------------------------------------
+
+    wiso_inconsistency = .false.
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
+                              'qflx_prec_grnd_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
+                              'qflx_prec_grnd_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
+                              'qflx_rain_grnd_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
+                              'qflx_rain_grnd_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
+                              'qflx_snow_grnd_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
+                              'qflx_snow_grnd_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
+                              'qflx_sub_snow_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_sub_snow_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_sub_snow_col(bounds%begc:bounds%endc), &
+                              'qflx_sub_snow_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
+                              'qflx_evap_soi_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_evap_soi_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_evap_soi_col(bounds%begc:bounds%endc), &
+                              'qflx_evap_soi_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
+                              'qflx_evap_veg_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_evap_veg_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_evap_veg_col(bounds%begc:bounds%endc), &
+                              'qflx_evap_veg_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_evap_can_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_evap_can_patch(bounds%begp:bounds%endp), &
+                              'qflx_evap_can_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_evap_can_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_evap_can_col(bounds%begc:bounds%endc), &
+                              'qflx_evap_can_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
+                              'qflx_evap_tot_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_evap_tot_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_evap_tot_col(bounds%begc:bounds%endc), &
+                              'qflx_evap_tot_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
+                              'qflx_evap_grnd_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
+                              'qflx_evap_grnd_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
+                              'qflx_tran_veg_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_tran_veg_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_tran_veg_col(bounds%begc:bounds%endc), &
+                              'qflx_tran_veg_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
+                              'qflx_dew_snow_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_dew_snow_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_dew_snow_col(bounds%begc:bounds%endc), &
+                              'qflx_dew_snow_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
+                              'qflx_dew_grnd_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
+                              'qflx_dew_grnd_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
+                              'qflx_prec_intr_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_prec_intr_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_prec_intr_col(bounds%begc:bounds%endc), &
+                              'qflx_prec_intr_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
+                              'qflx_snwcp_liq_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
+                              'qflx_snwcp_ice_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_glcice_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_glcice_col(bounds%begc:bounds%endc), &
+                              'qflx_glcice_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
+                              'qflx_glcice_frz_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
+                              'qflx_glcice_melt_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_infl_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_infl_col(bounds%begc:bounds%endc), &
+                              'qflx_infl_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_surf_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_surf_col(bounds%begc:bounds%endc), &
+                              'qflx_surf_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_drain_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_drain_col(bounds%begc:bounds%endc), &
+                              'qflx_drain_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_drain_perched_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_drain_perched_col(bounds%begc:bounds%endc), &
+                              'qflx_drain_perched_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_top_soil_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_top_soil_col(bounds%begc:bounds%endc), &
+                              'qflx_top_soil_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_floodc_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_floodc_col(bounds%begc:bounds%endc), &
+                              'qflx_floodc_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
+                              'qflx_sl_top_soil_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_snomelt_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_snomelt_col(bounds%begc:bounds%endc), &
+                              'qflx_snomelt_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_qrgwl_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_qrgwl_col(bounds%begc:bounds%endc), &
+                              'qflx_qrgwl_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_runoff_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_runoff_col(bounds%begc:bounds%endc), &
+                              'qflx_runoff_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_runoff_r_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_runoff_r_col(bounds%begc:bounds%endc), &
+                              'qflx_runoff_r_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_runoff_u_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_runoff_u_col(bounds%begc:bounds%endc), &
+                              'qflx_runoff_u_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
+                              'qflx_rsub_sat_col')
+
+    do l = lbound(this%qflx_snofrz_lyr_col,2),ubound(this%qflx_snofrz_lyr_col,2)
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,l), &
+                              tracer%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,l), &
+                              'qflx_snofrz_lyr_col')
+    end do
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_snofrz_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_snofrz_col(bounds%begc:bounds%endc), &
+                              'qflx_snofrz_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+                              this%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
+                              tracer%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
+                              'qflx_liq_dynbal')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+                              this%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
+                              tracer%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
+                              'qflx_ice_dynbal')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%qflx_irrig_patch(bounds%begp:bounds%endp), &
+                              tracer%qflx_irrig_patch(bounds%begp:bounds%endp), &
+                              'qflx_irrig_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qflx_irrig_col(bounds%begc:bounds%endc), &
+                              tracer%qflx_irrig_col(bounds%begc:bounds%endc), &
+                              'qflx_irrig_col')
+
+  end function TracerConsistencyCheck
 
 end module WaterFluxType

@@ -305,7 +305,7 @@ contains
 
     call t_startf('dyn_subgrid')
     call dynSubgrid_driver(bounds_proc,                                               &
-         urbanparams_inst, soilstate_inst, soilhydrology_inst,                        &
+         urbanparams_inst, soilstate_inst,                        &
          water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
          water_inst%waterbalancebulk_inst, water_inst%waterfluxbulk_inst, &
          temperature_inst, energyflux_inst,          &
@@ -419,7 +419,7 @@ contains
             atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
 
        call downscale_forcings(bounds_clump, &
-            topo_inst, atm2lnd_inst, &
+            topo_inst, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, &
             eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
        ! Update filters that depend on variables set in clm_drv_init
@@ -446,7 +446,8 @@ contains
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
             atm2lnd_inst, canopystate_inst, temperature_inst, &
             aerosol_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst)
+            water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &
+            water_inst%wateratm2lndbulk_inst)
        call t_stopf('canhydro')
 
        ! ============================================================================
@@ -506,7 +507,8 @@ contains
             clm_fates,                                                        &
             atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst, energyflux_inst, temperature_inst)
+            water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst,  &
+            energyflux_inst, temperature_inst)
        call t_stopf('bgp1')
 
        ! ============================================================================
@@ -522,7 +524,8 @@ contains
             atm2lnd_inst, soilstate_inst,                &
             frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, photosyns_inst, humanindex_inst)
+            water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
+            photosyns_inst, humanindex_inst)
        call t_stopf('bgflux')
 
        ! non-bareground fluxes for all patches except lakes and urban landunits
@@ -556,7 +559,8 @@ contains
             atm2lnd_inst, canopystate_inst,                                                 &
             energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
             temperature_inst, water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, ch4_inst, ozone_inst, photosyns_inst, &
+            water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst,          &
+            ch4_inst, ozone_inst, photosyns_inst, &
             humanindex_inst, soil_water_retention_curve, &
             downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
             leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp), &
@@ -576,7 +580,7 @@ contains
             atm2lnd_inst, urbanparams_inst, soilstate_inst, temperature_inst,   &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
             frictionvel_inst, energyflux_inst, water_inst%waterfluxbulk_inst, &
-            humanindex_inst)
+            water_inst%wateratm2lndbulk_inst, humanindex_inst)
        call t_stopf('uflux')
 
        ! Fluxes for all lake landunits
@@ -586,8 +590,10 @@ contains
             filter(nc)%num_lakec, filter(nc)%lakec,                          &
             filter(nc)%num_lakep, filter(nc)%lakep,                          &
             atm2lnd_inst, solarabs_inst, frictionvel_inst, temperature_inst, &
-            energyflux_inst, water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst, lakestate_inst,&  
+            energyflux_inst, water_inst%waterstatebulk_inst,                 &
+            water_inst%waterdiagnosticbulk_inst,                             &
+            water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst, &
+            lakestate_inst,&  
             humanindex_inst) 
        call t_stopf('bgplake')
 
@@ -611,7 +617,7 @@ contains
             eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
             h2osoi_liq         = water_inst%waterstatebulk_inst%h2osoi_liq_col&
             (bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
-            volr               = atm2lnd_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
+            volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
             rof_prognostic     = rof_prognostic)
        call t_stopf('irrigationneeded')
 
@@ -760,7 +766,7 @@ contains
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc,                              &
             atm2lnd_inst, temperature_inst, soilstate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst, &
-            water_inst%waterfluxbulk_inst, &
+            water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst, &
             energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
        
        !  Calculate column-integrated aerosol masses, and
@@ -841,7 +847,7 @@ contains
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                atm2lnd_inst, water_inst%waterstatebulk_inst, &
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,      &
-               canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
                photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
                nutrient_competition_method, fireemis_inst)
 
@@ -863,8 +869,8 @@ contains
        call t_startf('depvel')
        call depvel_compute(bounds_clump, &
             atm2lnd_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, frictionvel_inst, &
-            photosyns_inst, drydepvel_inst)
+            water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
+            frictionvel_inst, photosyns_inst, drydepvel_inst)
        call t_stopf('depvel')
 
        ! ============================================================================
@@ -881,7 +887,7 @@ contains
             atm2lnd_inst, glc2lnd_inst, temperature_inst,     &
             soilhydrology_inst, soilstate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst, &
-            water_inst%waterfluxbulk_inst, &
+            water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst, &
             glacier_smb_inst)
 
        call t_stopf('hydro2_drainage')     
@@ -913,7 +919,7 @@ contains
           call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                atm2lnd_inst, soilstate_inst, temperature_inst,                   &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-               canopystate_inst, soilbiogeochem_carbonflux_inst,&
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst,&
                frictionvel_inst)
           
           ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
@@ -959,7 +965,7 @@ contains
        call BalanceCheck(bounds_clump, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterbalancebulk_inst, &
+            water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
             energyflux_inst, canopystate_inst)
        call t_stopf('balchk')
 
@@ -1078,10 +1084,8 @@ contains
 
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
-         water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-         water_inst%waterbalancebulk_inst, water_inst%waterfluxbulk_inst, &
-         energyflux_inst, &
-         solarabs_inst, drydepvel_inst,       &
+         water_inst, &
+         energyflux_inst, solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
          lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
@@ -1174,7 +1178,7 @@ contains
           call get_clump_bounds(nc, bounds_clump)
           call bgc_vegetation_inst%EndOfTimeStepVegDynamics(bounds_clump, &
                filter(nc)%num_natvegp, filter(nc)%natvegp, &
-               atm2lnd_inst)
+               atm2lnd_inst, water_inst%wateratm2lndbulk_inst)
        end do
        !$OMP END PARALLEL DO
        call t_stopf('endTSdynveg')

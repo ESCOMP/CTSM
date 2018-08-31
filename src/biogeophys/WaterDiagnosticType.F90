@@ -19,6 +19,7 @@ module WaterDiagnosticType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterIsotopesMod, only : WisoCompareBulkToTracer
   !
   implicit none
   save
@@ -45,6 +46,7 @@ module WaterDiagnosticType
 
      procedure          :: Init         
      procedure          :: Restart      
+     procedure          :: TracerConsistencyCheck
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -61,7 +63,7 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, info)
 
-    class(waterdiagnostic_type)            :: this
+    class(waterdiagnostic_type), intent(inout) :: this
     type(bounds_type) , intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
 
@@ -85,7 +87,7 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type) :: this
+    class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -131,7 +133,7 @@ contains
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type) :: this
+    class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -244,7 +246,7 @@ contains
     use ncdio_pio       , only : file_desc_t, ncd_io
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type)                :: this
+    class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -297,7 +299,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type) :: this
+    class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -328,6 +330,85 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
   end subroutine Restart
+
+  function TracerConsistencyCheck(this,bounds,tracer) result(wiso_inconsistency)
+    !
+    ! !DESCRIPTION:
+    ! Check consistency of water tracer with that of bulk water
+    !
+    ! !ARGUMENTS:
+
+    logical :: wiso_inconsistency  ! function result
+    class(waterdiagnostic_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    class(waterdiagnostic_type), intent(in) :: tracer
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    wiso_inconsistency = .false.
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%snowice_col(bounds%begc:bounds%endc), &
+                              tracer%snowice_col(bounds%begc:bounds%endc), &
+                              'snowice_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%snowliq_col(bounds%begc:bounds%endc), &
+                              tracer%snowliq_col(bounds%begc:bounds%endc), &
+                              'snowliq_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
+                              tracer%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
+                              'h2osoi_liqice_10cm_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+                              this%tws_grc(bounds%begg:bounds%endg), &
+                              tracer%tws_grc(bounds%begg:bounds%endg), &
+                              'tws_grc')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%q_ref2m_patch(bounds%begp:bounds%endp), &
+                              tracer%q_ref2m_patch(bounds%begp:bounds%endp), &
+                              'q_ref2m_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qg_snow_col(bounds%begc:bounds%endc), &
+                              tracer%qg_snow_col(bounds%begc:bounds%endc), &
+                              'qg_snow_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qg_soil_col(bounds%begc:bounds%endc), &
+                              tracer%qg_soil_col(bounds%begc:bounds%endc), &
+                              'qg_soil_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qg_h2osfc_col(bounds%begc:bounds%endc), &
+                              tracer%qg_h2osfc_col(bounds%begc:bounds%endc), &
+                              'qg_h2osfc_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%qg_col(bounds%begc:bounds%endc), &
+                              tracer%qg_col(bounds%begc:bounds%endc), &
+                              'qg_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begl, bounds%endl, &
+                              this%qaf_lun(bounds%begl:bounds%endl), &
+                              tracer%qaf_lun(bounds%begl:bounds%endl), &
+                              'qaf_lun')
+
+  end function TracerConsistencyCheck
 
 
 end module WaterDiagnosticType

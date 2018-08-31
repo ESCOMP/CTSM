@@ -17,6 +17,7 @@ module WaterStateType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterIsotopesMod, only : WisoCompareBulkToTracer
   !
   implicit none
   save
@@ -36,11 +37,13 @@ module WaterStateType
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
+     real(r8), pointer :: wa_col            (:)     ! col water in the unconfined aquifer (mm) 
 
    contains
 
      procedure          :: Init         
      procedure          :: Restart      
+     procedure          :: TracerConsistencyCheck
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -58,7 +61,7 @@ contains
   subroutine Init(this, bounds, info, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
-    class(waterstate_type)         :: this
+    class(waterstate_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
     class(water_info_base_type), intent(in), target :: info
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
@@ -86,7 +89,7 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterstate_type) :: this
+    class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -109,7 +112,7 @@ contains
     allocate(this%snocan_patch           (begp:endp))                     ; this%snocan_patch           (:)   = nan  
     allocate(this%liqcan_patch           (begp:endp))                     ; this%liqcan_patch           (:)   = nan  
     allocate(this%h2osfc_col             (begc:endc))                     ; this%h2osfc_col             (:)   = nan   
-
+    allocate(this%wa_col            (begc:endc))                 ; this%wa_col            (:)     = nan
 
 
 
@@ -129,7 +132,7 @@ contains
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
-    class(waterstate_type) :: this
+    class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -243,6 +246,12 @@ contains
          long_name=this%info%lname('surface water depth'), &
          ptr_col=this%h2osfc_col)
 
+    this%wa_col(begc:endc) = spval
+    call hist_addfld1d (fname=this%info%fname('WA'),  units='mm',  &
+         avgflag='A', long_name=this%info%lname('water in the unconfined aquifer (vegetated landunits only)'), &
+         ptr_col=this%wa_col, l2g_scale_type='veg')
+
+
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
     !                  I think that since the value is zero in all cases except
@@ -273,7 +282,7 @@ contains
     use column_varcon   , only : icol_shadewall, icol_road_perv
     use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
     use clm_varcon      , only : denice, denh2o, spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc
+    use clm_varcon      , only : zlnd, tfrz, spval, pc, aquifer_water_baseline
     use clm_varctl      , only : fsurdat, iulog
     use clm_varctl        , only : use_bedrock
     use spmdMod         , only : masterproc
@@ -282,7 +291,7 @@ contains
     use ncdio_pio       , only : file_desc_t, ncd_io
     !
     ! !ARGUMENTS:
-    class(waterstate_type)                :: this
+    class(waterstate_type), intent(in)    :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
@@ -447,6 +456,27 @@ contains
          end do
       end do
 
+
+      this%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline
+      do c = bounds%begc,bounds%endc
+         l = col%landunit(c)
+         if (.not. lun%lakpoi(l)) then  !not lake
+            if (lun%urbpoi(l)) then
+               if (col%itype(c) == icol_road_perv) then
+                  ! Note that the following hard-coded constant (on the next line)
+                  ! seems implicitly related to aquifer_water_baseline 
+                  this%wa_col(c)  = 4800._r8
+               else
+                  this%wa_col(c)  = spval
+               end if
+            else
+               ! Note that the following hard-coded constant (on the next line) seems
+               ! implicitly related to aquifer_water_baseline
+               this%wa_col(c)  = 4000._r8
+            end if
+         end if
+      end do
+
     end associate
 
   end subroutine InitCold
@@ -469,7 +499,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterstate_type) :: this
+    class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -547,6 +577,11 @@ contains
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%liqcan_patch)
 
+    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('WA'), xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('water in the unconfined aquifer'), units='mm', &
+         interpinic_flag='interp', readvar=readvar, data=this%wa_col)
+
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
@@ -612,6 +647,86 @@ contains
 
 
   end subroutine Restart
+
+  function TracerConsistencyCheck(this,bounds,tracer) result(wiso_inconsistency)
+    !
+    ! !DESCRIPTION:
+    ! Check consistency of water tracer with that of bulk water
+    !
+    ! !ARGUMENTS:
+
+    logical :: wiso_inconsistency  ! function result
+    class(waterstate_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    class(waterstate_type), intent(in) :: tracer
+    !
+    ! !LOCAL VARIABLES:
+    integer l
+    !-----------------------------------------------------------------------
+
+    wiso_inconsistency = .false.
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%h2osno_col(bounds%begc:bounds%endc), &
+                              tracer%h2osno_col(bounds%begc:bounds%endc), &
+                              'h2osno_col')
+
+    do l = lbound(this%h2osoi_liq_col,2),ubound(this%h2osoi_liq_col,2)
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%h2osoi_liq_col(bounds%begc:bounds%endc,l), &
+                              tracer%h2osoi_liq_col(bounds%begc:bounds%endc,l), &
+                              'h2osoi_liq_col')
+    end do
+
+    do l = lbound(this%h2osoi_ice_col,2),ubound(this%h2osoi_ice_col,2)
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%h2osoi_ice_col(bounds%begc:bounds%endc,l), &
+                              tracer%h2osoi_ice_col(bounds%begc:bounds%endc,l), &
+                              'h2osoi_ice_col')
+    end do
+
+    do l = lbound(this%h2osoi_vol_col,2),ubound(this%h2osoi_vol_col,2)
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%h2osoi_vol_col(bounds%begc:bounds%endc,l), &
+                              tracer%h2osoi_vol_col(bounds%begc:bounds%endc,l), &
+                              'h2osoi_vol_col')
+    end do
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%h2ocan_patch(bounds%begp:bounds%endp), &
+                              tracer%h2ocan_patch(bounds%begp:bounds%endp), &
+                              'h2ocan_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%h2osfc_col(bounds%begc:bounds%endc), &
+                              tracer%h2osfc_col(bounds%begc:bounds%endc), &
+                              'h2osfc_col')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%snocan_patch(bounds%begp:bounds%endp), &
+                              tracer%snocan_patch(bounds%begp:bounds%endp), &
+                              'snocan_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+                              this%liqcan_patch(bounds%begp:bounds%endp), &
+                              tracer%liqcan_patch(bounds%begp:bounds%endp), &
+                              'liqcan_patch')
+
+    wiso_inconsistency = wiso_inconsistency .or. &
+      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+                              this%wa_col(bounds%begc:bounds%endc), &
+                              tracer%wa_col(bounds%begc:bounds%endc), &
+                              'wa_col')
+
+  end function TracerConsistencyCheck
 
 
 end module WaterStateType

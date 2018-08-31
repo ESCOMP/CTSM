@@ -13,12 +13,15 @@ module test_partition_precip
   use clm_varcon, only : hfus   ! latent heat of fusion for ice [J/kg]
   use clm_varcon, only : denh2o ! density of liquid water [kg/m3]
   use shr_const_mod, only : SHR_CONST_TKFRZ
+  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+  use WaterInfoBulkType, only : water_info_bulk_type
 
   implicit none
 
   @TestCase
   type, extends(TestCase) :: TestPartitionPrecip
      type(atm2lnd_type) :: atm2lnd_inst
+     type(wateratm2lndbulk_type) :: wateratm2lndbulk_inst
      real(r8), allocatable :: sh_from_conversion(:)
    contains
      procedure :: setUp
@@ -45,6 +48,7 @@ contains
     class(TestPartitionPrecip), intent(inout) :: this
 
     call this%atm2lnd_inst%Clean()
+    call this%wateratm2lndbulk_inst%Clean()
     call unittest_subgrid_teardown()
   end subroutine tearDown
 
@@ -78,11 +82,12 @@ contains
 
     ! Allocate necessary variables
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
+    call this%wateratm2lndbulk_inst%InitBulk(bounds,water_info_bulk_type())
     this%sh_from_conversion = col_array()
 
     ! set input variables
-    this%atm2lnd_inst%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg) = rain(:)
-    this%atm2lnd_inst%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg) = snow(:)
+    this%wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg) = rain(:)
+    this%wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg) = snow(:)
     this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc:bounds%endc) = temperature(:)
   end subroutine set_inputs
 
@@ -93,11 +98,11 @@ contains
     call setup_single_veg_patch(pft_type=1)
     call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[270._r8])
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
+         rain_col => this%wateratm2lndbulk_inst%forc_rain_downscaled_col, &
+         snow_col => this%wateratm2lndbulk_inst%forc_snow_downscaled_col)
     @assertEqual(0._r8, rain_col(begc), tolerance=tol)
     @assertEqual(3._r8, snow_col(begc), tolerance=tol)
     end associate
@@ -110,11 +115,11 @@ contains
     call setup_single_veg_patch(pft_type=1)
     call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[276._r8])
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
+         rain_col => this%wateratm2lndbulk_inst%forc_rain_downscaled_col, &
+         snow_col => this%wateratm2lndbulk_inst%forc_snow_downscaled_col)
     @assertEqual(3._r8, rain_col(begc), tolerance=tol)
     @assertEqual(0._r8, snow_col(begc), tolerance=tol)
     end associate
@@ -127,11 +132,11 @@ contains
     call setup_single_veg_patch(pft_type=1)
     call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[SHR_CONST_TKFRZ + 1.5_r8])
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
+         rain_col => this%wateratm2lndbulk_inst%forc_rain_downscaled_col, &
+         snow_col => this%wateratm2lndbulk_inst%forc_snow_downscaled_col)
     @assertEqual(3._r8 * 0.75_r8, rain_col(begc), tolerance=tol)
     @assertEqual(3._r8 * 0.25_r8, snow_col(begc), tolerance=tol)
     end associate
@@ -150,11 +155,11 @@ contains
     ! Choose a temperature 3/4 of the way from all-snow to all-rain
     call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[SHR_CONST_TKFRZ - 3._r8])
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
+         rain_col => this%wateratm2lndbulk_inst%forc_rain_downscaled_col, &
+         snow_col => this%wateratm2lndbulk_inst%forc_snow_downscaled_col)
     @assertEqual(3._r8 * 0.75_r8, rain_col(begc), tolerance=tol)
     @assertEqual(3._r8 * 0.25_r8, snow_col(begc), tolerance=tol)
     end associate
@@ -167,7 +172,7 @@ contains
     call setup_single_veg_patch(pft_type=1)
     call this%set_inputs(rain=[5._r8], snow=[0._r8], temperature=[290._r8])
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     @assertEqual([0._r8], this%sh_from_conversion)
   end subroutine noConversion_resultsInNoHeatFlux
@@ -181,7 +186,7 @@ contains
     call setup_single_veg_patch(pft_type=1)
     call this%set_inputs(rain=[2._r8], snow=[snow_old], temperature=[290._r8])
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     ! Snow to rain extracts energy, so results in a negative heat flux to atm
     expected = -1._r8 * snow_old * mm_to_m * denh2o * hfus
@@ -197,7 +202,7 @@ contains
     call setup_single_veg_patch(pft_type=1)
     call this%set_inputs(rain=[rain_old], snow=[3._r8], temperature=[250._r8])
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     ! Rain to snow releases energy, so results in a positive heat flux to atm
     expected = rain_old * mm_to_m * denh2o * hfus
@@ -212,11 +217,11 @@ contains
     call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[250._r8], &
          repartition_rain_snow = .false.)
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
+         rain_col => this%wateratm2lndbulk_inst%forc_rain_downscaled_col, &
+         snow_col => this%wateratm2lndbulk_inst%forc_snow_downscaled_col)
     @assertEqual([1._r8], rain_col)
     @assertEqual([2._r8], snow_col)
     @assertEqual([0._r8], this%sh_from_conversion)
@@ -235,11 +240,11 @@ contains
     call setup_ncells_single_veg_patch(ncells=2, pft_type=1)
     call this%set_inputs(rain=rain, snow=snow, temperature=temp)
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
+         rain_col => this%wateratm2lndbulk_inst%forc_rain_downscaled_col, &
+         snow_col => this%wateratm2lndbulk_inst%forc_snow_downscaled_col)
     @assertEqual(rain_expected, rain_col, tolerance=tol)
     @assertEqual(snow_expected, snow_col, tolerance=tol)
     end associate
@@ -257,7 +262,7 @@ contains
     call setup_ncells_single_veg_patch(ncells=2, pft_type=1)
     call this%set_inputs(rain=rain, snow=snow, temperature=temp)
 
-    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+    call partition_precip(bounds, this%atm2lnd_inst, this%wateratm2lndbulk_inst, this%sh_from_conversion)
 
     ! grid cell 1: converts snow to rain
     sens_heat_expected(1) = -1._r8 * snow(1) * mm_to_m * denh2o * hfus

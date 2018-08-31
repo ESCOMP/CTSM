@@ -1,13 +1,13 @@
-module WaterStateBulkType
+module Waterlnd2atmBulkType
 
 #include "shr_assert.h"
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Defines a derived type containing water state variables that just apply to bulk
-  ! water. Note that this type extends the base waterstate_type, so the full
-  ! waterstatebulk_type contains the union of the fields defined here and the fields
-  ! defined in waterstate_type.
+  ! Defines a derived type containing water lnd2atm variables that just apply to bulk
+  ! water. Note that this type extends the base waterlnd2atm_type, so the full
+  ! waterlnd2atmbulk_type contains the union of the fields defined here and the fields
+  ! defined in waterlnd2atm_type.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -18,7 +18,7 @@ module WaterStateBulkType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use WaterStateType , only : waterstate_type
+  use WaterLnd2atmType , only : waterlnd2atm_type
   use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
@@ -26,10 +26,9 @@ module WaterStateBulkType
   private
   !
   ! !PUBLIC TYPES:
-  type, extends(waterstate_type), public :: waterstatebulk_type
+  type, extends(waterlnd2atm_type), public :: waterlnd2atmbulk_type
 
-     real(r8), pointer :: snow_persistence_col   (:)   ! col length of time that ground has had non-zero snow thickness (sec)
-     real(r8), pointer :: int_snow_col           (:)   ! col integrated snowfall (mm H2O)
+     real(r8), pointer :: h2osoi_vol_grc     (:,:) => null() ! volumetric soil water (0~watsat, m3/m3, nlevgrnd) (for dust model)   
 
 
    contains
@@ -40,7 +39,7 @@ module WaterStateBulkType
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
 
-  end type waterstatebulk_type
+  end type waterlnd2atmbulk_type
 
 
   character(len=*), parameter, private :: sourcefile = &
@@ -50,26 +49,20 @@ module WaterStateBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, info, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+  subroutine InitBulk(this, bounds, info)
 
-    class(waterstatebulk_type), intent(inout) :: this
+    class(waterlnd2atmbulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
-    real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
-    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
-    real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
 
 
-    call this%Init(bounds, info, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+    call this%Init(bounds, info)
 
     call this%InitBulkAllocate(bounds) 
 
     call this%InitBulkHistory(bounds)
 
-    call this%InitBulkCold(bounds, &
-       h2osno_input_col)
+    call this%InitBulkCold(bounds)
 
   end subroutine InitBulk
 
@@ -83,10 +76,11 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type), intent(in) :: this
+    class(waterlnd2atmbulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
+    real(r8) :: ival  = 0.0_r8  ! initial value
     integer :: begp, endp
     integer :: begc, endc
     integer :: begl, endl
@@ -98,8 +92,7 @@ contains
     begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
-    allocate(this%snow_persistence_col   (begc:endc))                     ; this%snow_persistence_col   (:)   = nan
-    allocate(this%int_snow_col           (begc:endc))                     ; this%int_snow_col           (:)   = nan   
+    allocate(this%h2osoi_vol_grc     (begg:endg,1:nlevgrnd)) ; this%h2osoi_vol_grc     (:,:) = ival
 
 
 
@@ -116,10 +109,10 @@ contains
     use clm_varctl     , only : use_lch4
     use clm_varctl     , only : hist_wrtch4diag
     use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type), intent(in) :: this
+    class(waterlnd2atmbulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -137,37 +130,21 @@ contains
 
     ! Snow properties - these will be vertically averaged over the snow profile
 
-    this%int_snow_col(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('INT_SNOW'),  &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('accumulated swe (vegetated landunits only)'), &
-         ptr_col=this%int_snow_col, l2g_scale_type='veg', &
-         default='inactive')
+!    this%int_snow_col(begc:endc) = spval
+!    call hist_addfld1d ( &
+!         fname=this%info%fname('INT_SNOW'),  &
+!         units='mm',  &
+!         avgflag='A', &
+!         long_name=this%info%lname('accumulated swe (vegetated landunits only)'), &
+!         ptr_col=this%int_snow_col, l2g_scale_type='veg', &
+!         default='inactive')
 
-    call hist_addfld1d ( &
-         fname=this%info%fname('INT_SNOW_ICE'),  &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('accumulated swe (ice landunits only)'), &
-         ptr_col=this%int_snow_col, l2g_scale_type='ice', &
-         default='inactive')
-
-    this%snow_persistence_col(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('SNOW_PERSISTENCE'),  &
-         units='seconds',  &
-         avgflag='I', &
-         long_name=this%info%lname('Length of time of continuous snow cover (nat. veg. landunits only)'), &
-         ptr_col=this%snow_persistence_col, l2g_scale_type='natveg') 
 
 
   end subroutine InitBulkHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitBulkCold(this, bounds, &
-       h2osno_input_col)
+  subroutine InitBulkCold(this, bounds)
     !
     ! !DESCRIPTION:
     ! Initialize time constant variables and cold start conditions 
@@ -192,9 +169,8 @@ contains
     use ncdio_pio       , only : file_desc_t, ncd_io
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type), intent(in) :: this
+    class(waterlnd2atmbulk_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
-    real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
     integer            :: p,c,j,l,g,lev
@@ -206,24 +182,12 @@ contains
     character(len=256) :: locfn       
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
 
-    do c = bounds%begc,bounds%endc
-       this%int_snow_col(c)           = h2osno_input_col(c) 
-       this%snow_persistence_col(c)   = 0._r8
-    end do
-
-
-    associate(snl => col%snl) 
-
-
-    end associate
 
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------
-  subroutine RestartBulk(this, bounds, ncid, flag, &
-       watsat_col)
+  subroutine RestartBulk(this, bounds, ncid, flag)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -234,51 +198,36 @@ contains
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterstatebulk_type), intent(in) :: this
+    class(waterlnd2atmbulk_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j
     logical  :: readvar
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
-
-    call this%restart (bounds, ncid, flag=flag, &
-         watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 
+    call this%restart (bounds, ncid, flag=flag) 
 
 
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('INT_SNOW'), &
-         xtype=ncd_double,  &
-         dim1name='column', &
-         long_name=this%info%lname('accuumulated snow'), &
-         units='mm', &
-         interpinic_flag='interp', readvar=readvar, data=this%int_snow_col)
-    if (flag=='read' .and. .not. readvar) then
-       this%int_snow_col(:) = 0.0_r8
-    end if
 
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('SNOW_PERS'), &
-         xtype=ncd_double,  &
-         dim1name='column', &
-         long_name=this%info%lname('continuous snow cover time'), &
-         units='sec', &
-         interpinic_flag='interp', readvar=readvar, data=this%snow_persistence_col)    
-    if (flag=='read' .and. .not. readvar) then
-         this%snow_persistence_col(:) = 0.0_r8
-    end if
+!    call restartvar(ncid=ncid, flag=flag, &
+!         varname=this%info%fname('SNOW_PERS'), &
+!         xtype=ncd_double,  &
+!         dim1name='column', &
+!         long_name=this%info%lname('continuous snow cover time'), &
+!         units='sec', &
+!         interpinic_flag='interp', readvar=readvar, data=this%snow_persistence_col)    
+!    if (flag=='read' .and. .not. readvar) then
+!         this%snow_persistence_col(:) = 0.0_r8
+!    end if
 
   end subroutine RestartBulk
 
 
-end module WaterStateBulkType
+end module Waterlnd2atmBulkType

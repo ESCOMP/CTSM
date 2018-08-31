@@ -98,7 +98,7 @@ contains
   subroutine InitBulk(this, bounds, info, &
        snow_depth_input_col, waterstatebulk_inst)
 
-    class(waterdiagnosticbulk_type) :: this
+    class(waterdiagnosticbulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
     class(water_info_base_type), intent(in), target :: info
     real(r8)          , intent(in) :: snow_depth_input_col(bounds%begc:)
@@ -126,7 +126,7 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type) :: this
+    class(waterdiagnosticbulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -193,7 +193,7 @@ contains
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type) :: this
+    class(waterdiagnosticbulk_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -490,7 +490,7 @@ contains
     use ncdio_pio       , only : file_desc_t, ncd_io
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type)                :: this
+    class(waterdiagnosticbulk_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: snow_depth_input_col(bounds%begc:)
     class(waterstatebulk_type), intent(in)                :: waterstatebulk_inst
@@ -599,7 +599,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type) :: this
+    class(waterdiagnosticbulk_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -744,7 +744,7 @@ contains
     ! Intitialize SNICAR variables for fresh snow column
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type) :: this
+    class(waterdiagnosticbulk_type), intent(in) :: this
     integer , intent(in)   :: column     ! column index
     !-----------------------------------------------------------------------
 
