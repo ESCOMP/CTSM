@@ -27,3 +27,7 @@ class JobLauncherNoBatch(JobLauncherBase):
     def run_command_impl(self, command):
         # FIXME(wjs, 2018-08-25) Implement this
         pass
+
+    def run_command_logger_message(self, command):
+        message = 'Running: {}'.format(' '.join(command))
+        return message

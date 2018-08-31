@@ -3,8 +3,13 @@
 This should not be instantiated directly - rather, it should be extended by concrete
 classes.
 
-Classes that extend this should provide an implementation of run_command.
+Classes that extend this should provide implementations of run_command_impl and
+run_command_logger_message.
 """
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 class JobLauncherBase(object):
     """Base class for job launchers. Not meant to be instantiated directly"""
@@ -12,6 +17,13 @@ class JobLauncherBase(object):
     def __init__(self, queue=None, walltime=None, account=None,
                  required_args=None, extra_args=None):
         """Initialize a job launcher object.
+
+        Note that some of these arguments (e.g., queue and walltime) aren't needed by some
+        job launcher types. They are included in the base class so that users of the class
+        can call the getter methods without needing to worry about knowing what type they
+        have (e.g., this is used to print default values in help messages; if we're using
+        a class that doesn't have a particular value, it might simply print a default of
+        'None').
 
         For a job launcher type that expects a particular argument (e.g., extra_args): if
         that argument is unneeded in a given instance, use an empty string rather than
@@ -65,13 +77,26 @@ class JobLauncherBase(object):
     def run_command(self, command, dry_run=False):
         """Run a command with this job launcher.
 
+        Command should be a list (as is typically passed to subprocess calls)
+
         If dry_run is True, then just print the command to be run without actually running it.
         """
+        logger.info("%s", self.run_command_logger_message(command))
         if not dry_run:
             self.run_command_impl(command)
 
     def run_command_impl(self, command):
-        """Actually runs the command"""
+        """Actually runs the command
+
+        Command should be a list (as is typically passed to subprocess calls)
+        """
+        raise NotImplementedError
+
+    def run_command_logger_message(self, command):
+        """Return a string for output to the log describing the command that will be run
+
+        Command should be a list (as is typically passed to subprocess calls)
+        """
         raise NotImplementedError
 
     def __repr__(self):
