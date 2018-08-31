@@ -426,7 +426,7 @@ contains
 
     if (use_fun) then
        call extract_accum_field ('AnnET', rbufslp, nstep)
-       this%AnnET(begc:endc) = rbufslp(begc:endc)
+       this%qflx_evap_tot_col(begc:endc) = rbufslp(begc:endc)
     end if
 
     deallocate(rbufslp)
