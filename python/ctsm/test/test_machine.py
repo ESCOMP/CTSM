@@ -31,9 +31,14 @@ class TestCreateMachine(unittest.TestCase):
         self.assertEqual(machine.scratch_dir, scratch_dir)
         self.assertEqual(machine.account, account)
 
-    def assertNoBatchInfo(self, machine):
+    def assertNoBatchInfo(self, machine, nice_level=None):
         """Asserts that the machine's launcher is of type JobLauncherNoBatch"""
-        self.assertIsInstance(machine.job_launcher, JobLauncherNoBatch)
+        launcher = machine.job_launcher
+        self.assertIsInstance(launcher, JobLauncherNoBatch)
+        if nice_level is None:
+            # the default nice level should be 0
+            nice_level = 0
+        self.assertEqual(launcher.get_nice_level(), nice_level)
 
     def assertQsubInfo(self, machine, queue, walltime, account, required_args, extra_args):
         """Asserts that the machine's launcher is of type JobLauncherQsub, and has values as
@@ -75,6 +80,19 @@ class TestCreateMachine(unittest.TestCase):
                                scratch_dir='/path/to/scratch',
                                account='a123')
         self.assertNoBatchInfo(machine)
+
+    def test_noBatchMachine_niceLevel(self):
+        """Tests a no-batch machine where the nice level is explicit"""
+        machine = create_machine('unknown_test_machine', MACHINE_DEFAULTS,
+                                 job_launcher_type=JOB_LAUNCHER_NOBATCH,
+                                 scratch_dir='/path/to/scratch',
+                                 account='a123',
+                                 job_launcher_nice_level=13)
+        self.assertMachineInfo(machine=machine,
+                               name='unknown_test_machine',
+                               scratch_dir='/path/to/scratch',
+                               account='a123')
+        self.assertNoBatchInfo(machine, nice_level=13)
 
     def test_unknownMachine_argsExplicit(self):
         """Tests a machine not in the defaults structure, with explicit arguments"""

@@ -15,15 +15,31 @@ JOB_LAUNCHER_NOBATCH = "no_batch"
 JOB_LAUNCHER_QSUB = "qsub"
 JOB_LAUNCHER_FAKE = "fake"
 
-def create_job_launcher(job_launcher_type, account=None, queue=None, walltime=None,
+def create_job_launcher(job_launcher_type,
+                        account=None, queue=None, walltime=None,
+                        nice_level=None,
                         required_args=None, extra_args=None,
                         allow_missing_entries=False):
     """
+    Creates and returns a job launcher object of the specified type
 
     Args:
-    account (str): Account number for launching jobs. This must be provided (not None) if
-        we're using a job launcher other than JOB_LAUNCHER_NOBATCH (unless
-        allow_missing_entries is True)
+    job_launcher_type: One of the JOB_LAUNCHER constants defined at the top of this module
+    account (str or None): Account number for launching jobs. This must be provided (not
+        None) if we're using a job launcher other than JOB_LAUNCHER_NOBATCH /
+        JOB_LAUNCHER_FAKE (unless allow_missing_entries is True)
+    queue (str or None): Queue to use. Not applicable for JOB_LAUNCHER_NOBATCH and
+        JOB_LAUNCHER_FAKE; must be provided for other job launcher types.
+    walltime (str or None): Walltime to use. Not applicable for JOB_LAUNCHER_NOBATCH and
+        JOB_LAUNCHER_FAKE; much be provided for other job launcher types.
+    nice_level (int or None): Level used for the nice command; only applicable for
+        JOB_LAUNCHER_NOBATCH
+    required_args (str or None): Arguments to the job launcher that cannot be overridden by the
+        user. Not applicable for JOB_LAUNCHER_NOBATCH and JOB_LAUNCHER_FAKE; must be
+        provided for other job launcher types (but can be the empty string)
+    extra_args (str or None): Arguments to the job launcher that can be overridden by the
+        user. Not applicable for JOB_LAUNCHER_NOBATCH and JOB_LAUNCHER_FAKE; must be
+        provided for other job launcher types (but can be the empty string)
     allow_missing_entries (bool): For a job launcher type that generally requires certain
         entries (e.g., account): If allow_missing_entries is True, then we proceed even if
         these entries are missing. This is intended for when create_job_launcher is just
@@ -34,7 +50,7 @@ def create_job_launcher(job_launcher_type, account=None, queue=None, walltime=No
         return JobLauncherFake()
 
     if job_launcher_type == JOB_LAUNCHER_NOBATCH:
-        return JobLauncherNoBatch()
+        return JobLauncherNoBatch(nice_level=nice_level)
 
     if account is None and not allow_missing_entries:
         raise RuntimeError("Could not find an account code")

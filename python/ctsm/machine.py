@@ -17,6 +17,7 @@ Machine = namedtuple('Machine', ['name',           # str
 def create_machine(machine_name, defaults, job_launcher_type=None,
                    scratch_dir=None, account=None,
                    job_launcher_queue=None, job_launcher_walltime=None,
+                   job_launcher_nice_level=None,
                    job_launcher_extra_args=None,
                    allow_missing_entries=False):
     """Create a machine object (of type Machine, as given above)
@@ -24,12 +25,21 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     This uses the provided (non-None) arguments to override any defaults provided via the
     'defaults' argument.
 
-    Non-straightforward Args:
+    Args:
     machine_name (str): name of machine; this is used to index into the 'defaults'
         argument, and is used as the machine name in the returned object
     defaults: dict of MachineDefaults (as defined in machine_defaults)
     job_launcher_type: one of the JOB_LAUNCHER constants defined in job_launcher_factory,
         or None. If None, we pick the default for this machine.
+    job_launcher_queue (str or None): Queue to use (not applicable for
+        JOB_LAUNCHER_NOBATCH and JOB_LAUNCHER_FAKE)
+    job_launcher_walltime (str or None): Walltime to use (not applicable for
+        JOB_LAUNCHER_NOBATCH and JOB_LAUNCHER_FAKE)
+    job_launcher_nice_level (int or None): Level used for the nice command; only
+        applicable for JOB_LAUNCHER_NOBATCH
+    job_launcher_extra_args (str or None): Arguments to the job launcher that can be
+        overridden by the user. Not applicable for JOB_LAUNCHER_NOBATCH and
+        JOB_LAUNCHER_FAKE
     allow_missing_entries (bool): For a machine that generally requires certain entries
         (e.g., account or scratch_dir): If allow_missing_entries is True, then we proceed
         even if these entries are missing. This is intended for when create_machine is
@@ -101,6 +111,7 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
                                        account=account,
                                        queue=job_launcher_queue,
                                        walltime=job_launcher_walltime,
+                                       nice_level=job_launcher_nice_level,
                                        required_args=job_launcher_required_args,
                                        extra_args=job_launcher_extra_args,
                                        allow_missing_entries=allow_missing_entries)
