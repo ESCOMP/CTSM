@@ -12,6 +12,10 @@ class JobLauncherNoBatch(JobLauncherBase):
         """
         JobLauncherBase.__init__(self)
         if nice_level is None:
+            # We have a default value of None rather than 0 in the argument list because
+            # objects of this class may be created via a few layers, and we want to allow
+            # for the possibility that the passed-down argument has a default of None in
+            # one of these creation layers.
             self._nice_level = 0
         else:
             self._nice_level = nice_level
