@@ -67,6 +67,11 @@ class JobLauncherBase(object):
 
         If dry_run is True, then just print the command to be run without actually running it.
         """
+        if not dry_run:
+            self.run_command_impl(command)
+
+    def run_command_impl(self, command):
+        """Actually runs the command"""
         raise NotImplementedError
 
     def __repr__(self):

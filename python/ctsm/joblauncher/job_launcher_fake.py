@@ -9,7 +9,7 @@ class JobLauncherFake(JobLauncherBase):
         JobLauncherBase.__init__(self)
         self._commands = []
 
-    def run_command(self, command, dry_run=False):
+    def run_command_impl(self, command):
         self._commands.append(' '.join(command))
 
     def get_commands(self):

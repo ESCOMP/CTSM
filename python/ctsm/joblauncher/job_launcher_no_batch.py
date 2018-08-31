@@ -24,6 +24,6 @@ class JobLauncherNoBatch(JobLauncherBase):
         """Returns the level used for the nice command (larger = lower priority)"""
         return self._nice_level
 
-    def run_command(self, command, dry_run=False):
+    def run_command_impl(self, command):
         # FIXME(wjs, 2018-08-25) Implement this
         pass

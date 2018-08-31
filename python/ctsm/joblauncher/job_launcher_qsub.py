@@ -13,6 +13,6 @@ class JobLauncherQsub(JobLauncherBase):
                                  required_args=required_args,
                                  extra_args=extra_args)
 
-    def run_command(self, command, dry_run=False):
+    def run_command_impl(self, command):
         # FIXME(wjs, 2018-08-25) Implement this
         pass

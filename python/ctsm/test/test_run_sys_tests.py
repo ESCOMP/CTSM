@@ -189,6 +189,14 @@ class TestRunSysTests(unittest.TestCase):
                                           'cs.status')
         self.assertTrue(os.path.isfile(expected_cs_status))
 
+    def test_withDryRun_nothingDone(self):
+        """With dry_run=True, no directories should be created, and no commands should be run"""
+        machine = self._make_machine()
+        run_sys_tests(machine=machine, cime_path=self._cime_path(), testlist=['foo'],
+                      dry_run=True)
+        self.assertEqual(os.listdir(self._scratch), [])
+        self.assertEqual(machine.job_launcher.get_commands(), [])
+
 if __name__ == '__main__':
     unit_testing.setup_for_tests()
     unittest.main()

@@ -95,7 +95,8 @@ def run_sys_tests(machine, cime_path,
         _run_test_suite(cime_path=cime_path,
                         suite_name=suite_name, machine=machine,
                         testid_base=testid_base, testroot=testroot,
-                        create_test_args=create_test_args)
+                        create_test_args=create_test_args,
+                        dry_run=dry_run)
     else:
         if testfile:
             test_args = ['--testfile', testfile]
@@ -106,7 +107,8 @@ def run_sys_tests(machine, cime_path,
         _run_create_test(cime_path=cime_path,
                          test_args=test_args, machine=machine,
                          testid=testid_base, testroot=testroot,
-                         create_test_args=create_test_args)
+                         create_test_args=create_test_args,
+                         dry_run=dry_run)
 
 # ========================================================================
 # Private functions
@@ -307,8 +309,8 @@ def _make_cs_status_for_suite(testroot, testid_base):
                      extra_args='--fails-only --count-performance-fails',
                      filename='cs.status')
 
-def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, create_test_args):
-
+def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, create_test_args,
+                    dry_run):
     compilers = _get_compilers_for_suite(suite_name, machine.name)
     for compiler in compilers:
         test_args = ['--xml-category', suite_name,
@@ -318,7 +320,8 @@ def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, creat
         _run_create_test(cime_path=cime_path,
                          test_args=test_args, machine=machine,
                          testid=testid, testroot=testroot,
-                         create_test_args=create_test_args)
+                         create_test_args=create_test_args,
+                         dry_run=dry_run)
 
 def _get_compilers_for_suite(suite_name, machine_name):
     test_data = get_tests_from_xml(
@@ -331,13 +334,14 @@ def _get_compilers_for_suite(suite_name, machine_name):
     logger.info("Running with compilers: %s", compilers)
     return compilers
 
-def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args):
+def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
     create_test_cmd = _build_create_test_cmd(cime_path=cime_path,
                                              test_args=test_args,
                                              testid=testid,
                                              testroot=testroot,
                                              create_test_args=create_test_args)
-    machine.job_launcher.run_command(create_test_cmd)
+    machine.job_launcher.run_command(create_test_cmd,
+                                     dry_run=dry_run)
 
 def _build_create_test_cmd(cime_path, test_args, testid, testroot, create_test_args):
     """Builds and returns the create_test command
