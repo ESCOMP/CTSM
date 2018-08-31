@@ -159,6 +159,8 @@ class TestRunSysTests(unittest.TestCase):
 
         This tests that multiple create_test commands are run, one with each compiler in
         the given test suite for the given machine
+
+        It also ensures that the cs.status file is created
         """
         machine = self._make_machine()
         with mock.patch('ctsm.run_sys_tests.datetime') as mock_date, \
@@ -181,6 +183,11 @@ class TestRunSysTests(unittest.TestCase):
 
         six.assertRegex(self, all_commands[0], r'--test-id +{}_in'.format(self._expected_testid()))
         six.assertRegex(self, all_commands[1], r'--test-id +{}_pg'.format(self._expected_testid()))
+
+        expected_cs_status = os.path.join(self._scratch,
+                                          self._expected_testroot(),
+                                          'cs.status')
+        self.assertTrue(os.path.isfile(expected_cs_status))
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()

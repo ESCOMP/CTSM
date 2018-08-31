@@ -12,8 +12,12 @@ from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 
 from CIME.test_utils import get_tests_from_xml
+from CIME.cs_status_creator import create_cs_status
 
 logger = logging.getLogger(__name__)
+
+# Number of initial characters from the compiler name to use in a testid
+_NUM_COMPILER_CHARS = 2
 
 # ========================================================================
 # Public functions
@@ -86,6 +90,8 @@ def run_sys_tests(machine, cime_path,
                                              queue=queue,
                                              extra_create_test_args=extra_create_test_args)
     if suite_name:
+        if not dry_run:
+            _make_cs_status_for_suite(testroot, testid_base)
         _run_test_suite(cime_path=cime_path,
                         suite_name=suite_name, machine=machine,
                         testid_base=testid_base, testroot=testroot,
@@ -267,9 +273,6 @@ def _make_testroot(testroot, testid_base, dry_run):
     """Make the testroot directory at the given location, as well as a link in the current
     directory
     """
-    # FIXME(wjs, 2018-08-24) Finish implementing this:
-    #
-    # - I think this is also where we should create the cs.status scripts
     if os.path.exists(testroot):
         raise RuntimeError("{} already exists".format(testroot))
     logger.info("Making directory: %s", testroot)
@@ -296,6 +299,14 @@ def _get_create_test_args(compare_name, generate_name, baseline_root,
     args.extend(extra_create_test_args.split())
     return args
 
+def _make_cs_status_for_suite(testroot, testid_base):
+    """Makes a cs.status file that can be run for the entire test suite"""
+    testid_pattern = testid_base + '_' + _NUM_COMPILER_CHARS*'?'
+    create_cs_status(test_root=testroot,
+                     test_id=testid_pattern,
+                     extra_args='--fails-only --count-performance-fails',
+                     filename='cs.status')
+
 def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, create_test_args):
 
     compilers = _get_compilers_for_suite(suite_name, machine.name)
@@ -303,7 +314,7 @@ def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, creat
         test_args = ['--xml-category', suite_name,
                      '--xml-machine', machine.name,
                      '--xml-compiler', compiler]
-        testid = testid_base + '_' + compiler[0:2]
+        testid = testid_base + '_' + compiler[0:_NUM_COMPILER_CHARS]
         _run_create_test(cime_path=cime_path,
                          test_args=test_args, machine=machine,
                          testid=testid, testroot=testroot,
