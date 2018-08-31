@@ -62,10 +62,33 @@ def run_sys_tests(machine, cime_path,
                   baseline_root=None,
                   walltime=None, queue=None,
                   extra_create_test_args=''):
-    # FIXME(wjs, 2018-08-29) finish documenting Args
     """Implementation of run_sys_tests command
 
+    Exactly one of suite_name, testfile or testlist should be provided
+
     Args:
+    machine: Machine object, as defined in machine.py
+    cime_path (str): path to root of cime
+    skip_testroot_creation (bool): if True, assume the testroot directory has already been
+        created, so don't try to recreate it or re-make the link to it
+    dry_run (bool): if True, print commands to be run but don't run them
+    suite_name (str): name of test suite/category to run
+    testfile (str): path to file containing list of tests to run
+    testlist (list of strings): names of tests to run
+    testid_base (str): test id, or start of the test id in the case of a test suite (if
+        not provided, will be generated automatically)
+    testroot_base (str): path to the directory that will contain the testroot (if not
+        provided, will be determined based on machine defaults)
+    compare_name (str): if not None, baseline name to compare against
+    generate_name (str): if not None, baseline name to generate
+    baseline_root (str): path in which baselines should be compared and generated (if not
+        provided, the test suite will determine it automatically)
+    walltime (str): walltime to use for each test (if not provided, the test suite will
+        determine it automatically)
+    queue (str): queue to use for each test (if not provided, the test suite will
+        determine it automatically)
+    extra_create_test_args (str): any extra arguments to create_test, as a single,
+        space-delimited string
     testlist: list of strings giving test names to run
     """
     num_provided_options = ((suite_name is not None) +
