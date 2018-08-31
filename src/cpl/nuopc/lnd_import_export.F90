@@ -891,9 +891,10 @@ contains
        call state_setexport(exportState, trim(fldname), bounds, input=lnd2atm_inst%fireflx_grc(:,num), minus=.true.,rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     end do
-    call state_setexport(exportState, trim(shr_fire_emis_ztop_token), bounds, input=lnd2atm_inst%fireztop_grc, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
+    if (shr_string_listGetNum(fire_emis_fields) > 0) then
+       call state_setexport(exportState, trim(shr_fire_emis_ztop_token), bounds, input=lnd2atm_inst%fireztop_grc, rc=rc)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    endif
     ! sign convention is positive downward with hierarchy of atm/glc/lnd/rof/ice/ocn.
     ! i.e. water sent from land to rof is positive
 
