@@ -73,11 +73,10 @@ class TestCreateMachine(unittest.TestCase):
     def test_unknownMachine_defaults(self):
         """Tests a machine not in the defaults structure, with no overriding arguments"""
         machine = create_machine('unknown_test_machine', MACHINE_DEFAULTS,
-                                 scratch_dir='/path/to/scratch',
                                  account='a123')
         self.assertMachineInfo(machine=machine,
                                name='unknown_test_machine',
-                               scratch_dir='/path/to/scratch',
+                               scratch_dir=None,
                                account='a123')
         self.assertNoBatchInfo(machine)
 

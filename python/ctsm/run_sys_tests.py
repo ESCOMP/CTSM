@@ -38,7 +38,6 @@ def main(cime_path):
     logger.info('Running on machine: %s', args.machine_name)
     machine = create_machine(machine_name=args.machine_name,
                              defaults=MACHINE_DEFAULTS,
-                             scratch_dir=args.testroot_base,
                              account=args.account,
                              job_launcher_queue=args.job_launcher_queue,
                              job_launcher_walltime=args.job_launcher_walltime,

@@ -9,6 +9,14 @@ from CIME.utils import get_charge_account  # pylint:disable=import-error
 
 logger = logging.getLogger(__name__)
 
+# TODO(wjs, 2018-08-31) Turn this into a real class, with getter methods.
+#
+# An attempt to call get_scratch_dir() should raise a RuntimeError if self._scratch_dir is
+# None. (That is, we allow a machine to be created with a scratch_dir of None - because
+# for some applications we don't need a scratch_dir - but we raise an exception if the
+# application tries to use the scratch_dir when it wasn't properly set, in order to print
+# a meaningful error message rather than whatever message you'd get when trying to use the
+# None value somewhere.)
 Machine = namedtuple('Machine', ['name',           # str
                                  'scratch_dir',    # str
                                  'account',        # str or None
@@ -29,6 +37,10 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     machine_name (str): name of machine; this is used to index into the 'defaults'
         argument, and is used as the machine name in the returned object
     defaults: dict of MachineDefaults (as defined in machine_defaults)
+    scratch_dir: path to scratch directory (if not provided, will attempt to get it from
+        machine defaults)
+    account: account to use for job submission to a queue (if not provided, will attempt
+        to determine it automatically using the CIME method)
     job_launcher_type: one of the JOB_LAUNCHER constants defined in job_launcher_factory,
         or None. If None, we pick the default for this machine.
     job_launcher_queue (str or None): Queue to use (not applicable for
@@ -71,16 +83,6 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
                            machine_name)
         if job_launcher_type is None:
             job_launcher_type = JOB_LAUNCHER_NOBATCH
-        if scratch_dir is None and not allow_missing_entries:
-            # NOTE(wjs, 2018-08-29) If we start using this more generally, we might have
-            # contexts where we don't need a scratch directory. In that case, we
-            # can/should get rid of this RuntimeError, and allow scratch_dir to remain
-            # None. We could then turn Machine into a real class (rather than a
-            # namedtuple), with getter methods. The getter methods would then raise a
-            # RuntimeError if you tried to get a value that was None. This way, you'd only
-            # have an exception from having something set to None if you actually need
-            # that value for this application.
-            raise RuntimeError("For generic machine, must specify scratch directory")
 
     # ------------------------------------------------------------------------
     # Settings that depend on both machine and job launcher type
