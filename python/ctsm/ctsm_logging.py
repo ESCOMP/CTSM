@@ -61,7 +61,7 @@ def add_logging_args(parser):
 
     logging_level = parser.add_mutually_exclusive_group()
 
-    logging_level.add_argument('--verbose', action='store_true',
+    logging_level.add_argument('-v', '--verbose', action='store_true',
                                help='Output extra logging info')
 
     logging_level.add_argument('--debug', action='store_true',
