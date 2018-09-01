@@ -23,7 +23,7 @@ class JobLauncherQsub(JobLauncherBase):
                                         stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
-        (out, err) = qsub_process.communicate(command)
+        (out, err) = qsub_process.communicate(' '.join(command))
         if err:
             logger.info('qsub ERROR:\n%s', err)
         if out:
