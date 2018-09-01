@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 # application tries to use the scratch_dir when it wasn't properly set, in order to print
 # a meaningful error message rather than whatever message you'd get when trying to use the
 # None value somewhere.)
+#
+# For now, just keep in mind that it's possible that a machine's scratch_dir may be None,
+# if it wasn't set explicitly and there was no default available. For now, it's up to the
+# user of the machine object to check for that possibility if need be.
 Machine = namedtuple('Machine', ['name',           # str
                                  'scratch_dir',    # str
                                  'account',        # str or None
@@ -53,9 +57,9 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
         overridden by the user. Not applicable for JOB_LAUNCHER_NOBATCH and
         JOB_LAUNCHER_FAKE
     allow_missing_entries (bool): For a machine that generally requires certain entries
-        (e.g., account or scratch_dir): If allow_missing_entries is True, then we proceed
-        even if these entries are missing. This is intended for when create_machine is
-        just called for the sake of getting default values.
+        (e.g., account): If allow_missing_entries is True, then we proceed even if these
+        entries are missing. This is intended for when create_machine is just called for
+        the sake of getting default values.
     """
 
     # ------------------------------------------------------------------------

@@ -284,7 +284,11 @@ def _get_testid_base(machine_name):
     return '{}{}'.format(now_str, machine_start)
 
 def _get_testroot_base(machine):
-    return machine.scratch_dir
+    scratch_dir = machine.scratch_dir
+    if scratch_dir is None:
+        raise RuntimeError('For a machine without a default specified for the scratch directory, '
+                           'must specify --testroot-base')
+    return scratch_dir
 
 def _get_testroot(testroot_base, testid_base):
     """Get the path to the test root, given a base test id"""
