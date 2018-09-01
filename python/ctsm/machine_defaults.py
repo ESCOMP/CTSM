@@ -38,6 +38,9 @@ MACHINE_DEFAULTS = {
                 queue='regular',
                 walltime='06:00:00',
                 extra_args='',
+                # The following assumes a single node, with a single mpi proc; we may want
+                # to add more flexibility in the future, making the node / proc counts
+                # individually selectable
                 required_args=
                 '-l select=1:ncpus=36:mpiprocs=1 -r n -l inception=login')
             }),
