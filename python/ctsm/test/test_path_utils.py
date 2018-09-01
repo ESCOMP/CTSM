@@ -15,7 +15,7 @@ from ctsm import path_utils
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
-#pylint:disable=invalid-name
+# pylint: disable=invalid-name
 
 class TestPathUtils(unittest.TestCase):
     """Tests of path_utils"""

@@ -14,7 +14,7 @@ from datetime import datetime
 import six
 from six_additions import mock, assertNotRegex
 
-from ctsm import add_cime_to_path #pylint:disable=unused-import
+from ctsm import add_cime_to_path # pylint: disable=unused-import
 from ctsm import unit_testing
 from ctsm.run_sys_tests import run_sys_tests
 from ctsm.machine_defaults import MACHINE_DEFAULTS
@@ -23,7 +23,7 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
-#pylint:disable=invalid-name
+# pylint: disable=invalid-name
 
 class TestRunSysTests(unittest.TestCase):
     """Tests of run_sys_tests"""
@@ -191,8 +191,10 @@ class TestRunSysTests(unittest.TestCase):
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 2)
         for command in all_commands:
-            six.assertRegex(self, command.cmd, r'--xml-category +{}(\s|$)'.format('my_suite'))
-            six.assertRegex(self, command.cmd, r'--xml-machine +{}(\s|$)'.format(self._MACHINE_NAME))
+            six.assertRegex(self, command.cmd,
+                            r'--xml-category +{}(\s|$)'.format('my_suite'))
+            six.assertRegex(self, command.cmd,
+                            r'--xml-machine +{}(\s|$)'.format(self._MACHINE_NAME))
 
         six.assertRegex(self, all_commands[0].cmd, r'--xml-compiler +intel(\s|$)')
         six.assertRegex(self, all_commands[1].cmd, r'--xml-compiler +pgi(\s|$)')

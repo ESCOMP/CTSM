@@ -11,8 +11,8 @@ from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 
-from CIME.test_utils import get_tests_from_xml
-from CIME.cs_status_creator import create_cs_status
+from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
+from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -370,12 +370,12 @@ def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, creat
 
 def _get_compilers_for_suite(suite_name, machine_name):
     test_data = get_tests_from_xml(
-        xml_machine = machine_name,
-        xml_category = suite_name)
+        xml_machine=machine_name,
+        xml_category=suite_name)
     if not test_data:
         raise RuntimeError('No tests found for suite {} on machine {}'.format(
             suite_name, machine_name))
-    compilers = sorted(set([one_test['compiler'] for one_test in test_data]))
+    compilers = sorted({one_test['compiler'] for one_test in test_data})
     logger.info("Running with compilers: %s", compilers)
     return compilers
 

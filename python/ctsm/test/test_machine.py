@@ -6,7 +6,7 @@
 import unittest
 import os
 
-from ctsm import add_cime_to_path #pylint:disable=unused-import
+from ctsm import add_cime_to_path # pylint: disable=unused-import
 from ctsm import unit_testing
 
 from ctsm.machine import create_machine
@@ -18,7 +18,7 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_QSUB, JOB_LAUNCHE
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
-#pylint:disable=invalid-name
+# pylint: disable=invalid-name
 
 class TestCreateMachine(unittest.TestCase):
     """Tests of create_machine"""

@@ -45,7 +45,7 @@ class JobLauncherNoBatch(JobLauncherBase):
              open(stderr_path, 'w') as errfile:
             # Note that preexec_fn is POSIX-only; also, it may be unsafe in the presence
             # of threads (hence the need for disabling the pylint warning)
-            #pylint:disable=subprocess-popen-preexec-fn
+            # pylint: disable=subprocess-popen-preexec-fn
             subprocess.Popen(command,
                              stdout=outfile,
                              stderr=errfile,

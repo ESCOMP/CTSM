@@ -5,7 +5,7 @@ import logging
 from collections import namedtuple
 from ctsm.joblauncher.job_launcher_factory import \
     create_job_launcher, JOB_LAUNCHER_NOBATCH
-from CIME.utils import get_charge_account  # pylint:disable=import-error
+from CIME.utils import get_charge_account  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
