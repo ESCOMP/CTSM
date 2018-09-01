@@ -614,9 +614,13 @@ EOF
       }
       my $mopts  = "$queryopts -namelist default_settings $usrnam";
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
-      foreach my $typ ( "lak", "veg", "voc", "tex", "col", "hrv",
+      my @typlist = ( "lak", "veg", "voc", "tex", "col", "hrv",
                         "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
-		        "gdp", "peat","soildepth","abm", "topostats" , "vic", "ch4") {
+		        "gdp", "peat","soildepth","abm", "vic", "ch4");
+      if ( ! $opts{'fast_maps'} ) {
+         push( @typlist, "topostats" );
+      }
+      foreach my $typ ( @typlist ) {
          my $lmask = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,mergeGIS=$merge_gis,hirespft=$hirespft -var lmask`;
          $lmask = trim($lmask);
          my $hgrid_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,hirespft=$hirespft -var hgrid";
