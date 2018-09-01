@@ -197,8 +197,8 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, all_commands[0].cmd, r'--xml-compiler +intel(\s|$)')
         six.assertRegex(self, all_commands[1].cmd, r'--xml-compiler +pgi(\s|$)')
 
-        expected_testid1 = '{}_in'.format(self._expected_testid())
-        expected_testid2 = '{}_pg'.format(self._expected_testid())
+        expected_testid1 = '{}_int'.format(self._expected_testid())
+        expected_testid2 = '{}_pgi'.format(self._expected_testid())
         six.assertRegex(self, all_commands[0].cmd,
                         r'--test-id +{}(\s|$)'.format(expected_testid1))
         six.assertRegex(self, all_commands[1].cmd,

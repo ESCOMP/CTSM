@@ -17,7 +17,7 @@ from CIME.cs_status_creator import create_cs_status
 logger = logging.getLogger(__name__)
 
 # Number of initial characters from the compiler name to use in a testid
-_NUM_COMPILER_CHARS = 2
+_NUM_COMPILER_CHARS = 3
 
 # For job launchers that use 'nice', the level of niceness we should use
 _NICE_LEVEL = 19
