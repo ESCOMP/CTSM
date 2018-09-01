@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 # Number of initial characters from the compiler name to use in a testid
 _NUM_COMPILER_CHARS = 2
 
+# For job launchers that use 'nice', the level of niceness we should use
+_NICE_LEVEL = 19
+
 # ========================================================================
 # Public functions
 # ========================================================================
@@ -41,6 +44,7 @@ def main(cime_path):
                              account=args.account,
                              job_launcher_queue=args.job_launcher_queue,
                              job_launcher_walltime=args.job_launcher_walltime,
+                             job_launcher_nice_level=_NICE_LEVEL,
                              job_launcher_extra_args=args.job_launcher_extra_args)
     logger.debug("Machine info: %s", machine)
 
@@ -366,7 +370,13 @@ def _run_create_test(cime_path, test_args, machine, testid, testroot, create_tes
                                              testid=testid,
                                              testroot=testroot,
                                              create_test_args=create_test_args)
+    stdout_path = os.path.join(testroot,
+                               'STDOUT.{}'.format(testid))
+    stderr_path = os.path.join(testroot,
+                               'STDERR.{}'.format(testid))
     machine.job_launcher.run_command(create_test_cmd,
+                                     stdout_path=stdout_path,
+                                     stderr_path=stderr_path,
                                      dry_run=dry_run)
 
 def _build_create_test_cmd(cime_path, test_args, testid, testroot, create_test_args):

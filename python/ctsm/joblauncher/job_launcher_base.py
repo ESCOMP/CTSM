@@ -74,26 +74,35 @@ class JobLauncherBase(object):
         """
         return self._extra_args
 
-    def run_command(self, command, dry_run=False):
+    def run_command(self, command, stdout_path, stderr_path, dry_run=False):
         """Run a command with this job launcher.
 
         Command should be a list (as is typically passed to subprocess calls)
 
+        stdout_path and stderr_path are the paths to the files that will hold stdout and
+        stderr from the job
+
         If dry_run is True, then just print the command to be run without actually running it.
         """
-        logger.info("%s", self.run_command_logger_message(command))
+        logger.info("%s", self.run_command_logger_message(command, stdout_path, stderr_path))
         if not dry_run:
-            self.run_command_impl(command)
+            self.run_command_impl(command, stdout_path, stderr_path)
 
-    def run_command_impl(self, command):
+    def run_command_impl(self, command, stdout_path, stderr_path):
         """Actually runs the command
+
+        stdout_path and stderr_path are the paths to the files that will hold stdout and
+        stderr from the job
 
         Command should be a list (as is typically passed to subprocess calls)
         """
         raise NotImplementedError
 
-    def run_command_logger_message(self, command):
+    def run_command_logger_message(self, command, stdout_path, stderr_path):
         """Return a string for output to the log describing the command that will be run
+
+        stdout_path and stderr_path are the paths to the files that will hold stdout and
+        stderr from the job
 
         Command should be a list (as is typically passed to subprocess calls)
         """

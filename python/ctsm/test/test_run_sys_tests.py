@@ -108,7 +108,7 @@ class TestRunSysTests(unittest.TestCase):
 
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 1)
-        command = all_commands[0]
+        command = all_commands[0].cmd
         expected_create_test = os.path.join(self._cime_path(), 'scripts', 'create_test')
         six.assertRegex(self, command, r'^ *{}\b'.format(re.escape(expected_create_test)))
         six.assertRegex(self, command, r'--test-id +{}\b'.format(self._expected_testid()))
@@ -142,7 +142,7 @@ class TestRunSysTests(unittest.TestCase):
 
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 1)
-        command = all_commands[0]
+        command = all_commands[0].cmd
         six.assertRegex(self, command, r'--test-id +mytestid\b')
         six.assertRegex(self, command, r'--test-root +{}\b'.format(testroot))
         six.assertRegex(self, command, r'--testfile +/path/to/testfile\b')
@@ -160,6 +160,8 @@ class TestRunSysTests(unittest.TestCase):
         This tests that multiple create_test commands are run, one with each compiler in
         the given test suite for the given machine
 
+        This test also checks the stdout and stderr files used for each command
+
         It also ensures that the cs.status file is created
         """
         machine = self._make_machine()
@@ -175,14 +177,28 @@ class TestRunSysTests(unittest.TestCase):
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 2)
         for command in all_commands:
-            six.assertRegex(self, command, r'--xml-category +{}\b'.format('my_suite'))
-            six.assertRegex(self, command, r'--xml-machine +{}\b'.format(self._MACHINE_NAME))
+            six.assertRegex(self, command.cmd, r'--xml-category +{}\b'.format('my_suite'))
+            six.assertRegex(self, command.cmd, r'--xml-machine +{}\b'.format(self._MACHINE_NAME))
 
-        six.assertRegex(self, all_commands[0], r'--xml-compiler +intel\b')
-        six.assertRegex(self, all_commands[1], r'--xml-compiler +pgi\b')
+        six.assertRegex(self, all_commands[0].cmd, r'--xml-compiler +intel\b')
+        six.assertRegex(self, all_commands[1].cmd, r'--xml-compiler +pgi\b')
 
-        six.assertRegex(self, all_commands[0], r'--test-id +{}_in'.format(self._expected_testid()))
-        six.assertRegex(self, all_commands[1], r'--test-id +{}_pg'.format(self._expected_testid()))
+        expected_testid1 = '{}_in'.format(self._expected_testid())
+        expected_testid2 = '{}_pg'.format(self._expected_testid())
+        six.assertRegex(self, all_commands[0].cmd,
+                        r'--test-id +{}'.format(expected_testid1))
+        six.assertRegex(self, all_commands[1].cmd,
+                        r'--test-id +{}'.format(expected_testid2))
+
+        expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
+        self.assertEqual(all_commands[0].out, os.path.join(expected_testroot_path,
+                                                           'STDOUT.'+expected_testid1))
+        self.assertEqual(all_commands[0].err, os.path.join(expected_testroot_path,
+                                                           'STDERR.'+expected_testid1))
+        self.assertEqual(all_commands[1].out, os.path.join(expected_testroot_path,
+                                                           'STDOUT.'+expected_testid2))
+        self.assertEqual(all_commands[1].err, os.path.join(expected_testroot_path,
+                                                           'STDERR.'+expected_testid2))
 
         expected_cs_status = os.path.join(self._scratch,
                                           self._expected_testroot(),
