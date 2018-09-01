@@ -93,12 +93,14 @@ class TestRunSysTests(unittest.TestCase):
     def test_createTestCommand_testnames(self):
         """The correct create_test command should be run when providing a list of test names
 
-        This test covers two things:
+        This test covers three things:
 
         (1) The use of a testlist argument
 
         (2) The standard arguments to create_test (the path to create_test, the arguments
         --test-id and --test-root, and the absence of --compare and --generate)
+
+        (3) That a cs.status file was created
         """
         machine = self._make_machine()
         with mock.patch('ctsm.run_sys_tests.datetime') as mock_date:
@@ -110,29 +112,36 @@ class TestRunSysTests(unittest.TestCase):
         self.assertEqual(len(all_commands), 1)
         command = all_commands[0].cmd
         expected_create_test = os.path.join(self._cime_path(), 'scripts', 'create_test')
-        six.assertRegex(self, command, r'^ *{}\b'.format(re.escape(expected_create_test)))
-        six.assertRegex(self, command, r'--test-id +{}\b'.format(self._expected_testid()))
+        six.assertRegex(self, command, r'^ *{}\s'.format(re.escape(expected_create_test)))
+        six.assertRegex(self, command, r'--test-id +{}\s'.format(self._expected_testid()))
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
-        six.assertRegex(self, command, r'--test-root +{}\b'.format(expected_testroot_path))
+        six.assertRegex(self, command, r'--test-root +{}\s'.format(expected_testroot_path))
         six.assertRegex(self, command, r'test1 +test2 *$')
-        assertNotRegex(self, command, r'--compare\b')
-        assertNotRegex(self, command, r'--generate\b')
+        assertNotRegex(self, command, r'--compare\s')
+        assertNotRegex(self, command, r'--generate\s')
+
+        expected_cs_status = os.path.join(self._scratch,
+                                          self._expected_testroot(),
+                                          'cs.status')
+        self.assertTrue(os.path.isfile(expected_cs_status))
 
     def test_createTestCommand_testfileAndExtraArgs(self):
         """The correct create_test command should be run with a testfile and extra arguments
 
-        This test covers two things:
+        This test covers three things:
 
         (1) The use of a testfile argument
 
         (2) The use of a bunch of optional arguments that are passed along to create_test
+
+        (3) That a cs.status file was created
         """
         machine = self._make_machine(account='myaccount')
-        testroot = os.path.join(self._scratch, 'my', 'testroot')
+        testroot_base = os.path.join(self._scratch, 'my', 'testroot')
         run_sys_tests(machine=machine, cime_path=self._cime_path(),
                       testfile='/path/to/testfile',
                       testid_base='mytestid',
-                      testroot_base=testroot,
+                      testroot_base=testroot_base,
                       compare_name='mycompare',
                       generate_name='mygenerate',
                       baseline_root='myblroot',
@@ -143,16 +152,21 @@ class TestRunSysTests(unittest.TestCase):
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 1)
         command = all_commands[0].cmd
-        six.assertRegex(self, command, r'--test-id +mytestid\b')
-        six.assertRegex(self, command, r'--test-root +{}\b'.format(testroot))
-        six.assertRegex(self, command, r'--testfile +/path/to/testfile\b')
-        six.assertRegex(self, command, r'--compare +mycompare\b')
-        six.assertRegex(self, command, r'--generate +mygenerate\b')
-        six.assertRegex(self, command, r'--baseline-root +myblroot\b')
-        six.assertRegex(self, command, r'--walltime +3:45:67\b')
-        six.assertRegex(self, command, r'--queue +runqueue\b')
-        six.assertRegex(self, command, r'--project +myaccount\b')
-        six.assertRegex(self, command, r'--some +extra +--createtest +args\b')
+        six.assertRegex(self, command, r'--test-id +mytestid(\s|$)')
+        expected_testroot = os.path.join(testroot_base, 'tests_mytestid')
+        six.assertRegex(self, command, r'--test-root +{}(\s|$)'.format(expected_testroot))
+        six.assertRegex(self, command, r'--testfile +/path/to/testfile(\s|$)')
+        six.assertRegex(self, command, r'--compare +mycompare(\s|$)')
+        six.assertRegex(self, command, r'--generate +mygenerate(\s|$)')
+        six.assertRegex(self, command, r'--baseline-root +myblroot(\s|$)')
+        six.assertRegex(self, command, r'--walltime +3:45:67(\s|$)')
+        six.assertRegex(self, command, r'--queue +runqueue(\s|$)')
+        six.assertRegex(self, command, r'--project +myaccount(\s|$)')
+        six.assertRegex(self, command, r'--some +extra +--createtest +args(\s|$)')
+
+        expected_cs_status = os.path.join(expected_testroot,
+                                          'cs.status')
+        self.assertTrue(os.path.isfile(expected_cs_status))
 
     def test_createTestCommand_testsuite(self):
         """The correct create_test commands should be run with a test suite
@@ -177,18 +191,18 @@ class TestRunSysTests(unittest.TestCase):
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 2)
         for command in all_commands:
-            six.assertRegex(self, command.cmd, r'--xml-category +{}\b'.format('my_suite'))
-            six.assertRegex(self, command.cmd, r'--xml-machine +{}\b'.format(self._MACHINE_NAME))
+            six.assertRegex(self, command.cmd, r'--xml-category +{}(\s|$)'.format('my_suite'))
+            six.assertRegex(self, command.cmd, r'--xml-machine +{}(\s|$)'.format(self._MACHINE_NAME))
 
-        six.assertRegex(self, all_commands[0].cmd, r'--xml-compiler +intel\b')
-        six.assertRegex(self, all_commands[1].cmd, r'--xml-compiler +pgi\b')
+        six.assertRegex(self, all_commands[0].cmd, r'--xml-compiler +intel(\s|$)')
+        six.assertRegex(self, all_commands[1].cmd, r'--xml-compiler +pgi(\s|$)')
 
         expected_testid1 = '{}_in'.format(self._expected_testid())
         expected_testid2 = '{}_pg'.format(self._expected_testid())
         six.assertRegex(self, all_commands[0].cmd,
-                        r'--test-id +{}'.format(expected_testid1))
+                        r'--test-id +{}(\s|$)'.format(expected_testid1))
         six.assertRegex(self, all_commands[1].cmd,
-                        r'--test-id +{}'.format(expected_testid2))
+                        r'--test-id +{}(\s|$)'.format(expected_testid2))
 
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
         self.assertEqual(all_commands[0].out, os.path.join(expected_testroot_path,

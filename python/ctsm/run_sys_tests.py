@@ -22,6 +22,9 @@ _NUM_COMPILER_CHARS = 2
 # For job launchers that use 'nice', the level of niceness we should use
 _NICE_LEVEL = 19
 
+# Extra arguments for the cs.status command
+_CS_STATUS_EXTRA_ARGS = '--fails-only --count-performance-fails'
+
 # ========================================================================
 # Public functions
 # ========================================================================
@@ -124,6 +127,8 @@ def run_sys_tests(machine, cime_path,
                         create_test_args=create_test_args,
                         dry_run=dry_run)
     else:
+        if not dry_run:
+            _make_cs_status_non_suite(testroot, testid_base)
         if testfile:
             test_args = ['--testfile', testfile]
         elif testlist:
@@ -237,8 +242,9 @@ can be repeated multiple times).
                         'If not provided, uses machine default.')
 
     parser.add_argument('--extra-create-test-args', default='',
-                        help='String giving extra arguments to pass to create_test')
-
+                        help='String giving extra arguments to pass to create_test\n'
+                        '(To allow the argument parsing to accept this, enclose the string\n'
+                        'in quotes, with a leading space, as in " --my-arg foo".)')
 
     parser.add_argument('--job-launcher-queue',
                         help='Queue to which the create_test command is submitted.\n'
@@ -257,6 +263,8 @@ can be repeated multiple times).
     parser.add_argument('--job-launcher-extra-args',
                         help='Extra arguments for the command that launches the\n'
                         'create_test command.\n'
+                        '(To allow the argument parsing to accept this, enclose the string\n'
+                        'in quotes, with a leading space, as in " --my-arg foo".)\n'
                         'Default for this machine: {}'.format(
                             default_machine.job_launcher.get_extra_args()))
 
@@ -336,7 +344,14 @@ def _make_cs_status_for_suite(testroot, testid_base):
     testid_pattern = testid_base + '_' + _NUM_COMPILER_CHARS*'?'
     create_cs_status(test_root=testroot,
                      test_id=testid_pattern,
-                     extra_args='--fails-only --count-performance-fails',
+                     extra_args=_CS_STATUS_EXTRA_ARGS,
+                     filename='cs.status')
+
+def _make_cs_status_non_suite(testroot, testid_base):
+    """Makes a cs.status file for a single run of create_test - not a whole test suite"""
+    create_cs_status(test_root=testroot,
+                     test_id=testid_base,
+                     extra_args=_CS_STATUS_EXTRA_ARGS,
                      filename='cs.status')
 
 def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, create_test_args,
