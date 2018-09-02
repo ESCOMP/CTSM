@@ -167,8 +167,7 @@ Typical usage:
     Any other test suite can be given as well: clm_short, aux_glc, etc.
 
 This can also be used to run tests listed in a text file (via the -f/--testfile argument),
-or tests listed individually on the command line (via the -t/--testname argument, which
-can be repeated multiple times).
+or tests listed individually on the command line (via the -t/--testname argument).
 """
 
     parser = argparse.ArgumentParser(
