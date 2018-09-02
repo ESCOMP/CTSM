@@ -54,6 +54,7 @@ def main(cime_path):
     run_sys_tests(machine=machine, cime_path=cime_path,
                   skip_testroot_creation=args.skip_testroot_creation, dry_run=args.dry_run,
                   suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
+                  suite_compilers=args.suite_compiler,
                   testid_base=args.testid_base, testroot_base=args.testroot_base,
                   compare_name=args.compare, generate_name=args.generate,
                   baseline_root=args.baseline_root,
@@ -63,6 +64,7 @@ def main(cime_path):
 def run_sys_tests(machine, cime_path,
                   skip_testroot_creation=False, dry_run=False,
                   suite_name=None, testfile=None, testlist=None,
+                  suite_compilers=None,
                   testid_base=None, testroot_base=None,
                   compare_name=None, generate_name=None,
                   baseline_root=None,
@@ -81,6 +83,9 @@ def run_sys_tests(machine, cime_path,
     suite_name (str): name of test suite/category to run
     testfile (str): path to file containing list of tests to run
     testlist (list of strings): names of tests to run
+    suite_compilers (list of strings): compilers to use in the test suite; only applicable
+        with suite_name; if not specified, use all compilers that are defined for this
+        test suite
     testid_base (str): test id, or start of the test id in the case of a test suite (if
         not provided, will be generated automatically)
     testroot_base (str): path to the directory that will contain the testroot (if not
@@ -122,7 +127,9 @@ def run_sys_tests(machine, cime_path,
         if not dry_run:
             _make_cs_status_for_suite(testroot, testid_base)
         _run_test_suite(cime_path=cime_path,
-                        suite_name=suite_name, machine=machine,
+                        suite_name=suite_name,
+                        suite_compilers=suite_compilers,
+                        machine=machine,
                         testid_base=testid_base, testroot=testroot,
                         create_test_args=create_test_args,
                         dry_run=dry_run)
@@ -209,6 +216,11 @@ or tests listed individually on the command line (via the -t/--testname argument
     generate.add_argument('--skip-generate', action='store_true',
                           help='Do not generate baselines')
 
+    parser.add_argument('--suite-compiler', nargs='+',
+                        help='Compiler(s) from the given test suite for which tests are run\n'
+                        'Only valid in conjunction with -s/--suite-name;\n'
+                        'if not specified, use all compilers defined for this suite and machine\n')
+
     parser.add_argument('--account',
                         help='Account number to use for job submission.\n'
                         'This is needed on some machines; if not provided explicitly,\n'
@@ -285,7 +297,13 @@ or tests listed individually on the command line (via the -t/--testname argument
 
     args = parser.parse_args()
 
+    _check_arg_validity(args)
+
     return args
+
+def _check_arg_validity(args):
+    if args.suite_compiler and not args.suite_name:
+        raise RuntimeError('--suite-compiler can only be specified if using --suite-name')
 
 def _get_testid_base(machine_name):
     """Returns a base testid based on the current date and time and the machine name"""
@@ -353,10 +371,12 @@ def _make_cs_status_non_suite(testroot, testid_base):
                      extra_args=_CS_STATUS_EXTRA_ARGS,
                      filename='cs.status')
 
-def _run_test_suite(cime_path, suite_name, machine, testid_base, testroot, create_test_args,
+def _run_test_suite(cime_path, suite_name, suite_compilers,
+                    machine, testid_base, testroot, create_test_args,
                     dry_run):
-    compilers = _get_compilers_for_suite(suite_name, machine.name)
-    for compiler in compilers:
+    if not suite_compilers:
+        suite_compilers = _get_compilers_for_suite(suite_name, machine.name)
+    for compiler in suite_compilers:
         test_args = ['--xml-category', suite_name,
                      '--xml-machine', machine.name,
                      '--xml-compiler', compiler]

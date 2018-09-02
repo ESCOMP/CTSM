@@ -168,7 +168,7 @@ class TestRunSysTests(unittest.TestCase):
                                           'cs.status')
         self.assertTrue(os.path.isfile(expected_cs_status))
 
-    def test_createTestCommand_testsuite(self):
+    def test_createTestCommands_testsuite(self):
         """The correct create_test commands should be run with a test suite
 
         This tests that multiple create_test commands are run, one with each compiler in
@@ -220,6 +220,24 @@ class TestRunSysTests(unittest.TestCase):
                                           self._expected_testroot(),
                                           'cs.status')
         self.assertTrue(os.path.isfile(expected_cs_status))
+
+    def test_createTestCommands_testsuiteSpecifiedCompilers(self):
+        """The correct commands should be run with a test suite where compilers are specified"""
+        machine = self._make_machine()
+        with mock.patch('ctsm.run_sys_tests.get_tests_from_xml') as mock_get_tests:
+            # This value should be ignored; we just set it to make sure it's different
+            # from the passed-in compiler list
+            mock_get_tests.return_value = [{'compiler': 'intel'},
+                                           {'compiler': 'pgi'},
+                                           {'compiler': 'gnu'}]
+            run_sys_tests(machine=machine, cime_path=self._cime_path(),
+                          suite_name='my_suite',
+                          suite_compilers=['comp1a', 'comp2b'])
+
+        all_commands = machine.job_launcher.get_commands()
+        self.assertEqual(len(all_commands), 2)
+        six.assertRegex(self, all_commands[0].cmd, r'--xml-compiler +comp1a(\s|$)')
+        six.assertRegex(self, all_commands[1].cmd, r'--xml-compiler +comp2b(\s|$)')
 
     def test_withDryRun_nothingDone(self):
         """With dry_run=True, no directories should be created, and no commands should be run"""
