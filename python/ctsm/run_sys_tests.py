@@ -195,7 +195,7 @@ or tests listed individually on the command line (via the -t/--testname argument
     tests_to_run.add_argument('-f', '--testfile',
                               help='Path to file listing tests to run')
 
-    tests_to_run.add_argument('-t', '--testname', nargs='+',
+    tests_to_run.add_argument('-t', '--testname', '--testnames', nargs='+',
                               help='One or more test names to run (space-delimited)')
 
     compare = parser.add_mutually_exclusive_group(required=True)
@@ -216,7 +216,7 @@ or tests listed individually on the command line (via the -t/--testname argument
     generate.add_argument('--skip-generate', action='store_true',
                           help='Do not generate baselines')
 
-    parser.add_argument('--suite-compiler', nargs='+',
+    parser.add_argument('--suite-compiler', '--suite-compilers', nargs='+',
                         help='Compiler(s) from the given test suite for which tests are run\n'
                         'Only valid in conjunction with -s/--suite-name;\n'
                         'if not specified, use all compilers defined for this suite and machine\n')
