@@ -59,6 +59,7 @@ class TestCreateMachine(unittest.TestCase):
             'cheyenne': MachineDefaults(
                 job_launcher_type=default_job_launcher,
                 scratch_dir=os.path.join(os.path.sep, 'glade', 'scratch', get_user()),
+                account_required=True,
                 job_launcher_defaults={
                     JOB_LAUNCHER_QSUB: QsubDefaults(
                         queue='regular',

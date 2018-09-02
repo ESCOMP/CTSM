@@ -10,6 +10,7 @@ from ctsm.machine_utils import get_user
 
 MachineDefaults = namedtuple('MachineDefaults', ['job_launcher_type',
                                                  'scratch_dir',
+                                                 'account_required',
                                                  'job_launcher_defaults'])
 # job_launcher_type: one of the JOB_LAUNCHERs defined in job_launcher_factory
 # scratch_dir: str
@@ -18,6 +19,8 @@ MachineDefaults = namedtuple('MachineDefaults', ['job_launcher_type',
 #     have 0, 1 or multiple job_launcher_defaults. (It can be useful to have defaults even
 #     for the non-default job launcher for this machine, in case the user chooses a
 #     non-default launcher.)
+# account_required: bool: whether an account number is required on this machine (not
+#     really a default, but used for error-checking)
 
 # Note that the different job launcher types have different structures defining their
 # defaults, because different ones require different elements to be set. For now we only
@@ -33,6 +36,7 @@ MACHINE_DEFAULTS = {
     'cheyenne': MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, 'glade', 'scratch', get_user()),
+        account_required=True,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='regular',
@@ -47,5 +51,6 @@ MACHINE_DEFAULTS = {
     'hobart': MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_NOBATCH,
         scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
+        account_required=False,
         job_launcher_defaults={})
     }

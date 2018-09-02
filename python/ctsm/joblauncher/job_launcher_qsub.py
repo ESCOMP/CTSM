@@ -11,6 +11,9 @@ class JobLauncherQsub(JobLauncherBase):
     """Job launcher for systems where we run big jobs via qsub"""
 
     def __init__(self, queue, walltime, account, required_args, extra_args):
+        """
+        account can be None or the empty string on a machine that doesn't require an account
+        """
         JobLauncherBase.__init__(self,
                                  queue=queue,
                                  walltime=walltime,
@@ -40,11 +43,12 @@ class JobLauncherQsub(JobLauncherBase):
     def _qsub_command(self, stdout_path, stderr_path):
         """Returns the qsub command"""
         qsub_cmd = ['qsub',
-                    '-A', self._account,
                     '-q', self._queue,
                     '-l', 'walltime={}'.format(self._walltime),
                     '-o', stdout_path,
                     '-e', stderr_path]
+        if self._account:
+            qsub_cmd.extend(['-A', self._account])
         if self._required_args:
             qsub_cmd.extend(self._required_args.split())
         if self._extra_args:

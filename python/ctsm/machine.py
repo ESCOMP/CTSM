@@ -79,6 +79,8 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
             job_launcher_type = mach_defaults.job_launcher_type
         if scratch_dir is None:
             scratch_dir = mach_defaults.scratch_dir
+        if account is None and mach_defaults.account_required and not allow_missing_entries:
+            raise RuntimeError("Could not find an account code")
     else:
         if not allow_missing_entries:
             # This isn't exactly a missing entry, but the times we don't care about this
