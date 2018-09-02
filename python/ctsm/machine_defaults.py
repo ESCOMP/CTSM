@@ -52,5 +52,11 @@ MACHINE_DEFAULTS = {
         job_launcher_type=JOB_LAUNCHER_NOBATCH,
         scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
         account_required=False,
-        job_launcher_defaults={})
+        job_launcher_defaults={
+            JOB_LAUNCHER_QSUB: QsubDefaults(
+                queue='medium',
+                walltime='06:00:00',
+                extra_args='',
+                required_args='-l select=1:ncpus=48:mpiprocs=1')
+        })
     }
