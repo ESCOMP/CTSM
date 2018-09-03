@@ -9,6 +9,7 @@ module test_balance
   use unittestSubgridMod
   use ncdio_pio   ! use the fake version of this module
   use BalanceCheckMod
+  use unittestUtils  , only : endrun_msg
 
   implicit none
   save
@@ -31,6 +32,7 @@ contains
     class(TestBalance), intent(inout) :: this
 
     call unittest_timemgr_teardown()
+    call BalanceCheckClean()
 
   end subroutine tearDown
 
@@ -59,6 +61,32 @@ contains
     nskip = GetBalanceCheckSkipSteps()
     @assertEqual( 2, nskip, message="Ensure even with a long time-step skip is 2 time-steps" )
   end subroutine test_balance_longstep
+
+  @Test
+  subroutine test_balance_300sec( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 300
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( 12, nskip, message="Check skip length for 300 sec time-step" )
+  end subroutine test_balance_300sec
+
+  @Test
+  subroutine test_balance_Fail( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+    character(len=256) :: expected_msg
+
+    nskip = GetBalanceCheckSkipSteps()
+    expected_msg = endrun_msg( &
+            "ERROR:: GetBalanceCheckSkipSteps called before BalanceCheckInit" )
+    @assertExceptionRaised(expected_msg)
+  end subroutine test_balance_Fail
 
   @Test
   subroutine test_balance_shortstep( this )
