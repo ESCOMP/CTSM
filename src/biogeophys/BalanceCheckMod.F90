@@ -43,6 +43,7 @@ module BalanceCheckMod
   public :: BeginWaterBalance        ! Initialize water balance check
   public :: BalanceCheck             ! Water and energy balance check
   public :: GetBalanceCheckSkipSteps ! Get the number of steps to skip for the balance check
+  public :: BalanceCheckClean        ! Clean up for BalanceCheck
 
   ! !PRIVATE MEMBER DATA:
   real(r8), private, parameter :: skip_size = 3600.0_r8   ! Time steps to skip the balance check at startup (sec)
@@ -75,6 +76,21 @@ contains
     write(iulog,*) ' Skip balance checking for the first ', skip_steps, ' time steps'
 
   end subroutine BalanceCheckInit
+
+  !-----------------------------------------------------------------------
+  subroutine BalanceCheckClean( )
+  !-----------------------------------------------------------------------
+    !
+    ! !DESCRIPTION:
+    ! Clean up BalanceCheck
+    !
+    ! !USES:
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    skip_steps = -999
+  end subroutine BalanceCheckClean
 
   !-----------------------------------------------------------------------
   integer function GetBalanceCheckSkipSteps( )
