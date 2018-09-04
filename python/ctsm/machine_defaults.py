@@ -5,7 +5,7 @@ To allow running out-of-the-box on other machines, add code here."""
 from collections import namedtuple
 import os
 from ctsm.joblauncher.job_launcher_factory import \
-    JOB_LAUNCHER_QSUB, JOB_LAUNCHER_NOBATCH
+    JOB_LAUNCHER_QSUB
 from ctsm.machine_utils import get_user
 
 MachineDefaults = namedtuple('MachineDefaults', ['job_launcher_type',
@@ -49,14 +49,14 @@ MACHINE_DEFAULTS = {
                 '-l select=1:ncpus=36:mpiprocs=1 -r n -l inception=login')
             }),
     'hobart': MachineDefaults(
-        job_launcher_type=JOB_LAUNCHER_NOBATCH,
+        job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
         account_required=False,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='medium',
-                walltime='06:00:00',
+                walltime='02:00:00',
                 extra_args='',
-                required_args='-l select=1:ncpus=48:mpiprocs=1')
+                required_args='-l nodes=1:ppn=48 -r n')
         })
-    }
+}
