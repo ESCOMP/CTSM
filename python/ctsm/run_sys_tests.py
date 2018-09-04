@@ -115,6 +115,7 @@ def run_sys_tests(machine, cime_path,
     testroot = _get_testroot(testroot_base, testid_base)
     if not skip_testroot_creation:
         _make_testroot(testroot, testid_base, dry_run)
+    print("Testroot: {}".format(testroot))
 
     create_test_args = _get_create_test_args(compare_name=compare_name,
                                              generate_name=generate_name,
