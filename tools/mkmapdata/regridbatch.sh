@@ -46,6 +46,13 @@ else
    fi
    grid="-f $GRIDFILE"
 fi
+
+if [ -z "$MKMAPDATA_OPTIONS" ]; then
+   echo "Run with standard options"
+   options=" "
+else
+   options="$MKMAPDATA_OPTIONS"
+fi
 echo "Create mapping files for this list of resolutions: $resols"
 
 #----------------------------------------------------------------------
@@ -53,7 +60,7 @@ echo "Create mapping files for this list of resolutions: $resols"
 for res in $resols; do
    echo "Create mapping files for: $res"
 #----------------------------------------------------------------------
-   cmdargs="-r $res $grid"
+   cmdargs="-r $res $grid $options"
 
    # For single-point and regional resolutions, tell mkmapdata that
    # output type is regional
