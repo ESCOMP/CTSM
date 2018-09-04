@@ -55,7 +55,7 @@ module clm_time_manager
         is_end_curr_year,         &! return true on last timestep in current year
         is_last_step,             &! return true on last timestep
         is_perpetual,             &! return true if perpetual calendar is in use
-        is_near_local_noon,       &! return ture if near local noon
+        is_near_local_noon,       &! return true if near local noon
         is_restart,               &! return true if this is a restart run
         update_rad_dtime,         &! track radiation interval via nstep
         update_DA_nstep,          &! update the Data Assimulation time step
