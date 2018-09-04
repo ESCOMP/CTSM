@@ -1,5 +1,6 @@
 module clm_time_manager
 
+#include "shr_assert.h"
    use shr_kind_mod, only: r8 => shr_kind_r8
    use shr_sys_mod , only: shr_sys_abort
    use spmdMod     , only: masterproc
@@ -42,6 +43,7 @@ module clm_time_manager
         get_curr_yearfrac,        &! return the fractional position in the current year, as of the end of the current timestep
         get_prev_yearfrac,        &! return the fractional position in the current year, as of the beginning of the current timestep
         get_rest_date,            &! return the date from the restart file
+        get_local_time,           &! return the local time for the input longitude
         set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
@@ -53,6 +55,7 @@ module clm_time_manager
         is_end_curr_year,         &! return true on last timestep in current year
         is_last_step,             &! return true on last timestep
         is_perpetual,             &! return true if perpetual calendar is in use
+        is_near_local_noon,       &! return ture if near local noon
         is_restart,               &! return true if this is a restart run
         update_rad_dtime,         &! track radiation interval via nstep
         update_DA_nstep,          &! update the Data Assimulation time step
@@ -1481,6 +1484,61 @@ contains
     ! Extract the year
     yr = ymd / year_mask
   end subroutine get_rest_date
+
+  !=========================================================================================
+
+  integer function get_local_time( londeg )
+
+    !---------------------------------------------------------------------------------
+    ! Get the local time for this longitude
+    !
+    ! uses
+    use clm_varcon, only: degpsec, isecspday
+    ! Arguments
+    real(r8), intent(in) :: londeg   ! Longitude in degrees
+
+    ! Local variables
+    integer  :: yr, mon, day    ! year, month, day, unused
+    integer  :: secs            ! seconds into the day
+    real(r8) :: lon             ! positive longitude
+    !---------------------------------------------------------------------------------
+    SHR_ASSERT( londeg >= -180.0_r8, "londeg must be greater than -180" )
+    SHR_ASSERT( londeg <= 360.0_r8,  "londeg must be less than 360" )
+    call  get_curr_date(yr, mon, day, secs )
+    lon = londeg
+    if ( lon < 0.0_r8 ) lon = lon + 360.0_r8
+    get_local_time  = secs + nint((lon/degpsec)/real(dtime,r8))*dtime
+    get_local_time  = mod(get_local_time,isecspday)
+  end function get_local_time
+
+  !=========================================================================================
+
+  logical function is_near_local_noon( londeg, deltasec )
+
+    !---------------------------------------------------------------------------------
+    ! Is this longitude near it's local noon?
+    !
+    ! uses
+    use clm_varcon, only: degpsec, isecspday
+    ! Arguments
+    real(r8), intent(in) :: londeg   ! Longitude in degrees
+    integer , intent(in) :: deltasec ! Number of seconds before or after local noon
+    
+    ! Local variables
+    integer :: local_secs                         ! Local time in seconds
+    integer, parameter :: noonsec = isecspday / 2 ! seconds at local noon
+    !---------------------------------------------------------------------------------
+    SHR_ASSERT( deltasec < noonsec, "deltasec must be less than 12 hours" )
+    local_secs = get_local_time( londeg )
+
+    if ( local_secs >= (noonsec - deltasec) .and. local_secs <= (noonsec + deltasec)) then
+       is_near_local_noon = .true.
+    else
+       is_near_local_noon = .false.
+    end if
+
+    !---------------------------------------------------------------------------------
+  end function is_near_local_noon
 
   !=========================================================================================
 
