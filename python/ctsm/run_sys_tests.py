@@ -167,7 +167,9 @@ Typical usage:
     This automatically detects the machine and launches the appropriate components of the
     aux_clm test suite on that machine. This script also implements other aspects of the
     typical CTSM system testing workflow, such as running create_test via qsub on
-    cheyenne, and setting up a directory to hold all of the tests in the test suite.
+    cheyenne, and setting up a directory to hold all of the tests in the test suite. A
+    symbolic link will be created in the current directory pointing to the testroot
+    directory containing all of the test directories in the test suite.
 
     Note that the -c/--compare and -g/--generate arguments are required, unless you specify
     --skip-compare and/or --skip-generate.
