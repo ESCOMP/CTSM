@@ -19,7 +19,7 @@ ifneq ($(verbose), not-set)
 endif
 
 PYLINT=pylint
-PYLINT_ARGS=-j 2 --rcfile=ctsm/.pylintrc
+PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
 	ctsm
 
