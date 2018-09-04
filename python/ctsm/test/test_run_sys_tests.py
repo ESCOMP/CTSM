@@ -100,7 +100,7 @@ class TestRunSysTests(unittest.TestCase):
         (2) The standard arguments to create_test (the path to create_test, the arguments
         --test-id and --test-root, and the absence of --compare and --generate)
 
-        (3) That a cs.status file was created
+        (3) That a cs.status.fails file was created
         """
         machine = self._make_machine()
         with mock.patch('ctsm.run_sys_tests.datetime') as mock_date:
@@ -122,7 +122,7 @@ class TestRunSysTests(unittest.TestCase):
 
         expected_cs_status = os.path.join(self._scratch,
                                           self._expected_testroot(),
-                                          'cs.status')
+                                          'cs.status.fails')
         self.assertTrue(os.path.isfile(expected_cs_status))
 
     def test_createTestCommand_testfileAndExtraArgs(self):
@@ -134,7 +134,7 @@ class TestRunSysTests(unittest.TestCase):
 
         (2) The use of a bunch of optional arguments that are passed along to create_test
 
-        (3) That a cs.status file was created
+        (3) That a cs.status.fails file was created
         """
         machine = self._make_machine(account='myaccount')
         testroot_base = os.path.join(self._scratch, 'my', 'testroot')
@@ -165,7 +165,7 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r'--some +extra +--createtest +args(\s|$)')
 
         expected_cs_status = os.path.join(expected_testroot,
-                                          'cs.status')
+                                          'cs.status.fails')
         self.assertTrue(os.path.isfile(expected_cs_status))
 
     def test_createTestCommands_testsuite(self):
@@ -176,7 +176,7 @@ class TestRunSysTests(unittest.TestCase):
 
         This test also checks the stdout and stderr files used for each command
 
-        It also ensures that the cs.status file is created
+        It also ensures that the cs.status.fails and cs.status files are created
         """
         machine = self._make_machine()
         with mock.patch('ctsm.run_sys_tests.datetime') as mock_date, \
@@ -219,6 +219,9 @@ class TestRunSysTests(unittest.TestCase):
         expected_cs_status = os.path.join(self._scratch,
                                           self._expected_testroot(),
                                           'cs.status')
+        expected_cs_status = os.path.join(self._scratch,
+                                          self._expected_testroot(),
+                                          'cs.status.fails')
         self.assertTrue(os.path.isfile(expected_cs_status))
 
     def test_createTestCommands_testsuiteSpecifiedCompilers(self):
