@@ -127,7 +127,7 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type), intent(in) :: this
+    class(waterdiagnosticbulk_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:

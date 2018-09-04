@@ -129,7 +129,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(waterflux_type), intent(in) :: this
+    class(waterflux_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
