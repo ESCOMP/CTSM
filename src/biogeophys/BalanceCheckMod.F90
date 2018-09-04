@@ -69,8 +69,11 @@ contains
     real(r8) :: dtime                    ! land model time step (sec)
     !-----------------------------------------------------------------------
     dtime = get_step_size()
-    ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded up
-    skip_steps = max(2, nint( (skip_size / dtime) + 0.4_r8) )
+    ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded to the nearest integer
+    skip_steps = max(2, nint( (skip_size / dtime) ) )
+
+    write(iulog,*) ' Skip balance checking for the first ', skip_steps, ' time steps'
+
   end subroutine BalanceCheckInit
 
   !-----------------------------------------------------------------------
