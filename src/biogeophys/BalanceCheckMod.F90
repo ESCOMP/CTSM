@@ -35,6 +35,7 @@ module BalanceCheckMod
   ! !PUBLIC TYPES:
   implicit none
   save
+  private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
 
@@ -92,17 +93,19 @@ contains
   end subroutine BalanceCheckClean
 
   !-----------------------------------------------------------------------
-  integer function GetBalanceCheckSkipSteps( )
+  function GetBalanceCheckSkipSteps( ) result( get_skip )
   !-----------------------------------------------------------------------
     !
     ! !DESCRIPTION:
     ! Get the number of steps to skip for the balance check
     !
     ! !ARGUMENTS:
+    integer :: get_skip    ! function result
     ! !LOCAL VARIABLES:
     if ( skip_steps > 0 )then
-       GetBalanceCheckSkipSteps = skip_steps
+       get_skip = skip_steps
     else
+       get_skip = -999
        call endrun('ERROR:: GetBalanceCheckSkipSteps called before BalanceCheckInit')
     end if
   end function GetBalanceCheckSkipSteps

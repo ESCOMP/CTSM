@@ -4,6 +4,7 @@ module test_irrigation
 
   use pfunit_mod
   use unittestSubgridMod
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
   use IrrigationMod, only : irrigation_type, irrigation_params_type
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varpar, only : nlevsoi, nlevgrnd
@@ -68,6 +69,10 @@ contains
   subroutine setUp(this)
     class(TestIrrigation), intent(inout) :: this
 
+    integer :: dtime
+
+    dtime = 1800
+    call unittest_timemgr_setup(dtime=dtime)
     ! Need to set nlevgrnd before doing the subgrid setup (because it is needed when
     ! allocating the col object). So we must do this before setupEnvironment, because
     ! that assumes that the subgrid setup has already been done.
@@ -83,6 +88,7 @@ contains
   subroutine tearDown(this)
     class(TestIrrigation), intent(inout) :: this
 
+    call unittest_timemgr_teardown()
     call this%irrigation%Clean()
     call this%teardownEnvironment()
     call unittest_subgrid_teardown()

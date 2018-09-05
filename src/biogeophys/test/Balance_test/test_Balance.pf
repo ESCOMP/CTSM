@@ -82,10 +82,13 @@ contains
     integer :: nskip
     character(len=256) :: expected_msg
 
+    dtime = 1800
+    call unittest_timemgr_setup(dtime=dtime)
     nskip = GetBalanceCheckSkipSteps()
     expected_msg = endrun_msg( &
             "ERROR:: GetBalanceCheckSkipSteps called before BalanceCheckInit" )
     @assertExceptionRaised(expected_msg)
+    call BalanceCheckInit()
   end subroutine test_balance_Fail
 
   @Test

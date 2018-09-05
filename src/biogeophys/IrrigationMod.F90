@@ -1040,7 +1040,8 @@ contains
     ! Determine whether a given patch needs to be checked for irrigation now.
     !
     ! !USES:
-    use pftconMod, only : pftcon
+    use clm_time_manager, only : get_local_time
+    use pftconMod       , only : pftcon
     !
     ! !ARGUMENTS:
     logical :: check_for_irrig  ! function result
@@ -1063,7 +1064,7 @@ contains
     if (pftcon%irrigated(pft_type) == 1._r8 .and. &
          elai > this%params%irrig_min_lai) then
        ! see if it's the right time of day to start irrigating:
-       local_time = modulo(time_prev + nint(londeg/degpsec), isecspday)
+       local_time = get_local_time( londeg, offset=-this%dtime )
        seconds_since_irrig_start_time = modulo(local_time - this%params%irrig_start_time, isecspday)
        if (seconds_since_irrig_start_time < this%dtime) then
           check_for_irrig         = .true.

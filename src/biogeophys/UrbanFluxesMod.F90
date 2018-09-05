@@ -10,7 +10,7 @@ module UrbanFluxesMod
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use decompMod            , only : bounds_type
   use clm_varpar           , only : numrad
-  use clm_varcon           , only : isecspday, degpsec, namel
+  use clm_varcon           , only : namel
   use clm_varctl           , only : iulog
   use abortutils           , only : endrun  
   use UrbanParamsType      , only : urbanparams_type
@@ -68,7 +68,7 @@ contains
     use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use QSatMod             , only : QSat
     use clm_varpar          , only : maxpatch_urb, nlevurb, nlevgrnd
-    use clm_time_manager    , only : get_curr_date, get_step_size, get_nstep
+    use clm_time_manager    , only : get_step_size, get_nstep, is_near_local_noon
     use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
@@ -175,9 +175,9 @@ contains
     real(r8) :: qflx_err(bounds%begl:bounds%endl)                    ! water vapor flux error (kg/m**2/s)
     real(r8) :: fwet_roof                                            ! fraction of roof surface that is wet (-)
     real(r8) :: fwet_road_imperv                                     ! fraction of impervious road surface that is wet (-)
-    integer  :: local_secp1(bounds%begl:bounds%endl)                 ! seconds into current date in local time (sec)
+    !integer  :: local_secp1(bounds%begl:bounds%endl)                 ! seconds into current date in local time (sec)
     real(r8) :: dtime                                                ! land model time step (sec)
-    integer  :: year,month,day,secs                                  ! calendar info for current time step
+    !integer  :: year,month,day,secs                                  ! calendar info for current time step
     logical  :: found                                                ! flag in search loop
     integer  :: indexl                                               ! index of first found in search loop
     integer  :: nstep                                                ! time step number
@@ -319,7 +319,7 @@ contains
 
       ! Get current date
       dtime = get_step_size()
-      call get_curr_date (year, month, day, secs)
+      !call get_curr_date (year, month, day, secs)
 
       ! Compute canyontop wind using Masson (2000)
 
@@ -327,8 +327,8 @@ contains
          l = filter_urbanl(fl)
          g = lun%gridcell(l)
 
-         local_secp1(l)        = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-         local_secp1(l)        = mod(local_secp1(l),isecspday)
+         !local_secp1(l)        = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
+         !local_secp1(l)        = mod(local_secp1(l),isecspday)
 
          ! Error checks
 
