@@ -50,6 +50,16 @@ module WaterType
   !
   ! !PRIVATE TYPES:
 
+  type, private :: water_params_type
+     private
+
+     ! Whether we add tracers that are used for the tracer consistency checks
+     logical :: enable_consistency_checks
+
+     ! Whether we add tracers that are used for isotopes
+     logical :: enable_isotopes
+  end type water_params_type
+
   ! This type is a container for objects of class water_info_base_type, to facilitate
   ! having an array of polymorphic entities.
   type, private :: water_info_container_type
@@ -88,6 +98,8 @@ module WaterType
      ! Private data members
      ! ------------------------------------------------------------------------
 
+     type(water_params_type) :: params
+
      ! bulk_info needs to be a pointer so other pointers can point to it (since a derived
      ! type component cannot have the target attribute)
      type(water_info_bulk_type), pointer :: bulk_info
@@ -96,6 +108,7 @@ module WaterType
      integer :: bulk_tracer_index  ! index of the tracer that replicates bulk water (-1 if it doesn't exist)
 
    contains
+     ! Public routines
      procedure, public :: Init
      procedure, public :: InitAccBuffer
      procedure, public :: InitAccVars
@@ -106,8 +119,14 @@ module WaterType
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
      procedure, public :: TracerConsistencyCheck
 
+     ! Private routines
+     procedure, private :: ReadNamelist
      procedure, private :: SetupTracerInfo
   end type water_type
+
+  interface water_params_type
+     module procedure water_params_constructor
+  end interface water_params_type
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -115,7 +134,30 @@ module WaterType
 contains
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, &
+  function water_params_constructor(enable_consistency_checks, enable_isotopes) &
+       result(params)
+    !
+    ! !DESCRIPTION:
+    ! Creates a new instance of water_params_type
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(water_params_type) :: params  ! function result
+    logical, intent(in) :: enable_consistency_checks
+    logical, intent(in) :: enable_isotopes
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'water_params_constructor'
+    !-----------------------------------------------------------------------
+
+    params%enable_consistency_checks = enable_consistency_checks
+    params%enable_isotopes = enable_isotopes
+  end function water_params_constructor
+
+  !-----------------------------------------------------------------------
+  subroutine Init(this, bounds, NLFilename, &
        h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
     !
     ! !DESCRIPTION:
@@ -124,6 +166,7 @@ contains
     ! !ARGUMENTS:
     class(water_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
+    character(len=*) , intent(in)    :: NLFilename ! Namelist filename
     real(r8)          , intent(in) :: h2osno_col(bounds%begc:)
     real(r8)          , intent(in) :: snow_depth_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
@@ -143,6 +186,8 @@ contains
     SHR_ASSERT_ALL((ubound(snow_depth_col) == [endc]), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(watsat_col, 1) == endc), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_soisno_col, 1) == endc), errMsg(sourcefile, __LINE__))
+
+    call this%ReadNamelist(NLFilename)
 
     allocate(this%bulk_info, source = water_info_bulk_type())
 
@@ -208,6 +253,75 @@ contains
   end subroutine Init
 
   !-----------------------------------------------------------------------
+  subroutine ReadNamelist(this, NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the water_tracers namelist
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    class(water_type) , intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    ! temporary local variables corresponding to the namelist items
+    logical :: enable_water_tracer_consistency_checks
+    logical :: enable_water_isotopes
+
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+    character(len=*), parameter :: nmlname = 'water_tracers'
+
+    character(len=*), parameter :: subname = 'ReadNamelist'
+    !-----------------------------------------------------------------------
+
+    namelist /water_tracers_inparm/ &
+         enable_water_tracer_consistency_checks, enable_water_isotopes
+
+    ! Initialize namelist variables to defaults
+    enable_water_tracer_consistency_checks = .false.
+    enable_water_isotopes = .false.
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=water_tracers_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast(enable_water_tracer_consistency_checks, mpicom)
+    call shr_mpi_bcast(enable_water_isotopes, mpicom)
+
+    if (masterproc) then
+       write(iulog,*)
+       write(iulog,*) nmlname, ' settings'
+       write(iulog,nml=water_tracers_inparm)
+       write(iulog,*)
+    end if
+
+    this%params = water_params_type( &
+         enable_consistency_checks = enable_water_tracer_consistency_checks, &
+         enable_isotopes = enable_water_isotopes)
+
+  end subroutine ReadNamelist
+
+
+  !-----------------------------------------------------------------------
   subroutine SetupTracerInfo(this)
     !
     ! !DESCRIPTION:
@@ -219,10 +333,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: num_tracers
     integer :: tracer_num
-
-    ! TODO(wjs, 2018-07-31) Eventually these will be set more dynamically
-    logical, parameter :: enable_bulk_tracer = .false.  ! If true, add an isotope-like tracer that is equal to bulk water
-    logical, parameter :: enable_isotopes = .false.     ! If true, add isotopes
+    logical :: enable_bulk_tracer
 
     character(len=*), parameter :: subname = 'SetupTracerInfo'
     !-----------------------------------------------------------------------
@@ -230,10 +341,19 @@ contains
     this%bulk_tracer_index = -1
 
     num_tracers = 0
+    if (this%params%enable_consistency_checks .or. this%params%enable_isotopes) then
+       ! NOTE(wjs, 2018-09-05) From looking at the old water isotope code, it looks like
+       ! we may need the bulk tracer even if we're not doing consistency checks, in order
+       ! to do some roundoff-level adjustments.
+       enable_bulk_tracer = .true.
+    else
+       enable_bulk_tracer = .false.
+    end if
+
     if (enable_bulk_tracer) then
        num_tracers = num_tracers + 1
     end if
-    if (enable_isotopes) then
+    if (this%params%enable_isotopes) then
        num_tracers = num_tracers + 2
     end if
 
@@ -250,7 +370,7 @@ contains
        this%bulk_tracer_index = tracer_num
        tracer_num = tracer_num + 1
     end if
-    if (enable_isotopes) then
+    if (this%params%enable_isotopes) then
        allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('HDO'))
        this%is_isotope(tracer_num) = .true.
        tracer_num = tracer_num + 1
@@ -260,7 +380,12 @@ contains
        tracer_num = tracer_num + 1
     end if
 
-    SHR_ASSERT(tracer_num == this%num_tracers + 1, errMsg(sourcefile, __LINE__))
+    if (tracer_num - 1 /= this%num_tracers) then
+       write(iulog,*) subname//' ERROR: tracer_num discrepancy'
+       write(iulog,*) 'num_tracers = ', this%num_tracers
+       write(iulog,*) 'but added ', tracer_num - 1, ' tracers'
+       call endrun(msg='tracer_num discrepancy '//errMsg(sourcefile, __LINE__))
+    end if
 
   end subroutine SetupTracerInfo
 

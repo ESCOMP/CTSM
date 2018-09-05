@@ -275,7 +275,7 @@ contains
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties
 
-    call water_inst%Init(bounds, &
+    call water_inst%Init(bounds, NLFilename, &
          h2osno_col = h2osno_col(begc:endc), &
          snow_depth_col = snow_depth_col(begc:endc), &
          watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
