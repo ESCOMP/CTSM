@@ -164,6 +164,24 @@ contains
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1, nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+       ! every time step
+       if (get_nstep() == 0) then
+          ! FIXME(wjs, 2018-09-05) Change to be a subroutine like Mat is doing for
+          ! initialization
+          call t_startf("tracer_consistency_check")
+          if (water_inst%num_tracers > 0) then
+             write(iulog,*) 'tracerconsistencycheck= ',water_inst%TracerConsistencyCheck(bounds_clump)
+          end if
+          call t_stopf("tracer_consistency_check")
+       end if
+    end do
+    !$OMP END PARALLEL DO
+
     ! ========================================================================
     ! In the first time step of a startup or hybrid run, we want to update CLM's glacier
     ! areas to match those given by GLC. This is because, in initialization, we do not yet
