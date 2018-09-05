@@ -2,9 +2,12 @@ module CNSoilMatrixMod
 
 !#include "shr_assert.h"
   !-----------------------------------------------------------------------
-  ! !DESCRIPTION:
-  ! Module for CLM45BGC/CLM5.0BGC matrices
-  
+  ! The matrix model of CLM5.0 was developed by Yiqi Luo EcoLab members,
+  ! Drs. Xingjie Lu, Yuanyuan Huang and Zhengguang Du, at Northern Arizona University
+  !----------------------------------------------------------------------------------
+  ! 
+  ! DESCRIPTION:
+  ! Module for CLM5.0BGC matrices
   ! The matrix equation 
   ! Xn+1 = Xn + I*dt + (A*ksi*k - tri/dz)*Xn*dt
   

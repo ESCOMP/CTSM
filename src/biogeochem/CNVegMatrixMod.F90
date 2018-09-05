@@ -1,7 +1,11 @@
 module CNVegMatrixMod
 
-  !-----------------------------------------------------------------------
-  ! !DESCRIPTION:
+  !----------------------------------------------------------------------------------
+  ! The matrix model of CLM5.0 was developed by Yiqi Luo EcoLab members, 
+  ! Drs. Xingjie Lu, Yuanyuan Huang and Zhengguang Du, at Northern Arizona University
+  !----------------------------------------------------------------------------------
+  !
+  ! DESCRIPTION:
   ! Matrix solution for vegetation C and N cycles
   ! The matrix equation 
   ! Xn+1 = Xn + I*dt + (A*ksi*k)*Xn*dt
