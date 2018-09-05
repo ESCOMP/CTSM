@@ -824,7 +824,7 @@ contains
     type(ESMF_Time) :: start_date, stop_date, ref_date
     integer :: rc
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, timeStep=step_size, startTime=start_date, &
          stoptime=stop_date, reftime=ref_date, rc=rc )
@@ -845,7 +845,7 @@ contains
     character(len=*), parameter :: sub = 'clm::get_curr_ESMF_Time'
     integer :: rc
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, currTime=get_curr_ESMF_Time, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -862,7 +862,7 @@ contains
     type(ESMF_TimeInterval) :: step_size       ! timestep size
     integer :: rc
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet(tm_clock, timeStep=step_size, rc=rc)
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -920,7 +920,7 @@ contains
 
     character(len=*), parameter :: sub = 'clm::get_rad_step_size'
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     if (nstep_rad_prev == uninit_int ) then
        get_rad_step_size=get_step_size()
@@ -940,7 +940,7 @@ contains
     integer :: rc
     integer(ESMF_KIND_I8) :: step_no
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet(tm_clock, advanceCount=step_no, rc=rc)
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -985,7 +985,7 @@ contains
     type(ESMF_TimeInterval) :: off
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1031,7 +1031,7 @@ contains
     type(ESMF_TimeInterval) :: DelTime
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
     ! Get time of day add it to perpetual date
@@ -1075,7 +1075,7 @@ contains
     type(ESMF_Time) :: date
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet(tm_clock, prevTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1104,7 +1104,7 @@ contains
     type(ESMF_Time) :: date
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet(tm_clock, startTime=date, rc=rc)
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1130,7 +1130,7 @@ contains
     character(len=*), parameter :: sub = 'clm::get_driver_start_ymd'
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     if ( start_ymd == uninit_int )then
        call shr_sys_abort( sub//': error driver start date is NOT set yet' )
@@ -1167,7 +1167,7 @@ contains
     type(ESMF_Time) :: date
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet(tm_clock, refTime=date, rc=rc)
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1196,7 +1196,7 @@ contains
     type(ESMF_TimeInterval) :: diff
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, currTime=cdate, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1230,7 +1230,7 @@ contains
     type(ESMF_TimeInterval) :: diff
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet(tm_clock, prevTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet for prevTime')
@@ -1264,7 +1264,7 @@ contains
     integer :: year, month, day, tod
     !-----------------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1386,7 +1386,7 @@ contains
     integer         :: rc                ! ESMF return code
     !---------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     if ( present(offset) )then
        call get_curr_date(yr, mon, day, tod, offset )
@@ -1419,7 +1419,7 @@ contains
     real(r8) :: cday               ! current calendar day (1.0 = 0Z on Jan 1)
     real(r8) :: days_per_year      ! days per year
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     cday          = get_curr_calday(offset=offset)
     days_per_year = get_days_per_year()
@@ -1442,7 +1442,7 @@ contains
     
     character(len=*), parameter :: sub = 'clm::get_curr_yearfrac'
     
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
     
     get_prev_yearfrac = get_curr_yearfrac(offset = -dtime)
 
@@ -1487,7 +1487,7 @@ contains
 
   !=========================================================================================
 
-  integer function get_local_time( londeg )
+  integer function get_local_time( londeg, offset )
 
     !---------------------------------------------------------------------------------
     ! Get the local time for this longitude
@@ -1495,7 +1495,8 @@ contains
     ! uses
     use clm_varcon, only: degpsec, isecspday
     ! Arguments
-    real(r8), intent(in) :: londeg   ! Longitude in degrees
+    real(r8)         , intent(in) :: londeg  ! Longitude in degrees
+    integer, optional, intent(in) :: offset  ! Offset from current time in seconds (either sign)
 
     ! Local variables
     integer  :: yr, mon, day    ! year, month, day, unused
@@ -1504,7 +1505,7 @@ contains
     !---------------------------------------------------------------------------------
     SHR_ASSERT( londeg >= -180.0_r8, "londeg must be greater than -180" )
     SHR_ASSERT( londeg <= 360.0_r8,  "londeg must be less than 360" )
-    call  get_curr_date(yr, mon, day, secs )
+    call  get_curr_date(yr, mon, day, secs, offset )
     lon = londeg
     if ( lon < 0.0_r8 ) lon = lon + 360.0_r8
     get_local_time  = secs + nint((lon/degpsec)/real(dtime,r8))*dtime
@@ -1573,7 +1574,7 @@ contains
  
     character(len=*), parameter :: sub = 'clm::is_beg_curr_day'
 
-     call check_timemgr_initialized(sub)
+     if ( .not. check_timemgr_initialized(sub) ) return
 
      call get_curr_date(yr, mon, day, tod)
      is_beg_curr_day = ( tod == dtime )
@@ -1600,7 +1601,7 @@ contains
     character(len=*), parameter :: sub = 'clm::is_end_curr_day'
     !---------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call get_curr_date(yr, mon, day, tod)
     is_end_curr_day = (tod == 0)
@@ -1624,7 +1625,7 @@ contains
     character(len=*), parameter :: sub = 'clm::is_end_curr_month'
     !---------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call get_curr_date(yr, mon, day, tod)
     is_end_curr_month = (day == 1  .and.  tod == 0)
@@ -1647,7 +1648,7 @@ contains
     character(len=*), parameter :: subname = 'is_beg_curr_year'
     !-----------------------------------------------------------------------
 
-    call check_timemgr_initialized(subname)
+    if ( .not. check_timemgr_initialized(subname) ) return
 
     call get_curr_date(yr, mon, day, tod)
     is_beg_curr_year = (mon == 1 .and. day == 1 .and. tod == dtime)
@@ -1670,7 +1671,7 @@ contains
     character(len=*), parameter :: subname = 'is_end_curr_year'
     !-----------------------------------------------------------------------
 
-    call check_timemgr_initialized(subname)
+    if ( .not. check_timemgr_initialized(subname) ) return
 
     call get_curr_date(yr, mon, day, tod)
     is_end_curr_year = (mon == 1 .and. day == 1 .and. tod == 0)
@@ -1692,7 +1693,7 @@ contains
     integer(ESMF_KIND_I8) :: step_no
     !---------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1707,7 +1708,7 @@ contains
     ! Return true on first step of restart or branch run only.
     character(len=*), parameter :: sub = 'clm::is_first_restart_step'
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     is_first_restart_step = tm_first_restart_step
 
@@ -1721,7 +1722,7 @@ contains
     ! the first step of a startup, restart or branch run.
     character(len=*), parameter :: sub = 'clm::is_first_step_of_this_run_segment'
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     is_first_step_of_this_run_segment = (is_first_step() .or. is_first_restart_step())
 
@@ -1742,7 +1743,7 @@ contains
     integer :: rc
     !---------------------------------------------------------------------------------
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     call ESMF_ClockGet( tm_clock, stopTime=stop_date, &
          currTime=curr_date, TimeStep=time_step, rc=rc )
@@ -1762,7 +1763,7 @@ contains
     ! Return true on last timestep.
     character(len=*), parameter :: sub = 'clm::is_perpetual'
 
-    call check_timemgr_initialized(sub)
+    if ( .not. check_timemgr_initialized(sub) ) return
 
     is_perpetual = tm_perp_calendar
 
@@ -1864,7 +1865,7 @@ contains
 
   !=========================================================================================
   
-  subroutine check_timemgr_initialized(caller)
+  logical function check_timemgr_initialized(caller)
     !
     ! !DESCRIPTION:
     ! Checks if the time manager has been initialized. If not, aborts with an error
@@ -1882,9 +1883,12 @@ contains
     
     if (.not. timemgr_set) then
        call shr_sys_abort(trim(caller)//":: Time manager has not been initialized")
+       check_timemgr_initialized = .false.
+    else
+       check_timemgr_initialized = .true.
     end if
     
-  end subroutine check_timemgr_initialized
+  end function check_timemgr_initialized
 
   !-----------------------------------------------------------------------
   subroutine timemgr_reset()

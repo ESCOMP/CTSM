@@ -248,6 +248,25 @@ contains
   end subroutine check_local_time
 
   @Test
+  subroutine check_local_time_woffset(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: secs
+    real(r8) :: londeg
+    integer  :: expected
+
+    ! Check for local noon at Greenich for 1 time step ahead
+    londeg = 0.0_r8
+    secs = 3600*12 + dtime
+    call set_date(yr=2018, mon=9, day=3, tod=secs)
+    expected = secs - dtime
+    @assertEqual( expected, get_local_time( londeg, offset=-dtime ) )
+    londeg = 360.0_r8
+    @assertEqual( expected, get_local_time( londeg, offset=-dtime ) )
+  end subroutine check_local_time_woffset
+
+
+  @Test
   subroutine check_near_local_noon(this)
     class(TestTimeManager), intent(inout) :: this
 
