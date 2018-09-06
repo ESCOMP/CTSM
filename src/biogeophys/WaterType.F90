@@ -117,6 +117,7 @@ module WaterType
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
+     procedure, public :: DoConsistencyCheck ! Whether TracerConsistencyCheck should be called in this run
      procedure, public :: TracerConsistencyCheck
 
      ! Private routines
@@ -581,6 +582,26 @@ contains
     index = this%bulk_tracer_index
 
   end function GetBulkTracerIndex
+
+  !-----------------------------------------------------------------------
+  function DoConsistencyCheck(this) result(do_consistency_check)
+    !
+    ! !DESCRIPTION:
+    ! Returns a logical saying whether TracerConsistencyCheck should be called in this run
+    !
+    ! !ARGUMENTS:
+    logical :: do_consistency_check  ! function result
+    class(water_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'DoConsistencyCheck'
+    !-----------------------------------------------------------------------
+
+    do_consistency_check = this%params%enable_consistency_checks
+
+  end function DoConsistencyCheck
+
 
   !------------------------------------------------------------------------
   subroutine TracerConsistencyCheck(this,bounds)
