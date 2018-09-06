@@ -141,6 +141,8 @@ contains
     type(bounds_type)    :: bounds_clump    
     type(bounds_type)    :: bounds_proc     
 
+    logical :: tracer_consistency
+
     ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) These temporary allocatable arrays are
     ! needed to work around pgi compiler bugs, as noted below
     real(r8), allocatable :: downreg_patch(:)
@@ -175,7 +177,7 @@ contains
           ! initialization
           call t_startf("tracer_consistency_check")
           if (water_inst%num_tracers > 0) then
-             write(iulog,*) 'tracerconsistencycheck= ',water_inst%TracerConsistencyCheck(bounds_clump)
+             tracer_consistency = water_inst%TracerConsistencyCheck(bounds_clump)
           end if
           call t_stopf("tracer_consistency_check")
        end if
