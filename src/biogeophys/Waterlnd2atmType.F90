@@ -251,91 +251,74 @@ contains
 
   end subroutine Restart
 
-  function TracerConsistencyCheck(this,bounds,tracer) result(wiso_inconsistency)
-    !
+  !------------------------------------------------------------------------
+  subroutine TracerConsistencyCheck(this,bounds,tracer)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
     ! !ARGUMENTS:
-
-    logical :: wiso_inconsistency  ! function result
     class(waterlnd2atm_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     class(waterlnd2atm_type), intent(in) :: tracer
     !
     ! !LOCAL VARIABLES:
-    integer l
     !-----------------------------------------------------------------------
 
-    wiso_inconsistency = .false.
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%q_ref2m_grc(bounds%begg:bounds%endg), &
+         tracer%q_ref2m_grc(bounds%begg:bounds%endg), &
+         'q_ref2m_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%q_ref2m_grc(bounds%begg:bounds%endg), &
-                              tracer%q_ref2m_grc(bounds%begg:bounds%endg), &
-                              'q_ref2m_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%h2osno_grc(bounds%begg:bounds%endg), &
+         tracer%h2osno_grc(bounds%begg:bounds%endg), &
+         'h2osno_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%h2osno_grc(bounds%begg:bounds%endg), &
-                              tracer%h2osno_grc(bounds%begg:bounds%endg), &
-                              'h2osno_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
+         tracer%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
+         'qflx_evap_tot_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
-                              tracer%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
-                              'qflx_evap_tot_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qflx_rofliq_grc(bounds%begg:bounds%endg), &
+         tracer%qflx_rofliq_grc(bounds%begg:bounds%endg), &
+         'qflx_rofliq_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qflx_rofliq_grc(bounds%begg:bounds%endg), &
-                              tracer%qflx_rofliq_grc(bounds%begg:bounds%endg), &
-                              'qflx_rofliq_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
+         tracer%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
+         'qflx_rofliq_qsur_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
-                              tracer%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
-                              'qflx_rofliq_qsur_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
+         tracer%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
+         'qflx_rofliq_qsub_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
-                              tracer%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
-                              'qflx_rofliq_qsub_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
+         tracer%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
+         'qflx_rofliq_qgwl_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
-                              tracer%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
-                              'qflx_rofliq_qgwl_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
+         tracer%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
+         'qflx_rofliq_drain_perched_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
-                              tracer%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
-                              'qflx_rofliq_drain_perched_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qflx_rofice_grc(bounds%begg:bounds%endg), &
+         tracer%qflx_rofice_grc(bounds%begg:bounds%endg), &
+         'qflx_rofice_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qflx_rofice_grc(bounds%begg:bounds%endg), &
-                              tracer%qflx_rofice_grc(bounds%begg:bounds%endg), &
-                              'qflx_rofice_grc')
+    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+         this%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
+         tracer%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
+         'qflx_liq_from_ice_col')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
-                              this%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
-                              tracer%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
-                              'qflx_liq_from_ice_col')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%qirrig_grc(bounds%begg:bounds%endg), &
+         tracer%qirrig_grc(bounds%begg:bounds%endg), &
+         'qirrig_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%qirrig_grc(bounds%begg:bounds%endg), &
-                              tracer%qirrig_grc(bounds%begg:bounds%endg), &
-                              'qirrig_grc')
-
-  end function TracerConsistencyCheck
-
+  end subroutine TracerConsistencyCheck
 
 end module Waterlnd2atmType

@@ -586,17 +586,15 @@ contains
 
   end function GetBulkTracerIndex
 
-  function TracerConsistencyCheck(this,bounds) result(wiso_inconsistency)
+  !------------------------------------------------------------------------
+  subroutine TracerConsistencyCheck(this,bounds)
     !
     ! !DESCRIPTION:
     ! Check consistency of water tracers with that of bulk water
     !
-    ! Returns -1 if there is no tracer that replicates bulk water in this run
-    !
     ! !ARGUMENTS:
-    logical :: wiso_inconsistency  ! function result
     class(water_type), intent(in) :: this
-    type(bounds_type), intent(in)    :: bounds
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -611,16 +609,19 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    wiso_inconsistency = .false.  !default
+    call this%waterbalancebulk_inst%TracerConsistencyCheck(bounds, &
+         this%waterbalance_tracer_inst(i))
+    call this%waterstatebulk_inst%TracerConsistencyCheck(bounds, &
+         this%waterstate_tracer_inst(i))
+    call this%waterdiagnosticbulk_inst%TracerConsistencyCheck(bounds, &
+         this%waterdiagnostic_tracer_inst(i))
+    call this%waterfluxbulk_inst%TracerConsistencyCheck(bounds, &
+         this%waterflux_tracer_inst(i))
+    call this%waterlnd2atmbulk_inst%TracerConsistencyCheck(bounds, &
+         this%waterlnd2atm_tracer_inst(i))
+    call this%wateratm2lndbulk_inst%TracerConsistencyCheck(bounds, &
+         this%wateratm2lnd_tracer_inst(i))
 
-    wiso_inconsistency = wiso_inconsistency .or. this%waterbalancebulk_inst%TracerConsistencyCheck(bounds,this%waterbalance_tracer_inst(i))
-    wiso_inconsistency = wiso_inconsistency .or. this%waterstatebulk_inst%TracerConsistencyCheck(bounds,this%waterstate_tracer_inst(i))
-    wiso_inconsistency = wiso_inconsistency .or. this%waterdiagnosticbulk_inst%TracerConsistencyCheck(bounds,this%waterdiagnostic_tracer_inst(i))
-    wiso_inconsistency = wiso_inconsistency .or. this%waterfluxbulk_inst%TracerConsistencyCheck(bounds,this%waterflux_tracer_inst(i))
-    wiso_inconsistency = wiso_inconsistency .or. this%waterlnd2atmbulk_inst%TracerConsistencyCheck(bounds,this%waterlnd2atm_tracer_inst(i))
-    wiso_inconsistency = wiso_inconsistency .or. this%wateratm2lndbulk_inst%TracerConsistencyCheck(bounds,this%wateratm2lnd_tracer_inst(i))
-
-  end function TracerConsistencyCheck
-
+  end subroutine TracerConsistencyCheck
 
 end module WaterType

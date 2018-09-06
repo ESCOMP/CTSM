@@ -272,67 +272,54 @@ contains
 
   end subroutine Restart
 
-  function TracerConsistencyCheck(this,bounds,tracer) result(wiso_inconsistency)
-    !
+  !------------------------------------------------------------------------
+  subroutine TracerConsistencyCheck(this,bounds,tracer)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
     ! !ARGUMENTS:
-
-    logical :: wiso_inconsistency  ! function result
     class(wateratm2lnd_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     class(wateratm2lnd_type), intent(in) :: tracer
     !
     ! !LOCAL VARIABLES:
-    integer l
     !-----------------------------------------------------------------------
 
-    wiso_inconsistency = .false.
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
+         tracer%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
+         'forc_q_not_downscaled_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
-                              tracer%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
-                              'forc_q_not_downscaled_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
+         tracer%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
+         'forc_rain_not_downscaled_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
-                              tracer%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
-                              'forc_rain_not_downscaled_grc')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
+         tracer%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
+         'forc_snow_not_downscaled_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
-                              tracer%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
-                              'forc_snow_not_downscaled_grc')
+    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+         this%forc_q_downscaled_col(bounds%begc:bounds%endc), &
+         tracer%forc_q_downscaled_col(bounds%begc:bounds%endc), &
+         'forc_q_downscaled_col')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
-                              this%forc_q_downscaled_col(bounds%begc:bounds%endc), &
-                              tracer%forc_q_downscaled_col(bounds%begc:bounds%endc), &
-                              'forc_q_downscaled_col')
+    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+         this%forc_flood_grc(bounds%begg:bounds%endg), &
+         tracer%forc_flood_grc(bounds%begg:bounds%endg), &
+         'forc_flood_grc')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
-                              this%forc_flood_grc(bounds%begg:bounds%endg), &
-                              tracer%forc_flood_grc(bounds%begg:bounds%endg), &
-                              'forc_flood_grc')
+    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+         this%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
+         tracer%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
+         'forc_rain_downscaled_col')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
-                              this%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
-                              tracer%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
-                              'forc_rain_downscaled_col')
+    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+         this%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
+         tracer%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
+         'forc_snow_downscaled_col')
 
-    wiso_inconsistency = wiso_inconsistency .or. &
-      WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
-                              this%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
-                              tracer%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
-                              'forc_snow_downscaled_col')
-
-  end function TracerConsistencyCheck
-
+  end subroutine TracerConsistencyCheck
 
 end module Wateratm2lndType
