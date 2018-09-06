@@ -11,10 +11,7 @@ module Waterlnd2atmType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
   use clm_varctl     , only : iulog
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
   use WaterIsotopesMod, only : WisoCompareBulkToTracer
   !
@@ -27,23 +24,22 @@ module Waterlnd2atmType
 
      class(water_info_base_type), pointer :: info
 
-     real(r8), pointer :: q_ref2m_grc        (:)   => null() ! 2m surface specific humidity (kg/kg)       
-     real(r8), pointer :: h2osno_grc         (:)   => null() ! snow water (mm H2O)
-     real(r8), pointer :: qflx_evap_tot_grc  (:)   => null() ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg                        
-     real(r8), pointer :: qflx_rofliq_grc         (:)   => null() ! rof liq forcing
-     real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   => null() ! rof liq -- surface runoff component
-     real(r8), pointer :: qflx_rofliq_qsub_grc    (:)   => null() ! rof liq -- subsurface runoff component
-     real(r8), pointer :: qflx_rofliq_qgwl_grc    (:)   => null() ! rof liq -- glacier, wetland and lakes water balance residual component
-     real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   => null() ! rof liq -- perched water table runoff component        
-     real(r8), pointer :: qflx_rofice_grc    (:)   => null() ! rof ice forcing
-     real(r8), pointer :: qflx_liq_from_ice_col(:) => null() ! liquid runoff from converted ice runoff                              
-     real(r8), pointer :: qirrig_grc         (:)   => null() ! irrigation flux                                                      
+     real(r8), pointer :: q_ref2m_grc        (:)   ! 2m surface specific humidity (kg/kg)       
+     real(r8), pointer :: h2osno_grc         (:)   ! snow water (mm H2O)
+     real(r8), pointer :: qflx_evap_tot_grc  (:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg                        
+     real(r8), pointer :: qflx_rofliq_grc         (:)   ! rof liq forcing
+     real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   ! rof liq -- surface runoff component
+     real(r8), pointer :: qflx_rofliq_qsub_grc    (:)   ! rof liq -- subsurface runoff component
+     real(r8), pointer :: qflx_rofliq_qgwl_grc    (:)   ! rof liq -- glacier, wetland and lakes water balance residual component
+     real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   ! rof liq -- perched water table runoff component        
+     real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing
+     real(r8), pointer :: qflx_liq_from_ice_col(:) ! liquid runoff from converted ice runoff                              
+     real(r8), pointer :: qirrig_grc         (:)   ! irrigation flux                                                      
 
    contains
 
-     procedure          :: Init         
-     procedure          :: Restart      
-     procedure          :: TracerConsistencyCheck
+     procedure, public  :: Init         
+     procedure, public  :: TracerConsistencyCheck
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -89,15 +85,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     real(r8) :: ival  = 0.0_r8  ! initial value     
-    integer :: begp, endp
     integer :: begc, endc
-    integer :: begl, endl
     integer :: begg, endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
-    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     allocate(this%q_ref2m_grc        (begg:endg))            ; this%q_ref2m_grc        (:)   =ival
@@ -119,28 +111,20 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize module data structure
+    ! Initialize history vars
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : use_lch4
-    use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
-    class(waterlnd2atm_type), intent(in) :: this
+    class(waterlnd2atm_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
-    integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
@@ -163,93 +147,24 @@ contains
          long_name=this%info%lname('liquid runoff from converted ice runoff'), &
          ptr_col=this%qflx_liq_from_ice_col, default='inactive')
 
-
-
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize time constant variables and cold start conditions 
-    !
-    ! !USES:
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon      , only : denice, denh2o, spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc, aquifer_water_baseline
-    use clm_varctl      , only : fsurdat, iulog
-    use clm_varctl        , only : use_bedrock
-    use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
-    use fileutils       , only : getfil
-    use ncdio_pio       , only : file_desc_t, ncd_io
+    ! Initialize cold start conditions 
     !
     ! !ARGUMENTS:
-    class(waterlnd2atm_type), intent(in) :: this
-    type(bounds_type)     , intent(in)    :: bounds
+    class(waterlnd2atm_type), intent(inout) :: this
+    type(bounds_type)     , intent(in)      :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev,nlevs 
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
-    logical            :: readvar 
-    type(file_desc_t)  :: ncid        
-    character(len=256) :: locfn       
-    integer            :: nbedrock
     !-----------------------------------------------------------------------
 
-
+    ! Nothing to do for now
 
   end subroutine InitCold
-
-  !------------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag)
-    ! 
-    ! !DESCRIPTION:
-    ! Read/Write module information to/from restart file.
-    !
-    ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin, spval, nameg
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
-    use restUtilMod
-    !
-    ! !ARGUMENTS:
-    class(waterlnd2atm_type), intent(in) :: this
-    type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
-    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: c,l,j,nlevs
-    logical  :: readvar
-    real(r8) :: maxwatsat    ! maximum porosity    
-    real(r8) :: excess       ! excess volumetric soil water
-    real(r8) :: totwat       ! total soil water (mm)
-    !------------------------------------------------------------------------
-
-
-!    call restartvar(ncid=ncid, flag=flag, &
-!         varname=this%info%fname('H2OSFC'), &
-!         xtype=ncd_double,  &
-!         dim1name='column', &
-!         long_name=this%info%lname('surface water'), &
-!         units='kg/m2', &
-!         interpinic_flag='interp', readvar=readvar, data=this%h2osfc_col)
-!    if (flag=='read' .and. .not. readvar) then
-!       this%h2osfc_col(bounds%begc:bounds%endc) = 0.0_r8
-!    end if
-
-
-
-  end subroutine Restart
 
   !------------------------------------------------------------------------
   subroutine TracerConsistencyCheck(this,bounds,tracer)

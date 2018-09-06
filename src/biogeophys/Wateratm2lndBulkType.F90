@@ -16,10 +16,7 @@ module Wateratm2lndBulkType
   use abortutils     , only : endrun
   use PatchType      , only : patch
   use clm_varctl     , only : iulog, use_fates, use_cn, use_cndv
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
   use WaterAtm2lndType , only : wateratm2lnd_type
   use WaterInfoBaseType, only : water_info_base_type
   !
@@ -30,22 +27,20 @@ module Wateratm2lndBulkType
   ! !PUBLIC TYPES:
   type, extends(wateratm2lnd_type), public :: wateratm2lndbulk_type
 
-     real(r8), pointer :: volrmch_grc                   (:)   => null() ! rof volr main channel (m3)    
-     real(r8), pointer :: volr_grc                      (:)   => null() ! rof volr total volume (m3)
-     real(r8), pointer :: forc_rh_grc                   (:)   => null() ! atmospheric relative humidity (%)                                                                                     
-     real(r8) , pointer :: prec365_col                  (:)   => null() ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
-     real(r8) , pointer :: prec60_patch                 (:)   => null() ! patch 60-day running mean of tot. precipitation (mm/s)                                                                
-     real(r8) , pointer :: prec10_patch                 (:)   => null() ! patch 10-day running mean of tot. precipitation (mm/s)                                                                
-     real(r8) , pointer :: rh30_patch                   (:)   => null() ! patch 30-day running mean of relative humidity                                                                        
-     real(r8) , pointer :: prec24_patch                 (:)   => null() ! patch 24-hour running mean of tot. precipitation (mm/s)                                                               
-     real(r8) , pointer :: rh24_patch                   (:)   => null() ! patch 24-hour running mean of relative humidity                                                                       
- 
-
+     real(r8), pointer :: volrmch_grc                   (:)   ! rof volr main channel (m3)    
+     real(r8), pointer :: volr_grc                      (:)   ! rof volr total volume (m3)
+     real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)                                                                                     
+     real(r8) , pointer :: prec365_col                  (:)   ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
+     real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)                                                                
+     real(r8) , pointer :: prec10_patch                 (:)   ! patch 10-day running mean of tot. precipitation (mm/s)                                                                
+     real(r8) , pointer :: rh30_patch                   (:)   ! patch 30-day running mean of relative humidity                                                                        
+     real(r8) , pointer :: prec24_patch                 (:)   ! patch 24-hour running mean of tot. precipitation (mm/s)                                                               
+     real(r8) , pointer :: rh24_patch                   (:)   ! patch 24-hour running mean of relative humidity                                                                       
 
    contains
 
-     procedure          :: InitBulk         
-     procedure          :: RestartBulk      
+     procedure, public  :: InitBulk         
+     procedure, public  :: RestartBulk      
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
@@ -98,13 +93,11 @@ contains
     real(r8) :: ival  = 0.0_r8  ! initial value
     integer :: begp, endp
     integer :: begc, endc
-    integer :: begl, endl
     integer :: begg, endg
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
-    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     allocate(this%volr_grc                      (begg:endg))        ; this%volr_grc    (:)   = ival
@@ -130,25 +123,18 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : use_lch4
-    use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d
+    use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
-    class(wateratm2lndbulk_type), intent(in) :: this
+    class(wateratm2lndbulk_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
-    integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
 
@@ -184,50 +170,22 @@ contains
             ptr_patch=this%prec60_patch, default='inactive')
     end if
 
-
-
   end subroutine InitBulkHistory
 
   !-----------------------------------------------------------------------
   subroutine InitBulkCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize time constant variables and cold start conditions 
-    !
-    ! !USES:
-    use shr_const_mod   , only : shr_const_pi
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
-    use shr_spfn_mod    , only : shr_spfn_erf
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon      , only : spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc
-    use clm_varctl      , only : fsurdat, iulog
-    use clm_varctl        , only : use_bedrock
-    use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
-    use fileutils       , only : getfil
-    use ncdio_pio       , only : file_desc_t, ncd_io
+    ! Initialize cold start conditions 
     !
     ! !ARGUMENTS:
-    class(wateratm2lndbulk_type), intent(in) :: this
+    class(wateratm2lndbulk_type), intent(inout) :: this
     type(bounds_type)     , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
-    logical            :: readvar 
-    type(file_desc_t)  :: ncid        
-    character(len=256) :: locfn       
     !-----------------------------------------------------------------------
 
-
+    ! Nothing to do for now
 
   end subroutine InitBulkCold
 
@@ -238,13 +196,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
-    use restUtilMod
+    use ncdio_pio        , only : file_desc_t
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
@@ -253,24 +205,9 @@ contains
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,l,j
-    logical  :: readvar
     !------------------------------------------------------------------------
 
     call this%restart (bounds, ncid, flag=flag) 
-
-
-
-!    call restartvar(ncid=ncid, flag=flag, &
-!         varname=this%info%fname('SNOW_PERS'), &
-!         xtype=ncd_double,  &
-!         dim1name='column', &
-!         long_name=this%info%lname('continuous snow cover time'), &
-!         units='sec', &
-!         interpinic_flag='interp', readvar=readvar, data=this%snow_persistence_col)    
-!    if (flag=='read' .and. .not. readvar) then
-!         this%snow_persistence_col(:) = 0.0_r8
-!    end if
 
   end subroutine RestartBulk
 

@@ -481,8 +481,6 @@ contains
 
     call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
-    call this%waterlnd2atmbulk_inst%restartBulk (bounds, ncid, flag=flag)
-
     call this%wateratm2lndbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
     do i = 1, this%num_tracers
@@ -493,8 +491,6 @@ contains
             watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
        call this%waterdiagnostic_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
-
-       call this%waterlnd2atm_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
 
        call this%wateratm2lnd_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
 
