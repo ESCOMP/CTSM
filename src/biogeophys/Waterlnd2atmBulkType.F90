@@ -25,13 +25,13 @@ module Waterlnd2atmBulkType
   !
   ! !PUBLIC TYPES:
   type, extends(waterlnd2atm_type), public :: waterlnd2atmbulk_type
-     
-     real(r8), pointer :: h2osoi_vol_grc     (:,:) ! volumetric soil water (0~watsat, m3/m3, nlevgrnd) (for dust model)   
+
+     real(r8), pointer :: h2osoi_vol_grc     (:,:) ! volumetric soil water (0~watsat, m3/m3, nlevgrnd) (for dust model)
    contains
-     procedure, public  :: InitBulk         
-     procedure, private :: InitBulkAllocate 
-     procedure, private :: InitBulkHistory  
-     procedure, private :: InitBulkCold     
+     procedure, public  :: InitBulk
+     procedure, private :: InitBulkAllocate
+     procedure, private :: InitBulkHistory
+     procedure, private :: InitBulkCold
 
   end type waterlnd2atmbulk_type
 
@@ -52,7 +52,7 @@ contains
 
     call this%Init(bounds, info)
 
-    call this%InitBulkAllocate(bounds) 
+    call this%InitBulkAllocate(bounds)
 
     call this%InitBulkHistory(bounds)
 
@@ -71,7 +71,7 @@ contains
     !
     ! !ARGUMENTS:
     class(waterlnd2atmbulk_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     real(r8) :: ival  = 0.0_r8  ! initial value
@@ -92,7 +92,7 @@ contains
     !
     ! !ARGUMENTS:
     class(waterlnd2atmbulk_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     !------------------------------------------------------------------------
@@ -105,7 +105,7 @@ contains
   subroutine InitBulkCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize cold start conditions 
+    ! Initialize cold start conditions
     !
     ! !ARGUMENTS:
     class(waterlnd2atmbulk_type), intent(inout) :: this

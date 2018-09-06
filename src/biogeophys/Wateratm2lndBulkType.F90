@@ -27,27 +27,27 @@ module Wateratm2lndBulkType
   ! !PUBLIC TYPES:
   type, extends(wateratm2lnd_type), public :: wateratm2lndbulk_type
 
-     real(r8), pointer :: volrmch_grc                   (:)   ! rof volr main channel (m3)    
+     real(r8), pointer :: volrmch_grc                   (:)   ! rof volr main channel (m3)
      real(r8), pointer :: volr_grc                      (:)   ! rof volr total volume (m3)
-     real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)                                                                                     
+     real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)
      real(r8) , pointer :: prec365_col                  (:)   ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
-     real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)                                                                
-     real(r8) , pointer :: prec10_patch                 (:)   ! patch 10-day running mean of tot. precipitation (mm/s)                                                                
-     real(r8) , pointer :: rh30_patch                   (:)   ! patch 30-day running mean of relative humidity                                                                        
-     real(r8) , pointer :: prec24_patch                 (:)   ! patch 24-hour running mean of tot. precipitation (mm/s)                                                               
-     real(r8) , pointer :: rh24_patch                   (:)   ! patch 24-hour running mean of relative humidity                                                                       
+     real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)
+     real(r8) , pointer :: prec10_patch                 (:)   ! patch 10-day running mean of tot. precipitation (mm/s)
+     real(r8) , pointer :: rh30_patch                   (:)   ! patch 30-day running mean of relative humidity
+     real(r8) , pointer :: prec24_patch                 (:)   ! patch 24-hour running mean of tot. precipitation (mm/s)
+     real(r8) , pointer :: rh24_patch                   (:)   ! patch 24-hour running mean of relative humidity
 
    contains
 
-     procedure, public  :: InitBulk         
-     procedure, public  :: RestartBulk      
+     procedure, public  :: InitBulk
+     procedure, public  :: RestartBulk
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
      procedure, public  :: Clean
-     procedure, private :: InitBulkAllocate 
-     procedure, private :: InitBulkHistory  
-     procedure, private :: InitBulkCold     
+     procedure, private :: InitBulkAllocate
+     procedure, private :: InitBulkHistory
+     procedure, private :: InitBulkCold
 
   end type wateratm2lndbulk_type
 
@@ -68,7 +68,7 @@ contains
 
     call this%Init(bounds, info)
 
-    call this%InitBulkAllocate(bounds) 
+    call this%InitBulkAllocate(bounds)
 
     call this%InitBulkHistory(bounds)
 
@@ -87,7 +87,7 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     real(r8) :: ival  = 0.0_r8  ! initial value
@@ -127,7 +127,7 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
@@ -176,7 +176,7 @@ contains
   subroutine InitBulkCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize cold start conditions 
+    ! Initialize cold start conditions
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(inout) :: this
@@ -191,7 +191,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine RestartBulk(this, bounds, ncid, flag)
-    ! 
+    !
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
@@ -200,14 +200,14 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in)    :: bounds 
+    type(bounds_type), intent(in)    :: bounds
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
     !------------------------------------------------------------------------
 
-    call this%restart (bounds, ncid, flag=flag) 
+    call this%restart (bounds, ncid, flag=flag)
 
   end subroutine RestartBulk
 
@@ -219,13 +219,13 @@ contains
     ! This routine set defaults values that are then overwritten by the
     ! restart file for restart or branch runs
     !
-    ! !USES 
+    ! !USES
     use clm_varcon  , only : spval
     use accumulMod  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !---------------------------------------------------------------------
 
     if (use_cn) then
@@ -236,7 +236,7 @@ contains
        call init_accum_field (name='PREC60', units='MM H2O/S', &
             desc='60-day running mean of total precipitation', accum_type='runmean', accum_period=-60, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
-    
+
        call init_accum_field (name='RH30', units='%', &
             desc='30-day running mean of relative humidity', accum_type='runmean', accum_period=-30, &
             subgrid_type='pft', numlev=1, init_value=100._r8)
@@ -254,10 +254,10 @@ contains
             desc='24hr sum of precipitation', accum_type='runmean', accum_period=-1, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
 
-       ! Fudge - this neds to be initialized from the restat file eventually. 
+       ! Fudge - this neds to be initialized from the restat file eventually.
        call init_accum_field (name='RH24', units='m', &
             desc='24hr average of RH', accum_type='runmean', accum_period=-1, &
-            subgrid_type='pft', numlev=1, init_value=100._r8) 
+            subgrid_type='pft', numlev=1, init_value=100._r8)
     end if
 
   end subroutine InitAccBuffer
@@ -268,16 +268,16 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
+    ! and a restart run (and must therefore must be called after the restart file
     ! is read in and the accumulation buffer is obtained)
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : extract_accum_field
     use clm_time_manager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
@@ -315,13 +315,13 @@ contains
 
        call extract_accum_field ('PREC60', rbufslp, nstep)
        this%prec60_patch(begp:endp) = rbufslp(begp:endp)
-   
+
        call extract_accum_field ('RH30', rbufslp, nstep)
        this%rh30_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
     if (use_cndv) then
-       call extract_accum_field ('PREC365' , rbufslc, nstep) 
+       call extract_accum_field ('PREC365' , rbufslc, nstep)
        this%prec365_col(begc:endc) = rbufslc(begc:endc)
     end if
 
@@ -346,7 +346,7 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type)      , intent(in) :: bounds  
+    type(bounds_type)      , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p                     ! indices
@@ -416,8 +416,8 @@ contains
        call extract_accum_field ('PREC24', this%prec24_patch, nstep)
 
        do p = bounds%begp,bounds%endp
-          g = patch%gridcell(p) 
-          rbufslp(p) = this%forc_rh_grc(g) 
+          g = patch%gridcell(p)
+          rbufslp(p) = this%forc_rh_grc(g)
        end do
        call update_accum_field  ('RH24', rbufslp, nstep)
        call extract_accum_field ('RH24', this%rh24_patch, nstep)
@@ -425,7 +425,7 @@ contains
 
     if (use_cn) then
        do p = begp,endp
-          g = patch%gridcell(p) 
+          g = patch%gridcell(p)
           rbufslp(p) = this%forc_rh_grc(g)
        end do
        ! Accumulate and extract RH30 (accumulates RH as 30-day running mean)

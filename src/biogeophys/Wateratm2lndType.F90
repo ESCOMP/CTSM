@@ -10,10 +10,10 @@ module Wateratm2lndType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
   use clm_varctl     , only : iulog
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
+  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno
   use clm_varcon     , only : spval
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
+  use LandunitType   , only : lun
+  use ColumnType     , only : col
   use WaterInfoBaseType, only : water_info_base_type
   use WaterIsotopesMod, only : WisoCompareBulkToTracer
   !
@@ -26,22 +26,22 @@ module Wateratm2lndType
 
      class(water_info_base_type), pointer :: info
 
-     real(r8), pointer :: forc_q_not_downscaled_grc     (:)   ! not downscaled atm specific humidity (kg/kg)              
+     real(r8), pointer :: forc_q_not_downscaled_grc     (:)   ! not downscaled atm specific humidity (kg/kg)
      real(r8), pointer :: forc_rain_not_downscaled_grc  (:)   ! not downscaled atm rain rate [mm/s]
      real(r8), pointer :: forc_snow_not_downscaled_grc  (:)   ! not downscaled atm snow rate [mm/s]
-     real(r8), pointer :: forc_q_downscaled_col         (:)   ! downscaled atm specific humidity (kg/kg)                  
+     real(r8), pointer :: forc_q_downscaled_col         (:)   ! downscaled atm specific humidity (kg/kg)
      real(r8), pointer :: forc_flood_grc                (:)   ! rof flood (mm/s)
-     real(r8), pointer :: forc_rain_downscaled_col      (:)   ! downscaled atm rain rate [mm/s]                                                                                       
-     real(r8), pointer :: forc_snow_downscaled_col      (:)   ! downscaled atm snow rate [mm/s]                                                                                       
+     real(r8), pointer :: forc_rain_downscaled_col      (:)   ! downscaled atm rain rate [mm/s]
+     real(r8), pointer :: forc_snow_downscaled_col      (:)   ! downscaled atm snow rate [mm/s]
 
    contains
 
-     procedure, public  :: Init         
-     procedure, public  :: Restart      
+     procedure, public  :: Init
+     procedure, public  :: Restart
      procedure, public  :: TracerConsistencyCheck
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type wateratm2lnd_type
 
@@ -56,7 +56,7 @@ contains
   subroutine Init(this, bounds, info)
 
     class(wateratm2lnd_type), intent(inout) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
 
     this%info => info
@@ -80,10 +80,10 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lnd_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    real(r8) :: ival  = 0.0_r8  ! initial value     
+    real(r8) :: ival  = 0.0_r8  ! initial value
     integer :: begc, endc
     integer :: begg, endg
     !------------------------------------------------------------------------
@@ -113,7 +113,7 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lnd_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer           :: begc, endc
@@ -179,7 +179,7 @@ contains
   subroutine InitCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize cold start conditions 
+    ! Initialize cold start conditions
     !
     ! !ARGUMENTS:
     class(wateratm2lnd_type), intent(inout) :: this
@@ -194,7 +194,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
-    ! 
+    !
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
@@ -204,7 +204,7 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lnd_type), intent(in) :: this
-    type(bounds_type), intent(in)    :: bounds 
+    type(bounds_type), intent(in)    :: bounds
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     !

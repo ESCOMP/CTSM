@@ -24,25 +24,25 @@ module Waterlnd2atmType
 
      class(water_info_base_type), pointer :: info
 
-     real(r8), pointer :: q_ref2m_grc        (:)   ! 2m surface specific humidity (kg/kg)       
+     real(r8), pointer :: q_ref2m_grc        (:)   ! 2m surface specific humidity (kg/kg)
      real(r8), pointer :: h2osno_grc         (:)   ! snow water (mm H2O)
-     real(r8), pointer :: qflx_evap_tot_grc  (:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg                        
+     real(r8), pointer :: qflx_evap_tot_grc  (:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
      real(r8), pointer :: qflx_rofliq_grc         (:)   ! rof liq forcing
      real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   ! rof liq -- surface runoff component
      real(r8), pointer :: qflx_rofliq_qsub_grc    (:)   ! rof liq -- subsurface runoff component
      real(r8), pointer :: qflx_rofliq_qgwl_grc    (:)   ! rof liq -- glacier, wetland and lakes water balance residual component
-     real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   ! rof liq -- perched water table runoff component        
+     real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   ! rof liq -- perched water table runoff component
      real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing
-     real(r8), pointer :: qflx_liq_from_ice_col(:) ! liquid runoff from converted ice runoff                              
-     real(r8), pointer :: qirrig_grc         (:)   ! irrigation flux                                                      
+     real(r8), pointer :: qflx_liq_from_ice_col(:) ! liquid runoff from converted ice runoff
+     real(r8), pointer :: qirrig_grc         (:)   ! irrigation flux
 
    contains
 
-     procedure, public  :: Init         
+     procedure, public  :: Init
      procedure, public  :: TracerConsistencyCheck
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type waterlnd2atm_type
 
@@ -57,7 +57,7 @@ contains
   subroutine Init(this, bounds, info)
 
     class(waterlnd2atm_type), intent(inout) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
 
     this%info => info
@@ -81,10 +81,10 @@ contains
     !
     ! !ARGUMENTS:
     class(waterlnd2atm_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    real(r8) :: ival  = 0.0_r8  ! initial value     
+    real(r8) :: ival  = 0.0_r8  ! initial value
     integer :: begc, endc
     integer :: begg, endg
     !------------------------------------------------------------------------
@@ -118,7 +118,7 @@ contains
     !
     ! !ARGUMENTS:
     class(waterlnd2atm_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer           :: begc, endc
@@ -153,7 +153,7 @@ contains
   subroutine InitCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize cold start conditions 
+    ! Initialize cold start conditions
     !
     ! !ARGUMENTS:
     class(waterlnd2atm_type), intent(inout) :: this
