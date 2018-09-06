@@ -10,8 +10,9 @@ module AerosolMod
   use clm_varpar       , only : nlevsno, nlevgrnd 
   use clm_time_manager , only : get_step_size
   use atm2lndType      , only : atm2lnd_type
-  use WaterfluxType    , only : waterflux_type
-  use WaterstateType   , only : waterstate_type
+  use WaterFluxBulkType    , only : waterfluxbulk_type
+  use WaterStateBulkType   , only : waterstatebulk_type
+  use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
   use ColumnType       , only : col               
   use abortutils       , only : endrun
   !
@@ -513,7 +514,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine AerosolMasses(bounds, num_on, filter_on, num_off, filter_off, &
-       waterflux_inst, waterstate_inst, aerosol_inst)
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, aerosol_inst)
     !
     ! !DESCRIPTION:
     ! Calculate column-integrated aerosol masses, and
@@ -528,8 +529,9 @@ contains
     integer               , intent(in)    :: filter_on(:)   ! column filter for filter-ON points
     integer               , intent(in)    :: num_off        ! number of column non filter-OFF points
     integer               , intent(in)    :: filter_off(:)  ! column filter for filter-OFF points
-    type(waterflux_type)  , intent(in)    :: waterflux_inst 
-    type(waterstate_type) , intent(inout) :: waterstate_inst
+    type(waterfluxbulk_type)  , intent(in)    :: waterfluxbulk_inst 
+    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
     type(aerosol_type)    , intent(inout) :: aerosol_inst
     !
     ! !LOCAL VARIABLES:
@@ -542,11 +544,11 @@ contains
     associate(                                                & 
          snl           => col%snl                           , & ! Input:  [integer  (:)   ]  number of snow layers                    
 
-         h2osoi_ice    => waterstate_inst%h2osoi_ice_col    , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         h2osoi_liq    => waterstate_inst%h2osoi_liq_col    , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
+         h2osoi_ice    => waterstatebulk_inst%h2osoi_ice_col    , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
+         h2osoi_liq    => waterstatebulk_inst%h2osoi_liq_col    , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
 
-         h2osno_top    => waterstate_inst%h2osno_top_col    , & ! Output: [real(r8) (:)   |  top-layer mass of snow  [kg]
-         snw_rds       => waterstate_inst%snw_rds_col       , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
+         h2osno_top    => waterdiagnosticbulk_inst%h2osno_top_col    , & ! Output: [real(r8) (:)   |  top-layer mass of snow  [kg]
+         snw_rds       => waterdiagnosticbulk_inst%snw_rds_col       , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
 
          mss_bcpho     => aerosol_inst%mss_bcpho_col        , & ! Output: [real(r8) (:,:) ]  mass of hydrophobic BC in snow (col,lyr) [kg]
          mss_bcphi     => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ]  mass of hydrophillic BC in snow (col,lyr) [kg]
