@@ -17,7 +17,7 @@ module WaterBalanceType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
-  use WaterIsotopesMod, only : WisoCompareBulkToTracer
+  use WaterTracerUtils, only : CompareBulkToTracer
   !
   implicit none
   save
@@ -207,52 +207,52 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%h2osno_old_col(bounds%begc:bounds%endc), &
          tracer%h2osno_old_col(bounds%begc:bounds%endc), &
          'h2osno_old_col')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%liq1_grc(bounds%begg:bounds%endg), &
          tracer%liq1_grc(bounds%begg:bounds%endg), &
          'liq1_grc')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%liq2_grc(bounds%begg:bounds%endg), &
          tracer%liq2_grc(bounds%begg:bounds%endg), &
          'liq2_grc')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%ice1_grc(bounds%begg:bounds%endg), &
          tracer%ice1_grc(bounds%begg:bounds%endg), &
          'ice1_grc')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%ice2_grc(bounds%begg:bounds%endg), &
          tracer%ice2_grc(bounds%begg:bounds%endg), &
          'ice2_grc')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%begwb_col(bounds%begc:bounds%endc), &
          tracer%begwb_col(bounds%begc:bounds%endc), &
          'begwb_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%endwb_col(bounds%begc:bounds%endc), &
          tracer%endwb_col(bounds%begc:bounds%endc), &
          'endwb_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%errh2o_col(bounds%begc:bounds%endc), &
          tracer%errh2o_col(bounds%begc:bounds%endc), &
          'errh2o_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%errh2osno_col(bounds%begc:bounds%endc), &
          tracer%errh2osno_col(bounds%begc:bounds%endc), &
          'errh2osno_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%errh2o_patch(bounds%begp:bounds%endp), &
          tracer%errh2o_patch(bounds%begp:bounds%endp), &
          'errh2o_patch')

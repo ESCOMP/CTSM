@@ -1,4 +1,4 @@
-module WaterIsotopesMod
+module WaterTracerUtils
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -17,7 +17,7 @@ module WaterIsotopesMod
   private
 
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: WisoCompareBulkToTracer
+  public :: CompareBulkToTracer
 
   ! !PRIVATE MEMBER DATA:
   
@@ -27,7 +27,7 @@ module WaterIsotopesMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine WisoCompareBulkToTracer(bounds_beg, bounds_end, &
+  subroutine CompareBulkToTracer(bounds_beg, bounds_end, &
        bulk, tracer, name)
     !
     ! !DESCRIPTION:
@@ -47,7 +47,7 @@ contains
 
     real(r8), parameter :: tolerance = 1.0e-7_r8
 
-    character(len=*), parameter :: subname = 'WisoCompareBulkToTracer'
+    character(len=*), parameter :: subname = 'CompareBulkToTracer'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(bulk) == [bounds_end]), errMsg(sourcefile, __LINE__))
@@ -81,6 +81,6 @@ contains
             " tracer does not agree with bulk water."
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-  end subroutine WisoCompareBulkToTracer
+  end subroutine CompareBulkToTracer
 
-end module WaterIsotopesMod
+end module WaterTracerUtils

@@ -15,7 +15,7 @@ module Wateratm2lndType
   use LandunitType   , only : lun
   use ColumnType     , only : col
   use WaterInfoBaseType, only : water_info_base_type
-  use WaterIsotopesMod, only : WisoCompareBulkToTracer
+  use WaterTracerUtils, only : CompareBulkToTracer
   !
   implicit none
   save
@@ -237,37 +237,37 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
          tracer%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
          'forc_q_not_downscaled_grc')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
          tracer%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
          'forc_rain_not_downscaled_grc')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
          tracer%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
          'forc_snow_not_downscaled_grc')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%forc_q_downscaled_col(bounds%begc:bounds%endc), &
          tracer%forc_q_downscaled_col(bounds%begc:bounds%endc), &
          'forc_q_downscaled_col')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_flood_grc(bounds%begg:bounds%endg), &
          tracer%forc_flood_grc(bounds%begg:bounds%endg), &
          'forc_flood_grc')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
          tracer%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
          'forc_rain_downscaled_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
          tracer%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
          'forc_snow_downscaled_col')

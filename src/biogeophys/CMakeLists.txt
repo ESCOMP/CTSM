@@ -26,9 +26,9 @@ list(APPEND clm_sources
   WaterFluxBulkType.F90
   WaterInfoBaseType.F90
   WaterInfoBulkType.F90
-  WaterIsotopesMod.F90
   WaterStateBulkType.F90
   WaterStateType.F90
+  WaterTracerUtils.F90
   )
 
 sourcelist_to_parent(clm_sources)

@@ -16,7 +16,7 @@ module WaterFluxType
   use PatchType      , only : patch   
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
-  use WaterIsotopesMod, only : WisoCompareBulkToTracer
+  use WaterTracerUtils, only : CompareBulkToTracer
   !
   implicit none
   private
@@ -634,254 +634,254 @@ contains
     integer :: l
     !-----------------------------------------------------------------------
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
          tracer%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
          'qflx_prec_grnd_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
          tracer%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
          'qflx_prec_grnd_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
          tracer%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
          'qflx_rain_grnd_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
          tracer%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
          'qflx_rain_grnd_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
          tracer%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
          'qflx_snow_grnd_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
          tracer%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
          'qflx_snow_grnd_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
          tracer%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
          'qflx_sub_snow_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_sub_snow_col(bounds%begc:bounds%endc), &
          tracer%qflx_sub_snow_col(bounds%begc:bounds%endc), &
          'qflx_sub_snow_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
          tracer%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
          'qflx_evap_soi_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_evap_soi_col(bounds%begc:bounds%endc), &
          tracer%qflx_evap_soi_col(bounds%begc:bounds%endc), &
          'qflx_evap_soi_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
          tracer%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
          'qflx_evap_veg_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_evap_veg_col(bounds%begc:bounds%endc), &
          tracer%qflx_evap_veg_col(bounds%begc:bounds%endc), &
          'qflx_evap_veg_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_evap_can_patch(bounds%begp:bounds%endp), &
          tracer%qflx_evap_can_patch(bounds%begp:bounds%endp), &
          'qflx_evap_can_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_evap_can_col(bounds%begc:bounds%endc), &
          tracer%qflx_evap_can_col(bounds%begc:bounds%endc), &
          'qflx_evap_can_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
          tracer%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
          'qflx_evap_tot_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_evap_tot_col(bounds%begc:bounds%endc), &
          tracer%qflx_evap_tot_col(bounds%begc:bounds%endc), &
          'qflx_evap_tot_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
          tracer%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
          'qflx_evap_grnd_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
          tracer%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
          'qflx_evap_grnd_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
          tracer%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
          'qflx_tran_veg_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_tran_veg_col(bounds%begc:bounds%endc), &
          tracer%qflx_tran_veg_col(bounds%begc:bounds%endc), &
          'qflx_tran_veg_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
          tracer%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
          'qflx_dew_snow_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_dew_snow_col(bounds%begc:bounds%endc), &
          tracer%qflx_dew_snow_col(bounds%begc:bounds%endc), &
          'qflx_dew_snow_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
          tracer%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
          'qflx_dew_grnd_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
          tracer%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
          'qflx_dew_grnd_col')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
          tracer%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
          'qflx_prec_intr_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_prec_intr_col(bounds%begc:bounds%endc), &
          tracer%qflx_prec_intr_col(bounds%begc:bounds%endc), &
          'qflx_prec_intr_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
          tracer%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
          'qflx_snwcp_liq_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
          tracer%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
          'qflx_snwcp_ice_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_glcice_col(bounds%begc:bounds%endc), &
          tracer%qflx_glcice_col(bounds%begc:bounds%endc), &
          'qflx_glcice_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
          tracer%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
          'qflx_glcice_frz_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
          tracer%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
          'qflx_glcice_melt_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_infl_col(bounds%begc:bounds%endc), &
          tracer%qflx_infl_col(bounds%begc:bounds%endc), &
          'qflx_infl_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_surf_col(bounds%begc:bounds%endc), &
          tracer%qflx_surf_col(bounds%begc:bounds%endc), &
          'qflx_surf_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_drain_col(bounds%begc:bounds%endc), &
          tracer%qflx_drain_col(bounds%begc:bounds%endc), &
          'qflx_drain_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_drain_perched_col(bounds%begc:bounds%endc), &
          tracer%qflx_drain_perched_col(bounds%begc:bounds%endc), &
          'qflx_drain_perched_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_top_soil_col(bounds%begc:bounds%endc), &
          tracer%qflx_top_soil_col(bounds%begc:bounds%endc), &
          'qflx_top_soil_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_floodc_col(bounds%begc:bounds%endc), &
          tracer%qflx_floodc_col(bounds%begc:bounds%endc), &
          'qflx_floodc_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
          tracer%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
          'qflx_sl_top_soil_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_snomelt_col(bounds%begc:bounds%endc), &
          tracer%qflx_snomelt_col(bounds%begc:bounds%endc), &
          'qflx_snomelt_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_qrgwl_col(bounds%begc:bounds%endc), &
          tracer%qflx_qrgwl_col(bounds%begc:bounds%endc), &
          'qflx_qrgwl_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_runoff_col(bounds%begc:bounds%endc), &
          tracer%qflx_runoff_col(bounds%begc:bounds%endc), &
          'qflx_runoff_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_runoff_r_col(bounds%begc:bounds%endc), &
          tracer%qflx_runoff_r_col(bounds%begc:bounds%endc), &
          'qflx_runoff_r_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_runoff_u_col(bounds%begc:bounds%endc), &
          tracer%qflx_runoff_u_col(bounds%begc:bounds%endc), &
          'qflx_runoff_u_col')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
          tracer%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
          'qflx_rsub_sat_col')
 
     do l = lbound(this%qflx_snofrz_lyr_col,2),ubound(this%qflx_snofrz_lyr_col,2)
-       call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+       call CompareBulkToTracer(bounds%begc, bounds%endc, &
             this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,l), &
             tracer%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,l), &
             'qflx_snofrz_lyr_col')
     end do
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_snofrz_col(bounds%begc:bounds%endc), &
          tracer%qflx_snofrz_col(bounds%begc:bounds%endc), &
          'qflx_snofrz_col')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
          tracer%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
          'qflx_liq_dynbal')
 
-    call WisoCompareBulkToTracer(bounds%begg, bounds%endg, &
+    call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
          tracer%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
          'qflx_ice_dynbal')
 
-    call WisoCompareBulkToTracer(bounds%begp, bounds%endp, &
+    call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%qflx_irrig_patch(bounds%begp:bounds%endp), &
          tracer%qflx_irrig_patch(bounds%begp:bounds%endp), &
          'qflx_irrig_patch')
 
-    call WisoCompareBulkToTracer(bounds%begc, bounds%endc, &
+    call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qflx_irrig_col(bounds%begc:bounds%endc), &
          tracer%qflx_irrig_col(bounds%begc:bounds%endc), &
          'qflx_irrig_col')
