@@ -77,6 +77,7 @@ contains
     allocate(waterstatebulk_vars%h2osoi_liq_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
     allocate(waterstatebulk_vars%h2osoi_ice_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
     allocate(waterstatebulk_vars%h2osoi_vol_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
+    allocate(waterstatebulk_vars%wa_col(bounds%begc:bounds%endc))
     do lev = -nlevsno+1, nlevgrnd
        do c = bounds%begc, bounds%endc
           temperature_vars%t_soisno_col(c, lev) = c*1000 + lev
@@ -90,6 +91,9 @@ contains
     end do
 
     ! Also need to initialize some other variables for which we don't have any assertions
+    do c = bounds%begc, bounds%endc
+       waterstatebulk_vars%wa_col(c) = 0._r8
+    end do
   end subroutine setup
 
   subroutine cleanup()
@@ -102,6 +106,7 @@ contains
     deallocate(waterstatebulk_vars%h2osoi_liq_col)
     deallocate(waterstatebulk_vars%h2osoi_ice_col)
     deallocate(waterstatebulk_vars%h2osoi_vol_col)
+    deallocate(waterstatebulk_vars%wa_col)
 
   end subroutine cleanup
 
