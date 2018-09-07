@@ -28,7 +28,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CompareBulkToTracer(bounds_beg, bounds_end, &
-       bulk, tracer, name)
+       bulk, tracer, caller_location, name, level)
     !
     ! !DESCRIPTION:
     ! Compare the bulk and tracer quantities; abort if they differ
@@ -38,11 +38,14 @@ contains
     integer, intent(in) :: bounds_end
     real(r8), intent(in) :: bulk( bounds_beg: )
     real(r8), intent(in) :: tracer( bounds_beg: )
-    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
+    character(len=*), intent(in) :: name             ! variable name (for error messages)
+    integer, intent(in), optional :: level           ! level being compared (for error messages)
     !
     ! !LOCAL VARIABLES:
     logical :: arrays_equal
     integer :: i
+    integer :: diffloc
     real(r8) :: val1, val2
 
     real(r8), parameter :: tolerance = 1.0e-7_r8
@@ -63,6 +66,7 @@ contains
              ! trap special case were both are zero to avoid division by zero. values equal                                                                    
           else if (abs(val1 - val2) / max(abs(val1), abs(val2)) > tolerance) then
              arrays_equal = .false.
+             diffloc = i
              exit
           else
              ! error < tolerance, considered equal.                             
@@ -72,14 +76,23 @@ contains
        else
           ! only one value is nan, not equal                                    
           arrays_equal = .false.
+          diffloc = i
           exit
        end if
     end do
 
     if (.not. arrays_equal) then
-       write(iulog, '(a, a, a, i3, a)') "WISO: ", trim(name), &
-            " tracer does not agree with bulk water."
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       write(iulog, '(a, a, a)') 'ERROR in ', subname, ': tracer does not agree with bulk water'
+       write(iulog, '(a, a)') 'Called from: ', trim(caller_location)
+       if (present(level)) then
+          write(iulog, '(a, a, a, i0)') 'Variable: ', trim(name), ', level ', level
+       else
+          write(iulog, '(a, a)') 'Variable: ', trim(name)
+       end if
+       write(iulog, '(a, i0)') 'First difference at index: ', diffloc
+       write(iulog, '(a, e25.17)') 'Bulk  : ', bulk(diffloc)
+       write(iulog, '(a, e25.17)') 'Tracer: ', tracer(diffloc)
+       call endrun(msg=subname//': tracer does not agree with bulk water')
     end if
   end subroutine CompareBulkToTracer
 

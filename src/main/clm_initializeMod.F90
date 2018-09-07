@@ -692,7 +692,7 @@ contains
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1,nclumps
           call get_clump_bounds(nc, bounds_clump)
-          call water_inst%TracerConsistencyCheck(bounds_proc)
+          call water_inst%TracerConsistencyCheck(bounds_proc, 'end of initialization')
        end do
        !$OMP END PARALLEL DO
     end if

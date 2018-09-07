@@ -225,7 +225,7 @@ contains
   end subroutine Restart
 
   !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this,bounds,tracer)
+  subroutine TracerConsistencyCheck(this, bounds, tracer, caller_location)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
@@ -233,6 +233,7 @@ contains
     class(wateratm2lnd_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     class(wateratm2lnd_type), intent(in) :: tracer
+    character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     !
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
@@ -240,37 +241,44 @@ contains
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
          tracer%forc_q_not_downscaled_grc(bounds%begg:bounds%endg), &
-         'forc_q_not_downscaled_grc')
+         caller_location=caller_location, &
+         name='forc_q_not_downscaled_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
          tracer%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg), &
-         'forc_rain_not_downscaled_grc')
+         caller_location=caller_location, &
+         name='forc_rain_not_downscaled_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
          tracer%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg), &
-         'forc_snow_not_downscaled_grc')
+         caller_location=caller_location, &
+         name='forc_snow_not_downscaled_grc')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%forc_q_downscaled_col(bounds%begc:bounds%endc), &
          tracer%forc_q_downscaled_col(bounds%begc:bounds%endc), &
-         'forc_q_downscaled_col')
+         caller_location=caller_location, &
+         name='forc_q_downscaled_col')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%forc_flood_grc(bounds%begg:bounds%endg), &
          tracer%forc_flood_grc(bounds%begg:bounds%endg), &
-         'forc_flood_grc')
+         caller_location=caller_location, &
+         name='forc_flood_grc')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
          tracer%forc_rain_downscaled_col(bounds%begc:bounds%endc), &
-         'forc_rain_downscaled_col')
+         caller_location=caller_location, &
+         name='forc_rain_downscaled_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
          tracer%forc_snow_downscaled_col(bounds%begc:bounds%endc), &
-         'forc_snow_downscaled_col')
+         caller_location=caller_location, &
+         name='forc_snow_downscaled_col')
 
   end subroutine TracerConsistencyCheck
 

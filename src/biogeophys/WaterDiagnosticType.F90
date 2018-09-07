@@ -332,7 +332,7 @@ contains
   end subroutine Restart
 
   !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this,bounds,tracer)
+  subroutine TracerConsistencyCheck(this, bounds, tracer, caller_location)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
@@ -340,6 +340,7 @@ contains
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     class(waterdiagnostic_type), intent(in) :: tracer
+    character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     !
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
@@ -347,52 +348,62 @@ contains
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%snowice_col(bounds%begc:bounds%endc), &
          tracer%snowice_col(bounds%begc:bounds%endc), &
-         'snowice_col')
+         caller_location=caller_location, &
+         name='snowice_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%snowliq_col(bounds%begc:bounds%endc), &
          tracer%snowliq_col(bounds%begc:bounds%endc), &
-         'snowliq_col')
+         caller_location=caller_location, &
+         name='snowliq_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
          tracer%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
-         'h2osoi_liqice_10cm_col')
+         caller_location=caller_location, &
+         name='h2osoi_liqice_10cm_col')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
          this%tws_grc(bounds%begg:bounds%endg), &
          tracer%tws_grc(bounds%begg:bounds%endg), &
-         'tws_grc')
+         caller_location=caller_location, &
+         name='tws_grc')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
          this%q_ref2m_patch(bounds%begp:bounds%endp), &
          tracer%q_ref2m_patch(bounds%begp:bounds%endp), &
-         'q_ref2m_patch')
+         caller_location=caller_location, &
+         name='q_ref2m_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qg_snow_col(bounds%begc:bounds%endc), &
          tracer%qg_snow_col(bounds%begc:bounds%endc), &
-         'qg_snow_col')
+         caller_location=caller_location, &
+         name='qg_snow_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qg_soil_col(bounds%begc:bounds%endc), &
          tracer%qg_soil_col(bounds%begc:bounds%endc), &
-         'qg_soil_col')
+         caller_location=caller_location, &
+         name='qg_soil_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qg_h2osfc_col(bounds%begc:bounds%endc), &
          tracer%qg_h2osfc_col(bounds%begc:bounds%endc), &
-         'qg_h2osfc_col')
+         caller_location=caller_location, &
+         name='qg_h2osfc_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
          this%qg_col(bounds%begc:bounds%endc), &
          tracer%qg_col(bounds%begc:bounds%endc), &
-         'qg_col')
+         caller_location=caller_location, &
+         name='qg_col')
 
     call CompareBulkToTracer(bounds%begl, bounds%endl, &
          this%qaf_lun(bounds%begl:bounds%endl), &
          tracer%qaf_lun(bounds%begl:bounds%endl), &
-         'qaf_lun')
+         caller_location=caller_location, &
+         name='qaf_lun')
 
   end subroutine TracerConsistencyCheck
 

@@ -604,7 +604,7 @@ contains
 
 
   !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this,bounds)
+  subroutine TracerConsistencyCheck(this, bounds, caller_location)
     !
     ! !DESCRIPTION:
     ! Check consistency of water tracers with that of bulk water
@@ -612,6 +612,7 @@ contains
     ! !ARGUMENTS:
     class(water_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
+    character(len=*) , intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -627,17 +628,17 @@ contains
     end if
 
     call this%waterbalancebulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterbalance_tracer_inst(i))
+         this%waterbalance_tracer_inst(i), caller_location)
     call this%waterstatebulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterstate_tracer_inst(i))
+         this%waterstate_tracer_inst(i), caller_location)
     call this%waterdiagnosticbulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterdiagnostic_tracer_inst(i))
+         this%waterdiagnostic_tracer_inst(i), caller_location)
     call this%waterfluxbulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterflux_tracer_inst(i))
+         this%waterflux_tracer_inst(i), caller_location)
     call this%waterlnd2atmbulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterlnd2atm_tracer_inst(i))
+         this%waterlnd2atm_tracer_inst(i), caller_location)
     call this%wateratm2lndbulk_inst%TracerConsistencyCheck(bounds, &
-         this%wateratm2lnd_tracer_inst(i))
+         this%wateratm2lnd_tracer_inst(i), caller_location)
 
   end subroutine TracerConsistencyCheck
 
