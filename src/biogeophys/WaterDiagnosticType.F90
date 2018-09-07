@@ -332,76 +332,76 @@ contains
   end subroutine Restart
 
   !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this, bounds, tracer, caller_location)
+  subroutine TracerConsistencyCheck(this, bounds, bulk, caller_location)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    class(waterdiagnostic_type), intent(in) :: tracer
+    class(waterdiagnostic_type), intent(in) :: bulk
     character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     !
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%snowice_col(bounds%begc:bounds%endc), &
-         tracer%snowice_col(bounds%begc:bounds%endc), &
+         bulk=bulk%snowice_col(bounds%begc:bounds%endc), &
+         tracer=this%snowice_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='snowice_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%snowliq_col(bounds%begc:bounds%endc), &
-         tracer%snowliq_col(bounds%begc:bounds%endc), &
+         bulk=bulk%snowliq_col(bounds%begc:bounds%endc), &
+         tracer=this%snowliq_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='snowliq_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
-         tracer%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
+         bulk=bulk%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
+         tracer=this%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='h2osoi_liqice_10cm_col')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%tws_grc(bounds%begg:bounds%endg), &
-         tracer%tws_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%tws_grc(bounds%begg:bounds%endg), &
+         tracer=this%tws_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='tws_grc')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%q_ref2m_patch(bounds%begp:bounds%endp), &
-         tracer%q_ref2m_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%q_ref2m_patch(bounds%begp:bounds%endp), &
+         tracer=this%q_ref2m_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='q_ref2m_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qg_snow_col(bounds%begc:bounds%endc), &
-         tracer%qg_snow_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qg_snow_col(bounds%begc:bounds%endc), &
+         tracer=this%qg_snow_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qg_snow_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qg_soil_col(bounds%begc:bounds%endc), &
-         tracer%qg_soil_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qg_soil_col(bounds%begc:bounds%endc), &
+         tracer=this%qg_soil_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qg_soil_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qg_h2osfc_col(bounds%begc:bounds%endc), &
-         tracer%qg_h2osfc_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qg_h2osfc_col(bounds%begc:bounds%endc), &
+         tracer=this%qg_h2osfc_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qg_h2osfc_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qg_col(bounds%begc:bounds%endc), &
-         tracer%qg_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qg_col(bounds%begc:bounds%endc), &
+         tracer=this%qg_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qg_col')
 
     call CompareBulkToTracer(bounds%begl, bounds%endl, &
-         this%qaf_lun(bounds%begl:bounds%endl), &
-         tracer%qaf_lun(bounds%begl:bounds%endl), &
+         bulk=bulk%qaf_lun(bounds%begl:bounds%endl), &
+         tracer=this%qaf_lun(bounds%begl:bounds%endl), &
          caller_location=caller_location, &
          name='qaf_lun')
 

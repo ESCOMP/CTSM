@@ -621,14 +621,14 @@ contains
   end subroutine Restart
 
   !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this, bounds, tracer, caller_location)
+  subroutine TracerConsistencyCheck(this, bounds, bulk, caller_location)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    class(waterflux_type), intent(in) :: tracer
+    class(waterflux_type), intent(in) :: bulk
     character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     !
     ! !LOCAL VARIABLES:
@@ -636,305 +636,305 @@ contains
     !-----------------------------------------------------------------------
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_prec_grnd_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
-         tracer%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_prec_grnd_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_rain_grnd_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
-         tracer%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_rain_grnd_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_snow_grnd_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
-         tracer%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_snow_grnd_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_sub_snow_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_sub_snow_col(bounds%begc:bounds%endc), &
-         tracer%qflx_sub_snow_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_sub_snow_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_sub_snow_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_sub_snow_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_evap_soi_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_evap_soi_col(bounds%begc:bounds%endc), &
-         tracer%qflx_evap_soi_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_evap_soi_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_evap_soi_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_evap_soi_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_evap_veg_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_evap_veg_col(bounds%begc:bounds%endc), &
-         tracer%qflx_evap_veg_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_evap_veg_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_evap_veg_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_evap_veg_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_evap_can_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_evap_can_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_evap_can_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_evap_can_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_evap_can_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_evap_can_col(bounds%begc:bounds%endc), &
-         tracer%qflx_evap_can_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_evap_can_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_evap_can_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_evap_can_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_evap_tot_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_evap_tot_col(bounds%begc:bounds%endc), &
-         tracer%qflx_evap_tot_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_evap_tot_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_evap_tot_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_evap_tot_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_evap_grnd_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
-         tracer%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_evap_grnd_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_tran_veg_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_tran_veg_col(bounds%begc:bounds%endc), &
-         tracer%qflx_tran_veg_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_tran_veg_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_tran_veg_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_tran_veg_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_dew_snow_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_dew_snow_col(bounds%begc:bounds%endc), &
-         tracer%qflx_dew_snow_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_dew_snow_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_dew_snow_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_dew_snow_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_dew_grnd_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
-         tracer%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_dew_grnd_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_prec_intr_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_prec_intr_col(bounds%begc:bounds%endc), &
-         tracer%qflx_prec_intr_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_prec_intr_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_prec_intr_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_prec_intr_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
-         tracer%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_snwcp_liq_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
-         tracer%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_snwcp_ice_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_glcice_col(bounds%begc:bounds%endc), &
-         tracer%qflx_glcice_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_glcice_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_glcice_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_glcice_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
-         tracer%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_glcice_frz_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
-         tracer%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_glcice_melt_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_infl_col(bounds%begc:bounds%endc), &
-         tracer%qflx_infl_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_infl_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_infl_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_infl_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_surf_col(bounds%begc:bounds%endc), &
-         tracer%qflx_surf_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_surf_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_surf_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_surf_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_drain_col(bounds%begc:bounds%endc), &
-         tracer%qflx_drain_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_drain_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_drain_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_drain_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_drain_perched_col(bounds%begc:bounds%endc), &
-         tracer%qflx_drain_perched_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_drain_perched_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_drain_perched_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_drain_perched_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_top_soil_col(bounds%begc:bounds%endc), &
-         tracer%qflx_top_soil_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_top_soil_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_top_soil_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_top_soil_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_floodc_col(bounds%begc:bounds%endc), &
-         tracer%qflx_floodc_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_floodc_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_floodc_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_floodc_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
-         tracer%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_sl_top_soil_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_snomelt_col(bounds%begc:bounds%endc), &
-         tracer%qflx_snomelt_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_snomelt_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_snomelt_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_snomelt_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_qrgwl_col(bounds%begc:bounds%endc), &
-         tracer%qflx_qrgwl_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_qrgwl_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_qrgwl_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_qrgwl_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_runoff_col(bounds%begc:bounds%endc), &
-         tracer%qflx_runoff_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_runoff_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_runoff_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_runoff_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_runoff_r_col(bounds%begc:bounds%endc), &
-         tracer%qflx_runoff_r_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_runoff_r_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_runoff_r_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_runoff_r_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_runoff_u_col(bounds%begc:bounds%endc), &
-         tracer%qflx_runoff_u_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_runoff_u_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_runoff_u_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_runoff_u_col')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
-         tracer%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_rsub_sat_col')
 
     do lev = lbound(this%qflx_snofrz_lyr_col,2),ubound(this%qflx_snofrz_lyr_col,2)
        call CompareBulkToTracer(bounds%begc, bounds%endc, &
-            this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,lev), &
-            tracer%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,lev), &
+            bulk=bulk%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,lev), &
+            tracer=this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,lev), &
             caller_location=caller_location, &
             name='qflx_snofrz_lyr_col', &
             level=lev)
     end do
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_snofrz_col(bounds%begc:bounds%endc), &
-         tracer%qflx_snofrz_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_snofrz_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_snofrz_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_snofrz_col')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_liq_dynbal')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_ice_dynbal')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%qflx_irrig_patch(bounds%begp:bounds%endp), &
-         tracer%qflx_irrig_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%qflx_irrig_patch(bounds%begp:bounds%endp), &
+         tracer=this%qflx_irrig_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='qflx_irrig_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_irrig_col(bounds%begc:bounds%endc), &
-         tracer%qflx_irrig_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_irrig_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_irrig_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_irrig_col')
 

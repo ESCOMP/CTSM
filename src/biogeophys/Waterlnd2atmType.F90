@@ -167,82 +167,82 @@ contains
   end subroutine InitCold
 
   !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this, bounds, tracer, caller_location)
+  subroutine TracerConsistencyCheck(this, bounds, bulk, caller_location)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
     ! !ARGUMENTS:
     class(waterlnd2atm_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    class(waterlnd2atm_type), intent(in) :: tracer
+    class(waterlnd2atm_type), intent(in) :: bulk
     character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     !
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%q_ref2m_grc(bounds%begg:bounds%endg), &
-         tracer%q_ref2m_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%q_ref2m_grc(bounds%begg:bounds%endg), &
+         tracer=this%q_ref2m_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='q_ref2m_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%h2osno_grc(bounds%begg:bounds%endg), &
-         tracer%h2osno_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%h2osno_grc(bounds%begg:bounds%endg), &
+         tracer=this%h2osno_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='h2osno_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_evap_tot_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_rofliq_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_rofliq_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_rofliq_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_rofliq_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_rofliq_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_rofliq_qsur_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_rofliq_qsub_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_rofliq_qgwl_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_rofliq_drain_perched_grc')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qflx_rofice_grc(bounds%begg:bounds%endg), &
-         tracer%qflx_rofice_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qflx_rofice_grc(bounds%begg:bounds%endg), &
+         tracer=this%qflx_rofice_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qflx_rofice_grc')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
-         tracer%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
+         bulk=bulk%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
+         tracer=this%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='qflx_liq_from_ice_col')
 
     call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         this%qirrig_grc(bounds%begg:bounds%endg), &
-         tracer%qirrig_grc(bounds%begg:bounds%endg), &
+         bulk=bulk%qirrig_grc(bounds%begg:bounds%endg), &
+         tracer=this%qirrig_grc(bounds%begg:bounds%endg), &
          caller_location=caller_location, &
          name='qirrig_grc')
 

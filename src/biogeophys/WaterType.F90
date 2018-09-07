@@ -627,18 +627,23 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    call this%waterbalancebulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterbalance_tracer_inst(i), caller_location)
-    call this%waterstatebulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterstate_tracer_inst(i), caller_location)
-    call this%waterdiagnosticbulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterdiagnostic_tracer_inst(i), caller_location)
-    call this%waterfluxbulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterflux_tracer_inst(i), caller_location)
-    call this%waterlnd2atmbulk_inst%TracerConsistencyCheck(bounds, &
-         this%waterlnd2atm_tracer_inst(i), caller_location)
-    call this%wateratm2lndbulk_inst%TracerConsistencyCheck(bounds, &
-         this%wateratm2lnd_tracer_inst(i), caller_location)
+    call this%waterbalance_tracer_inst(i)%TracerConsistencyCheck(bounds, &
+         this%waterbalancebulk_inst, caller_location)
+
+    call this%waterstate_tracer_inst(i)%TracerConsistencyCheck(bounds, &
+         this%waterstatebulk_inst, caller_location)
+
+    call this%waterdiagnostic_tracer_inst(i)%TracerConsistencyCheck(bounds, &
+         this%waterdiagnosticbulk_inst, caller_location)
+
+    call this%waterflux_tracer_inst(i)%TracerConsistencyCheck(bounds, &
+         this%waterfluxbulk_inst, caller_location)
+
+    call this%waterlnd2atm_tracer_inst(i)%TracerConsistencyCheck(bounds, &
+         this%waterlnd2atmbulk_inst, caller_location)
+
+    call this%wateratm2lnd_tracer_inst(i)%TracerConsistencyCheck(bounds, &
+         this%wateratm2lndbulk_inst, caller_location)
 
   end subroutine TracerConsistencyCheck
 

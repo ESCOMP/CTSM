@@ -649,14 +649,14 @@ contains
   end subroutine Restart
 
   !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this, bounds, tracer, caller_location)
+  subroutine TracerConsistencyCheck(this, bounds, bulk, caller_location)
     ! !DESCRIPTION:
     ! Check consistency of water tracer with that of bulk water
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    class(waterstate_type), intent(in) :: tracer
+    class(waterstate_type), intent(in) :: bulk
     character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     !
     ! !LOCAL VARIABLES:
@@ -664,15 +664,15 @@ contains
     !-----------------------------------------------------------------------
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%h2osno_col(bounds%begc:bounds%endc), &
-         tracer%h2osno_col(bounds%begc:bounds%endc), &
+         bulk=bulk%h2osno_col(bounds%begc:bounds%endc), &
+         tracer=this%h2osno_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='h2osno_col')
 
     do lev = lbound(this%h2osoi_liq_col,2),ubound(this%h2osoi_liq_col,2)
        call CompareBulkToTracer(bounds%begc, bounds%endc, &
-            this%h2osoi_liq_col(bounds%begc:bounds%endc,lev), &
-            tracer%h2osoi_liq_col(bounds%begc:bounds%endc,lev), &
+            bulk=bulk%h2osoi_liq_col(bounds%begc:bounds%endc,lev), &
+            tracer=this%h2osoi_liq_col(bounds%begc:bounds%endc,lev), &
             caller_location=caller_location, &
             name='h2osoi_liq_col', &
             level=lev)
@@ -680,8 +680,8 @@ contains
 
     do lev = lbound(this%h2osoi_ice_col,2),ubound(this%h2osoi_ice_col,2)
        call CompareBulkToTracer(bounds%begc, bounds%endc, &
-            this%h2osoi_ice_col(bounds%begc:bounds%endc,lev), &
-            tracer%h2osoi_ice_col(bounds%begc:bounds%endc,lev), &
+            bulk=bulk%h2osoi_ice_col(bounds%begc:bounds%endc,lev), &
+            tracer=this%h2osoi_ice_col(bounds%begc:bounds%endc,lev), &
             caller_location=caller_location, &
             name='h2osoi_ice_col', &
             level=lev)
@@ -689,40 +689,40 @@ contains
 
     do lev = lbound(this%h2osoi_vol_col,2),ubound(this%h2osoi_vol_col,2)
        call CompareBulkToTracer(bounds%begc, bounds%endc, &
-            this%h2osoi_vol_col(bounds%begc:bounds%endc,lev), &
-            tracer%h2osoi_vol_col(bounds%begc:bounds%endc,lev), &
+            bulk=bulk%h2osoi_vol_col(bounds%begc:bounds%endc,lev), &
+            tracer=this%h2osoi_vol_col(bounds%begc:bounds%endc,lev), &
             caller_location=caller_location, &
             name='h2osoi_vol_col', &
             level=lev)
     end do
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%h2ocan_patch(bounds%begp:bounds%endp), &
-         tracer%h2ocan_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%h2ocan_patch(bounds%begp:bounds%endp), &
+         tracer=this%h2ocan_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='h2ocan_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%h2osfc_col(bounds%begc:bounds%endc), &
-         tracer%h2osfc_col(bounds%begc:bounds%endc), &
+         bulk=bulk%h2osfc_col(bounds%begc:bounds%endc), &
+         tracer=this%h2osfc_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='h2osfc_col')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%snocan_patch(bounds%begp:bounds%endp), &
-         tracer%snocan_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%snocan_patch(bounds%begp:bounds%endp), &
+         tracer=this%snocan_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='snocan_patch')
 
     call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         this%liqcan_patch(bounds%begp:bounds%endp), &
-         tracer%liqcan_patch(bounds%begp:bounds%endp), &
+         bulk=bulk%liqcan_patch(bounds%begp:bounds%endp), &
+         tracer=this%liqcan_patch(bounds%begp:bounds%endp), &
          caller_location=caller_location, &
          name='liqcan_patch')
 
     call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         this%wa_col(bounds%begc:bounds%endc), &
-         tracer%wa_col(bounds%begc:bounds%endc), &
+         bulk=bulk%wa_col(bounds%begc:bounds%endc), &
+         tracer=this%wa_col(bounds%begc:bounds%endc), &
          caller_location=caller_location, &
          name='wa_col')
 
