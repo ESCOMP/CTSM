@@ -20,6 +20,7 @@ module WaterFluxBulkType
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterFluxType     , only : waterflux_type
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   private
@@ -100,13 +101,14 @@ module WaterFluxBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, info)
+  subroutine InitBulk(this, bounds, info, vars)
 
     class(waterfluxbulk_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: vars
 
-    call this%Init(bounds, info)
+    call this%Init(bounds, info, vars)
     call this%InitBulkAllocate(bounds) ! same as "call initAllocate_type(hydro, bounds)"
     call this%InitBulkHistory(bounds)
     call this%InitBulkCold(bounds)

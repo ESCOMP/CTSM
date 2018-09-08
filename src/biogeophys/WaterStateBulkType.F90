@@ -20,6 +20,7 @@ module WaterStateBulkType
   use ColumnType     , only : col                
   use WaterStateType , only : waterstate_type
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -50,18 +51,19 @@ module WaterStateBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, info, &
+  subroutine InitBulk(this, bounds, info, vars, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
     class(waterstatebulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: vars
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
 
 
-    call this%Init(bounds, info, &
+    call this%Init(bounds, info, vars, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
     call this%InitBulkAllocate(bounds) 

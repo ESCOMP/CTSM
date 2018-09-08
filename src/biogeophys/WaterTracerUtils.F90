@@ -7,16 +7,21 @@ module WaterTracerUtils
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
+  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+  use decompMod      , only : bounds_type, get_beg, get_end
   use clm_varctl     , only : iulog
   use abortutils     , only : endrun
   use shr_infnan_mod , only : shr_infnan_isnan
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use WaterTracerContainerType, only : water_tracer_container_type
 
   implicit none
   save
   private
 
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: AllocateVar1d
+  public :: AllocateVar2d
   public :: CompareBulkToTracer
 
   ! !PRIVATE MEMBER DATA:
@@ -25,6 +30,91 @@ module WaterTracerUtils
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine AllocateVar1d(var, name, container, bounds, subgrid_level, ival)
+    !
+    ! !DESCRIPTION:
+    ! Allocate a 1-d water tracer variable and add it to the container
+    !
+    ! Assumes var is not yet allocated (otherwise there will be a memory leak)
+    !
+    ! !ARGUMENTS:
+    real(r8), pointer                 , intent(out)   :: var(:)
+    character(len=*)                  , intent(in)    :: name          ! variable name
+    type(water_tracer_container_type) , intent(inout) :: container
+    type(bounds_type)                 , intent(in)    :: bounds
+    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begi, endi
+
+    character(len=*), parameter :: subname = 'AllocateVar1d'
+    !-----------------------------------------------------------------------
+
+    begi = get_beg(bounds, subgrid_level)
+    endi = get_end(bounds, subgrid_level)
+    allocate(var(begi:endi))
+    if (present(ival)) then
+       var(:) = ival
+    else
+       var(:) = nan
+    end if
+
+    call container%add_var( &
+         var = var, &
+         description = name, &
+         subgrid_level = subgrid_level)
+
+  end subroutine AllocateVar1d
+
+  !-----------------------------------------------------------------------
+  subroutine AllocateVar2d(var, name, container, bounds, subgrid_level, dim2beg, dim2end, ival)
+    !
+    ! !DESCRIPTION:
+    ! Allocate a 2-d water tracer variable and add it to the container
+    !
+    ! A separate variable is added to the container for each level
+    !
+    ! Assumes var is not yet allocated (otherwise there will be a memory leak)
+    !
+    ! !ARGUMENTS:
+    real(r8), pointer                 , intent(out)   :: var(:,:)
+    character(len=*)                  , intent(in)    :: name          ! variable name
+    type(water_tracer_container_type) , intent(inout) :: container
+    type(bounds_type)                 , intent(in)    :: bounds
+    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    integer                           , intent(in)    :: dim2beg
+    integer                           , intent(in)    :: dim2end
+    real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begi, endi
+    integer :: lev
+    character(len=:), allocatable :: description
+
+    character(len=*), parameter :: subname = 'AllocateVar2d'
+    !-----------------------------------------------------------------------
+
+    begi = get_beg(bounds, subgrid_level)
+    endi = get_end(bounds, subgrid_level)
+    allocate(var(begi:endi, dim2beg:dim2end))
+    if (present(ival)) then
+       var(:,:) = ival
+    else
+       var(:,:) = nan
+    end if
+
+    do lev = dim2beg, dim2end
+       write(description, '(a, a, i0)') trim(name), ', level ', lev
+       call container%add_var( &
+            var = var(:,lev), &
+            description = description, &
+            subgrid_level = subgrid_level)
+    end do
+
+  end subroutine AllocateVar2d
 
   !-----------------------------------------------------------------------
   subroutine CompareBulkToTracer(bounds_beg, bounds_end, &

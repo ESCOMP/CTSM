@@ -11,12 +11,14 @@ module WaterFluxType
   use clm_varpar     , only : nlevsno, nlevsoi
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch   
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerUtils, only : CompareBulkToTracer
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
   !
   implicit none
   private
@@ -95,7 +97,6 @@ module WaterFluxType
      
      procedure, public  :: Init
      procedure, public  :: Restart      
-     procedure, public :: TracerConsistencyCheck
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -106,22 +107,23 @@ module WaterFluxType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, info)
+  subroutine Init(this, bounds, info, tracer_vars)
 
     class(waterflux_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
 
     this%info => info
 
-    call this%InitAllocate(bounds) ! same as "call initAllocate_type(hydro, bounds)"
+    call this%InitAllocate(bounds, tracer_vars)
     call this%InitHistory(bounds)
     call this%InitCold(bounds)
 
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tracer_vars)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -131,73 +133,168 @@ contains
     ! !ARGUMENTS:
     class(waterflux_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
-    integer :: begc, endc
-    integer :: begg, endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
-    begg = bounds%begg; endg= bounds%endg
+    call AllocateVar1d(var = this%qflx_prec_intr_patch, name = 'qflx_prec_intr_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_prec_grnd_patch, name = 'qflx_prec_grnd_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_rain_grnd_patch, name = 'qflx_rain_grnd_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_snow_grnd_patch, name = 'qflx_snow_grnd_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_sub_snow_patch, name = 'qflx_sub_snow_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH, &
+         ival = 0.0_r8)
+    call AllocateVar1d(var = this%qflx_tran_veg_patch, name = 'qflx_tran_veg_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_dew_grnd_patch, name = 'qflx_dew_grnd_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_dew_snow_patch, name = 'qflx_dew_snow_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
 
-    allocate(this%qflx_prec_intr_patch     (begp:endp))              ; this%qflx_prec_intr_patch     (:)   = nan
-    allocate(this%qflx_prec_grnd_patch     (begp:endp))              ; this%qflx_prec_grnd_patch     (:)   = nan
-    allocate(this%qflx_rain_grnd_patch     (begp:endp))              ; this%qflx_rain_grnd_patch     (:)   = nan
-    allocate(this%qflx_snow_grnd_patch     (begp:endp))              ; this%qflx_snow_grnd_patch     (:)   = nan
-    allocate(this%qflx_sub_snow_patch      (begp:endp))              ; this%qflx_sub_snow_patch      (:)   = 0.0_r8
-    allocate(this%qflx_tran_veg_patch      (begp:endp))              ; this%qflx_tran_veg_patch      (:)   = nan
+    call AllocateVar1d(var = this%qflx_prec_intr_col, name = 'qflx_prec_intr_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_prec_grnd_col, name = 'qflx_prec_grnd_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_rain_grnd_col, name = 'qflx_rain_grnd_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snow_grnd_col, name = 'qflx_snow_grnd_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_sub_snow_col, name = 'qflx_sub_snow_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         ival = 0.0_r8)
+    call AllocateVar1d(var = this%qflx_snwcp_liq_col, name = 'qflx_snwcp_liq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snwcp_ice_col, name = 'qflx_snwcp_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_glcice_col, name = 'qflx_glcice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_glcice_frz_col, name = 'qflx_glcice_frz_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_glcice_melt_col, name = 'qflx_glcice_melt_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_tran_veg_col, name = 'qflx_tran_veg_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_evap_veg_col, name = 'qflx_evap_veg_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_evap_can_col, name = 'qflx_evap_can_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_evap_soi_col, name = 'qflx_evap_soi_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_evap_tot_col, name = 'qflx_evap_tot_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_evap_grnd_col, name = 'qflx_evap_grnd_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_dew_grnd_col, name = 'qflx_dew_grnd_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_dew_snow_col, name = 'qflx_dew_snow_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_evap_veg_patch, name = 'qflx_evap_veg_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_evap_can_patch, name = 'qflx_evap_can_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_evap_soi_patch, name = 'qflx_evap_soi_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_evap_tot_patch, name = 'qflx_evap_tot_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_evap_grnd_patch, name = 'qflx_evap_grnd_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
 
-    allocate(this%qflx_dew_grnd_patch      (begp:endp))              ; this%qflx_dew_grnd_patch      (:)   = nan
-    allocate(this%qflx_dew_snow_patch      (begp:endp))              ; this%qflx_dew_snow_patch      (:)   = nan
+    call AllocateVar1d(var = this%qflx_infl_col, name = 'qflx_infl_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_surf_col, name = 'qflx_surf_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_drain_col, name = 'qflx_drain_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_drain_perched_col, name = 'qflx_drain_perched_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_top_soil_col, name = 'qflx_top_soil_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snomelt_col, name = 'qflx_snomelt_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snofrz_col, name = 'qflx_snofrz_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar2d(var = this%qflx_snofrz_lyr_col, name = 'qflx_snofrz_lyr_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = -nlevsno+1, dim2end = 0)
+    call AllocateVar1d(var = this%qflx_qrgwl_col, name = 'qflx_qrgwl_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_floodc_col, name = 'qflx_floodc_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_sl_top_soil_col, name = 'qflx_sl_top_soil_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_runoff_col, name = 'qflx_runoff_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_runoff_r_col, name = 'qflx_runoff_r_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_runoff_u_col, name = 'qflx_runoff_u_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_rsub_sat_col, name = 'qflx_rsub_sat_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
-    allocate(this%qflx_prec_intr_col       (begc:endc))              ; this%qflx_prec_intr_col       (:)   = nan
-    allocate(this%qflx_prec_grnd_col       (begc:endc))              ; this%qflx_prec_grnd_col       (:)   = nan
-    allocate(this%qflx_rain_grnd_col       (begc:endc))              ; this%qflx_rain_grnd_col       (:)   = nan
-    allocate(this%qflx_snow_grnd_col       (begc:endc))              ; this%qflx_snow_grnd_col       (:)   = nan
-    allocate(this%qflx_sub_snow_col        (begc:endc))              ; this%qflx_sub_snow_col        (:)   = 0.0_r8
-    allocate(this%qflx_snwcp_liq_col       (begc:endc))              ; this%qflx_snwcp_liq_col       (:)   = nan
-    allocate(this%qflx_snwcp_ice_col       (begc:endc))              ; this%qflx_snwcp_ice_col       (:)   = nan
-    allocate(this%qflx_glcice_col          (begc:endc))              ; this%qflx_glcice_col          (:)   = nan
-    allocate(this%qflx_glcice_frz_col      (begc:endc))              ; this%qflx_glcice_frz_col      (:)   = nan
-    allocate(this%qflx_glcice_melt_col     (begc:endc))              ; this%qflx_glcice_melt_col     (:)   = nan
-    allocate(this%qflx_tran_veg_col        (begc:endc))              ; this%qflx_tran_veg_col        (:)   = nan
-    allocate(this%qflx_evap_veg_col        (begc:endc))              ; this%qflx_evap_veg_col        (:)   = nan
-    allocate(this%qflx_evap_can_col        (begc:endc))              ; this%qflx_evap_can_col        (:)   = nan
-    allocate(this%qflx_evap_soi_col        (begc:endc))              ; this%qflx_evap_soi_col        (:)   = nan
-    allocate(this%qflx_evap_tot_col        (begc:endc))              ; this%qflx_evap_tot_col        (:)   = nan
-    allocate(this%qflx_evap_grnd_col       (begc:endc))              ; this%qflx_evap_grnd_col       (:)   = nan
-    allocate(this%qflx_dew_grnd_col        (begc:endc))              ; this%qflx_dew_grnd_col        (:)   = nan
-    allocate(this%qflx_dew_snow_col        (begc:endc))              ; this%qflx_dew_snow_col        (:)   = nan
-    allocate(this%qflx_evap_veg_patch      (begp:endp))              ; this%qflx_evap_veg_patch      (:)   = nan
-    allocate(this%qflx_evap_can_patch      (begp:endp))              ; this%qflx_evap_can_patch      (:)   = nan
-    allocate(this%qflx_evap_soi_patch      (begp:endp))              ; this%qflx_evap_soi_patch      (:)   = nan
-    allocate(this%qflx_evap_tot_patch      (begp:endp))              ; this%qflx_evap_tot_patch      (:)   = nan
-    allocate(this%qflx_evap_grnd_patch     (begp:endp))              ; this%qflx_evap_grnd_patch     (:)   = nan
+    call AllocateVar1d(var = this%qflx_liq_dynbal_grc, name = 'qflx_liq_dynbal_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+    call AllocateVar1d(var = this%qflx_ice_dynbal_grc, name = 'qflx_ice_dynbal_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
 
-
-    allocate(this%qflx_infl_col            (begc:endc))              ; this%qflx_infl_col            (:)   = nan
-    allocate(this%qflx_surf_col            (begc:endc))              ; this%qflx_surf_col            (:)   = nan
-    allocate(this%qflx_drain_col           (begc:endc))              ; this%qflx_drain_col           (:)   = nan
-    allocate(this%qflx_drain_perched_col   (begc:endc))              ; this%qflx_drain_perched_col   (:)   = nan
-    allocate(this%qflx_top_soil_col        (begc:endc))              ; this%qflx_top_soil_col        (:)   = nan
-    allocate(this%qflx_snomelt_col         (begc:endc))              ; this%qflx_snomelt_col         (:)   = nan
-    allocate(this%qflx_snofrz_col          (begc:endc))              ; this%qflx_snofrz_col          (:)   = nan
-    allocate(this%qflx_snofrz_lyr_col      (begc:endc,-nlevsno+1:0)) ; this%qflx_snofrz_lyr_col      (:,:) = nan
-    allocate(this%qflx_qrgwl_col           (begc:endc))              ; this%qflx_qrgwl_col           (:)   = nan
-    allocate(this%qflx_floodc_col          (begc:endc))              ; this%qflx_floodc_col          (:)   = nan
-    allocate(this%qflx_sl_top_soil_col     (begc:endc))              ; this%qflx_sl_top_soil_col     (:)   = nan
-    allocate(this%qflx_runoff_col          (begc:endc))              ; this%qflx_runoff_col          (:)   = nan
-    allocate(this%qflx_runoff_r_col        (begc:endc))              ; this%qflx_runoff_r_col        (:)   = nan
-    allocate(this%qflx_runoff_u_col        (begc:endc))              ; this%qflx_runoff_u_col        (:)   = nan
-    allocate(this%qflx_rsub_sat_col        (begc:endc))              ; this%qflx_rsub_sat_col        (:)   = nan
-
-    allocate(this%qflx_liq_dynbal_grc      (begg:endg))              ; this%qflx_liq_dynbal_grc      (:)   = nan
-    allocate(this%qflx_ice_dynbal_grc      (begg:endg))              ; this%qflx_ice_dynbal_grc      (:)   = nan
-
-    allocate(this%qflx_irrig_patch         (begp:endp))              ; this%qflx_irrig_patch         (:)   = nan
-    allocate(this%qflx_irrig_col           (begc:endc))              ; this%qflx_irrig_col           (:)   = nan
+    call AllocateVar1d(var = this%qflx_irrig_patch, name = 'qflx_irrig_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_irrig_col, name = 'qflx_irrig_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
   end subroutine InitAllocate
 
@@ -619,325 +716,5 @@ contains
     endif
 
   end subroutine Restart
-
-  !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this, bounds, bulk, caller_location)
-    ! !DESCRIPTION:
-    ! Check consistency of water tracer with that of bulk water
-    !
-    ! !ARGUMENTS:
-    class(waterflux_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds
-    class(waterflux_type), intent(in) :: bulk
-    character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
-    !
-    ! !LOCAL VARIABLES:
-    integer :: lev
-    !-----------------------------------------------------------------------
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_prec_grnd_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_prec_grnd_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_prec_grnd_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_rain_grnd_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_rain_grnd_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_rain_grnd_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_snow_grnd_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_snow_grnd_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_snow_grnd_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_sub_snow_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_sub_snow_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_sub_snow_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_sub_snow_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_evap_soi_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_evap_soi_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_evap_soi_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_evap_soi_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_evap_veg_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_evap_veg_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_evap_veg_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_evap_veg_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_evap_veg_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_evap_can_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_evap_can_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_evap_can_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_evap_can_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_evap_can_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_evap_can_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_evap_tot_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_evap_tot_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_evap_tot_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_evap_tot_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_evap_tot_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_evap_grnd_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_evap_grnd_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_evap_grnd_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_tran_veg_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_tran_veg_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_tran_veg_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_tran_veg_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_dew_snow_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_dew_snow_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_dew_snow_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_dew_snow_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_dew_grnd_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_dew_grnd_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_dew_grnd_col')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_prec_intr_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_prec_intr_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_prec_intr_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_prec_intr_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_prec_intr_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_snwcp_liq_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_snwcp_liq_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_snwcp_ice_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_snwcp_ice_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_glcice_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_glcice_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_glcice_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_glcice_frz_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_glcice_frz_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_glcice_melt_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_glcice_melt_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_infl_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_infl_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_infl_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_surf_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_surf_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_surf_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_drain_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_drain_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_drain_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_drain_perched_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_drain_perched_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_drain_perched_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_top_soil_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_top_soil_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_top_soil_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_floodc_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_floodc_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_floodc_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_sl_top_soil_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_sl_top_soil_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_snomelt_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_snomelt_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_snomelt_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_qrgwl_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_qrgwl_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_qrgwl_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_runoff_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_runoff_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_runoff_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_runoff_r_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_runoff_r_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_runoff_r_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_runoff_u_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_runoff_u_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_runoff_u_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_rsub_sat_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_rsub_sat_col')
-
-    do lev = lbound(this%qflx_snofrz_lyr_col,2),ubound(this%qflx_snofrz_lyr_col,2)
-       call CompareBulkToTracer(bounds%begc, bounds%endc, &
-            bulk=bulk%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,lev), &
-            tracer=this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,lev), &
-            caller_location=caller_location, &
-            name='qflx_snofrz_lyr_col', &
-            level=lev)
-    end do
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_snofrz_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_snofrz_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_snofrz_col')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_liq_dynbal_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_liq_dynbal')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_ice_dynbal_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_ice_dynbal')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%qflx_irrig_patch(bounds%begp:bounds%endp), &
-         tracer=this%qflx_irrig_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='qflx_irrig_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_irrig_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_irrig_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_irrig_col')
-
-  end subroutine TracerConsistencyCheck
 
 end module WaterFluxType

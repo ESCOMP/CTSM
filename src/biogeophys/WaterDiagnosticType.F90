@@ -13,13 +13,15 @@ module WaterDiagnosticType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : use_vancouver, use_mexicocity, iulog
   use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerUtils, only : CompareBulkToTracer
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use WaterTracerUtils, only : AllocateVar1d
   !
   implicit none
   save
@@ -46,7 +48,6 @@ module WaterDiagnosticType
 
      procedure          :: Init         
      procedure          :: Restart      
-     procedure          :: TracerConsistencyCheck
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -61,15 +62,16 @@ module WaterDiagnosticType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, info)
+  subroutine Init(this, bounds, info, tracer_vars)
 
     class(waterdiagnostic_type), intent(inout) :: this
     type(bounds_type) , intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
 
     this%info => info
 
-    call this%InitAllocate(bounds) 
+    call this%InitAllocate(bounds, tracer_vars)
 
     call this%InitHistory(bounds)
 
@@ -78,7 +80,7 @@ contains
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tracer_vars)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -89,33 +91,41 @@ contains
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
-    integer :: begc, endc
-    integer :: begl, endl
-    integer :: begg, endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
-    begl = bounds%begl; endl= bounds%endl
-    begg = bounds%begg; endg= bounds%endg
-
-    allocate(this%snowice_col            (begc:endc))                     ; this%snowice_col            (:)   = nan   
-    allocate(this%snowliq_col            (begc:endc))                     ; this%snowliq_col            (:)   = nan   
-    allocate(this%h2osoi_liqice_10cm_col (begc:endc))                     ; this%h2osoi_liqice_10cm_col (:)   = nan   
-    allocate(this%tws_grc                (begg:endg))                     ; this%tws_grc                (:)   = nan
-
-
-
-    allocate(this%qg_snow_col            (begc:endc))                     ; this%qg_snow_col            (:)   = nan   
-    allocate(this%qg_soil_col            (begc:endc))                     ; this%qg_soil_col            (:)   = nan   
-    allocate(this%qg_h2osfc_col          (begc:endc))                     ; this%qg_h2osfc_col          (:)   = nan   
-    allocate(this%qg_col                 (begc:endc))                     ; this%qg_col                 (:)   = nan   
-    allocate(this%qaf_lun                (begl:endl))                     ; this%qaf_lun                (:)   = nan
-    allocate(this%q_ref2m_patch          (begp:endp))                     ; this%q_ref2m_patch          (:)   = nan
-
+    call AllocateVar1d(var = this%snowice_col, name = 'snowice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%snowliq_col, name = 'snowliq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%h2osoi_liqice_10cm_col, name = 'h2osoi_liqice_10cm_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%tws_grc, name = 'tws_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+    call AllocateVar1d(var = this%qg_snow_col, name = 'qg_snow_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qg_soil_col, name = 'qg_soil_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qg_h2osfc_col, name = 'qg_h2osfc_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qg_col, name = 'qg_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qaf_lun, name = 'qaf_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
+    call AllocateVar1d(var = this%q_ref2m_patch, name = 'q_ref2m_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
 
   end subroutine InitAllocate
 
@@ -330,81 +340,5 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
   end subroutine Restart
-
-  !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this, bounds, bulk, caller_location)
-    ! !DESCRIPTION:
-    ! Check consistency of water tracer with that of bulk water
-    !
-    ! !ARGUMENTS:
-    class(waterdiagnostic_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds
-    class(waterdiagnostic_type), intent(in) :: bulk
-    character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
-    !
-    ! !LOCAL VARIABLES:
-    !-----------------------------------------------------------------------
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%snowice_col(bounds%begc:bounds%endc), &
-         tracer=this%snowice_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='snowice_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%snowliq_col(bounds%begc:bounds%endc), &
-         tracer=this%snowliq_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='snowliq_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
-         tracer=this%h2osoi_liqice_10cm_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='h2osoi_liqice_10cm_col')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%tws_grc(bounds%begg:bounds%endg), &
-         tracer=this%tws_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='tws_grc')
-
-    call CompareBulkToTracer(bounds%begp, bounds%endp, &
-         bulk=bulk%q_ref2m_patch(bounds%begp:bounds%endp), &
-         tracer=this%q_ref2m_patch(bounds%begp:bounds%endp), &
-         caller_location=caller_location, &
-         name='q_ref2m_patch')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qg_snow_col(bounds%begc:bounds%endc), &
-         tracer=this%qg_snow_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qg_snow_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qg_soil_col(bounds%begc:bounds%endc), &
-         tracer=this%qg_soil_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qg_soil_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qg_h2osfc_col(bounds%begc:bounds%endc), &
-         tracer=this%qg_h2osfc_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qg_h2osfc_col')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qg_col(bounds%begc:bounds%endc), &
-         tracer=this%qg_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qg_col')
-
-    call CompareBulkToTracer(bounds%begl, bounds%endl, &
-         bulk=bulk%qaf_lun(bounds%begl:bounds%endl), &
-         tracer=this%qaf_lun(bounds%begl:bounds%endl), &
-         caller_location=caller_location, &
-         name='qaf_lun')
-
-  end subroutine TracerConsistencyCheck
 
 end module WaterDiagnosticType

@@ -28,6 +28,7 @@ list(APPEND clm_sources
   WaterInfoBulkType.F90
   WaterStateBulkType.F90
   WaterStateType.F90
+  WaterTracerContainerType.F90
   WaterTracerUtils.F90
   )
 

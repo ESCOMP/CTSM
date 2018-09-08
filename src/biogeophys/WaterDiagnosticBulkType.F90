@@ -24,6 +24,7 @@ module WaterDiagnosticBulkType
   use WaterStateBulkType, only : waterstatebulk_type
   use WaterDiagnosticType, only : waterdiagnostic_type
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -96,17 +97,18 @@ module WaterDiagnosticBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, info, &
+  subroutine InitBulk(this, bounds, info, vars, &
        snow_depth_input_col, waterstatebulk_inst)
 
     class(waterdiagnosticbulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: vars
     real(r8)          , intent(in) :: snow_depth_input_col(bounds%begc:)
     class(waterstatebulk_type), intent(in) :: waterstatebulk_inst
 
 
-    call this%Init(bounds, info)
+    call this%Init(bounds, info, vars)
 
     call this%InitBulkAllocate(bounds) 
 

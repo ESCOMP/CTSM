@@ -10,10 +10,12 @@ module Waterlnd2atmType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
+  use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : iulog
   use clm_varcon     , only : spval
   use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerUtils, only : CompareBulkToTracer
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use WaterTracerUtils, only : AllocateVar1d
   !
   implicit none
   save
@@ -39,7 +41,6 @@ module Waterlnd2atmType
    contains
 
      procedure, public  :: Init
-     procedure, public  :: TracerConsistencyCheck
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
@@ -54,15 +55,16 @@ module Waterlnd2atmType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, info)
+  subroutine Init(this, bounds, info, tracer_vars)
 
     class(waterlnd2atm_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
 
     this%info => info
 
-    call this%InitAllocate(bounds)
+    call this%InitAllocate(bounds, tracer_vars)
 
     call this%InitHistory(bounds)
 
@@ -71,7 +73,7 @@ contains
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tracer_vars)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -82,28 +84,56 @@ contains
     ! !ARGUMENTS:
     class(waterlnd2atm_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
     !
     ! !LOCAL VARIABLES:
     real(r8) :: ival  = 0.0_r8  ! initial value
-    integer :: begc, endc
-    integer :: begg, endg
     !------------------------------------------------------------------------
 
-    begc = bounds%begc; endc= bounds%endc
-    begg = bounds%begg; endg= bounds%endg
-
-    allocate(this%q_ref2m_grc        (begg:endg))            ; this%q_ref2m_grc        (:)   =ival
-    allocate(this%h2osno_grc         (begg:endg))            ; this%h2osno_grc         (:)   =ival
-    allocate(this%qflx_evap_tot_grc  (begg:endg))            ; this%qflx_evap_tot_grc  (:)   =ival
-    allocate(this%qflx_rofliq_grc    (begg:endg))            ; this%qflx_rofliq_grc    (:)   =ival
-    allocate(this%qflx_rofliq_qsur_grc    (begg:endg))       ; this%qflx_rofliq_qsur_grc    (:)   =ival
-    allocate(this%qflx_rofliq_qsub_grc    (begg:endg))       ; this%qflx_rofliq_qsub_grc    (:)   =ival
-    allocate(this%qflx_rofliq_qgwl_grc    (begg:endg))       ; this%qflx_rofliq_qgwl_grc    (:)   =ival
-    allocate(this%qflx_rofliq_drain_perched_grc    (begg:endg))       ; this%qflx_rofliq_drain_perched_grc    (:)   =ival
-    allocate(this%qflx_rofice_grc    (begg:endg))            ; this%qflx_rofice_grc    (:)   =ival
-    allocate(this%qflx_liq_from_ice_col(begc:endc))          ; this%qflx_liq_from_ice_col(:) = ival
-    allocate(this%qirrig_grc         (begg:endg))            ; this%qirrig_grc         (:)   =ival
-
+    call AllocateVar1d(var = this%q_ref2m_grc, name = 'q_ref2m_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%h2osno_grc, name = 'h2osno_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_evap_tot_grc, name = 'qflx_evap_tot_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_rofliq_grc, name = 'qflx_rofliq_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_rofliq_qsur_grc, name = 'qflx_rofliq_qsur_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_rofliq_qsub_grc, name = 'qflx_rofliq_qsub_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_rofliq_qgwl_grc, name = 'qflx_rofliq_qgwl_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_rofliq_drain_perched_grc, name = 'qflx_rofliq_drain_perched_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_rofice_grc, name = 'qflx_rofice_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_liq_from_ice_col, name = 'qflx_liq_from_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         ival=ival)
+    call AllocateVar1d(var = this%qirrig_grc, name = 'qirrig_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
 
   end subroutine InitAllocate
 
@@ -165,87 +195,5 @@ contains
     ! Nothing to do for now
 
   end subroutine InitCold
-
-  !------------------------------------------------------------------------
-  subroutine TracerConsistencyCheck(this, bounds, bulk, caller_location)
-    ! !DESCRIPTION:
-    ! Check consistency of water tracer with that of bulk water
-    !
-    ! !ARGUMENTS:
-    class(waterlnd2atm_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds
-    class(waterlnd2atm_type), intent(in) :: bulk
-    character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
-    !
-    ! !LOCAL VARIABLES:
-    !-----------------------------------------------------------------------
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%q_ref2m_grc(bounds%begg:bounds%endg), &
-         tracer=this%q_ref2m_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='q_ref2m_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%h2osno_grc(bounds%begg:bounds%endg), &
-         tracer=this%h2osno_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='h2osno_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_evap_tot_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_evap_tot_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_rofliq_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_rofliq_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_rofliq_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_rofliq_qsur_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_rofliq_qsub_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_rofliq_qgwl_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_rofliq_qgwl_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_rofliq_drain_perched_grc')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qflx_rofice_grc(bounds%begg:bounds%endg), &
-         tracer=this%qflx_rofice_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qflx_rofice_grc')
-
-    call CompareBulkToTracer(bounds%begc, bounds%endc, &
-         bulk=bulk%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
-         tracer=this%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
-         caller_location=caller_location, &
-         name='qflx_liq_from_ice_col')
-
-    call CompareBulkToTracer(bounds%begg, bounds%endg, &
-         bulk=bulk%qirrig_grc(bounds%begg:bounds%endg), &
-         tracer=this%qirrig_grc(bounds%begg:bounds%endg), &
-         caller_location=caller_location, &
-         name='qirrig_grc')
-
-  end subroutine TracerConsistencyCheck
 
 end module Waterlnd2atmType

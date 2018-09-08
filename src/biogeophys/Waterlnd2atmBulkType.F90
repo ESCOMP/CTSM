@@ -18,6 +18,7 @@ module Waterlnd2atmBulkType
   use clm_varcon     , only : spval
   use WaterLnd2atmType , only : waterlnd2atm_type
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -43,14 +44,15 @@ module Waterlnd2atmBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, info)
+  subroutine InitBulk(this, bounds, info, vars)
 
     class(waterlnd2atmbulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: vars
 
 
-    call this%Init(bounds, info)
+    call this%Init(bounds, info, vars)
 
     call this%InitBulkAllocate(bounds)
 

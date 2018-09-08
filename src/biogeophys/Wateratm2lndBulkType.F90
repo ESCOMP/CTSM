@@ -19,6 +19,7 @@ module Wateratm2lndBulkType
   use clm_varcon     , only : spval
   use WaterAtm2lndType , only : wateratm2lnd_type
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -40,6 +41,7 @@ module Wateratm2lndBulkType
    contains
 
      procedure, public  :: InitBulk
+     procedure, public  :: InitForTesting  ! Should only be used in unit tests
      procedure, public  :: RestartBulk
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
@@ -59,14 +61,15 @@ module Wateratm2lndBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, info)
+  subroutine InitBulk(this, bounds, info, vars)
 
     class(wateratm2lndbulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: vars
 
 
-    call this%Init(bounds, info)
+    call this%Init(bounds, info, vars)
 
     call this%InitBulkAllocate(bounds)
 
@@ -75,6 +78,21 @@ contains
     call this%InitBulkCold(bounds)
 
   end subroutine InitBulk
+
+  !------------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds, info)
+    ! Init routine only for unit testing
+    class(wateratm2lndbulk_type), intent(inout) :: this
+    type(bounds_type) , intent(in) :: bounds
+    class(water_info_base_type), intent(in), target :: info
+
+    type(water_tracer_container_type) :: vars
+
+    ! In unit tests, we don't care about the vars structure, so don't force tests to
+    ! create it
+    vars = water_tracer_container_type()
+    call this%InitBulk(bounds, info, vars)
+  end subroutine InitForTesting
 
   !------------------------------------------------------------------------
   subroutine InitBulkAllocate(this, bounds)

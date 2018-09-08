@@ -43,6 +43,8 @@ module WaterType
   use Waterlnd2atmBulkType    , only : waterlnd2atmbulk_type
   use Wateratm2lndType    , only : wateratm2lnd_type
   use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use WaterTracerUtils, only : CompareBulkToTracer
 
   implicit none
   private
@@ -103,8 +105,10 @@ module WaterType
      ! bulk_info needs to be a pointer so other pointers can point to it (since a derived
      ! type component cannot have the target attribute)
      type(water_info_bulk_type), pointer :: bulk_info
+     type(water_tracer_container_type) :: bulk_vars  ! water tracer variables for bulk water (note that this only includes variables that are also included for water tracers)
      logical, allocatable :: is_isotope(:)
      type(water_info_container_type), allocatable :: tracer_info(:)
+     type(water_tracer_container_type), allocatable :: tracer_vars(:)
      integer :: bulk_tracer_index  ! index of the tracer that replicates bulk water (-1 if it doesn't exist)
 
    contains
@@ -191,33 +195,43 @@ contains
     call this%ReadNamelist(NLFilename)
 
     allocate(this%bulk_info, source = water_info_bulk_type())
+    this%bulk_vars = water_tracer_container_type()
 
     call this%waterstatebulk_inst%InitBulk(bounds, &
          this%bulk_info, &
+         this%bulk_vars, &
          h2osno_input_col = h2osno_col(begc:endc),       &
          watsat_col = watsat_col(begc:endc, 1:),   &
          t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
 
     call this%waterdiagnosticbulk_inst%InitBulk(bounds, &
          this%bulk_info, &
+         this%bulk_vars, &
          snow_depth_input_col = snow_depth_col(begc:endc),    &
          waterstatebulk_inst = this%waterstatebulk_inst )
 
     call this%waterbalancebulk_inst%Init(bounds, &
-         this%bulk_info)
+         this%bulk_info, &
+         this%bulk_vars)
 
     call this%waterfluxbulk_inst%InitBulk(bounds, &
-         this%bulk_info)
+         this%bulk_info, &
+         this%bulk_vars)
 
     call this%waterlnd2atmbulk_inst%InitBulk(bounds, &
-         this%bulk_info)
+         this%bulk_info, &
+         this%bulk_vars)
 
     call this%wateratm2lndbulk_inst%InitBulk(bounds, &
-         this%bulk_info)
+         this%bulk_info, &
+         this%bulk_vars)
+
+    call this%bulk_vars%complete_setup()
 
     call this%SetupTracerInfo()
 
     if (this%num_tracers > 0) then
+       allocate(this%tracer_vars(this%num_tracers))
        allocate(this%waterflux_tracer_inst(this%num_tracers))
        allocate(this%waterstate_tracer_inst(this%num_tracers))
        allocate(this%waterdiagnostic_tracer_inst(this%num_tracers))
@@ -228,26 +242,36 @@ contains
 
     do i = 1, this%num_tracers
 
+       this%tracer_vars(i) = water_tracer_container_type()
+
        call this%waterstate_tracer_inst(i)%Init(bounds, &
             this%tracer_info(i)%info, &
+            this%tracer_vars(i), &
             h2osno_input_col = h2osno_col(begc:endc),       &
             watsat_col = watsat_col(begc:endc, 1:),   &
             t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
 
        call this%waterdiagnostic_tracer_inst(i)%Init(bounds, &
-            this%tracer_info(i)%info)
+            this%tracer_info(i)%info, &
+            this%tracer_vars(i))
 
        call this%waterbalance_tracer_inst(i)%Init(bounds, &
-            this%tracer_info(i)%info)
+            this%tracer_info(i)%info, &
+            this%tracer_vars(i))
 
        call this%waterflux_tracer_inst(i)%Init(bounds, &
-            this%tracer_info(i)%info)
+            this%tracer_info(i)%info, &
+            this%tracer_vars(i))
 
        call this%waterlnd2atm_tracer_inst(i)%Init(bounds, &
-            this%tracer_info(i)%info)
+            this%tracer_info(i)%info, &
+            this%tracer_vars(i))
 
        call this%wateratm2lnd_tracer_inst(i)%Init(bounds, &
-            this%tracer_info(i)%info)
+            this%tracer_info(i)%info, &
+            this%tracer_vars(i))
+
+       call this%tracer_vars(i)%complete_setup()
 
     end do
 
@@ -616,6 +640,12 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: i
+    integer :: num_vars
+    integer :: var_num
+    character(len=:), allocatable :: name
+    integer :: begi, endi
+    real(r8), pointer :: bulk(:)
+    real(r8), pointer :: tracer(:)
     character(len=*), parameter :: subname = 'TracerConsistencyCheck'
     !-----------------------------------------------------------------------
 
@@ -627,23 +657,25 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    call this%waterbalance_tracer_inst(i)%TracerConsistencyCheck(bounds, &
-         this%waterbalancebulk_inst, caller_location)
+    num_vars = this%tracer_vars(i)%get_num_vars()
+    SHR_ASSERT(num_vars == this%bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
 
-    call this%waterstate_tracer_inst(i)%TracerConsistencyCheck(bounds, &
-         this%waterstatebulk_inst, caller_location)
+    do var_num = 1, num_vars
+       name = this%tracer_vars(i)%get_description(var_num)
+       SHR_ASSERT(name == this%bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
 
-    call this%waterdiagnostic_tracer_inst(i)%TracerConsistencyCheck(bounds, &
-         this%waterdiagnosticbulk_inst, caller_location)
+       call this%tracer_vars(i)%get_bounds(var_num, bounds, begi, endi)
 
-    call this%waterflux_tracer_inst(i)%TracerConsistencyCheck(bounds, &
-         this%waterfluxbulk_inst, caller_location)
+       call this%bulk_vars%get_data(var_num, bulk)
+       call this%tracer_vars(i)%get_data(var_num, tracer)
 
-    call this%waterlnd2atm_tracer_inst(i)%TracerConsistencyCheck(bounds, &
-         this%waterlnd2atmbulk_inst, caller_location)
+       call CompareBulkToTracer(begi, endi, &
+            bulk   = bulk(begi:endi), &
+            tracer = tracer(begi:endi), &
+            caller_location = caller_location, &
+            name = name)
 
-    call this%wateratm2lnd_tracer_inst(i)%TracerConsistencyCheck(bounds, &
-         this%wateratm2lndbulk_inst, caller_location)
+    end do
 
   end subroutine TracerConsistencyCheck
 

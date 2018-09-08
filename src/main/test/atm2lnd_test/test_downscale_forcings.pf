@@ -134,7 +134,7 @@ contains
          lapse_rate_longwave = lapse_rate_longwave, &
          longwave_downscaling_limit = l_longwave_downscaling_limit)
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
-    call this%wateratm2lndbulk_inst%InitBulk(bounds, water_info_bulk_type())
+    call this%wateratm2lndbulk_inst%InitForTesting(bounds, water_info_bulk_type())
     this%atm2lnd_inst%forc_topo_grc(bounds%begg:bounds%endg) = forc_topo(:)
 
     if (present(forc_t)) then
