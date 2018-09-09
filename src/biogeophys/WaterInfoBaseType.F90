@@ -59,11 +59,9 @@ contains
   subroutine set_metadata(this,ratio) 
      ! !ARGUMENTS:
      class(water_info_base_type) , intent(inout)  :: this
-     real(r8), intent(in), optional :: ratio
+     real(r8), intent(in) :: ratio
 
-     if (present(ratio)) then
-        this%ratio = ratio
-     end if
+     this%ratio = ratio
   end subroutine
 
   function get_ratio(this) result(ratio)
