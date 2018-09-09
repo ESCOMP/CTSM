@@ -390,17 +390,17 @@ contains
 
     tracer_num = 1
     if (enable_bulk_tracer) then
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('H2OTR'))
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('H2OTR',1._r8))
        this%is_isotope(tracer_num) = .true.
        this%bulk_tracer_index = tracer_num
        tracer_num = tracer_num + 1
     end if
     if (this%params%enable_isotopes) then
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('HDO'))
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('HDO',0.9_r8))
        this%is_isotope(tracer_num) = .true.
        tracer_num = tracer_num + 1
 
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('H218O'))
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('H218O',0.5_r8))
        this%is_isotope(tracer_num) = .true.
        tracer_num = tracer_num + 1
     end if

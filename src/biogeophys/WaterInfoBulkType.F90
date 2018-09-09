@@ -9,6 +9,7 @@ module WaterInfoBulkType
   !
   ! !USES:
   !
+  use shr_kind_mod     , only : r8 => shr_kind_r8
   use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
@@ -34,6 +35,7 @@ contains
     ! Create a water_info_bulk_type object
     type(water_info_bulk_type) :: this  ! function result
 
+    call this%set_metadata(ratio = 1._r8)
     ! nothing to do
   end function constructor
 
