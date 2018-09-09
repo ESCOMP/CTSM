@@ -955,7 +955,7 @@ contains
     ! a multi-layer canopy
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, spval, degpsec, isecspday
+    use clm_varcon        , only : rgas, tfrz, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size, is_near_local_noon
     use clm_varctl     , only : cnallocate_carbon_only
@@ -1101,11 +1101,8 @@ contains
     real(r8) :: total_lai                
     integer  :: nptreemax                
 
-    !integer  :: local_secp1                     ! seconds into current date in local time
     real(r8) :: dtime                           ! land model time step (sec)
-    !integer  :: year,month,day,secs             ! calendar info for current time step
     integer  :: g                               ! index
-    !integer, parameter :: noonsec = isecspday / 2 ! seconds at local noon
     !------------------------------------------------------------------------------
 
     ! Temperature and soil water response functions
@@ -1220,7 +1217,6 @@ contains
       ! Determine seconds of current time step
 
       dtime = get_step_size()
-      !call get_curr_date (year, month, day, secs)
 
       ! vcmax25 parameters, from CN
 
@@ -1654,12 +1650,7 @@ contains
 
                if (an(p,iv) < 0._r8) gs_mol(p,iv) = bbb(p)
 
-               ! Get local noon sunlit and shaded stomatal conductance
-               !local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-               !local_secp1 = mod(local_secp1,isecspday)
-
                ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
-               !if (local_secp1 >= (isecspday/2 - 3600) .and. local_secp1 <= (isecspday/2 + 3600)) then
                if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
                   if (phase == 'sun') then
                      gs_mol_sun_ln(p,iv) = gs_mol(p,iv)
@@ -2440,7 +2431,7 @@ contains
     ! method
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, rpi, spval, degpsec, isecspday
+    use clm_varcon        , only : rgas, tfrz, rpi, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size, is_near_local_noon
     use clm_varctl        , only : cnallocate_carbon_only
@@ -2632,9 +2623,7 @@ contains
     real(r8) :: sum_nscaler
     real(r8) :: total_lai                
     integer  :: nptreemax                
-    integer  :: local_secp1                     ! seconds into current date in local time
     real(r8) :: dtime                           ! land model time step (sec)
-    !integer  :: year,month,day,secs             ! calendar info for current time step
     integer  :: j,g                     ! index
     real(r8) :: rs_resis                ! combined soil-root resistance [s]
     real(r8) :: r_soil                  ! root spacing [m]
@@ -2654,7 +2643,6 @@ contains
     real(r8), parameter :: croot_lateral_length = 0.25_r8   ! specified lateral coarse root length [m]
     real(r8), parameter :: c_to_b = 2.0_r8           !(g biomass /g C)
 !Note that root density is for dry biomass not carbon. CLM provides root biomass as carbon. The conversion is 0.5 g C / g biomass
-    !integer, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
 
     !------------------------------------------------------------------------------
 
@@ -2792,7 +2780,6 @@ contains
       ! Determine seconds off current time step
 
       dtime = get_step_size()
-      !call get_curr_date (year, month, day, secs)
 
       ! vcmax25 parameters, from CN
 
@@ -3357,11 +3344,7 @@ contains
 
                if (an_sun(p,iv) < 0._r8) gs_mol_sun(p,iv) = max( bsun(p)*gsminsun, 1._r8 )
                if (an_sha(p,iv) < 0._r8) gs_mol_sha(p,iv) = max( bsha(p)*gsminsha, 1._r8 )
-               ! Get local noon sunlit and shaded stomatal conductance
-               !local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-               !local_secp1 = mod(local_secp1,isecspday)
                ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
-               !if (local_secp1 >= (isecspday/2 - 3600) .and. local_secp1 <= (isecspday/2 + 3600)) then
                if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
                   gs_mol_sun_ln(p,iv) = gs_mol_sun(p,iv)
                   gs_mol_sha_ln(p,iv) = gs_mol_sha(p,iv)

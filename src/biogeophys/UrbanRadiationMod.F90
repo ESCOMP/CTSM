@@ -85,8 +85,6 @@ contains
     integer  :: fp,fl,p,c,l,g              ! indices
     !integer  :: local_secp1                ! seconds into current date in local time
     real(r8) :: dtime                      ! land model time step (sec)
-    !integer  :: year,month,day             ! temporaries (not used)
-    !integer  :: secs                       ! seconds into current date
 
     real(r8), parameter :: mpe    = 1.e-06_r8 ! prevents overflow for division by zero
     real(r8), parameter :: snoem  = 0.97_r8   ! snow emissivity (should use value from Biogeophysics1)
@@ -250,7 +248,6 @@ contains
       end if
 
       dtime = get_step_size()
-      !call get_curr_date (year, month, day, secs)
 
       ! Determine variables needed for history output and communication with atm
       ! Loop over urban patches in clump

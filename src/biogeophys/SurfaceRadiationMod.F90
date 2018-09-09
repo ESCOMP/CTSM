@@ -520,7 +520,6 @@ contains
      real(r8) :: cai(bounds%begp:bounds%endp,numrad) ! diffuse radiation absorbed by canopy (W/m**2)
      !integer  :: local_secp1                         ! seconds into current date in local time
      real(r8) :: dtime                               ! land model time step (sec)
-     !integer  :: year,month,day,secs                 ! calendar info for current time step
      real(r8) :: sabg_snl_sum                        ! temporary, absorbed energy in all active snow layers [W/m2]
      real(r8) :: absrad_pur                          ! temp: absorbed solar radiation by pure snow [W/m2]
      real(r8) :: absrad_bc                           ! temp: absorbed solar radiation without BC [W/m2]
@@ -531,8 +530,6 @@ contains
      real(r8) :: sabg_oc(bounds%begp:bounds%endp)    ! solar radiation absorbed by ground without OC [W/m2]
      real(r8) :: sabg_dst(bounds%begp:bounds%endp)   ! solar radiation absorbed by ground without dust [W/m2]
      real(r8) :: parveg(bounds%begp:bounds%endp)     ! absorbed par by vegetation (W/m**2)
-     !
-     !integer, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
      !
      !------------------------------------------------------------------------------
 
@@ -647,7 +644,6 @@ contains
        ! Determine seconds off current time step
      
        dtime = get_step_size()
-       !call get_curr_date (year, month, day, secs)
 
        ! Initialize fluxes
 
@@ -926,9 +922,6 @@ contains
              ssre_fsr_vis_i(p) = fsrSF_vis_i(p)-fsr_vis_i(p)
              ssre_fsr_nir_i(p) = fsrSF_nir_i(p)-fsr_nir_i(p)
           end if
-          !local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-          !local_secp1 = mod(local_secp1,isecspday)
-          !if (local_secp1 == isecspday/2) then
           if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
              fsds_vis_d_ln(p) = forc_solad(g,1)
              fsds_nir_d_ln(p) = forc_solad(g,2)
@@ -945,7 +938,6 @@ contains
              parveg_ln(p)     = spval
           end if
           if (use_SSRE) then
-             !if (local_secp1 == isecspday/2) then
              if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
                 fsrSF_vis_d_ln(p) = albdSF(p,1)*forc_solad(g,1)
                 fsrSF_nir_d_ln(p) = albdSF(p,2)*forc_solad(g,2)
@@ -985,9 +977,6 @@ contains
           p = filter_urbanp(fp)
           g = patch%gridcell(p)
 
-          !local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-          !local_secp1 = mod(local_secp1,isecspday)
-
           if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
              if ( DEBUG ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
           endif
@@ -999,7 +988,6 @@ contains
           fsds_nir_i(p) = forc_solai(g,2)
 
           ! Determine local noon incident solar
-          !if (local_secp1 == noonsec) then
           if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
              fsds_vis_d_ln(p) = forc_solad(g,1)
              fsds_nir_d_ln(p) = forc_solad(g,2)
@@ -1021,7 +1009,6 @@ contains
           fsr_nir_i(p) = albi(p,2) * forc_solai(g,2)
 
           ! Determine local noon reflected solar
-          !if (local_secp1 == noonsec) then
           if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
              fsr_vis_d_ln(p) = fsr_vis_d(p)
              fsr_nir_d_ln(p) = fsr_nir_d(p)

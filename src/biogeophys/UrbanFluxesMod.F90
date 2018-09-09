@@ -175,9 +175,7 @@ contains
     real(r8) :: qflx_err(bounds%begl:bounds%endl)                    ! water vapor flux error (kg/m**2/s)
     real(r8) :: fwet_roof                                            ! fraction of roof surface that is wet (-)
     real(r8) :: fwet_road_imperv                                     ! fraction of impervious road surface that is wet (-)
-    !integer  :: local_secp1(bounds%begl:bounds%endl)                 ! seconds into current date in local time (sec)
     real(r8) :: dtime                                                ! land model time step (sec)
-    !integer  :: year,month,day,secs                                  ! calendar info for current time step
     logical  :: found                                                ! flag in search loop
     integer  :: indexl                                               ! index of first found in search loop
     integer  :: nstep                                                ! time step number
@@ -319,16 +317,12 @@ contains
 
       ! Get current date
       dtime = get_step_size()
-      !call get_curr_date (year, month, day, secs)
 
       ! Compute canyontop wind using Masson (2000)
 
       do fl = 1, num_urbanl
          l = filter_urbanl(fl)
          g = lun%gridcell(l)
-
-         !local_secp1(l)        = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-         !local_secp1(l)        = mod(local_secp1(l),isecspday)
 
          ! Error checks
 
