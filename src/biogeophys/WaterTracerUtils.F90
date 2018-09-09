@@ -118,19 +118,22 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CompareBulkToTracer(bounds_beg, bounds_end, &
-       bulk, tracer, caller_location, name, level)
+       bulk, tracer, caller_location, name)
     !
     ! !DESCRIPTION:
     ! Compare the bulk and tracer quantities; abort if they differ
     !
     ! !ARGUMENTS:
+    ! We could get bounds_beg and bounds_end from the lbound and ubound of the bulk or
+    ! tracer arrays, but passing them in helps catch any accidental omission of bounds
+    ! slicing in the caller (e.g., passing in foo_col rather than
+    ! foo_col(bounds%begc:bounds%endc)).
     integer, intent(in) :: bounds_beg
     integer, intent(in) :: bounds_end
     real(r8), intent(in) :: bulk( bounds_beg: )
     real(r8), intent(in) :: tracer( bounds_beg: )
     character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     character(len=*), intent(in) :: name             ! variable name (for error messages)
-    integer, intent(in), optional :: level           ! level being compared (for error messages)
     !
     ! !LOCAL VARIABLES:
     logical :: arrays_equal
@@ -174,11 +177,7 @@ contains
     if (.not. arrays_equal) then
        write(iulog, '(a, a, a)') 'ERROR in ', subname, ': tracer does not agree with bulk water'
        write(iulog, '(a, a)') 'Called from: ', trim(caller_location)
-       if (present(level)) then
-          write(iulog, '(a, a, a, i0)') 'Variable: ', trim(name), ', level ', level
-       else
-          write(iulog, '(a, a)') 'Variable: ', trim(name)
-       end if
+       write(iulog, '(a, a)') 'Variable: ', trim(name)
        write(iulog, '(a, i0)') 'First difference at index: ', diffloc
        write(iulog, '(a, e25.17)') 'Bulk  : ', bulk(diffloc)
        write(iulog, '(a, e25.17)') 'Tracer: ', tracer(diffloc)
