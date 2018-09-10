@@ -64,6 +64,7 @@ contains
 
     call container%add_var( &
          var = var, &
+         begi = begi, &
          description = name, &
          subgrid_level = subgrid_level)
 
@@ -112,6 +113,7 @@ contains
        description = trim(name) // ', level ' // lev_str
        call container%add_var( &
             var = var(:,lev), &
+            begi = begi, &
             description = description, &
             subgrid_level = subgrid_level)
     end do

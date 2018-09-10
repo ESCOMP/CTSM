@@ -66,6 +66,10 @@ module WaterTracerContainerType
      module procedure new_water_tracer_container_type
   end interface water_tracer_container_type
 
+  interface water_tracer_type
+     module procedure new_water_tracer_type
+  end interface water_tracer_type
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -75,18 +79,15 @@ contains
 #include "dynamic_vector_procdef.inc"
 
   !-----------------------------------------------------------------------
-  ! Note that this currently doesn't have an 'interface' equating this with
-  ! 'water_tracer_type', because I think some compilers might get confused if there is an
-  ! overloaded name with the same arguments (since the arguments to this function are the
-  ! same as the derived type components)
-  function new_water_tracer_type(data, description, subgrid_level) result(this)
+  function new_water_tracer_type(data, begi, description, subgrid_level) result(this)
     !
     ! !DESCRIPTION:
     ! Create a water_tracer_type object
     !
     ! !ARGUMENTS:
     type(water_tracer_type) :: this  ! function result
-    real(r8), target, intent(in) :: data(:)
+    integer, intent(in)          :: begi           ! beginning index of data array
+    real(r8), target, intent(in) :: data(begi:)
     character(len=*), intent(in) :: description
     integer         , intent(in) :: subgrid_level  ! one of the levels defined in decompMod  
     !
@@ -121,14 +122,15 @@ contains
   end function new_water_tracer_container_type
 
   !-----------------------------------------------------------------------
-  subroutine add_var(this, var, description, subgrid_level)
+  subroutine add_var(this, var, begi, description, subgrid_level)
     !
     ! !DESCRIPTION:
     ! Add the given variable to this container
     !
     ! !ARGUMENTS:
     class(water_tracer_container_type), intent(inout) :: this
-    real(r8), target, intent(in) :: var(:)
+    integer, intent(in)          :: begi           ! beginning index of var array
+    real(r8), target, intent(in) :: var(begi:)
     character(len=*), intent(in) :: description
     integer         , intent(in) :: subgrid_level  ! one of the levels defined in decompMod
     !
@@ -148,6 +150,7 @@ contains
 
     one_tracer = water_tracer_type( &
          data = var, &
+         begi = begi, &
          description = description, &
          subgrid_level = subgrid_level)
 
