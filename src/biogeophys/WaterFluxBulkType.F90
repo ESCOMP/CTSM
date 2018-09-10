@@ -13,9 +13,6 @@ module WaterFluxBulkType
   use clm_varpar     , only : nlevsno, nlevsoi
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch   
   use CNSharedParamsMod           , only : use_fun
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterFluxType     , only : waterflux_type
@@ -121,8 +118,6 @@ contains
     ! !DESCRIPTION:
     ! Initialize module data structure
     !
-    ! !USES:
-    !
     ! !ARGUMENTS:
     class(waterfluxbulk_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
@@ -197,7 +192,6 @@ contains
   subroutine InitBulkHistory(this, bounds)
     !
     ! !USES:
-    use clm_varctl  , only : use_cn
     use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
@@ -336,15 +330,11 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitBulkCold(this, bounds)
-    !
-    ! !USES:
-    !
     ! !ARGUMENTS:
     class(waterfluxbulk_type), intent(in) :: this
     type(bounds_type) , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: p,c,l
     !-----------------------------------------------------------------------
 
     this%qflx_phs_neg_col(bounds%begc:bounds%endc)   = 0.0_r8

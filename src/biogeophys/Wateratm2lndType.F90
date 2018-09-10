@@ -11,10 +11,7 @@ module Wateratm2lndType
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : iulog
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno
   use clm_varcon     , only : spval
-  use LandunitType   , only : lun
-  use ColumnType     , only : col
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d

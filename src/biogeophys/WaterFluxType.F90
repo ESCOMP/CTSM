@@ -14,8 +14,6 @@ module WaterFluxType
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use PatchType      , only : patch   
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
@@ -302,7 +300,6 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use clm_varctl  , only : use_cn
     use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
