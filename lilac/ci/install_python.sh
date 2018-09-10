@@ -4,16 +4,11 @@ set -e
 set -x
 
 # Install miniconda
-wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ${HOME}/miniconda.sh
-bash ~/miniconda.sh -b -p $HOME/miniconda
-export PATH="$HOME/miniconda/bin:$PATH"
+wget --quiet http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /usr/src/miniconda.sh
+bash /usr/src/miniconda.sh -b -p /usr/local/miniconda
 conda update conda --yes
 conda clean -tipy
 conda config --set always_yes yes --set changeps1 no
 conda --version
 
-conda env create -f ci/environment.yml --name lilac
-
-source activate lilac
-
-cd ${TRAVIS_BUILD_DIR}
+conda install -c conda-forge cmake>=3

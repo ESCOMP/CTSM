@@ -1,34 +1,20 @@
 language: cpp
-sudo: false
+sudo: required
 dist: trusty
 notifications:
   email: false
 
-matrix:
-  include:
-    - os: linux
-      compiler: gcc
-      apt:
-        packages:
-          - gfortran
-          - cmake
-          - cmake-data
+services:
+  - docker
 
 before_install:
-  - export FC=/usr/bin/gfortran
-  - ./ci/install_python.sh
-  - ./ci/install_esmf.sh
-  - ./ci/install_pfunit.sh
+  - docker version
 
 install:
-  - cd ${TRAVIS_BUILD_DIR}
-  - mkdir -p build && cd build
-  - cmake ..
-  - make
+  - docker build -t lilac .
 
 before_script:
-  - echo "before script"
+  - docker images
 
 script:
-  - cd ${TRAVIS_BUILD_DIR}
-  - ./build/prog
+  - docker run -t lilac
