@@ -86,7 +86,13 @@ contains
     !
     ! !ARGUMENTS:
     type(water_tracer_type) :: this  ! function result
-    real(r8), target, intent(in) :: data(:)
+    ! 'data' is declared to be a pointer rather than a target so that it maintains its
+    ! lower bound. This works for now, since our variables are always pointers; if we
+    ! change some variables to be target, non-pointers, then we should have the caller
+    ! pass in the lower bound and change 'data' to:
+    !
+    !    real(r8), target, intent(in) :: data(lbound:)
+    real(r8), pointer, intent(in) :: data(:)
     character(len=*), intent(in) :: description
     integer         , intent(in) :: subgrid_level  ! one of the levels defined in decompMod  
     !
@@ -128,7 +134,13 @@ contains
     !
     ! !ARGUMENTS:
     class(water_tracer_container_type), intent(inout) :: this
-    real(r8), target, intent(in) :: var(:)
+    ! 'data' is declared to be a pointer rather than a target so that it maintains its
+    ! lower bound. This works for now, since our variables are always pointers; if we
+    ! change some variables to be target, non-pointers, then we should have the caller
+    ! pass in the lower bound and change 'data' to:
+    !
+    !    real(r8), target, intent(in) :: data(lbound:)
+    real(r8), pointer, intent(in) :: var(:)
     character(len=*), intent(in) :: description
     integer         , intent(in) :: subgrid_level  ! one of the levels defined in decompMod
     !
@@ -146,7 +158,7 @@ contains
             additional_msg=errMsg(sourcefile, __LINE__))
     end if
 
-    one_tracer = water_tracer_type( &
+    one_tracer = new_water_tracer_type( &
          data = var, &
          description = description, &
          subgrid_level = subgrid_level)

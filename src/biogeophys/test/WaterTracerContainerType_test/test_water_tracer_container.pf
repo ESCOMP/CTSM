@@ -40,12 +40,14 @@ contains
     ! This test illustrates the typical workflow of using this container class.
     class(TestWTC), intent(inout) :: this
     type(water_tracer_container_type) :: container
-    real(r8), target :: data1(3)
-    real(r8), target :: more_data(3,4)
+    real(r8), pointer :: data1(:)
+    real(r8), pointer :: more_data(:,:)
     real(r8), pointer :: data_retrieved(:)
     integer :: i
     integer :: num_vars
 
+    allocate(data1(3))
+    allocate(more_data(3,4))
     container = water_tracer_container_type()
     data1 = [1._r8, 2._r8, 3._r8]
     ! Add enough variables that we can be pretty confident that there has been a resize
@@ -68,10 +70,11 @@ contains
     ! If you try to call get_num_vars before calling complete_setup, aborts
     class(TestWTC), intent(inout) :: this
     type(water_tracer_container_type) :: container
-    real(r8), target :: data(3)
+    real(r8), pointer :: data(:)
     integer :: num_vars
     character(len=:), allocatable :: expected_msg
 
+    allocate(data(3))
     container = water_tracer_container_type()
     call container%add_var(data, 'my data', BOUNDS_SUBGRID_GRIDCELL)
     num_vars = container%get_num_vars()
@@ -85,10 +88,12 @@ contains
     ! If you try to call add_var after calling complete_setup, aborts
     class(TestWTC), intent(inout) :: this
     type(water_tracer_container_type) :: container
-    real(r8), target :: data1(3), data2(3)
+    real(r8), pointer :: data1(:), data2(:)
     integer :: num_vars
     character(len=:), allocatable :: expected_msg
 
+    allocate(data1(3))
+    allocate(data2(3))
     container = water_tracer_container_type()
     call container%add_var(data1, 'my data1', BOUNDS_SUBGRID_GRIDCELL)
     call container%complete_setup()
