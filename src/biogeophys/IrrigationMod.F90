@@ -51,7 +51,7 @@ module IrrigationMod
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
-  use clm_varcon       , only : isecspday, degpsec, denh2o, spval, namec
+  use clm_varcon       , only : isecspday, denh2o, spval, namec
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type

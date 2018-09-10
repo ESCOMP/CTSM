@@ -518,7 +518,6 @@ contains
      real(r8) :: tri(bounds%begp:bounds%endp,numrad) ! transmitted solar radiation: diffuse (W/m**2)
      real(r8) :: cad(bounds%begp:bounds%endp,numrad) ! direct beam absorbed by canopy (W/m**2)
      real(r8) :: cai(bounds%begp:bounds%endp,numrad) ! diffuse radiation absorbed by canopy (W/m**2)
-     !integer  :: local_secp1                         ! seconds into current date in local time
      real(r8) :: dtime                               ! land model time step (sec)
      real(r8) :: sabg_snl_sum                        ! temporary, absorbed energy in all active snow layers [W/m2]
      real(r8) :: absrad_pur                          ! temp: absorbed solar radiation by pure snow [W/m2]
