@@ -52,16 +52,6 @@ module WaterType
   !
   ! !PRIVATE TYPES:
 
-  type, private :: water_params_type
-     private
-
-     ! Whether we add tracers that are used for the tracer consistency checks
-     logical :: enable_consistency_checks
-
-     ! Whether we add tracers that are used for isotopes
-     logical :: enable_isotopes
-  end type water_params_type
-
   ! This type is a container for objects of class water_info_base_type, to facilitate
   ! having an array of polymorphic entities.
   type, private :: water_info_container_type
@@ -73,6 +63,18 @@ module WaterType
 
   !
   ! !PUBLIC TYPES:
+
+  ! water_params_type is public for the sake of unit tests
+  type, public :: water_params_type
+     private
+
+     ! Whether we add tracers that are used for the tracer consistency checks
+     logical :: enable_consistency_checks
+
+     ! Whether we add tracers that are used for isotopes
+     logical :: enable_isotopes
+  end type water_params_type
+
   type, public :: water_type
      private
 
@@ -114,6 +116,7 @@ module WaterType
    contains
      ! Public routines
      procedure, public :: Init
+     procedure, public :: InitForTesting  ! Init routine just for unit tests
      procedure, public :: InitAccBuffer
      procedure, public :: InitAccVars
      procedure, public :: UpdateAccVars
@@ -125,6 +128,7 @@ module WaterType
      procedure, public :: TracerConsistencyCheck
 
      ! Private routines
+     procedure, private :: DoInit
      procedure, private :: ReadNamelist
      procedure, private :: SetupTracerInfo
   end type water_type
@@ -178,10 +182,67 @@ contains
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Init'
+    !-----------------------------------------------------------------------
+
+    call this%ReadNamelist(NLFilename)
+    call this%DoInit(bounds, &
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+
+  end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds, params, &
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+    !
+    ! !DESCRIPTION:
+    ! Version of Init routine just for unit tests
+    !
+    ! This version has params passed in directly instead of reading from namelist
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(water_params_type), intent(in) :: params
+    real(r8)          , intent(in) :: h2osno_col(bounds%begc:)
+    real(r8)          , intent(in) :: snow_depth_col(bounds%begc:)
+    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
+    real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitForTesting'
+    !-----------------------------------------------------------------------
+
+    this%params = params
+    call this%DoInit(bounds, &
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+
+  end subroutine InitForTesting
+
+  !-----------------------------------------------------------------------
+  subroutine DoInit(this, bounds, &
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+    !
+    ! !DESCRIPTION:
+    ! Actually do the initialization (shared between main Init routine and InitForTesting)
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds
+    real(r8)         , intent(in) :: h2osno_col(bounds%begc:)
+    real(r8)         , intent(in) :: snow_depth_col(bounds%begc:)
+    real(r8)         , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
+    real(r8)         , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    !
+    ! !LOCAL VARIABLES:
     integer :: begc, endc
     integer :: i
 
-    character(len=*), parameter :: subname = 'Init'
+    character(len=*), parameter :: subname = 'DoInit'
     !-----------------------------------------------------------------------
 
     begc = bounds%begc
@@ -191,8 +252,6 @@ contains
     SHR_ASSERT_ALL((ubound(snow_depth_col) == [endc]), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(watsat_col, 1) == endc), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_soisno_col, 1) == endc), errMsg(sourcefile, __LINE__))
-
-    call this%ReadNamelist(NLFilename)
 
     allocate(this%bulk_info, source = water_info_bulk_type())
     this%bulk_vars = water_tracer_container_type()
@@ -275,13 +334,14 @@ contains
 
     end do
 
-  end subroutine Init
+  end subroutine DoInit
+
 
   !-----------------------------------------------------------------------
   subroutine ReadNamelist(this, NLFilename)
     !
     ! !DESCRIPTION:
-    ! Read the water_tracers namelist
+    ! Read the water_tracers namelist; set this%params
     !
     ! !USES:
     use fileutils      , only : getavu, relavu, opnfil
@@ -632,6 +692,8 @@ contains
     !
     ! !DESCRIPTION:
     ! Check consistency of water tracers with that of bulk water
+    !
+    ! This should only be called if this%DoConsistencyCheck() returns .true.
     !
     ! !ARGUMENTS:
     class(water_type), intent(in) :: this

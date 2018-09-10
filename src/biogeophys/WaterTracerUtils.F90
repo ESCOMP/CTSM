@@ -92,6 +92,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begi, endi
     integer :: lev
+    character(len=8) :: lev_str
     character(len=:), allocatable :: description
 
     character(len=*), parameter :: subname = 'AllocateVar2d'
@@ -107,7 +108,8 @@ contains
     end if
 
     do lev = dim2beg, dim2end
-       write(description, '(a, a, i0)') trim(name), ', level ', lev
+       write(lev_str, '(i0)') lev
+       description = trim(name) // ', level ' // lev_str
        call container%add_var( &
             var = var(:,lev), &
             description = description, &
