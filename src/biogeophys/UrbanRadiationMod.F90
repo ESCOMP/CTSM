@@ -83,7 +83,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fp,fl,p,c,l,g              ! indices
-    !integer  :: local_secp1                ! seconds into current date in local time
     real(r8) :: dtime                      ! land model time step (sec)
 
     real(r8), parameter :: mpe    = 1.e-06_r8 ! prevents overflow for division by zero
