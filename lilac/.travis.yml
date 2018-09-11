@@ -9,12 +9,13 @@ services:
 
 before_install:
   - docker version
+  - docker-compose version
 
 install:
-  - docker build -t lilac .
+  - docker-compose build lilac
 
 before_script:
-  - docker images
+  - docker-compose images
 
 script:
   - docker run -t lilac
