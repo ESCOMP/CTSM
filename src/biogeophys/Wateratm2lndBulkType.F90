@@ -90,7 +90,7 @@ contains
 
     ! In unit tests, we don't care about the vars structure, so don't force tests to
     ! create it
-    vars = water_tracer_container_type()
+    call vars%init()
     call this%InitBulk(bounds, info, vars)
   end subroutine InitForTesting
 

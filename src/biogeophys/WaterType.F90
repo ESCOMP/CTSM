@@ -254,7 +254,7 @@ contains
     SHR_ASSERT_ALL((ubound(t_soisno_col, 1) == endc), errMsg(sourcefile, __LINE__))
 
     allocate(this%bulk_info, source = water_info_bulk_type())
-    this%bulk_vars = water_tracer_container_type()
+    call this%bulk_vars%init()
 
     call this%waterstatebulk_inst%InitBulk(bounds, &
          this%bulk_info, &
@@ -301,7 +301,7 @@ contains
 
     do i = 1, this%num_tracers
 
-       this%tracer_vars(i) = water_tracer_container_type()
+       call this%tracer_vars(i)%init()
 
        call this%waterstate_tracer_inst(i)%Init(bounds, &
             this%tracer_info(i)%info, &

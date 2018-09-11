@@ -8,7 +8,7 @@ module WaterTracerContainerType
   !
   ! To use the container (water_tracer_container_type):
   !
-  ! - Initialize it with its constructor
+  ! - Initialize it by calling the 'init' method
   !
   ! - Add variables with add_var
   !
@@ -54,6 +54,7 @@ module WaterTracerContainerType
      type(water_tracer_vector) :: tracer_vec
      type(water_tracer_type), allocatable :: tracers(:)
    contains
+     procedure, public :: init
      procedure, public :: add_var
      procedure, public :: complete_setup
      procedure, public :: get_num_vars
@@ -61,10 +62,6 @@ module WaterTracerContainerType
      procedure, public :: get_bounds
      procedure, public :: get_data
   end type water_tracer_container_type
-
-  interface water_tracer_container_type
-     module procedure new_water_tracer_container_type
-  end interface water_tracer_container_type
 
   interface water_tracer_type
      module procedure new_water_tracer_type
@@ -102,24 +99,23 @@ contains
 
   end function new_water_tracer_type
 
-
   !-----------------------------------------------------------------------
-  function new_water_tracer_container_type() result(this)
+  subroutine init(this)
     !
     ! !DESCRIPTION:
-    ! Create a water_tracer_container_type object
+    ! Initialize a new water_tracer_container_type object
     !
     ! !ARGUMENTS:
-    type(water_tracer_container_type) :: this  ! function result
+    class(water_tracer_container_type), intent(inout) :: this
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'new_water_tracer_container_type'
+    character(len=*), parameter :: subname = 'init'
     !-----------------------------------------------------------------------
 
     this%tracer_vec = water_tracer_vector()
 
-  end function new_water_tracer_container_type
+  end subroutine init
 
   !-----------------------------------------------------------------------
   subroutine add_var(this, var, begi, description, subgrid_level)
