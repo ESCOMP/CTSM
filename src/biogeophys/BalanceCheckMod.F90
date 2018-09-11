@@ -63,6 +63,7 @@ contains
     ! Initialize balance check
     !
     ! !USES:
+    use spmdMod           , only : masterproc
     use clm_time_manager  , only : get_step_size
     ! !ARGUMENTS:
     !
@@ -73,7 +74,7 @@ contains
     ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded to the nearest integer
     skip_steps = max(2, nint( (skip_size / dtime) ) )
 
-    write(iulog,*) ' Skip balance checking for the first ', skip_steps, ' time steps'
+    if ( masterproc ) write(iulog,*) ' Skip balance checking for the first ', skip_steps, ' time steps'
 
   end subroutine BalanceCheckInit
 

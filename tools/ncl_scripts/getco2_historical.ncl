@@ -18,7 +18,7 @@ begin
    ;
    csmdata  = getenv("CSMDATA");
    clmroot  = getenv("CLM_ROOT");
-   rcp      = getenv("RCP");          ; Get representative concentration pathway from env variable
+   hgrid    = getenv("HGRID");          ; Get horizontal grid to use from env variable
    querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
    if ( .not. ismissing(csmdata) )then
       querynml = querynml+" -csmdata "+csmdata;
@@ -28,16 +28,15 @@ begin
    else
       querynml = clmroot+"/"+querynml;
    end if
-   histrcp = -999.9
-   if ( ismissing(rcp) )then
-     rcp = histrcp
+   if ( ismissing(hgrid) )then
+     hgrid = "lat-bands"
    end if
    ;
    ; Get input Greenhouse gas file and open it
    ;
    filetype  = "mkghg_bndtvghg";
-   print( querynml+" -namelist clmexp -var "+filetype+" -options rcp="+rcp );
-   ghgfile  = systemfunc( querynml+" -namelist clmexp -var "+filetype+" -options rcp="+rcp );
+   print( querynml+" -namelist clmexp -var "+filetype+" -options hgrid="+hgrid );
+   ghgfile  = systemfunc( querynml+" -namelist clmexp -var "+filetype+" -options hgrid="+hgrid );
    print( "Use "+filetype+" file: "+ghgfile );
    if ( systemfunc("test -f "+ghgfile+"; echo $?" ) .ne. 0 )then
       print( "Input "+filetype+" file does not exist or not found: "+ghgfile );
@@ -55,31 +54,31 @@ begin
    ntime   = dimsizes( ncg->date );
    sim_yr2 = ncg->date(ntime-1) / 10000;
 
-   sim_yr_rng = sim_yr0 + "-" + sim_yr2;
+   sim_yr_rng = "_simyr_"+sim_yr0 + "-" + sim_yr2;
    
-   if ( rcp .eq. histrcp )then
-      cmip_vers = "_CMIP6_";
-      outco2filename = "fco2_datm_"+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
-   else
-      cmip_vers = "_CMIP5_";
-      outco2filename = "fco2_datm_rcp"+rcp+"_"+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
-   end if
+   cmip_vers = "_CMIP6_";
+   outco2filename = "fco2_datm_"+hgrid+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
    system( "/bin/rm -f "+outco2filename );
    print( "output file: "+outco2filename );
    nco = addfile( outco2filename, "c" );
    ;
    ; Define dimensions
    ;
-   if ( isfilevar(ncg, "lat") )then
+   if ( hgrid .eq. "lat-bands" )then
       nlat = dimsizes(ncg->lat);
    else
-      nlat = 1
+      if ( hgrid .eq. "global" )then
+         nlat = 1
+      else
+         print( "hgrid type can only be global or lat-bands: "+hgrid )
+         exit
+      end if
    end if
    nlon = 1;
    nv   = 4;
-   dimnames = (/ "time", "lat", "lon", "nv" /);
-   dsizes   = (/ ntime, nlat,  nlon, nv /);
-   is_unlim = (/ True, False, False, False /);
+   dimnames = (/ "time", "lat", "lon", "nv", "bounds" /);
+   dsizes   = (/ ntime, nlat,  nlon, nv, 2 /);
+   is_unlim = (/ True, False, False, False, False /);
    filedimdef( nco, dimnames, dsizes, is_unlim );
    ;
    ; Define variables
@@ -102,8 +101,9 @@ begin
       nco->$vars(i)$@units = units(i);
       nco->$vars(i)$@lname = lname(i);
    end do
-   filevardef ( nco, "time", "float",    (/ "time" /) );
-   filevardef ( nco, "date", "integer",  (/ "time" /) );
+   filevardef ( nco, "time",      "float",    (/ "time" /) );
+   filevardef ( nco, "time_bnds", "float",    (/ "time", "bounds" /) );
+   filevardef ( nco, "date",      "integer",  (/ "time" /) );
    varstatic = (/ "mask", "frac", "area" /);
    do i = 0, dimsizes(varstatic)-1
       nco->$varstatic(i)$@coordinate  = "latc lonc";
@@ -119,6 +119,9 @@ begin
    nco@Version  = systemfunc( "git describe" );
    filevarattdef( nco, "time", ncg->time );
    filevarattdef( nco, "date", ncg->date );
+   nco->time_bnds@long_name = nco->time@long_name;
+   nco->time_bnds@units     = nco->time@units;
+   nco->time_bnds@calendar  = nco->time@calendar;
    ;
    ; Set static variables
    ;
@@ -162,19 +165,7 @@ begin
    ; Time and date
    ;
    nco->date = (/ ncg->date /);
-   if ( nlat .gt. 1 )then
-      starttime = (/ ncg->time(0)/) - 15
-      print( "Start time is: "+starttime );
-      nco->time = (/ ncg->time /) - starttime;
-      expected_first = sim_yr0*10000 + 116
-      if ( nco->date(0) .ne. expected_first )then
-         print( "Starting date is NOT what is expected: "+nco->date(0)+ " should be:"+expected_first );
-         exit
-      end if
-      nco->time@units = "days since "+sim_yr0+"-01-01 00:00:00" ;
-   else
-      nco->time = dble2flt( ncg->time );
-   end if
+   nco->time = (/ ncg->time /);
    nco->date@comment = "This variable is NOT used when read by datm, the time coordinate is used";
    ;
    ; CO2
@@ -186,7 +177,14 @@ begin
         nco->CO2(:,y,0) = (/ ncg->CO2_LBC(:,y) /) * 1.e6;
       end do
    else
-      nco->CO2(:,0,0) = (/ ncg->CO2(:) /);
+      ; make sure all latitudes on file are the same for each time
+      do itime = 0, ntime-1
+         if ( max(ncg->CO2_LBC(itime,:)) .ne. min(ncg->CO2_LBC(itime,:)) )then
+            print( "Global average, but latitudes are NOT constant" );
+            exit
+         end if
+      end do
+      nco->CO2(:,0,0) = (/ ncg->CO2_LBC(:,0) /) * 1.e6;
    end if
    print( "Average Global First CO2 ppmv value: Date="+nco->date(0)+" CO2="+avg(nco->CO2(0,:,0)     ) );
    print( "Average Global Last  CO2 ppmv value: Date="+nco->date(ntime-1)+" CO2="+avg(nco->CO2(ntime-1,:,0)) );
