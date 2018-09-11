@@ -2570,6 +2570,9 @@ contains
              call ncd_defvar(varname='hslp_cold', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope downhill column index', &
                   ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_colu', xtype=ncd_int, &
+                  dim1name=namec, long_name='hillslope uphill column index', &
+                  ncid=nfid(t))             
           end if
       
           if(use_fates)then
@@ -2626,6 +2629,7 @@ contains
              call ncd_io(varname='hslp_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_cold' , data=col%cold, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_colu' , data=col%colu, dim1name=namec, ncid=nfid(t), flag='write')
           endif
 
           if(use_fates)then

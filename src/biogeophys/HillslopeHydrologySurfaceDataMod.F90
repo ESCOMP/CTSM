@@ -385,8 +385,8 @@ contains
 !scs                col%colu(c) = -999 
                 col%colu(c) = ispval
                 do i = lun%coli(l), lun%colf(l)
-                   if(i == col%cold(c)) then
-                      col%colu(i) = c
+                   if(c == col%cold(i)) then
+                      col%colu(c) = i
                    endif
                 enddo
 
