@@ -19,6 +19,7 @@ module SoilHydrologyMod
   use landunit_varcon   , only : istsoil, istcrop
   use clm_time_manager  , only : get_step_size
   use NumericsMod       , only : truncate_small_values
+  use atm2lndType       , only : atm2lnd_type
   use EnergyFluxType    , only : energyflux_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -2408,7 +2409,7 @@ contains
         num_hillslope, filter_hillslopec,   &
         num_hydrologyc, filter_hydrologyc,  &
         num_urbanc, filter_urbanc,soilhydrology_inst, soilstate_inst, &
-        waterstatebulk_inst, waterfluxbulk_inst)
+        waterstatebulk_inst, waterfluxbulk_inst, atm2lnd_inst)
      !
      ! !DESCRIPTION:
      ! Calculate subsurface drainage
@@ -2431,10 +2432,11 @@ contains
      integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilstate_type)     , intent(in)    :: soilstate_inst
+     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
      type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
-      integer                 , intent(in)    :: num_hillslope         ! number of hillslope soil cols 
+     integer                  , intent(in)    :: num_hillslope         ! number of hillslope soil cols 
      integer                  , intent(in)    :: filter_hillslopec(:)  ! column filter for designating all hillslope cols.               
      integer                  , intent(in)    :: num_hilltop           ! number of hillslope soil cols 
      integer                  , intent(in)    :: filter_hilltopc(:)    ! column filter for designating all hillslope cols.               
@@ -2482,7 +2484,8 @@ contains
 
 !scs
      character(len=32) :: transmissivity_method = 'layersum'
-     character(len=32) :: baseflow_method = 'kinematic'
+!     character(len=32) :: baseflow_method = 'kinematic'
+     character(len=32) :: baseflow_method = 'darcy'
      integer  :: c_down
      real(r8) :: transmis
      real(r8) :: dgrad
@@ -2508,9 +2511,12 @@ contains
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
           eff_porosity       =>    soilstate_inst%eff_porosity_col       , & ! Input:  [real(r8) (:,:) ] effective porosity = porosity - vol_ice         
           hk_l               =>    soilstate_inst%hk_l_col               , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity (mm/s)                    
-         qflx_latflow_out    =>    waterfluxbulk_inst%qflx_latflow_out_col   , & ! Output: [real(r8) (:)   ] lateral saturated outflow (mm/s)
-         qflx_latflow_in     =>    waterfluxbulk_inst%qflx_latflow_in_col    , & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
-         qdischarge          =>    waterfluxbulk_inst%qdischarge_col         , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
+          qflx_latflow_out   =>    waterfluxbulk_inst%qflx_latflow_out_col, & ! Output: [real(r8) (:)   ] lateral saturated outflow (mm/s)
+          qflx_latflow_in    =>    waterfluxbulk_inst%qflx_latflow_in_col, & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
+          qdischarge         =>    waterfluxbulk_inst%qdischarge_col     , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
+
+          tdepth             =>    atm2lnd_inst%tdepth_grc               , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
+          tdepth_bankfull    =>    atm2lnd_inst%tdepthmax_grc            , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
 
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           c_param            =>    soilhydrology_inst%c_param_col        , & ! Input:  [real(r8) (:)   ] baseflow exponent (Qb)                             
@@ -2623,6 +2629,11 @@ contains
              endif
           endif ! this could be moved to include latflow calculations...
 
+          ! the qflx_latflow_out_vol calculations use the
+          ! transmissivity to determine whether saturated flow
+          ! conditions exist, b/c gradients will be nonzero
+          ! even when no saturated layers are present
+          
           ! kinematic wave approximation
           if (baseflow_method == 'kinematic') then
              qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*col%hill_slope(c)
@@ -2631,13 +2642,19 @@ contains
           if (baseflow_method == 'darcy') then
              if (col%cold(c) /= ispval) then
                 c_down = col%cold(c)
-                dgrad = (col%hill_elev(c)+(zi(c,nbedrock(c))-zwt(c))) &
-                     - (col%hill_elev(c_down)+(zi(c,nbedrock(c))-zwt(c_down)))
+                dgrad = (col%hill_elev(c)-zwt(c)) &
+                     - (col%hill_elev(c_down)-zwt(c_down))
                 dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(c_down))
              else
-! assume elev = 0 at channel and zwt = 0 at channel
-                dgrad = (col%hill_elev(c)-zwt(c))
+                ! flow between channel and lowest column
+                ! bankfull height is defined to be zero
+                dgrad = (col%hill_elev(c)-zwt(c)) &
+                     - (tdepth(g) - tdepth_bankfull(g))
                 dgrad = dgrad / (col%hill_distance(c))
+                ! dgrad cannot be negative when channel is empty
+                if (tdepth(g) <= 0._r8) then
+                   dgrad = max(dgrad, 0._r8)
+                endif
              endif
              qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
           end if

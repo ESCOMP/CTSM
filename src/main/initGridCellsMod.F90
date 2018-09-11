@@ -256,6 +256,7 @@ contains
 
     if (nlunits > 0) then
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
+       nlunits_added = nlunits_added + 1
        wtcol2lunit = 1.0_r8/real(ncols,r8)
        do ci2 = 1,ncols
           call add_column(ci=ci, li=li, ctype=1, wtlunit=wtcol2lunit)

@@ -158,7 +158,6 @@ contains
     end do
 
     if (npatches > 0) then
-       ! Assume that the vegetated landunit has one column
        nlunits = 1
        if(use_hillslope) then 
           ! ensure ncols is > 0

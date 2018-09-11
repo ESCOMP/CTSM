@@ -161,7 +161,8 @@ contains
                  num_hydrologyc, filter_hydrologyc, &
                  num_urbanc, filter_urbanc,&
                  soilhydrology_inst, soilstate_inst, &
-                 waterstatebulk_inst, waterfluxbulk_inst)
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 atm2lnd_inst)
          else
             call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
                  num_urbanc, filter_urbanc,&
