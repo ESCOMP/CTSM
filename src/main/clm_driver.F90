@@ -141,8 +141,6 @@ contains
     type(bounds_type)    :: bounds_clump    
     type(bounds_type)    :: bounds_proc     
 
-    logical :: tracer_consistency
-
     ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) These temporary allocatable arrays are
     ! needed to work around pgi compiler bugs, as noted below
     real(r8), allocatable :: downreg_patch(:)
@@ -170,16 +168,14 @@ contains
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
 
-       ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-       ! every time step
-       if (get_nstep() == 0) then
-          ! FIXME(wjs, 2018-09-05) Change to be a subroutine like Mat is doing for
-          ! initialization
-          call t_startf("tracer_consistency_check")
-          if (water_inst%num_tracers > 0) then
-             tracer_consistency = water_inst%TracerConsistencyCheck(bounds_clump)
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'start of driver loop')
+             call t_stopf("tracer_consistency_check")
           end if
-          call t_stopf("tracer_consistency_check")
        end if
     end do
     !$OMP END PARALLEL DO
