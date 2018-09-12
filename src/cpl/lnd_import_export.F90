@@ -7,6 +7,8 @@ module lnd_import_export
   use lnd2glcMod   , only: lnd2glc_type
   use atm2lndType  , only: atm2lnd_type
   use glc2lndMod   , only: glc2lnd_type 
+  use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
+  use Wateratm2lndBulkType , only: wateratm2lndbulk_type
   use clm_cpl_indices
   !
   implicit none
@@ -15,7 +17,7 @@ module lnd_import_export
 contains
 
   !===============================================================================
-  subroutine lnd_import( bounds, x2l, glc_present, atm2lnd_inst, glc2lnd_inst)
+  subroutine lnd_import( bounds, x2l, glc_present, atm2lnd_inst, glc2lnd_inst, wateratm2lndbulk_inst)
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
@@ -37,6 +39,7 @@ contains
     logical            , intent(in)    :: glc_present       ! .true. => running with a non-stub GLC model
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst      ! clm internal input data type
     type(glc2lnd_type) , intent(inout) :: glc2lnd_inst      ! clm internal input data type
+    type(wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst   ! clm internal input data type
     !
     ! !LOCAL VARIABLES:
     integer  :: g,i,k,nstep,ier      ! indices, number of steps, and error code
@@ -105,10 +108,10 @@ contains
        ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
        ! change the sign to indicate addition of water to system.
 
-       atm2lnd_inst%forc_flood_grc(g)   = -x2l(index_x2l_Flrr_flood,i)  
+       wateratm2lndbulk_inst%forc_flood_grc(g)   = -x2l(index_x2l_Flrr_flood,i)  
 
-       atm2lnd_inst%volr_grc(g)   = x2l(index_x2l_Flrr_volr,i) * (ldomain%area(g) * 1.e6_r8)
-       atm2lnd_inst%volrmch_grc(g)= x2l(index_x2l_Flrr_volrmch,i) * (ldomain%area(g) * 1.e6_r8)
+       wateratm2lndbulk_inst%volr_grc(g)   = x2l(index_x2l_Flrr_volr,i) * (ldomain%area(g) * 1.e6_r8)
+       wateratm2lndbulk_inst%volrmch_grc(g)= x2l(index_x2l_Flrr_volrmch,i) * (ldomain%area(g) * 1.e6_r8)
 
        ! Determine required receive fields
 
@@ -122,7 +125,7 @@ contains
        atm2lnd_inst%forc_solai_grc(g,1)              = x2l(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
        atm2lnd_inst%forc_th_not_downscaled_grc(g)    = x2l(index_x2l_Sa_ptem,i)      ! forc_thxy Atm state K
-       atm2lnd_inst%forc_q_not_downscaled_grc(g)     = x2l(index_x2l_Sa_shum,i)      ! forc_qxy  Atm state kg/kg
+       wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)     = x2l(index_x2l_Sa_shum,i)      ! forc_qxy  Atm state kg/kg
        atm2lnd_inst%forc_pbot_not_downscaled_grc(g)  = x2l(index_x2l_Sa_pbot,i)      ! ptcmxy  Atm state Pa
        atm2lnd_inst%forc_t_not_downscaled_grc(g)     = x2l(index_x2l_Sa_tbot,i)      ! forc_txy  Atm state K
        atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) = x2l(index_x2l_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
@@ -169,7 +172,7 @@ contains
        ! Determine derived quantities for required fields
 
        forc_t = atm2lnd_inst%forc_t_not_downscaled_grc(g)
-       forc_q = atm2lnd_inst%forc_q_not_downscaled_grc(g)
+       forc_q = wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
        
        atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
@@ -183,8 +186,8 @@ contains
        atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
                                         atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
 
-       atm2lnd_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc + forc_rainl
-       atm2lnd_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc + forc_snowl
+       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc + forc_rainl
+       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc + forc_snowl
 
        if (forc_t > SHR_CONST_TKFRZ) then
           e = esatw(tdc(forc_t))
@@ -198,11 +201,11 @@ contains
           if((forc_rainc+forc_rainl) > 0._r8) then
              forc_q = 0.95_r8*qsat
              !           forc_q = qsat
-             atm2lnd_inst%forc_q_not_downscaled_grc(g) = forc_q
+             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
           endif
        endif
 
-       atm2lnd_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
+       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
 
        ! Check that solar, specific-humidity and LW downward aren't negative
        if ( atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) <= 0.0_r8 )then
@@ -213,7 +216,7 @@ contains
           call endrun( sub//' ERROR: One of the solar fields (indirect/diffuse, vis or near-IR)'// &
                        ' from the atmosphere model is negative or zero' )
        end if
-       if ( atm2lnd_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
+       if ( wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
           call endrun( sub//' ERROR: Bottom layer specific humidty sent from the atmosphere model is less than zero' )
        end if
 
@@ -233,8 +236,8 @@ contains
        end if
 
        ! Make sure relative humidity is properly bounded
-       ! atm2lnd_inst%forc_rh_grc(g) = min( 100.0_r8, atm2lnd_inst%forc_rh_grc(g) )
-       ! atm2lnd_inst%forc_rh_grc(g) = max(   0.0_r8, atm2lnd_inst%forc_rh_grc(g) )
+       ! wateratm2lndbulk_inst%forc_rh_grc(g) = min( 100.0_r8, wateratm2lndbulk_inst%forc_rh_grc(g) )
+       ! wateratm2lndbulk_inst%forc_rh_grc(g) = max(   0.0_r8, wateratm2lndbulk_inst%forc_rh_grc(g) )
 
        ! Determine derived quantities for optional fields
        ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
@@ -281,7 +284,7 @@ contains
 
   !===============================================================================
 
-  subroutine lnd_export( bounds, lnd2atm_inst, lnd2glc_inst, l2x)
+  subroutine lnd_export( bounds, waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x)
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
@@ -304,6 +307,7 @@ contains
     type(bounds_type) , intent(in)    :: bounds  ! bounds
     type(lnd2atm_type), intent(inout) :: lnd2atm_inst ! clm land to atmosphere exchange data type
     type(lnd2glc_type), intent(inout) :: lnd2glc_inst ! clm land to atmosphere exchange data type
+    type(waterlnd2atmbulk_type), intent(in) :: waterlnd2atmbulk_inst
     real(r8)          , intent(out)   :: l2x(:,:)! land to coupler export state on land grid
     !
     ! !LOCAL VARIABLES:
@@ -323,20 +327,20 @@ contains
     do g = bounds%begg,bounds%endg
        i = 1 + (g-bounds%begg)
        l2x(index_l2x_Sl_t,i)        =  lnd2atm_inst%t_rad_grc(g)
-       l2x(index_l2x_Sl_snowh,i)    =  lnd2atm_inst%h2osno_grc(g)
+       l2x(index_l2x_Sl_snowh,i)    =  waterlnd2atmbulk_inst%h2osno_grc(g)
        l2x(index_l2x_Sl_avsdr,i)    =  lnd2atm_inst%albd_grc(g,1)
        l2x(index_l2x_Sl_anidr,i)    =  lnd2atm_inst%albd_grc(g,2)
        l2x(index_l2x_Sl_avsdf,i)    =  lnd2atm_inst%albi_grc(g,1)
        l2x(index_l2x_Sl_anidf,i)    =  lnd2atm_inst%albi_grc(g,2)
        l2x(index_l2x_Sl_tref,i)     =  lnd2atm_inst%t_ref2m_grc(g)
-       l2x(index_l2x_Sl_qref,i)     =  lnd2atm_inst%q_ref2m_grc(g)
+       l2x(index_l2x_Sl_qref,i)     =  waterlnd2atmbulk_inst%q_ref2m_grc(g)
        l2x(index_l2x_Sl_u10,i)      =  lnd2atm_inst%u_ref10m_grc(g)
        l2x(index_l2x_Fall_taux,i)   = -lnd2atm_inst%taux_grc(g)
        l2x(index_l2x_Fall_tauy,i)   = -lnd2atm_inst%tauy_grc(g)
        l2x(index_l2x_Fall_lat,i)    = -lnd2atm_inst%eflx_lh_tot_grc(g)
        l2x(index_l2x_Fall_sen,i)    = -lnd2atm_inst%eflx_sh_tot_grc(g)
        l2x(index_l2x_Fall_lwup,i)   = -lnd2atm_inst%eflx_lwrad_out_grc(g)
-       l2x(index_l2x_Fall_evap,i)   = -lnd2atm_inst%qflx_evap_tot_grc(g)
+       l2x(index_l2x_Fall_evap,i)   = -waterlnd2atmbulk_inst%qflx_evap_tot_grc(g)
        l2x(index_l2x_Fall_swnet,i)  =  lnd2atm_inst%fsa_grc(g)
        if (index_l2x_Fall_fco2_lnd /= 0) then
           l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%net_carbon_exchange_grc(g)  
@@ -346,7 +350,7 @@ contains
        ! These are now standard fields, but the check on the index makes sure the driver handles them
        if (index_l2x_Sl_ram1      /= 0 )  l2x(index_l2x_Sl_ram1,i)     =  lnd2atm_inst%ram1_grc(g)
        if (index_l2x_Sl_fv        /= 0 )  l2x(index_l2x_Sl_fv,i)       =  lnd2atm_inst%fv_grc(g)
-       if (index_l2x_Sl_soilw     /= 0 )  l2x(index_l2x_Sl_soilw,i)    =  lnd2atm_inst%h2osoi_vol_grc(g,1)
+       if (index_l2x_Sl_soilw     /= 0 )  l2x(index_l2x_Sl_soilw,i)    =  waterlnd2atmbulk_inst%h2osoi_vol_grc(g,1)
        if (index_l2x_Fall_flxdst1 /= 0 )  l2x(index_l2x_Fall_flxdst1,i)= -lnd2atm_inst%flxdst_grc(g,1)
        if (index_l2x_Fall_flxdst2 /= 0 )  l2x(index_l2x_Fall_flxdst2,i)= -lnd2atm_inst%flxdst_grc(g,2)
        if (index_l2x_Fall_flxdst3 /= 0 )  l2x(index_l2x_Fall_flxdst3,i)= -lnd2atm_inst%flxdst_grc(g,3)
@@ -381,20 +385,20 @@ contains
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  
        ! I.e. water sent from land to rof is positive
 
-       l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g)
+       l2x(index_l2x_Flrl_rofsur,i) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g)
 
        !  subsurface runoff is the sum of qflx_drain and qflx_perched_drain
-       l2x(index_l2x_Flrl_rofsub,i) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) &
-            + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
+       l2x(index_l2x_Flrl_rofsub,i) = waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) &
+            + waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
 
        !  qgwl sent individually to coupler
-       l2x(index_l2x_Flrl_rofgwl,i) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g)
+       l2x(index_l2x_Flrl_rofgwl,i) = waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(g)
 
        ! ice  sent individually to coupler
-       l2x(index_l2x_Flrl_rofi,i) = lnd2atm_inst%qflx_rofice_grc(g)
+       l2x(index_l2x_Flrl_rofi,i) = waterlnd2atmbulk_inst%qflx_rofice_grc(g)
 
        ! irrigation flux to be removed from main channel storage (negative)
-       l2x(index_l2x_Flrl_irrig,i) = - lnd2atm_inst%qirrig_grc(g)
+       l2x(index_l2x_Flrl_irrig,i) = - waterlnd2atmbulk_inst%qirrig_grc(g)
 
        ! glc coupling
        ! We could avoid setting these fields if glc_present is .false., if that would

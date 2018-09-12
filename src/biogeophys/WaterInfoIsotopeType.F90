@@ -10,6 +10,7 @@ module WaterInfoIsotopeType
   !
   ! !USES:
   !
+  use shr_kind_mod     , only : r8 => shr_kind_r8
   use WaterInfoTracerType, only : water_info_tracer_type
   !
   implicit none
@@ -37,7 +38,7 @@ module WaterInfoIsotopeType
 
 contains
 
-  function constructor(tracer_name) result(this)
+  function constructor(tracer_name,ratio) result(this)
     ! Create a water_info_isotope_type object
     !
     ! Eventually, this will either (a) accept various arguments specifying information
@@ -45,8 +46,9 @@ contains
     ! information from a lookup table defined here or elsewhere, based on the tracer_name.
     type(water_info_isotope_type) :: this  ! function result
     character(len=*), intent(in) :: tracer_name
+    real(r8), intent(in)          :: ratio
 
-    this%water_info_tracer_type = water_info_tracer_type(tracer_name)
+    this%water_info_tracer_type = water_info_tracer_type(tracer_name,ratio)
   end function constructor
 
 end module WaterInfoIsotopeType

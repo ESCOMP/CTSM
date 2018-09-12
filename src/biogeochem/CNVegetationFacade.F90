@@ -66,6 +66,7 @@ module CNVegetationFacade
   use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
   use WaterFluxBulkType                   , only : waterfluxbulk_type
+  use Wateratm2lndBulkType                   , only : wateratm2lndbulk_type
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type 
   use CropType                        , only : crop_type
@@ -784,7 +785,7 @@ contains
        soilbiogeochem_state_inst,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
-       canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+       wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
        photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
        nutrient_competition_method, fireemis_inst)
     !
@@ -819,6 +820,7 @@ contains
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
     type(waterfluxbulk_type)                    , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)                    , intent(inout) :: wateratm2lndbulk_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
@@ -854,7 +856,7 @@ contains
          soilbiogeochem_state_inst,                                               &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
          atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
-         canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+         wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
          nutrient_competition_method, this%cnfire_method)
 
@@ -1027,7 +1029,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine EndOfTimeStepVegDynamics(this, bounds, num_natvegp, filter_natvegp, &
-       atm2lnd_inst)
+       atm2lnd_inst, wateratm2lndbulk_inst)
     !
     ! !DESCRIPTION:
     ! Do vegetation dynamics that should be done at the end of each time step
@@ -1042,6 +1044,7 @@ contains
     integer            , intent(inout) :: num_natvegp       ! number of naturally-vegetated patches in filter
     integer            , intent(inout) :: filter_natvegp(:) ! filter for naturally-vegetated patches
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
+    type(wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: nstep  ! time step number
@@ -1077,7 +1080,7 @@ contains
 
           call CNDVDriver(bounds, &
                num_natvegp, filter_natvegp, kyr,  &
-               atm2lnd_inst, &
+               atm2lnd_inst, wateratm2lndbulk_inst, &
                this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, this%dgvs_inst)
        end if
        call t_stopf('d2dgvm')

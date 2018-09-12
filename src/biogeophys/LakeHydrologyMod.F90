@@ -29,6 +29,7 @@ module LakeHydrologyMod
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
   use WaterFluxBulkType        , only : waterfluxbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
   use WaterStateBulkType       , only : waterstatebulk_type
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use WaterBalanceType       , only : waterbalance_type
@@ -51,7 +52,7 @@ contains
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
        atm2lnd_inst, temperature_inst, soilstate_inst, waterstatebulk_inst, &
        waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
-       energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
+       wateratm2lndbulk_inst, energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
     !
     ! !DESCRIPTION:
     ! WARNING: This subroutine assumes lake columns have one and only one pft.
@@ -97,6 +98,7 @@ contains
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)  , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(lakestate_type)   , intent(inout) :: lakestate_inst
@@ -135,10 +137,10 @@ contains
          zi                   =>  col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface depth (m)                   
          snl                  =>  col%snl                               , & ! Input:  [integer  (:)   ]  number of snow layers                    
 
-         forc_rain            =>  atm2lnd_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
-         forc_snow            =>  atm2lnd_inst%forc_snow_downscaled_col , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
+         forc_rain            =>  wateratm2lndbulk_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
+         forc_snow            =>  wateratm2lndbulk_inst%forc_snow_downscaled_col , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
          forc_t               =>  atm2lnd_inst%forc_t_downscaled_col    , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
-         qflx_floodg          =>  atm2lnd_inst%forc_flood_grc           , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
+         qflx_floodg          =>  wateratm2lndbulk_inst%forc_flood_grc           , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
 
          watsat               =>  soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
 
