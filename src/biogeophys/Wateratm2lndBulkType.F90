@@ -16,12 +16,10 @@ module Wateratm2lndBulkType
   use abortutils     , only : endrun
   use PatchType      , only : patch
   use clm_varctl     , only : iulog, use_fates, use_cn, use_cndv
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
   use WaterAtm2lndType , only : wateratm2lnd_type
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -30,29 +28,28 @@ module Wateratm2lndBulkType
   ! !PUBLIC TYPES:
   type, extends(wateratm2lnd_type), public :: wateratm2lndbulk_type
 
-     real(r8), pointer :: volrmch_grc                   (:)   => null() ! rof volr main channel (m3)    
-     real(r8), pointer :: volr_grc                      (:)   => null() ! rof volr total volume (m3)
-     real(r8), pointer :: forc_rh_grc                   (:)   => null() ! atmospheric relative humidity (%)                                                                                     
-     real(r8) , pointer :: prec365_col                  (:)   => null() ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
-     real(r8) , pointer :: prec60_patch                 (:)   => null() ! patch 60-day running mean of tot. precipitation (mm/s)                                                                
-     real(r8) , pointer :: prec10_patch                 (:)   => null() ! patch 10-day running mean of tot. precipitation (mm/s)                                                                
-     real(r8) , pointer :: rh30_patch                   (:)   => null() ! patch 30-day running mean of relative humidity                                                                        
-     real(r8) , pointer :: prec24_patch                 (:)   => null() ! patch 24-hour running mean of tot. precipitation (mm/s)                                                               
-     real(r8) , pointer :: rh24_patch                   (:)   => null() ! patch 24-hour running mean of relative humidity                                                                       
- 
-
+     real(r8), pointer :: volrmch_grc                   (:)   ! rof volr main channel (m3)
+     real(r8), pointer :: volr_grc                      (:)   ! rof volr total volume (m3)
+     real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)
+     real(r8) , pointer :: prec365_col                  (:)   ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
+     real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)
+     real(r8) , pointer :: prec10_patch                 (:)   ! patch 10-day running mean of tot. precipitation (mm/s)
+     real(r8) , pointer :: rh30_patch                   (:)   ! patch 30-day running mean of relative humidity
+     real(r8) , pointer :: prec24_patch                 (:)   ! patch 24-hour running mean of tot. precipitation (mm/s)
+     real(r8) , pointer :: rh24_patch                   (:)   ! patch 24-hour running mean of relative humidity
 
    contains
 
-     procedure          :: InitBulk         
-     procedure          :: RestartBulk      
+     procedure, public  :: InitBulk
+     procedure, public  :: InitForTesting  ! Should only be used in unit tests
+     procedure, public  :: RestartBulk
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
      procedure, public  :: Clean
-     procedure, private :: InitBulkAllocate 
-     procedure, private :: InitBulkHistory  
-     procedure, private :: InitBulkCold     
+     procedure, private :: InitBulkAllocate
+     procedure, private :: InitBulkHistory
+     procedure, private :: InitBulkCold
 
   end type wateratm2lndbulk_type
 
@@ -64,22 +61,38 @@ module Wateratm2lndBulkType
 contains
 
   !------------------------------------------------------------------------
-  subroutine InitBulk(this, bounds, info)
+  subroutine InitBulk(this, bounds, info, vars)
 
     class(wateratm2lndbulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: vars
 
 
-    call this%Init(bounds, info)
+    call this%Init(bounds, info, vars)
 
-    call this%InitBulkAllocate(bounds) 
+    call this%InitBulkAllocate(bounds)
 
     call this%InitBulkHistory(bounds)
 
     call this%InitBulkCold(bounds)
 
   end subroutine InitBulk
+
+  !------------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds, info)
+    ! Init routine only for unit testing
+    class(wateratm2lndbulk_type), intent(inout) :: this
+    type(bounds_type) , intent(in) :: bounds
+    class(water_info_base_type), intent(in), target :: info
+
+    type(water_tracer_container_type) :: vars
+
+    ! In unit tests, we don't care about the vars structure, so don't force tests to
+    ! create it
+    call vars%init()
+    call this%InitBulk(bounds, info, vars)
+  end subroutine InitForTesting
 
   !------------------------------------------------------------------------
   subroutine InitBulkAllocate(this, bounds)
@@ -92,19 +105,17 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     real(r8) :: ival  = 0.0_r8  ! initial value
     integer :: begp, endp
     integer :: begc, endc
-    integer :: begl, endl
     integer :: begg, endg
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
-    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     allocate(this%volr_grc                      (begg:endg))        ; this%volr_grc    (:)   = ival
@@ -130,25 +141,18 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : use_lch4
-    use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d
+    use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
-    class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    class(wateratm2lndbulk_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
-    integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
 
@@ -184,93 +188,44 @@ contains
             ptr_patch=this%prec60_patch, default='inactive')
     end if
 
-
-
   end subroutine InitBulkHistory
 
   !-----------------------------------------------------------------------
   subroutine InitBulkCold(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize time constant variables and cold start conditions 
-    !
-    ! !USES:
-    use shr_const_mod   , only : shr_const_pi
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
-    use shr_spfn_mod    , only : shr_spfn_erf
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon      , only : spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc
-    use clm_varctl      , only : fsurdat, iulog
-    use clm_varctl        , only : use_bedrock
-    use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
-    use fileutils       , only : getfil
-    use ncdio_pio       , only : file_desc_t, ncd_io
+    ! Initialize cold start conditions
     !
     ! !ARGUMENTS:
-    class(wateratm2lndbulk_type), intent(in) :: this
+    class(wateratm2lndbulk_type), intent(inout) :: this
     type(bounds_type)     , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
-    logical            :: readvar 
-    type(file_desc_t)  :: ncid        
-    character(len=256) :: locfn       
     !-----------------------------------------------------------------------
 
-
+    ! Nothing to do for now
 
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------
   subroutine RestartBulk(this, bounds, ncid, flag)
-    ! 
+    !
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
-    use restUtilMod
+    use ncdio_pio        , only : file_desc_t
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in)    :: bounds 
+    type(bounds_type), intent(in)    :: bounds
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,l,j
-    logical  :: readvar
     !------------------------------------------------------------------------
 
-    call this%restart (bounds, ncid, flag=flag) 
-
-
-
-!    call restartvar(ncid=ncid, flag=flag, &
-!         varname=this%info%fname('SNOW_PERS'), &
-!         xtype=ncd_double,  &
-!         dim1name='column', &
-!         long_name=this%info%lname('continuous snow cover time'), &
-!         units='sec', &
-!         interpinic_flag='interp', readvar=readvar, data=this%snow_persistence_col)    
-!    if (flag=='read' .and. .not. readvar) then
-!         this%snow_persistence_col(:) = 0.0_r8
-!    end if
+    call this%restart (bounds, ncid, flag=flag)
 
   end subroutine RestartBulk
 
@@ -282,13 +237,13 @@ contains
     ! This routine set defaults values that are then overwritten by the
     ! restart file for restart or branch runs
     !
-    ! !USES 
+    ! !USES
     use clm_varcon  , only : spval
     use accumulMod  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !---------------------------------------------------------------------
 
     if (use_cn) then
@@ -299,7 +254,7 @@ contains
        call init_accum_field (name='PREC60', units='MM H2O/S', &
             desc='60-day running mean of total precipitation', accum_type='runmean', accum_period=-60, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
-    
+
        call init_accum_field (name='RH30', units='%', &
             desc='30-day running mean of relative humidity', accum_type='runmean', accum_period=-30, &
             subgrid_type='pft', numlev=1, init_value=100._r8)
@@ -317,10 +272,10 @@ contains
             desc='24hr sum of precipitation', accum_type='runmean', accum_period=-1, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
 
-       ! Fudge - this neds to be initialized from the restat file eventually. 
+       ! Fudge - this neds to be initialized from the restat file eventually.
        call init_accum_field (name='RH24', units='m', &
             desc='24hr average of RH', accum_type='runmean', accum_period=-1, &
-            subgrid_type='pft', numlev=1, init_value=100._r8) 
+            subgrid_type='pft', numlev=1, init_value=100._r8)
     end if
 
   end subroutine InitAccBuffer
@@ -331,16 +286,16 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
+    ! and a restart run (and must therefore must be called after the restart file
     ! is read in and the accumulation buffer is obtained)
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : extract_accum_field
     use clm_time_manager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
@@ -378,13 +333,13 @@ contains
 
        call extract_accum_field ('PREC60', rbufslp, nstep)
        this%prec60_patch(begp:endp) = rbufslp(begp:endp)
-   
+
        call extract_accum_field ('RH30', rbufslp, nstep)
        this%rh30_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
     if (use_cndv) then
-       call extract_accum_field ('PREC365' , rbufslc, nstep) 
+       call extract_accum_field ('PREC365' , rbufslc, nstep)
        this%prec365_col(begc:endc) = rbufslc(begc:endc)
     end if
 
@@ -409,7 +364,7 @@ contains
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type)      , intent(in) :: bounds  
+    type(bounds_type)      , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p                     ! indices
@@ -479,8 +434,8 @@ contains
        call extract_accum_field ('PREC24', this%prec24_patch, nstep)
 
        do p = bounds%begp,bounds%endp
-          g = patch%gridcell(p) 
-          rbufslp(p) = this%forc_rh_grc(g) 
+          g = patch%gridcell(p)
+          rbufslp(p) = this%forc_rh_grc(g)
        end do
        call update_accum_field  ('RH24', rbufslp, nstep)
        call extract_accum_field ('RH24', this%rh24_patch, nstep)
@@ -488,7 +443,7 @@ contains
 
     if (use_cn) then
        do p = begp,endp
-          g = patch%gridcell(p) 
+          g = patch%gridcell(p)
           rbufslp(p) = this%forc_rh_grc(g)
        end do
        ! Accumulate and extract RH30 (accumulates RH as 30-day running mean)

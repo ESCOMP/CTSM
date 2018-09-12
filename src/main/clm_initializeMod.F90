@@ -688,8 +688,14 @@ contains
 
     call t_stopf('clm_init2')
 
-    if (water_inst%num_tracers > 0) &
-       print*,'tracerconsistencycheck= ',water_inst%TracerConsistencyCheck(bounds_proc)
+    if (water_inst%DoConsistencyCheck()) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
+       end do
+       !$OMP END PARALLEL DO
+    end if
 
   end subroutine initialize2
 

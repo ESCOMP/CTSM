@@ -82,7 +82,7 @@ contains
 
     ! Allocate necessary variables
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
-    call this%wateratm2lndbulk_inst%InitBulk(bounds,water_info_bulk_type())
+    call this%wateratm2lndbulk_inst%InitForTesting(bounds,water_info_bulk_type())
     this%sh_from_conversion = col_array()
 
     ! set input variables

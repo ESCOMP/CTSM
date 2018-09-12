@@ -20,15 +20,22 @@ list(APPEND clm_sources
   UrbanParamsType.F90
   Wateratm2lndBulkType.F90
   Wateratm2lndType.F90
+  WaterBalanceType.F90
   WaterDiagnosticBulkType.F90
   WaterDiagnosticType.F90
   WaterFluxType.F90
   WaterFluxBulkType.F90
+  Waterlnd2atmBulkType.F90
+  Waterlnd2atmType.F90
   WaterInfoBaseType.F90
   WaterInfoBulkType.F90
-  WaterIsotopesMod.F90
+  WaterInfoIsotopeType.F90
+  WaterInfoTracerType.F90
   WaterStateBulkType.F90
   WaterStateType.F90
+  WaterTracerContainerType.F90
+  WaterTracerUtils.F90
+  WaterType.F90
   )
 
 sourcelist_to_parent(clm_sources)
