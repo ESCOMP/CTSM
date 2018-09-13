@@ -329,9 +329,7 @@ contains
 
     call t_startf('dyn_subgrid')
     call dynSubgrid_driver(bounds_proc,                                               &
-         urbanparams_inst, soilstate_inst,                        &
-         water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-         water_inst%waterbalancebulk_inst, water_inst%waterfluxbulk_inst, &
+         urbanparams_inst, soilstate_inst, water_inst,                       &
          temperature_inst, energyflux_inst,          &
          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &

@@ -7,13 +7,16 @@ module test_init_columns
   use dynInitColumnsMod
   use ColumnType      , only : col
   use LandunitType    , only : lun
-  use GridcellType    , only : grc 
+  use GridcellType    , only : grc
+  use landunit_varcon , only : istwet
   use decompMod       , only : bounds_type
   use clm_varcon      , only : ispval
   use clm_varpar      , only : nlevsno, nlevgrnd
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use TemperatureType , only : temperature_type
-  use WaterstateBulkType  , only : waterstatebulk_type
+  use WaterType       , only : water_type
+  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
+  use WaterstateType  , only : waterstate_type
   use dynColumnTemplateMod, only : TEMPLATE_NONE_FOUND
 
   implicit none
@@ -24,11 +27,13 @@ module test_init_columns
      integer :: c_new     ! column index of the new column to initialize in some tests
      integer :: l1        ! index of the landunit with landunit type 1
      integer :: l2        ! index of the landunit with landunit type 2
-     type(temperature_type) :: temperature_vars
-     type(waterstatebulk_type)  :: waterstatebulk_vars
+     type(temperature_type) :: temperature_inst
+     type(water_type)  :: water_inst
+     type(unittest_water_type_factory_type) :: water_factory
    contains
      procedure :: setUp
      procedure :: tearDown
+     procedure :: init_waterstate
   end type TestInit
 
 contains
@@ -37,10 +42,19 @@ contains
     ! Set up variables needed for tests: various subgrid type variables, along with
     ! bounds and this%cactive_prior.
     !
+    ! There is guaranteed to be at least one water tracer.
+    !
     ! col%active and this%cactive_prior need to be set by specific tests
     class(TestInit), intent(inout) :: this
 
     integer :: c, lev
+    integer :: tracer_num
+
+    call this%water_factory%init()
+    call this%water_factory%setup_before_subgrid( &
+         my_nlevsoi = 6, &
+         nlevgrnd_additional = 4, &
+         my_nlevsno = 3)
 
     ! Set up subgrid structure
     ! The weights (of both landunits and columns) and column types in the following are
@@ -50,7 +64,8 @@ contains
 
     call unittest_add_gridcell()
 
-    call unittest_add_landunit(my_gi=gi, ltype=3, wtgcell=0.25_r8)
+    ! The first landunit is neither natural veg nor crop
+    call unittest_add_landunit(my_gi=gi, ltype=istwet, wtgcell=0.25_r8)
     call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8)
     call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8)
 
@@ -72,49 +87,71 @@ contains
 
     call unittest_subgrid_setup_end()
 
+    call this%water_factory%setup_after_subgrid(snl = 0, dz = 1._r8)
+    call this%water_factory%create_water_type(this%water_inst, &
+         enable_isotopes = .true.)
+
     col%active(begc:endc) = .false.
     allocate(this%cactive_prior(bounds%begc:bounds%endc), source=.false.)
 
-    nlevgrnd=10
-    allocate(this%temperature_vars%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    allocate(this%waterstatebulk_vars%h2osoi_liq_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    allocate(this%waterstatebulk_vars%h2osoi_ice_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    allocate(this%waterstatebulk_vars%h2osoi_vol_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    allocate(this%waterstatebulk_vars%wa_col(bounds%begc:bounds%endc))
+    allocate(this%temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
     do lev = -nlevsno+1, nlevgrnd
        do c = bounds%begc, bounds%endc
-          this%temperature_vars%t_soisno_col(c, lev) = c*1000 + lev
-
-          ! 137 is a nice arbitrary number, larger than any column index (so we won't
-          ! have the same value in any column)
-          this%waterstatebulk_vars%h2osoi_liq_col(c, lev) = c*137._r8 + lev
-
-          ! Also need to initialize some other waterstate_type variables, but we don't
-          ! have any assertions on them in this test, so just initialize them to 0
-          this%waterstatebulk_vars%h2osoi_ice_col(c, lev) = 0._r8
-          this%waterstatebulk_vars%h2osoi_vol_col(c, lev) = 0._r8
+          this%temperature_inst%t_soisno_col(c, lev) = c*1000 + lev
        end do
     end do
 
-    ! Also need to initialize some other variables for which we don't have any assertions
-    do c = bounds%begc, bounds%endc
-       this%waterstatebulk_vars%wa_col(c) = 0._r8
+    call this%init_waterstate(this%water_inst%waterstatebulk_inst, &
+         tracer_num = 0)
+    @assertGreaterThan(this%water_inst%num_tracers, 0)
+    do tracer_num = 1, this%water_inst%num_tracers
+       call this%init_waterstate(this%water_inst%waterstate_tracer_inst(tracer_num), &
+            tracer_num = tracer_num)
     end do
+
   end subroutine setUp
 
   subroutine tearDown(this)
     ! clean up stuff set up in setup()
     class(TestInit), intent(inout) :: this
 
+    call this%water_factory%teardown(this%water_inst)
+    deallocate(this%temperature_inst%t_soisno_col)
     call unittest_subgrid_teardown()
 
-    deallocate(this%temperature_vars%t_soisno_col)
-    deallocate(this%waterstatebulk_vars%h2osoi_liq_col)
-    deallocate(this%waterstatebulk_vars%h2osoi_ice_col)
-    deallocate(this%waterstatebulk_vars%h2osoi_vol_col)
-    deallocate(this%waterstatebulk_vars%wa_col)
-
   end subroutine tearDown
+
+  subroutine init_waterstate(this, waterstate_inst, tracer_num)
+    ! Initialize variables that need to be set for these tests in one waterstate instance
+    class(TestInit), intent(in) :: this
+    class(waterstate_type), intent(inout) :: waterstate_inst
+    integer, intent(in) :: tracer_num  ! used to give each tracer unique values
+
+    integer :: lev, c
+
+    do lev = -nlevsno+1, nlevgrnd
+       do c = bounds%begc, bounds%endc
+          ! 137 is a nice arbitrary number, larger than any column index (so we won't
+          ! have the same value in any column)
+          waterstate_inst%h2osoi_liq_col(c, lev) = &
+               c*(137._r8 + 37._r8*tracer_num) + lev
+
+          ! Also need to initialize some other waterstate_type variables, but we don't
+          ! have any assertions on them in this test, so just initialize them to 0
+          waterstate_inst%h2osoi_ice_col(c, lev) = 0._r8
+       end do
+    end do
+
+    ! Also need to initialize some other variables for which we don't have any assertions
+    do lev = 1, nlevgrnd
+       do c = bounds%begc, bounds%endc
+          waterstate_inst%h2osoi_vol_col(c, lev) = 0._r8
+       end do
+    end do
+    do c = bounds%begc, bounds%endc
+       waterstate_inst%wa_col(c) = 0._r8
+    end do
+  end subroutine init_waterstate
 
   ! ------------------------------------------------------------------------
   ! Tests of initial_template_col_crop
@@ -165,10 +202,10 @@ contains
     col%active(lun%coli(this%l2)+1) = .false.
     this%cactive_prior(lun%coli(this%l2)+1) = .false.
     col%active(lun%coli(this%l2)+2) = .false.
-    t_soisno_expected = this%temperature_vars%t_soisno_col
+    t_soisno_expected = this%temperature_inst%t_soisno_col
     call initialize_new_columns(bounds, this%cactive_prior, &
-         this%temperature_vars, this%waterstatebulk_vars)
-    @assertEqual(t_soisno_expected, this%temperature_vars%t_soisno_col)
+         this%temperature_inst, this%water_inst)
+    @assertEqual(t_soisno_expected, this%temperature_inst%t_soisno_col)
   end subroutine test_initialize_new_columns_none
 
   @Test
@@ -181,10 +218,10 @@ contains
     col%active(lun%coli(this%l2)+1) = .true.
     ! all cactive_prior points were false, so there's nothing to use as a template:
     this%cactive_prior(:) = .false.
-    t_soisno_expected = this%temperature_vars%t_soisno_col
+    t_soisno_expected = this%temperature_inst%t_soisno_col
     call initialize_new_columns(bounds, this%cactive_prior, &
-         this%temperature_vars, this%waterstatebulk_vars)
-    @assertEqual(t_soisno_expected, this%temperature_vars%t_soisno_col)
+         this%temperature_inst, this%water_inst)
+    @assertEqual(t_soisno_expected, this%temperature_inst%t_soisno_col)
   end subroutine test_initialize_new_columns_TEMPLATE_NONE_FOUND
 
   @Test
@@ -193,6 +230,7 @@ contains
     class(TestInit), intent(inout) :: this
     real(r8), allocatable :: t_soisno_expected(:,:)
     real(r8), allocatable :: h2osoi_liq_expected(:,:)
+    real(r8), allocatable :: h2osoi_liq_tracer_expected(:,:)
     integer :: source_col, dest_col
 
     col%active(:) = .false.
@@ -203,18 +241,25 @@ contains
     source_col = lun%coli(this%l1) + 1
     this%cactive_prior(source_col) = .true.
 
-    t_soisno_expected = this%temperature_vars%t_soisno_col
-    h2osoi_liq_expected = this%waterstatebulk_vars%h2osoi_liq_col
+    t_soisno_expected = this%temperature_inst%t_soisno_col
+    h2osoi_liq_expected = this%water_inst%waterstatebulk_inst%h2osoi_liq_col
+    h2osoi_liq_tracer_expected = this%water_inst%waterstate_tracer_inst(1)%h2osoi_liq_col
     ! In the following, note that only the belowground portion (starting with level 1) is
     ! copied:
-    t_soisno_expected(dest_col,1:) = this%temperature_vars%t_soisno_col(source_col,1:)
-    h2osoi_liq_expected(dest_col,1:) = this%waterstatebulk_vars%h2osoi_liq_col(source_col,1:)
+    t_soisno_expected(dest_col,1:) = &
+         this%temperature_inst%t_soisno_col(source_col,1:)
+    h2osoi_liq_expected(dest_col,1:) = &
+         this%water_inst%waterstatebulk_inst%h2osoi_liq_col(source_col,1:)
+    h2osoi_liq_tracer_expected(dest_col,1:) = &
+         this%water_inst%waterstate_tracer_inst(1)%h2osoi_liq_col(source_col,1:)
 
     call initialize_new_columns(bounds, this%cactive_prior, &
-         this%temperature_vars, this%waterstatebulk_vars)
+         this%temperature_inst, this%water_inst)
 
-    @assertEqual(t_soisno_expected, this%temperature_vars%t_soisno_col)
-    @assertEqual(h2osoi_liq_expected, this%waterstatebulk_vars%h2osoi_liq_col)
+    @assertEqual(t_soisno_expected, this%temperature_inst%t_soisno_col)
+    @assertEqual(h2osoi_liq_expected, this%water_inst%waterstatebulk_inst%h2osoi_liq_col)
+    ! We assume that, if the first tracer is handled correctly, then all of them are
+    @assertEqual(h2osoi_liq_tracer_expected, this%water_inst%waterstate_tracer_inst(1)%h2osoi_liq_col)
   end subroutine test_initialize_new_columns_copy_state
 
 end module test_init_columns

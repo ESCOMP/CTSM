@@ -123,6 +123,7 @@ module WaterType
      procedure, public :: UpdateAccVars
      procedure, public :: Restart
      procedure, public :: SetAtm2lndNondownscaledTracers
+     procedure, public :: CopyStateForNewColumn
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
@@ -618,6 +619,37 @@ contains
     end do
 
   end subroutine SetAtm2lndNondownscaledTracers
+
+  !-----------------------------------------------------------------------
+  subroutine CopyStateForNewColumn(this, c_new, c_template)
+    !
+    ! !DESCRIPTION:
+    ! When a new column comes into existence via dynamic landunits/columns: Copy
+    ! necessary state variables from a template column (index given by c_template) into
+    ! the new column (index given by c_new).
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    integer, intent(in) :: c_new      ! index of newly-active column
+    integer, intent(in) :: c_template ! index of column to use as a template
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'CopyStateForNewColumn'
+    !-----------------------------------------------------------------------
+
+    call this%waterstatebulk_inst%CopyStateForNewColumn( &
+         c_new = c_new, &
+         c_template = c_template)
+
+    do i = 1, this%num_tracers
+       call this%waterstate_tracer_inst(i)%CopyStateForNewColumn( &
+            c_new = c_new, &
+            c_template = c_template)
+    end do
+
+  end subroutine CopyStateForNewColumn
 
 
   !-----------------------------------------------------------------------

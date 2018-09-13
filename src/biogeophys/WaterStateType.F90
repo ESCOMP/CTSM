@@ -10,6 +10,7 @@ module WaterStateType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
   use clm_varctl     , only : iulog, use_bedrock
@@ -43,11 +44,12 @@ module WaterStateType
 
    contains
 
-     procedure          :: Init         
-     procedure          :: Restart      
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, public  :: Init
+     procedure, public  :: Restart
+     procedure, public  :: CopyStateForNewColumn
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type waterstate_type
 
@@ -389,6 +391,10 @@ contains
                do j = 1, nlevs
                   this%h2osoi_vol_col(c,j) = 1.0_r8
                end do
+            else
+               write(iulog,*) 'water_state_type InitCold: unhandled landunit type ', lun%itype(l)
+               call endrun(msg = 'unhandled landunit type', &
+                    additional_msg = errMsg(sourcefile, __LINE__))
             endif
             do j = 1, nlevs
                this%h2osoi_vol_col(c,j) = min(this%h2osoi_vol_col(c,j), watsat_col(c,j))
@@ -644,5 +650,45 @@ contains
     endif   ! end if if-read flag
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine CopyStateForNewColumn(this, c_new, c_template)
+    !
+    ! !DESCRIPTION:
+    ! When a new column comes into existence via dynamic landunits/columns: Copy
+    ! necessary state variables from a template column (index given by c_template) into
+    ! the new column (index given by c_new).
+    !
+    ! !ARGUMENTS:
+    class(waterstate_type), intent(inout) :: this
+    integer, intent(in) :: c_new      ! index of newly-active column
+    integer, intent(in) :: c_template ! index of column to use as a template
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'CopyStateForNewColumn'
+    !-----------------------------------------------------------------------
+
+    ! We only copy the below-ground portion of these multi-level variables, not the
+    ! above-ground (snow) portion. This is because it is challenging to initialize the
+    ! snow pack in a consistent state, requiring copying many more state variables - and
+    ! if you initialize it in a partly-inconsistent state, you get balance errors. So, for
+    ! now at least, we (Dave Lawrence, Keith Oleson, Bill Sacks) have decided that it's
+    ! safest to just let the snow pack in the new column start at cold start conditions.
+
+    ! TODO(wjs, 2016-08-31) If we had more general uses of this initial template col
+    ! infrastructure (copying state between very different landunits), then we might need
+    ! to handle bedrock layers - e.g., zeroing out any water that would be added to a
+    ! bedrock layer(?). But for now we just use this initial template col infrastructure
+    ! for nat veg -> crop, for which the bedrock will be the same, so we're not dealing
+    ! with that complexity for now.
+    this%h2osoi_liq_col(c_new,1:) = this%h2osoi_liq_col(c_template,1:)
+    this%h2osoi_ice_col(c_new,1:) = this%h2osoi_ice_col(c_template,1:)
+    this%h2osoi_vol_col(c_new,1:) = this%h2osoi_vol_col(c_template,1:)
+
+    this%wa_col(c_new) = this%wa_col(c_template)
+
+  end subroutine CopyStateForNewColumn
+
 
 end module WaterStateType
