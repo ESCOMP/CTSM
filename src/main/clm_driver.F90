@@ -327,22 +327,6 @@ contains
     ! call needs to happen outside loops over nclumps.
     ! ============================================================================
 
-    ! FIXME(wjs, 2018-09-13) This is temporary; remove it
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-    do nc = 1, nclumps
-       call get_clump_bounds(nc, bounds_clump)
-       if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'before dynSubgrid_driver')
-             call t_stopf("tracer_consistency_check")
-          end if
-       end if
-    end do
-    !$OMP END PARALLEL DO
-
     call t_startf('dyn_subgrid')
     call dynSubgrid_driver(bounds_proc,                                               &
          urbanparams_inst, soilstate_inst,                        &
