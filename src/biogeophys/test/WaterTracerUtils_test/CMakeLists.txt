@@ -1,4 +1,5 @@
 set (pfunit_sources
+  test_calc_tracer_from_bulk_fixed_ratio.pf
   test_compare_bulk_to_tracer.pf)
 
 # extra sources used for this test, which are not .pf files

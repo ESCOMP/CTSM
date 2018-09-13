@@ -22,6 +22,7 @@ module WaterTracerUtils
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: AllocateVar1d
   public :: AllocateVar2d
+  public :: CalcTracerFromBulkFixedRatio
   public :: CompareBulkToTracer
 
   ! !PRIVATE MEMBER DATA:
@@ -119,6 +120,34 @@ contains
     end do
 
   end subroutine AllocateVar2d
+
+  !-----------------------------------------------------------------------
+  subroutine CalcTracerFromBulkFixedRatio(bulk, ratio, tracer)
+    !
+    ! !DESCRIPTION:
+    ! Calculate a tracer variable from a corresponding bulk variable when the tracer
+    ! should be a fixed ratio times the bulk
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in) :: bulk(:)
+    real(r8), intent(in) :: ratio   ! ratio of tracer to bulk
+    real(r8), intent(inout) :: tracer(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: num
+    integer :: i
+
+    character(len=*), parameter :: subname = 'CalcTracerFromBulkFixedRatio'
+    !-----------------------------------------------------------------------
+
+    num = size(bulk)
+    SHR_ASSERT((size(tracer) == num), errMsg(sourcefile, __LINE__))
+    do i = 1, num
+       tracer(i) = bulk(i) * ratio
+    end do
+
+  end subroutine CalcTracerFromBulkFixedRatio
+
 
   !-----------------------------------------------------------------------
   subroutine CompareBulkToTracer(bounds_beg, bounds_end, &

@@ -168,6 +168,10 @@ contains
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
 
+       ! FIXME(wjs, 2018-09-06) Probably combine this with a later call rather than having
+       ! it be its own call
+       call water_inst%SetAtm2lndNondownscaledTracers(bounds_clump)
+
        if (water_inst%DoConsistencyCheck()) then
           ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
           ! every time step

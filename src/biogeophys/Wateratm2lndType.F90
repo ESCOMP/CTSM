@@ -14,7 +14,7 @@ module Wateratm2lndType
   use clm_varcon     , only : spval
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d
+  use WaterTracerUtils, only : AllocateVar1d, CalcTracerFromBulkFixedRatio
   !
   implicit none
   save
@@ -37,6 +37,7 @@ module Wateratm2lndType
 
      procedure, public  :: Init
      procedure, public  :: Restart
+     procedure, public  :: SetNondownscaledTracers
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
@@ -239,5 +240,58 @@ contains
     endif
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine SetNondownscaledTracers(this, bounds, bulk)
+    !
+    ! !DESCRIPTION:
+    ! Set tracer values for the non-downscaled atm2lnd water quantities from the bulk quantities
+    !
+    ! This should only be called for tracers that are not communicated with the coupler.
+    ! Note that the tracer values are set to a fixed ratio times the bulk (because we
+    ! don't have any other information to go on for these fields).
+    !
+    ! !ARGUMENTS:
+    class(wateratm2lnd_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    class(wateratm2lnd_type), intent(in) :: bulk
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: ratio
+
+    character(len=*), parameter :: subname = 'SetNondownscaledTracers'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begg => bounds%begg, &
+         endg => bounds%endg &
+         )
+
+    ratio = this%info%get_ratio()
+
+    call CalcTracerFromBulkFixedRatio( &
+         bulk = bulk%forc_q_not_downscaled_grc(begg:endg), &
+         ratio = ratio, &
+         tracer = this%forc_q_not_downscaled_grc(begg:endg))
+
+    call CalcTracerFromBulkFixedRatio( &
+         bulk = bulk%forc_rain_not_downscaled_grc(begg:endg), &
+         ratio = ratio, &
+         tracer = this%forc_rain_not_downscaled_grc(begg:endg))
+
+    call CalcTracerFromBulkFixedRatio( &
+         bulk = bulk%forc_snow_not_downscaled_grc(begg:endg), &
+         ratio = ratio, &
+         tracer = this%forc_snow_not_downscaled_grc(begg:endg))
+
+    call CalcTracerFromBulkFixedRatio( &
+         bulk = bulk%forc_flood_grc(begg:endg), &
+         ratio = ratio, &
+         tracer = this%forc_flood_grc(begg:endg))
+
+    end associate
+
+  end subroutine SetNondownscaledTracers
+
 
 end module Wateratm2lndType

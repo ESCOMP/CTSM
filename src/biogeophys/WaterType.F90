@@ -38,6 +38,7 @@ module WaterType
   use WaterBalanceType        , only : waterbalance_type
   use WaterInfoBaseType       , only : water_info_base_type
   use WaterInfoBulkType       , only : water_info_bulk_type
+  use WaterInfoTracerType     , only : water_info_tracer_type
   use WaterInfoIsotopeType    , only : water_info_isotope_type
   use Waterlnd2atmType    , only : waterlnd2atm_type
   use Waterlnd2atmBulkType    , only : waterlnd2atmbulk_type
@@ -52,14 +53,14 @@ module WaterType
   !
   ! !PRIVATE TYPES:
 
-  ! This type is a container for objects of class water_info_base_type, to facilitate
+  ! This type is a container for objects of class water_info_tracer_type, to facilitate
   ! having an array of polymorphic entities.
-  type, private :: water_info_container_type
+  type, private :: tracer_info_container_type
      private
      ! 'info' needs to be a pointer so other pointers can point to it (since a derived
      ! type component cannot have the target attribute)
-     class(water_info_base_type), pointer :: info
-  end type water_info_container_type
+     class(water_info_tracer_type), pointer :: info
+  end type tracer_info_container_type
 
   !
   ! !PUBLIC TYPES:
@@ -109,7 +110,7 @@ module WaterType
      type(water_info_bulk_type), pointer :: bulk_info
      type(water_tracer_container_type) :: bulk_vars  ! water tracer variables for bulk water (note that this only includes variables that are also included for water tracers)
      logical, allocatable :: is_isotope(:)
-     type(water_info_container_type), allocatable :: tracer_info(:)
+     type(tracer_info_container_type), allocatable :: tracer_info(:)
      type(water_tracer_container_type), allocatable :: tracer_vars(:)
      integer :: bulk_tracer_index  ! index of the tracer that replicates bulk water (-1 if it doesn't exist)
 
@@ -121,6 +122,7 @@ module WaterType
      procedure, public :: InitAccVars
      procedure, public :: UpdateAccVars
      procedure, public :: Restart
+     procedure, public :: SetAtm2lndNondownscaledTracers
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
@@ -450,17 +452,26 @@ contains
 
     tracer_num = 1
     if (enable_bulk_tracer) then
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('H2OTR',1._r8))
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type( &
+            tracer_name = 'H2OTR', &
+            ratio = 1._r8, &
+            communicated_with_coupler = .false.))
        this%is_isotope(tracer_num) = .true.
        this%bulk_tracer_index = tracer_num
        tracer_num = tracer_num + 1
     end if
     if (this%params%enable_isotopes) then
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('HDO',0.9_r8))
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type( &
+            tracer_name = 'HDO', &
+            ratio = 0.9_r8, &
+            communicated_with_coupler = .false.))
        this%is_isotope(tracer_num) = .true.
        tracer_num = tracer_num + 1
 
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('H218O',0.5_r8))
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type( &
+            tracer_name = 'H218O', &
+            ratio = 0.5_r8, &
+            communicated_with_coupler = .false.))
        this%is_isotope(tracer_num) = .true.
        tracer_num = tracer_num + 1
     end if
@@ -582,6 +593,32 @@ contains
     end do
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine SetAtm2lndNondownscaledTracers(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Set tracer values for the non-downscaled atm2lnd water quantities
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'SetAtm2lndNondownscaledTracers'
+    !-----------------------------------------------------------------------
+
+    do i = 1, this%num_tracers
+       if (.not. this%tracer_info(i)%info%is_communicated_with_coupler()) then
+          call this%wateratm2lnd_tracer_inst(i)%SetNondownscaledTracers( &
+               bounds, this%wateratm2lndbulk_inst)
+       end if
+    end do
+
+  end subroutine SetAtm2lndNondownscaledTracers
+
 
   !-----------------------------------------------------------------------
   function IsIsotope(this, i)
