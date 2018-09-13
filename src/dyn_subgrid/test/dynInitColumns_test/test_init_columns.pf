@@ -85,9 +85,12 @@ contains
        do c = bounds%begc, bounds%endc
           this%temperature_vars%t_soisno_col(c, lev) = c*1000 + lev
 
-          ! Also need to initialize some waterstate_type variables, but we don't have any
-          ! assertions on them in this test
-          this%waterstatebulk_vars%h2osoi_liq_col(c, lev) = 0._r8
+          ! 137 is a nice arbitrary number, larger than any column index (so we won't
+          ! have the same value in any column)
+          this%waterstatebulk_vars%h2osoi_liq_col(c, lev) = c*137._r8 + lev
+
+          ! Also need to initialize some other waterstate_type variables, but we don't
+          ! have any assertions on them in this test, so just initialize them to 0
           this%waterstatebulk_vars%h2osoi_ice_col(c, lev) = 0._r8
           this%waterstatebulk_vars%h2osoi_vol_col(c, lev) = 0._r8
        end do
@@ -189,6 +192,7 @@ contains
     ! Something to initialize, which results in a state copy
     class(TestInit), intent(inout) :: this
     real(r8), allocatable :: t_soisno_expected(:,:)
+    real(r8), allocatable :: h2osoi_liq_expected(:,:)
     integer :: source_col, dest_col
 
     col%active(:) = .false.
@@ -200,14 +204,17 @@ contains
     this%cactive_prior(source_col) = .true.
 
     t_soisno_expected = this%temperature_vars%t_soisno_col
+    h2osoi_liq_expected = this%waterstatebulk_vars%h2osoi_liq_col
     ! In the following, note that only the belowground portion (starting with level 1) is
     ! copied:
     t_soisno_expected(dest_col,1:) = this%temperature_vars%t_soisno_col(source_col,1:)
+    h2osoi_liq_expected(dest_col,1:) = this%waterstatebulk_vars%h2osoi_liq_col(source_col,1:)
 
     call initialize_new_columns(bounds, this%cactive_prior, &
          this%temperature_vars, this%waterstatebulk_vars)
 
     @assertEqual(t_soisno_expected, this%temperature_vars%t_soisno_col)
+    @assertEqual(h2osoi_liq_expected, this%waterstatebulk_vars%h2osoi_liq_col)
   end subroutine test_initialize_new_columns_copy_state
 
 end module test_init_columns
