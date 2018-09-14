@@ -45,12 +45,6 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: snounload_patch        (:)   ! Canopy snow unloading (mm H2O)
      real(r8), pointer :: swe_old_col            (:,:) ! col initial snow water
 
-     real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
-                                                        ! in most cases, the vegetation scheme does not have a dynamic
-                                                        ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
-                                                        ! When FATES is coupled in with plant hydraulics turned on, this storage
-                                                        ! term is set to non-zero. (kg/m2 H2O)
-
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
@@ -154,8 +148,6 @@ contains
     allocate(this%h2osoi_liq_tot_col     (begc:endc))                     ; this%h2osoi_liq_tot_col     (:)   = nan
     allocate(this%snounload_patch        (begp:endp))                     ; this%snounload_patch        (:)   = nan  
     allocate(this%swe_old_col            (begc:endc,-nlevsno+1:0))        ; this%swe_old_col            (:,:) = nan   
-
-    allocate(this%total_plant_stored_h2o_col(begc:endc))                  ; this%total_plant_stored_h2o_col(:) = nan
 
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
     allocate(this%snw_rds_top_col        (begc:endc))                     ; this%snw_rds_top_col        (:)   = nan
@@ -500,11 +492,6 @@ contains
        this%wf_col(c) = spval
        this%wf2_col(c) = spval
     end do
-
-
-    ! Water Stored in plants is almost always a static entity, with the exception
-    ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
-    this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
 
 
     associate(snl => col%snl) 

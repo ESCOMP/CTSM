@@ -173,7 +173,7 @@ contains
     ! !USES:
     use clm_varctl           , only : use_cn, use_fates
     use dynInitColumnsMod    , only : initialize_new_columns
-    use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
+    use dynConsBiogeophysMod , only : dyn_heat_content_init, dyn_hwcontent_final
     use dynEDMod             , only : dyn_ED
     !
     ! !ARGUMENTS:
@@ -217,13 +217,15 @@ contains
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
 
-       call dyn_hwcontent_init(bounds_clump, &
+       call water_inst%DynWaterContentInit(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec)
+       call dyn_heat_content_init(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterbalancebulk_inst, water_inst%waterfluxbulk_inst, &
-            temperature_inst, energyflux_inst)
+            temperature_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
        call patch_state_updater%set_old_weights(bounds_clump)

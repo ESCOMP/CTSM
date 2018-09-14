@@ -19,6 +19,8 @@ module dynConsBiogeophysMod
   use TemperatureType   , only : temperature_type
   use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterStateType    , only : waterstate_type
+  use WaterDiagnosticType, only : waterdiagnostic_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use WaterBalanceType    , only : waterbalance_type
   use TotalWaterAndHeatMod, only : ComputeLiqIceMassNonLake, ComputeLiqIceMassLake
@@ -36,11 +38,11 @@ module dynConsBiogeophysMod
   implicit none
   private
   !
-  public :: dyn_hwcontent_init            ! compute grid-level heat and water content, before land cover change
+  public :: dyn_heat_content_init         ! compute grid-level heat content, before land cover change
   public :: dyn_hwcontent_final           ! compute grid-level heat and water content, after land cover change; also compute dynbal fluxes
+  public :: dyn_water_content             ! compute gridcell total liquid and ice water contents
   !
   ! !PRIVATE MEMBER FUNCTIONS
-  private :: dyn_water_content            ! compute gridcell total liquid and ice water contents
   private :: dyn_heat_content             ! compute gridcell total heat contents
 
   character(len=*), parameter, private :: sourcefile = &
@@ -50,16 +52,15 @@ module dynConsBiogeophysMod
 contains
 
   !---------------------------------------------------------------------------
-  subroutine dyn_hwcontent_init(bounds, &
+  subroutine dyn_heat_content_init(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
-       waterfluxbulk_inst, temperature_inst, energyflux_inst)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       temperature_inst)
     !
     ! !DESCRIPTION:
-    ! Initialize variables used for dyn_hwcontent, and compute grid cell-level heat
-    ! and water content before land cover change
+    ! Compute grid cell-level heat content before land cover change
     !
     ! Should be called BEFORE any subgrid weight updates this time step
     !
@@ -71,25 +72,15 @@ contains
     integer                  , intent(in)    :: filter_lakec(:)
     type(urbanparams_type)   , intent(in)    :: urbanparams_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
-    type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
+    type(waterstatebulk_type), intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
-    type(energyflux_type)    , intent(inout) :: energyflux_inst
     !
     ! !LOCAL VARIABLES:
     integer :: g   ! grid cell index
 
     !-------------------------------------------------------------------------------
     
-    call dyn_water_content(bounds, &
-         num_nolakec, filter_nolakec, &
-         num_lakec, filter_lakec, &
-         waterstatebulk_inst, waterdiagnosticbulk_inst, &
-         liquid_mass = waterbalancebulk_inst%liq1_grc(bounds%begg:bounds%endg), &
-         ice_mass    = waterbalancebulk_inst%ice1_grc(bounds%begg:bounds%endg))
-
     call dyn_heat_content( bounds, &
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
@@ -98,7 +89,7 @@ contains
          heat_grc = temperature_inst%heat1_grc(bounds%begg:bounds%endg), &
          liquid_water_temp_grc = temperature_inst%liquid_water_temp1_grc(bounds%begg:bounds%endg))
 
-  end subroutine dyn_hwcontent_init
+  end subroutine dyn_heat_content_init
 
   !---------------------------------------------------------------------------
   subroutine dyn_hwcontent_final(bounds, &
@@ -197,22 +188,22 @@ contains
   subroutine dyn_water_content(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       waterstate_inst, waterdiagnostic_inst, &
        liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
     ! Compute gridcell total liquid and ice water contents
     !
     ! !ARGUMENTS:
-    type(bounds_type)        , intent(in)    :: bounds  
-    integer                  , intent(in)    :: num_nolakec
-    integer                  , intent(in)    :: filter_nolakec(:)
-    integer                  , intent(in)    :: num_lakec
-    integer                  , intent(in)    :: filter_lakec(:)
-    type(waterstatebulk_type)    , intent(in)    :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type)    , intent(in)    :: waterdiagnosticbulk_inst
-    real(r8)                 , intent(out)   :: liquid_mass( bounds%begg: ) ! kg m-2
-    real(r8)                 , intent(out)   :: ice_mass( bounds%begg: )    ! kg m-2
+    type(bounds_type)           , intent(in)  :: bounds  
+    integer                     , intent(in)  :: num_nolakec
+    integer                     , intent(in)  :: filter_nolakec(:)
+    integer                     , intent(in)  :: num_lakec
+    integer                     , intent(in)  :: filter_lakec(:)
+    class(waterstate_type)      , intent(in)  :: waterstate_inst
+    class(waterdiagnostic_type) , intent(in)  :: waterdiagnostic_inst
+    real(r8)                    , intent(out) :: liquid_mass( bounds%begg: ) ! kg m-2
+    real(r8)                    , intent(out) :: ice_mass( bounds%begg: )    ! kg m-2
     !
     ! !LOCAL VARIABLES:
     real(r8) :: liquid_mass_col(bounds%begc:bounds%endc) ! kg m-2
@@ -225,12 +216,12 @@ contains
     SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     call ComputeLiqIceMassNonLake(bounds, num_nolakec, filter_nolakec, &
-         waterstatebulk_inst, waterdiagnosticbulk_inst, &
+         waterstate_inst, waterdiagnostic_inst, &
          liquid_mass_col(bounds%begc:bounds%endc), &
          ice_mass_col(bounds%begc:bounds%endc))
 
     call ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
-         waterstatebulk_inst, &
+         waterstate_inst, &
          liquid_mass_col(bounds%begc:bounds%endc), &
          ice_mass_col(bounds%begc:bounds%endc))
 

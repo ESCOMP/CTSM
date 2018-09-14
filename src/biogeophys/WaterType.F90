@@ -46,6 +46,7 @@ module WaterType
   use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : CompareBulkToTracer
+  use dynConsBiogeophysMod, only : dyn_water_content
 
   implicit none
   private
@@ -124,6 +125,7 @@ module WaterType
      procedure, public :: Restart
      procedure, public :: SetAtm2lndNondownscaledTracers
      procedure, public :: CopyStateForNewColumn
+     procedure, public :: DynWaterContentInit
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
@@ -651,6 +653,47 @@ contains
 
   end subroutine CopyStateForNewColumn
 
+  !-----------------------------------------------------------------------
+  subroutine DynWaterContentInit(this, bounds, &
+       num_nolakec, filter_nolakec, &
+       num_lakec, filter_lakec)
+    !
+    ! !DESCRIPTION:
+    ! Compute grid cell-level water content before land cover change
+    !
+    ! Should be called BEFORE any subgrid weight updates this time step
+    !
+    ! !ARGUMENTS:
+    class(water_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    integer           , intent(in)    :: num_nolakec
+    integer           , intent(in)    :: filter_nolakec(:)
+    integer           , intent(in)    :: num_lakec
+    integer           , intent(in)    :: filter_lakec(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'DynWaterContentInit'
+    !-----------------------------------------------------------------------
+
+    call dyn_water_content(bounds, &
+         num_nolakec, filter_nolakec, &
+         num_lakec, filter_lakec, &
+         this%waterstatebulk_inst, this%waterdiagnosticbulk_inst, &
+         liquid_mass = this%waterbalancebulk_inst%liq1_grc(bounds%begg:bounds%endg), &
+         ice_mass = this%waterbalancebulk_inst%ice1_grc(bounds%begg:bounds%endg))
+
+    do i = 1, this%num_tracers
+       call dyn_water_content(bounds, &
+            num_nolakec, filter_nolakec, &
+            num_lakec, filter_lakec, &
+            this%waterstate_tracer_inst(i), this%waterdiagnostic_tracer_inst(i), &
+            liquid_mass = this%waterbalance_tracer_inst(i)%liq1_grc(bounds%begg:bounds%endg), &
+            ice_mass = this%waterbalance_tracer_inst(i)%ice1_grc(bounds%begg:bounds%endg))
+    end do
+
+  end subroutine DynWaterContentInit
 
   !-----------------------------------------------------------------------
   function IsIsotope(this, i)
