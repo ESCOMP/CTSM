@@ -9,6 +9,7 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
+  use shr_kind_mod                 , only : r8 => shr_kind_r8
   use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
   use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
@@ -173,7 +174,7 @@ contains
     ! !USES:
     use clm_varctl           , only : use_cn, use_fates
     use dynInitColumnsMod    , only : initialize_new_columns
-    use dynConsBiogeophysMod , only : dyn_heat_content_init, dyn_hwcontent_final
+    use dynConsBiogeophysMod , only : dyn_heat_content_init, dyn_heat_content_final
     use dynEDMod             , only : dyn_ED
     !
     ! !ARGUMENTS:
@@ -201,6 +202,7 @@ contains
     integer           :: nclumps      ! number of clumps on this processor
     integer           :: nc           ! clump index
     type(bounds_type) :: bounds_clump ! clump-level bounds
+    real(r8)          :: delta_liq_bulk(bounds_proc%begg:bounds_proc%endg)  ! change in gridcell h2o liq content for bulk water
 
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
@@ -291,13 +293,17 @@ contains
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
             temperature_inst, water_inst)
 
-       call dyn_hwcontent_final(bounds_clump, &
+       call water_inst%DynWaterContentFinal(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            delta_liq_bulk = delta_liq_bulk(bounds_clump%begg:bounds_clump%endg))
+       call dyn_heat_content_final(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterbalancebulk_inst, water_inst%waterfluxbulk_inst, &
-            temperature_inst, energyflux_inst)
+            temperature_inst, energyflux_inst, &
+            delta_liq = delta_liq_bulk(bounds_clump%begg:bounds_clump%endg))
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, nc, &

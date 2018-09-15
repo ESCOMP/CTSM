@@ -46,7 +46,7 @@ module WaterType
   use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : CompareBulkToTracer
-  use dynConsBiogeophysMod, only : dyn_water_content
+  use dynConsBiogeophysMod, only : dyn_water_content, dyn_water_content_final
 
   implicit none
   private
@@ -126,6 +126,7 @@ module WaterType
      procedure, public :: SetAtm2lndNondownscaledTracers
      procedure, public :: CopyStateForNewColumn
      procedure, public :: DynWaterContentInit
+     procedure, public :: DynWaterContentFinal
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
@@ -694,6 +695,56 @@ contains
     end do
 
   end subroutine DynWaterContentInit
+
+  !-----------------------------------------------------------------------
+  subroutine DynWaterContentFinal(this, bounds, &
+       num_nolakec, filter_nolakec, &
+       num_lakec, filter_lakec, &
+       delta_liq_bulk)
+    !
+    ! !DESCRIPTION:
+    ! Compute grid cell-level water content after land cover change, and compute the
+    ! dynbal water fluxes.
+    !
+    ! Should be called AFTER all subgrid weight updates this time step
+    !
+    ! !ARGUMENTS:
+    class(water_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    integer           , intent(in)    :: num_nolakec
+    integer           , intent(in)    :: filter_nolakec(:)
+    integer           , intent(in)    :: num_lakec
+    integer           , intent(in)    :: filter_lakec(:)
+    real(r8)          , intent(out)   :: delta_liq_bulk(bounds%begg:)  ! change in gridcell h2o liq content for bulk water
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+    real(r8) :: delta_liq_tracer(bounds%begg:bounds%endg)
+
+    character(len=*), parameter :: subname = 'DynWaterContentFinal'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(delta_liq_bulk) == [bounds%endg]), errMsg(sourcefile, __LINE__))
+
+    call dyn_water_content_final(bounds, &
+         num_nolakec, filter_nolakec, &
+         num_lakec, filter_lakec, &
+         this%waterstatebulk_inst, this%waterdiagnosticbulk_inst, &
+         this%waterbalancebulk_inst, this%waterfluxbulk_inst, &
+         delta_liq = delta_liq_bulk(bounds%begg:bounds%endg))
+
+    do i = 1, this%num_tracers
+       call dyn_water_content_final(bounds, &
+            num_nolakec, filter_nolakec, &
+            num_lakec, filter_lakec, &
+            this%waterstate_tracer_inst(i), this%waterdiagnostic_tracer_inst(i), &
+            this%waterbalance_tracer_inst(i), this%waterflux_tracer_inst(i), &
+            delta_liq = delta_liq_tracer(bounds%begg:bounds%endg))
+       ! Note that we don't use delta_liq_tracer, but it's needed to satisfy the interface
+    end do
+
+  end subroutine DynWaterContentFinal
+
 
   !-----------------------------------------------------------------------
   function IsIsotope(this, i)

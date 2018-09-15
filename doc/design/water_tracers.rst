@@ -113,6 +113,22 @@ of understanding the suite of water flux variables, and reducing the number of i
 that need to get passed all around (e.g., we won't need to pass irrigation_inst to as many
 places).
 
+========================
+ Loops over all tracers
+========================
+
+As much as possible, we are trying to keep loops over tracers in WaterType. The main
+motivations are:
+
+1. To keep this complexity out of other modules
+
+2. To make it easier to change the details of how the bulk and tracer instances are
+   stored, if we ever need to: By keeping as many of the loops as possible in WaterType,
+   we reduce the number of places that would need to be changed
+
+This means that there are many wrapper routines in WaterType that just call some other
+routine on each tracer instance (or possibly on the bulk plus each tracer instance).
+
 ==============================================
  Infrastructure for looping through variables
 ==============================================

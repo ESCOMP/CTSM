@@ -14,6 +14,7 @@ module WaterFluxType
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
+  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
@@ -88,6 +89,10 @@ module WaterFluxType
      real(r8), pointer :: qflx_irrig_patch         (:)   ! patch irrigation flux (mm H2O/s) [+]           
      real(r8), pointer :: qflx_irrig_col           (:)   ! col irrigation flux (mm H2O/s) [+]             
 
+     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
+     ! that are dribbled throughout the year
+     type(annual_flux_dribbler_type) :: qflx_liq_dynbal_dribbler
+     type(annual_flux_dribbler_type) :: qflx_ice_dynbal_dribbler
 
    contains
  
@@ -293,6 +298,16 @@ contains
     call AllocateVar1d(var = this%qflx_irrig_col, name = 'qflx_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
+         bounds = bounds, &
+         name = this%info%fname('qflx_liq_dynbal'), &
+         units = 'mm H2O')
+
+    this%qflx_ice_dynbal_dribbler = annual_flux_dribbler_gridcell( &
+         bounds = bounds, &
+         name = this%info%fname('qflx_ice_dynbal'), &
+         units = 'mm H2O')
 
   end subroutine InitAllocate
 
@@ -690,7 +705,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterflux_type), intent(in):: this
+    class(waterflux_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -711,6 +726,9 @@ contains
        ! initial run, not restart: initialize qflx_snofrz_lyr to zero
        this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:0) = 0._r8
     endif
+
+    call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
+    call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine Restart
 

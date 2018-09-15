@@ -14,7 +14,6 @@ module WaterFluxBulkType
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
   use CNSharedParamsMod           , only : use_fun
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterFluxType     , only : waterflux_type
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -69,12 +68,6 @@ module WaterFluxBulkType
      real(r8), pointer :: qflx_drain_vr_col        (:,:) ! col liquid water losted as drainage (m /time step)
      real(r8), pointer :: snow_sources_col         (:)   ! col snow sources (mm H2O/s)
      real(r8), pointer :: snow_sinks_col           (:)   ! col snow sinks (mm H2O/s)
-
-
-     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
-     ! that are dribbled throughout the year
-     type(annual_flux_dribbler_type) :: qflx_liq_dynbal_dribbler
-     type(annual_flux_dribbler_type) :: qflx_ice_dynbal_dribbler
 
      ! ET accumulation
      real(r8), pointer :: AnnEt                    (:)   ! Annual average ET flux mmH20/s                                     
@@ -175,16 +168,6 @@ contains
     allocate(this%snow_sinks_col           (begc:endc))              ; this%snow_sinks_col           (:)   = nan   
     allocate(this%AnnET                    (begc:endc))              ; this%AnnET                    (:)   = nan
 
-
-    this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = 'qflx_liq_dynbal', &
-         units = 'mm H2O')
-
-    this%qflx_ice_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = 'qflx_ice_dynbal', &
-         units = 'mm H2O')
 
   end subroutine InitBulkAllocate
 
@@ -483,7 +466,6 @@ contains
     !-----------------------------------------------------------------------
 
     call this%restart ( bounds, ncid, flag=flag )
-    ! needed for SNICAR
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('qflx_snow_drain')//':'//this%info%fname('qflx_snow_melt'), &
@@ -497,8 +479,5 @@ contains
        this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
     endif
     
-    call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
-    call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)
-
   end subroutine RestartBulk
 end module WaterFluxBulkType
