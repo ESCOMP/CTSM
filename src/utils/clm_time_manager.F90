@@ -44,6 +44,7 @@ module clm_time_manager
         get_prev_yearfrac,        &! return the fractional position in the current year, as of the beginning of the current timestep
         get_rest_date,            &! return the date from the restart file
         get_local_time,           &! return the local time for the input longitude
+        get_local_irrig_time,     &! return the local time for the input longitude
         set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
@@ -1511,6 +1512,33 @@ contains
     get_local_time  = secs + nint((lon/degpsec)/real(dtime,r8))*dtime
     get_local_time  = mod(get_local_time,isecspday)
   end function get_local_time
+
+  !=========================================================================================
+
+  integer function get_local_irrig_time( londeg, offset )
+
+    !---------------------------------------------------------------------------------
+    ! Get the local time for this longitude
+    !
+    ! uses
+    use clm_varcon, only: degpsec, isecspday
+    ! Arguments
+    real(r8)         , intent(in) :: londeg  ! Longitude in degrees
+    integer, optional, intent(in) :: offset  ! Offset from current time in seconds (either sign)
+
+    ! Local variables
+    integer  :: yr, mon, day    ! year, month, day, unused
+    integer  :: secs            ! seconds into the day
+    real(r8) :: lon             ! positive longitude
+    !---------------------------------------------------------------------------------
+    SHR_ASSERT( londeg >= -180.0_r8, "londeg must be greater than -180" )
+    SHR_ASSERT( londeg <= 360.0_r8,  "londeg must be less than 360" )
+    call  get_curr_date(yr, mon, day, secs, offset )
+    lon = londeg
+    if ( lon < 0.0_r8 ) lon = lon + 360.0_r8
+    get_local_irrig_time  = modulo(secs + nint(londeg/degpsec), isecspday)
+    get_local_irrig_time  = modulo(get_local_irrig_time,isecspday)
+  end function get_local_irrig_time
 
   !=========================================================================================
 

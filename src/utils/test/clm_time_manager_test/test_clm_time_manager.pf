@@ -248,6 +248,27 @@ contains
   end subroutine check_local_time
 
   @Test
+  subroutine compare_local_time(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: secs
+    real(r8) :: londeg
+
+    londeg = 0.0_r8
+    do while ( londeg <= 360.0_r8 )
+       londeg = londeg + 0.1_r8
+       ! Start at 0 Z
+       secs = 0
+       call set_date(yr=1, mon=1, day=1, tod=secs)
+       do while ( .not. is_end_curr_year() )
+          @assertEqual( get_local_irrig_time( londeg ), get_local_time( londeg ) )
+          call advance_timestep()
+       end do
+    end do
+
+  end subroutine compare_local_time
+
+  @Test
   subroutine check_local_time_woffset(this)
     class(TestTimeManager), intent(inout) :: this
 
