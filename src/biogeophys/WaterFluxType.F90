@@ -52,10 +52,12 @@ module WaterFluxType
      ! and solid fluxes is done, these are represented by qflx_snwcp_liq_col and qflx_snwcp_ice_col. 
      real(r8), pointer :: qflx_snwcp_liq_col       (:)   ! col excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
      real(r8), pointer :: qflx_snwcp_ice_col       (:)   ! col excess solid h2o due to snow capping (outgoing) (mm H2O /s)
+     real(r8), pointer :: qflx_snwcp_discarded_liq_col(:) ! col excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+     real(r8), pointer :: qflx_snwcp_discarded_ice_col(:) ! col excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
      real(r8), pointer :: qflx_glcice_col(:)              ! col net flux of new glacial ice (growth - melt) (mm H2O/s), passed to GLC; only valid inside the do_smb_c filter
      real(r8), pointer :: qflx_glcice_frz_col (:)         ! col ice growth (positive definite) (mm H2O/s); only valid inside the do_smb_c filter
      real(r8), pointer :: qflx_glcice_melt_col(:)         ! col ice melt (positive definite) (mm H2O/s); only valid inside the do_smb_c filter
-
+     real(r8), pointer :: qflx_glcice_dyn_water_flux_col(:) ! col water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system); valid for all columns
 
      real(r8), pointer :: qflx_tran_veg_patch      (:)   ! patch vegetation transpiration (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_tran_veg_col        (:)   ! col vegetation transpiration (mm H2O/s) (+ = to atm)
@@ -81,6 +83,12 @@ module WaterFluxType
      real(r8), pointer :: qflx_rsub_sat_col        (:)   ! col soil saturation excess [mm/s]
      real(r8), pointer :: qflx_snofrz_lyr_col      (:,:) ! col snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
      real(r8), pointer :: qflx_snofrz_col          (:)   ! col column-integrated snow freezing rate (positive definite) (col) [kg m-2 s-1]
+     real(r8), pointer :: qflx_snow_drain_col      (:)   ! col drainage from snow pack
+     real(r8), pointer :: qflx_ice_runoff_snwcp_col(:)   ! col solid runoff from snow capping (mm H2O /s)
+     real(r8), pointer :: qflx_ice_runoff_xs_col   (:)   ! col solid runoff from excess ice in soil (mm H2O /s)
+
+     real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
+     real(r8), pointer :: qflx_snow_h2osfc_col     (:)   ! col snow falling on surface water
 
      ! Dynamic land cover change
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
@@ -189,6 +197,12 @@ contains
     call AllocateVar1d(var = this%qflx_snwcp_ice_col, name = 'qflx_snwcp_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snwcp_discarded_liq_col, name = 'qflx_snwcp_discarded_liq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snwcp_discarded_ice_col, name = 'qflx_snwcp_discarded_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_glcice_col, name = 'qflx_glcice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -196,6 +210,9 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_glcice_melt_col, name = 'qflx_glcice_melt_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_glcice_dyn_water_flux_col, name = 'qflx_glcice_dyn_water_flux_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_tran_veg_col, name = 'qflx_tran_veg_col', &
@@ -263,6 +280,15 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          dim2beg = -nlevsno+1, dim2end = 0)
+    call AllocateVar1d(var = this%qflx_snow_drain_col, name = 'qflx_snow_drain_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_ice_runoff_snwcp_col, name = 'qflx_ice_runoff_snwcp_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_ice_runoff_xs_col, name = 'qflx_ice_runoff_xs_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_qrgwl_col, name = 'qflx_qrgwl_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -282,6 +308,13 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_rsub_sat_col, name = 'qflx_rsub_sat_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar1d(var = this%qflx_h2osfc_to_ice_col, name = 'qflx_h2osfc_to_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snow_h2osfc_col, name = 'qflx_snow_h2osfc_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
@@ -476,6 +509,21 @@ contains
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, &
          l2g_scale_type='ice', default='inactive')
 
+    this%qflx_snow_drain_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_SNOW_DRAIN'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('drainage from snow pack'), &
+         ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf')
+
+    call hist_addfld1d ( &
+         fname=this%info%fname('QFLX_SNOW_DRAIN_ICE'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('drainage from snow pack melt (ice landunits only)'), &
+         ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
+
     this%qflx_prec_intr_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QINTR'), &
@@ -651,6 +699,14 @@ contains
          long_name=this%info%lname('saturation excess drainage'), &
          ptr_col=this%qflx_rsub_sat_col, c2l_scale_type='urbanf')
 
+    this%qflx_h2osfc_to_ice_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QH2OSFC_TO_ICE'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('surface water converted to ice'), &
+         ptr_col=this%qflx_h2osfc_to_ice_col, default='inactive')
+
     this%qflx_irrig_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QIRRIG'), &
@@ -685,6 +741,18 @@ contains
     this%qflx_evap_grnd_col(bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_grnd_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_snow_col (bounds%begc:bounds%endc) = 0.0_r8
+    this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8
+
+    ! This variable only gets set in the hydrology filter; need to initialize it to 0 for
+    ! the sake of columns outside this filter
+    this%qflx_ice_runoff_xs_col(bounds%begc:bounds%endc) = 0._r8
+
+    ! Initialize qflx_glcice_dyn_water_flux_col to 0 for all columns because we want this
+    ! flux to remain 0 for columns where is is never set, including non-glacier columns.
+    !
+    ! Other qflx_glcice fluxes intentionally remain unset (spval) outside the do_smb
+    ! filter, so that they are flagged as missing value outside that filter.
+    this%qflx_glcice_dyn_water_flux_col(bounds%begc:bounds%endc) = 0._r8
 
     ! needed for CNNLeaching 
     do c = bounds%begc, bounds%endc
@@ -725,6 +793,18 @@ contains
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize qflx_snofrz_lyr to zero
        this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:0) = 0._r8
+    endif
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('qflx_snow_drain')//':'//this%info%fname('qflx_snow_melt'), &
+         xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('drainage from snow column'), &
+         units='mm/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%qflx_snow_drain_col)
+    if (flag == 'read' .and. .not. readvar) then
+       ! initial run, not restart: initialize qflx_snow_drain to zero
+       this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
     endif
 
     call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)

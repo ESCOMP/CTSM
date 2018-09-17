@@ -46,7 +46,9 @@ module WaterType
   use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : CompareBulkToTracer
+  use SoilHydrologyType  , only : soilhydrology_type
   use dynConsBiogeophysMod, only : dyn_water_content, dyn_water_content_final
+  use BalanceCheckMod, only : BeginWaterBalance
 
   implicit none
   private
@@ -127,6 +129,7 @@ module WaterType
      procedure, public :: CopyStateForNewColumn
      procedure, public :: DynWaterContentInit
      procedure, public :: DynWaterContentFinal
+     procedure, public :: WaterBalanceInit
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
@@ -744,6 +747,50 @@ contains
     end do
 
   end subroutine DynWaterContentFinal
+
+  !-----------------------------------------------------------------------
+  subroutine WaterBalanceInit(this, bounds, &
+       num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+       soilhydrology_inst)
+    !
+    ! !DESCRIPTION:
+    ! Initialize column-level water balance at beginning of time step, for bulk water and
+    ! each water tracer
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    type(bounds_type)         , intent(in)    :: bounds
+    integer                   , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
+    integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
+    integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
+    integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
+    type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'WaterBalanceInit'
+    !-----------------------------------------------------------------------
+
+    call BeginWaterBalance(bounds, &
+         num_nolakec, filter_nolakec, &
+         num_lakec, filter_lakec, &
+         soilhydrology_inst, &
+         this%waterstatebulk_inst, &
+         this%waterdiagnosticbulk_inst, &
+         this%waterbalancebulk_inst)
+
+    do i = 1, this%num_tracers
+       call BeginWaterBalance(bounds, &
+            num_nolakec, filter_nolakec, &
+            num_lakec, filter_lakec, &
+            soilhydrology_inst, &
+            this%waterstate_tracer_inst(i), &
+            this%waterdiagnostic_tracer_inst(i), &
+            this%waterbalance_tracer_inst(i))
+    end do
+
+  end subroutine WaterBalanceInit
 
 
   !-----------------------------------------------------------------------
