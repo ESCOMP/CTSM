@@ -338,8 +338,8 @@ contains
          glc_behavior)
     call t_stopf('dyn_subgrid')
 
-    ! FIXME(wjs, 2018-09-13) Soon, I remove this, and just keep a check lower down in the
-    ! driver loop.
+    ! FIXME(wjs, 2018-09-13) Soon, I will remove this, and just keep a check lower down in
+    ! the driver loop.
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
@@ -382,6 +382,18 @@ contains
             water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst)
 
        call t_stopf('begwbal')
+
+       ! FIXME(wjs, 2018-09-13) Soon, I will remove this, and just keep a check lower down
+       ! in the driver loop.
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after BeginWaterBalance')
+             call t_stopf("tracer_consistency_check")
+          end if
+       end if
 
        call t_startf('begcnbal_col')
        if (use_cn) then
