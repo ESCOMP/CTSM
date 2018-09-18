@@ -17,7 +17,8 @@ module BalanceCheckMod
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type
-  use SoilHydrologyType  , only : soilhydrology_type  
+  use SoilHydrologyType  , only : soilhydrology_type
+  use SurfaceAlbedoType  , only : surfalb_type
   use WaterStateType     , only : waterstate_type
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use WaterDiagnosticType, only : waterdiagnostic_type
@@ -102,7 +103,7 @@ contains
    subroutine BalanceCheck( bounds, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
         waterdiagnosticbulk_inst, waterbalance_inst, wateratm2lnd_inst, &
-        energyflux_inst, canopystate_inst)
+        energyflux_inst, canopystate_inst, surfalb_inst)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -122,7 +123,6 @@ contains
      use clm_varcon        , only : spval
      use clm_time_manager  , only : get_step_size, get_nstep
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
-     use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod
      !
@@ -137,6 +137,7 @@ contains
      class(wateratm2lnd_type) , intent(in) :: wateratm2lnd_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
      type(canopystate_type), intent(inout) :: canopystate_inst
+     type(surfalb_type)    , intent(in)    :: surfalb_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: p,c,l,g,fc                             ! indices
@@ -222,8 +223,8 @@ contains
 
           fabd                    =>    surfalb_inst%fabd_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
           fabi                    =>    surfalb_inst%fabi_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit indirect flux
-          albd                    =>    surfalb_inst%albd_patch                 , & ! Output: [real(r8) (:,:)]  surface albedo (direct)
-          albi                    =>    surfalb_inst%albi_patch                 , & ! Output: [real(r8) (:,:)]  surface albedo (diffuse)
+          albd                    =>    surfalb_inst%albd_patch                 , & ! Input:  [real(r8) (:,:)]  surface albedo (direct)
+          albi                    =>    surfalb_inst%albi_patch                 , & ! Input:  [real(r8) (:,:)]  surface albedo (diffuse)
           ftdd                    =>    surfalb_inst%ftdd_patch                 , & ! Input:  [real(r8) (:,:)]  down direct flux below canopy per unit direct flux
           ftid                    =>    surfalb_inst%ftid_patch                 , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit direct flux
           ftii                    =>    surfalb_inst%ftii_patch                 , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit diffuse flux
