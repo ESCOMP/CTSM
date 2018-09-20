@@ -18,6 +18,7 @@ module BareGroundFluxesMod
   use WaterFluxBulkType        , only : waterfluxbulk_type
   use WaterStateBulkType       , only : waterstatebulk_type
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
   use HumanIndexMod        , only : humanindex_type
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
@@ -37,7 +38,8 @@ contains
   subroutine BareGroundFluxes(bounds, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, soilstate_inst, &
        frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
-       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, photosyns_inst, humanindex_inst)
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst)
     !
     ! !DESCRIPTION:
     ! Compute sensible and latent fluxes and their derivatives with respect
@@ -72,6 +74,7 @@ contains
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)  , intent(inout) :: wateratm2lndbulk_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
     !
@@ -157,7 +160,7 @@ contains
          forc_t                 => atm2lnd_inst%forc_t_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin) 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
          forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
-         forc_q                 => atm2lnd_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
 
          watsat                 => soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)                      
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               

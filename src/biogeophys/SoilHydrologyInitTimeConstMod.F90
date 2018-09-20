@@ -9,6 +9,7 @@ module SoilHydrologyInitTimeConstMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use SoilHydrologyType , only : soilhydrology_type
+  use WaterStateBulkType, only : waterstatebulk_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   !
@@ -30,7 +31,7 @@ module SoilHydrologyInitTimeConstMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine SoilHydrologyInitTimeConst(bounds, soilhydrology_inst) 
+  subroutine SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, waterstatebulk_inst) 
     !
     ! !USES:
     use shr_const_mod   , only : shr_const_pi
@@ -51,6 +52,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                                    
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
+    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer            :: p,c,j,l,g,lev,nlevs 
@@ -82,7 +84,6 @@ contains
     ! Initialize frost table
     ! -----------------------------------------------------------------
 
-    soilhydrology_inst%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline
     soilhydrology_inst%zwt_col(bounds%begc:bounds%endc) = 0._r8
 
     do c = bounds%begc,bounds%endc
@@ -90,22 +91,19 @@ contains
        if (.not. lun%lakpoi(l)) then  !not lake
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_road_perv) then
-                ! Note that the following hard-coded constants (on the next two lines)
+                ! Note that the following hard-coded constants (on the next line)
                 ! seem implicitly related to aquifer_water_baseline
-                soilhydrology_inst%wa_col(c)  = 4800._r8
-                soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+                soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - waterstatebulk_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
              else
-                soilhydrology_inst%wa_col(c)  = spval
                 soilhydrology_inst%zwt_col(c) = spval
              end if
              ! initialize frost_table, zwt_perched
              soilhydrology_inst%zwt_perched_col(c) = spval
              soilhydrology_inst%frost_table_col(c) = spval
           else
-             ! Note that the following hard-coded constants (on the next two lines) seem
+             ! Note that the following hard-coded constants (on the next line) seem
              ! implicitly related to aquifer_water_baseline
-             soilhydrology_inst%wa_col(c)  = 4000._r8
-             soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+             soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - waterstatebulk_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
              ! initialize frost_table, zwt_perched to bottom of soil column
              soilhydrology_inst%zwt_perched_col(c) = col%zi(c,nlevsoi)
              soilhydrology_inst%frost_table_col(c) = col%zi(c,nlevsoi)
