@@ -52,7 +52,7 @@ contains
     ! that bound the initial model date)
     !
     ! !USES:
-    use clm_varpar     , only : numpft, maxpatch_pft, natpft_size
+    use clm_varpar     , only : numpft, natpft_size
     use ncdio_pio
     use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
     !
@@ -70,10 +70,14 @@ contains
 
     ! Error check
 
-    if ( maxpatch_pft /= numpft+1 )then
-       call endrun(msg=' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case'//&
-            errMsg(sourcefile, __LINE__) )
-    end if
+! slevis: I consider this check unnecessary because maxpatch_pft contains the
+!         same info as numpft+1 and maxpft; also the number of pfts in the input
+!         files have already been compared elsewhere against the "expected"
+!         values set in clm_varpar
+!   if ( maxpatch_pft /= numpft+1 )then
+!      call endrun(msg=' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case'//&
+!           errMsg(sourcefile, __LINE__) )
+!   end if
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'

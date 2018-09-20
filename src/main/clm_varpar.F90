@@ -12,6 +12,7 @@ module clm_varpar
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, soil_layerstruct
   use clm_varctl   , only: use_fates
+  use clm_varctl   , only: fsurdat
 
   !
   ! !PUBLIC TYPES:
@@ -109,7 +110,9 @@ contains
 
     ! Crop settings and consistency checks
 
-    if (use_crop) then
+    ! slevis: I tried ".or. get_do_transient_crops()" & got unhelpful bld error
+    !         so added this fsurdat check instead
+    if (use_crop .or. index(fsurdat,'78pfts') > 0) then
        numpft        = mxpft   ! actual # of patches (without bare)
        actual_numcft =  64     ! actual # of crops
     else
