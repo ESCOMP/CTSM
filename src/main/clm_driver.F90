@@ -460,8 +460,8 @@ contains
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
             filter(nc)%num_soilp  , filter(nc)%soilp,   &
             canopystate_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterbalancebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst, energyflux_inst)
+            water_inst%waterdiagnosticbulk_inst, &
+            energyflux_inst)
 
        ! FIXME(wjs, 2018-09-13) Soon, I will remove this, and just keep a check lower down
        ! in the driver loop.
@@ -1290,7 +1290,7 @@ contains
        num_nolakep, filter_nolakep, &
        num_soilp  , filter_soilp, &
        canopystate_inst, waterstatebulk_inst, &
-       waterbalancebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst)
+       waterdiagnosticbulk_inst, energyflux_inst)
     !
     ! !DESCRIPTION:
     ! Initialization of clm driver variables needed from previous timestep
@@ -1316,9 +1316,7 @@ contains
     integer               , intent(in)    :: filter_soilp(:)   ! patch filter for soil points
     type(canopystate_type), intent(inout) :: canopystate_inst
     type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
-    type(waterbalance_type) , intent(inout) :: waterbalancebulk_inst
     type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterfluxbulk_type)  , intent(inout) :: waterfluxbulk_inst
     type(energyflux_type) , intent(inout) :: energyflux_inst
     !
     ! !LOCAL VARIABLES:
@@ -1329,10 +1327,8 @@ contains
     associate(                                                             & 
          snl                => col%snl                                   , & ! Input:  [integer  (:)   ]  number of snow layers                    
         
-         h2osno             => waterstatebulk_inst%h2osno_col                , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
-         h2osno_old         => waterbalancebulk_inst%h2osno_old_col            , & ! Output: [real(r8) (:)   ]  snow water (mm H2O) at previous time step
          frac_iceold        => waterdiagnosticbulk_inst%frac_iceold_col           , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
 
          elai               => canopystate_inst%elai_patch               , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow    
@@ -1353,9 +1349,6 @@ contains
       end do
 
       do c = bounds%begc,bounds%endc
-         ! Save snow mass at previous time step
-         h2osno_old(c) = h2osno(c)
-
          ! Reset flux from beneath soil/ice column 
          eflx_bot(c)  = 0._r8
       end do

@@ -73,11 +73,13 @@ contains
     integer :: c, j, fc                  ! indices
     !-----------------------------------------------------------------------
 
-    associate(                                               & 
-         zi           =>    col%zi                         , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
-         zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
-         wa           =>    waterstate_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
-         begwb        =>    waterbalance_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
+    associate(                                               &
+         zi         => col%zi                           , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
+         zwt        => soilhydrology_inst%zwt_col       , & ! Input:  [real(r8) (:)   ]  water table depth (m)
+         h2osno     => waterstate_inst%h2osno_col       , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
+         wa         => waterstate_inst%wa_col           , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
+         begwb      => waterbalance_inst%begwb_col      , & ! Output: [real(r8) (:)   ]  water mass begining of the time step
+         h2osno_old => waterbalance_inst%h2osno_old_col   & ! Output: [real(r8) (:)   ]  snow water (mm H2O) at previous time step
          )
 
    do fc = 1, num_nolakec
@@ -94,6 +96,10 @@ contains
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
          waterstate_inst, begwb(bounds%begc:bounds%endc))
+
+    do c = bounds%begc, bounds%endc
+       h2osno_old(c) = h2osno(c)
+    end do
 
     end associate 
 
