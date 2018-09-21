@@ -167,7 +167,7 @@ contains
     allocate(this%frac_h2osfc_col        (begc:endc))                     ; this%frac_h2osfc_col        (:)   = nan 
     allocate(this%frac_h2osfc_nosnow_col (begc:endc))                     ; this%frac_h2osfc_nosnow_col        (:)   = nan 
     allocate(this%wf_col                 (begc:endc))                     ; this%wf_col                 (:)   = nan
-    allocate(this%wf2_col                (begc:endc))                     ; 
+    allocate(this%wf2_col                (begc:endc))                     ; this%wf2_col                (:)   = nan
     allocate(this%fwet_patch             (begp:endp))                     ; this%fwet_patch             (:)   = nan
     allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
