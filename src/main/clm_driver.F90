@@ -463,6 +463,18 @@ contains
             water_inst%waterbalancebulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterfluxbulk_inst, energyflux_inst)
 
+       ! FIXME(wjs, 2018-09-13) Soon, I will remove this, and just keep a check lower down
+       ! in the driver loop.
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after clm_drv_init')
+             call t_stopf("tracer_consistency_check")
+          end if
+       end if
+
        call topo_inst%UpdateTopo(bounds_clump, &
             filter(nc)%num_icemecc, filter(nc)%icemecc, &
             glc2lnd_inst, glc_behavior, &
