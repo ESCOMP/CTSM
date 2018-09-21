@@ -14,4 +14,18 @@ CESM (possibly because of compiler bugs that prevented the general use of constr
 this purpose?). As more object orientation was added, we continued to use an ``Init``
 method for this purpose to remain consistent with existing code.
 
-At this point, we could probably refactor this to use constructors.
+We could probably refactor this to use constructors. However, we still occasionally run
+into trouble with some compilers in the assignment that results from writing::
+
+  foo_inst = foo_type(...)
+
+Some components seem to get set to garbage occasionally with some compilers when doing
+that. (This was encountered 2018-09-11 with intel17.0.1). It's possible that this is user
+error rather than a compiler bug, but in any case, it's harder to get that to work
+robustly. So for now, we're generally sticking with using::
+
+  call foo_inst%Init(...)
+
+rather than::
+
+  foo_inst = foo_type(...)

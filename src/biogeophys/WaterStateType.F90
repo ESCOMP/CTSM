@@ -11,12 +11,15 @@ module WaterStateType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : iulog
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
+  use clm_varctl     , only : iulog, use_bedrock
+  use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
   !
   implicit none
   save
@@ -36,6 +39,7 @@ module WaterStateType
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
+     real(r8), pointer :: wa_col            (:)     ! col water in the unconfined aquifer (mm) 
 
    contains
 
@@ -55,19 +59,20 @@ module WaterStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, info, &
+  subroutine Init(this, bounds, info, tracer_vars, &
        h2osno_input_col, watsat_col, t_soisno_col)
 
-    class(waterstate_type)         :: this
+    class(waterstate_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
 
     this%info => info
 
-    call this%InitAllocate(bounds)
+    call this%InitAllocate(bounds, tracer_vars)
 
     call this%InitHistory(bounds)
 
@@ -77,7 +82,7 @@ contains
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tracer_vars)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -86,32 +91,43 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterstate_type) :: this
+    class(waterstate_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
-    integer :: begc, endc
-    integer :: begl, endl
-    integer :: begg, endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
-    begl = bounds%begl; endl= bounds%endl
-    begg = bounds%begg; endg= bounds%endg
-
-    allocate(this%h2osno_col             (begc:endc))                     ; this%h2osno_col             (:)   = nan   
-    allocate(this%h2osoi_vol_col         (begc:endc, 1:nlevgrnd))         ; this%h2osoi_vol_col         (:,:) = nan
-    allocate(this%h2osoi_ice_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_ice_col         (:,:) = nan
-    allocate(this%h2osoi_liq_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liq_col         (:,:) = nan
-    allocate(this%h2ocan_patch           (begp:endp))                     ; this%h2ocan_patch           (:)   = nan  
-    allocate(this%snocan_patch           (begp:endp))                     ; this%snocan_patch           (:)   = nan  
-    allocate(this%liqcan_patch           (begp:endp))                     ; this%liqcan_patch           (:)   = nan  
-    allocate(this%h2osfc_col             (begc:endc))                     ; this%h2osfc_col             (:)   = nan   
-
-
-
+    call AllocateVar1d(var = this%h2osno_col, name = 'h2osno_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar2d(var = this%h2osoi_vol_col, name = 'h2osoi_vol_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = 1, dim2end = nlevgrnd)
+    call AllocateVar2d(var = this%h2osoi_ice_col, name = 'h2osoi_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = -nlevsno+1, dim2end = nlevgrnd)
+    call AllocateVar2d(var = this%h2osoi_liq_col, name = 'h2osoi_liq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = -nlevsno+1, dim2end = nlevgrnd)
+    call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%liqcan_patch, name = 'liqcan_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%h2osfc_col, name = 'h2osfc_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%wa_col, name = 'wa_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
   end subroutine InitAllocate
 
@@ -129,7 +145,7 @@ contains
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
-    class(waterstate_type) :: this
+    class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -243,6 +259,12 @@ contains
          long_name=this%info%lname('surface water depth'), &
          ptr_col=this%h2osfc_col)
 
+    this%wa_col(begc:endc) = spval
+    call hist_addfld1d (fname=this%info%fname('WA'),  units='mm',  &
+         avgflag='A', long_name=this%info%lname('water in the unconfined aquifer (vegetated landunits only)'), &
+         ptr_col=this%wa_col, l2g_scale_type='veg')
+
+
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
     !                  I think that since the value is zero in all cases except
@@ -263,26 +285,15 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use shr_const_mod   , only : shr_const_pi
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
-    use shr_spfn_mod    , only : shr_spfn_erf
-    use shr_kind_mod    , only : r8 => shr_kind_r8
     use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon      , only : denice, denh2o, spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc
-    use clm_varctl      , only : fsurdat, iulog
-    use clm_varctl        , only : use_bedrock
-    use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
-    use fileutils       , only : getfil
-    use ncdio_pio       , only : file_desc_t, ncd_io
+    use landunit_varcon , only : istwet, istsoil, istcrop, istice_mec  
+    use column_varcon   , only : icol_road_perv, icol_road_imperv
+    use clm_varcon      , only : denice, denh2o, bdsno 
+    use clm_varcon      , only : tfrz, aquifer_water_baseline
+    use ncdio_pio       , only : file_desc_t
     !
     ! !ARGUMENTS:
-    class(waterstate_type)                :: this
+    class(waterstate_type), intent(in)    :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
@@ -292,10 +303,6 @@ contains
     integer            :: p,c,j,l,g,lev,nlevs 
     real(r8)           :: maxslope, slopemax, minslope
     real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
-    logical            :: readvar 
-    type(file_desc_t)  :: ncid        
-    character(len=256) :: locfn       
     integer            :: nbedrock
     !-----------------------------------------------------------------------
 
@@ -447,6 +454,27 @@ contains
          end do
       end do
 
+
+      this%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline
+      do c = bounds%begc,bounds%endc
+         l = col%landunit(c)
+         if (.not. lun%lakpoi(l)) then  !not lake
+            if (lun%urbpoi(l)) then
+               if (col%itype(c) == icol_road_perv) then
+                  ! Note that the following hard-coded constant (on the next line)
+                  ! seems implicitly related to aquifer_water_baseline 
+                  this%wa_col(c)  = 4800._r8
+               else
+                  this%wa_col(c)  = spval
+               end if
+            else
+               ! Note that the following hard-coded constant (on the next line) seems
+               ! implicitly related to aquifer_water_baseline
+               this%wa_col(c)  = 4000._r8
+            end if
+         end if
+      end do
+
     end associate
 
   end subroutine InitCold
@@ -469,7 +497,7 @@ contains
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterstate_type) :: this
+    class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -547,6 +575,11 @@ contains
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%liqcan_patch)
 
+    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('WA'), xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('water in the unconfined aquifer'), units='mm', &
+         interpinic_flag='interp', readvar=readvar, data=this%wa_col)
+
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
@@ -610,8 +643,6 @@ contains
 
     endif   ! end if if-read flag
 
-
   end subroutine Restart
-
 
 end module WaterStateType

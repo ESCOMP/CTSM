@@ -2408,6 +2408,22 @@ below a given elevation, you risk forcing the system to evolve
 differently in areas below and above reset_snow_glc_ela.
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist options related to water tracers                                                 -->
+<!-- ========================================================================================  -->
+
+<entry id="enable_water_tracer_consistency_checks" type="logical" category="clm_physics"
+       group="water_tracers_inparm" >
+If .true., add water tracers needed to perform water tracer consistency checks.
+
+These consistency checks ensure that all water tracers are updated to remain in-sync with
+the related bulk quantities.
+</entry>
+
+<entry id="enable_water_isotopes" type="logical" category="clm_physics"
+       group="water_tracers_inparm" >
+If .true., run with water isotopes
+</entry>  
 
 <!-- ========================================================================================  -->
 <!-- Namelist options related to initInterp                                                    -->

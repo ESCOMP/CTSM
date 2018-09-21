@@ -38,6 +38,7 @@ module CanopyFluxesMod
   use WaterFluxBulkType         , only : waterfluxbulk_type
   use WaterStateBulkType        , only : waterstatebulk_type
   use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
   use CanopyHydrologyMod    , only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
@@ -136,7 +137,9 @@ contains
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
        clm_fates, nc, atm2lnd_inst, canopystate_inst,                                    &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
-       temperature_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, ch4_inst, ozone_inst, photosyns_inst, &
+       temperature_inst, waterfluxbulk_inst, waterstatebulk_inst,                        &
+       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
+       photosyns_inst, &
        humanindex_inst, soil_water_retention_curve, &
        downreg_patch, leafn_patch, froot_carbon, croot_carbon)
     !
@@ -197,9 +200,10 @@ contains
     type(surfalb_type)                     , intent(in)            :: surfalb_inst
     type(soilstate_type)                   , intent(inout)         :: soilstate_inst
     type(temperature_type)                 , intent(inout)         :: temperature_inst
-    type(waterstatebulk_type)                  , intent(inout)         :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type)                  , intent(inout)         :: waterdiagnosticbulk_inst
-    type(waterfluxbulk_type)                   , intent(inout)         :: waterfluxbulk_inst
+    type(waterstatebulk_type)              , intent(inout)         :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)         , intent(inout)         :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)               , intent(inout)         :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)            , intent(inout)         :: wateratm2lndbulk_inst
     type(ch4_type)                         , intent(inout)         :: ch4_inst
     class(ozone_base_type)                 , intent(inout)         :: ozone_inst
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
@@ -373,7 +377,7 @@ contains
          dleaf                  => pftcon%dleaf                                 , & ! Input:  characteristic leaf dimension (m)                                     
 
          forc_lwrad             => atm2lnd_inst%forc_lwrad_downscaled_col       , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)                       
-         forc_q                 => atm2lnd_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
          forc_th                => atm2lnd_inst%forc_th_downscaled_col          , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
          forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
