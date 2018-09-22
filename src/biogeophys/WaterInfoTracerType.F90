@@ -9,6 +9,7 @@ module WaterInfoTracerType
   !
   ! !USES:
   !
+  use shr_kind_mod     , only : r8 => shr_kind_r8
   use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
@@ -31,12 +32,14 @@ module WaterInfoTracerType
 
 contains
 
-  function constructor(tracer_name) result(this)
+  function constructor(tracer_name,ratio) result(this)
     ! Create a water_info_tracer_type object
     type(water_info_tracer_type) :: this  ! function result
     character(len=*), intent(in) :: tracer_name
+    real(r8), intent(in)         :: ratio
 
     this%tracer_name = trim(tracer_name)
+    call this%set_metadata(ratio = ratio)
   end function constructor
 
   !-----------------------------------------------------------------------

@@ -20,6 +20,7 @@ module BalanceCheckMod
   use SoilHydrologyType  , only : soilhydrology_type  
   use WaterStateBulkType     , only : waterstatebulk_type
   use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   use WaterBalanceType     , only : waterbalance_type
   use WaterFluxBulkType      , only : waterfluxbulk_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake, ComputeWaterMassLake
@@ -73,7 +74,7 @@ contains
     associate(                                               & 
          zi           =>    col%zi                         , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
          zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
-         wa           =>    soilhydrology_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
+         wa           =>    waterstatebulk_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
          begwb        =>    waterbalancebulk_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
@@ -87,7 +88,7 @@ contains
     end do
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-         soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, begwb(bounds%begc:bounds%endc))
+         waterstatebulk_inst, waterdiagnosticbulk_inst, begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
          waterstatebulk_inst, begwb(bounds%begc:bounds%endc))
@@ -98,7 +99,8 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
-        atm2lnd_inst, solarabs_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+        atm2lnd_inst, solarabs_inst, waterfluxbulk_inst, waterstatebulk_inst, &
+        waterdiagnosticbulk_inst, waterbalancebulk_inst, wateratm2lndbulk_inst, &
         energyflux_inst, canopystate_inst)
      !
      ! !DESCRIPTION:
@@ -131,6 +133,7 @@ contains
      type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
      type(waterbalance_type) , intent(inout) :: waterbalancebulk_inst
+     type(wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
      type(canopystate_type), intent(inout) :: canopystate_inst
      !
@@ -146,11 +149,11 @@ contains
      !-----------------------------------------------------------------------
 
      associate(                                                                   & 
-          volr                    =>    atm2lnd_inst%volr_grc                   , & ! Input:  [real(r8) (:)   ]  river water storage (m3)                 
+          volr                    =>    wateratm2lndbulk_inst%volr_grc                   , & ! Input:  [real(r8) (:)   ]  river water storage (m3)                 
           forc_solad              =>    atm2lnd_inst%forc_solad_grc             , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
           forc_solai              =>    atm2lnd_inst%forc_solai_grc             , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
-          forc_rain               =>    atm2lnd_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]
-          forc_snow               =>    atm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]
+          forc_rain               =>    wateratm2lndbulk_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]
+          forc_snow               =>    wateratm2lndbulk_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
           h2osno                  =>    waterstatebulk_inst%h2osno_col              , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     

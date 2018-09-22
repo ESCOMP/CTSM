@@ -22,6 +22,7 @@ module CanopyHydrologyMod
   use CanopyStateType , only : canopystate_type
   use TemperatureType , only : temperature_type
   use WaterFluxBulkType   , only : waterfluxbulk_type
+  use Wateratm2lndBulkType   , only : wateratm2lndbulk_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
   use ColumnType      , only : col                
@@ -142,7 +143,8 @@ contains
    subroutine CanopyHydrology(bounds, &
         num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
         atm2lnd_inst, canopystate_inst, temperature_inst, &
-        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst)
+        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+        waterfluxbulk_inst, wateratm2lndbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculation of
@@ -177,6 +179,7 @@ contains
      type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
      type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+     type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: f                                            ! filter index
@@ -227,10 +230,10 @@ contains
           dz                   => col%dz                                  , & ! Output: [real(r8) (:,:) ]  layer depth (m)                       
           z                    => col%z                                   , & ! Output: [real(r8) (:,:) ]  layer thickness (m)                   
 
-          forc_rain            => atm2lnd_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
-          forc_snow            => atm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
+          forc_rain            => wateratm2lndbulk_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
+          forc_snow            => wateratm2lndbulk_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
           forc_t               => atm2lnd_inst%forc_t_downscaled_col      , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
-          qflx_floodg          => atm2lnd_inst%forc_flood_grc             , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
+          qflx_floodg          => wateratm2lndbulk_inst%forc_flood_grc             , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
           forc_wind            => atm2lnd_inst%forc_wind_grc              , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
           dewmx                => canopystate_inst%dewmx_patch            , & ! Input:  [real(r8) (:)   ]  Maximum allowed dew [mm]                
           frac_veg_nosno       => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
