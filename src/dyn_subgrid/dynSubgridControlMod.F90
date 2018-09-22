@@ -131,6 +131,7 @@ contains
          do_transient_pfts, &
          do_transient_crops, &
          do_harvest, &
+	 do_grossunrep, &
          for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes
 
@@ -157,7 +158,6 @@ contains
        end if
        close(nu_nml)
        call relavu( nu_nml )
-       do_grossunrep = do_harvest
     endif
 
     call shr_mpi_bcast (flanduse_timeseries, mpicom)
