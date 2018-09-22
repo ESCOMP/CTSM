@@ -110,8 +110,11 @@ contains
 
     ! Crop settings and consistency checks
 
-    ! slevis: I tried ".or. get_do_transient_crops()" & got unhelpful bld error
-    !         so added this fsurdat check instead
+! slevis used this line & it worked; replace with more robust code similar to
+! what's found in surfrdMod.F90 line 756? Or wait to complete this work,
+! at which time the if-then-else will go away and we will keep these 2 lines:
+! numpft = mxpft
+! actual_numcft = 64
     if (use_crop .or. index(fsurdat,'78pfts') > 0) then
        numpft        = mxpft   ! actual # of patches (without bare)
        actual_numcft =  64     ! actual # of crops
