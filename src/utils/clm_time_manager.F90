@@ -1515,7 +1515,7 @@ contains
 
   !=========================================================================================
 
-  integer function get_local_irrig_time( londeg, offset )
+  integer function get_local_irrig_time( londeg, irrig_start )
 
     !---------------------------------------------------------------------------------
     ! Get the local time for this longitude
@@ -1523,8 +1523,8 @@ contains
     ! uses
     use clm_varcon, only: degpsec, isecspday
     ! Arguments
-    real(r8)         , intent(in) :: londeg  ! Longitude in degrees
-    integer, optional, intent(in) :: offset  ! Offset from current time in seconds (either sign)
+    real(r8)         , intent(in) :: londeg       ! Longitude in degrees
+    integer          , intent(in) :: irrig_start  ! Irrigation start time
 
     ! Local variables
     integer  :: yr, mon, day    ! year, month, day, unused
@@ -1533,11 +1533,11 @@ contains
     !---------------------------------------------------------------------------------
     SHR_ASSERT( londeg >= -180.0_r8, "londeg must be greater than -180" )
     SHR_ASSERT( londeg <= 360.0_r8,  "londeg must be less than 360" )
-    call  get_curr_date(yr, mon, day, secs, offset )
+    call  get_prev_date(yr, mon, day, secs )
     lon = londeg
     if ( lon < 0.0_r8 ) lon = lon + 360.0_r8
     get_local_irrig_time  = modulo(secs + nint(londeg/degpsec), isecspday)
-    get_local_irrig_time  = modulo(get_local_irrig_time,isecspday)
+    get_local_irrig_time  = modulo(get_local_irrig_time - irrig_start,isecspday)
   end function get_local_irrig_time
 
   !=========================================================================================
