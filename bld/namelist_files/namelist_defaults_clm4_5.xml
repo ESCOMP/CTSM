@@ -2436,6 +2436,14 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 
 <!-- =========================================  -->
+<!-- Defaults for water tracers                 -->
+<!-- =========================================  -->
+
+<enable_water_tracer_consistency_checks>.false.</enable_water_tracer_consistency_checks>
+
+<enable_water_isotopes>.false.</enable_water_isotopes>
+
+<!-- =========================================  -->
 <!-- Defaults for init_interp                   -->
 <!-- =========================================  -->
 

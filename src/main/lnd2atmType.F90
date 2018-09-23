@@ -36,10 +36,7 @@ module lnd2atmType
      ! lnd->atm
      real(r8), pointer :: t_rad_grc          (:)   => null() ! radiative temperature (Kelvin)
      real(r8), pointer :: t_ref2m_grc        (:)   => null() ! 2m surface air temperature (Kelvin)
-     real(r8), pointer :: q_ref2m_grc        (:)   => null() ! 2m surface specific humidity (kg/kg)
      real(r8), pointer :: u_ref10m_grc       (:)   => null() ! 10m surface wind speed (m/sec)
-     real(r8), pointer :: h2osno_grc         (:)   => null() ! snow water (mm H2O)
-     real(r8), pointer :: h2osoi_vol_grc     (:,:) => null() ! volumetric soil water (0~watsat, m3/m3, nlevgrnd) (for dust model)
      real(r8), pointer :: albd_grc           (:,:) => null() ! (numrad) surface albedo (direct)
      real(r8), pointer :: albi_grc           (:,:) => null() ! (numrad) surface albedo (diffuse)
      real(r8), pointer :: taux_grc           (:)   => null() ! wind stress: e-w (kg/m/s**2)
@@ -49,7 +46,6 @@ module lnd2atmType
      real(r8), pointer :: eflx_sh_precip_conversion_grc(:) => null() ! sensible HF from precipitation conversion (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_ice_to_liq_col(:) => null() ! sensible HF generated from conversion of ice runoff to liquid (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_lwrad_out_grc (:)   => null() ! IR (longwave) radiation (W/m**2)
-     real(r8), pointer :: qflx_evap_tot_grc  (:)   => null() ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
      real(r8), pointer :: fsa_grc            (:)   => null() ! solar rad absorbed (total) (W/m**2)
      real(r8), pointer :: net_carbon_exchange_grc(:) => null() ! net CO2 flux (kg CO2/m**2/s) [+ to atm]
      real(r8), pointer :: nem_grc            (:)   => null() ! gridcell average net methane correction to CO2 flux (g C/m^2/s)
@@ -62,14 +58,6 @@ module lnd2atmType
      real(r8), pointer :: fireztop_grc       (:)   => null() ! Wild Fire Emissions vertical distribution top
      real(r8), pointer :: flux_ch4_grc       (:)   => null() ! net CH4 flux (kg C/m**2/s) [+ to atm]
      ! lnd->rof
-     real(r8), pointer :: qflx_rofliq_grc         (:)   => null() ! rof liq forcing
-     real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   => null() ! rof liq -- surface runoff component
-     real(r8), pointer :: qflx_rofliq_qsub_grc    (:)   => null() ! rof liq -- subsurface runoff component
-     real(r8), pointer :: qflx_rofliq_qgwl_grc    (:)   => null() ! rof liq -- glacier, wetland and lakes water balance residual component
-     real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   => null() ! rof liq -- perched water table runoff component
-     real(r8), pointer :: qflx_rofice_grc    (:)   => null() ! rof ice forcing
-     real(r8), pointer :: qflx_liq_from_ice_col(:) => null() ! liquid runoff from converted ice runoff
-     real(r8), pointer :: qirrig_grc         (:)   => null() ! irrigation flux
 
    contains
 
@@ -146,10 +134,7 @@ contains
 
     allocate(this%t_rad_grc          (begg:endg))            ; this%t_rad_grc          (:)   =ival
     allocate(this%t_ref2m_grc        (begg:endg))            ; this%t_ref2m_grc        (:)   =ival
-    allocate(this%q_ref2m_grc        (begg:endg))            ; this%q_ref2m_grc        (:)   =ival
     allocate(this%u_ref10m_grc       (begg:endg))            ; this%u_ref10m_grc       (:)   =ival
-    allocate(this%h2osno_grc         (begg:endg))            ; this%h2osno_grc         (:)   =ival
-    allocate(this%h2osoi_vol_grc     (begg:endg,1:nlevgrnd)) ; this%h2osoi_vol_grc     (:,:) =ival
     allocate(this%albd_grc           (begg:endg,1:numrad))   ; this%albd_grc           (:,:) =ival
     allocate(this%albi_grc           (begg:endg,1:numrad))   ; this%albi_grc           (:,:) =ival
     allocate(this%taux_grc           (begg:endg))            ; this%taux_grc           (:)   =ival
@@ -159,7 +144,6 @@ contains
     allocate(this%eflx_sh_precip_conversion_grc(begg:endg))  ; this%eflx_sh_precip_conversion_grc(:) = ival
     allocate(this%eflx_sh_ice_to_liq_col(begc:endc))         ; this%eflx_sh_ice_to_liq_col(:) = ival
     allocate(this%eflx_lh_tot_grc    (begg:endg))            ; this%eflx_lh_tot_grc    (:)   =ival
-    allocate(this%qflx_evap_tot_grc  (begg:endg))            ; this%qflx_evap_tot_grc  (:)   =ival
     allocate(this%fsa_grc            (begg:endg))            ; this%fsa_grc            (:)   =ival
     allocate(this%net_carbon_exchange_grc(begg:endg))        ; this%net_carbon_exchange_grc(:) =ival
     allocate(this%nem_grc            (begg:endg))            ; this%nem_grc            (:)   =ival
@@ -167,14 +151,6 @@ contains
     allocate(this%fv_grc             (begg:endg))            ; this%fv_grc             (:)   =ival
     allocate(this%flxdst_grc         (begg:endg,1:ndst))     ; this%flxdst_grc         (:,:) =ival
     allocate(this%flux_ch4_grc       (begg:endg))            ; this%flux_ch4_grc       (:)   =ival
-    allocate(this%qflx_rofliq_grc    (begg:endg))            ; this%qflx_rofliq_grc    (:)   =ival
-    allocate(this%qflx_rofliq_qsur_grc    (begg:endg))       ; this%qflx_rofliq_qsur_grc    (:)   =ival
-    allocate(this%qflx_rofliq_qsub_grc    (begg:endg))       ; this%qflx_rofliq_qsub_grc    (:)   =ival
-    allocate(this%qflx_rofliq_qgwl_grc    (begg:endg))       ; this%qflx_rofliq_qgwl_grc    (:)   =ival
-    allocate(this%qflx_rofliq_drain_perched_grc    (begg:endg))       ; this%qflx_rofliq_drain_perched_grc    (:)   =ival
-    allocate(this%qflx_rofice_grc    (begg:endg))            ; this%qflx_rofice_grc    (:)   =ival
-    allocate(this%qflx_liq_from_ice_col(begc:endc))          ; this%qflx_liq_from_ice_col(:) = ival
-    allocate(this%qirrig_grc         (begg:endg))            ; this%qirrig_grc         (:)   =ival
 
     if (shr_megan_mechcomps_n>0) then
        allocate(this%flxvoc_grc(begg:endg,1:shr_megan_mechcomps_n));  this%flxvoc_grc(:,:)=ival
@@ -284,24 +260,6 @@ contains
          avgflag='A', &
          long_name='sensible heat flux generated from conversion of ice runoff to liquid', &
          ptr_col=this%eflx_sh_ice_to_liq_col)
-
-    this%qflx_rofliq_grc(begg:endg) = 0._r8
-    call hist_addfld1d (fname='QRUNOFF_TO_COUPLER',  units='mm/s',  &
-         avgflag='A', &
-         long_name='total liquid runoff sent to coupler (includes corrections for land use change)', &
-         ptr_lnd=this%qflx_rofliq_grc)
-
-    this%qflx_rofice_grc(begg:endg) = 0._r8
-    call hist_addfld1d (fname='QRUNOFF_ICE_TO_COUPLER',  units='mm/s',  &
-         avgflag='A', &
-         long_name='total ice runoff sent to coupler (includes corrections for land use change)', &
-         ptr_lnd=this%qflx_rofice_grc)
-
-    this%qflx_liq_from_ice_col(begc:endc) = 0._r8
-    call hist_addfld1d (fname='QRUNOFF_ICE_TO_LIQ', units='mm/s', &
-         avgflag='A', &
-         long_name='liquid runoff from converted ice runoff', &
-         ptr_col=this%qflx_liq_from_ice_col, default='inactive')
 
     this%net_carbon_exchange_grc(begg:endg) = spval
     call hist_addfld1d(fname='FCO2', units='kgCO2/m2/s', &

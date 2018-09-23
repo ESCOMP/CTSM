@@ -162,7 +162,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine dynSubgrid_driver(bounds_proc,                                            &
-       urbanparams_inst, soilstate_inst, soilhydrology_inst,           &
+       urbanparams_inst, soilstate_inst,           &
        waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
        waterfluxbulk_inst, temperature_inst, energyflux_inst,             &
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
@@ -191,7 +191,6 @@ contains
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
     type(urbanparams_type)               , intent(in)    :: urbanparams_inst
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
-    type(soilhydrology_type)             , intent(inout) :: soilhydrology_inst
     type(waterstatebulk_type)                , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)                , intent(inout) :: waterbalancebulk_inst
@@ -235,7 +234,7 @@ contains
        call dyn_hwcontent_init(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
-            urbanparams_inst, soilstate_inst, soilhydrology_inst, &
+            urbanparams_inst, soilstate_inst, &
             waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
             waterfluxbulk_inst, temperature_inst, energyflux_inst)
 
@@ -305,12 +304,12 @@ contains
 
        call initialize_new_columns(bounds_clump, &
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
-            temperature_inst, waterstatebulk_inst, soilhydrology_inst)
+            temperature_inst, waterstatebulk_inst)
 
        call dyn_hwcontent_final(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
-            urbanparams_inst, soilstate_inst, soilhydrology_inst, &
+            urbanparams_inst, soilstate_inst, &
             waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
             waterfluxbulk_inst, temperature_inst, energyflux_inst)
 

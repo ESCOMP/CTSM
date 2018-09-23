@@ -84,7 +84,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, water_mass)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, water_mass)
     !
     ! !DESCRIPTION:
     ! Compute total water mass for all non-lake columns
@@ -93,7 +93,6 @@ contains
     type(bounds_type)        , intent(in)    :: bounds     
     integer                  , intent(in)    :: num_nolakec                ! number of column non-lake points in column filter
     integer                  , intent(in)    :: filter_nolakec(:)          ! column filter for non-lake points
-    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstatebulk_type)    , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(in)    :: waterdiagnosticbulk_inst
     real(r8)                 , intent(inout) :: water_mass( bounds%begc: ) ! computed water mass (kg m-2)
@@ -112,7 +111,6 @@ contains
          bounds = bounds, &
          num_nolakec = num_nolakec, &
          filter_nolakec = filter_nolakec, &
-         soilhydrology_inst = soilhydrology_inst, &
          waterstatebulk_inst = waterstatebulk_inst, &
          waterdiagnosticbulk_inst = waterdiagnosticbulk_inst, &
          liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
@@ -167,7 +165,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeLiqIceMassNonLake(bounds, num_nolakec, filter_nolakec, &
-       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, liquid_mass, ice_mass)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
     ! Compute total water mass for all non-lake columns, separated into liquid and ice
@@ -179,7 +177,6 @@ contains
     type(bounds_type)        , intent(in)    :: bounds     
     integer                  , intent(in)    :: num_nolakec                 ! number of column non-lake points in column filter
     integer                  , intent(in)    :: filter_nolakec(:)           ! column filter for non-lake points
-    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstatebulk_type)    , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(in)    :: waterdiagnosticbulk_inst
     real(r8)                 , intent(inout) :: liquid_mass( bounds%begc: ) ! computed liquid water mass (kg m-2)
@@ -209,7 +206,7 @@ contains
          h2osoi_liq   =>    waterstatebulk_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          total_plant_stored_h2o => waterdiagnosticbulk_inst%total_plant_stored_h2o_col, & 
                                                                ! Input:  [real(r8) (:,:) ] plant internal stored water (mm H2O)
-         wa           =>    soilhydrology_inst%wa_col        & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
+         wa           =>    waterstatebulk_inst%wa_col        & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
          )
 
     do fc = 1, num_nolakec
@@ -377,7 +374,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ComputeHeatNonLake(bounds, num_nolakec, filter_nolakec, &
        urbanparams_inst, soilstate_inst, &
-       temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, soilhydrology_inst, &
+       temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        heat, heat_liquid, cv_liquid)
     !
     ! !DESCRIPTION:
@@ -400,7 +397,6 @@ contains
     type(temperature_type)   , intent(in)  :: temperature_inst
     type(waterstatebulk_type)    , intent(in)  :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(in)  :: waterdiagnosticbulk_inst
-    type(soilhydrology_type) , intent(in)  :: soilhydrology_inst
 
     real(r8) , intent(inout) :: heat( bounds%begc: )        ! sum of heat content for all columns [J/m^2]
     real(r8) , intent(inout) :: heat_liquid( bounds%begc: ) ! sum of heat content for all columns: liquid water, excluding latent heat [J/m^2]
@@ -445,7 +441,7 @@ contains
          h2ocan_patch => waterstatebulk_inst%h2ocan_patch, & ! canopy water (mm H2O)
          snocan_patch => waterstatebulk_inst%snocan_patch, & ! canopy snow water (mm H2O)
          total_plant_stored_h2o_col => waterdiagnosticbulk_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
-         wa           => soilhydrology_inst%wa_col & ! water in the unconfined aquifer (mm)
+         wa           => waterstatebulk_inst%wa_col & ! water in the unconfined aquifer (mm)
          )
 
     do fc = 1, num_nolakec

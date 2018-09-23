@@ -25,7 +25,6 @@ Module SoilHydrologyType
      real(r8), pointer :: zwt_col           (:)     ! col water table depth
      real(r8), pointer :: zwts_col          (:)     ! col water table depth, the shallower of the two water depths
      real(r8), pointer :: zwt_perched_col   (:)     ! col perched water table depth
-     real(r8), pointer :: wa_col            (:)     ! col water in the unconfined aquifer (mm)
      real(r8), pointer :: qcharge_col       (:)     ! col aquifer recharge rate (mm/s) 
      real(r8), pointer :: fracice_col       (:,:)   ! col fractional impermeability (-)
      real(r8), pointer :: icefrac_col       (:,:)   ! col fraction of ice       
@@ -117,7 +116,6 @@ contains
     allocate(this%zwt_perched_col   (begc:endc))                 ; this%zwt_perched_col   (:)     = nan
     allocate(this%zwts_col          (begc:endc))                 ; this%zwts_col          (:)     = nan
 
-    allocate(this%wa_col            (begc:endc))                 ; this%wa_col            (:)     = nan
     allocate(this%qcharge_col       (begc:endc))                 ; this%qcharge_col       (:)     = nan
     allocate(this%fracice_col       (begc:endc,nlevgrnd))        ; this%fracice_col       (:,:)   = nan
     allocate(this%icefrac_col       (begc:endc,nlevgrnd))        ; this%icefrac_col       (:,:)   = nan
@@ -164,11 +162,6 @@ contains
 
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
-
-    this%wa_col(begc:endc) = spval
-    call hist_addfld1d (fname='WA',  units='mm',  &
-         avgflag='A', long_name='water in the unconfined aquifer (vegetated landunits only)', &
-         ptr_col=this%wa_col, l2g_scale_type='veg')
 
     this%qcharge_col(begc:endc) = spval
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
@@ -246,11 +239,6 @@ contains
     if (flag == 'read' .and. .not. readvar) then
        this%frost_table_col(bounds%begc:bounds%endc) = col%zi(bounds%begc:bounds%endc,nlevsoi)
     end if
-
-    call restartvar(ncid=ncid, flag=flag, varname='WA', xtype=ncd_double,  & 
-         dim1name='column', &
-         long_name='water in the unconfined aquifer', units='mm', &
-         interpinic_flag='interp', readvar=readvar, data=this%wa_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='ZWT', xtype=ncd_double,  & 
          dim1name='column', &

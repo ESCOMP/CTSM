@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev011    sacks 09/12/2018 Add water tracer consistency checks, and other water tracer work
   ctsm1.0.dev010    sacks 08/30/2018 Update cime to cime5.7.3
   ctsm1.0.dev009    sacks 08/22/2018 Fix initialization of AnnET in InitAccVars
   ctsm1.0.dev008     erik 08/14/2018 Update 1850 ndep file and last year for streams for Historical transient cases
