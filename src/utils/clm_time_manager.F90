@@ -43,8 +43,8 @@ module clm_time_manager
         get_curr_yearfrac,        &! return the fractional position in the current year, as of the end of the current timestep
         get_prev_yearfrac,        &! return the fractional position in the current year, as of the beginning of the current timestep
         get_rest_date,            &! return the date from the restart file
+        get_local_timestep_time,  &! return the local time for the input longitude to the nearest time-step
         get_local_time,           &! return the local time for the input longitude
-        get_local_irrig_time,     &! return the local time for the input longitude
         set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
@@ -1488,10 +1488,10 @@ contains
 
   !=========================================================================================
 
-  integer function get_local_time( londeg, offset )
+  integer function get_local_timestep_time( londeg, offset )
 
     !---------------------------------------------------------------------------------
-    ! Get the local time for this longitude
+    ! Get the local time for this longitude that is evenly divisible by the time-step
     !
     ! uses
     use clm_varcon, only: degpsec, isecspday
@@ -1503,19 +1503,25 @@ contains
     integer  :: yr, mon, day    ! year, month, day, unused
     integer  :: secs            ! seconds into the day
     real(r8) :: lon             ! positive longitude
+    integer  :: offset_sec      ! offset seconds (either 0 for current time or -dtime for previous time)
     !---------------------------------------------------------------------------------
+    if ( present(offset) ) then
+       offset_sec = offset
+    else
+       offset_sec = 0
+    end if
     SHR_ASSERT( londeg >= -180.0_r8, "londeg must be greater than -180" )
     SHR_ASSERT( londeg <= 360.0_r8,  "londeg must be less than 360" )
-    call  get_curr_date(yr, mon, day, secs, offset )
+    call  get_curr_date(yr, mon, day, secs, offset=offset_sec )
     lon = londeg
     if ( lon < 0.0_r8 ) lon = lon + 360.0_r8
-    get_local_time  = secs + nint((lon/degpsec)/real(dtime,r8))*dtime
-    get_local_time  = mod(get_local_time,isecspday)
-  end function get_local_time
+    get_local_timestep_time  = secs + nint((lon/degpsec)/real(dtime,r8))*dtime
+    get_local_timestep_time  = mod(get_local_timestep_time,isecspday)
+  end function get_local_timestep_time
 
   !=========================================================================================
 
-  integer function get_local_irrig_time( londeg, irrig_start )
+  integer function get_local_time( londeg, starttime, offset )
 
     !---------------------------------------------------------------------------------
     ! Get the local time for this longitude
@@ -1524,21 +1530,37 @@ contains
     use clm_varcon, only: degpsec, isecspday
     ! Arguments
     real(r8)         , intent(in) :: londeg       ! Longitude in degrees
-    integer          , intent(in) :: irrig_start  ! Irrigation start time
+    integer, optional, intent(in) :: starttime    ! Start time (sec)
+    integer, optional, intent(in) :: offset       ! Offset from current time in seconds (either sign)
 
     ! Local variables
     integer  :: yr, mon, day    ! year, month, day, unused
     integer  :: secs            ! seconds into the day
+    integer  :: start           ! start seconds
+    integer  :: offset_sec      ! offset seconds (either 0 for current time or -dtime for previous time)
     real(r8) :: lon             ! positive longitude
     !---------------------------------------------------------------------------------
-    SHR_ASSERT( londeg >= -180.0_r8, "londeg must be greater than -180" )
-    SHR_ASSERT( londeg <= 360.0_r8,  "londeg must be less than 360" )
-    call  get_prev_date(yr, mon, day, secs )
+    if ( present(starttime) ) then
+       start = starttime
+    else
+       start = 0
+    end if
+    if ( present(offset) ) then
+       offset_sec = offset
+    else
+       offset_sec = 0
+    end if
+    SHR_ASSERT( start >= 0,            "starttime must be greater than or equal to zero" )
+    SHR_ASSERT( start <= isecspday,    "starttime must be less than or equal to number of seconds in a day" )
+    SHR_ASSERT( londeg >= -180.0_r8,   "londeg must be greater than -180" )
+    SHR_ASSERT( londeg <= 360.0_r8,    "londeg must be less than 360" )
+    SHR_ASSERT( (offset_sec == 0) .or. (offset_sec == -dtime), "offset must be zero or negative time-step" )
+    call  get_curr_date(yr, mon, day, secs, offset=offset_sec )
     lon = londeg
     if ( lon < 0.0_r8 ) lon = lon + 360.0_r8
-    get_local_irrig_time  = modulo(secs + nint(londeg/degpsec), isecspday)
-    get_local_irrig_time  = modulo(get_local_irrig_time - irrig_start,isecspday)
-  end function get_local_irrig_time
+    get_local_time  = modulo(secs + nint(londeg/degpsec), isecspday)
+    get_local_time  = modulo(get_local_time - starttime,isecspday)
+  end function get_local_time
 
   !=========================================================================================
 
@@ -1558,7 +1580,7 @@ contains
     integer, parameter :: noonsec = isecspday / 2 ! seconds at local noon
     !---------------------------------------------------------------------------------
     SHR_ASSERT( deltasec < noonsec, "deltasec must be less than 12 hours" )
-    local_secs = get_local_time( londeg )
+    local_secs = get_local_timestep_time( londeg )
 
     if ( local_secs >= (noonsec - deltasec) .and. local_secs <= (noonsec + deltasec)) then
        is_near_local_noon = .true.

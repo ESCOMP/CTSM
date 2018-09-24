@@ -921,7 +921,7 @@ contains
              ssre_fsr_vis_i(p) = fsrSF_vis_i(p)-fsr_vis_i(p)
              ssre_fsr_nir_i(p) = fsrSF_nir_i(p)-fsr_nir_i(p)
           end if
-          if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
+          if ( is_near_local_noon( grc%londeg(g), deltasec=dtime/2 ) )then
              fsds_vis_d_ln(p) = forc_solad(g,1)
              fsds_nir_d_ln(p) = forc_solad(g,2)
              fsr_vis_d_ln(p) = albd(p,1)*forc_solad(g,1)
@@ -937,7 +937,7 @@ contains
              parveg_ln(p)     = spval
           end if
           if (use_SSRE) then
-             if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
+             if ( is_near_local_noon( grc%londeg(g), deltasec=dtime/2 ) )then
                 fsrSF_vis_d_ln(p) = albdSF(p,1)*forc_solad(g,1)
                 fsrSF_nir_d_ln(p) = albdSF(p,2)*forc_solad(g,2)
              else
@@ -987,7 +987,7 @@ contains
           fsds_nir_i(p) = forc_solai(g,2)
 
           ! Determine local noon incident solar
-          if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
+          if ( is_near_local_noon( grc%londeg(g), deltasec=dtime/2 ) )then
              fsds_vis_d_ln(p) = forc_solad(g,1)
              fsds_nir_d_ln(p) = forc_solad(g,2)
              fsds_vis_i_ln(p) = forc_solai(g,1)
@@ -1008,7 +1008,7 @@ contains
           fsr_nir_i(p) = albi(p,2) * forc_solai(g,2)
 
           ! Determine local noon reflected solar
-          if ( is_near_local_noon( grc%londeg(g), deltasec=0 ) )then
+          if ( is_near_local_noon( grc%londeg(g), deltasec=dtime/2 ) )then
              fsr_vis_d_ln(p) = fsr_vis_d(p)
              fsr_nir_d_ln(p) = fsr_nir_d(p)
           else
