@@ -54,7 +54,7 @@ contains
     ! Obtain local copy of file
     ! First check current working directory
     ! Next check full pathname[fulpath] on disk
-    ! 
+    !
     ! !USES:
     use shr_file_mod, only: shr_file_get
     !
@@ -74,7 +74,7 @@ contains
     locfn = get_filename( fulpath )
     if (len_trim(locfn) == 0) then
        if (masterproc) write(iulog,*)'(GETFIL): local filename has zero length'
-       call shr_sys_abort
+       call shr_sys_abort('(GETFIL): local filename has zero length')
     else
        if (masterproc) write(iulog,*)'(GETFIL): attempting to find local file ',  &
             trim(locfn)

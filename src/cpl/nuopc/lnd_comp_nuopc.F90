@@ -75,6 +75,8 @@ module lnd_comp_nuopc
   integer                    :: dbrc
   character(*),parameter     :: modName =  "(lnd_comp_nuopc)"
   character(*),parameter     :: u_FILE_u = __FILE__
+  integer                :: shrlogunit ! original log unit
+  integer                :: shrloglev  ! original log level
 
 !===============================================================================
 contains
@@ -147,6 +149,8 @@ contains
   !===============================================================================
 
   subroutine InitializeAdvertise(gcomp, importState, exportState, clock, rc)
+    use shr_nuopc_utils_mod, only : shr_nuopc_set_component_logging
+    use shr_nuopc_utils_mod, only : shr_nuopc_get_component_instance
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -159,12 +163,11 @@ contains
     logical                :: exists
     integer                :: lsize      ! local array size
     integer                :: ierr       ! error code
-    integer                :: shrlogunit ! original log unit
-    integer                :: shrloglev  ! original log level
     integer                :: n,nflds
     logical                :: isPresent
     character(len=512)     :: diro
     character(len=512)     :: logfile
+    integer :: localpet
     integer                :: compid      ! component id
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
@@ -180,7 +183,7 @@ contains
     call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_VMGet(vm, mpiCommunicator=lmpicom, rc=rc)
+    call ESMF_VMGet(vm, mpiCommunicator=lmpicom, localpet=localpet, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
@@ -200,41 +203,14 @@ contains
     ! determine instance information
     !----------------------------------------------------------------------------
 
-    call NUOPC_CompAttributeGet(gcomp, name="inst_name", value=inst_name, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call NUOPC_CompAttributeGet(gcomp, name="inst_index", value=cvalue, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) inst_index
-
-    call ESMF_AttributeGet(gcomp, name="inst_suffix", isPresent=isPresent, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (isPresent) then
-       call NUOPC_CompAttributeGet(gcomp, name="inst_suffix", value=inst_suffix, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       inst_suffix = ''
-    end if
+    call shr_nuopc_get_component_instance(gcomp, inst_suffix, inst_index)
+    inst_name = "LND"//trim(inst_suffix)
 
     !----------------------------------------------------------------------------
     ! reset shr logging to my log file
     !----------------------------------------------------------------------------
 
-    if (masterproc) then
-       call NUOPC_CompAttributeGet(gcomp, name="diro", value=diro, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       call NUOPC_CompAttributeGet(gcomp, name="logfile", value=logfile, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       if (len_trim(logfile) > 0) then
-          iulog = shr_file_getUnit()
-          open(iulog,file=trim(diro)//"/"//trim(logfile))
-       else
-          iulog = shrlogunit
-       endif
-    endif
-
-    call shr_file_getLogLevel(shrloglev)
-    call shr_file_setLogUnit (iulog)
+    call shr_nuopc_set_component_logging(gcomp, localPet==0, iulog, shrlogunit, shrloglev)
 
     !----------------------------------------------------------------------------
     ! advertise fields
@@ -291,8 +267,6 @@ contains
     character(ESMF_MAXSTR)  :: convCIM, purpComp
     type(ESMF_Grid)         :: Egrid
     type(ESMF_Mesh)         :: Emesh
-    integer                 :: shrlogunit            ! original log unit
-    integer                 :: shrloglev             ! original log level
     type(ESMF_VM)           :: vm
     integer                 :: n, m
     logical                 :: connected             ! is field connected?
@@ -647,8 +621,6 @@ contains
     type(ESMF_Time)        :: nextTime
     type(ESMF_State)       :: importState, exportState
     character(ESMF_MAXSTR) :: cvalue
-    integer                :: shrlogunit     ! original log unit
-    integer                :: shrloglev      ! original log level
     character(ESMF_MAXSTR) :: case_name      ! case name
     integer                :: ymd            ! CLM current date (YYYYMMDD)
     integer                :: yr             ! CLM current year
@@ -737,10 +709,10 @@ contains
     ! call NUOPC_CompAttributeGet(gcomp, name='glc_present', value=cvalue, rc=rc)
     ! if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     ! read(cvalue,*) glc_present
-    
+
     ! call NUOPC_CompAttributeGet(gcomp, name='rof_present', value=cvalue, rc=rc)
     ! if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! read(cvalue,*) rof_prognostic  
+    ! read(cvalue,*) rof_prognostic
     ! TODO: is this right?? what is the right flag for this - do we
     ! really need to know if the rof is prognostic
 
