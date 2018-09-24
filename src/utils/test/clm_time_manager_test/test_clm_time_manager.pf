@@ -261,7 +261,7 @@ contains
        secs = 0
        call set_date(yr=1, mon=1, day=1, tod=secs)
        do while ( .not. is_end_curr_year() )
-          @assertEqual( get_local_irrig_time( londeg, irrig_start=0 ), get_local_time( londeg ) )
+          @assertEqual( get_local_time( londeg, starttime=0 ), get_local_timestep_time( londeg ) )
           call advance_timestep()
        end do
     end do
