@@ -595,7 +595,7 @@ contains
     !     Handle generic crop types for file format where they are on their own
     !     crop landunit and read in as Crop Function Types.
     ! !USES:
-    use clm_instur      , only : fert_cft, wt_nat_patch
+    use clm_instur      , only : fert_cft, wt_nat_patch, irrig_method
     use clm_varpar      , only : cft_size, cft_lb, natpft_lb
     ! !ARGUMENTS:
     implicit none
@@ -634,6 +634,18 @@ contains
        fert_cft = 0.0_r8
     end if
 
+    if ( cft_size > 0 )then
+       call ncd_io(ncid=ncid, varname='irrigation_method', flag='read', data=irrig_method, &
+               dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if ( masterproc ) &
+                write(iulog,*) ' WARNING: irrigation_method NOT on surfdata file zero out'
+          irrig_method = 0
+       end if
+    else
+       irrig_method = 0
+    end if
+
     allocate( array2D(begg:endg,1:natpft_size) )
     call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=array2D, &
          dim1name=grlnd, readvar=readvar)
@@ -650,7 +662,7 @@ contains
     !     Handle generic crop types for file format where they are part of the
     !     natural vegetation landunit.
     ! !USES:
-    use clm_instur      , only : fert_cft, wt_nat_patch
+    use clm_instur      , only : fert_cft, irrig_method, wt_nat_patch
     use clm_varpar      , only : natpft_size, cft_size, natpft_lb
     ! !ARGUMENTS:
     implicit none
@@ -687,6 +699,16 @@ contains
                errMsg(sourcefile, __LINE__))
     end if
     fert_cft = 0.0_r8
+
+    call ncd_io(ncid=ncid, varname='irrigation_method', flag='read', data=irrig_method, &
+            dim1name=grlnd, readvar=readvar)
+    if (readvar) then
+       call endrun( msg= ' ERROR: unexpectedly found irrigation_method on dataset when cft_size=0'// &
+               ' (if the surface dataset has a separate crop landunit, then the code'// &
+               ' must also have a separate crop landunit, and vice versa)'//&
+               errMsg(sourcefile, __LINE__))
+    end if
+    irrig_method = 0
 
     call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=wt_nat_patch, &
          dim1name=grlnd, readvar=readvar)

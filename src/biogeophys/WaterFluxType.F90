@@ -85,13 +85,18 @@ module WaterFluxType
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
      real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
 
-     real(r8), pointer :: qflx_irrig_patch         (:)   ! patch irrigation flux (mm H2O/s) [+]           
-     real(r8), pointer :: qflx_irrig_col           (:)   ! col irrigation flux (mm H2O/s) [+]             
-
+     real(r8), pointer :: qflx_sfc_irrig_patch      (:)   ! patch surface irrigation flux (mm H2O/s) [+]           
+     real(r8), pointer :: qflx_sfc_irrig_col        (:)   ! col surface irrigation flux (mm H2O/s) [+]             
+     real(r8), pointer :: qflx_gw_uncon_irrig_patch (:)   ! patch unconfined groundwater irrigation flux (mm H2O/s)
+     real(r8), pointer :: qflx_gw_uncon_irrig_col   (:)   ! col unconfined groundwater irrigation flux (mm H2O/s)
+     real(r8), pointer :: qflx_gw_con_irrig_patch   (:)   ! patch confined groundwater irrigation flux (mm H2O/s)
+     real(r8), pointer :: qflx_gw_con_irrig_col     (:)   ! col confined groundwater irrigation flux (mm H2O/s)
+     real(r8), pointer :: qflx_irrig_drip_patch     (:)   ! patch drip irrigation
+     real(r8), pointer :: qflx_irrig_drip_col       (:)   ! col   drip irrigation
+     real(r8), pointer :: qflx_irrig_sprinkler_patch(:)   ! patch sprinkler irrigation
+     real(r8), pointer :: qflx_irrig_sprinkler_col  (:)   ! col   sprinkler irrigation
 
    contains
- 
-     
      
      procedure, public  :: Init
      procedure, public  :: Restart      
@@ -287,13 +292,41 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
 
-    call AllocateVar1d(var = this%qflx_irrig_patch, name = 'qflx_irrig_patch', &
+    call AllocateVar1d(var = this%qflx_sfc_irrig_patch, name = 'qflx_sfc_irrig_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_irrig_col, name = 'qflx_irrig_col', &
+    call AllocateVar1d(var = this%qflx_sfc_irrig_col, name = 'qflx_sfc_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
+    call AllocateVar1d(var = this%qflx_gw_uncon_irrig_patch, name = 'qflx_gw_uncon_irrig_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_gw_uncon_irrig_col, name = 'qflx_gw_uncon_irrig_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar1d(var = this%qflx_gw_con_irrig_patch, name = 'qflx_gw_con_irrig_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_gw_con_irrig_col, name = 'qflx_gw_con_irrig_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar1d(var = this%qflx_irrig_drip_patch, name = 'qflx_irrig_drip_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_irrig_drip_col, name = 'qflx_irrig_drip_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar1d(var = this%qflx_irrig_sprinkler_patch, name = 'qflx_irrig_sprinkler_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_irrig_sprinkler_col, name = 'qflx_irrig_sprinkler_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -636,13 +669,45 @@ contains
          long_name=this%info%lname('saturation excess drainage'), &
          ptr_col=this%qflx_rsub_sat_col, c2l_scale_type='urbanf')
 
-    this%qflx_irrig_patch(begp:endp) = spval
+    this%qflx_sfc_irrig_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QIRRIG'), &
+         fname=this%info%fname('QIRRIG_FROM_SURFACE'), &
          units='mm/s', &
          avgflag='A', &
-         long_name=this%info%lname('water added through irrigation'), &
-         ptr_patch=this%qflx_irrig_patch)
+         long_name=this%info%lname('water added through surface water irrigation'), &
+         ptr_patch=this%qflx_sfc_irrig_patch)
+
+    this%qflx_gw_uncon_irrig_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QIRRIG_FROM_GW_UNCONFINED'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('water added through unconfined groundwater irrigation'), &
+         ptr_patch=this%qflx_gw_uncon_irrig_patch)
+
+    this%qflx_gw_con_irrig_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QIRRIG_FROM_GW_CONFINED'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('water added through confined groundwater irrigation'), &
+         ptr_patch=this%qflx_gw_con_irrig_patch)
+
+    this%qflx_irrig_drip_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QIRRIG_DRIP'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('water added via drip irrigation'), &
+         ptr_patch=this%qflx_irrig_drip_patch, default='inactive')
+
+    this%qflx_irrig_sprinkler_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QIRRIG_SPRINKLER'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('water added via sprinkler irrigation'), &
+         ptr_patch=this%qflx_irrig_sprinkler_patch, default='inactive')
 
   end subroutine InitHistory
   

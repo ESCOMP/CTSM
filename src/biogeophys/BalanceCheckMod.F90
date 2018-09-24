@@ -78,15 +78,6 @@ contains
          begwb        =>    waterbalancebulk_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
-   do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
-       if (col%hydrologically_active(c)) then
-          if(zwt(c) <= zi(c,nlevsoi)) then
-             wa(c) = aquifer_water_baseline
-          end if
-       end if
-    end do
-
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstatebulk_inst, waterdiagnosticbulk_inst, begwb(bounds%begc:bounds%endc))
 
@@ -199,7 +190,11 @@ contains
           snow_sources            =>    waterfluxbulk_inst%snow_sources_col         , & ! Output: [real(r8) (:)   ]  snow sources (mm H2O /s)  
           snow_sinks              =>    waterfluxbulk_inst%snow_sinks_col           , & ! Output: [real(r8) (:)   ]  snow sinks (mm H2O /s)    
 
-          qflx_irrig              =>    waterfluxbulk_inst%qflx_irrig_col          , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
+          qflx_sfc_irrig          =>    waterfluxbulk_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
+          qflx_gw_uncon_irrig     =>    waterfluxbulk_inst%qflx_gw_uncon_irrig_col  , & ! Input:  [real(r8) (:)   ]  groundwater irrigation flux (mm H2O /s)
+          qflx_gw_con_irrig       =>    waterfluxbulk_inst%qflx_gw_con_irrig_col    , & ! Input:  [real(r8) (:)   ]  groundwater irrigation flux (mm H2O /s)
+          qflx_irrig_drip         =>    waterfluxbulk_inst%qflx_irrig_drip_col      , & ! Input:  [real(r8) (:)   ]  drip irrigation flux (mm H2O /s)
+          qflx_irrig_sprinkler    =>    waterfluxbulk_inst%qflx_irrig_sprinkler_col , & ! Input:  [real(r8) (:)   ]  sprinkler irrigation flux (mm H2O /s)
 
           qflx_glcice_dyn_water_flux => waterfluxbulk_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
@@ -272,7 +267,10 @@ contains
                   - (forc_rain_col(c)        &
                   + forc_snow_col(c)         &
                   + qflx_floodc(c)           &
-                  + qflx_irrig(c)            &
+                  + qflx_irrig_drip(c)       &
+                  + qflx_irrig_sprinkler(c)  &
+                  - qflx_gw_uncon_irrig(c)   &
+                  - qflx_gw_con_irrig(c)     &
                   + qflx_glcice_dyn_water_flux(c) &
                   - qflx_evap_tot(c)         &
                   - qflx_surf(c)             &
@@ -321,7 +319,11 @@ contains
              write(iulog,*)'endwb                 = ',endwb(indexc)
              write(iulog,*)'begwb                 = ',begwb(indexc)
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
-             write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
+             write(iulog,*)'qflx_irrig_drip       = ',qflx_irrig_drip(indexc)*dtime
+             write(iulog,*)'qflx_irrig_sprinkler  = ',qflx_irrig_sprinkler(indexc)*dtime
+             write(iulog,*)'qflx_sfc_irrig        = ',qflx_sfc_irrig(indexc)*dtime
+             write(iulog,*)'qflx_gw_uncon_irrig   = ',qflx_gw_uncon_irrig(indexc)*dtime
+             write(iulog,*)'qflx_gw_con_irrig     = ',qflx_gw_con_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
@@ -351,7 +353,11 @@ contains
              write(iulog,*)'begwb                 = ',begwb(indexc)
              
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
-             write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
+             write(iulog,*)'qflx_irrig_drip       = ',qflx_irrig_drip(indexc)*dtime
+             write(iulog,*)'qflx_irrig_sprinkler  = ',qflx_irrig_sprinkler(indexc)*dtime
+             write(iulog,*)'qflx_sfc_irrig        = ',qflx_sfc_irrig(indexc)*dtime
+             write(iulog,*)'qflx_gw_uncon_irrig   = ',qflx_gw_uncon_irrig(indexc)*dtime
+             write(iulog,*)'qflx_gw_con_irrig     = ',qflx_gw_con_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime

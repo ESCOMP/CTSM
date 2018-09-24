@@ -39,7 +39,7 @@ module WaterStateType
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
-     real(r8), pointer :: wa_col            (:)     ! col water in the unconfined aquifer (mm) 
+     real(r8), pointer :: wa_col                 (:)     ! col water in the unconfined aquifer (mm) 
 
    contains
 

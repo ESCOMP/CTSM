@@ -1984,7 +1984,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-        waterstatebulk_inst, waterfluxbulk_inst) 
+        waterstatebulk_inst, waterfluxbulk_inst, waterdiagnosticbulk_inst) 
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
@@ -2001,15 +2001,20 @@ contains
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
-     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
-     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
+     type(waterstatebulk_type)     , intent(inout) :: waterstatebulk_inst
+     type(waterfluxbulk_type)      , intent(inout) :: waterfluxbulk_inst
+     type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
      !
      ! !LOCAL VARIABLES:
+     integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
      integer  :: c,j,fc,i                                ! indices
      integer  :: k,k_zwt
      real(r8) :: sat_lev
      real(r8) :: s1,s2,m,b   ! temporary variables used to interpolate theta
      integer  :: sat_flag
+     real(r8) :: s_y
+     real(r8) :: available_water_layer
+     
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
@@ -2020,8 +2025,11 @@ contains
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
           h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+          bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
+          sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
-          zwt                =>    soilhydrology_inst%zwt_col              & ! Output: [real(r8) (:)   ]  water table depth (m)                             
+          zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
+          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col                                                                       & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/ms)
           )
 
        ! calculate water table based on soil moisture state
@@ -2072,10 +2080,41 @@ contains
 
        end do
 
+       ! calculate amount of water in saturated zone that
+       ! is available for groundwater irrigation
+
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          available_gw_uncon(c) = 0._r8
+
+          jwt(c) = nlevsoi
+          ! allow jwt to equal zero when zwt is in top layer
+          do j = 1,nlevsoi
+             if(zwt(c) <= zi(c,j)) then
+                jwt(c) = j-1
+                exit
+             end if
+          enddo
+          do j = jwt(c)+1, nbedrock(c)
+             s_y = watsat(c,j) &
+                  * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+             s_y=max(s_y,0.02_r8)
+             
+             if (j==jwt(c)+1) then
+                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))
+             else
+                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
+             endif
+!             if((jwt(c)+1) < nbedrock(c)) write(iulog,*) 'availwater: ', j,jwt(c), nbedrock(c), available_water_layer
+
+             available_gw_uncon(c) = available_gw_uncon(c) &
+                  + available_water_layer
+          enddo
+       enddo
+
      end associate
 
    end subroutine ThetaBasedWaterTable
-
 
 !#6
    !-----------------------------------------------------------------------
@@ -2184,6 +2223,8 @@ contains
           qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
           qflx_qrgwl         =>    waterfluxbulk_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
           qflx_rsub_sat      =>    waterfluxbulk_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ] soil saturation excess [mm h2o/s]                 
+          qflx_gw_uncon_irrig => waterfluxbulk_inst%qflx_gw_uncon_irrig_col  , & ! unconfined groundwater irrigation flux (mm H2O /s)
+
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
           )
@@ -2252,8 +2293,10 @@ contains
              rsub_top(c) = 0._r8
           endif
 
+          ! add groundwater irrigation flux to subsurface drainage flux
           !--  Now remove water via rsub_top
-          rsub_top_tot = - rsub_top(c) * dtime
+          rsub_top_tot = - (rsub_top(c) + qflx_gw_uncon_irrig(c))* dtime
+          
           !should never be positive... but include for completeness
           if(rsub_top_tot > 0.) then !rising water table
              
@@ -2265,13 +2308,16 @@ contains
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
                 s_y=max(s_y,0.02_r8)
-                
-                rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
+                if (j==jwt(c)+1) then
+                   rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
+                else
+                   rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
+                endif
                 rsub_top_layer=min(rsub_top_layer,0._r8)
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
                    
                 rsub_top_tot = rsub_top_tot - rsub_top_layer
-                   
+
                 if (rsub_top_tot >= 0.) then 
                    zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
                    
@@ -2281,9 +2327,9 @@ contains
                 endif
              enddo
              
-             !--  remove residual rsub_top  ---------------------------------------------
+             !--  remove residual rsub_top  --------------------------------
              ! make sure no extra water removed from soil column
-             rsub_top(c) = rsub_top(c) - rsub_top_tot/dtime
+             rsub_top(c) = rsub_top(c) + rsub_top_tot/dtime
           endif
           
           zwt(c) = max(0.0_r8,zwt(c))

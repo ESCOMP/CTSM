@@ -449,7 +449,8 @@ contains
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
             atm2lnd_inst, canopystate_inst, temperature_inst, &
             aerosol_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &
+            water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterfluxbulk_inst, &
             water_inst%wateratm2lndbulk_inst)
        call t_stopf('canhydro')
 
@@ -621,7 +622,8 @@ contains
             h2osoi_liq         = water_inst%waterstatebulk_inst%h2osoi_liq_col&
             (bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
             volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
-            rof_prognostic     = rof_prognostic)
+            rof_prognostic     = rof_prognostic, &
+            available_gw_uncon = water_inst%waterdiagnosticbulk_inst%available_gw_uncon_col)
        call t_stopf('irrigationneeded')
 
        ! ============================================================================
