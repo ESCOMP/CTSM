@@ -1559,7 +1559,7 @@ contains
     lon = londeg
     if ( lon < 0.0_r8 ) lon = lon + 360.0_r8
     get_local_time  = modulo(secs + nint(londeg/degpsec), isecspday)
-    get_local_time  = modulo(get_local_time - starttime,isecspday)
+    get_local_time  = modulo(get_local_time - start,isecspday)
   end function get_local_time
 
   !=========================================================================================
