@@ -99,7 +99,7 @@ contains
   end function lname
 
   !-----------------------------------------------------------------------
-  function is_communicated_with_coupler(this) result(coupled)
+  pure function is_communicated_with_coupler(this) result(coupled)
     !
     ! !DESCRIPTION:
     ! Returns true if this tracer is received from and sent to the coupler. Returns false

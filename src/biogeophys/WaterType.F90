@@ -71,18 +71,13 @@ module WaterType
   !
   ! !PRIVATE TYPES:
 
-  ! This type is a container for objects of class water_info_tracer_type, to facilitate
-  ! having an array of polymorphic entities.
-  type, private :: tracer_info_container_type
-     private
-     ! 'info' needs to be a pointer so other pointers can point to it (since a derived
-     ! type component cannot have the target attribute)
-     class(water_info_tracer_type), pointer :: info
-  end type tracer_info_container_type
-
   ! This type holds instances needed for bulk water or for a single tracer
   type, private :: one_bulk_or_tracer_type
      private
+
+     ! ------------------------------------------------------------------------
+     ! Public data members
+     ! ------------------------------------------------------------------------
 
      class(waterflux_type)       , pointer, public :: waterflux_inst
      class(waterstate_type)      , pointer, public :: waterstate_inst
@@ -90,6 +85,15 @@ module WaterType
      class(waterbalance_type)    , pointer, public :: waterbalance_inst
      class(waterlnd2atm_type)    , pointer, public :: waterlnd2atm_inst
      class(wateratm2lnd_type)    , pointer, public :: wateratm2lnd_inst
+
+     ! ------------------------------------------------------------------------
+     ! Private data members
+     ! ------------------------------------------------------------------------
+
+     logical :: is_isotope = .false.
+     class(water_info_base_type) , pointer :: info
+     type(water_tracer_container_type) :: vars
+
   end type one_bulk_or_tracer_type
 
   !
@@ -134,14 +138,6 @@ module WaterType
      ! ------------------------------------------------------------------------
 
      type(water_params_type) :: params
-
-     ! bulk_info needs to be a pointer so other pointers can point to it (since a derived
-     ! type component cannot have the target attribute)
-     type(water_info_bulk_type), pointer :: bulk_info
-     type(water_tracer_container_type) :: bulk_vars  ! water tracer variables for bulk water (note that this only includes variables that are also included for water tracers)
-     logical, allocatable :: is_isotope(:)
-     type(tracer_info_container_type), allocatable :: tracer_info(:)
-     type(water_tracer_container_type), allocatable :: tracer_vars(:)
      integer :: bulk_tracer_index  ! index of the tracer that replicates bulk water (-1 if it doesn't exist)
 
    contains
@@ -293,78 +289,82 @@ contains
 
     call this%SetupTracerInfo()
 
-    allocate(this%bulk_and_tracers(this%bulk_and_tracers_beg:this%bulk_and_tracers_end))
-
     call this%AllocateBulk()
 
-    allocate(this%bulk_info, source = water_info_bulk_type())
-    call this%bulk_vars%init()
+    associate( &
+         bulk_info => this%bulk_and_tracers(this%i_bulk)%info, &
+         bulk_vars => this%bulk_and_tracers(this%i_bulk)%vars &
+         )
+
+    call bulk_vars%init()
 
     call this%waterstatebulk_inst%InitBulk(bounds, &
-         this%bulk_info, &
-         this%bulk_vars, &
+         bulk_info, &
+         bulk_vars, &
          h2osno_input_col = h2osno_col(begc:endc),       &
          watsat_col = watsat_col(begc:endc, 1:),   &
          t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
 
     call this%waterdiagnosticbulk_inst%InitBulk(bounds, &
-         this%bulk_info, &
-         this%bulk_vars, &
+         bulk_info, &
+         bulk_vars, &
          snow_depth_input_col = snow_depth_col(begc:endc),    &
          waterstatebulk_inst = this%waterstatebulk_inst )
 
     call this%waterbalancebulk_inst%Init(bounds, &
-         this%bulk_info, &
-         this%bulk_vars)
+         bulk_info, &
+         bulk_vars)
 
     call this%waterfluxbulk_inst%InitBulk(bounds, &
-         this%bulk_info, &
-         this%bulk_vars)
+         bulk_info, &
+         bulk_vars)
 
     call this%waterlnd2atmbulk_inst%InitBulk(bounds, &
-         this%bulk_info, &
-         this%bulk_vars)
+         bulk_info, &
+         bulk_vars)
 
     call this%wateratm2lndbulk_inst%InitBulk(bounds, &
-         this%bulk_info, &
-         this%bulk_vars)
+         bulk_info, &
+         bulk_vars)
 
-    call this%bulk_vars%complete_setup()
+    call bulk_vars%complete_setup()
+
+    end associate
 
     do i = this%tracers_beg, this%tracers_end
 
-       call this%tracer_vars(i)%init()
-
        call this%AllocateTracer(i)
 
+       call this%bulk_and_tracers(i)%vars%init()
+
        call this%bulk_and_tracers(i)%waterstate_inst%Init(bounds, &
-            this%tracer_info(i)%info, &
-            this%tracer_vars(i), &
+            this%bulk_and_tracers(i)%info, &
+            this%bulk_and_tracers(i)%vars, &
             h2osno_input_col = h2osno_col(begc:endc),       &
             watsat_col = watsat_col(begc:endc, 1:),   &
             t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
-            this%tracer_info(i)%info, &
-            this%tracer_vars(i))
+            this%bulk_and_tracers(i)%info, &
+            this%bulk_and_tracers(i)%vars)
 
        call this%bulk_and_tracers(i)%waterbalance_inst%Init(bounds, &
-            this%tracer_info(i)%info, &
-            this%tracer_vars(i))
+            this%bulk_and_tracers(i)%info, &
+            this%bulk_and_tracers(i)%vars)
 
        call this%bulk_and_tracers(i)%waterflux_inst%Init(bounds, &
-            this%tracer_info(i)%info, &
-            this%tracer_vars(i))
+            this%bulk_and_tracers(i)%info, &
+            this%bulk_and_tracers(i)%vars)
 
        call this%bulk_and_tracers(i)%waterlnd2atm_inst%Init(bounds, &
-            this%tracer_info(i)%info, &
-            this%tracer_vars(i))
+            this%bulk_and_tracers(i)%info, &
+            this%bulk_and_tracers(i)%vars)
 
        call this%bulk_and_tracers(i)%wateratm2lnd_inst%Init(bounds, &
-            this%tracer_info(i)%info, &
-            this%tracer_vars(i))
+            this%bulk_and_tracers(i)%info, &
+            this%bulk_and_tracers(i)%vars)
 
-       call this%tracer_vars(i)%complete_setup()
+       call this%bulk_and_tracers(i)%vars%complete_setup()
 
     end do
 
@@ -482,35 +482,33 @@ contains
     this%tracers_end = num_tracers
     this%i_bulk = 0
 
-    if (num_tracers > 0) then
-       allocate(this%tracer_info(this%tracers_beg:this%tracers_end))
-       allocate(this%is_isotope(this%tracers_beg:this%tracers_end))
-       allocate(this%tracer_vars(this%tracers_beg:this%tracers_end))
-    end if
+    allocate(this%bulk_and_tracers(this%bulk_and_tracers_beg:this%bulk_and_tracers_end))
+
+    allocate(this%bulk_and_tracers(this%i_bulk)%info, source = water_info_bulk_type())
 
     tracer_num = 1
     if (enable_bulk_tracer) then
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type( &
+       allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
             tracer_name = 'H2OTR', &
             ratio = 1._r8, &
             communicated_with_coupler = .false.))
-       this%is_isotope(tracer_num) = .true.
+       this%bulk_and_tracers(tracer_num)%is_isotope = .true.
        this%bulk_tracer_index = tracer_num
        tracer_num = tracer_num + 1
     end if
     if (this%params%enable_isotopes) then
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type( &
+       allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
             tracer_name = 'HDO', &
             ratio = 0.9_r8, &
             communicated_with_coupler = .false.))
-       this%is_isotope(tracer_num) = .true.
+       this%bulk_and_tracers(tracer_num)%is_isotope = .true.
        tracer_num = tracer_num + 1
 
-       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type( &
+       allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
             tracer_name = 'H218O', &
             ratio = 0.5_r8, &
             communicated_with_coupler = .false.))
-       this%is_isotope(tracer_num) = .true.
+       this%bulk_and_tracers(tracer_num)%is_isotope = .true.
        tracer_num = tracer_num + 1
     end if
 
@@ -713,7 +711,7 @@ contains
     !-----------------------------------------------------------------------
 
     do i = this%tracers_beg, this%tracers_end
-       if (.not. this%tracer_info(i)%info%is_communicated_with_coupler()) then
+       if (.not. this%bulk_and_tracers(i)%info%is_communicated_with_coupler()) then
           call this%bulk_and_tracers(i)%wateratm2lnd_inst%SetNondownscaledTracers( &
                bounds, this%wateratm2lndbulk_inst)
        end if
@@ -888,7 +886,7 @@ contains
     SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
     SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
 
-    IsIsotope = this%is_isotope(i)
+    IsIsotope = this%bulk_and_tracers(i)%is_isotope
 
   end function IsIsotope
 
@@ -921,7 +919,7 @@ contains
     SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
     SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
 
-    select type(info => this%tracer_info(i)%info)
+    select type(info => this%bulk_and_tracers(i)%info)
     type is(water_info_isotope_type)
        isotope_info => info
     class default
@@ -1004,17 +1002,22 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    num_vars = this%tracer_vars(i)%get_num_vars()
-    SHR_ASSERT(num_vars == this%bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
+    associate( &
+         tracer_vars => this%bulk_and_tracers(i)%vars, &
+         bulk_vars => this%bulk_and_tracers(this%i_bulk)%vars &
+         )
+
+    num_vars = tracer_vars%get_num_vars()
+    SHR_ASSERT(num_vars == bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
 
     do var_num = 1, num_vars
-       name = this%tracer_vars(i)%get_description(var_num)
-       SHR_ASSERT(name == this%bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
+       name = tracer_vars%get_description(var_num)
+       SHR_ASSERT(name == bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
 
-       call this%tracer_vars(i)%get_bounds(var_num, bounds, begi, endi)
+       call tracer_vars%get_bounds(var_num, bounds, begi, endi)
 
-       call this%bulk_vars%get_data(var_num, bulk)
-       call this%tracer_vars(i)%get_data(var_num, tracer)
+       call bulk_vars%get_data(var_num, bulk)
+       call tracer_vars%get_data(var_num, tracer)
 
        call CompareBulkToTracer(begi, endi, &
             bulk   = bulk(begi:endi), &
@@ -1023,6 +1026,8 @@ contains
             name = name)
 
     end do
+
+    end associate
 
   end subroutine TracerConsistencyCheck
 
