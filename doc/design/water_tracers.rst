@@ -117,8 +117,8 @@ places).
  Loops over all tracers
 ========================
 
-As much as possible, we are trying to keep loops over tracers in WaterType. The main
-motivations are:
+Initially, I was hoping that we could keep loops over tracers in WaterType, for the
+following reasons:
 
 1. To keep this complexity out of other modules
 
@@ -126,8 +126,16 @@ motivations are:
    stored, if we ever need to: By keeping as many of the loops as possible in WaterType,
    we reduce the number of places that would need to be changed
 
-This means that there are many wrapper routines in WaterType that just call some other
-routine on each tracer instance (or possibly on the bulk plus each tracer instance).
+However, it was starting to get too awkward to require all loops over tracers to happen in
+WaterType (or some other centralized location): I had originally imagined that we wouldn't
+need too many loops over tracers, but it turns out that we need loops over tracers in a
+lot of places. Requiring all of these loops over tracers to be in WaterType both (a)
+bloats that module, and (b) adds extra indirection (which makes it harder to understand
+the code, because you're bouncing back and forth between more modules, and has possible
+performance implications as we break routines into tiny pieces for this purpose).
+
+So we allow loops over tracers (or bulk plus tracers) anywhere in the code. See comments
+at the top of WaterType.F90 for example code showing how to write these loops.
 
 ==============================================
  Infrastructure for looping through variables
