@@ -84,26 +84,17 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    call c2g(bounds, &
-         water_inst%waterstatebulk_inst%h2osno_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%h2osno_grc    (bounds%begg:bounds%endg), &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-
-    do g = bounds%begg,bounds%endg
-       water_inst%waterlnd2atmbulk_inst%h2osno_grc(g) = water_inst%waterlnd2atmbulk_inst%h2osno_grc(g)/1000._r8
-    end do
-
-    do i = 1, water_inst%num_tracers
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
       call c2g(bounds, &
-           water_inst%waterstate_tracer_inst(i)%h2osno_col (bounds%begc:bounds%endc), &
-           water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc    (bounds%begg:bounds%endg), &
+           water_inst%bulk_and_tracers(i)%waterstate_inst%h2osno_col(bounds%begc:bounds%endc), &
+           water_inst%bulk_and_tracers(i)%waterlnd2atm_inst%h2osno_grc(bounds%begg:bounds%endg), &
            c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
       do g = bounds%begg,bounds%endg
-         water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc(g) = water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc(g)/1000._r8
+         water_inst%bulk_and_tracers(i)%waterlnd2atm_inst%h2osno_grc(g) = &
+              water_inst%bulk_and_tracers(i)%waterlnd2atm_inst%h2osno_grc(g)/1000._r8
       end do
     end do
-
 
     call c2g(bounds, nlevgrnd, &
          water_inst%waterstatebulk_inst%h2osoi_vol_col (bounds%begc:bounds%endc, :), &

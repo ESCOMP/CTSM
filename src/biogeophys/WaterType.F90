@@ -5,18 +5,33 @@ module WaterType
   ! Container for derived types relating to water, both for bulk water and for isotopes
   ! and other tracers.
   !
-  ! To loop through all tracers, use code like this:
-  !    do i = 1, water_inst%num_tracers
-  !       call some_subroutine(..., water_inst%waterflux_tracer_inst(i), ...)
+  ! Variables pertaining to bulk water can be accessed in two ways:
+  !
+  !    (1) Using water_inst%water*bulk_inst
+  !
+  !    (2) As one of the indices in water_inst%bulk_and_tracers(:)%water*_inst
+  !
+  !    Method (1) is greatly preferable when you are just operating on bulk water. Method
+  !    (2) is just meant to be used when you are doing the same operation on bulk water
+  !    and all water tracers.
+  !
+  ! To loop through bulk and all tracers, use code like this:
+  !    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+  !       call some_subroutine(..., water_inst%bulk_and_tracers(i)%waterflux_inst, ...)
   !    end do
   !
-  ! To loop through all isotopes, use code like this:
+  ! To loop through all tracers (not bulk), use code like this:
+  !    do i = water_inst%tracers_beg, water_inst%tracers_end
+  !       call some_subroutine(..., water_inst%bulk_and_tracers(i)%waterflux_inst, ...)
+  !    end do
+  !
+  ! To loop through all isotopes (not bulk or other water tracers), use code like this:
   !    type(water_info_isotope_type), pointer :: iso_info
   !
-  !    do i = 1, water_inst%num_tracers
+  !    do i = water_inst%tracers_beg, water_inst%tracers_end
   !       if (water_inst%IsIsotope(i)) then
   !          call water_inst%GetIsotopeInfo(i, iso_info)
-  !          call some_subroutine(..., iso_info, water_inst%waterflux_tracer_inst(i), ...)
+  !          call some_subroutine(..., iso_info, water_inst%bulk_and_tracers(i)%waterflux_inst, ...)
   !       end if
   !    end do
   !
@@ -65,6 +80,18 @@ module WaterType
      class(water_info_tracer_type), pointer :: info
   end type tracer_info_container_type
 
+  ! This type holds instances needed for bulk water or for a single tracer
+  type, private :: one_bulk_or_tracer_type
+     private
+
+     class(waterflux_type)       , pointer, public :: waterflux_inst
+     class(waterstate_type)      , pointer, public :: waterstate_inst
+     class(waterdiagnostic_type) , pointer, public :: waterdiagnostic_inst
+     class(waterbalance_type)    , pointer, public :: waterbalance_inst
+     class(waterlnd2atm_type)    , pointer, public :: waterlnd2atm_inst
+     class(wateratm2lnd_type)    , pointer, public :: wateratm2lnd_inst
+  end type one_bulk_or_tracer_type
+
   !
   ! !PUBLIC TYPES:
 
@@ -86,21 +113,21 @@ module WaterType
      ! Public data members
      ! ------------------------------------------------------------------------
 
-     integer, public :: num_tracers
+     ! indices into the bulk_and_tracers array
+     integer, public :: bulk_and_tracers_beg  ! first index when looping over bulk & tracers
+     integer, public :: bulk_and_tracers_end  ! last index when looping over bulk & tracers
+     integer, public :: tracers_beg           ! first index when looping over just tracers
+     integer, public :: tracers_end           ! last index when looping over just tracers
+     integer, public :: i_bulk                ! index of bulk in arrays that contain both bulk and tracers
 
-     type(waterfluxbulk_type), public       :: waterfluxbulk_inst
-     type(waterstatebulk_type), public      :: waterstatebulk_inst
-     type(waterdiagnosticbulk_type), public :: waterdiagnosticbulk_inst
-     type(waterbalance_type), public        :: waterbalancebulk_inst
-     type(waterlnd2atmbulk_type), public        :: waterlnd2atmbulk_inst
-     type(wateratm2lndbulk_type), public        :: wateratm2lndbulk_inst
+     type(waterfluxbulk_type), pointer, public       :: waterfluxbulk_inst
+     type(waterstatebulk_type), pointer, public      :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type), pointer, public :: waterdiagnosticbulk_inst
+     type(waterbalance_type), pointer, public        :: waterbalancebulk_inst
+     type(waterlnd2atmbulk_type), pointer, public    :: waterlnd2atmbulk_inst
+     type(wateratm2lndbulk_type), pointer, public    :: wateratm2lndbulk_inst
 
-     type(waterflux_type), allocatable, public       :: waterflux_tracer_inst(:)
-     type(waterstate_type), allocatable, public      :: waterstate_tracer_inst(:)
-     type(waterdiagnostic_type), allocatable, public :: waterdiagnostic_tracer_inst(:)
-     type(waterbalance_type), allocatable, public    :: waterbalance_tracer_inst(:)
-     type(waterlnd2atm_type), allocatable, public :: waterlnd2atm_tracer_inst(:)
-     type(wateratm2lnd_type), allocatable, public :: wateratm2lnd_tracer_inst(:)
+     type(one_bulk_or_tracer_type), allocatable, public :: bulk_and_tracers(:)
 
      ! ------------------------------------------------------------------------
      ! Private data members
@@ -140,6 +167,8 @@ module WaterType
      procedure, private :: DoInit
      procedure, private :: ReadNamelist
      procedure, private :: SetupTracerInfo
+     procedure, private :: AllocateBulk
+     procedure, private :: AllocateTracer
   end type water_type
 
   interface water_params_type
@@ -262,6 +291,12 @@ contains
     SHR_ASSERT_ALL((ubound(watsat_col, 1) == endc), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_soisno_col, 1) == endc), errMsg(sourcefile, __LINE__))
 
+    call this%SetupTracerInfo()
+
+    allocate(this%bulk_and_tracers(this%bulk_and_tracers_beg:this%bulk_and_tracers_end))
+
+    call this%AllocateBulk()
+
     allocate(this%bulk_info, source = water_info_bulk_type())
     call this%bulk_vars%init()
 
@@ -296,46 +331,36 @@ contains
 
     call this%bulk_vars%complete_setup()
 
-    call this%SetupTracerInfo()
-
-    if (this%num_tracers > 0) then
-       allocate(this%tracer_vars(this%num_tracers))
-       allocate(this%waterflux_tracer_inst(this%num_tracers))
-       allocate(this%waterstate_tracer_inst(this%num_tracers))
-       allocate(this%waterdiagnostic_tracer_inst(this%num_tracers))
-       allocate(this%waterbalance_tracer_inst(this%num_tracers))
-       allocate(this%waterlnd2atm_tracer_inst(this%num_tracers))
-       allocate(this%wateratm2lnd_tracer_inst(this%num_tracers))
-    end if
-
-    do i = 1, this%num_tracers
+    do i = this%tracers_beg, this%tracers_end
 
        call this%tracer_vars(i)%init()
 
-       call this%waterstate_tracer_inst(i)%Init(bounds, &
+       call this%AllocateTracer(i)
+
+       call this%bulk_and_tracers(i)%waterstate_inst%Init(bounds, &
             this%tracer_info(i)%info, &
             this%tracer_vars(i), &
             h2osno_input_col = h2osno_col(begc:endc),       &
             watsat_col = watsat_col(begc:endc, 1:),   &
             t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
 
-       call this%waterdiagnostic_tracer_inst(i)%Init(bounds, &
+       call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
             this%tracer_info(i)%info, &
             this%tracer_vars(i))
 
-       call this%waterbalance_tracer_inst(i)%Init(bounds, &
+       call this%bulk_and_tracers(i)%waterbalance_inst%Init(bounds, &
             this%tracer_info(i)%info, &
             this%tracer_vars(i))
 
-       call this%waterflux_tracer_inst(i)%Init(bounds, &
+       call this%bulk_and_tracers(i)%waterflux_inst%Init(bounds, &
             this%tracer_info(i)%info, &
             this%tracer_vars(i))
 
-       call this%waterlnd2atm_tracer_inst(i)%Init(bounds, &
+       call this%bulk_and_tracers(i)%waterlnd2atm_inst%Init(bounds, &
             this%tracer_info(i)%info, &
             this%tracer_vars(i))
 
-       call this%wateratm2lnd_tracer_inst(i)%Init(bounds, &
+       call this%bulk_and_tracers(i)%wateratm2lnd_inst%Init(bounds, &
             this%tracer_info(i)%info, &
             this%tracer_vars(i))
 
@@ -451,10 +476,16 @@ contains
        num_tracers = num_tracers + 2
     end if
 
-    this%num_tracers = num_tracers
-    if (this%num_tracers > 0) then
-       allocate(this%tracer_info(this%num_tracers))
-       allocate(this%is_isotope(this%num_tracers))
+    this%bulk_and_tracers_beg = 0
+    this%tracers_beg = 1
+    this%bulk_and_tracers_end = num_tracers
+    this%tracers_end = num_tracers
+    this%i_bulk = 0
+
+    if (num_tracers > 0) then
+       allocate(this%tracer_info(this%tracers_beg:this%tracers_end))
+       allocate(this%is_isotope(this%tracers_beg:this%tracers_end))
+       allocate(this%tracer_vars(this%tracers_beg:this%tracers_end))
     end if
 
     tracer_num = 1
@@ -483,14 +514,78 @@ contains
        tracer_num = tracer_num + 1
     end if
 
-    if (tracer_num - 1 /= this%num_tracers) then
+    if (tracer_num - 1 /= num_tracers) then
        write(iulog,*) subname//' ERROR: tracer_num discrepancy'
-       write(iulog,*) 'num_tracers = ', this%num_tracers
+       write(iulog,*) 'num_tracers = ', num_tracers
        write(iulog,*) 'but added ', tracer_num - 1, ' tracers'
        call endrun(msg='tracer_num discrepancy '//errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine SetupTracerInfo
+
+  !-----------------------------------------------------------------------
+  subroutine AllocateBulk(this)
+    !
+    ! !DESCRIPTION:
+    ! Allocate each of the bulk objects
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'AllocateBulk'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         i_bulk => this%i_bulk &
+         )
+
+    allocate(this%waterfluxbulk_inst)
+    this%bulk_and_tracers(i_bulk)%waterflux_inst => this%waterfluxbulk_inst
+
+    allocate(this%waterstatebulk_inst)
+    this%bulk_and_tracers(i_bulk)%waterstate_inst => this%waterstatebulk_inst
+
+    allocate(this%waterdiagnosticbulk_inst)
+    this%bulk_and_tracers(i_bulk)%waterdiagnostic_inst => this%waterdiagnosticbulk_inst
+
+    allocate(this%waterbalancebulk_inst)
+    this%bulk_and_tracers(i_bulk)%waterbalance_inst => this%waterbalancebulk_inst
+
+    allocate(this%waterlnd2atmbulk_inst)
+    this%bulk_and_tracers(i_bulk)%waterlnd2atm_inst => this%waterlnd2atmbulk_inst
+
+    allocate(this%wateratm2lndbulk_inst)
+    this%bulk_and_tracers(i_bulk)%wateratm2lnd_inst => this%wateratm2lndbulk_inst
+
+    end associate
+
+  end subroutine AllocateBulk
+
+  !-----------------------------------------------------------------------
+  subroutine AllocateTracer(this, i)
+    !
+    ! !DESCRIPTION:
+    ! Allocate each of the tracer objects for tracer i
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    integer, intent(in) :: i  ! tracer number
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'AllocateTracer'
+    !-----------------------------------------------------------------------
+
+    allocate(waterflux_type :: this%bulk_and_tracers(i)%waterflux_inst)
+    allocate(waterstate_type :: this%bulk_and_tracers(i)%waterstate_inst)
+    allocate(waterdiagnostic_type :: this%bulk_and_tracers(i)%waterdiagnostic_inst)
+    allocate(waterbalance_type :: this%bulk_and_tracers(i)%waterbalance_inst)
+    allocate(waterlnd2atm_type :: this%bulk_and_tracers(i)%waterlnd2atm_inst)
+    allocate(wateratm2lnd_type :: this%bulk_and_tracers(i)%wateratm2lnd_inst)
+
+  end subroutine AllocateTracer
 
   !-----------------------------------------------------------------------
   subroutine InitAccBuffer(this, bounds)
@@ -586,16 +681,16 @@ contains
 
     call this%wateratm2lndbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
-    do i = 1, this%num_tracers
+    do i = this%tracers_beg, this%tracers_end
 
-       call this%waterflux_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
+       call this%bulk_and_tracers(i)%waterflux_inst%Restart(bounds, ncid, flag=flag)
 
-       call this%waterstate_tracer_inst(i)%Restart(bounds, ncid, flag=flag, &
+       call this%bulk_and_tracers(i)%waterstate_inst%Restart(bounds, ncid, flag=flag, &
             watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
-       call this%waterdiagnostic_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
+       call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag)
 
-       call this%wateratm2lnd_tracer_inst(i)%Restart(bounds, ncid, flag=flag)
+       call this%bulk_and_tracers(i)%wateratm2lnd_inst%Restart(bounds, ncid, flag=flag)
 
     end do
 
@@ -617,9 +712,9 @@ contains
     character(len=*), parameter :: subname = 'SetAtm2lndNondownscaledTracers'
     !-----------------------------------------------------------------------
 
-    do i = 1, this%num_tracers
+    do i = this%tracers_beg, this%tracers_end
        if (.not. this%tracer_info(i)%info%is_communicated_with_coupler()) then
-          call this%wateratm2lnd_tracer_inst(i)%SetNondownscaledTracers( &
+          call this%bulk_and_tracers(i)%wateratm2lnd_inst%SetNondownscaledTracers( &
                bounds, this%wateratm2lndbulk_inst)
        end if
     end do
@@ -645,12 +740,8 @@ contains
     character(len=*), parameter :: subname = 'CopyStateForNewColumn'
     !-----------------------------------------------------------------------
 
-    call this%waterstatebulk_inst%CopyStateForNewColumn( &
-         c_new = c_new, &
-         c_template = c_template)
-
-    do i = 1, this%num_tracers
-       call this%waterstate_tracer_inst(i)%CopyStateForNewColumn( &
+    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
+       call this%bulk_and_tracers(i)%waterstate_inst%CopyStateForNewColumn( &
             c_new = c_new, &
             c_template = c_template)
     end do
@@ -681,20 +772,14 @@ contains
     character(len=*), parameter :: subname = 'DynWaterContentInit'
     !-----------------------------------------------------------------------
 
-    call dyn_water_content(bounds, &
-         num_nolakec, filter_nolakec, &
-         num_lakec, filter_lakec, &
-         this%waterstatebulk_inst, this%waterdiagnosticbulk_inst, &
-         liquid_mass = this%waterbalancebulk_inst%liq1_grc(bounds%begg:bounds%endg), &
-         ice_mass = this%waterbalancebulk_inst%ice1_grc(bounds%begg:bounds%endg))
-
-    do i = 1, this%num_tracers
+    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
        call dyn_water_content(bounds, &
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
-            this%waterstate_tracer_inst(i), this%waterdiagnostic_tracer_inst(i), &
-            liquid_mass = this%waterbalance_tracer_inst(i)%liq1_grc(bounds%begg:bounds%endg), &
-            ice_mass = this%waterbalance_tracer_inst(i)%ice1_grc(bounds%begg:bounds%endg))
+            this%bulk_and_tracers(i)%waterstate_inst, &
+            this%bulk_and_tracers(i)%waterdiagnostic_inst, &
+            liquid_mass = this%bulk_and_tracers(i)%waterbalance_inst%liq1_grc(bounds%begg:bounds%endg), &
+            ice_mass = this%bulk_and_tracers(i)%waterbalance_inst%ice1_grc(bounds%begg:bounds%endg))
     end do
 
   end subroutine DynWaterContentInit
@@ -722,28 +807,25 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: i
-    real(r8) :: delta_liq_tracer(bounds%begg:bounds%endg)
+    real(r8) :: delta_liq_temp(bounds%begg:bounds%endg)
 
     character(len=*), parameter :: subname = 'DynWaterContentFinal'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(delta_liq_bulk) == [bounds%endg]), errMsg(sourcefile, __LINE__))
 
-    call dyn_water_content_final(bounds, &
-         num_nolakec, filter_nolakec, &
-         num_lakec, filter_lakec, &
-         this%waterstatebulk_inst, this%waterdiagnosticbulk_inst, &
-         this%waterbalancebulk_inst, this%waterfluxbulk_inst, &
-         delta_liq = delta_liq_bulk(bounds%begg:bounds%endg))
-
-    do i = 1, this%num_tracers
+    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
        call dyn_water_content_final(bounds, &
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
-            this%waterstate_tracer_inst(i), this%waterdiagnostic_tracer_inst(i), &
-            this%waterbalance_tracer_inst(i), this%waterflux_tracer_inst(i), &
-            delta_liq = delta_liq_tracer(bounds%begg:bounds%endg))
-       ! Note that we don't use delta_liq_tracer, but it's needed to satisfy the interface
+            this%bulk_and_tracers(i)%waterstate_inst, &
+            this%bulk_and_tracers(i)%waterdiagnostic_inst, &
+            this%bulk_and_tracers(i)%waterbalance_inst, &
+            this%bulk_and_tracers(i)%waterflux_inst, &
+            delta_liq = delta_liq_temp(bounds%begg:bounds%endg))
+       if (i == this%i_bulk) then
+          delta_liq_bulk(bounds%begg:bounds%endg) = delta_liq_temp(bounds%begg:bounds%endg)
+       end if
     end do
 
   end subroutine DynWaterContentFinal
@@ -772,22 +854,14 @@ contains
     character(len=*), parameter :: subname = 'WaterBalanceInit'
     !-----------------------------------------------------------------------
 
-    call BeginWaterBalance(bounds, &
-         num_nolakec, filter_nolakec, &
-         num_lakec, filter_lakec, &
-         soilhydrology_inst, &
-         this%waterstatebulk_inst, &
-         this%waterdiagnosticbulk_inst, &
-         this%waterbalancebulk_inst)
-
-    do i = 1, this%num_tracers
+    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
        call BeginWaterBalance(bounds, &
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
             soilhydrology_inst, &
-            this%waterstate_tracer_inst(i), &
-            this%waterdiagnostic_tracer_inst(i), &
-            this%waterbalance_tracer_inst(i))
+            this%bulk_and_tracers(i)%waterstate_inst, &
+            this%bulk_and_tracers(i)%waterdiagnostic_inst, &
+            this%bulk_and_tracers(i)%waterbalance_inst)
     end do
 
   end subroutine WaterBalanceInit
@@ -799,9 +873,7 @@ contains
     ! !DESCRIPTION:
     ! Returns true if tracer i is an isotope
     !
-    ! i must be <= this%num_tracers
-    !
-    ! !USES:
+    ! i must be >= this%tracers_beg and <= this%tracers_end
     !
     ! !ARGUMENTS:
     logical :: IsIsotope  ! function result
@@ -813,7 +885,8 @@ contains
     character(len=*), parameter :: subname = 'IsIsotope'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(i <= this%num_tracers, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
 
     IsIsotope = this%is_isotope(i)
 
@@ -827,7 +900,8 @@ contains
     !
     ! This provides a mechanism for passing the isotope info to subroutines that need it.
     !
-    ! i must be <= this%num_tracers, and this%IsIsotope(i) must be true
+    ! i must be >= this%tracers_beg and <= this%tracers_end, and this%IsIsotope(i) must be
+    ! true
     !
     ! Assumes that the 'isotope_info' pointer is not currently allocated. (Otherwise this
     ! will result in a memory leak. It is okay for the isotope_info pointer to be
@@ -844,7 +918,8 @@ contains
     character(len=*), parameter :: subname = 'GetIsotopeInfo'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(i <= this%num_tracers, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
 
     select type(info => this%tracer_info(i)%info)
     type is(water_info_isotope_type)
