@@ -979,17 +979,11 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2000</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2100</stream_year_last_ndep>
 
-<stream_fldfilename_ndep hgrid="1.9x2.5"   use_cn=".true."   >lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep hgrid="1.9x2.5"   use_cn=".true."   rcp="8.5" >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep hgrid="1.9x2.5"   use_cn=".true."   rcp="6"   >lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100810.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep hgrid="1.9x2.5"   use_cn=".true."   rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep hgrid="1.9x2.5"   use_cn=".true."   rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep hgrid="0.9x1.25" use_cn=".true." >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
-<ndep_taxmode use_cn=".true."                              >extend</ndep_taxmode>
-
-<ndep_varlist use_cn=".true."                              >NDEP_year</ndep_varlist>
-
-<ndepmapalgo use_cn=".true."                               >bilinear</ndepmapalgo>
+<ndep_taxmode            use_cn=".true." >cycle</ndep_taxmode>
+<ndep_varlist            use_cn=".true." >NDEP_month</ndep_varlist>
+<ndepmapalgo             use_cn=".true." >bilinear</ndepmapalgo>
 
 <ndepmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
