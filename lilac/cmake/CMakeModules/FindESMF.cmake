@@ -36,7 +36,7 @@ if (NOT DEFINED ENV{ESMF_CONFIG_FILE} AND NOT DEFINED ESMF_CONFIG_FILE)
                    export ESMF_CONFIG_FILE=/path/to/esmf.mk && cmake ${CMAKE_SOURCE_DIR}")
 endif ()
 
-if (NOT EXISTS $ENV{ESMF_CONFIG_FILE} AND NOT EXISTS ${ESMF_CONFIG_FILE})
+if (NOT EXISTS ENV{ESMF_CONFIG_FILE} AND NOT EXISTS ${ESMF_CONFIG_FILE})
   message (FATAL_ERROR "${Esc}[1;31m Error: esmf.mk file is not found at \
                         ${ESMF_CONFIG_FILE} ${Esc}[m")
 else ()
@@ -44,9 +44,11 @@ else ()
 endif ()
 
 if (DEFINED ENV{ESMF_CONFIG_FILE})
-  set(ESMF_CONFIG_FILE $ENV{ESMF_CONFIG_FILE} CACHE STRING "")
+  set(ESMF_CONFIG_FILE ENV{ESMF_CONFIG_FILE} CACHE STRING "")
 endif ()
 set(ESMF_CONFIG_FILE ${ESMF_CONFIG_FILE} CACHE STRING "")
+
+message ("Parsing ESMF_CONFIG_FILE: " ${ESMF_CONFIG_FILE})
 
 file(STRINGS "${ESMF_CONFIG_FILE}" all_vars)
 foreach(str ${all_vars})

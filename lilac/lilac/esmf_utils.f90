@@ -1,9 +1,9 @@
 module esmf_utils
 
-! Wrappers and derived types exposing ESMF components to LILAC
+  ! Wrappers and derived types exposing ESMF components to LILAC
 
 
-#include "ESMF.h"
+#include "ESMC.h"
   use ESMF
 
   implicit none
@@ -204,18 +204,18 @@ contains
 
     ! Set the entry points for standard ESMF Component methods
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
-                              userRoutine=atoms_init, rc=rc)
+         userRoutine=atoms_init, rc=rc)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
-                              userRoutine=atoms_copy_atm_to_lilac, phase=1, rc=rc)
+         userRoutine=atoms_copy_atm_to_lilac, phase=1, rc=rc)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
-                              userRoutine=atoms_copy_lilac_to_atm, phase=2, rc=rc)
+         userRoutine=atoms_copy_lilac_to_atm, phase=2, rc=rc)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
-                              userRoutine=atoms_final, rc=rc)
+         userRoutine=atoms_final, rc=rc)
     ! TODO: check rcs
 
     rc = ESMF_SUCCESS
 
-  end subroutine
+  end subroutine atoms_register
 
   subroutine land_register(comp, rc)
     type(ESMF_GridComp)   :: comp   ! must not be optional
@@ -225,16 +225,16 @@ contains
 
     ! Set the entry points for standard ESMF Component methods
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
-                              userRoutine=land_init, rc=rc)
+         userRoutine=land_init, rc=rc)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
-                              userRoutine=land_run, rc=rc)
+         userRoutine=land_run, rc=rc)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
-                              userRoutine=land_final, rc=rc)
+         userRoutine=land_final, rc=rc)
     ! TODO: check rcs
 
     rc = ESMF_SUCCESS
 
-  end subroutine
+  end subroutine land_register
 
   subroutine cpl_register(comp, rc)
     type(ESMF_GridComp)   :: comp   ! must not be optional
@@ -255,15 +255,15 @@ contains
 
     rc = ESMF_SUCCESS
 
-  end subroutine
+  end subroutine cpl_register
 
   function return_error(rc, returnrc)
     ! fight with this later
     integer, intent(in) :: rc, returnrc
     if (ESMF_LogFoundError(rc, ESMF_ERR_PASSTHRU, ESMF_CONTEXT, rcToReturn=returnrc)) then
-      return_error = .true.
+       return_error = .true.
     else
-      return_error = .false.
+       return_error = .false.
     endif
 
   end function return_error

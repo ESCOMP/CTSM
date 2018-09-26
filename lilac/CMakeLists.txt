@@ -3,9 +3,10 @@ cmake_minimum_required(VERSION 2.8.12.1)
 project(LILAC Fortran)
 enable_language(Fortran)
 
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/CMakeModules")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/CMakeModules")
 
-find_package (ESMF)
+find_package(MPI REQUIRED)
+find_package(ESMF REQUIRED)
 
 # Local CMake modules
 
@@ -25,8 +26,11 @@ endif()
 set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${bounds}")
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${dialect}")
 
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}\ ${ESMF_COMPILER_LINE}")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_COMPILER_LINE}")
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_LINK_LINE} -g -cpp")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I /usr/include/ -I/usr/src/lilac/external/esmf/src/Infrastructure/Util/include")
+
+message("CMAKE_Fortran_FLAGS:" ${CMAKE_Fortran_FLAGS})
 
 add_subdirectory(lilac)
 add_subdirectory(tests)

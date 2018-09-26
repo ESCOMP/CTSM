@@ -2,7 +2,7 @@ FROM centos:latest
 LABEL description="LILAC development environment"
 
 RUN yum install -y curl; yum upgrade -y; yum update -y;  yum clean all
-RUN yum -y install wget bzip2 gcc gcc-c++ gcc-gfortran mpich make git
+RUN yum -y install wget bzip2 gcc gcc-c++ gcc-gfortran mpich-devel make git
 
 WORKDIR /usr/src/lilac/
 

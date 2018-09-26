@@ -1,6 +1,5 @@
 module lilac
 
-#include "ESMF.h"
   use ESMF
 
   use atmos_comp, only : atmos_setvm, atmos_register
@@ -21,14 +20,14 @@ module lilac
 contains
 
   type, public :: LilacType
-    private
+     private
 
-    type(ESMFInfoType)             :: esmf_info
+     type(ESMFInfoType)             :: esmf_info
 
-  contains
-    procedure, public  :: init  => init
-    procedure, public  :: run => run
-    procedure, public  :: final => final
+   contains
+     procedure, public  :: init  => init
+     procedure, public  :: run => run
+     procedure, public  :: final => final
   end type LilacType
 
 contains

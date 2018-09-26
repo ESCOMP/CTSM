@@ -7,8 +7,11 @@ echo "building lilac"
 
 # build lilac
 mkdir -p /lilac/build
+
+export CMAKE_PREFIX_PATH=/usr/lib64/mpich/bin
+
 cd /lilac/build && cmake ..
-make -j 4
+make # -j 4
 
 echo "done building lilac, time to run the tests..."
 
