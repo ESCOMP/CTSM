@@ -86,7 +86,7 @@ module WaterType
   ! !PRIVATE TYPES:
 
   ! This type holds instances needed for bulk water or for a single tracer
-  type, private :: one_bulk_or_tracer_type
+  type, private :: bulk_or_tracer_type
      private
 
      ! ------------------------------------------------------------------------
@@ -108,7 +108,7 @@ module WaterType
      class(water_info_base_type) , pointer :: info
      type(water_tracer_container_type) :: vars
 
-  end type one_bulk_or_tracer_type
+  end type bulk_or_tracer_type
 
   !
   ! !PUBLIC TYPES:
@@ -145,7 +145,7 @@ module WaterType
      type(waterlnd2atmbulk_type), pointer, public    :: waterlnd2atmbulk_inst
      type(wateratm2lndbulk_type), pointer, public    :: wateratm2lndbulk_inst
 
-     type(one_bulk_or_tracer_type), allocatable, public :: bulk_and_tracers(:)
+     type(bulk_or_tracer_type), allocatable, public  :: bulk_and_tracers(:)
 
      ! ------------------------------------------------------------------------
      ! Private data members
