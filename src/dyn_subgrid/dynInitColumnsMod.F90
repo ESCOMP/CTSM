@@ -226,6 +226,7 @@ contains
     type(water_type)        , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: i
     
     character(len=*), parameter :: subname = 'copy_state'
     !-----------------------------------------------------------------------
@@ -242,9 +243,26 @@ contains
 
     temperature_inst%t_soisno_col(c_new,1:) = temperature_inst%t_soisno_col(c_template,1:)
 
-    call water_inst%CopyStateForNewColumn( &
-         c_new = c_new, &
-         c_template = c_template)
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+
+       associate( &
+            waterstate_inst => water_inst%bulk_and_tracers(i)%waterstate_inst)
+
+       ! TODO(wjs, 2016-08-31) If we had more general uses of this initial template col
+       ! infrastructure (copying state between very different landunits), then we might need
+       ! to handle bedrock layers - e.g., zeroing out any water that would be added to a
+       ! bedrock layer(?). But for now we just use this initial template col infrastructure
+       ! for nat veg -> crop, for which the bedrock will be the same, so we're not dealing
+       ! with that complexity for now.
+       waterstate_inst%h2osoi_liq_col(c_new,1:) = waterstate_inst%h2osoi_liq_col(c_template,1:)
+       waterstate_inst%h2osoi_ice_col(c_new,1:) = waterstate_inst%h2osoi_ice_col(c_template,1:)
+       waterstate_inst%h2osoi_vol_col(c_new,1:) = waterstate_inst%h2osoi_vol_col(c_template,1:)
+
+       waterstate_inst%wa_col(c_new) = waterstate_inst%wa_col(c_template)
+
+       end associate
+
+    end do
 
   end subroutine copy_state
 

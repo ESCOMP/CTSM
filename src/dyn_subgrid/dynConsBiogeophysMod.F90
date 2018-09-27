@@ -9,41 +9,42 @@ module dynConsBiogeophysMod
   ! cover.
   !
   ! !USES:
-  use shr_kind_mod      , only : r8 => shr_kind_r8
-  use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
-  use UrbanParamsType   , only : urbanparams_type
-  use EnergyFluxType    , only : energyflux_type
-  use SoilHydrologyType , only : soilhydrology_type  
-  use SoilStateType     , only : soilstate_type
-  use TemperatureType   , only : temperature_type
-  use WaterFluxType     , only : waterflux_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterStateType    , only : waterstate_type
-  use WaterDiagnosticType, only : waterdiagnostic_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use WaterBalanceType    , only : waterbalance_type
-  use TotalWaterAndHeatMod, only : ComputeLiqIceMassNonLake, ComputeLiqIceMassLake
-  use TotalWaterAndHeatMod, only : ComputeHeatNonLake, ComputeHeatLake
-  use TotalWaterAndHeatMod, only : AdjustDeltaHeatForDeltaLiq
-  use TotalWaterAndHeatMod, only : heat_base_temp
-  use subgridAveMod     , only : p2c, c2g
-  use LandunitType      , only : lun
-  use ColumnType        , only : col                
-  use PatchType         , only : patch                
-  use clm_varcon        , only : tfrz, cpliq, hfus
-  use dynSubgridControlMod, only : get_for_testing_zero_dynbal_fluxes
+  use shr_kind_mod            , only : r8 => shr_kind_r8
+  use shr_log_mod             , only : errMsg => shr_log_errMsg
+  use decompMod               , only : bounds_type
+  use UrbanParamsType         , only : urbanparams_type
+  use EnergyFluxType          , only : energyflux_type
+  use SoilHydrologyType       , only : soilhydrology_type
+  use SoilStateType           , only : soilstate_type
+  use TemperatureType         , only : temperature_type
+  use WaterFluxType           , only : waterflux_type
+  use WaterStateBulkType      , only : waterstatebulk_type
+  use WaterStateType          , only : waterstate_type
+  use WaterDiagnosticType     , only : waterdiagnostic_type
+  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use WaterBalanceType        , only : waterbalance_type
+  use WaterType               , only : water_type
+  use TotalWaterAndHeatMod    , only : ComputeLiqIceMassNonLake, ComputeLiqIceMassLake
+  use TotalWaterAndHeatMod    , only : ComputeHeatNonLake, ComputeHeatLake
+  use TotalWaterAndHeatMod    , only : AdjustDeltaHeatForDeltaLiq
+  use TotalWaterAndHeatMod    , only : heat_base_temp
+  use subgridAveMod           , only : p2c, c2g
+  use LandunitType            , only : lun
+  use ColumnType              , only : col
+  use PatchType               , only : patch
+  use clm_varcon              , only : tfrz, cpliq, hfus
+  use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   private
   !
-  public :: dyn_heat_content_init         ! compute grid-level heat content, before land cover change
-  public :: dyn_water_content_final       ! compute grid-level water content and dynbal fluxes after landcover change, for a single water tracer or bulk water
-  public :: dyn_heat_content_final        ! compute grid-level heat content and dynbal fluxes after land cover change
-  public :: dyn_water_content             ! compute gridcell total liquid and ice water contents
+  public :: dyn_hwcontent_init         ! compute grid-level heat and water content, before land cover change
+  public :: dyn_hwcontent_final        ! compute grid-level heat and water content and dynbal fluxes after land cover change
   !
   ! !PRIVATE MEMBER FUNCTIONS
+  private :: dyn_water_content_final      ! compute grid-level water content and dynbal fluxes after landcover change, for a single water tracer or bulk water
+  private :: dyn_water_content            ! compute gridcell total liquid and ice water contents
   private :: dyn_heat_content             ! compute gridcell total heat contents
 
   character(len=*), parameter, private :: sourcefile = &
@@ -53,15 +54,14 @@ module dynConsBiogeophysMod
 contains
 
   !---------------------------------------------------------------------------
-  subroutine dyn_heat_content_init(bounds, &
+  subroutine dyn_hwcontent_init(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, &
-       temperature_inst)
+       water_inst, temperature_inst)
     !
     ! !DESCRIPTION:
-    ! Compute grid cell-level heat content before land cover change
+    ! Compute grid cell-level heat and water content before land cover change
     !
     ! Should be called BEFORE any subgrid weight updates this time step
     !
@@ -73,23 +73,131 @@ contains
     integer                  , intent(in)    :: filter_lakec(:)
     type(urbanparams_type)   , intent(in)    :: urbanparams_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(waterstatebulk_type), intent(in)    :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
+    type(water_type)         , intent(inout) :: water_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: i
 
     !-------------------------------------------------------------------------------
-    
+
+    associate( &
+         begg => bounds%begg, &
+         endg => bounds%endg  &
+         )
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
+       call dyn_water_content(bounds, &
+            num_nolakec, filter_nolakec, &
+            num_lakec, filter_lakec, &
+            bulk_or_tracer%waterstate_inst, &
+            bulk_or_tracer%waterdiagnostic_inst, &
+            liquid_mass = bulk_or_tracer%waterbalance_inst%liq1_grc(begg:endg), &
+            ice_mass = bulk_or_tracer%waterbalance_inst%ice1_grc(begg:endg))
+       end associate
+    end do
+
     call dyn_heat_content( bounds, &
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
          urbanparams_inst, soilstate_inst, &
-         temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-         heat_grc = temperature_inst%heat1_grc(bounds%begg:bounds%endg), &
-         liquid_water_temp_grc = temperature_inst%liquid_water_temp1_grc(bounds%begg:bounds%endg))
+         temperature_inst, &
+         water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+         heat_grc = temperature_inst%heat1_grc(begg:endg), &
+         liquid_water_temp_grc = temperature_inst%liquid_water_temp1_grc(begg:endg))
 
-  end subroutine dyn_heat_content_init
+    end associate
+
+  end subroutine dyn_hwcontent_init
+
+  !---------------------------------------------------------------------------
+  subroutine dyn_hwcontent_final(bounds, &
+       num_nolakec, filter_nolakec, &
+       num_lakec, filter_lakec, &
+       urbanparams_inst, soilstate_inst, &
+       water_inst, &
+       temperature_inst, energyflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! Compute grid cell-level heat and water content and dynbal fluxes after land cover change
+    !
+    ! Should be called AFTER all subgrid weight updates this time step
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)        , intent(in)    :: bounds  
+    integer                  , intent(in)    :: num_nolakec
+    integer                  , intent(in)    :: filter_nolakec(:)
+    integer                  , intent(in)    :: num_lakec
+    integer                  , intent(in)    :: filter_lakec(:)
+    type(urbanparams_type)   , intent(in)    :: urbanparams_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
+    type(water_type)         , intent(inout) :: water_inst
+    type(temperature_type)   , intent(inout) :: temperature_inst
+    type(energyflux_type)    , intent(inout) :: energyflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: i
+    integer  :: g     ! grid cell index
+    real(r8) :: this_delta_liq(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk or one tracer
+    real(r8) :: delta_liq_bulk(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk water
+    real(r8) :: delta_heat(bounds%begg:bounds%endg) ! change in gridcell heat content
+    !---------------------------------------------------------------------------
+
+    associate( &
+         begg => bounds%begg, &
+         endg => bounds%endg)
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
+       call dyn_water_content_final(bounds, &
+            num_nolakec, filter_nolakec, &
+            num_lakec, filter_lakec, &
+            bulk_or_tracer%waterstate_inst, &
+            bulk_or_tracer%waterdiagnostic_inst, &
+            bulk_or_tracer%waterbalance_inst, &
+            bulk_or_tracer%waterflux_inst, &
+            delta_liq = this_delta_liq(begg:endg))
+       if (i == water_inst%i_bulk) then
+          delta_liq_bulk(begg:endg) = this_delta_liq(begg:endg)
+       end if
+       end associate
+    end do
+
+    call dyn_heat_content( bounds,                                &
+         num_nolakec, filter_nolakec, &
+         num_lakec, filter_lakec, &
+         urbanparams_inst, soilstate_inst, &
+         temperature_inst, &
+         water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+         heat_grc = temperature_inst%heat2_grc(begg:endg), &
+         liquid_water_temp_grc = temperature_inst%liquid_water_temp2_grc(begg:endg))
+
+    if (get_for_testing_zero_dynbal_fluxes()) then
+       do g = begg, endg
+          delta_heat(g) = 0._r8
+       end do
+    else
+       do g = begg, endg
+          delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
+       end do
+    end if
+
+    call AdjustDeltaHeatForDeltaLiq( &
+         bounds, &
+         delta_liq = delta_liq_bulk(begg:endg), &
+         liquid_water_temp1 = temperature_inst%liquid_water_temp1_grc(begg:endg), &
+         liquid_water_temp2 = temperature_inst%liquid_water_temp2_grc(begg:endg), &
+         delta_heat = delta_heat(begg:endg))
+
+    call energyflux_inst%eflx_dynbal_dribbler%set_curr_delta(bounds, &
+         delta_heat(begg:endg))
+    call energyflux_inst%eflx_dynbal_dribbler%get_curr_flux(bounds, &
+         energyflux_inst%eflx_dynbal_grc(begg:endg))
+
+    end associate
+
+  end subroutine dyn_hwcontent_final
 
   !-----------------------------------------------------------------------
   subroutine dyn_water_content_final(bounds, &
@@ -104,7 +212,7 @@ contains
     ! a single water tracer or bulk water
     !
     ! !ARGUMENTS:
-    type(bounds_type)           , intent(in)    :: bounds  
+    type(bounds_type)           , intent(in)    :: bounds
     integer                     , intent(in)    :: num_nolakec
     integer                     , intent(in)    :: filter_nolakec(:)
     integer                     , intent(in)    :: num_lakec
@@ -160,80 +268,6 @@ contains
     end associate
 
   end subroutine dyn_water_content_final
-
-
-  !---------------------------------------------------------------------------
-  subroutine dyn_heat_content_final(bounds, &
-       num_nolakec, filter_nolakec, &
-       num_lakec, filter_lakec, &
-       urbanparams_inst, soilstate_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, &
-       temperature_inst, energyflux_inst, &
-       delta_liq)
-    !
-    ! !DESCRIPTION:
-    ! Compute grid cell-level heat content and dynbal fluxes after land cover change
-    !
-    ! Should be called AFTER all subgrid weight updates this time step
-    !
-    ! !ARGUMENTS:
-    type(bounds_type)        , intent(in)    :: bounds  
-    integer                  , intent(in)    :: num_nolakec
-    integer                  , intent(in)    :: filter_nolakec(:)
-    integer                  , intent(in)    :: num_lakec
-    integer                  , intent(in)    :: filter_lakec(:)
-    type(urbanparams_type)   , intent(in)    :: urbanparams_inst
-    type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(waterstatebulk_type), intent(in)    :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
-    type(temperature_type)   , intent(inout) :: temperature_inst
-    type(energyflux_type)    , intent(inout) :: energyflux_inst
-    real(r8)                 , intent(in)    :: delta_liq(bounds%begg:)  ! change in gridcell h2o liq content
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: g     ! grid cell index
-    real(r8) :: delta_heat(bounds%begg:bounds%endg) ! change in gridcell heat content
-    !---------------------------------------------------------------------------
-
-    SHR_ASSERT_ALL((ubound(delta_liq) == [bounds%endg]), errMsg(sourcefile, __LINE__))
-
-    associate( &
-         begg => bounds%begg, &
-         endg => bounds%endg)
-
-    call dyn_heat_content( bounds,                                &
-         num_nolakec, filter_nolakec, &
-         num_lakec, filter_lakec, &
-         urbanparams_inst, soilstate_inst, &
-         temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-         heat_grc = temperature_inst%heat2_grc(bounds%begg:bounds%endg), &
-         liquid_water_temp_grc = temperature_inst%liquid_water_temp2_grc(bounds%begg:bounds%endg))
-
-    if (get_for_testing_zero_dynbal_fluxes()) then
-       do g = begg, endg
-          delta_heat(g) = 0._r8
-       end do
-    else
-       do g = begg, endg
-          delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
-       end do
-    end if
-
-    call AdjustDeltaHeatForDeltaLiq( &
-         bounds, &
-         delta_liq = delta_liq(bounds%begg:bounds%endg), &
-         liquid_water_temp1 = temperature_inst%liquid_water_temp1_grc(bounds%begg:bounds%endg), &
-         liquid_water_temp2 = temperature_inst%liquid_water_temp2_grc(bounds%begg:bounds%endg), &
-         delta_heat = delta_heat(bounds%begg:bounds%endg))
-
-    call energyflux_inst%eflx_dynbal_dribbler%set_curr_delta(bounds, &
-         delta_heat(begg:endg))
-    call energyflux_inst%eflx_dynbal_dribbler%get_curr_flux(bounds, &
-         energyflux_inst%eflx_dynbal_grc(begg:endg))
-
-    end associate
-
-  end subroutine dyn_heat_content_final
 
   !-----------------------------------------------------------------------
   subroutine dyn_water_content(bounds, &

@@ -25,7 +25,7 @@ module clm_driver
   use abortutils             , only : endrun
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
-  use BalanceCheckMod        , only : BalanceCheck
+  use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
   !
   use CanopyTemperatureMod   , only : CanopyTemperature ! (formerly Biogeophysics1Mod)
   use UrbanTimeVarType       , only : urbantv_type
@@ -363,7 +363,7 @@ contains
     ! conserved when weights change (instead the difference is put in the grid cell-level
     ! terms, qflx_liq_dynbal, etc.). In the future, we may want to change the balance
     ! checks to ensure that the grid cell-level water is conserved, considering
-    ! qflx_liq_dynbal; in this case, the call to WaterBalanceInit should be moved to
+    ! qflx_liq_dynbal; in this case, the call to BeginWaterBalance should be moved to
     ! before the weight updates.
     !
     ! For carbon & nitrogen: This needs to be done after dynSubgrid_driver, because the
@@ -375,10 +375,10 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call t_startf('begwbal')
-       call water_inst%WaterBalanceInit(bounds_clump,        &
+       call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
-            soilhydrology_inst)
+            water_inst, soilhydrology_inst)
 
        call t_stopf('begwbal')
 

@@ -17,12 +17,20 @@ module WaterType
   !
   ! To loop through bulk and all tracers, use code like this:
   !    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-  !       call some_subroutine(..., water_inst%bulk_and_tracers(i)%waterflux_inst, ...)
+  !       associate( &
+  !            waterflux_inst => water_inst%bulk_and_tracers(i)%waterflux_inst, &
+  !            [and other associations, as necessary])
+  !       [Do calculations involving waterflux_inst, etc.]
+  !       end associate
   !    end do
   !
   ! To loop through all tracers (not bulk), use code like this:
   !    do i = water_inst%tracers_beg, water_inst%tracers_end
-  !       call some_subroutine(..., water_inst%bulk_and_tracers(i)%waterflux_inst, ...)
+  !       associate( &
+  !            waterflux_inst => water_inst%bulk_and_tracers(i)%waterflux_inst, &
+  !            [and other associations, as necessary])
+  !       [Do calculations involving waterflux_inst, etc.]
+  !       end associate
   !    end do
   !
   ! To loop through all isotopes (not bulk or other water tracers), use code like this:
@@ -31,9 +39,18 @@ module WaterType
   !    do i = water_inst%tracers_beg, water_inst%tracers_end
   !       if (water_inst%IsIsotope(i)) then
   !          call water_inst%GetIsotopeInfo(i, iso_info)
-  !          call some_subroutine(..., iso_info, water_inst%bulk_and_tracers(i)%waterflux_inst, ...)
+  !          associate( &
+  !               waterflux_inst => water_inst%bulk_and_tracers(i)%waterflux_inst, &
+  !               [and other associations, as necessary])
+  !          [Do calculations involving iso_info, waterflux_inst, etc.]
+  !          end associate
   !       end if
   !    end do
+  !
+  ! The associate statements given above aren't crucial. If the block of code refers to
+  ! multiple instances (waterstate, waterflux, etc.), but only refers to each one once or
+  ! twice, it can be best to just have:
+  !    associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
   !
   ! !USES:
 #include "shr_assert.h"
@@ -61,9 +78,6 @@ module WaterType
   use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : CompareBulkToTracer
-  use SoilHydrologyType  , only : soilhydrology_type
-  use dynConsBiogeophysMod, only : dyn_water_content, dyn_water_content_final
-  use BalanceCheckMod, only : BeginWaterBalance
 
   implicit none
   private
@@ -149,10 +163,6 @@ module WaterType
      procedure, public :: UpdateAccVars
      procedure, public :: Restart
      procedure, public :: SetAtm2lndNondownscaledTracers
-     procedure, public :: CopyStateForNewColumn
-     procedure, public :: DynWaterContentInit
-     procedure, public :: DynWaterContentFinal
-     procedure, public :: WaterBalanceInit
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
@@ -718,152 +728,6 @@ contains
     end do
 
   end subroutine SetAtm2lndNondownscaledTracers
-
-  !-----------------------------------------------------------------------
-  subroutine CopyStateForNewColumn(this, c_new, c_template)
-    !
-    ! !DESCRIPTION:
-    ! When a new column comes into existence via dynamic landunits/columns: Copy
-    ! necessary state variables from a template column (index given by c_template) into
-    ! the new column (index given by c_new).
-    !
-    ! !ARGUMENTS:
-    class(water_type), intent(inout) :: this
-    integer, intent(in) :: c_new      ! index of newly-active column
-    integer, intent(in) :: c_template ! index of column to use as a template
-    !
-    ! !LOCAL VARIABLES:
-    integer :: i
-
-    character(len=*), parameter :: subname = 'CopyStateForNewColumn'
-    !-----------------------------------------------------------------------
-
-    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
-       call this%bulk_and_tracers(i)%waterstate_inst%CopyStateForNewColumn( &
-            c_new = c_new, &
-            c_template = c_template)
-    end do
-
-  end subroutine CopyStateForNewColumn
-
-  !-----------------------------------------------------------------------
-  subroutine DynWaterContentInit(this, bounds, &
-       num_nolakec, filter_nolakec, &
-       num_lakec, filter_lakec)
-    !
-    ! !DESCRIPTION:
-    ! Compute grid cell-level water content before land cover change
-    !
-    ! Should be called BEFORE any subgrid weight updates this time step
-    !
-    ! !ARGUMENTS:
-    class(water_type) , intent(inout) :: this
-    type(bounds_type) , intent(in)    :: bounds
-    integer           , intent(in)    :: num_nolakec
-    integer           , intent(in)    :: filter_nolakec(:)
-    integer           , intent(in)    :: num_lakec
-    integer           , intent(in)    :: filter_lakec(:)
-    !
-    ! !LOCAL VARIABLES:
-    integer :: i
-
-    character(len=*), parameter :: subname = 'DynWaterContentInit'
-    !-----------------------------------------------------------------------
-
-    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
-       call dyn_water_content(bounds, &
-            num_nolakec, filter_nolakec, &
-            num_lakec, filter_lakec, &
-            this%bulk_and_tracers(i)%waterstate_inst, &
-            this%bulk_and_tracers(i)%waterdiagnostic_inst, &
-            liquid_mass = this%bulk_and_tracers(i)%waterbalance_inst%liq1_grc(bounds%begg:bounds%endg), &
-            ice_mass = this%bulk_and_tracers(i)%waterbalance_inst%ice1_grc(bounds%begg:bounds%endg))
-    end do
-
-  end subroutine DynWaterContentInit
-
-  !-----------------------------------------------------------------------
-  subroutine DynWaterContentFinal(this, bounds, &
-       num_nolakec, filter_nolakec, &
-       num_lakec, filter_lakec, &
-       delta_liq_bulk)
-    !
-    ! !DESCRIPTION:
-    ! Compute grid cell-level water content after land cover change, and compute the
-    ! dynbal water fluxes.
-    !
-    ! Should be called AFTER all subgrid weight updates this time step
-    !
-    ! !ARGUMENTS:
-    class(water_type) , intent(inout) :: this
-    type(bounds_type) , intent(in)    :: bounds
-    integer           , intent(in)    :: num_nolakec
-    integer           , intent(in)    :: filter_nolakec(:)
-    integer           , intent(in)    :: num_lakec
-    integer           , intent(in)    :: filter_lakec(:)
-    real(r8)          , intent(out)   :: delta_liq_bulk(bounds%begg:)  ! change in gridcell h2o liq content for bulk water
-    !
-    ! !LOCAL VARIABLES:
-    integer :: i
-    real(r8) :: delta_liq_temp(bounds%begg:bounds%endg)
-
-    character(len=*), parameter :: subname = 'DynWaterContentFinal'
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL((ubound(delta_liq_bulk) == [bounds%endg]), errMsg(sourcefile, __LINE__))
-
-    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
-       call dyn_water_content_final(bounds, &
-            num_nolakec, filter_nolakec, &
-            num_lakec, filter_lakec, &
-            this%bulk_and_tracers(i)%waterstate_inst, &
-            this%bulk_and_tracers(i)%waterdiagnostic_inst, &
-            this%bulk_and_tracers(i)%waterbalance_inst, &
-            this%bulk_and_tracers(i)%waterflux_inst, &
-            delta_liq = delta_liq_temp(bounds%begg:bounds%endg))
-       if (i == this%i_bulk) then
-          delta_liq_bulk(bounds%begg:bounds%endg) = delta_liq_temp(bounds%begg:bounds%endg)
-       end if
-    end do
-
-  end subroutine DynWaterContentFinal
-
-  !-----------------------------------------------------------------------
-  subroutine WaterBalanceInit(this, bounds, &
-       num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst)
-    !
-    ! !DESCRIPTION:
-    ! Initialize column-level water balance at beginning of time step, for bulk water and
-    ! each water tracer
-    !
-    ! !ARGUMENTS:
-    class(water_type), intent(inout) :: this
-    type(bounds_type)         , intent(in)    :: bounds
-    integer                   , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
-    integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
-    integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
-    integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
-    type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
-    !
-    ! !LOCAL VARIABLES:
-    integer :: i
-
-    character(len=*), parameter :: subname = 'WaterBalanceInit'
-    !-----------------------------------------------------------------------
-
-    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
-       call BeginWaterBalance(bounds, &
-            num_nolakec, filter_nolakec, &
-            num_lakec, filter_lakec, &
-            soilhydrology_inst, &
-            this%bulk_and_tracers(i)%waterstate_inst, &
-            this%bulk_and_tracers(i)%waterdiagnostic_inst, &
-            this%bulk_and_tracers(i)%waterbalance_inst)
-    end do
-
-  end subroutine WaterBalanceInit
-
 
   !-----------------------------------------------------------------------
   function IsIsotope(this, i)

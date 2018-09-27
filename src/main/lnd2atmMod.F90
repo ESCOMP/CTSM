@@ -85,15 +85,17 @@ contains
     !------------------------------------------------------------------------
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-      call c2g(bounds, &
-           water_inst%bulk_and_tracers(i)%waterstate_inst%h2osno_col(bounds%begc:bounds%endc), &
-           water_inst%bulk_and_tracers(i)%waterlnd2atm_inst%h2osno_grc(bounds%begg:bounds%endg), &
-           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+       associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
+       call c2g(bounds, &
+            bulk_or_tracer%waterstate_inst%h2osno_col(bounds%begc:bounds%endc), &
+            bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-      do g = bounds%begg,bounds%endg
-         water_inst%bulk_and_tracers(i)%waterlnd2atm_inst%h2osno_grc(g) = &
-              water_inst%bulk_and_tracers(i)%waterlnd2atm_inst%h2osno_grc(g)/1000._r8
-      end do
+       do g = bounds%begg,bounds%endg
+          bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g) = &
+               bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g)/1000._r8
+       end do
+       end associate
     end do
 
     call c2g(bounds, nlevgrnd, &

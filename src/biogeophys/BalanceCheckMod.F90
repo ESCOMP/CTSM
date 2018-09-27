@@ -25,6 +25,7 @@ module BalanceCheckMod
   use Wateratm2lndType   , only : wateratm2lnd_type
   use WaterBalanceType   , only : waterbalance_type
   use WaterFluxType      , only : waterflux_type
+  use WaterType          , only : water_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake, ComputeWaterMassLake
   use GridcellType       , only : grc                
   use LandunitType       , only : lun                
@@ -44,6 +45,10 @@ module BalanceCheckMod
   public :: BeginWaterBalance        ! Initialize water balance check
   public :: BalanceCheck             ! Water and energy balance check
 
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: BeginWaterBalanceSingle ! Initialize water balance check for bulk or a single tracer
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -53,10 +58,47 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+       water_inst, soilhydrology_inst)
+    !
+    ! !DESCRIPTION:
+    ! Initialize column-level water balance at beginning of time step, for bulk water and
+    ! each water tracer
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)         , intent(in)    :: bounds
+    integer                   , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
+    integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
+    integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
+    integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
+    type(water_type)          , intent(inout) :: water_inst
+    type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'BeginWaterBalance'
+    !-----------------------------------------------------------------------
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       call BeginWaterBalanceSingle(bounds, &
+            num_nolakec, filter_nolakec, &
+            num_lakec, filter_lakec, &
+            soilhydrology_inst, &
+            water_inst%bulk_and_tracers(i)%waterstate_inst, &
+            water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
+            water_inst%bulk_and_tracers(i)%waterbalance_inst)
+    end do
+
+  end subroutine BeginWaterBalance
+
+  !-----------------------------------------------------------------------
+  subroutine BeginWaterBalanceSingle(bounds, &
+       num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
        soilhydrology_inst, waterstate_inst, waterdiagnostic_inst, waterbalance_inst)
     !
     ! !DESCRIPTION:
-    ! Initialize column-level water balance at beginning of time step
+    ! Initialize column-level water balance at beginning of time step, for bulk or a
+    ! single tracer
     !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds     
@@ -103,7 +145,7 @@ contains
 
     end associate 
 
-  end subroutine BeginWaterBalance
+  end subroutine BeginWaterBalanceSingle
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &

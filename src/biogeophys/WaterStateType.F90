@@ -46,7 +46,6 @@ module WaterStateType
 
      procedure, public  :: Init
      procedure, public  :: Restart
-     procedure, public  :: CopyStateForNewColumn
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
@@ -650,45 +649,5 @@ contains
     endif   ! end if if-read flag
 
   end subroutine Restart
-
-  !-----------------------------------------------------------------------
-  subroutine CopyStateForNewColumn(this, c_new, c_template)
-    !
-    ! !DESCRIPTION:
-    ! When a new column comes into existence via dynamic landunits/columns: Copy
-    ! necessary state variables from a template column (index given by c_template) into
-    ! the new column (index given by c_new).
-    !
-    ! !ARGUMENTS:
-    class(waterstate_type), intent(inout) :: this
-    integer, intent(in) :: c_new      ! index of newly-active column
-    integer, intent(in) :: c_template ! index of column to use as a template
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'CopyStateForNewColumn'
-    !-----------------------------------------------------------------------
-
-    ! We only copy the below-ground portion of these multi-level variables, not the
-    ! above-ground (snow) portion. This is because it is challenging to initialize the
-    ! snow pack in a consistent state, requiring copying many more state variables - and
-    ! if you initialize it in a partly-inconsistent state, you get balance errors. So, for
-    ! now at least, we (Dave Lawrence, Keith Oleson, Bill Sacks) have decided that it's
-    ! safest to just let the snow pack in the new column start at cold start conditions.
-
-    ! TODO(wjs, 2016-08-31) If we had more general uses of this initial template col
-    ! infrastructure (copying state between very different landunits), then we might need
-    ! to handle bedrock layers - e.g., zeroing out any water that would be added to a
-    ! bedrock layer(?). But for now we just use this initial template col infrastructure
-    ! for nat veg -> crop, for which the bedrock will be the same, so we're not dealing
-    ! with that complexity for now.
-    this%h2osoi_liq_col(c_new,1:) = this%h2osoi_liq_col(c_template,1:)
-    this%h2osoi_ice_col(c_new,1:) = this%h2osoi_ice_col(c_template,1:)
-    this%h2osoi_vol_col(c_new,1:) = this%h2osoi_vol_col(c_template,1:)
-
-    this%wa_col(c_new) = this%wa_col(c_template)
-
-  end subroutine CopyStateForNewColumn
-
 
 end module WaterStateType
