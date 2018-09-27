@@ -54,30 +54,30 @@ module WaterType
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod            , only : r8 => shr_kind_r8
-  use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use abortutils              , only : endrun
-  use decompMod               , only : bounds_type
-  use clm_varctl              , only : iulog
-  use clm_varpar              , only : nlevsno
-  use ncdio_pio               , only : file_desc_t
-  use WaterFluxBulkType       , only : waterfluxbulk_type
-  use WaterFluxType           , only : waterflux_type
-  use WaterStateBulkType      , only : waterstatebulk_type
-  use WaterStateType          , only : waterstate_type
-  use WaterDiagnosticType     , only : waterdiagnostic_type
-  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
-  use WaterBalanceType        , only : waterbalance_type
-  use WaterInfoBaseType       , only : water_info_base_type
-  use WaterInfoBulkType       , only : water_info_bulk_type
-  use WaterInfoTracerType     , only : water_info_tracer_type
-  use WaterInfoIsotopeType    , only : water_info_isotope_type
-  use Waterlnd2atmType    , only : waterlnd2atm_type
-  use Waterlnd2atmBulkType    , only : waterlnd2atmbulk_type
-  use Wateratm2lndType    , only : wateratm2lnd_type
-  use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : CompareBulkToTracer
+  use shr_kind_mod             , only : r8 => shr_kind_r8
+  use shr_log_mod              , only : errMsg => shr_log_errMsg
+  use abortutils               , only : endrun
+  use decompMod                , only : bounds_type
+  use clm_varctl               , only : iulog
+  use clm_varpar               , only : nlevsno
+  use ncdio_pio                , only : file_desc_t
+  use WaterFluxBulkType        , only : waterfluxbulk_type
+  use WaterFluxType            , only : waterflux_type
+  use WaterStateBulkType       , only : waterstatebulk_type
+  use WaterStateType           , only : waterstate_type
+  use WaterDiagnosticType      , only : waterdiagnostic_type
+  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use WaterBalanceType         , only : waterbalance_type
+  use WaterInfoBaseType        , only : water_info_base_type
+  use WaterInfoBulkType        , only : water_info_bulk_type
+  use WaterInfoTracerType      , only : water_info_tracer_type
+  use WaterInfoIsotopeType     , only : water_info_isotope_type
+  use Waterlnd2atmType         , only : waterlnd2atm_type
+  use Waterlnd2atmBulkType     , only : waterlnd2atmbulk_type
+  use Wateratm2lndType         , only : wateratm2lnd_type
+  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
+  use WaterTracerContainerType , only : water_tracer_container_type
+  use WaterTracerUtils         , only : CompareBulkToTracer
 
   implicit none
   private
