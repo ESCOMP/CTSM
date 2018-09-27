@@ -109,8 +109,8 @@ contains
     bulk_tracer = this%water_inst%GetBulkTracerIndex()
     @assertGreaterThan(bulk_tracer, 0)
 
-    this%water_inst%waterstate_tracer_inst(bulk_tracer)%h2osfc_col(bounds%begc) = &
-         this%water_inst%waterstate_tracer_inst(bulk_tracer)%h2osfc_col(bounds%begc) + 1._r8
+    this%water_inst%bulk_and_tracers(bulk_tracer)%waterstate_inst%h2osfc_col(bounds%begc) = &
+         this%water_inst%bulk_and_tracers(bulk_tracer)%waterstate_inst%h2osfc_col(bounds%begc) + 1._r8
 
     @assertTrue(this%water_inst%DoConsistencyCheck())
 
@@ -141,7 +141,7 @@ contains
     ! We set both the bulk and tracer values explicitly, because we can't rely on these
     ! being set to reasonable values in all layers in initialization
     this%water_inst%waterstatebulk_inst%h2osoi_liq_col(bounds%begc, lev) = 1._r8
-    this%water_inst%waterstate_tracer_inst(bulk_tracer)%h2osoi_liq_col(bounds%begc, lev) = 2._r8
+    this%water_inst%bulk_and_tracers(bulk_tracer)%waterstate_inst%h2osoi_liq_col(bounds%begc, lev) = 2._r8
 
     @assertTrue(this%water_inst%DoConsistencyCheck())
 
