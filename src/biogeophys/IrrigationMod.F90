@@ -624,6 +624,10 @@ contains
        if (pftcon%irrigated(patch%itype(p)) == 1._r8) then 
           m = patch%itype(p)
           this%irrig_method_patch(p) = irrig_method(g,m)
+          ! ensure irrig_method is valid; if not, revert to drip
+          if(irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
+             this%irrig_method_patch(p) = irrig_method_drip
+          endif
        end if
     end do
        
