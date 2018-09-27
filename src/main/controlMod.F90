@@ -202,8 +202,9 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, soil_layerstruct, subgridflag, &
-         irrigate, run_zero_weight_urban, all_active
-
+         irrigate, run_zero_weight_urban, all_active, &
+         crop_fsat_equals_zero
+    
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -601,6 +602,9 @@ contains
 
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    ! Crop saturated excess runoff
+    call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)

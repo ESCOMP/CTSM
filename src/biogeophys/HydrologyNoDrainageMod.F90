@@ -190,7 +190,7 @@ contains
            soilhydrology_inst, soilstate_inst, waterstatebulk_inst)
 
       call saturated_excess_runoff_inst%SaturatedExcessRunoff(&
-           bounds, num_hydrologyc, filter_hydrologyc, col, &
+           bounds, num_hydrologyc, filter_hydrologyc, lun, col, &
            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
 
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &

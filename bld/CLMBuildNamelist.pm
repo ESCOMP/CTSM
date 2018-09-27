@@ -2184,7 +2184,8 @@ sub setup_logic_crop {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "initial_seed_at_planting",
                     'use_crop'=>$nl->get_value('use_crop') );
      } else {
-        error_if_set( $nl, "Can NOT be set without crop on", "baset_mapping", "baset_latvary_slope", "baset_latvary_intercept" );
+	 error_if_set( $nl, "Can NOT be set without crop on", "baset_mapping", "baset_latvary_slope", "baset_latvary_intercept" );
+	 add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_fsat_equals_zero' );
      }
   }
 }
@@ -2768,7 +2769,7 @@ sub setup_logic_irrigation_parameters {
      my $var;
      foreach $var ("irrig_min_lai", "irrig_start_time", "irrig_length",
                    "irrig_target_smp", "irrig_depth", "irrig_threshold_fraction",
-                   "limit_irrigation_if_rof_enabled") {
+                   "limit_irrigation_if_rof_enabled","use_groundwater_irrigation") {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
      }
 

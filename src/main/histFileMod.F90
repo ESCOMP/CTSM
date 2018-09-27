@@ -16,6 +16,7 @@ module histFileMod
   use clm_varcon     , only : spval, ispval, dzsoi_decomp 
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
+  use GetGlobalValuesMod , only : GetGlobalIndex
   use GridcellType   , only : grc                
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -3093,6 +3094,10 @@ contains
           !     long_name='1d landunit index of corresponding column', ncid=ncid)
           ! ----------------------------------------------------------------
 
+          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name=namec, &
+               long_name='1d landunit index of corresponding column', ncid=ncid)
+
+
           call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name=namec, &
                long_name='column weight relative to corresponding gridcell', ncid=ncid)
 
@@ -3134,7 +3139,10 @@ contains
           !     long_name='1d column index of corresponding pft', ncid=ncid)
           ! ----------------------------------------------------------------
 
-          call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
+       call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name=namep, &
+               long_name='1d column index of corresponding pft', ncid=ncid)
+
+       call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
                long_name='pft weight relative to corresponding gridcell', ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_wtlunit', xtype=ncd_double, dim1name=namep, &
@@ -3239,6 +3247,11 @@ contains
        !call ncd_io(varname='cols1d_gi'     , data=col%gridcell, dim1name=namec, ncid=ncid, flag='write')
        !call ncd_io(varname='cols1d_li'     , data=col%landunit, dim1name=namec, ncid=ncid, flag='write')
        ! ----------------------------------------------------------------
+       do c = bounds%begc,bounds%endc
+         icarr(c) =  GetGlobalIndex(decomp_index=col%landunit(c), clmlevel=namel)
+       enddo
+       call ncd_io(varname='cols1d_li', data=icarr            , dim1name=namec, ncid=ncid, flag='write')
+
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_wtlunit', data=col%wtlunit , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_itype_col', data=col%itype , dim1name=namec, ncid=ncid, flag='write')
@@ -3273,7 +3286,11 @@ contains
        !call ncd_io(varname='pfts1d_li'       , data=patch%landunit, dim1name=namep, ncid=ncid, flag='write')
        !call ncd_io(varname='pfts1d_ci'       , data=patch%column  , dim1name=namep, ncid=ncid, flag='write')
        ! ----------------------------------------------------------------
-       call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
+       do p=bounds%begp,bounds%endp
+          iparr(p) = GetGlobalIndex(decomp_index=patch%column(p), clmlevel=namec)
+       enddo
+       call ncd_io(varname='pfts1d_ci'  , data=iparr              , dim1name=namep, ncid=ncid, flag='write')
+
        call ncd_io(varname='pfts1d_wtlunit'  , data=patch%wtlunit , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtcol'    , data=patch%wtcol   , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_itype_veg', data=patch%itype   , dim1name=namep, ncid=ncid, flag='write')
@@ -3426,7 +3443,9 @@ contains
              call htape_timeconst(t, mode='define')
 
              ! Define 3D time-constant field variables only to first primary tape
-             if ( do_3Dtconst .and. t == 1 ) then
+!scs             if ( do_3Dtconst .and. t == 1 ) then
+! try to get z,dz on second history tape
+             if ( do_3Dtconst) then
                 call htape_timeconst3D(t, &
                      bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='define')
                 TimeConst3DVars_Filename = trim(locfnh(t))
@@ -3445,7 +3464,9 @@ contains
           call htape_timeconst(t, mode='write')
 
           ! Write 3D time constant history variables only to first primary tape
-          if ( do_3Dtconst .and. t == 1 .and. tape(t)%ntimes == 1 )then
+!scs          if ( do_3Dtconst .and. t == 1 .and. tape(t)%ntimes == 1 )then
+! write to all history tapes
+          if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
              call htape_timeconst3D(t, &
                   bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
              do_3Dtconst = .false.

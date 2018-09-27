@@ -115,11 +115,12 @@ Otherwise use the fraction straight up              (the default for CLM5.0)
 </entry>
 
 <entry id="soil_layerstruct" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m" >
+       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,22SL_50m" >
 10SL_3.5m    = standard CLM4 and CLM4.5 version
 23SL_3.5m    = more vertical layers for permafrost simulations 
 49SL_10m     = 49 layer soil column, 10m of soil, 5 bedrock layers
 20SL_8.5m    = 20 layer soil column, 8m of soil, 5 bedrock layers
+22SL_50m     = 22 layer soil column, 8m of soil, 2 variable thickness layers, 5 bedrock layers
 </entry>
 
 <entry id="use_bedrock" type="logical" category="clm_physics"
@@ -437,9 +438,19 @@ Only applies if using an active runoff (ROF) model; otherwise, river storage-bas
 is turned off regardless of the setting of this namelist variable.
 </entry>
 
+<entry id="use_groundwater_irrigation" type="logical" category="clm_physics"
+       group="irrigation_inparm" valid_values="" >
+If TRUE, supply irrigation from groundwater (in addition to surface water).
+</entry>
+
 <entry id="irrigate" type="logical" category="clm_physics"
        group="clm_inparm"  >
 If TRUE, irrigation will be active.
+</entry> 
+
+<entry id="crop_fsat_equals_zero" type="logical" category="clm_physics"
+       group="clm_inparm"  >
+If TRUE, fsat will be set to zero for crop columns.
 </entry> 
 
 <entry id="maxpatch_glcmec" type="integer"  category="clm_physics"

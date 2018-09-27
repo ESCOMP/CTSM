@@ -113,6 +113,9 @@ module IrrigationMod
      ! regardless of the value of this flag.
      logical :: limit_irrigation_if_rof_enabled
 
+     ! use groundwater supply for irrigation (in addition to surface water)
+     logical :: use_groundwater_irrigation
+
   end type irrigation_params_type
 
   type, public :: irrigation_type
@@ -197,7 +200,7 @@ contains
        irrig_start_time, irrig_length, &
        irrig_target_smp, &
        irrig_depth, irrig_threshold_fraction, irrig_river_volume_threshold, &
-       limit_irrigation_if_rof_enabled) &
+       limit_irrigation_if_rof_enabled, use_groundwater_irrigation) &
        result(this)
     !
     ! !DESCRIPTION:
@@ -215,6 +218,7 @@ contains
     real(r8), intent(in) :: irrig_threshold_fraction
     real(r8), intent(in) :: irrig_river_volume_threshold
     logical , intent(in) :: limit_irrigation_if_rof_enabled
+    logical , intent(in) :: use_groundwater_irrigation
     !
     ! !LOCAL VARIABLES:
     
@@ -229,6 +233,7 @@ contains
     this%irrig_threshold_fraction = irrig_threshold_fraction
     this%irrig_river_volume_threshold = irrig_river_volume_threshold
     this%limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled
+    this%use_groundwater_irrigation = use_groundwater_irrigation
 
   end function irrigation_params_constructor
 
@@ -317,6 +322,7 @@ contains
     real(r8) :: irrig_threshold_fraction
     real(r8) :: irrig_river_volume_threshold
     logical  :: limit_irrigation_if_rof_enabled
+    logical  :: use_groundwater_irrigation
 
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -327,8 +333,9 @@ contains
 
     namelist /irrigation_inparm/ irrig_min_lai, irrig_start_time, irrig_length, &
          irrig_target_smp, irrig_depth, irrig_threshold_fraction, &
-         irrig_river_volume_threshold, limit_irrigation_if_rof_enabled
-
+         irrig_river_volume_threshold, limit_irrigation_if_rof_enabled, &
+         use_groundwater_irrigation
+    
     ! Initialize options to garbage defaults, forcing all to be specified explicitly in
     ! order to get reasonable results
     irrig_min_lai = nan
@@ -339,6 +346,7 @@ contains
     irrig_threshold_fraction = nan
     irrig_river_volume_threshold = nan
     limit_irrigation_if_rof_enabled = .false.
+    use_groundwater_irrigation = .false.
 
     if (masterproc) then
        unitn = getavu()
@@ -364,6 +372,7 @@ contains
     call shr_mpi_bcast(irrig_threshold_fraction, mpicom)
     call shr_mpi_bcast(irrig_river_volume_threshold, mpicom)
     call shr_mpi_bcast(limit_irrigation_if_rof_enabled, mpicom)
+    call shr_mpi_bcast(use_groundwater_irrigation, mpicom)
 
     this%params = irrigation_params_type( &
          irrig_min_lai = irrig_min_lai, &
@@ -373,7 +382,8 @@ contains
          irrig_depth = irrig_depth, &
          irrig_threshold_fraction = irrig_threshold_fraction, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
-         limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled)
+         limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled, &
+         use_groundwater_irrigation = use_groundwater_irrigation)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -387,6 +397,7 @@ contains
        write(iulog,*) 'irrig_depth = ', irrig_depth
        write(iulog,*) 'irrig_threshold_fraction = ', irrig_threshold_fraction
        write(iulog,*) 'limit_irrigation_if_rof_enabled = ', limit_irrigation_if_rof_enabled
+       write(iulog,*) 'use_groundwate_irrigation = ', use_groundwater_irrigation
        if (limit_irrigation_if_rof_enabled) then
           write(iulog,*) 'irrig_river_volume_threshold = ', irrig_river_volume_threshold
        end if
@@ -426,6 +437,7 @@ contains
          irrig_depth => this%params%irrig_depth, &
          irrig_threshold_fraction => this%params%irrig_threshold_fraction, &
          irrig_river_volume_threshold => this%params%irrig_river_volume_threshold, &
+         use_groundwater_irrigation => this%params%use_groundwater_irrigation, &
          limit_irrigation_if_rof_enabled => this%params%limit_irrigation_if_rof_enabled)
 
     if (irrig_min_lai < 0._r8) then
@@ -1106,18 +1118,20 @@ contains
 
           ! groundwater irrigation will supply remaining deficit
           ! first take from unconfined aquifer, then confined aquifer
-          if((deficit(c) - deficit_volr_limited(c)) <= available_gw_uncon(c)) then
-             this%gw_uncon_irrig_rate_patch(p) = &
-                  (deficit(c) - deficit_volr_limited(c)) / &
-               (this%dtime*this%irrig_nsteps_per_day)
-             this%gw_con_irrig_rate_patch(p) = 0._r8
-          else
-             this%gw_uncon_irrig_rate_patch(p) = &
-                  available_gw_uncon(c) / &
-                  (this%dtime*this%irrig_nsteps_per_day)
-             this%gw_con_irrig_rate_patch(p) = &
-               (deficit(c) - deficit_volr_limited(c) - available_gw_uncon(c)) / &
-               (this%dtime*this%irrig_nsteps_per_day)
+          if(this%params%use_groundwater_irrigation) then 
+             if((deficit(c) - deficit_volr_limited(c)) <= available_gw_uncon(c)) then
+                this%gw_uncon_irrig_rate_patch(p) = &
+                     (deficit(c) - deficit_volr_limited(c)) / &
+                     (this%dtime*this%irrig_nsteps_per_day)
+                this%gw_con_irrig_rate_patch(p) = 0._r8
+             else
+                this%gw_uncon_irrig_rate_patch(p) = &
+                     available_gw_uncon(c) / &
+                     (this%dtime*this%irrig_nsteps_per_day)
+                this%gw_con_irrig_rate_patch(p) = &
+                     (deficit(c) - deficit_volr_limited(c) - available_gw_uncon(c)) / &
+                     (this%dtime*this%irrig_nsteps_per_day)
+             endif
           endif
           
           ! n_irrig_steps_left(p) > 0 is ok even if irrig_rate(p) ends up = 0
