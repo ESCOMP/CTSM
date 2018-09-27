@@ -137,6 +137,24 @@ performance implications as we break routines into tiny pieces for this purpose)
 So we allow loops over tracers (or bulk plus tracers) anywhere in the code. See comments
 at the top of WaterType.F90 for example code showing how to write these loops.
 
+Note that the bulk instances (``waterfluxbulk_inst``, etc.) can be obtained in two ways:
+
+1. Using ``water_inst%water*bulk_inst``
+
+2. As one of the indices in ``water_inst%bulk_and_tracers(:)%water*_inst``
+
+Method (2) is just meant to be used when you are doing the same operation on bulk water
+and all water tracers. Reasons why it is better, or necessary, to use method (1) when you
+are really just working with bulk water are:
+
+- This makes it more explicit and clear that you are working with bulk water
+
+- When passing an argument to a subroutine whose dummy argument is of type
+  ``water*bulk_type``, method (2) only works if you surround the call with a ``select
+  type`` statement, which is awkward, to say the least. (Subroutines that expect bulk
+  water should generally declare their dummy arguments to be of type ``water*bulk_type``,
+  as discussed in `Object-oriented design for water tracer types`_.)
+
 ==============================================
  Infrastructure for looping through variables
 ==============================================
