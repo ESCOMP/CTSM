@@ -670,6 +670,7 @@ sub write_filepath_cesmbld
 		     "fates/biogeophys", 
 		     "fates/biogeochem", 
 		     "fates/fire", 
+		     "fates/parteh",
 		     "utils", 
 		     "cpl" );
 
