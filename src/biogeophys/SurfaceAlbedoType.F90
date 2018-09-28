@@ -130,10 +130,8 @@ contains
     allocate(this%albgri_dst_col     (begc:endc,numrad))       ; this%albgri_dst_col     (:,:) = nan
     allocate(this%albd_patch         (begp:endp,numrad))       ; this%albd_patch         (:,:) = nan
     allocate(this%albi_patch         (begp:endp,numrad))       ; this%albi_patch         (:,:) = nan
-    if (use_SSRE) then
-       allocate(this%albdSF_patch    (begp:endp,numrad))       ; this%albdSF_patch       (:,:) = nan
-       allocate(this%albiSF_patch    (begp:endp,numrad))       ; this%albiSF_patch       (:,:) = nan
-    end if
+    allocate(this%albdSF_patch       (begp:endp,numrad))       ; this%albdSF_patch       (:,:) = nan
+    allocate(this%albiSF_patch       (begp:endp,numrad))       ; this%albiSF_patch       (:,:) = nan
     allocate(this%ftdd_patch         (begp:endp,numrad))       ; this%ftdd_patch         (:,:) = nan
     allocate(this%ftid_patch         (begp:endp,numrad))       ; this%ftid_patch         (:,:) = nan
     allocate(this%ftii_patch         (begp:endp,numrad))       ; this%ftii_patch         (:,:) = nan
