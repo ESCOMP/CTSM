@@ -1,6 +1,0 @@
-This testmods directory tests the collapse2gencrop branch
-while reading 16-pft fsurdat and flanduse_timeseries files
-and setting do_transient_crops = .true. and use_crop = .false.
-
-Prior to this branch, do_transient_crops could be true only with
-use_crop set to true and fsurdat & flanduse_timeseries pointing to 78-pft files.
