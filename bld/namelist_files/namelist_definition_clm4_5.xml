@@ -596,6 +596,11 @@ Toggle to turn on the FATES model
 (use_fates= '.true.' is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
+<entry id="fates_parteh_mode" type="integer" category="physics"
+        group="clm_inparm" valid_values="1">
+Switch deciding which nutrient model to use in FATES.
+</entry>
+
 <entry id="use_fates_spitfire" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on spitfire module for modeling fire (only relevant if FATES is being used).
