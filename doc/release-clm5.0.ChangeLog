@@ -1,4 +1,100 @@
 ===============================================================
+Tag name:  release-clm5.0.08
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Sep 28 14:17:52 MDT 2018
+One-line Summary: Updated CMIP6 ndep file for historical transient Bgc cases, 1850_control same as before
+
+Purpose of this version:
+------------------------
+
+Update the ndep file for transient cases for CLM50 to the CMIP6 version that has identical
+data for 1849-1850 to the previous CMIP6 1850_control (with different mid-month times however), and
+new 3-member ensemble average/5-year smoothing from the WACCM case: b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.00[123].
+The new data is monthly rather than yearly, which means there will be a seasonal cycle to nitrogen deposition
+for transient cases now. The midmonth times/dates are different for the multi-year file from
+the previous file, so answers change when using it for 1850_control cases even though the data is exactly the same.
+Because, of that we are still pointing to the previous 1850 CMIP6 ndep file.
+
+CLM4.5 is still using the previous CMIP5 ndep dataset.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev008 (minus ctsm1.0.dev005 and ctsm1.0.dev001)
+
+Summary of changes:
+-------------------
+
+Science changes since: New cmip6 ndep file for transient cases
+
+Software changes since: None
+
+Changes to User Interface since: None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm): PASS (limited testing)
+     PASS SMS_D.f09_g16.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist			
+     PASS SMS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default			
+     PASS SMS_D_Ly2.1x1_brazil.IHistClm50BgcQianGs.cheyenne_intel.clm-ciso_bombspike1963			
+     PASS SMS_D_Ly2.1x1_numaIA.IHistClm50BgcCropGs.cheyenne_intel.clm-ciso_bombspike1963			
+     PASS SMS_Ld5.f10_f10_musgs.I1850Clm45BgcCrop.cheyenne_intel.clm-crop			
+     PASS SMS_Ld5.f19_g17.IHistClm50Bgc.cheyenne_intel.clm-decStart			
+     PASS SMS_Ld5_D.f09_g16.I1850Clm50BgcCrop.cheyenne_intel.clm-cmip6			
+     PASS SMS_Lm1.f09_g17_gl4.I1850Clm50Bgc.cheyenne_intel.clm-clm50KitchenSink			
+     PASS SMS_Lm1.f19_g17_gl4.I1850Clm50Bgc.cheyenne_intel.clm-clm50dynroots			
+     PASS SMS_Lm1_D.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-snowlayers_3_monthly			
+     PASS ERP_P36x2_D_Ld5.f10_f10_musgs.IHistClm45BgcCruGs.cheyenne_intel.clm-decStart
+
+    Tests that are different from baseline (as expected)
+     DIFF SMS_D_Ly2.1x1_brazil.IHistClm50BgcQianGs.cheyenne_intel.clm-ciso_bombspike1963
+     DIFF SMS_D_Ly2.1x1_numaIA.IHistClm50BgcCropGs.cheyenne_intel.clm-ciso_bombspike1963
+     DIFF SMS_Ld5.f19_g17.IHistClm50Bgc.cheyenne_intel.clm-decStart
+     DIFF SMS_Lm1_D.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-snowlayers_3_monthly
+
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.07
+
+Changes answers relative to baseline: Yes! for CLM4.5/CLM5.0 CN or Bgc transient cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: IHist Clm45Bgc* and Clm50Bgc (Bgc or Cn)
+    - what platforms/compilers: All
+    - nature of change: Changes in climate for Nitrogen
+        New nitrogen deposition and change from yearly to monthly
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Update cime
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime_cesm2_0_rel_05
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #522 -- Point to the new ndep historical file for all cases, also update cime
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.07
 Originator(s):  erik (Erik Kluzek)
 Date:  Wed Aug  8 14:02:04 MDT 2018

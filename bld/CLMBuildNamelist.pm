@@ -3192,16 +3192,12 @@ sub setup_logic_nitrogen_deposition {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
-    if ( defined($opts->{'use_case'}) ) {
-       if ( ($nl_flags->{'lnd_tuning_mode'} =~ /clm5_0_cam/) && ($opts->{'use_case'} eq "1850_control") ) {
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
                       'use_cn'=>$nl_flags->{'use_cn'}, 
                       'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
                       'use_cn'=>$nl_flags->{'use_cn'}, 
                       'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
-       }
-    }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -3214,9 +3210,9 @@ sub setup_logic_nitrogen_deposition {
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                'use_cn'=>$nl_flags->{'use_cn'}, 'rcp'=>$nl_flags->{'rcp'},
+                'use_cn'=>$nl_flags->{'use_cn'}, 
                 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                'hgrid'=>"1.9x2.5" );
+                'hgrid'=>"0.9x1.25" );
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
     if ( defined($nl->get_value('stream_year_first_ndep')) ||
