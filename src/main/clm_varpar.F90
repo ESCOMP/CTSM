@@ -57,6 +57,7 @@ module clm_varpar
   integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
   integer, public :: maxpatch_pft        ! max number of plant functional types in naturally vegetated landunit (namelist setting)
+  integer, public :: maxpatch_pft_new  ! actual # of pfts with bare ground; replaces maxpatch_pft, which may be obsolete
 
   ! constants for decomposition cascade
 
@@ -118,9 +119,11 @@ contains
     if (use_crop .or. index(fsurdat,'78pfts') > 0) then
        numpft        = mxpft   ! actual # of patches (without bare)
        actual_numcft =  64     ! actual # of crops
+       maxpatch_pft_new = numpft + 1  ! actual # of patches with bare ground
     else
        numpft        = numveg  ! actual # of patches (without bare)
        actual_numcft =   2     ! actual # of crops
+       maxpatch_pft_new = numpft + 1  ! actual # of patches with bare ground
     end if
 
     ! For arrays containing all Patches (natural veg & crop), determine lower and upper bounds
@@ -129,10 +132,10 @@ contains
     ! if create_crop_landunit=false)
 
     if (create_crop_landunit) then
-       natpft_size = (numpft + 1) - actual_numcft    ! note that numpft doesn't include bare ground -- thus we add 1
+       natpft_size = maxpatch_pft_new - actual_numcft  ! includes bare ground
        cft_size    = actual_numcft
     else
-       natpft_size = numpft + 1               ! note that numpft doesn't include bare ground -- thus we add 1
+       natpft_size = maxpatch_pft_new  ! includes bare ground
        cft_size    = 0
     end if
 
@@ -146,7 +149,7 @@ contains
     ! or, better, removed from the code entirely (because it is a maintenance problem, and
     ! I can't imagine that looping idioms that use it help performance that much, and
     ! likely they hurt performance.)
-    max_patch_per_col= max(numpft+1, actual_numcft, maxpatch_urb)
+    max_patch_per_col= max(maxpatch_pft_new, actual_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
     nlevurb     =  5

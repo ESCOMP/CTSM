@@ -461,7 +461,7 @@ contains
     ! read 12 months of veg data for dry deposition
     !
     ! !USES:
-    use clm_varpar  , only : numpft
+    use clm_varpar  , only : numpft, maxpatch_pft_new
     use pftconMod   , only : noveg
     use domainMod   , only : ldomain
     use fileutils   , only : getfil
@@ -516,7 +516,7 @@ contains
        write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    call check_dim(ncid, 'lsmpft', numpft+1)
+    call check_dim(ncid, 'lsmpft', maxpatch_pft_new)
 
     if (single_column) then
        call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
