@@ -1,5 +1,8 @@
 This testmods directory is similar to the collapse_pfts_16_to_16 testmods
-except it reads 78-pft instead of 16-pft datasets.
+except it reads 78-pft instead of 16-pft datasets. In this way, it tests the
+new combination do_transient_crops = .true. and use_crop = .false. while
+exercising the collapse2gencrop branch ability to collapse the full crop data
+to clm's generic crops.
 
 According to the file
 /glade/work/slevis/git/collapse_pfts/bld/namelist_files/namelist_defaults_clm4_5.xml

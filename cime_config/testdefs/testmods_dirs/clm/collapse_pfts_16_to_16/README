@@ -1,7 +1,6 @@
-This testmods directory is similar to the glcMEC_decrease testmods directory,
-except
-it allows the default setting of do_transient_crops, which now makes this
-testmods directory the same as baseline's glcMEC_decrease testmods directory.
+This testmods directory tests the collapse2gencrop branch
+while reading 16-pft fsurdat and flanduse_timeseries files
+and setting do_transient_crops = .true. and use_crop = .false.
 
-However, in the collapse2gencrop branch, do_transient_crops = .true.
-while in the current baseline (ctsm1.0.dev008) do_transient_crops = .false.
+Prior to this branch, do_transient_crops could be true only with
+use_crop set to true and fsurdat & flanduse_timeseries pointing to 78-pft files.
