@@ -167,15 +167,17 @@ subroutine Init(this, bounds )
        all_human_stress_indices  = .false.
        fast_human_stress_indices = .false.
     end if
-    if (all_human_stress_indices .or. fast_human_stress_indices) then
-       call this%InitAllocate ( bounds )
-       call this%InitHistory (  bounds )
-    else
+
+    ! Allocation always needs to be done...
+    if (trim(calc_human_stress_indices) == calc_human_stress_indices_none) then
        ! Associate statements need humanindex_inst to be allocated
        ! So allocate with size 1 when not being used
        bounds_tmp%begp = 1
        bounds_tmp%endp = 1
+       call this%InitAllocate ( bounds_tmp )
+    else
        call this%InitAllocate ( bounds )
+       call this%InitHistory (  bounds )
     end if
 
 end subroutine Init
@@ -220,34 +222,30 @@ subroutine InitAllocate(this, bounds)
     allocate(this%discomf_index_ref2mS_r_patch (begp:endp))                    ; this%discomf_index_ref2mS_r_patch(:)  = nan
     allocate(this%discomf_index_ref2mS_u_patch (begp:endp))                    ; this%discomf_index_ref2mS_u_patch(:)  = nan
 
-    if ( all_human_stress_indices ) then
-
-       allocate(this%wb_ref2m_patch               (begp:endp))                    ; this%wb_ref2m_patch              (:)  = nan
-       allocate(this%wb_ref2m_r_patch             (begp:endp))                    ; this%wb_ref2m_r_patch            (:)  = nan
-       allocate(this%wb_ref2m_u_patch             (begp:endp))                    ; this%wb_ref2m_u_patch            (:)  = nan
-       allocate(this%teq_ref2m_patch              (begp:endp))                    ; this%teq_ref2m_patch             (:)  = nan
-       allocate(this%teq_ref2m_r_patch            (begp:endp))                    ; this%teq_ref2m_r_patch           (:)  = nan
-       allocate(this%teq_ref2m_u_patch            (begp:endp))                    ; this%teq_ref2m_u_patch           (:)  = nan
-       allocate(this%ept_ref2m_patch              (begp:endp))                    ; this%ept_ref2m_patch             (:)  = nan
-       allocate(this%ept_ref2m_r_patch            (begp:endp))                    ; this%ept_ref2m_r_patch           (:)  = nan
-       allocate(this%ept_ref2m_u_patch            (begp:endp))                    ; this%ept_ref2m_u_patch           (:)  = nan
-       allocate(this%discomf_index_ref2m_patch    (begp:endp))                    ; this%discomf_index_ref2m_patch   (:)  = nan
-       allocate(this%discomf_index_ref2m_r_patch  (begp:endp))                    ; this%discomf_index_ref2m_r_patch (:)  = nan
-       allocate(this%discomf_index_ref2m_u_patch  (begp:endp))                    ; this%discomf_index_ref2m_u_patch (:)  = nan
-       allocate(this%thip_ref2m_patch             (begp:endp))                    ; this%thip_ref2m_patch            (:)  = nan
-       allocate(this%thip_ref2m_r_patch           (begp:endp))                    ; this%thip_ref2m_r_patch          (:)  = nan
-       allocate(this%thip_ref2m_u_patch           (begp:endp))                    ; this%thip_ref2m_u_patch          (:)  = nan
-       allocate(this%thic_ref2m_patch             (begp:endp))                    ; this%thic_ref2m_patch            (:)  = nan
-       allocate(this%thic_ref2m_r_patch           (begp:endp))                    ; this%thic_ref2m_r_patch          (:)  = nan
-       allocate(this%thic_ref2m_u_patch           (begp:endp))                    ; this%thic_ref2m_u_patch          (:)  = nan
-       allocate(this%swmp65_ref2m_patch           (begp:endp))                    ; this%swmp65_ref2m_patch          (:)  = nan
-       allocate(this%swmp65_ref2m_r_patch         (begp:endp))                    ; this%swmp65_ref2m_r_patch        (:)  = nan
-       allocate(this%swmp65_ref2m_u_patch         (begp:endp))                    ; this%swmp65_ref2m_u_patch        (:)  = nan
-       allocate(this%swmp80_ref2m_patch           (begp:endp))                    ; this%swmp80_ref2m_patch          (:)  = nan
-       allocate(this%swmp80_ref2m_r_patch         (begp:endp))                    ; this%swmp80_ref2m_r_patch        (:)  = nan
-       allocate(this%swmp80_ref2m_u_patch         (begp:endp))                    ; this%swmp80_ref2m_u_patch        (:)  = nan
-
-    end if
+    allocate(this%wb_ref2m_patch               (begp:endp))                    ; this%wb_ref2m_patch              (:)  = nan
+    allocate(this%wb_ref2m_r_patch             (begp:endp))                    ; this%wb_ref2m_r_patch            (:)  = nan
+    allocate(this%wb_ref2m_u_patch             (begp:endp))                    ; this%wb_ref2m_u_patch            (:)  = nan
+    allocate(this%teq_ref2m_patch              (begp:endp))                    ; this%teq_ref2m_patch             (:)  = nan
+    allocate(this%teq_ref2m_r_patch            (begp:endp))                    ; this%teq_ref2m_r_patch           (:)  = nan
+    allocate(this%teq_ref2m_u_patch            (begp:endp))                    ; this%teq_ref2m_u_patch           (:)  = nan
+    allocate(this%ept_ref2m_patch              (begp:endp))                    ; this%ept_ref2m_patch             (:)  = nan
+    allocate(this%ept_ref2m_r_patch            (begp:endp))                    ; this%ept_ref2m_r_patch           (:)  = nan
+    allocate(this%ept_ref2m_u_patch            (begp:endp))                    ; this%ept_ref2m_u_patch           (:)  = nan
+    allocate(this%discomf_index_ref2m_patch    (begp:endp))                    ; this%discomf_index_ref2m_patch   (:)  = nan
+    allocate(this%discomf_index_ref2m_r_patch  (begp:endp))                    ; this%discomf_index_ref2m_r_patch (:)  = nan
+    allocate(this%discomf_index_ref2m_u_patch  (begp:endp))                    ; this%discomf_index_ref2m_u_patch (:)  = nan
+    allocate(this%thip_ref2m_patch             (begp:endp))                    ; this%thip_ref2m_patch            (:)  = nan
+    allocate(this%thip_ref2m_r_patch           (begp:endp))                    ; this%thip_ref2m_r_patch          (:)  = nan
+    allocate(this%thip_ref2m_u_patch           (begp:endp))                    ; this%thip_ref2m_u_patch          (:)  = nan
+    allocate(this%thic_ref2m_patch             (begp:endp))                    ; this%thic_ref2m_patch            (:)  = nan
+    allocate(this%thic_ref2m_r_patch           (begp:endp))                    ; this%thic_ref2m_r_patch          (:)  = nan
+    allocate(this%thic_ref2m_u_patch           (begp:endp))                    ; this%thic_ref2m_u_patch          (:)  = nan
+    allocate(this%swmp65_ref2m_patch           (begp:endp))                    ; this%swmp65_ref2m_patch          (:)  = nan
+    allocate(this%swmp65_ref2m_r_patch         (begp:endp))                    ; this%swmp65_ref2m_r_patch        (:)  = nan
+    allocate(this%swmp65_ref2m_u_patch         (begp:endp))                    ; this%swmp65_ref2m_u_patch        (:)  = nan
+    allocate(this%swmp80_ref2m_patch           (begp:endp))                    ; this%swmp80_ref2m_patch          (:)  = nan
+    allocate(this%swmp80_ref2m_r_patch         (begp:endp))                    ; this%swmp80_ref2m_r_patch        (:)  = nan
+    allocate(this%swmp80_ref2m_u_patch         (begp:endp))                    ; this%swmp80_ref2m_u_patch        (:)  = nan
 
 end subroutine InitAllocate
 

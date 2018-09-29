@@ -308,6 +308,10 @@ module clm_varctl
   ! FATES
   !----------------------------------------------------------
   character(len=fname_len), public :: fates_paramfile  = ' '
+  !----------------------------------------------------------
+  ! SSRE diagnostic
+  !----------------------------------------------------------
+  logical, public :: use_SSRE = .false.   ! flag for SSRE diagnostic
 
   !----------------------------------------------------------
   ! Migration of CPP variables
