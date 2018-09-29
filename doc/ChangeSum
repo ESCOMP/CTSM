@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev012     erik 09/29/2018 Add snow-free fields for snowmip, fix several issues
   ctsm1.0.dev011    sacks 09/12/2018 Add water tracer consistency checks, and other water tracer work
   ctsm1.0.dev010    sacks 08/30/2018 Update cime to cime5.7.3
   ctsm1.0.dev009    sacks 08/22/2018 Fix initialization of AnnET in InitAccVars
