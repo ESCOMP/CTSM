@@ -22,6 +22,7 @@ module WaterTracerUtils
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: AllocateVar1d
   public :: AllocateVar2d
+  public :: CalcTracerFromBulk
   public :: CalcTracerFromBulkFixedRatio
   public :: CompareBulkToTracer
 
@@ -120,6 +121,84 @@ contains
     end do
 
   end subroutine AllocateVar2d
+
+  !-----------------------------------------------------------------------
+  subroutine CalcTracerFromBulk(num_pts, filter_pts, &
+       bulk_val, bulk_source, tracer_source, tracer_val)
+    !
+    ! !DESCRIPTION:
+    ! Calculate a tracer variable from a corresponding bulk variable when the ratio of
+    ! the tracer to the bulk should be based on the ratio in some 'source' variable.
+    !
+    ! Typically this is used to calculate a tracer flux given a bulk flux. In this case,
+    ! the source variable should be the source of the flux - since the tracer ratio of
+    ! the flux will be the same as the tracer ratio in the source state variable.
+    !
+    ! tracer_val will be updated within the given filter, and will remain at its original
+    ! values elsewhere
+    !
+    ! !ARGUMENTS:
+    integer  , intent(in)    :: num_pts          ! number of points in the filter
+    integer  , intent(in)    :: filter_pts(:)    ! filter in which tracer_val should be updated
+    real(r8) , intent(in)    :: bulk_val(:)      ! values of the variable of interest, for bulk
+    real(r8) , intent(in)    :: bulk_source(:)   ! values of the source for this variable, for bulk
+    real(r8) , intent(in)    :: tracer_source(:) ! values of the source for this variable, for the tracer
+    real(r8) , intent(inout) :: tracer_val(:)    ! output values of the variable of interest, for the tracer
+    !
+    ! !LOCAL VARIABLES:
+    integer :: num
+    integer :: fn, n
+
+    character(len=*), parameter :: subname = 'CalcTracerFromBulk'
+    !-----------------------------------------------------------------------
+
+    num = size(bulk_val)
+    SHR_ASSERT((size(bulk_source) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(tracer_source) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(tracer_val) == num), errMsg(sourcefile, __LINE__))
+
+    do fn = 1, num_pts
+       n = filter_pts(fn)
+
+       if (bulk_source(n) /= 0._r8) then
+          ! Standard case
+          tracer_val(n) = bulk_val(n) * (tracer_source(n) / bulk_source(n))
+       else if (bulk_val(n) == 0._r8 .and. tracer_source(n) == 0._r8) then
+          ! This is acceptable: bulk_source, bulk_val and tracer_source are all 0
+          tracer_val(n) = 0._r8
+       else if (bulk_val(n) /= 0._r8) then
+          write(iulog,*) subname//' ERROR: Non-zero bulk val despite zero bulk source:'
+          write(iulog,*) 'bulk_val = ', bulk_val(n)
+          write(iulog,*) 'at n = ', n
+          write(iulog,*) 'This would lead to an indeterminate tracer val.'
+          call endrun(msg=subname//': Non-zero bulk val despite zero bulk source', &
+               additional_msg=errMsg(sourcefile, __LINE__))
+       else if (tracer_source(n) /= 0._r8) then
+          ! NOTE(wjs, 2018-09-28) To avoid this error, we might need code elsewhere that
+          ! sets tracer state variables to 0 if the corresponding bulk state variable is 0
+          ! and the tracer state is originally near 0 (within roundoff) - in order deal
+          ! with roundoff issues arising during state updates. (There's a bit of
+          ! discussion of this point in https://github.com/ESCOMP/ctsm/issues/487.)
+          write(iulog,*) subname//' ERROR: Non-zero tracer source despite zero bulk source:'
+          write(iulog,*) 'tracer_source = ', tracer_source(n)
+          write(iulog,*) 'at n = ', n
+          write(iulog,*) 'This would lead to an indeterminate tracer val.'
+          call endrun(msg=subname//': Non-zero tracer source despite zero bulk source', &
+               additional_msg=errMsg(sourcefile, __LINE__))
+       else
+          write(iulog,*) subname//' ERROR: unhandled condition; we should never get here.'
+          write(iulog,*) 'This indicates a programming error in this subroutine.'
+          write(iulog,*) 'bulk_val = ', bulk_val(n)
+          write(iulog,*) 'bulk_source = ', bulk_source(n)
+          write(iulog,*) 'tracer_source = ', tracer_source(n)
+          write(iulog,*) 'at n = ', n
+          call endrun(msg=subname//': unhandled condition; we should never get here', &
+               additional_msg=errMsg(sourcefile, __LINE__))
+       end if
+    end do
+
+  end subroutine CalcTracerFromBulk
+
 
   !-----------------------------------------------------------------------
   subroutine CalcTracerFromBulkFixedRatio(bulk, ratio, tracer)

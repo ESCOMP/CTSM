@@ -9,27 +9,27 @@ module test_calc_tracer_from_bulk_fixed_ratio
   implicit none
 
   @TestCase
-  type, extends(TestCase) :: TestCalc
+  type, extends(TestCase) :: TestCalcFixedRatio
    contains
      procedure :: setUp
      procedure :: tearDown
-  end type TestCalc
+  end type TestCalcFixedRatio
 
   real(r8), parameter :: tol = 1.e-13_r8
 
 contains
 
   subroutine setUp(this)
-    class(TestCalc), intent(inout) :: this
+    class(TestCalcFixedRatio), intent(inout) :: this
   end subroutine setUp
 
   subroutine tearDown(this)
-    class(TestCalc), intent(inout) :: this
+    class(TestCalcFixedRatio), intent(inout) :: this
   end subroutine tearDown
 
   @Test
   subroutine basic(this)
-    class(TestCalc), intent(inout) :: this
+    class(TestCalcFixedRatio), intent(inout) :: this
     real(r8) :: tracer(3)
 
     call CalcTracerFromBulkFixedRatio( &
