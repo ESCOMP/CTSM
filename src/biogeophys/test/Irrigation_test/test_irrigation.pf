@@ -639,8 +639,6 @@ contains
     @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
 
     ! Now reset time, change soil moisture, and make sure that irrigation happens as expected
-    call unittest_timemgr_teardown()
-    call unittest_timemgr_setup(dtime=dtime)
     call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
     this%h2osoi_liq(:,:) = 100._r8
     call this%calculateAndApplyIrrigation()
