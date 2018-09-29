@@ -1,4 +1,286 @@
 ===============================================================
+Tag name:  ctsm1.0.dev012
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Sep 29 11:49:35 MDT 2018
+One-line Summary: Add snow-free fields for snowmip, fix several issues
+
+Purpose of changes
+------------------
+
+Bring in new diagnostic fields added by Justin Perket, Sean Swenson and Mark Flanner
+for Snow-MIP. Most of those are fields that represent "Snow Free" data.
+
+Also bring in fixes for a list of issues. Add handling of the new CO2 which includes
+both latitude-band and global average versions. Add some changes to make it easier
+for input data processing including NOT doing the slow 1km map file creation. Have
+the number of steps that are skipped at startup dependent on the time-step size. Add
+a test for some requirements of WACCMX (time-step and use of ESMF). Calculations of 
+local time are now done in a global subroutine, that can handle negative longitudes.
+Fix how FFIX_TO_SMINN is handled for history output. The namelist logical "calc_human_stress_indices"
+changed from logical to a character string of three values: FAST, NONE, ALL. FAST
+is the default so the less expensive ones are output, NONE turns them all off, and ]
+ALL does all of them including the expensive ones.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #428, #474, #475, #476, #450, #482, #481, #491
+   Fix #428 -- Update getco2_historical.ncl to handle latitude varying CO2
+   Fix #474 -- Add ability to send GRIDFILE to regridbatch.sh script
+   Fix #475 -- Have number of steps to skip balance-check based on time
+   Fix #476 -- Add a test for WACCMX standalone
+   Fix #450 -- Add option to use global average of terrain standard deviation on surfdata files
+       (partial fix with simplest option)
+   Fix #482 -- Add extra field on CO2 streams file for global/time-averaged data
+   Fix #481 -- FFIX_TO_SMINN needs to be output when FUN is on
+   Fix #491 -- Calculations of local noon assume that longitude is 0 to 360 rather than -180 to 180
+
+Known bugs introduced in this tag (include github issue ID): cime#2801
+   cime#2801 -- Problem building with ESMF_LIB
+
+Known bugs found since the previous tag (include github issue ID):  #507, #505
+   #507 -- Albedo's are bad at night with negative longitudes
+   #505 -- CTSM input data-set tools can only work on 0-360 grids, and require monotone increasing longitude
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+  New namelist:
+    use_ssre -- Turn on show free fields needed for SnowMIP
+
+  Changed namelist:
+   calc_human_stress_indices changed from logical to character with options: ALL, FAST, NONE
+
+  New history fields:
+     Mostly added Snow Free (SF) fields
+     ALBDSF
+     ALBISF
+     FSRSF
+     FSRSFND
+     FSRSFNDLN
+     FSRSFNI
+     FSRSFVD
+     FSRSFVDLN
+     FSRSFVI
+     SSRE_FSR
+     SSRE_FSRND
+     SSRE_FSRNDLN
+     SSRE_FSRNI
+     SSRE_FSRVD
+     SSRE_FSRVDLN
+     SSRE_FSRVI
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+   calc_human_stress_indices = 'FAST' is now the default
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   mkghg_bndtvghg -- Update with new CO2 files, both monthly, lat-bands and yearly, global
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   I was able to reduce the duplication in SurfaceAlbedoMod where the original implementation added a cut
+   and paste copy of code. But, there is still a lot of duplication in this file that could be improved, by
+   making smaller functions/subroutines to do sections of code that are essentially repeated many times.
+   There's a bit of an increase in complexity to reduce the duplication, but reducing the duplication was worth it.
+
+Changes to tests or testing:
+   Add a new waccmx_offline test mods and test with it
+   New test expected fail because of cime issue: ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline
+   Turn use_ssre on for most tests, off for reducedOutput
+   And set calc_human_stress_indices=NONE for reducedOutput, FAST for most, and ALL for KitchenSink and KSMOut tests
+
+Code reviewed by: self, @olyson, @billsacks
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev011
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): No
+
+Pull Requests that document the changes (include PR ids): #462 #449
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #462 -- Add namelist item to calculate all heat stress indices only if requested; to speed up model
+   #449 -- Bring in snowmip diagnostic fields
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev011
+Originator(s):  sacks (Bill Sacks), mvr (Mathew Rothstein)
+Date: Wed Sep 12 10:50:31 MDT 2018
+One-line Summary: Add water tracer consistency checks, and other water tracer work
+
+Purpose of changes
+------------------
+
+1. Add water tracer consistency checks
+
+2. Add infrastructure for looping over all water tracers - currently
+   just used for the tracer consistency checks
+
+3. Breakout of atm2lnd and lnd2atm water variables, needed for water tracers
+
+4. Add some namelist control over the addition of water tracers
+
+5. Add a system test that exercises the water tracer consistency checks
+
+6. Add a 'ratio' variable for each water tracer
+
+7. Add some unit tests of the new water tracer infrastructure
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Partially addresses #357
+- Resolves #479
+- Resolves #492
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Don't be fooled by the new namelist variable, enable_water_isotopes:
+  This is just a place-holder for now, not implying that water isotopes
+  are actually working.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variables: enable_water_tracer_consistency_checks and
+  enable_water_isotopes. The latter is just a place-holder for now.
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: New test that runs the water tracer consistency check
+   I ran this test on cheyenne_gnu and cheyenne_intel along with the
+   out-of-the-box hobart_nag version
+
+Code reviewed by: Mat Rothstein and I have worked together on many of
+these changes, but not all code has been reviewed by the other.
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok (tests pass, clm4_5 and clm5_0 namelists differ from
+    baseline as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev010
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/497
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev009
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Aug 22 20:32:36 MDT 2018
