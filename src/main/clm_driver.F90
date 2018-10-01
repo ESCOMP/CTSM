@@ -484,6 +484,16 @@ contains
             topo_inst, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, &
             eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after downscale_forcings')
+             call t_stopf("tracer_consistency_check")
+          end if
+       end if
+
        ! Update filters that depend on variables set in clm_drv_init
        
        call setExposedvegpFilter(bounds_clump, &
