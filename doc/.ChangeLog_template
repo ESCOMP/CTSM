@@ -50,7 +50,7 @@ Substantial timing or memory changes:
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
-NOTE: Be sure to review the steps in CTSMMasterChecklist as well as the coding style in the Developers Guide
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
