@@ -37,6 +37,7 @@ module Wateratm2lndType
 
      procedure, public  :: Init
      procedure, public  :: Restart
+     procedure, public  :: IsCommunicatedWithCoupler
      procedure, public  :: SetNondownscaledTracers
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
@@ -242,14 +243,33 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
+  pure function IsCommunicatedWithCoupler(this) result(coupled)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if this tracer is received from the coupler. Returns false if this
+    ! tracer is just used internally in CTSM, and should be set to some fixed ratio times
+    ! the bulk water.
+    !
+    ! !ARGUMENTS:
+    logical :: coupled  ! function result
+    class(wateratm2lnd_type), intent(in) :: this
+    !-----------------------------------------------------------------------
+
+    coupled = this%info%is_communicated_with_coupler()
+
+  end function IsCommunicatedWithCoupler
+
+
+  !-----------------------------------------------------------------------
   subroutine SetNondownscaledTracers(this, bounds, bulk)
     !
     ! !DESCRIPTION:
     ! Set tracer values for the non-downscaled atm2lnd water quantities from the bulk quantities
     !
-    ! This should only be called for tracers that are not communicated with the coupler.
-    ! Note that the tracer values are set to a fixed ratio times the bulk (because we
-    ! don't have any other information to go on for these fields).
+    ! This should only be called for tracers that are not communicated with the coupler
+    ! (i.e., for which this%IsCommunicatedWithCoupler() is false). Note that the tracer
+    ! values are set to a fixed ratio times the bulk (because we don't have any other
+    ! information to go on for these fields).
     !
     ! !ARGUMENTS:
     class(wateratm2lnd_type), intent(inout) :: this

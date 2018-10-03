@@ -721,10 +721,15 @@ contains
     !-----------------------------------------------------------------------
 
     do i = this%tracers_beg, this%tracers_end
-       if (.not. this%bulk_and_tracers(i)%info%is_communicated_with_coupler()) then
-          call this%bulk_and_tracers(i)%wateratm2lnd_inst%SetNondownscaledTracers( &
+       associate( &
+            wateratm2lnd_inst => this%bulk_and_tracers(i)%wateratm2lnd_inst)
+
+       if (.not. wateratm2lnd_inst%IsCommunicatedWithCoupler()) then
+          call wateratm2lnd_inst%SetNondownscaledTracers( &
                bounds, this%wateratm2lndbulk_inst)
        end if
+
+       end associate
     end do
 
   end subroutine SetAtm2lndNondownscaledTracers
