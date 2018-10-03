@@ -121,21 +121,38 @@ contains
   end subroutine highTemp_resultsInCorrectPartitioning
 
   @Test
-  subroutine intermediateTemp_resultsInCorrectPartitioning(this)
+  subroutine intermediateTemp_resultsInCorrectPartitioningAndHeatFlux(this)
+    ! Unlike other tests, where we check for either correct partitioning or correct heat
+    ! flux in a given test: This test checks both for convenience (to avoid duplication
+    ! between two tests which would require us to update both of them if the ramp for
+    ! rain-snow conversion changed).
     class(TestPartitionPrecip), intent(inout) :: this
+    real(r8), parameter :: rain_orig = 1._r8
+    real(r8), parameter :: snow_orig = 2._r8
+    real(r8) :: tot_precip
+    real(r8) :: expected_rain
+    real(r8) :: expected_snow
+    real(r8) :: expected_heat_flux
 
     call setup_single_veg_patch(pft_type=1)
-    call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[SHR_CONST_TKFRZ + 1.5_r8])
+    call this%set_inputs(rain=[rain_orig], snow=[snow_orig], temperature=[SHR_CONST_TKFRZ + 1.5_r8])
 
     call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
 
     associate(&
          rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
          snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
-    @assertEqual(3._r8 * 0.75_r8, rain_col(begc), tolerance=tol)
-    @assertEqual(3._r8 * 0.25_r8, snow_col(begc), tolerance=tol)
+    tot_precip = rain_orig + snow_orig
+    expected_rain = tot_precip * 0.75_r8
+    expected_snow = tot_precip * 0.25_r8
+    @assertEqual(expected_rain, rain_col(begc), tolerance=tol)
+    @assertEqual(expected_snow, snow_col(begc), tolerance=tol)
+
+    ! Snow to rain extracts energy, so results in a negative heat flux to atm
+    expected_heat_flux = (rain_orig - expected_rain) * mm_to_m * denh2o * hfus
+    @assertEqual([expected_heat_flux], this%sh_from_conversion, tolerance=tol)
     end associate
-  end subroutine intermediateTemp_resultsInCorrectPartitioning
+  end subroutine intermediateTemp_resultsInCorrectPartitioningAndHeatFlux
 
   @Test
   subroutine intermediateTemp_glacier_resultsInCorrectPartitioning(this)

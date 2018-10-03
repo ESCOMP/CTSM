@@ -31,17 +31,17 @@ module atm2lndMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: downscale_forcings           ! Downscale atm forcing fields from gridcell to column
 
-  ! The following routines are public for the sake of unit testing; they should not be
+  ! The following routine is public for the sake of unit testing; it should not be
   ! called by production code outside this module
-  public :: partition_precip              ! Partition precipitation into rain/snow
-  public :: sens_heat_from_precip_conversion  ! Compute sensible heat flux needed to compensate for rain-snow conversion
+  public :: partition_precip             ! Partition precipitation into rain/snow
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: rhos  ! calculate atmospheric density
-  private :: repartition_rain_snow_one_col ! Re-partition precipitation for a single column
-  private :: downscale_longwave          ! Downscale longwave radiation from gridcell to column
-  private :: build_normalization         ! Compute normalization factors so that downscaled fields are conservative
-  private :: check_downscale_consistency ! Check consistency of downscaling
+  private :: rhos                             ! calculate atmospheric density
+  private :: repartition_rain_snow_one_col    ! Re-partition precipitation for a single column
+  private :: sens_heat_from_precip_conversion ! Compute sensible heat flux needed to compensate for rain-snow conversion
+  private :: downscale_longwave               ! Downscale longwave radiation from gridcell to column
+  private :: build_normalization              ! Compute normalization factors so that downscaled fields are conservative
+  private :: check_downscale_consistency      ! Check consistency of downscaling
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
