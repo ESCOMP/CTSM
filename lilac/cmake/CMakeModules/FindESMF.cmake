@@ -26,31 +26,9 @@
 # Defining the ${Esc} for syntax coloring.
 string(ASCII 27 Esc)
 
-# Checking if ESMF exists
-if (NOT DEFINED ENV{ESMF_CONFIG_FILE} AND NOT DEFINED ESMF_CONFIG_FILE)
-  message (FATAL_ERROR "\n${Esc}[1;31m!! Error: You need ESMF library to \
-                   run this program. please set the environment \
-                   variable ESMF_CONFIG_FILE to point to esmf.mk in \
-                   your ESMF installation directory. \
-                   Try something like: ${Esc}[m\
-                   export ESMF_CONFIG_FILE=/path/to/esmf.mk && cmake ${CMAKE_SOURCE_DIR}")
-endif ()
+message ("Parsing ESMF_CONFIG_FILE: " $ENV{ESMF_CONFIG_FILE})
 
-if (NOT EXISTS ENV{ESMF_CONFIG_FILE} AND NOT EXISTS ${ESMF_CONFIG_FILE})
-  message (FATAL_ERROR "${Esc}[1;31m Error: esmf.mk file is not found at \
-                        ${ESMF_CONFIG_FILE} ${Esc}[m")
-else ()
-  message ("+>${Esc}[1;32m The config file for ESMF library is found.${Esc}[m")
-endif ()
-
-if (DEFINED ENV{ESMF_CONFIG_FILE})
-  set(ESMF_CONFIG_FILE ENV{ESMF_CONFIG_FILE} CACHE STRING "")
-endif ()
-set(ESMF_CONFIG_FILE ${ESMF_CONFIG_FILE} CACHE STRING "")
-
-message ("Parsing ESMF_CONFIG_FILE: " ${ESMF_CONFIG_FILE})
-
-file(STRINGS "${ESMF_CONFIG_FILE}" all_vars)
+file(STRINGS "$ENV{ESMF_CONFIG_FILE}" all_vars)
 foreach(str ${all_vars})
   string(REGEX MATCH "^[^#]" def ${str})
   if (def)
@@ -69,5 +47,6 @@ set (ESMF_LINK_LINE "${ESMF_F90LINKOPTS} \
 
 set (ESMF_COMPILER_LINE "${ESMF_F90COMPILEOPTS} \
                          ${ESMF_F90COMPILEPATHS} \
-                         ${ESMF_F90COMPILEFREENOCPP}")
+                         ${ESMF_F90COMPILEFREENOCPP} \
+                         ${ESMF_CXXCOMPILEPATHS}")
 
