@@ -1,5 +1,5 @@
-This testmods directory is similar to the collapse_pfts_16_to_16 testmods
-except it reads 78-pft instead of 16-pft datasets. In this way, it tests the
+This test reads 78-pft datasets (glcMEC_decrease happens to be similar but
+reads 16-pft datasets). In this way, it tests the
 new combination do_transient_crops = .true. and use_crop = .false. while
 exercising the collapse2gencrop branch ability to collapse the full crop data
 to clm's generic crops.

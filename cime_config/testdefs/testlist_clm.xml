@@ -769,7 +769,7 @@
       <option name="comment"  >test transient PFTs (via HIST) in conjunction with changing glacier area</option>
     </options>
   </test>
-  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/collapse_pfts_78_to_16">
+  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/collapse_pfts_78_to_16_f10">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
