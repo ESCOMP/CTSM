@@ -4,7 +4,6 @@ module esmf_utils
 
 
 #include "ESMF.h"
-#include <lilac.h>
   use ESMF
 
   implicit none
