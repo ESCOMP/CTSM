@@ -925,7 +925,6 @@ contains
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
-    write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   nsegspc              = ',nsegspc
     ! New fields
     write(iulog,*) ' perchroot (plant water stress based on unfrozen layers only) = ',perchroot

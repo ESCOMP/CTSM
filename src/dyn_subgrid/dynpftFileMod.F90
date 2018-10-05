@@ -52,7 +52,7 @@ contains
     ! that bound the initial model date)
     !
     ! !USES:
-    use clm_varpar     , only : numpft, natpft_size
+    use clm_varpar     , only : maxveg, natpft_size
     use ncdio_pio
     use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
     !
@@ -71,11 +71,11 @@ contains
     ! Error check
 
 ! slevis: I consider this check unnecessary because maxpatch_pft contains the
-!         same info as numpft+1 and maxpft; also the number of pfts in the input
+!         same info as maxveg+1 and maxpft; also the number of pfts in the input
 !         files have already been compared elsewhere against the "expected"
 !         values set in clm_varpar
-!   if ( maxpatch_pft /= numpft+1 )then
-!      call endrun(msg=' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case'//&
+!   if ( maxpatch_pft /= maxveg+1 )then
+!      call endrun(msg=' maxpatch_pft does NOT equal maxveg+1 -- this is invalid for dynamic PFT case'//&
 !           errMsg(sourcefile, __LINE__) )
 !   end if
 
@@ -264,7 +264,7 @@ contains
     character(len=32) :: subname='dynpft_interp' ! subroutine name
     !-----------------------------------------------------------------------
 
-    ! assumes that maxpatch_pft = numpft + 1, that each landunit has only 1 column, 
+    ! assumes that maxpatch_pft = maxveg + 1, that each landunit has only 1 column, 
     ! and SCAM and CNDV have not been defined
     !
     ! NOTE(wjs, 2014-12-10) I'm not sure if there is still the requirement that SCAM

@@ -967,7 +967,7 @@ contains
     !
     ! Constants
     !
-    !MV (10-08-14) TODO is this right - used to be numpft - is it okay to set it to mxpft?
+    !MV (10-08-14) TODO is this right - used to be maxveg - is it okay to set it to mxpft?
     do m = 0,mxpft 
        this%dwood(m) = dwood
        this%root_radius(m)  = root_radius

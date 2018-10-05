@@ -10,7 +10,7 @@ module surfrdMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use abortutils      , only : endrun
-  use clm_varpar      , only : nlevsoifl, maxpatch_pft_new
+  use clm_varpar      , only : nlevsoifl, maxsoil_patches
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
@@ -756,15 +756,15 @@ contains
        call ncd_inqdlen(ncid, dimid, numcft, 'cft')
        ! Full crop on file and in CLM
        if ( create_crop_landunit .and. numcft > 2 .and. use_crop)then
-          call check_dim(ncid, 'lsmpft', maxpatch_pft_new) ! Check dimension size
+          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
        ! Generic crop in file and generic crop in model
        else if ( create_crop_landunit .and. numcft == 2 .and. cft_size == 2 )then
-          call check_dim(ncid, 'lsmpft', maxpatch_pft_new) ! Check dimension size
+          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
        ! Full crop in file, but model is only with generic crop
        else if ( create_crop_landunit .and. numcft > 2 .and. .not. use_crop)then
-          call check_dim(ncid, 'lsmpft', maxpatch_pft_new) ! Check dimension size
+          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           cftsize = numcft
           allocate(array2DCFT (begg:endg,cft_lb:cftsize-1+cft_lb))
           allocate(array2DFERT(begg:endg,cft_lb:cftsize-1+cft_lb))
@@ -776,7 +776,7 @@ contains
           deallocate(array2DCFT)
           deallocate(array2DFERT)
        else if ( .not. create_crop_landunit )then
-          call check_dim(ncid, 'lsmpft', maxpatch_pft_new) ! Check dimension size
+          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           if ( masterproc ) write(iulog,*) "WARNING: New CFT-based format surface datasets should be run with ", &
                                            "create_crop_landunit=T"
           if ( use_fates ) then
@@ -797,7 +797,7 @@ contains
     else if ( (.not. cft_dim_exists) .and. (.not. create_crop_landunit) )then
        if ( masterproc ) write(iulog,*) "WARNING: The PFT format is an unsupported format that will be removed in the future!"
        ! Check dimension size
-       call check_dim(ncid, 'lsmpft', maxpatch_pft_new)
+       call check_dim(ncid, 'lsmpft', maxsoil_patches)
        call surfrd_pftformat( begg, endg, ncid )                                 ! Format where crop is part of the natural veg. landunit
     else 
        call endrun( msg=' ERROR: Problem figuring out format of input fsurdat file'//errMsg(sourcefile, __LINE__))

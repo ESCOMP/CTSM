@@ -53,11 +53,11 @@ module clm_varpar
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
 
-  integer, public :: numpft      = mxpft   ! actual # of pfts (without bare)
+  integer, public :: maxveg      = mxpft   ! actual # of pfts (without bare)
   integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
   integer, public :: maxpatch_pft        ! max number of plant functional types in naturally vegetated landunit (namelist setting)
-  integer, public :: maxpatch_pft_new  ! actual # of pfts with bare ground; replaces maxpatch_pft, which may be obsolete
+  integer, public :: maxsoil_patches  ! actual # of pfts with bare ground; replaces maxpatch_pft, which may be obsolete
 
   ! constants for decomposition cascade
 
@@ -114,16 +114,16 @@ contains
 ! slevis used this line & it worked; replace with more robust code similar to
 ! what's found in surfrdMod.F90 line 756? Or wait to complete this work,
 ! at which time the if-then-else will go away and we will keep these 2 lines:
-! numpft = mxpft
+! maxveg = mxpft
 ! actual_numcft = 64
     if (use_crop .or. index(fsurdat,'78pfts') > 0) then
-       numpft        = mxpft   ! actual # of patches (without bare)
+       maxveg        = mxpft   ! actual # of patches (without bare)
        actual_numcft =  64     ! actual # of crops
-       maxpatch_pft_new = numpft + 1  ! actual # of patches with bare ground
+       maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
     else
-       numpft        = numveg  ! actual # of patches (without bare)
+       maxveg        = numveg  ! actual # of patches (without bare)
        actual_numcft =   2     ! actual # of crops
-       maxpatch_pft_new = numpft + 1  ! actual # of patches with bare ground
+       maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
     end if
 
     ! For arrays containing all Patches (natural veg & crop), determine lower and upper bounds
@@ -132,10 +132,10 @@ contains
     ! if create_crop_landunit=false)
 
     if (create_crop_landunit) then
-       natpft_size = maxpatch_pft_new - actual_numcft  ! includes bare ground
+       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
        cft_size    = actual_numcft
     else
-       natpft_size = maxpatch_pft_new  ! includes bare ground
+       natpft_size = maxsoil_patches  ! includes bare ground
        cft_size    = 0
     end if
 
@@ -149,7 +149,7 @@ contains
     ! or, better, removed from the code entirely (because it is a maintenance problem, and
     ! I can't imagine that looping idioms that use it help performance that much, and
     ! likely they hurt performance.)
-    max_patch_per_col= max(maxpatch_pft_new, actual_numcft, maxpatch_urb)
+    max_patch_per_col= max(maxsoil_patches, actual_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
     nlevurb     =  5
