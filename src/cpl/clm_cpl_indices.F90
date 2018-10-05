@@ -110,6 +110,8 @@ module clm_cpl_indices
   integer, public ::index_x2l_Flrr_flood      ! rtm->lnd rof flood flux
   integer, public ::index_x2l_Flrr_volr       ! rtm->lnd rof volr total volume
   integer, public ::index_x2l_Flrr_volrmch    ! rtm->lnd rof volr main channel volume
+  integer, public ::index_x2l_Sr_tdepth       ! rtm->lnd tributary water depth
+  integer, public ::index_x2l_Sr_tdepth_max   ! rtm->lnd tributary bankfull water depth
 
   ! In the following, index 0 is bare land, other indices are glc elevation classes
   integer, allocatable, public ::index_x2l_Sg_ice_covered(:) ! Fraction of glacier from glc model
@@ -247,6 +249,8 @@ contains
 
     index_x2l_Flrr_volr     = mct_avect_indexra(x2l,'Flrr_volr')
     index_x2l_Flrr_volrmch  = mct_avect_indexra(x2l,'Flrr_volrmch')
+    index_x2l_Sr_tdepth     = mct_avect_indexra(x2l,'Sr_tdepth')
+    index_x2l_Sr_tdepth_max = mct_avect_indexra(x2l,'Sr_tdepth_max')
 
     index_x2l_Faxa_lwdn     = mct_avect_indexra(x2l,'Faxa_lwdn')
     index_x2l_Faxa_rainc    = mct_avect_indexra(x2l,'Faxa_rainc')

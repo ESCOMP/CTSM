@@ -109,6 +109,8 @@ contains
 
        atm2lnd_inst%volr_grc(g)   = x2l(index_x2l_Flrr_volr,i) * (ldomain%area(g) * 1.e6_r8)
        atm2lnd_inst%volrmch_grc(g)= x2l(index_x2l_Flrr_volrmch,i) * (ldomain%area(g) * 1.e6_r8)
+       atm2lnd_inst%tdepth_grc(g)    = x2l(index_x2l_Sr_tdepth,i)
+       atm2lnd_inst%tdepthmax_grc(g) = x2l(index_x2l_Sr_tdepth_max,i)
 
        ! Determine required receive fields
 

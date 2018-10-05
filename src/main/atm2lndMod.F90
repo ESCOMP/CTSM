@@ -18,7 +18,7 @@ module atm2lndMod
   use decompMod      , only : bounds_type
   use atm2lndType    , only : atm2lnd_type
   use TopoMod        , only : topo_type
-  use SurfaceAlbedoType, only : surfalb_type
+  use SurfaceAlbedoType, only : surfalb_type !scs
   use filterColMod   , only : filter_col_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col
@@ -52,6 +52,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine downscale_forcings(bounds, &
+!scs       topo_inst, atm2lnd_inst, eflx_sh_precip_conversion)
        topo_inst, atm2lnd_inst, surfalb_inst, eflx_sh_precip_conversion)
     !
     ! !DESCRIPTION:
@@ -79,7 +80,7 @@ contains
     type(bounds_type)  , intent(in)    :: bounds  
     class(topo_type)   , intent(in)    :: topo_inst
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
-    class(surfalb_type), intent(in)    :: surfalb_inst
+    class(surfalb_type)   , intent(in)    :: surfalb_inst !scs
     real(r8)           , intent(out)   :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
     !
     ! !LOCAL VARIABLES:
@@ -738,15 +739,20 @@ contains
             sum_wt(g) = sum_wt(g) + col%wtlunit(c)
          end if
       end do
-      ! Normalize column level solar to sum to gridcell value
+      ! Normalize column level solar
       do c = bounds%begc,bounds%endc
 !         if (col%active(c)) then
          if (lun%itype(col%landunit(c)) == istsoil) then
             g = col%gridcell(c)
             do n = 1,numrad
                norm(n) = (sum_solar(g,n)/sum_wt(g))
+!                  write(iulog,*) 'normsolad: ', sum_solar(g,n),sum_wt(g)
                if(norm(n) > 0._r8) then
                   forc_solad_col(c,n)  = forc_solad_col(c,n)*(forc_solad_grc(g,n)/norm(n))
+
+!                  if(c==bounds%begc .and. n==1) write(iulog,*) 'c,n,coszen(c/g),fcol,fgrc,norm--------------------'
+!                  write(iulog,'(a12,2i6,6f12.6)') 'forcsolad: ', c,n,coszen_col(c),coszen_grc(g),forc_solad_col(c,n),forc_solad_grc(g,n),norm(n)
+
                endif
             enddo
          end if

@@ -2368,6 +2368,9 @@ contains
          qflx_latflow_in     =>    waterflux_inst%qflx_latflow_in_col    , & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
          qdischarge          =>    waterflux_inst%qdischarge_col         , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
 
+          tdepth             =>    atm2lnd_inst%tdepth_grc               , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
+          tdepth_bankfull    =>    atm2lnd_inst%tdepthmax_grc            , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
+
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           c_param            =>    soilhydrology_inst%c_param_col        , & ! Input:  [real(r8) (:)   ] baseflow exponent (Qb)                             
           Dsmax              =>    soilhydrology_inst%dsmax_col          , & ! Input:  [real(r8) (:)   ] max. velocity of baseflow (mm/day)
@@ -2479,6 +2482,11 @@ contains
              endif
           endif ! this could be moved to include latflow calculations...
 
+          ! the qflx_latflow_out_vol calculations use the
+          ! transmissivity to determine whether saturated flow
+          ! conditions exist, b/c gradients will be nonzero
+          ! even when no saturated layers are present
+          
           ! kinematic wave approximation
           if (baseflow_method == 'kinematic') then
              qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*col%hill_slope(c)
@@ -2487,13 +2495,19 @@ contains
           if (baseflow_method == 'darcy') then
              if (col%cold(c) /= ispval) then
                 c_down = col%cold(c)
-                dgrad = (col%hill_elev(c)+(zi(c,nbedrock(c))-zwt(c))) &
-                     - (col%hill_elev(c_down)+(zi(c,nbedrock(c))-zwt(c_down)))
+                dgrad = (col%hill_elev(c)-zwt(c)) &
+                     - (col%hill_elev(c_down)-zwt(c_down))
                 dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(c_down))
              else
-! assume elev = 0 at channel and zwt = 0 at channel
-                dgrad = (col%hill_elev(c)-zwt(c))
+                ! flow between channel and lowest column
+                ! bankfull height is defined to be zero
+                dgrad = (col%hill_elev(c)-zwt(c)) &
+                     - (tdepth(g) - tdepth_bankfull(g))
                 dgrad = dgrad / (col%hill_distance(c))
+                ! dgrad cannot be negative when channel is empty
+                if (tdepth(g) <= 0._r8) then
+                   dgrad = max(dgrad, 0._r8)
+                endif
              endif
              qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
           end if
