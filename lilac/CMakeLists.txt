@@ -6,6 +6,8 @@ enable_language(Fortran)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/CMakeModules")
 
 find_package(MPI REQUIRED)
+# TODO: This should be found from the find_package call but its not working
+set(CMAKE_Fortran_COMPILER "/usr/lib64/mpich/bin/mpif90")
 find_package(ESMF REQUIRED)
 
 # Local CMake modules
@@ -28,8 +30,8 @@ set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${dialect}")
 
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_COMPILER_LINE}")
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_LINK_LINE} -g -cpp")
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I /usr/include/ -I/usr/src/lilac/external/esmf/src/Infrastructure/Util/include")
-
+# TODO: This should not be necessary but certain header files are missing from the build
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I /usr/include/ -I/usr/src/lilac/external/esmf/src/Infrastructure/Util/include -I/usr/src/lilac/external/esmf/build_config/Linux.gfortran.default -I /usr/src/lilac/external/esmf/src/include")
 message("CMAKE_Fortran_FLAGS:" ${CMAKE_Fortran_FLAGS})
 
 add_subdirectory(lilac)

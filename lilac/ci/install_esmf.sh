@@ -4,7 +4,7 @@ set -x
 
 cd ./external/esmf
 
-export FC="gfortran"
+export FC="mpif90"
 
 export ESMF_DIR=$PWD
 export ESMF_COMM="mpich3"
