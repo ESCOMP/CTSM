@@ -24,7 +24,7 @@ module histFileMod
   use EDTypesMod     , only : nlevleaf
   use FatesInterfaceMod , only : nlevsclass, nlevage
   use EDTypesMod     , only : nfsc, ncwd
-  use FatesInterfaceMod , only : numpft_ed => maxveg
+  use FatesInterfaceMod , only : maxveg_ed => maxveg
   use ncdio_pio 
 
   !
@@ -2056,14 +2056,14 @@ contains
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
-       call ncd_defdim(lnfid, 'fates_levpft', numpft_ed, dimid)
+       call ncd_defdim(lnfid, 'fates_levpft', maxveg_ed, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levfuel', nfsc, dimid)
        call ncd_defdim(lnfid, 'fates_levcwdsc', ncwd, dimid)
-       call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_ed, dimid)
+       call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*maxveg_ed, dimid)
        call ncd_defdim(lnfid, 'fates_levcan', nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
-       call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_ed, dimid)
+       call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * maxveg_ed, dimid)
     end if
 
     if ( .not. lhistrest )then
@@ -4757,7 +4757,7 @@ contains
     case ('fates_levscls')
        num2d = nlevsclass
     case ('fates_levpft')
-       num2d = numpft_ed
+       num2d = maxveg_ed
     case ('fates_levage')
        num2d = nlevage
     case ('fates_levfuel')
@@ -4765,7 +4765,7 @@ contains
     case ('fates_levcwdsc')
        num2d = ncwd
     case ('fates_levscpf')
-       num2d = nlevsclass*numpft_ed
+       num2d = nlevsclass*maxveg_ed
     case ('fates_levscag')
        num2d = nlevsclass*nlevage
     case ('fates_levcan')
@@ -4773,7 +4773,7 @@ contains
     case ('fates_levcnlf')
        num2d = nlevleaf * nclmax
     case ('fates_levcnlfpf')
-       num2d = nlevleaf * nclmax * numpft_ed
+       num2d = nlevleaf * nclmax * maxveg_ed
     case ('ltype')
        num2d = max_lunit
     case ('natpft')
