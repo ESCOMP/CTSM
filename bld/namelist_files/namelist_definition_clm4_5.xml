@@ -115,12 +115,11 @@ Otherwise use the fraction straight up              (the default for CLM5.0)
 </entry>
 
 <entry id="soil_layerstruct" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,22SL_50m" >
+       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m" >
 10SL_3.5m    = standard CLM4 and CLM4.5 version
 23SL_3.5m    = more vertical layers for permafrost simulations 
 49SL_10m     = 49 layer soil column, 10m of soil, 5 bedrock layers
 20SL_8.5m    = 20 layer soil column, 8m of soil, 5 bedrock layers
-22SL_50m     = 22 layer soil column, 8m of soil, 2 variable thickness layers, 5 bedrock layers
 </entry>
 
 <entry id="use_bedrock" type="logical" category="clm_physics"
