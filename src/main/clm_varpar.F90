@@ -119,8 +119,13 @@ contains
     ! crops if create_crop_landunit=false), and (2) CFTs on the crop landunit (no elements
     ! if create_crop_landunit=false)
 
-    natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
-    cft_size    = actual_numcft
+    if (create_crop_landunit) then
+       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
+       cft_size    = actual_numcft
+    else
+       natpft_size = maxsoil_patches  ! includes bare ground
+       cft_size    = 0
+    end if
 
     natpft_lb = 0
     natpft_ub = natpft_lb + natpft_size - 1
