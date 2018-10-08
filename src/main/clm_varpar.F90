@@ -48,7 +48,6 @@ module clm_varpar
   integer, public, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
   integer, public, parameter :: mxpft       =  78     ! maximum number of PFT's for any mode;
   ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
-  integer, public, parameter :: numveg      =  16     ! number of veg types (without specific crop)
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
@@ -110,22 +109,8 @@ contains
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    ! Crop settings and consistency checks
-
-! slevis used this line & it worked; replace with more robust code similar to
-! what's found in surfrdMod.F90 line 756? Or wait to complete this work,
-! at which time the if-then-else will go away and we will keep these 2 lines:
-! maxveg = mxpft
-! actual_numcft = 64
-!   if (use_crop .or. index(fsurdat,'78pfts') > 0) then
-!      maxveg        = mxpft   ! actual # of patches (without bare)
-!      actual_numcft =  64     ! actual # of crops
-!      maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
-!   else
-!      maxveg        = numveg  ! actual # of patches (without bare)
-!      actual_numcft =   2     ! actual # of crops
-!      maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
-!   end if
+    ! actual_maxsoil_patches and actual_numcft were read directly from the
+    ! surface dataset
     maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
     maxveg = maxsoil_patches - 1  ! # of patches without bare ground
 
@@ -134,13 +119,8 @@ contains
     ! crops if create_crop_landunit=false), and (2) CFTs on the crop landunit (no elements
     ! if create_crop_landunit=false)
 
-    if (create_crop_landunit) then
-       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
-       cft_size    = actual_numcft
-    else
-       natpft_size = maxsoil_patches  ! includes bare ground
-       cft_size    = 0
-    end if
+    natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
+    cft_size    = actual_numcft
 
     natpft_lb = 0
     natpft_ub = natpft_lb + natpft_size - 1

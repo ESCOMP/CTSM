@@ -19,9 +19,9 @@ contains
      use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
      use pftconMod       , only : nbrdlf_evr_shrub, nc4_grass, noveg
      use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size, numveg 
+     use clm_varpar      , only : natpft_size, cft_size
      implicit none
-     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8), allocatable ::  wtpft(:,:)
 
@@ -77,10 +77,10 @@ contains
      use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
      use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
      use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size, numveg
+     use clm_varpar      , only : natpft_size, cft_size
 
      implicit none
-     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16
      real(r8) :: wt_cft(begg:endg,cftsize)
 
      ! Set relevant pftcon values to defaults; these should be overridden by individual
