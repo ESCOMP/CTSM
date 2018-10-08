@@ -129,7 +129,7 @@ module IrrigationMod
      integer , pointer :: irrig_method_patch          (:) ! patch irrigation application method
 
      ! Private data members; time-varying:
-     real(r8), pointer :: irrig_rate_patch            (:) ! current irrigation rate [mm/s]
+     real(r8), pointer :: sfc_irrig_rate_patch            (:) ! current irrigation rate [mm/s]
      real(r8), pointer :: irrig_rate_demand_patch     (:) ! current irrigation rate, neglecting surface water source limitation [mm/s]
      real(r8), pointer :: gw_uncon_irrig_rate_patch   (:) ! current unconfined groundwater irrigation rate [mm/s]
      real(r8), pointer :: gw_con_irrig_rate_patch     (:) ! current confined groundwater irrigation rate [mm/s]
@@ -523,7 +523,7 @@ contains
     allocate(this%qflx_irrig_demand_patch (begp:endp))              ; this%qflx_irrig_demand_patch  (:)   = nan
     allocate(this%relsat_wilting_point_col    (begc:endc,nlevsoi))  ; this%relsat_wilting_point_col     (:,:) = nan
     allocate(this%relsat_target_col           (begc:endc,nlevsoi))  ; this%relsat_target_col            (:,:) = nan
-    allocate(this%irrig_rate_patch            (begp:endp))          ; this%irrig_rate_patch             (:)   = nan
+    allocate(this%sfc_irrig_rate_patch            (begp:endp))          ; this%sfc_irrig_rate_patch             (:)   = nan
     allocate(this%irrig_rate_demand_patch     (begp:endp))          ; this%irrig_rate_demand_patch      (:)   = nan
     allocate(this%gw_uncon_irrig_rate_patch   (begp:endp))          ; this%gw_uncon_irrig_rate_patch    (:)   = nan
     allocate(this%gw_con_irrig_rate_patch     (begp:endp))          ; this%gw_con_irrig_rate_patch      (:)   = nan
@@ -729,11 +729,11 @@ contains
     if (do_io) then
        call restartvar(ncid=ncid, flag=flag, varname='irrig_rate', xtype=ncd_double,  &
             dim1name='pft', &
-            long_name='irrigation rate', units='mm/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%irrig_rate_patch)
+            long_name='surface irrigation rate', units='mm/s', &
+            interpinic_flag='interp', readvar=readvar, data=this%sfc_irrig_rate_patch)
     end if
     if (flag=='read' .and. .not. readvar) then
-       this%irrig_rate_patch = 0.0_r8
+       this%sfc_irrig_rate_patch = 0.0_r8
     end if
 
     ! BACKWARDS_COMPATIBILITY(wjs, 2016-11-23) To support older restart files without an
@@ -779,7 +779,7 @@ contains
     deallocate(this%qflx_irrig_demand_patch)
     deallocate(this%relsat_wilting_point_col)
     deallocate(this%relsat_target_col)
-    deallocate(this%irrig_rate_patch)
+    deallocate(this%sfc_irrig_rate_patch)
     deallocate(this%irrig_rate_demand_patch)
     deallocate(this%gw_uncon_irrig_rate_patch)
     deallocate(this%gw_con_irrig_rate_patch)
@@ -837,7 +837,7 @@ contains
     do p = bounds%begp, bounds%endp
 
        if (this%n_irrig_steps_left_patch(p) > 0) then
-          qflx_sfc_irrig_patch(p)          = this%irrig_rate_patch(p)
+          qflx_sfc_irrig_patch(p)          = this%sfc_irrig_rate_patch(p)
           this%qflx_irrig_demand_patch(p)  = this%irrig_rate_demand_patch(p)
           qflx_gw_uncon_irrig_patch(p)     = this%gw_uncon_irrig_rate_patch(p)
           qflx_gw_con_irrig_patch(p)       = this%gw_con_irrig_rate_patch(p)
@@ -1120,7 +1120,7 @@ contains
        if (check_for_irrig_patch(p)) then
 
           ! Convert units from mm to mm/sec
-          this%irrig_rate_patch(p) = deficit_volr_limited(c) / &
+          this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
                (this%dtime*this%irrig_nsteps_per_day)
           this%irrig_rate_demand_patch(p) = deficit(c) / &
                (this%dtime*this%irrig_nsteps_per_day)
@@ -1141,6 +1141,9 @@ contains
                      (deficit(c) - deficit_volr_limited(c) - available_gw_uncon(c)) / &
                      (this%dtime*this%irrig_nsteps_per_day)
              endif
+          else
+             this%gw_uncon_irrig_rate_patch(p) = 0._r8
+             this%gw_con_irrig_rate_patch(p)   = 0._r8
           endif
           
           ! n_irrig_steps_left(p) > 0 is ok even if irrig_rate(p) ends up = 0
