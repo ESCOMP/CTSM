@@ -11,4 +11,10 @@ The atmosphere component will need to call each of the following subroutines:
   * `lilac_run`
   * `lilac_final`
 
-TODO: fill in this section as the api comes together.
+LILAC Core
+----------
+.. f:autosrcfile:: core.f90
+
+ESMF Utils
+----------
+.. f:autosrcfile:: esmf_utils.f90

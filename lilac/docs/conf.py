@@ -12,7 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -39,7 +39,14 @@ release = ''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.todo',
+    'sphinx.ext.coverage',
+    'sphinx.ext.imgmath',
+    'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
+    'sphinxfortran.fortran_domain',
+    'sphinxfortran.fortran_autodoc',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,6 +57,7 @@ templates_path = ['_templates']
 #
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
+fortran_src = '*f90'
 
 # The master toctree document.
 master_doc = 'index'
@@ -162,3 +170,18 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+
+## -- Options for Sphinx-Fortran ---------------------------------------------
+# List of possible extensions in the case of a directory listing
+fortran_ext = ['f90', 'F90', 'f95', 'F95']
+
+# This variable must be set with file pattern, like "*.f90", or a list of them.
+# It is also possible to specify a directory name; in this case, all files than
+# have an extension matching those define by the config variable `fortran_ext`
+# are used.
+fortran_src = [os.path.abspath('../lilac/')]
+
+# Indentation string or length (default 4). If it is an integer,
+# indicates the number of spaces.
+fortran_indent = 4
