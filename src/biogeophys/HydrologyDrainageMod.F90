@@ -164,9 +164,7 @@ contains
        ! remove groundwater irrigation from aquifer
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
-          if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then      
-             wa(c) = wa(c) - qflx_gw_con_irrig(c) * dtime
-          endif
+          wa(c) = wa(c) - qflx_gw_con_irrig(c) * dtime
        enddo
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
