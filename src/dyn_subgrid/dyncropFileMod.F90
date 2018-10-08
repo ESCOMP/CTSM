@@ -126,7 +126,6 @@ contains
     use landunit_varcon   , only : istcrop
     use clm_varpar        , only : cft_size, cft_lb, cft_ub
     use clm_varctl        , only : use_crop
-    use surfrdMod         , only : numcft
     use surfrdUtilsMod    , only : collapse_crop_types
     use subgridWeightsMod , only : set_landunit_weight
     implicit none
