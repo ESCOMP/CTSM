@@ -3057,10 +3057,8 @@ contains
           call ncd_defvar(varname='land1d_jxy', xtype=ncd_int, dim1name=namel, &
                long_name='2d latitude index of corresponding landunit', ncid=ncid)
 
-          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-          !call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name='landunit', &
-          !     long_name='1d grid index of corresponding landunit', ncid=ncid)
-          ! ----------------------------------------------------------------
+          call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name='landunit', &
+               long_name='1d grid index of corresponding landunit', ncid=ncid)
 
           call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name=namel, &
                long_name='landunit weight relative to corresponding gridcell', ncid=ncid)
@@ -3086,13 +3084,11 @@ contains
           call ncd_defvar(varname='cols1d_jxy', xtype=ncd_int, dim1name=namec, &
                long_name='2d latitude index of corresponding column', ncid=ncid)
 
-          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-          !call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
-          !     long_name='1d grid index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
+               long_name='1d grid index of corresponding column', ncid=ncid)
 
-          !call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
-          !     long_name='1d landunit index of corresponding column', ncid=ncid)
-          ! ----------------------------------------------------------------
+          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
+               long_name='1d landunit index of corresponding column', ncid=ncid)
 
           call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name=namec, &
                long_name='1d landunit index of corresponding column', ncid=ncid)
@@ -3128,21 +3124,19 @@ contains
           call ncd_defvar(varname='pfts1d_jxy', xtype=ncd_int, dim1name=namep, &
                long_name='2d latitude index of corresponding pft', ncid=ncid)
 
-          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-          !call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name='pft', &
-          !     long_name='1d grid index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name='pft', &
+               long_name='1d grid index of corresponding pft', ncid=ncid)
 
-          !call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
-          !     long_name='1d landunit index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
+               long_name='1d landunit index of corresponding pft', ncid=ncid)
 
-          !call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
-          !     long_name='1d column index of corresponding pft', ncid=ncid)
-          ! ----------------------------------------------------------------
-
-       call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name=namep, &
+          call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
                long_name='1d column index of corresponding pft', ncid=ncid)
 
-       call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
+          call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name=namep, &
+               long_name='1d column index of corresponding pft', ncid=ncid)
+
+          call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
                long_name='pft weight relative to corresponding gridcell', ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_wtlunit', xtype=ncd_double, dim1name=namep, &
@@ -3218,9 +3212,10 @@ contains
          ilarr(l) = (ldecomp%gdc2glo(lun%gridcell(l))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'      , data=ilarr        , dim1name=namel, ncid=ncid, flag='write')
-       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
-       !call ncd_io(varname='land1d_gi'       , data=lun%gridcell, dim1name=namel, ncid=ncid, flag='write')
-       ! ----------------------------------------------------------------
+       do l=bounds%begl,bounds%endl
+          ilarr(l) = GetGlobalIndex(decomp_index=lun%gridcell(l), clmlevel=nameg)
+       end do
+       call ncd_io(varname='land1d_gi'       , data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_wtgcell'  , data=lun%wtgcell , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_ityplunit', data=lun%itype   , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_active'   , data=lun%active  , dim1name=namel, ncid=ncid, flag='write')
@@ -3243,10 +3238,10 @@ contains
          icarr(c) = (ldecomp%gdc2glo(col%gridcell(c))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
-       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
-       !call ncd_io(varname='cols1d_gi'     , data=col%gridcell, dim1name=namec, ncid=ncid, flag='write')
-       !call ncd_io(varname='cols1d_li'     , data=col%landunit, dim1name=namec, ncid=ncid, flag='write')
-       ! ----------------------------------------------------------------
+       do c = bounds%begc,bounds%endc
+         icarr(c) =  GetGlobalIndex(decomp_index=col%gridcell(c), clmlevel=namel)
+       enddo
+       call ncd_io(varname='cols1d_gi'     , data=icarr, dim1name=namec, ncid=ncid, flag='write')
        do c = bounds%begc,bounds%endc
          icarr(c) =  GetGlobalIndex(decomp_index=col%landunit(c), clmlevel=namel)
        enddo
@@ -3281,11 +3276,15 @@ contains
          iparr(p) = (ldecomp%gdc2glo(patch%gridcell(p))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
-       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-       !call ncd_io(varname='pfts1d_gi'       , data=patch%gridcell, dim1name=namep, ncid=ncid, flag='write')
-       !call ncd_io(varname='pfts1d_li'       , data=patch%landunit, dim1name=namep, ncid=ncid, flag='write')
-       !call ncd_io(varname='pfts1d_ci'       , data=patch%column  , dim1name=namep, ncid=ncid, flag='write')
-       ! ----------------------------------------------------------------
+
+       do p=bounds%begp,bounds%endp
+          iparr(p) = GetGlobalIndex(decomp_index=patch%gridcell(p), clmlevel=namec)
+       enddo
+       call ncd_io(varname='pfts1d_gi'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
+       do p=bounds%begp,bounds%endp
+          iparr(p) = GetGlobalIndex(decomp_index=patch%landunit(p), clmlevel=namec)
+       enddo
+       call ncd_io(varname='pfts1d_li'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
        do p=bounds%begp,bounds%endp
           iparr(p) = GetGlobalIndex(decomp_index=patch%column(p), clmlevel=namec)
        enddo
@@ -3442,9 +3441,7 @@ contains
              ! Define time-constant field variables
              call htape_timeconst(t, mode='define')
 
-             ! Define 3D time-constant field variables only to first primary tape
-!scs             if ( do_3Dtconst .and. t == 1 ) then
-! try to get z,dz on second history tape
+             ! Define 3D time-constant field variables on first history tapes
              if ( do_3Dtconst) then
                 call htape_timeconst3D(t, &
                      bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='define')
@@ -3463,9 +3460,7 @@ contains
           ! Write time constant history variables
           call htape_timeconst(t, mode='write')
 
-          ! Write 3D time constant history variables only to first primary tape
-!scs          if ( do_3Dtconst .and. t == 1 .and. tape(t)%ntimes == 1 )then
-! write to all history tapes
+          ! Write 3D time constant history variables to first history tapes
           if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
              call htape_timeconst3D(t, &
                   bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
