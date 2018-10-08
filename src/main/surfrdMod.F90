@@ -597,6 +597,7 @@ contains
     ! !USES:
     use clm_instur      , only : fert_cft, wt_nat_patch, irrig_method
     use clm_varpar      , only : cft_size, cft_lb, natpft_lb
+    use IrrigationMod   , only : irrig_method_unset
     ! !ARGUMENTS:
     implicit none
     type(file_desc_t), intent(inout) :: ncid         ! netcdf id
@@ -640,10 +641,10 @@ contains
        if (.not. readvar) then
           if ( masterproc ) &
                 write(iulog,*) ' WARNING: irrigation_method NOT on surfdata file zero out'
-          irrig_method = 0
+          irrig_method = irrig_method_unset
        end if
     else
-       irrig_method = 0
+       irrig_method = irrig_method_unset
     end if
 
     allocate( array2D(begg:endg,1:natpft_size) )

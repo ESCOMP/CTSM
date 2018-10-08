@@ -47,12 +47,11 @@ module IrrigationMod
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
-  use clm_varcon       , only : isecspday, degpsec, denh2o, spval, ispval, namec
+  use clm_varcon       , only : isecspday, degpsec, denh2o, spval, ispval, namec, nameg
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use WaterFluxBulkType      , only : waterfluxbulk_type
-  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use GridcellType     , only : grc                
   use ColumnType       , only : col                
   use PatchType        , only : patch                
@@ -181,6 +180,7 @@ module IrrigationMod
   real(r8), parameter :: m3_over_km2_to_mm = 1.e-3_r8
      
   ! Irrigation methods
+  integer, parameter, public  :: irrig_method_unset = 0
   ! Drip is defined here as irrigation applied directly to soil surface
   integer, parameter, private :: irrig_method_drip = 1
   ! Sprinkler is applied directly to canopy
@@ -624,10 +624,14 @@ contains
        if (pftcon%irrigated(patch%itype(p)) == 1._r8) then 
           m = patch%itype(p)
           this%irrig_method_patch(p) = irrig_method(g,m)
-          ! ensure irrig_method is valid; if not, revert to drip
-          if(irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
+          ! ensure irrig_method is valid; if not set, use drip irrigation
+          if(irrig_method(g,m) == irrig_method_unset) then
              this%irrig_method_patch(p) = irrig_method_drip
-          endif
+          else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
+             write(iulog,*) subname //' invalid irrigation method specified'
+             call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
+                  errMsg(sourcefile, __LINE__))
+          end if
        end if
     end do
        
@@ -852,9 +856,11 @@ contains
        
        if(this%irrig_method_patch(p) == irrig_method_drip) then
           qflx_irrig_drip_patch(p)      = qflx_sfc_irrig_patch(p) + qflx_gw_uncon_irrig_patch(p) + qflx_gw_con_irrig_patch(p)
-       endif
-       if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
+       else if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
           qflx_irrig_sprinkler_patch(p) = qflx_sfc_irrig_patch(p) + qflx_gw_uncon_irrig_patch(p) + qflx_gw_con_irrig_patch(p)
+       else
+          call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
+               errMsg(sourcefile, __LINE__)) 
        endif
 
     end do
