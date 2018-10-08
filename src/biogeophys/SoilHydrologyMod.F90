@@ -2029,7 +2029,7 @@ contains
           sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
-          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col                                                                       & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/ms)
+          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col                                                                              & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/m2)
           )
 
        ! calculate water table based on soil moisture state
@@ -2105,7 +2105,6 @@ contains
              else
                 available_water_layer=max(0._r8,(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
              endif
-!             if((jwt(c)+1) < nbedrock(c)) write(iulog,*) 'availwater: ', j,jwt(c), nbedrock(c), available_water_layer
 
              available_gw_uncon(c) = available_gw_uncon(c) &
                   + available_water_layer

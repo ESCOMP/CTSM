@@ -402,7 +402,7 @@ contains
          long_name=this%info%lname('available water in the unconfined saturated zone'), &
          ptr_col=this%available_gw_uncon_col, default='inactive')
     
-       this%h2osno_top_col(begc:endc) = spval
+    this%h2osno_top_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('H2OSNO_TOP'), &
          units='kg/m2', &

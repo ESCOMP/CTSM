@@ -126,6 +126,7 @@ module IrrigationMod
      integer :: irrig_nsteps_per_day ! number of time steps per day in which we irrigate
      real(r8), pointer :: relsat_wilting_point_col(:,:) ! relative saturation at which smp = wilting point [col, nlevsoi]
      real(r8), pointer :: relsat_target_col(:,:)        ! relative saturation at which smp is at the irrigation target [col, nlevsoi]
+     integer , pointer :: irrig_method_patch          (:) ! patch irrigation application method
 
      ! Private data members; time-varying:
      real(r8), pointer :: irrig_rate_patch            (:) ! current irrigation rate [mm/s]
@@ -134,8 +135,6 @@ module IrrigationMod
      real(r8), pointer :: gw_con_irrig_rate_patch     (:) ! current confined groundwater irrigation rate [mm/s]
      integer , pointer :: n_irrig_steps_left_patch    (:) ! number of time steps for which we still need to irrigate today (if 0, ignore)
      real(r8), pointer :: qflx_irrig_demand_patch     (:) ! irrigation flux neglecting surface water source limitation [mm/s]
-
-     integer , pointer :: irrig_method_patch          (:) ! patch irrigation application method
 
    contains
      ! Public routines

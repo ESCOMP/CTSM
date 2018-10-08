@@ -209,6 +209,7 @@ contains
      real(r8) :: qflx_through_snow(bounds%begp:bounds%endp)   ! direct snow throughfall [mm/s]
      real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp) ! snow precipitation incident on ground [mm/s]
      real(r8) :: qflx_prec_grnd_rain(bounds%begp:bounds%endp) ! rain precipitation incident on ground [mm/s]
+     real(r8) :: qflx_liq_above_canopy(bounds%begp:bounds%endp) ! liquid water input above canopy (rain plus irrigation) [mm/s]
      real(r8) :: z_avg                                        ! grid cell average snow depth
      real(r8) :: rho_avg                                      ! avg density of snow column
      real(r8) :: temp_snow_depth,temp_intsnow                 ! temporary variables
@@ -309,13 +310,14 @@ contains
 
 
              if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
-
-                ! irrigation may occur if forc_precip = 0
                 if (frac_veg_nosno(p) == 1 .and. (forc_rain(c) + forc_snow(c) + qflx_irrig_sprinkler(p)) > 0._r8) then
-                
+
+                   ! total liquid water inputs above canopy
+                   qflx_liq_above_canopy(p) = forc_rain(c)+ qflx_irrig_sprinkler(p)
+                   
                    ! determine fraction of input precipitation that is snow and rain
-                   fracsnow(p) = forc_snow(c)/(forc_snow(c) + forc_rain(c))
-                   fracrain(p) = forc_rain(c)/(forc_snow(c) + forc_rain(c))
+                   fracsnow(p) = forc_snow(c)/(forc_snow(c) + qflx_liq_above_canopy(p))
+                   fracrain(p) = forc_rain(c)/(forc_snow(c) + qflx_liq_above_canopy(p))
 
                    ! The leaf water capacities for solid and liquid are different,
                    ! generally double for snow, but these are of somewhat less
@@ -342,17 +344,17 @@ contains
                       qflx_through_snow(p) = forc_snow(c) * (1._r8-fpi)
                    end if
                    ! Direct throughfall
-                   qflx_through_rain(p) = (forc_rain(c) + qflx_irrig_sprinkler(p)) * (1._r8-fpi)
+                   qflx_through_rain(p) = qflx_liq_above_canopy(p) * (1._r8-fpi)
 
                    if (snowveg_on .or. snowveg_onrad) then
                       ! Intercepted precipitation [mm/s]
                       qflx_prec_intr(p) = forc_snow(c)*fpisnow + (forc_rain(c) + qflx_irrig_sprinkler(p))*fpi
                       ! storage of intercepted snowfall, rain, and dew
                       snocan(p) = max(0._r8, snocan(p) + dtime*forc_snow(c)*fpisnow)    
-                      liqcan(p) = max(0._r8, liqcan(p) + dtime*(forc_rain(c) + qflx_irrig_sprinkler(p))*fpi)
+                      liqcan(p) = max(0._r8, liqcan(p) + dtime*qflx_liq_above_canopy(p)*fpi)
                    else
                       ! Intercepted precipitation [mm/s]
-                      qflx_prec_intr(p) = (forc_snow(c) + forc_rain(c) + qflx_irrig_sprinkler(p)) * fpi
+                      qflx_prec_intr(p) = (forc_snow(c) + qflx_liq_above_canopy(p)) * fpi
                    end if
                    
                    ! Water storage of intercepted precipitation and dew
@@ -420,7 +422,7 @@ contains
           if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
              if (frac_veg_nosno(p) == 0) then
                 qflx_prec_grnd_snow(p) = forc_snow(c)
-                qflx_prec_grnd_rain(p) = forc_rain(c)
+                qflx_prec_grnd_rain(p) = forc_rain(c) + qflx_irrig_sprinkler(p)
              else
                 if (snowveg_on .or. snowveg_onrad) then
                    qflx_snowindunload(p)=0._r8 
