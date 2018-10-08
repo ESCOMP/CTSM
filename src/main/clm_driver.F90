@@ -623,7 +623,7 @@ contains
             (bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
             volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
             rof_prognostic     = rof_prognostic, &
-            available_gw_uncon = water_inst%waterdiagnosticbulk_inst%available_gw_uncon_col)
+            available_gw_uncon = water_inst%waterdiagnosticbulk_inst%available_gw_uncon_col(bounds_clump%begc:bounds_clump%endc))
        call t_stopf('irrigationneeded')
 
        ! ============================================================================
