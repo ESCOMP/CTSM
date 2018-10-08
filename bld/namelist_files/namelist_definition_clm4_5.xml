@@ -440,6 +440,7 @@ is turned off regardless of the setting of this namelist variable.
 <entry id="use_groundwater_irrigation" type="logical" category="clm_physics"
        group="irrigation_inparm" valid_values="" >
 If TRUE, supply irrigation from groundwater (in addition to surface water).
+
 </entry>
 
 <entry id="irrigate" type="logical" category="clm_physics"

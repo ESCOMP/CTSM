@@ -42,6 +42,7 @@ module clm_driver
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
   use LakeHydrologyMod       , only : LakeHydrology
+  use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
   !
   use AerosolMod             , only : AerosolMasses  
   use SnowSnicarMod          , only : SnowAge_grain
@@ -429,6 +430,11 @@ contains
        
        call setExposedvegpFilter(bounds_clump, &
             canopystate_inst%frac_veg_nosno_patch(bounds_clump%begp:bounds_clump%endp))
+
+       ! Amount of water available for groundwater irrigation
+       call CalcAvailableUnconfinedAquifer(bounds_clump, filter(nc)%num_hydrologyc, &
+            filter(nc)%hydrologyc, soilhydrology_inst, soilstate_inst, &
+              water_inst%waterdiagnosticbulk_inst)
 
        ! Irrigation flux
        ! input is main channel storage

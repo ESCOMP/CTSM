@@ -50,7 +50,8 @@ module SoilHydrologyMod
   public :: ThetaBasedWaterTable ! Calculate water table from soil moisture state
   public :: LateralFlowPowerLaw  ! Calculate lateral flow based on power law drainage function
   public :: RenewCondensation    ! Misc. corrections
-
+  public :: CalcAvailableUnconfinedAquifer  ! Calculate water in unconfined aquifer available for groundwater irrigation use
+  
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: QflxH2osfcSurf      ! Compute qflx_h2osfc_surf
   private :: QflxH2osfcDrain     ! Compute qflx_h2osfc_drain
@@ -1984,7 +1985,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
         num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-        waterstatebulk_inst, waterfluxbulk_inst, waterdiagnosticbulk_inst) 
+        waterstatebulk_inst, waterfluxbulk_inst) 
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
@@ -2003,7 +2004,6 @@ contains
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(waterstatebulk_type)     , intent(inout) :: waterstatebulk_inst
      type(waterfluxbulk_type)      , intent(inout) :: waterfluxbulk_inst
-     type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
@@ -2028,8 +2028,7 @@ contains
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
           sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
-          zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
-          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col                                                                              & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/m2)
+          zwt                =>    soilhydrology_inst%zwt_col              & ! Output: [real(r8) (:)   ]  water table depth (m)                             
           )
 
        ! calculate water table based on soil moisture state
@@ -2079,37 +2078,6 @@ contains
           endif
 
        end do
-
-       ! calculate amount of water in saturated zone that
-       ! is available for groundwater irrigation
-
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          available_gw_uncon(c) = 0._r8
-
-          jwt(c) = nlevsoi
-          ! allow jwt to equal zero when zwt is in top layer
-          do j = 1,nlevsoi
-             if(zwt(c) <= zi(c,j)) then
-                jwt(c) = j-1
-                exit
-             end if
-          enddo
-          do j = jwt(c)+1, nbedrock(c)
-             s_y = watsat(c,j) &
-                  * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-             s_y=max(s_y,0.02_r8)
-             
-             if (j==jwt(c)+1) then
-                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))
-             else
-                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
-             endif
-
-             available_gw_uncon(c) = available_gw_uncon(c) &
-                  + available_water_layer
-          enddo
-       enddo
 
      end associate
 
@@ -2222,7 +2190,7 @@ contains
           qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
           qflx_qrgwl         =>    waterfluxbulk_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
           qflx_rsub_sat      =>    waterfluxbulk_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ] soil saturation excess [mm h2o/s]                 
-          qflx_gw_uncon_irrig => waterfluxbulk_inst%qflx_gw_uncon_irrig_col  , & ! unconfined groundwater irrigation flux (mm H2O /s)
+          qflx_gw_uncon_irrig => waterfluxbulk_inst%qflx_gw_uncon_irrig_col  , & ! Input:  [real(r8) (:) unconfined groundwater irrigation flux (mm H2O /s)
 
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
@@ -2535,6 +2503,79 @@ contains
      end associate
 
    end subroutine RenewCondensation
+!#8
+   !-----------------------------------------------------------------------
+   subroutine CalcAvailableUnconfinedAquifer(bounds, num_hydrologyc, filter_hydrologyc, &
+        soilhydrology_inst, soilstate_inst, waterdiagnosticbulk_inst) 
+     !
+     ! !DESCRIPTION:
+     ! Calculate water in unconfined aquifer (i.e. soil column) that
+     ! is available for groundwater recharge.
+     !
+     ! !USES:
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)        , intent(in)         :: bounds  
+     integer                  , intent(in)         :: num_hydrologyc       ! number of column soil points in column filter
+     integer                  , intent(in)         :: filter_hydrologyc(:) ! column filter for soil points
+     type(soilhydrology_type) , intent(inout)      :: soilhydrology_inst
+     type(soilstate_type)     , intent(in)         :: soilstate_inst
+     type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
+     integer  :: c,j,fc                                ! indices
+     real(r8) :: s_y
+     real(r8) :: available_water_layer
+     
+     !-----------------------------------------------------------------------
+
+     associate(                                                            & 
+          nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
+          z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
+          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)           
+          bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
+          sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
+          watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
+          zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
+          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col                                                                              & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/m2)
+          )
+
+       ! calculate amount of water in saturated zone that
+       ! is available for groundwater irrigation
+
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          available_gw_uncon(c) = 0._r8
+
+          jwt(c) = nlevsoi
+          ! allow jwt to equal zero when zwt is in top layer
+          do j = 1,nlevsoi
+             if(zwt(c) <= zi(c,j)) then
+                jwt(c) = j-1
+                exit
+             end if
+          enddo
+          do j = jwt(c)+1, nbedrock(c)
+             s_y = watsat(c,j) &
+                  * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+             s_y=max(s_y,0.02_r8)
+             
+             if (j==jwt(c)+1) then
+                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))
+             else
+                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
+             endif
+
+             available_gw_uncon(c) = available_gw_uncon(c) &
+                  + available_water_layer
+          enddo
+       enddo
+
+     end associate
+
+   end subroutine CalcAvailableUnconfinedAquifer
+
 
 !#0
 end module SoilHydrologyMod

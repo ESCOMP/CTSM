@@ -747,14 +747,14 @@ contains
          long_name='irrigation rate demand, neglecting surface water source limitation', &
          units='mm/s', &
          interpinic_flag='interp', readvar=readvar, data=this%irrig_rate_demand_patch)
-    call restartvar(ncid=ncid, flag=flag, varname='gw_uncon_irrig_rate:irrig_rate', &
+    call restartvar(ncid=ncid, flag=flag, varname='gw_uncon_irrig_rate', &
          xtype=ncd_double,  &
          dim1name='pft', &
          long_name='unconfined groundwater irrigation rate', &
          units='mm/s', &
          interpinic_flag='interp', readvar=readvar, data=this%gw_uncon_irrig_rate_patch)
 
-    call restartvar(ncid=ncid, flag=flag, varname='gw_con_irrig_rate:irrig_rate', &
+    call restartvar(ncid=ncid, flag=flag, varname='gw_con_irrig_rate', &
          xtype=ncd_double,  &
          dim1name='pft', &
          long_name='confined groundwater irrigation rate', &
@@ -998,6 +998,7 @@ contains
     SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(h2osoi_liq) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(volr) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(available_gw_uncon) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
 
     ! Determine if irrigation is needed (over irrigated soil columns)

@@ -55,6 +55,11 @@ contains
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step
+
+    !
+    ! !USES:
+    use SoilWaterMovementMod , only : use_aquifer_layer
+
     !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds     
@@ -77,6 +82,17 @@ contains
          wa           =>    waterstatebulk_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
          begwb        =>    waterbalancebulk_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
+
+      if(use_aquifer_layer()) then 
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (col%hydrologically_active(c)) then
+               if(zwt(c) <= zi(c,nlevsoi)) then
+                  wa(c) = aquifer_water_baseline
+               end if
+            end if
+         end do
+      endif
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstatebulk_inst, waterdiagnosticbulk_inst, begwb(bounds%begc:bounds%endc))
