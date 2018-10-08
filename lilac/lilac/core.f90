@@ -62,7 +62,7 @@ contains
     character(len=*), parameter :: subname=trim(modname)//':(init) '
 
     call ESMF_LogWrite(subname//"Initializing lilac", ESMF_LOGMSG_INFO)
-    
+
     self%name = trim(name)
 
     ! Initialize ESMF structures
@@ -151,10 +151,10 @@ contains
     ! Register the callback routines.
     call ESMF_CplCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=coupler_init, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    
+
     call ESMF_CplCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=coupler_run, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    
+
     call ESMF_CplCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=coupler_final, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
@@ -164,7 +164,7 @@ contains
 
   end subroutine cpl_register
 
-subroutine atmos_init(comp, importState, exportState, clock, rc)
+  subroutine atmos_init(comp, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -177,9 +177,9 @@ subroutine atmos_init(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"atmos_init has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine atmos_init
+  end subroutine atmos_init
 
-subroutine land_init(comp, importState, exportState, clock, rc)
+  subroutine land_init(comp, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -192,9 +192,9 @@ subroutine land_init(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"land_init has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine land_init
+  end subroutine land_init
 
-subroutine coupler_init(comp, importState, exportState, clock, rc)
+  subroutine coupler_init(comp, importState, exportState, clock, rc)
     type(ESMF_CplComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -207,9 +207,9 @@ subroutine coupler_init(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"coupler_init has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine coupler_init
+  end subroutine coupler_init
 
-subroutine atmos_copy_atm_to_lilac(comp, importState, exportState, clock, rc)
+  subroutine atmos_copy_atm_to_lilac(comp, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -222,9 +222,9 @@ subroutine atmos_copy_atm_to_lilac(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"atmos_copy_atm_to_lilac has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine atmos_copy_atm_to_lilac
+  end subroutine atmos_copy_atm_to_lilac
 
-subroutine atmos_copy_lilac_to_atm(comp, importState, exportState, clock, rc)
+  subroutine atmos_copy_lilac_to_atm(comp, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -237,9 +237,9 @@ subroutine atmos_copy_lilac_to_atm(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"atmos_copy_lilac_to_atm has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine atmos_copy_lilac_to_atm
+  end subroutine atmos_copy_lilac_to_atm
 
-subroutine land_run(comp, importState, exportState, clock, rc)
+  subroutine land_run(comp, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -252,9 +252,9 @@ subroutine land_run(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"land_run has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine land_run
+  end subroutine land_run
 
-subroutine coupler_run(comp, importState, exportState, clock, rc)
+  subroutine coupler_run(comp, importState, exportState, clock, rc)
     type(ESMF_CplComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -267,9 +267,9 @@ subroutine coupler_run(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"coupler_run has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine coupler_run
+  end subroutine coupler_run
 
-subroutine atmos_final(comp, importState, exportState, clock, rc)
+  subroutine atmos_final(comp, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -282,9 +282,9 @@ subroutine atmos_final(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"atmos_final has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine atmos_final
+  end subroutine atmos_final
 
-subroutine land_final(comp, importState, exportState, clock, rc)
+  subroutine land_final(comp, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -297,9 +297,9 @@ subroutine land_final(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"land_final has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine land_final
+  end subroutine land_final
 
-subroutine coupler_final(comp, importState, exportState, clock, rc)
+  subroutine coupler_final(comp, importState, exportState, clock, rc)
     type(ESMF_CplComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -312,6 +312,6 @@ subroutine coupler_final(comp, importState, exportState, clock, rc)
 
     call ESMF_LogWrite(subname//"coupler_final has not been implemented yet", ESMF_LOGMSG_INFO)
 
-end subroutine coupler_final
+  end subroutine coupler_final
 
 end module lilac
