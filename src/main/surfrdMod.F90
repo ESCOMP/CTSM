@@ -10,7 +10,7 @@ module surfrdMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use abortutils      , only : endrun
-  use clm_varpar      , only : nlevsoifl, maxsoil_patches
+  use clm_varpar      , only : nlevsoifl
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
@@ -29,6 +29,7 @@ module surfrdMod
   public :: surfrd_get_globmask  ! Reads global land mask (needed for setting domain decomp)
   public :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
   public :: surfrd_get_data      ! Read surface dataset and determine subgrid weights
+  public :: surfrd_get_num_patches  ! Read surface dataset to determine maxsoil_patches and numcft
 
   ! !PUBLIC DATA:
   integer, public  :: numcft     ! length of crop dimension on the file
@@ -437,6 +438,57 @@ contains
   end subroutine surfrd_get_data
 
 !-----------------------------------------------------------------------
+
+  subroutine surfrd_get_num_patches (lfsurdat, actual_maxsoil_patches, actual_numcft)
+    !
+    ! !DESCRIPTION:
+    ! Read maxsoil_patches and numcft from the surface dataset
+    !
+    ! !USES:
+    use fileutils   , only : getfil
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: lfsurdat  ! surface dataset filename
+    integer, intent(out) :: actual_maxsoil_patches  ! value from surface dataset
+    integer, intent(out) :: actual_numcft           ! cft value from sfc dataset
+    !
+    ! !LOCAL VARIABLES:
+    character(len=256):: locfn                ! local file name
+    type(file_desc_t) :: ncid                 ! netcdf file id
+    integer :: dimid                          ! netCDF dimension id
+    logical :: cft_dim_exists                 ! dimension exists on dataset
+    character(len=32) :: subname = 'surfrd_get_num_patches'  ! subroutine name
+    !-----------------------------------------------------------------------
+
+    if (masterproc) then
+       write(iulog,*) 'Attempting to read maxsoil_patches and numcft from the surface data .....'
+       if (lfsurdat == ' ') then
+          write(iulog,*)'lfsurdat must be specified'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       endif
+    endif
+
+    ! Open surface dataset
+    call getfil( lfsurdat, locfn, 0 )
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
+
+    ! Read maxsoil_patches and numcft
+    call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
+    call ncd_inqdid(ncid, 'cft', dimid, cft_dim_exists)
+    if ( cft_dim_exists ) then
+       call ncd_inqdlen(ncid, dimid, actual_numcft, 'cft')
+    else
+       actual_numcft = 0
+    end if
+
+    if ( masterproc )then
+       write(iulog,*) 'Successfully read maxsoil_patches and numcft from the surface data'
+       write(iulog,*)
+    end if
+
+  end subroutine surfrd_get_num_patches
+
+!-----------------------------------------------------------------------
   subroutine surfrd_special(begg, endg, ncid, ns)
     !
     ! !DESCRIPTION:
@@ -756,15 +808,15 @@ contains
        call ncd_inqdlen(ncid, dimid, numcft, 'cft')
        ! Full crop on file and in CLM
        if ( create_crop_landunit .and. numcft > 2 .and. use_crop)then
-          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
+!         call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
        ! Generic crop in file and generic crop in model
        else if ( create_crop_landunit .and. numcft == 2 .and. cft_size == 2 )then
-          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
+!         call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
        ! Full crop in file, but model is only with generic crop
        else if ( create_crop_landunit .and. numcft > 2 .and. .not. use_crop)then
-          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
+!         call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           cftsize = numcft
           allocate(array2DCFT (begg:endg,cft_lb:cftsize-1+cft_lb))
           allocate(array2DFERT(begg:endg,cft_lb:cftsize-1+cft_lb))
@@ -776,7 +828,7 @@ contains
           deallocate(array2DCFT)
           deallocate(array2DFERT)
        else if ( .not. create_crop_landunit )then
-          call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
+!         call check_dim(ncid, 'lsmpft', maxsoil_patches) ! Check dimension size
           if ( masterproc ) write(iulog,*) "WARNING: New CFT-based format surface datasets should be run with ", &
                                            "create_crop_landunit=T"
           if ( use_fates ) then
@@ -797,7 +849,7 @@ contains
     else if ( (.not. cft_dim_exists) .and. (.not. create_crop_landunit) )then
        if ( masterproc ) write(iulog,*) "WARNING: The PFT format is an unsupported format that will be removed in the future!"
        ! Check dimension size
-       call check_dim(ncid, 'lsmpft', maxsoil_patches)
+!      call check_dim(ncid, 'lsmpft', maxsoil_patches)
        call surfrd_pftformat( begg, endg, ncid )                                 ! Format where crop is part of the natural veg. landunit
     else 
        call endrun( msg=' ERROR: Problem figuring out format of input fsurdat file'//errMsg(sourcefile, __LINE__))

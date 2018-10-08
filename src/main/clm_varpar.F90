@@ -53,11 +53,11 @@ module clm_varpar
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
 
-  integer, public :: maxveg      = mxpft   ! actual # of pfts (without bare)
+  integer, public :: maxveg           ! # of pfts + cfts
   integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
-  integer, public :: maxpatch_pft        ! max number of plant functional types in naturally vegetated landunit (namelist setting)
-  integer, public :: maxsoil_patches  ! actual # of pfts with bare ground; replaces maxpatch_pft, which may be obsolete
+  integer, public :: maxpatch_pft     ! obsolete: max number of plant functional types in naturally vegetated landunit (namelist setting)
+  integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
 
   ! constants for decomposition cascade
 
@@ -95,18 +95,19 @@ module clm_varpar
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init()
+  subroutine clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
     !
     ! !ARGUMENTS:
     implicit none
+    integer, intent(in) :: actual_maxsoil_patches  ! value from surface dataset
+    integer, intent(in) :: actual_numcft  ! Actual number of crops
     !
     ! !LOCAL VARIABLES:
     !
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
-    integer :: actual_numcft     ! Actual number of crops
     !------------------------------------------------------------------------------
 
     ! Crop settings and consistency checks
@@ -116,15 +117,17 @@ contains
 ! at which time the if-then-else will go away and we will keep these 2 lines:
 ! maxveg = mxpft
 ! actual_numcft = 64
-    if (use_crop .or. index(fsurdat,'78pfts') > 0) then
-       maxveg        = mxpft   ! actual # of patches (without bare)
-       actual_numcft =  64     ! actual # of crops
-       maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
-    else
-       maxveg        = numveg  ! actual # of patches (without bare)
-       actual_numcft =   2     ! actual # of crops
-       maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
-    end if
+!   if (use_crop .or. index(fsurdat,'78pfts') > 0) then
+!      maxveg        = mxpft   ! actual # of patches (without bare)
+!      actual_numcft =  64     ! actual # of crops
+!      maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
+!   else
+!      maxveg        = numveg  ! actual # of patches (without bare)
+!      actual_numcft =   2     ! actual # of crops
+!      maxsoil_patches = maxveg + 1  ! actual # of patches with bare ground
+!   end if
+    maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
+    maxveg = maxsoil_patches - 1  ! # of patches without bare ground
 
     ! For arrays containing all Patches (natural veg & crop), determine lower and upper bounds
     ! for (1) Patches on the natural vegetation landunit (includes bare ground, and includes
