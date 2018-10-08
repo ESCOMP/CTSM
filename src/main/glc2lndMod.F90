@@ -14,7 +14,7 @@ module glc2lndMod
   use clm_varctl     , only : iulog, glc_do_dynglacier
   use clm_varcon     , only : nameg, spval, ispval
   use abortutils     , only : endrun
-  use GridcellType   , only : grc 
+  use GridcellType   , only : grc
   use LandunitType   , only : lun
   use ColumnType     , only : col
   use landunit_varcon, only : istice_mec
@@ -116,13 +116,13 @@ contains
   subroutine Init(this, bounds, glc_behavior)
 
     class(glc2lnd_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     type(glc_behavior_type), intent(in), target :: glc_behavior
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds, glc_behavior)
-    
+
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -133,7 +133,7 @@ contains
     !
     ! !ARGUMENTS:
     class (glc2lnd_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: begg,endg
@@ -162,7 +162,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: begg, endg
-    
+
     character(len=*), parameter :: subname = 'InitHistory'
     !-----------------------------------------------------------------------
 
@@ -210,7 +210,7 @@ contains
     ! of runoff routing).
     this%icemask_grc(begg:endg) = 0.0_r8
     this%icemask_coupled_fluxes_grc(begg:endg) = 0.0_r8
-    
+
     call this%update_glc2lnd_dyn_runoff_routing(bounds)
 
   end subroutine InitCold
@@ -310,11 +310,11 @@ contains
     class(glc2lnd_type), intent(inout) :: this
     type(bounds_type)  , intent(in)    :: bounds
     logical  , intent(in) :: glc_present                              ! true if running with a non-stub glc model
-    real(r8) , intent(in) :: frac_grc(:, bounds%begg: )               ! ice-covered field for each elevation class
-    real(r8) , intent(in) :: topo_grc(:, bounds%begg: )               ! topo field for each elevation class 
-    real(r8) , intent(in) :: hflx_grc(:, bounds%begg: )               ! heat flux field for each elevation class
-    real(r8) , intent(in) :: icemask_grc(bounds%begg: )               ! icemask field 
-    real(r8) , intent(in) :: icemask_coupled_fluxes_grc(bounds%begg:) ! icemask_coupled_fluxes field 
+    real(r8) , intent(in) :: frac_grc(bounds%begg:,:)               ! ice-covered field for each elevation class
+    real(r8) , intent(in) :: topo_grc(bounds%begg:,:)               ! topo field for each elevation class
+    real(r8) , intent(in) :: hflx_grc(bounds%begg:,:)               ! heat flux field for each elevation class
+    real(r8) , intent(in) :: icemask_grc(bounds%begg: )               ! icemask field
+    real(r8) , intent(in) :: icemask_coupled_fluxes_grc(bounds%begg:) ! icemask_coupled_fluxes field
     !
     ! !LOCAL VARIABLES:
     integer :: g
@@ -323,11 +323,11 @@ contains
     character(len=*), parameter :: subname = 'set_glc2lnd_fields_nuopc'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((ubound(frac_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(topo_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(hflx_grc, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
-!    SHR_ASSERT((ubound(icemask_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
-!    SHR_ASSERT((ubound(icemask_coupled_fluxes_grc) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(frac_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(topo_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(hflx_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(icemask_grc,1) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((ubound(icemask_coupled_fluxes_grc,1) == bounds%endg), errMsg(sourcefile, __LINE__))
 
     if (glc_present) then
        do g = bounds%begg, bounds%endg
@@ -411,10 +411,10 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! grid cell index
-    
+
     character(len=*), parameter :: subname = 'check_glc2lnd_icemask'
     !-----------------------------------------------------------------------
-    
+
     do g = bounds%begg, bounds%endg
 
        if (this%icemask_grc(g) > 0._r8) then
@@ -467,7 +467,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! grid cell index
-    
+
     character(len=*), parameter :: subname = 'check_glc2lnd_icemask_coupled_fluxes'
     !-----------------------------------------------------------------------
 
@@ -501,16 +501,16 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! grid cell index
-    
+
     character(len=*), parameter :: subname = 'update_glc2lnd_dyn_runoff_routing'
     !-----------------------------------------------------------------------
 
     ! Wherever we have an icesheet that is computing and sending fluxes to the coupler -
     ! which particularly means it is computing a calving flux - we will use the
-    ! "glc_dyn_runoff_routing" scheme, with 0 < glc_dyn_runoff_routing <= 1. 
+    ! "glc_dyn_runoff_routing" scheme, with 0 < glc_dyn_runoff_routing <= 1.
     ! In these places, all or part of the snowcap flux goes to CISM rather than the runoff model.
-    ! In other places - including places where CISM is not running at all, as well as places 
-    ! where CISM is running in diagnostic-only mode and therefore is not sending a calving flux - 
+    ! In other places - including places where CISM is not running at all, as well as places
+    ! where CISM is running in diagnostic-only mode and therefore is not sending a calving flux -
     ! we have glc_dyn_runoff_routing = 0, and the snowcap flux goes to the runoff model.
     ! This is needed to conserve water correctly in the absence of a calving flux.
 
@@ -539,7 +539,7 @@ contains
        !       is nearly equal to ldomain%frac(g). So an alternative would be to simply set
        !       glc_dyn_runoff_routing_grc(g) = icemask_grc(g).
        !       The reason to cap glc_dyn_runoff_routing at lfrac is to avoid sending the
-       !       ice sheet model a greater mass of water (in the form of snowcap fluxes) 
+       !       ice sheet model a greater mass of water (in the form of snowcap fluxes)
        !       than is allowed to fall on a CLM grid cell that is part ocean.
 
        ! TODO(wjs, 2017-05-08) Ideally, we wouldn't have this duplication in logic
@@ -608,7 +608,7 @@ contains
     integer :: icemec_class                     ! current icemec class (1..maxpatch_glcmec)
     logical :: frac_assigned(1:maxpatch_glcmec) ! whether this%frac has been assigned for each elevation class
     logical :: error                            ! if an error was found
-    
+
     character(len=*), parameter :: subname = 'update_glc2lnd_fracs'
     !-----------------------------------------------------------------------
 
@@ -728,4 +728,3 @@ contains
   end subroutine update_glc2lnd_topo
 
 end module glc2lndMod
-
