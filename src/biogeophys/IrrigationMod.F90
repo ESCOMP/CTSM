@@ -417,6 +417,7 @@ contains
     ! tasks.
     !
     ! !USES:
+    use SoilWaterMovementMod , only : use_aquifer_layer
     !
     ! !ARGUMENTS:
     class(irrigation_type), intent(in) :: this
@@ -488,6 +489,12 @@ contains
           call endrun(msg=' ERROR: irrig_river_volume_threshold must be between 0 and 1 ' // &
                errMsg(sourcefile, __LINE__))
        end if
+    end if
+
+    if (use_aquifer_layer() .and. use_groundwater_irrigation) then
+          write(iulog,*) ' ERROR: use_groundwater_irrigation and use_aquifer_layer may not be used simultaneously'
+          call endrun(msg=' ERROR: use_groundwater_irrigation and use_aquifer_layer cannot both be set to true' // &
+               errMsg(sourcefile, __LINE__))
     end if
 
     end associate
