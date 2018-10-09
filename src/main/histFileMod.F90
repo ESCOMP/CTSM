@@ -55,7 +55,11 @@ module histFileMod
   !
   ! Counters
   !
-  integer , public :: ntapes = 0         ! index of max history file requested
+  ! ntapes gives the index of the max history file requested. There can be "holes" in the
+  ! numbering - e.g., we can have h0, h1 and h3 tapes, but no h2 tape (because there are
+  ! no fields on the h2 tape). In this case, ntapes will be 4 (for h0, h1, h2 and h3,
+  ! since h3 is the last requested file), not 3 (the number of files actually produced).
+  integer , private :: ntapes = 0        ! index of max history file requested
   !
   ! Namelist
   !
@@ -238,6 +242,11 @@ module histFileMod
   ! Master list: an array of master_entry entities
   !
   type (master_entry) :: masterlist(max_flds)  ! master field list
+  !
+  ! Whether each history tape is in use in this run. If history_tape_in_use(i) is false,
+  ! then data in tape(i) is undefined and should not be referenced.
+  !
+  logical :: history_tape_in_use(max_tapes)  ! whether each history tape is in use in this run
   !
   ! History tape: an array of history_tape entities (only active fields)
   !
@@ -698,6 +707,7 @@ contains
        end do
     end do
 
+    history_tape_in_use(:) = .false.
     tape(:)%nflds = 0
     do t = 1,max_tapes
 
@@ -774,7 +784,7 @@ contains
        end if
     end do
 
-    ! Determine total number of active history tapes
+    ! Determine index of max active history tape, and whether each tape is in use
 
     ntapes = 0
     do t = max_tapes,1,-1
@@ -784,23 +794,11 @@ contains
        end if
     end do
 
-    ! Ensure there are no "holes" in tape specification, i.e. empty tapes.
-    ! Enabling holes should not be difficult if necessary.
-
-    do t = 1,ntapes
-       if (tape(t)%nflds  ==  0) then
-          write(iulog,*) trim(subname),' ERROR: Tape ',t,' is empty'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+    do t = 1, ntapes
+       if (tape(t)%nflds > 0) then
+          history_tape_in_use(t) = .true.
        end if
     end do
-
-    ! Check that the number of history files declared does not exceed
-    ! the maximum allowed.
-
-    if (ntapes > max_tapes) then
-       write(iulog,*) trim(subname),' ERROR: Too many history files declared, max_tapes=',max_tapes
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
 
     ! Change 1d output per tape output flag if requested - only for history
     ! tapes where 2d xy averaging is not enabled
@@ -834,6 +832,10 @@ contains
           end if
           write(iulog,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
           write(iulog,*)'Output precision on history tape ',t,'=',hist_ndens(t)
+          if (.not. history_tape_in_use(t)) then
+             write(iulog,*) 'History tape ',t,' does not have any fields,'
+             write(iulog,*) 'so it will not be written!'
+          end if
           write(iulog,*)
        end do
        call shr_sys_flush(iulog)
@@ -3381,9 +3383,15 @@ contains
     ! and write data to history files if end of history interval.
     do t = 1, ntapes
 
+       if (.not. history_tape_in_use(t)) then
+          cycle
+       end if
+
        ! Skip nstep=0 if monthly average
 
-       if (nstep==0 .and. tape(t)%nhtfrq==0) cycle
+       if (nstep==0 .and. tape(t)%nhtfrq==0) then
+          cycle
+       end if
 
        ! Determine if end of history interval
        tape(t)%is_endhist = .false.
@@ -3486,6 +3494,10 @@ contains
     ! must reopen the files
 
     do t = 1, ntapes
+       if (.not. history_tape_in_use(t)) then
+          cycle
+       end if
+
        if (if_disphist(t)) then
           if (tape(t)%ntimes /= 0) then
              if (masterproc) then
@@ -3511,6 +3523,10 @@ contains
     ! Reset number of time samples to zero if file is full 
     
     do t = 1, ntapes
+       if (.not. history_tape_in_use(t)) then
+          cycle
+       end if
+
        if (if_disphist(t) .and. tape(t)%ntimes==tape(t)%mfilt) then
           tape(t)%ntimes = 0
        end if
@@ -3559,7 +3575,9 @@ contains
     character(len=max_chars)  :: units           ! units of variable
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
-    character(len=max_chars)  :: locrest(max_tapes) ! local history restart file names
+    character(len=max_chars)  :: locrest(max_tapes)  ! local history restart file names
+    character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
+    character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
 
     character(len=max_namlen),allocatable :: tname(:)
     character(len=max_chars), allocatable :: tunits(:),tlongname(:)
@@ -3590,7 +3608,9 @@ contains
     integer :: dimid                             ! dimension ID
     integer :: k                                 ! 1d index
     integer :: ntapes_onfile                     ! number of history tapes on the restart file
+    logical :: history_tape_in_use_onfile        ! whether a given history tape is in use, according to the restart file
     integer :: nflds_onfile                      ! number of history fields on the restart file
+    logical :: readvar                           ! whether a variable was read successfully
     integer :: t                                 ! tape index
     integer :: f                                 ! field index
     integer :: varid                             ! variable id
@@ -3642,6 +3662,12 @@ contains
        call ncd_defdim( ncid, 'ntapes'       , ntapes      , dimid)
        call ncd_defdim( ncid, 'max_chars'    , max_chars   , dimid)
 
+       call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_log, &
+            long_name="Whether this history tape is in use", &
+            dim1name="ntapes")
+       ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
+       ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+
        call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
             long_name="History filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
@@ -3665,6 +3691,9 @@ contains
        ! only read/write accumulators and counters if needed
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
 
           ! Create the restart history filename and open it
           write(hnum,'(i1.1)') t-1
@@ -3839,8 +3868,16 @@ contains
 
        ! Add history filenames to master restart file
        do t = 1,ntapes
-          call ncd_io('locfnh',  locfnh(t),  'write', ncid, nt=t)
-          call ncd_io('locfnhr', locfnhr(t), 'write', ncid, nt=t)
+          call ncd_io('history_tape_in_use', history_tape_in_use(t), 'write', ncid, nt=t)
+          if (history_tape_in_use(t)) then
+             my_locfnh  = locfnh(t)
+             my_locfnhr = locfnhr(t)
+          else
+             my_locfnh  = 'non_existent_file'
+             my_locfnhr = 'non_existent_file'
+          end if
+          call ncd_io('locfnh',  my_locfnh,  'write', ncid, nt=t)
+          call ncd_io('locfnhr', my_locfnhr, 'write', ncid, nt=t)
        end do
        
        fincl(:,1)  = hist_fincl1(:)
@@ -3876,6 +3913,10 @@ contains
        allocate(itemp(max_nflds))
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
+
           call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t), flag='write')
 
           call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t), flag='write')
@@ -3941,19 +3982,48 @@ contains
     !================================================
 
        call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
-       if ( is_restart() .and. ntapes_onfile /= ntapes )then
-          write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
-          call endrun(msg=' ERROR: number of ntapes different than on restart file!,'// &
-               ' you can NOT change history options on restart!' //&
-               errMsg(sourcefile, __LINE__))
-       end if
-       if ( is_restart() .and. ntapes > 0 )then
-          call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
-          call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
-          do t = 1,ntapes
-             call strip_null(locrest(t))
-             call strip_null(locfnh(t))
+       if (is_restart()) then
+          if (ntapes_onfile /= ntapes) then
+             write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
+             call endrun(msg=' ERROR: number of ntapes differs from restart file. '// &
+                  'You can NOT change history options on restart.', &
+                  additional_msg=errMsg(sourcefile, __LINE__))
+          end if
+
+          do t = 1, ntapes
+             ! NOTE(wjs, 2018-10-06) Ideally, we'd read all values of history_tape_in_use
+             ! at once. However, we currently don't have a 1-d logical ncd_io routine, so
+             ! we have to read values one at a time.
+             call ncd_io('history_tape_in_use', history_tape_in_use_onfile, 'read', ncid, &
+                  readvar=readvar, nt=t)
+             if (.not. readvar) then
+                ! BACKWARDS_COMPATIBILITY(wjs, 2018-10-06) Old restart files do not have
+                ! 'history_tape_in_use'. However, before now, this has implicitly been
+                ! true for all tapes <= ntapes.
+                history_tape_in_use_onfile = .true.
+             end if
+             if (history_tape_in_use_onfile .neqv. history_tape_in_use(t)) then
+                write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
+                write(iulog,*) 'disagrees with current run: For tape ', t
+                write(iulog,*) 'On restart file: ', history_tape_in_use_onfile
+                write(iulog,*) 'In current run : ', history_tape_in_use(t)
+                write(iulog,*) 'This suggests that this tape was empty in one case,'
+                write(iulog,*) 'but non-empty in the other. (history_tape_in_use .false.'
+                write(iulog,*) 'means that history tape is empty.)'
+                call endrun(msg=' ERROR: history_tape_in_use differs from restart file. '// &
+                     'You can NOT change history options on restart.', &
+                     additional_msg=errMsg(sourcefile, __LINE__))
+             end if
           end do
+
+          if (ntapes > 0 )then
+             call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
+             call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
+             do t = 1,ntapes
+                call strip_null(locrest(t))
+                call strip_null(locfnh(t))
+             end do
+          end if
        end if
 
        ! Determine necessary indices - the following is needed if model decomposition is different on restart
@@ -3962,6 +4032,9 @@ contains
 
        if ( is_restart() )then
           do t = 1,ntapes
+             if (.not. history_tape_in_use(t)) then
+                cycle
+             end if
 
              call getfil( locrest(t), locfnhr(t), 0 )
              call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t)), ncd_nowrite)
@@ -4167,6 +4240,10 @@ contains
     if (flag == 'write') then     
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
+
           if (.not. tape(t)%is_endhist) then
 
              do f = 1,tape(t)%nflds
@@ -4218,6 +4295,9 @@ contains
        ! Read history restart information if history files are not full
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
 
           if (.not. tape(t)%is_endhist) then
 
@@ -5106,7 +5186,7 @@ contains
   subroutine hist_do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr, nlend)
     !
     ! !DESCRIPTION:
-    ! Determine logic for closeing and/or disposing history file
+    ! Determine logic for closing and/or disposing history file
     ! Sets values for if_disphist, if_stop (arguments)
     ! Remove history files unless this is end of run or
     ! history file is not full.
