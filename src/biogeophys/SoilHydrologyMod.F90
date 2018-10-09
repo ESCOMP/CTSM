@@ -2275,11 +2275,7 @@ contains
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
                 s_y=max(s_y,0.02_r8)
-                if (j==jwt(c)+1) then
-                   rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
-                else
-                   rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
-                endif
+                rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                 rsub_top_layer=min(rsub_top_layer,0._r8)
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
                    
@@ -2296,7 +2292,7 @@ contains
              
              !--  remove residual rsub_top  --------------------------------
              ! make sure no extra water removed from soil column
-             rsub_top(c) = rsub_top(c) + rsub_top_tot/dtime
+             rsub_top(c) = rsub_top(c) - rsub_top_tot/dtime
           endif
           
           zwt(c) = max(0.0_r8,zwt(c))

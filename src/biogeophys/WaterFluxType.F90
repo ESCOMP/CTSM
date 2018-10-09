@@ -728,10 +728,21 @@ contains
     integer :: p,c,l
     !-----------------------------------------------------------------------
 
-    this%qflx_evap_grnd_patch(bounds%begp:bounds%endp) = 0.0_r8
-    this%qflx_dew_grnd_patch (bounds%begp:bounds%endp) = 0.0_r8
-    this%qflx_dew_snow_patch (bounds%begp:bounds%endp) = 0.0_r8
+    this%qflx_evap_grnd_patch(bounds%begp:bounds%endp)        = 0.0_r8
+    this%qflx_dew_grnd_patch (bounds%begp:bounds%endp)        = 0.0_r8
+    this%qflx_dew_snow_patch (bounds%begp:bounds%endp)        = 0.0_r8
 
+    this%qflx_sfc_irrig_patch (bounds%begp:bounds%endp)       = 0.0_r8
+    this%qflx_sfc_irrig_col (bounds%begc:bounds%endc)         = 0.0_r8
+    this%qflx_gw_uncon_irrig_patch (bounds%begp:bounds%endp)  = 0.0_r8
+    this%qflx_gw_uncon_irrig_col (bounds%begc:bounds%endc)    = 0.0_r8
+    this%qflx_gw_con_irrig_patch (bounds%begp:bounds%endp)    = 0.0_r8
+    this%qflx_gw_con_irrig_col (bounds%begc:bounds%endc)      = 0.0_r8
+    this%qflx_irrig_drip_patch (bounds%begp:bounds%endp)      = 0.0_r8
+    this%qflx_irrig_drip_col (bounds%begc:bounds%endc)        = 0.0_r8
+    this%qflx_irrig_sprinkler_patch (bounds%begp:bounds%endp) = 0.0_r8
+    this%qflx_irrig_sprinkler_col (bounds%begc:bounds%endc)   = 0.0_r8
+    
     this%qflx_evap_grnd_col(bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_grnd_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_snow_col (bounds%begc:bounds%endc) = 0.0_r8
