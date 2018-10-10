@@ -528,7 +528,7 @@ contains
     allocate(this%qflx_irrig_demand_patch (begp:endp))              ; this%qflx_irrig_demand_patch  (:)   = nan
     allocate(this%relsat_wilting_point_col    (begc:endc,nlevsoi))  ; this%relsat_wilting_point_col     (:,:) = nan
     allocate(this%relsat_target_col           (begc:endc,nlevsoi))  ; this%relsat_target_col            (:,:) = nan
-    allocate(this%sfc_irrig_rate_patch            (begp:endp))          ; this%sfc_irrig_rate_patch             (:)   = nan
+    allocate(this%sfc_irrig_rate_patch        (begp:endp))          ; this%sfc_irrig_rate_patch         (:)   = nan
     allocate(this%irrig_rate_demand_patch     (begp:endp))          ; this%irrig_rate_demand_patch      (:)   = nan
     allocate(this%irrig_method_patch          (begp:endp))          ; this%irrig_method_patch           (:)   = ispval
     allocate(this%n_irrig_steps_left_patch    (begp:endp))          ; this%n_irrig_steps_left_patch     (:)   = 0
@@ -634,6 +634,8 @@ contains
              call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
                   errMsg(sourcefile, __LINE__))
           end if
+       else
+          this%irrig_method_patch(p) = irrig_method_drip
        end if
     end do
        

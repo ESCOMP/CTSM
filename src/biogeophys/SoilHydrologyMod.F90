@@ -2038,7 +2038,7 @@ contains
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
 
-! initialize to depth of bottom of lowest layer
+          ! initialize to depth of bottom of lowest layer
           zwt(c)=zi(c,nlevsoi)
 
           ! locate water table from bottom up starting at bottom of soil column
@@ -2076,7 +2076,6 @@ contains
           else
              zwt(c)=zi(c,nbedrock(c))
           endif
-
        end do
 
      end associate
@@ -2260,10 +2259,9 @@ contains
              rsub_top(c) = 0._r8
           endif
 
-          ! add groundwater irrigation flux to subsurface drainage flux
           !--  Now remove water via rsub_top
-          rsub_top_tot = - (rsub_top(c) + qflx_gw_uncon_irrig(c))* dtime
-          
+          rsub_top_tot = - (rsub_top(c)* dtime)
+
           !should never be positive... but include for completeness
           if(rsub_top_tot > 0.) then !rising water table
              
@@ -2294,6 +2292,15 @@ contains
              ! make sure no extra water removed from soil column
              rsub_top(c) = rsub_top(c) - rsub_top_tot/dtime
           endif
+
+          ! remove groundwater irrigation from deepest layer
+          rsub_top_layer = qflx_gw_uncon_irrig(c)* dtime
+          h2osoi_liq(c,nbedrock(c)) = h2osoi_liq(c,nbedrock(c)) - rsub_top_layer
+          s_y = watsat(c,nbedrock(c)) &
+                     * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nbedrock(c)))**(-1./bsw(c,nbedrock(c))))
+          s_y=max(s_y,0.02_r8)
+          zwt(c) = zwt(c) + rsub_top_layer/s_y/1000._r8
+          zwt(c) = min(zi(c,nbedrock(c)),zwt(c))
           
           zwt(c) = max(0.0_r8,zwt(c))
           zwt(c) = min(80._r8,zwt(c))
