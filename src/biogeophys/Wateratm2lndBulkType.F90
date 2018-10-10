@@ -368,7 +368,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p                     ! indices
-    integer :: dtime                     ! timestep size [seconds]
     integer :: nstep                     ! timestep number
     integer :: ier                       ! error status
     integer :: begp, endp

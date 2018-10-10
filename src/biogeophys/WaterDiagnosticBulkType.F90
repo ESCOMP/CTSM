@@ -200,7 +200,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -471,7 +470,6 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno
     use clm_varcon      , only : zlnd
     !
     ! !ARGUMENTS:
@@ -481,10 +479,7 @@ contains
     class(waterstatebulk_type), intent(in)                :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
+    integer            :: c,l
     real(r8)           :: snowbd      ! temporary calculation of snow bulk density (kg/m3)
     real(r8)           :: fmelt       ! snowbd/100
     !-----------------------------------------------------------------------

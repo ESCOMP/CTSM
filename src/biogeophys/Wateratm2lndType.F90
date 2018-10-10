@@ -10,7 +10,6 @@ module Wateratm2lndType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : iulog
   use clm_varcon     , only : spval
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type

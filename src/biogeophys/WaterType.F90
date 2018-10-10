@@ -734,6 +734,7 @@ contains
        call CompareBulkToTracer(begi, endi, &
             bulk   = bulk(begi:endi), &
             tracer = tracer(begi:endi), &
+            ratio = this%tracer_info(i)%info%get_ratio(), &
             caller_location = caller_location, &
             name = name)
 
