@@ -1,6 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
 release-clm5.0.08     erik 09/28/2018 Updated CMIP6 ndep file for historical transient Bgc cases, 1850_control same as before
+  ctsm1.0.dev009    sacks 08/22/2018 Fix initialization of AnnET in InitAccVars
 release-clm5.0.07     erik 08/08/2018 Bring in some simple fixes from ctsm1.0.dev006 and avoid glacier adjustment at startup from ctsm1.0.dev007
 release-clm5.0.06     erik 08/07/2018 Bring in some simple fixes from ctsm1.0.dev006 and avoid glacier adjustment at startup from ctsm1.0.dev007
   ctsm1.0.dev008     erik 08/14/2018 Update 1850 ndep file and last year for streams for Historical transient cases (same as release-clm5.0.05)
