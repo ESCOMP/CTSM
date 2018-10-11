@@ -68,17 +68,6 @@ contains
 
     SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    ! Error check
-
-! slevis: I consider this check unnecessary because maxpatch_pft contains the
-!         same info as maxveg+1 and maxpft; also the number of pfts in the input
-!         files have already been compared elsewhere against the "expected"
-!         values set in clm_varpar
-!   if ( maxpatch_pft /= maxveg+1 )then
-!      call endrun(msg=' maxpatch_pft does NOT equal maxveg+1 -- this is invalid for dynamic PFT case'//&
-!           errMsg(sourcefile, __LINE__) )
-!   end if
-
     if (masterproc) then
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
     end if
@@ -264,7 +253,7 @@ contains
     character(len=32) :: subname='dynpft_interp' ! subroutine name
     !-----------------------------------------------------------------------
 
-    ! assumes that maxpatch_pft = maxveg + 1, that each landunit has only 1 column, 
+    ! assumes that each landunit has only 1 column, 
     ! and SCAM and CNDV have not been defined
     !
     ! NOTE(wjs, 2014-12-10) I'm not sure if there is still the requirement that SCAM

@@ -288,7 +288,7 @@ contains
     ! Read the surface dataset and create subgrid weights.
     ! The model's surface dataset recognizes 6 basic land cover types within a grid
     ! cell: lake, wetland, urban, glacier, glacier_mec and vegetated. The vegetated
-    ! portion of the grid cell is comprised of up to [maxpatch_pft] patches. These
+    ! part of the grid cell cosists of up to [maxsoil_patches] patches. These
     ! subgrid patches are read in explicitly for each grid cell. This is in
     ! contrast to LSMv1, where the patches were built implicitly from biome types.
     !    o real latitude  of grid cell (degrees)
