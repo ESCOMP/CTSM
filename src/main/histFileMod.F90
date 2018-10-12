@@ -3608,7 +3608,7 @@ contains
     integer :: dimid                             ! dimension ID
     integer :: k                                 ! 1d index
     integer :: ntapes_onfile                     ! number of history tapes on the restart file
-    logical :: history_tape_in_use_onfile        ! whether a given history tape is in use, according to the restart file
+    logical, allocatable :: history_tape_in_use_onfile(:) ! whether a given history tape is in use, according to the restart file
     integer :: nflds_onfile                      ! number of history fields on the restart file
     logical :: readvar                           ! whether a variable was read successfully
     integer :: t                                 ! tape index
@@ -3990,33 +3990,31 @@ contains
                   additional_msg=errMsg(sourcefile, __LINE__))
           end if
 
-          do t = 1, ntapes
-             ! NOTE(wjs, 2018-10-06) Ideally, we'd read all values of history_tape_in_use
-             ! at once. However, we currently don't have a 1-d logical ncd_io routine, so
-             ! we have to read values one at a time.
+          if (ntapes > 0) then
+             allocate(history_tape_in_use_onfile(ntapes))
              call ncd_io('history_tape_in_use', history_tape_in_use_onfile, 'read', ncid, &
-                  readvar=readvar, nt=t)
+                  readvar=readvar)
              if (.not. readvar) then
                 ! BACKWARDS_COMPATIBILITY(wjs, 2018-10-06) Old restart files do not have
                 ! 'history_tape_in_use'. However, before now, this has implicitly been
                 ! true for all tapes <= ntapes.
-                history_tape_in_use_onfile = .true.
+                history_tape_in_use_onfile(:) = .true.
              end if
-             if (history_tape_in_use_onfile .neqv. history_tape_in_use(t)) then
-                write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
-                write(iulog,*) 'disagrees with current run: For tape ', t
-                write(iulog,*) 'On restart file: ', history_tape_in_use_onfile
-                write(iulog,*) 'In current run : ', history_tape_in_use(t)
-                write(iulog,*) 'This suggests that this tape was empty in one case,'
-                write(iulog,*) 'but non-empty in the other. (history_tape_in_use .false.'
-                write(iulog,*) 'means that history tape is empty.)'
-                call endrun(msg=' ERROR: history_tape_in_use differs from restart file. '// &
-                     'You can NOT change history options on restart.', &
-                     additional_msg=errMsg(sourcefile, __LINE__))
-             end if
-          end do
+             do t = 1, ntapes
+                if (history_tape_in_use_onfile(t) .neqv. history_tape_in_use(t)) then
+                   write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
+                   write(iulog,*) 'disagrees with current run: For tape ', t
+                   write(iulog,*) 'On restart file: ', history_tape_in_use_onfile(t)
+                   write(iulog,*) 'In current run : ', history_tape_in_use(t)
+                   write(iulog,*) 'This suggests that this tape was empty in one case,'
+                   write(iulog,*) 'but non-empty in the other. (history_tape_in_use .false.'
+                   write(iulog,*) 'means that history tape is empty.)'
+                   call endrun(msg=' ERROR: history_tape_in_use differs from restart file. '// &
+                        'You can NOT change history options on restart.', &
+                        additional_msg=errMsg(sourcefile, __LINE__))
+                end if
+             end do
 
-          if (ntapes > 0 )then
              call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
              call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
              do t = 1,ntapes
