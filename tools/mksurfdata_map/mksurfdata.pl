@@ -56,6 +56,7 @@ my %opts = (
                exedir=>undef,
                allownofile=>undef,
                crop=>1,
+               fast_maps=>0,
                hirespft=>undef,
                years=>"1850,2000",
                glc_nec=>10,
@@ -115,6 +116,7 @@ OPTIONS
      -dynpft "filename"            Dynamic PFT/harvesting file to use 
                                    (rather than create it on the fly) 
                                    (must be consistent with first year)
+     -fast_maps                    Toggle fast mode which doesn't use the large mapping files
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
      -merge_gis                    If you want to use the glacier dataset that merges in
                                    the Greenland Ice Sheet data that CISM uses (typically
@@ -330,7 +332,6 @@ sub write_namelist_file {
  map_fpeat        = '$map->{'peat'}'
  map_fsoildepth   = '$map->{'soildepth'}'
  map_fabm         = '$map->{'abm'}'
- map_ftopostats   = '$map->{'topostats'}'
  map_fvic         = '$map->{'vic'}'
  map_fch4         = '$map->{'ch4'}'
  mksrf_fsoitex    = '$datfil->{'tex'}'
@@ -346,7 +347,6 @@ sub write_namelist_file {
  mksrf_fpeat      = '$datfil->{'peat'}'
  mksrf_fsoildepth = '$datfil->{'soildepth'}'
  mksrf_fabm       = '$datfil->{'abm'}'
- mksrf_ftopostats = '$datfil->{'topostats'}'
  mksrf_fvic       = '$datfil->{'vic'}'
  mksrf_fch4       = '$datfil->{'ch4'}'
  outnc_double   = $double
@@ -355,6 +355,16 @@ sub write_namelist_file {
  mksrf_furban   = '$datfil->{'urb'}'
  gitdescribe    = '$gitdescribe'
 EOF
+  if ( ! $opts{'fast_maps'} ) {
+    print $fh <<"EOF";
+ map_ftopostats   = '$map->{'topostats'}'
+ mksrf_ftopostats = '$datfil->{'topostats'}'
+EOF
+  } else {
+    print $fh <<"EOF";
+ std_elev         = 371.0d00
+EOF
+  }
   if ( defined($opts{'soil_override'}) ) {
     print $fh <<"EOF";
  soil_clay     = $opts{'soil_cly'}
@@ -423,6 +433,7 @@ EOF
         "hirespft"     => \$opts{'hirespft'},
         "l|dinlc=s"    => \$opts{'csmdata'},
         "d|debug"      => \$opts{'debug'},
+        "fast_maps"    => \$opts{'fast_maps'},
         "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
         "exedir=s"     => \$opts{'exedir'},
@@ -603,9 +614,13 @@ EOF
       }
       my $mopts  = "$queryopts -namelist default_settings $usrnam";
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
-      foreach my $typ ( "lak", "veg", "voc", "tex", "col", "hrv",
+      my @typlist = ( "lak", "veg", "voc", "tex", "col", "hrv",
                         "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
-		        "gdp", "peat","soildepth","abm", "topostats" , "vic", "ch4") {
+		        "gdp", "peat","soildepth","abm", "vic", "ch4");
+      if ( ! $opts{'fast_maps'} ) {
+         push( @typlist, "topostats" );
+      }
+      foreach my $typ ( @typlist ) {
          my $lmask = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,mergeGIS=$merge_gis,hirespft=$hirespft -var lmask`;
          $lmask = trim($lmask);
          my $hgrid_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,hirespft=$hirespft -var hgrid";
