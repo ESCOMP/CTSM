@@ -226,7 +226,7 @@ contains
       ! ---------------------------------------------------------------------------------
      
       use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : maxveg_ed => maxveg
+      use FatesInterfaceMod, only : maxveg_ed => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -2331,7 +2331,7 @@ contains
    use FatesInterfaceMod, only : nlevsclass, nlevage
    use EDtypesMod, only : nfsc, ncwd
    use EDtypesMod, only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : maxveg_ed => maxveg
+   use FatesInterfaceMod, only : maxveg_ed => numpft
    use clm_varpar, only : nlevgrnd
 
    implicit none

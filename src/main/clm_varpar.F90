@@ -12,7 +12,6 @@ module clm_varpar
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, soil_layerstruct
   use clm_varctl   , only: use_fates
-  use clm_varctl   , only: fsurdat
 
   !
   ! !PUBLIC TYPES:

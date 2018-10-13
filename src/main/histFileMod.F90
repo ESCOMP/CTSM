@@ -24,7 +24,7 @@ module histFileMod
   use EDTypesMod     , only : nlevleaf
   use FatesInterfaceMod , only : nlevsclass, nlevage
   use EDTypesMod     , only : nfsc, ncwd
-  use FatesInterfaceMod , only : maxveg_ed => maxveg
+  use FatesInterfaceMod , only : maxveg_ed => numpft
   use ncdio_pio 
 
   !
