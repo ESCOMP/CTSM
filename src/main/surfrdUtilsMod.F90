@@ -243,6 +243,7 @@ contains
                 fert_cft(g,pftcon%mergetoclmpft(m)) = (wt_cft_to * fert_cft(g,pftcon%mergetoclmpft(m)) + &
                                                       wt_cft_from * fert_cft(g,m)) / wt_cft_merge
              end if
+             pftcon%is_pft_known_to_model(m) = .false.
           end if
        end do
 
