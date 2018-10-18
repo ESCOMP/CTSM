@@ -3152,6 +3152,9 @@ contains
           call ncd_defvar(varname='cols1d_active', xtype=ncd_log, dim1name=namec, &
                long_name='true => do computations on this column', ncid=ncid)
 
+          call ncd_defvar(varname='cols1d_nbedrock', xtype=ncd_int, dim1name=namec, &
+               long_name='column bedrock depth index', ncid=ncid)
+
           ! Define patch info
 
           call ncd_defvar(varname='pfts1d_lon', xtype=ncd_double, dim1name=namep, &
@@ -3298,6 +3301,7 @@ contains
        call ncd_io(varname='cols1d_itype_lunit', data=icarr    , dim1name=namec, ncid=ncid, flag='write')
 
        call ncd_io(varname='cols1d_active' , data=col%active  , dim1name=namec, ncid=ncid, flag='write')
+       call ncd_io(varname='cols1d_nbedrock', data=col%nbedrock , dim1name=namec, ncid=ncid, flag='write')
 
        ! Write patch info
 
@@ -3798,7 +3802,7 @@ contains
           call ncd_defdim( ncid_hist(t), 'max_chars'    , max_chars   , dimid)
           call ncd_defdim( ncid_hist(t), 'max_nflds'    , max_nflds   ,  dimid)   
           call ncd_defdim( ncid_hist(t), 'max_flds'     , max_flds    , dimid)   
-       
+          
           call ncd_defvar(ncid=ncid_hist(t), varname='nhtfrq', xtype=ncd_int, &
                long_name="Frequency of history writes",               &
                comment="Namelist item", &
@@ -3922,7 +3926,6 @@ contains
        max_nflds = max_nFields()
 
        start(1)=1
-
 
        !
        ! Add history namelist data to each history restart tape
@@ -4319,7 +4322,7 @@ contains
        end do
        
     end if
-    
+
   end subroutine hist_restart_ncd
 
   !-----------------------------------------------------------------------

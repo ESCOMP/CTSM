@@ -462,7 +462,7 @@ contains
 
             !  Set column bedrock index
              !thin soil for non-riparian columns, thick for riparian
-if(1==2) then
+             if(1==2) then
              do c =  lun%coli(l), lun%colf(l)
                 if(col%cold(c) /= ispval) then 
                    do j = 1,nlevsoi
@@ -482,7 +482,68 @@ if(1==2) then
                    enddo
                 endif
              end do
-endif             
+          endif
+          ! maximum soil depth of 3m
+          if(1==1) then
+             do c =  lun%coli(l), lun%colf(l)
+                do j = 1,nlevsoi 
+                   if(zisoi(j-1) > zmin_bedrock) then
+!                      if (zisoi(j-1) < 3.0_r8 .and. zisoi(j) >= 3.0_r8) then
+                      if (zisoi(j-1) < 1.4_r8 .and. zisoi(j) >= 1.4_r8) then
+                         col%nbedrock(c) = min(j,col%nbedrock(c))
+                      end if
+                   end if
+                enddo
+             end do
+          endif
+! thin soils in uplands
+            if(1==2) then    
+! first set all soils to 0.5m 
+             do c =  lun%coli(l), lun%colf(l)       
+                do j = 1,nlevsoi            
+                   if(zisoi(j-1) > zmin_bedrock) then             
+                      if (zisoi(j-1) < 0.5_r8 .and. zisoi(j) >= 0.5_r8) then
+                         col%nbedrock(c) = j
+                      end if  
+                   end if     
+                enddo         
+             enddo            
+! then increase relative to ridge           
+             do c =  lun%coli(l), lun%colf(l)       
+                if(col%cold(c) /= ispval) then      
+                   do j = 1,nlevsoi         
+                      if (zisoi(j-1) <  (zisoi(col%nbedrock(c))+1.0_r8) .and. zisoi(j) >= (zisoi(col%nbedrock(c))+1.0_r8)) then    
+                            col%nbedrock(col%cold(c)) = j         
+                         end if             
+                      enddo   
+                   endif
+                enddo
+             endif
+! thin soils in valley
+             if(1==2) then
+! first set all soils to 0.5m
+             do c =  lun%coli(l), lun%colf(l)
+                do j = 1,nlevsoi
+                   if(zisoi(j-1) > zmin_bedrock) then
+                      if (zisoi(j-1) < 0.5_r8 .and. zisoi(j) >= 0.5_r8) then
+                         col%nbedrock(c) = j
+                      end if
+                   end if
+                enddo
+             enddo
+! then increase relative to valley
+!             do c =  lun%coli(l), lun%colf(l)
+             do c =  lun%colf(l), lun%coli(l), -1
+                if(col%colu(c) /= ispval) then
+                   do j = 1,nlevsoi
+                      if (zisoi(j-1) <  (zisoi(col%nbedrock(c))+0.5_r8) .and. zisoi(j) >= (zisoi(col%nbedrock(c))+0.5_r8)) then
+                            col%nbedrock(col%colu(c)) = j
+                         end if
+                      enddo
+                   endif
+                end do
+             endif
+
           endif ! end of istsoil
        enddo    ! end of loop over landunits
        
