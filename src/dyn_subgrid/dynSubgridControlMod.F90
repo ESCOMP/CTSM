@@ -165,7 +165,7 @@ contains
     dyn_subgrid_control_inst = dyn_subgrid_control_type( &
          flanduse_timeseries = flanduse_timeseries, &
          do_transient_pfts = do_transient_pfts, &
-         do_transient_crops = do_transient_crops, &
+         do_transient_crops = do_transient_pfts, &
          do_harvest = do_harvest, &
          for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes = for_testing_zero_dynbal_fluxes)
@@ -225,10 +225,10 @@ contains
     end if
 
     if (dyn_subgrid_control_inst%do_transient_crops) then
-       if (.not. use_crop) then
-          write(iulog,*) 'ERROR: do_transient_crops can only be true if use_crop is true'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
+!      if (.not. use_crop) then
+!         write(iulog,*) 'ERROR: do_transient_crops can only be true if use_crop is true'
+!         call endrun(msg=errMsg(sourcefile, __LINE__))
+!      end if
        if (use_fates) then
           ! NOTE(wjs, 2017-01-13) ED / FATES does not currently have a mechanism for
           ! changing its column areas, with the consequent changes in aboveground biomass
