@@ -10,6 +10,7 @@ module SoilHydrologyMod
   use clm_varctl        , only : iulog, use_vichydro
   use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
   use clm_varcon        , only : ispval
+  use atm2lndType       , only : atm2lnd_type
   use EnergyFluxType    , only : energyflux_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
@@ -2264,7 +2265,7 @@ contains
         num_hillslope, filter_hillslopec,   &
         num_hydrologyc, filter_hydrologyc,  &
         num_urbanc, filter_urbanc,soilhydrology_inst, soilstate_inst, &
-        waterstate_inst, waterflux_inst)
+        waterstate_inst, waterflux_inst, atm2lnd_inst)
      !
      ! !DESCRIPTION:
      ! Calculate subsurface drainage
@@ -2287,6 +2288,7 @@ contains
      integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilstate_type)     , intent(in)    :: soilstate_inst
+     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(waterstate_type)    , intent(inout) :: waterstate_inst
      type(waterflux_type)     , intent(inout) :: waterflux_inst
@@ -2338,15 +2340,15 @@ contains
 
 !scs
      character(len=32) :: transmissivity_method = 'layersum'
-     character(len=32) :: baseflow_method = 'kinematic'
-     integer  :: c_down
+!     character(len=32) :: baseflow_method = 'kinematic'
+     character(len=32) :: baseflow_method = 'darcy'
      real(r8) :: transmis
      real(r8) :: dgrad
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
      real(r8), parameter :: k_anisotropic = 20._r8
      real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) 
      real(r8) :: qflx_net_latflow(bounds%begc:bounds%endc) 
-     integer  :: c0, nstep
+     integer  :: c0, c_src, nstep
 
      !-----------------------------------------------------------------------
 
@@ -2449,55 +2451,22 @@ contains
           enddo
        end do
 
+         
        do fc = 1, num_hillslope
           c = filter_hillslopec(fc)
           g = col%gridcell(c)
-         
-          ! Calculate transmissivity
 
-          transmis = 0._r8
-          ! transmissivity non-zero only when saturated conditions exist
-          if(zwt(c) <= zi(c,nbedrock(c))) then 
-             ! sum of layer transmissivities
-             if (transmissivity_method == 'layersum') then
-                do j = jwt(c)+1, nbedrock(c)
-                   if(j == jwt(c)+1) then
-                      transmis = transmis + 1.e-3_r8*hksat(c,j)*(zi(c,j) - zwt(c))
-                   else
-                      transmis = transmis + 1.e-3_r8*hksat(c,j)*dz(c,j)
-                   endif
-                end do
-                ! adjust by 'anisotropy factor'
-                transmis = k_anisotropic*transmis
-             endif
-             ! constant conductivity based on shallowest saturated layer hk
-             if (transmissivity_method == 'constant') then
-                transmis = k_anisotropic*(1.e-3_r8*hksat(c,jwt(c)+1)) &
-                     *(zi(c,nbedrock(c)) - zwt(c) )
-             endif
-             ! power law profile based on shallowest saturated layer hk
-             if (transmissivity_method == 'power') then
-                !             transmis = k_anisotropic*hksat(c,jwt(c)+1)*0.001_r8*dzsumall* &
-                !                  ((1-1000._r8*zwt(c)/dzsumall)**n_baseflow )/n_baseflow ! (m2/s)
-             endif
-          endif ! this could be moved to include latflow calculations...
-
-          ! the qflx_latflow_out_vol calculations use the
-          ! transmissivity to determine whether saturated flow
-          ! conditions exist, b/c gradients will be nonzero
-          ! even when no saturated layers are present
-          
           ! kinematic wave approximation
           if (baseflow_method == 'kinematic') then
-             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*col%hill_slope(c)
+             dgrad = col%hill_slope(c)
           endif
           ! darcy's law 
           if (baseflow_method == 'darcy') then
              if (col%cold(c) /= ispval) then
-                c_down = col%cold(c)
+                
                 dgrad = (col%hill_elev(c)-zwt(c)) &
-                     - (col%hill_elev(c_down)-zwt(c_down))
-                dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(c_down))
+                     - (col%hill_elev(col%cold(c))-zwt(col%cold(c)))
+                dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
              else
                 ! flow between channel and lowest column
                 ! bankfull height is defined to be zero
@@ -2509,8 +2478,54 @@ contains
                    dgrad = max(dgrad, 0._r8)
                 endif
              endif
-             qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
           end if
+
+          ! the qflx_latflow_out_vol calculations use the
+          ! transmissivity to determine whether saturated flow
+          ! conditions exist, b/c gradients will be nonzero
+          ! even when no saturated layers are present
+
+          ! Calculate transmissivity of source column
+          if (dgrad >= 0._r8) then
+             c_src = c
+          else
+             c_src = col%cold(c)
+          endif
+
+          transmis = 0._r8
+          if(c_src /= ispval) then 
+             ! transmissivity non-zero only when saturated conditions exist
+             if(zwt(c_src) <= zi(c_src,nbedrock(c_src))) then 
+                ! sum of layer transmissivities
+                if (transmissivity_method == 'layersum') then
+                   do j = jwt(c_src)+1, nbedrock(c_src)
+                      if(j == jwt(c_src)+1) then
+                         transmis = transmis + 1.e-3_r8*hksat(c_src,j)*(zi(c_src,j) - zwt(c_src))
+                      else
+                         transmis = transmis + 1.e-3_r8*hksat(c_src,j)*dz(c_src,j)
+                      endif
+                   end do
+                   ! adjust by 'anisotropy factor'
+                   transmis = k_anisotropic*transmis
+                endif
+                ! constant conductivity based on shallowest saturated layer hk
+                if (transmissivity_method == 'constant') then
+                   transmis = k_anisotropic*(1.e-3_r8*hksat(c_src,jwt(c_src)+1)) &
+                        *(zi(c_src,nbedrock(c_src)) - zwt(c_src) )
+                endif
+                ! power law profile based on shallowest saturated layer hk
+                if (transmissivity_method == 'power') then
+                   !             transmis = k_anisotropic*hksat(c_src,jwt(c_src)+1)*0.001_r8*dzsumall* &
+                   !                  ((1-1000._r8*zwt(c_src)/dzsumall)**n_baseflow )/n_baseflow ! (m2/s)
+                endif
+             endif
+          else
+             ! transmissivity of losing stream (c_src == ispval)
+             transmis = k_anisotropic*(1.e-3_r8*hksat(c,jwt(c)+1)) &
+                  *tdepth(g)
+          endif
+
+          qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
 
 ! currently this is redundant to above
           qdischarge(c) = qflx_latflow_out_vol(c)
@@ -2619,7 +2634,6 @@ contains
           zwt(c) = min(80._r8,zwt(c))
           
        end do
-
 
        !  excessive water above saturation added to the above unsaturated layer like a bucket
        !  if column fully saturated, excess water goes to runoff

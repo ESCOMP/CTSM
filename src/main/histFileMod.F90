@@ -2539,9 +2539,6 @@ contains
              call ncd_defvar(varname='hslp_cold', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope downhill column index', &
                   ncid=nfid(t))             
-             call ncd_defvar(varname='hslp_col_ndx', xtype=ncd_int, &
-                  dim1name=namec, long_name='hillslope column index', &
-                  ncid=nfid(t))             
           end if
       
           if(use_fates)then
@@ -2599,7 +2596,6 @@ contains
              call ncd_io(varname='hslp_aspect' , data=col%hill_aspect, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_cold' , data=col%cold, dim1name=namec, ncid=nfid(t), flag='write')
-             call ncd_io(varname='hslp_col_ndx' , data=col%col_ndx, dim1name=namec, ncid=nfid(t), flag='write')
           endif
 
           if(use_fates)then
@@ -3102,8 +3098,8 @@ contains
           !call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
           !     long_name='1d grid index of corresponding column', ncid=ncid)
 
-          !call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
-          !     long_name='1d landunit index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
+               long_name='1d landunit index of corresponding column', ncid=ncid)
           ! ----------------------------------------------------------------
 
           call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name=namec, &
@@ -3121,6 +3117,9 @@ contains
 
           call ncd_defvar(varname='cols1d_active', xtype=ncd_log, dim1name=namec, &
                long_name='true => do computations on this column', ncid=ncid)
+
+          call ncd_defvar(varname='cols1d_nbedrock', xtype=ncd_int, dim1name=namec, &
+               long_name='column bedrock depth index', ncid=ncid)
 
           ! Define patch info
 
@@ -3253,6 +3252,10 @@ contains
        ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
        !call ncd_io(varname='cols1d_gi'     , data=col%gridcell, dim1name=namec, ncid=ncid, flag='write')
        !call ncd_io(varname='cols1d_li'     , data=col%landunit, dim1name=namec, ncid=ncid, flag='write')
+       do c = bounds%begc,bounds%endc
+         icarr(c) =  GetGlobalIndex(decomp_index=col%landunit(c), clmlevel=namel)
+       enddo
+       call ncd_io(varname='cols1d_li'       , data=icarr  , dim1name=namec, ncid=ncid, flag='write')
        ! ----------------------------------------------------------------
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_wtlunit', data=col%wtlunit , dim1name=namec, ncid=ncid, flag='write')
@@ -3264,6 +3267,7 @@ contains
        call ncd_io(varname='cols1d_itype_lunit', data=icarr    , dim1name=namec, ncid=ncid, flag='write')
 
        call ncd_io(varname='cols1d_active' , data=col%active  , dim1name=namec, ncid=ncid, flag='write')
+       call ncd_io(varname='cols1d_nbedrock', data=col%nbedrock , dim1name=namec, ncid=ncid, flag='write')
 
        ! Write patch info
 

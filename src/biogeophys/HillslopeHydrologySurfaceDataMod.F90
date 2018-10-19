@@ -219,10 +219,13 @@ contains
     integer               :: c, l, g, i, j, ci, nh       ! indices
 
     real(r8)              :: hillslope_area       ! total area of hillslope
+    real(r8)              :: nc
     real(r8)              :: column_length        ! length of column [m]
     real(r8)              :: le_distance          ! distance of lower edge of column from bottom of hillslope
     real(r8)              :: ue_distance          ! distance of upper edge of column from bottom of hillslope
     integer               :: ctop, cbottom        ! hillslope top and bottom column indices
+    real(r8)              :: min_hill_dist, max_hill_dist
+    real(r8)              :: soil_depth
 
     character(len=*), parameter :: subname = 'Init'
 
@@ -376,8 +379,7 @@ contains
              do c = lun%coli(l), lun%colf(l)
                 ! ci should span [1:nhillcolumns(l)]
                 ci = c-lun%coli(l)+1
-                col%col_ndx(c) = c 
-                ! relative separation should be the same internally and externally
+                ! relative separation should be the same
                 if (col_dndx(l,ci) <= -999) then
                    ! lowermost column of hillslope has no downstream neighbor
 !scs                   col%cold(c) = col_dndx(l,ci)
@@ -398,8 +400,8 @@ contains
 !scs                col%colu(c) = -999 
                 col%colu(c) = ispval
                 do i = lun%coli(l), lun%colf(l)
-                   if(i == col%cold(c)) then
-                      col%colu(i) = c
+                   if(c == col%cold(i)) then
+                      col%colu(c) = i
                    endif
                 enddo
 
@@ -424,9 +426,27 @@ contains
              do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
                 hillslope_area = hillslope_area &
-                     + col%hill_area(c)*(pct_hillslope(l,nh)*0.01_r8)
+                     + col%hill_area(c)*real(pct_hillslope(l,nh),r8)*0.01_r8
              enddo
-             do c = lun%coli(l), lun%colf(l)
+
+! if missing hillslope information on surface dataset, fill data
+! and recalculate hillslope_area before setting column weights
+             if (hillslope_area == 0._r8) then
+                do c = lun%coli(l), lun%colf(l)
+                   col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6 ! km2 to m2
+                   col%hill_distance(c) = sqrt(col%hill_area(c))
+                   col%hill_width(c) = sqrt(col%hill_area(c))
+                   col%hill_elev(c) = col%topo_std(c)
+                   col%hill_slope(c) = tan((rpi/180.)*col%topo_slope(c))
+                   col%hill_aspect(c) = (rpi/2.) ! east (arbitrarily chosen)
+                   nh = col%hillslope_ndx(c)
+                   pct_hillslope(l,nh) = 100/nhillslope
+                   hillslope_area = hillslope_area &
+                        + col%hill_area(c)*real(pct_hillslope(l,nh),r8)*0.01_r8
+                enddo
+             endif
+
+            do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
                 col%wtlunit(c) = col%hill_area(c) &
                      * (pct_hillslope(l,nh)*0.01_r8)/hillslope_area      
@@ -454,7 +474,74 @@ if(1==2) then
                    enddo
                 endif
              end do
-endif             
+endif
+     if(1==2) then
+! first set all soils to 0.5m
+             do c =  lun%coli(l), lun%colf(l)
+                do j = 1,nlevsoi
+                   if(zisoi(j-1) > zmin_bedrock) then
+                      if (zisoi(j-1) < 0.5_r8 .and. zisoi(j) >= 0.5_r8) then
+                         col%nbedrock(c) = j
+                      end if
+                   end if
+                enddo
+             enddo
+
+! then increase relative to ridge
+             min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
+             max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
+             do c =  lun%coli(l), lun%colf(l)
+!                nc=c-lun%coli(l)
+                nc = (max_hill_dist - col%hill_distance(c))/(max_hill_dist - min_hill_dist)
+! nc should vary from 0 at ridge to 1 at valley
+                soil_depth = nc*3.5_r8 + 0.5_r8
+!write(iulog,*) l,c,nc,soil_depth
+                do j = 1,nlevsoi
+                   if ((zisoi(j-1) <  soil_depth) .and. (zisoi(j) >= soil_depth)) then
+                      col%nbedrock(c) = j
+                   end if
+                enddo
+             enddo
+          endif
+
+             if(1==1) then
+! first set all soils to 0.5m
+             do c =  lun%coli(l), lun%colf(l)
+                do j = 1,nlevsoi
+                   if(zisoi(j-1) > zmin_bedrock) then
+                      if (zisoi(j-1) < 0.5_r8 .and. zisoi(j) >= 0.5_r8) then
+                         col%nbedrock(c) = j
+                      end if
+                   end if
+                enddo
+             enddo
+! then increase relative to valley
+             min_hill_dist = minval(col%hill_distance(lun%coli(l):lun%colf(l)))
+             max_hill_dist = maxval(col%hill_distance(lun%coli(l):lun%colf(l)))
+             do c =  lun%coli(l), lun%colf(l)
+                nc = (col%hill_distance(c) - min_hill_dist)/(max_hill_dist - min_hill_dist)
+! nc should vary from 1 at ridge to 0 at valley
+                soil_depth = nc*6.0_r8 + 2.0_r8
+!write(iulog,*) 'soildepth: ',l,c,nc,soil_depth
+                do j = 1,nlevsoi
+                   if ((zisoi(j-1) <  soil_depth) .and. (zisoi(j) >= soil_depth)) then
+                      col%nbedrock(c) = j
+                   end if
+                enddo
+
+
+!!$             do c =  lun%colf(l), lun%coli(l), -1
+!!$                if(col%colu(c) /= ispval) then
+!!$                   do j = 1,nlevsoi
+!!$                      if (zisoi(j-1) <  (zisoi(col%nbedrock(c))+0.5_r8) .and. zisoi(j) >= (zisoi(col%nbedrock(c))+0.5_r8)) then
+!!$                            col%nbedrock(col%colu(c)) = j
+!!$                         end if
+!!$                      enddo
+!!$                   endif
+
+                end do
+             endif
+        
           endif ! end of istsoil
        enddo    ! end of loop over landunits
        
