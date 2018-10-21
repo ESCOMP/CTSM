@@ -165,7 +165,7 @@ contains
     dyn_subgrid_control_inst = dyn_subgrid_control_type( &
          flanduse_timeseries = flanduse_timeseries, &
          do_transient_pfts = do_transient_pfts, &
-         do_transient_crops = do_transient_pfts, &
+         do_transient_crops = do_transient_crops, &
          do_harvest = do_harvest, &
          for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes = for_testing_zero_dynbal_fluxes)
