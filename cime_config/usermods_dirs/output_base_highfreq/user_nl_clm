@@ -21,7 +21,6 @@ hist_fincl7 += 'TREFMXAV','TREFMNAV'
 ! h7 stream (3-hourly average, gridcell-level)
 ! 3hr, E3hr, CF3hr
 ! 3hr requires QRUNOFF for time mean, and SOILWATER_10CM, TSKIN for time point (I)
-! E3hr requires GPP, AR, HR for time mean
 ! CF3hr requires QFLX_SUB_SNOW for time point (I)
 hist_mfilt(8) = 2920
 hist_dov2xy(8) = .true.
