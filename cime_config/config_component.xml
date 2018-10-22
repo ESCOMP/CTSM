@@ -230,7 +230,7 @@
     <valid_values></valid_values>
     <default_value></default_value>
     <values match="last">
-      <value compset="_CLM50%[^_]*CMIP6DECK">$SRCROOT/components/clm/cime_config/usermods_dirs/cmip6</value>
+      <value compset="_CLM50%[^_]*CMIP6DECK[%_]">$SRCROOT/components/clm/cime_config/usermods_dirs/cmip6</value>
     </values>
     <group>run_component_clm</group>
     <file>env_case.xml</file>
