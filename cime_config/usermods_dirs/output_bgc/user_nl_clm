@@ -7,7 +7,7 @@ hist_fexcl1 += 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 
 hist_fincl1 += 'LEAFC_TO_LITTER', 'FROOTC_TO_LITTER','LITR1C_TO_SOIL1C','LITR1N_TO_SOIL1N','LITR2C_TO_SOIL1C', 'LITR2N_TO_SOIL1N','LITR3C_TO_SOIL2C','LITR3N_TO_SOIL2N','DWT_WOOD_PRODUCTC_GAIN_PATCH'
 
 ! h1 stream (monthly average, finest sub-grid)
-hist_fincl2 += 'GPP', 'NPP', 'AGNPP', 'TOTVEGC', 'NPP_NUPTAKE', 'Vcmx25Z', 'AR' 
+hist_fincl2 += 'GPP', 'NPP', 'AGNPP', 'TOTVEGC', 'NPP_NUPTAKE', 'Vcmx25Z', 'AR', 'HR', 'HTOP'
 
 ! h2 stream (monthly average, landunit-level)
 ! TOT_WOODPRODC:I, CROPPROD1C:I, and NEE are not available at the landunit level

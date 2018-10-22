@@ -38,7 +38,7 @@ hist_mfilt(2) = 1
 hist_dov2xy(2) = .false.
 hist_nhtfrq(2) = 0
 hist_type1d_pertape(2) = ' '
-hist_fincl2 += 'TLAI', 'TSA','TREFMNAV','TREFMXAV', 'BTRANMN', 'Vcmx25Z', 'FSH', 'VEGWP', 'FCTR', 'FCEV', 'FGEV', 'FIRE', 'FSR', 'HTOP', 'FIRA', 'FSA', 'HR', 'GSSUNLN', 'GSSHALN', 'TSKIN'
+hist_fincl2 += 'TLAI', 'TSA','TREFMNAV','TREFMXAV', 'BTRANMN', 'Vcmx25Z', 'FSH', 'VEGWP', 'FCTR', 'FCEV', 'FGEV', 'FIRE', 'FSR', 'FIRA', 'FSA', 'GSSUNLN', 'GSSHALN', 'TSKIN'
 
 ! h2 stream (monthly average, landunit-level)
 ! Emon
