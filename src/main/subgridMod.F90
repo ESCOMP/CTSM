@@ -156,13 +156,14 @@ contains
 
     nlunits = 1
     if(use_hillslope) then 
-       ncols = nhillcol(gi)
+       ! ensure ncols is > 0
+       ncols = max(nhillcol(gi),1)
     else
        ncols = 1
     endif
     npatches = ncols*natpft_size
 
-!    write(iulog,*) 'nhillslope, nhillcol, ncols:', nhillslope, nhillcol(gi), ncols
+!    write(iulog,*) 'nhillcol, ncols, npatches:', nhillcol(gi), ncols, npatches
 
     ! -------------------------------------------------------------------------
     ! Number of cohorts is set here

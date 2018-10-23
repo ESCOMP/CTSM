@@ -121,6 +121,7 @@ contains
          qflx_surf          => waterflux_inst%qflx_surf_col          , & ! surface runoff (mm H2O /s)      
          qflx_infl          => waterflux_inst%qflx_infl_col          , & ! infiltration (mm H2O /s)   
          qflx_qrgwl         => waterflux_inst%qflx_qrgwl_col         , & ! qflx_surf at glaciers, wetlands, lakes
+         qflx_latflow_out   => waterflux_inst%qflx_latflow_out_col   , & ! lateral subsurface outflow (mm H2O/s)
          qflx_runoff        => waterflux_inst%qflx_runoff_col        , & ! total runoff 
                                                                          ! (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterflux_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
@@ -199,6 +200,7 @@ contains
 
          if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
 
+            qflx_latflow_out(c)   = 0._r8
             qflx_drain(c)         = 0._r8
             qflx_drain_perched(c) = 0._r8
             qflx_h2osfc_surf(c)   = 0._r8
