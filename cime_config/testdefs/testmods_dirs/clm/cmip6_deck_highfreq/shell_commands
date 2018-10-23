@@ -1,6 +1,3 @@
 #!/bin/bash
 
 ./xmlchange BFBFLAG="TRUE"
-
-# FIXME(wjs, 2018-10-23) This is temporary to match what was being run before; it should be removed
-./xmlchange CCSM_BGC=CO2A
