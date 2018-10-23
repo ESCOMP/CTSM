@@ -1,2 +1,3 @@
-../cmip6_glaciers
+../_includes/cmip6_glaciers_cplhist
+../_includes/cmip6_glaciers_virtual_antarctica
 ../output_crop

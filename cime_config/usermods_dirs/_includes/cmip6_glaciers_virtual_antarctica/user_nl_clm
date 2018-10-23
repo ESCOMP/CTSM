@@ -1,5 +1,5 @@
 !----------------------------------------------------------------------------------
-! Settings from cmip6_glaciers
+! Settings from cmip6_glaciers_virtual_antarctica
 !----------------------------------------------------------------------------------
 
 ! This differs from the default in that it turns on virtual columns over Antarctica
