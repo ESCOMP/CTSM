@@ -1,7 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.09     erik 10/23/2018 Bring in bit-for-bit changes from master up to ctsm1.0.dev012: AnnEt init, snowmip fields
   ctsm1.0.dev012     erik 09/29/2018 Add snow-free fields for snowmip, fix several issues
-  ctsm1.0.dev011    sacks 09/12/2018 Add water tracer consistency checks, and other water tracer work
+  ctsm1.0.dev011    sacks 09/12/2018 SKIPPED ON RELEASE BRANCH -- water tracer consistency checks
   ctsm1.0.dev010    sacks 08/30/2018 SKIPPED ON RELEASE BRANCH -- cime update
   ctsm1.0.dev009    sacks 08/22/2018 Fix initialization of AnnET in InitAccVars
 release-clm5.0.08     erik 09/28/2018 Updated CMIP6 ndep file for historical transient Bgc cases, 1850_control same as before
