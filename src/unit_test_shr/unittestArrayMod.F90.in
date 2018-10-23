@@ -24,6 +24,14 @@ module unittestArrayMod
   ! filled with NaNs.
   public :: col_array
 
+  ! Create a patch-level array filled with a single value; the type of the array is the
+  ! same as the type of the input value. If no value is given, an r8 array is returned,
+  ! filled with NaNs.
+  public :: patch_array
+
+  ! Converts an array of logicals to a same-size array of integers: false => 0, true => 1
+  public :: logical_array_to_int
+
   interface grc_array
      module procedure grc_array_uninit
 
@@ -37,6 +45,13 @@ module unittestArrayMod
      !TYPE logical,int,double
      module procedure col_array_{TYPE}
   end interface col_array
+
+  interface patch_array
+     module procedure patch_array_uninit
+
+     !TYPE logical,int,double
+     module procedure patch_array_{TYPE}
+  end interface patch_array
 
 contains
 
@@ -130,5 +145,76 @@ contains
 
   end function col_array_{TYPE}
 
+
+  !-----------------------------------------------------------------------
+  pure function patch_array_uninit() result(patch_array)
+    !
+    ! !DESCRIPTION:
+    ! Creates a patch-level array of r8 values. All elements are set to NaN.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    real(r8), allocatable :: patch_array(:)  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'patch_array_uninit'
+    !-----------------------------------------------------------------------
+
+    allocate(patch_array(bounds%begp:bounds%endp))
+    patch_array(:) = nan
+
+  end function patch_array_uninit
+
+
+  !-----------------------------------------------------------------------
+  !TYPE logical,int,double
+  pure function patch_array_{TYPE}(val) result(patch_array)
+    !
+    ! !DESCRIPTION:
+    ! Creates a patch-level array with the same type as val. All elements are set to val.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    {VTYPE}, allocatable :: patch_array(:) ! function result
+    {VTYPE}, intent(in)  :: val ! all elements in patch_array are set to val
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'patch_array_{TYPE}'
+    !-----------------------------------------------------------------------
+
+    allocate(patch_array(bounds%begp:bounds%endp))
+    patch_array(:) = val
+
+  end function patch_array_{TYPE}
+
+  !-----------------------------------------------------------------------
+  function logical_array_to_int(logical_array) result(int_array)
+    !
+    ! !DESCRIPTION:
+    ! Converts an array of logicals to a same-size array of integers: false => 0, true => 1
+    !
+    ! This can be useful for doing assertions on arrays, since pFUnit doesn't support
+    ! assertions of equality of logical arrays.
+    !
+    ! !ARGUMENTS:
+    logical, intent(in) :: logical_array(:)
+    integer :: int_array(size(logical_array))  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'logical_array_to_int'
+    !-----------------------------------------------------------------------
+
+    where (logical_array)
+       int_array = 1
+    elsewhere
+       int_array = 0
+    end where
+
+  end function logical_array_to_int
 
 end module unittestArrayMod

@@ -17,8 +17,9 @@ module LakeTemperatureMod
   use SoilStateType     , only : soilstate_type
   use SolarAbsorbedType , only : solarabs_type
   use TemperatureType   , only : temperature_type
-  use WaterfluxType     , only : waterflux_type
-  use WaterstateType    , only : waterstate_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use ColumnType        , only : col                
   use PatchType         , only : patch                
   !    
@@ -42,7 +43,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine LakeTemperature(bounds, num_lakec, filter_lakec, num_lakep, filter_lakep, &
-       solarabs_inst, soilstate_inst, waterstate_inst, waterflux_inst, ch4_inst, &
+       solarabs_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, ch4_inst, &
        energyflux_inst, temperature_inst, lakestate_inst)
     !
     ! !DESCRIPTION:
@@ -127,8 +128,9 @@ contains
     integer                , intent(in)    :: filter_lakep(:) ! patch filter for non-lake points
     type(solarabs_type)    , intent(in)    :: solarabs_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(ch4_type)         , intent(inout) :: ch4_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(temperature_type) , intent(inout) :: temperature_inst
@@ -238,10 +240,10 @@ contains
          ws              =>   lakestate_inst%ws_col                , & ! Input:  [real(r8) (:)   ]  surface friction velocity (m/s)                   
          lake_raw       =>    lakestate_inst%lake_raw_col          , & ! Input:  [real(r8) (:)   ]  aerodynamic resistance for moisture (s/m)   
          
-         h2osno          =>   waterstate_inst%h2osno_col           , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
-         h2osoi_liq      =>   waterstate_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) [for snow & soil layers]
-         h2osoi_ice      =>   waterstate_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) [for snow & soil layers]
-         frac_iceold     =>   waterstate_inst%frac_iceold_col      , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
+         h2osno          =>   waterstatebulk_inst%h2osno_col           , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
+         h2osoi_liq      =>   waterstatebulk_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) [for snow & soil layers]
+         h2osoi_ice      =>   waterstatebulk_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) [for snow & soil layers]
+         frac_iceold     =>   waterdiagnosticbulk_inst%frac_iceold_col      , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
 
          t_grnd          =>   temperature_inst%t_grnd_col          , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)             
          t_soisno        =>   temperature_inst%t_soisno_col        , & ! Output: [real(r8) (:,:) ]  soil (or snow) temperature (Kelvin)   
@@ -489,7 +491,7 @@ contains
          tk(bounds%begc:bounds%endc, :), &
          cv(bounds%begc:bounds%endc, :), &
          tktopsoillay(bounds%begc:bounds%endc), &
-         soilstate_inst, waterstate_inst, temperature_inst)
+         soilstate_inst, waterstatebulk_inst, temperature_inst)
     
     ! Sum cv*t_lake for energy check
     ! Include latent heat term, and use tfrz as reference temperature
@@ -705,7 +707,7 @@ contains
          cv(bounds%begc:bounds%endc, :), &
          cv_lake(bounds%begc:bounds%endc, :), &
          lhabs(bounds%begc:bounds%endc), &
-         waterstate_inst, waterflux_inst, temperature_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst, &
          energyflux_inst, lakestate_inst)
 
     !!!!!!!!!!!!!!!!!!!!!!!
@@ -984,7 +986,7 @@ contains
          tk(bounds%begc:bounds%endc, :), &
          cv(bounds%begc:bounds%endc, :), &
          tktopsoillay(bounds%begc:bounds%endc), &
-         soilstate_inst, waterstate_inst, temperature_inst)
+         soilstate_inst, waterstatebulk_inst, temperature_inst)
 
 
     ! Do as above to sum energy content
@@ -1052,7 +1054,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine SoilThermProp_Lake (bounds,  num_lakec, filter_lakec, tk, cv, tktopsoillay, &
-        soilstate_inst, waterstate_inst, temperature_inst)
+        soilstate_inst, waterstatebulk_inst, temperature_inst)
      !
      ! !DESCRIPTION:
      ! Calculation of thermal conductivities and heat capacities of
@@ -1083,7 +1085,7 @@ contains
      real(r8)               , intent(out) :: tk( bounds%begc: , -nlevsno+1: ) ! thermal conductivity [W/(m K)] [col, lev]
      real(r8)               , intent(out) :: tktopsoillay( bounds%begc: )     ! thermal conductivity [W/(m K)] [col]
      type(soilstate_type)   , intent(in)  :: soilstate_inst
-     type(waterstate_type)  , intent(in)  :: waterstate_inst
+     type(waterstatebulk_type)  , intent(in)  :: waterstatebulk_inst
      type(temperature_type) , intent(in)  :: temperature_inst
     
      !
@@ -1116,8 +1118,8 @@ contains
           tkdry       => soilstate_inst%tkdry_col       , & ! Input:  [real(r8) (:,:)]  thermal conductivity, dry soil (W/m/Kelvin)
           csol        => soilstate_inst%csol_col        , & ! Input:  [real(r8) (:,:)]  heat capacity, soil solids (J/m**3/Kelvin)
 
-          h2osoi_liq  => waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
-          h2osoi_ice  => waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
+          h2osoi_liq  => waterstatebulk_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
+          h2osoi_ice  => waterstatebulk_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
 
           t_soisno    => temperature_inst%t_soisno_col    & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)             
           )
@@ -1235,7 +1237,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine PhaseChange_Lake (bounds, num_lakec, filter_lakec, cv, cv_lake, lhabs, &
-        waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst, lakestate_inst)
+        waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst, energyflux_inst, lakestate_inst)
      !
      ! !DESCRIPTION:
      ! Calculation of the phase change within snow, soil, & lake layers:
@@ -1265,8 +1267,9 @@ contains
      real(r8)               , intent(inout) :: cv( bounds%begc: , -nlevsno+1: ) ! heat capacity [J/(m2 K)] [col, lev]
      real(r8)               , intent(inout) :: cv_lake( bounds%begc: , 1: )     ! heat capacity [J/(m2 K)] [col, levlak]
      real(r8)               , intent(out)   :: lhabs( bounds%begc: )            ! total per-column latent heat abs. (J/m^2) [col]
-     type(waterstate_type)  , intent(inout) :: waterstate_inst
-     type(waterflux_type)   , intent(inout) :: waterflux_inst
+     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
      type(temperature_type) , intent(inout) :: temperature_inst
      type(energyflux_type)  , intent(inout) :: energyflux_inst
      type(lakestate_type)   , intent(inout) :: lakestate_inst
@@ -1294,18 +1297,18 @@ contains
           dz              => col%dz                             , & ! Input:  [real(r8)  (:,:) ] layer thickness (m)                   
           snl             => col%snl                            , & ! Input:  [integer   (:)   ] number of snow layers                    
 
-          snow_depth      => waterstate_inst%snow_depth_col     , & ! Output: [real(r8)  (:)   ] snow height (m)                         
-          h2osno          => waterstate_inst%h2osno_col         , & ! Output: [real(r8)  (:)   ] snow water (mm H2O)                     
-          h2osoi_liq      => waterstate_inst%h2osoi_liq_col     , & ! Output: [real(r8)  (:,:) ] liquid water (kg/m2)                  
-          h2osoi_ice      => waterstate_inst%h2osoi_ice_col     , & ! Output: [real(r8)  (:,:) ] ice lens (kg/m2)                      
+          snow_depth      => waterdiagnosticbulk_inst%snow_depth_col     , & ! Output: [real(r8)  (:)   ] snow height (m)                         
+          h2osno          => waterstatebulk_inst%h2osno_col         , & ! Output: [real(r8)  (:)   ] snow water (mm H2O)                     
+          h2osoi_liq      => waterstatebulk_inst%h2osoi_liq_col     , & ! Output: [real(r8)  (:,:) ] liquid water (kg/m2)                  
+          h2osoi_ice      => waterstatebulk_inst%h2osoi_ice_col     , & ! Output: [real(r8)  (:,:) ] ice lens (kg/m2)                      
 
           lake_icefrac    => lakestate_inst%lake_icefrac_col    , & ! Input:  [real(r8)  (:,:) ] mass fraction of lake layer that is frozen
           
-          qflx_snofrz_lyr => waterflux_inst%qflx_snofrz_lyr_col , & ! Output:  [real(r8)  (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
-          qflx_snomelt_lyr => waterflux_inst%qflx_snomelt_lyr_col, & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
-          qflx_snow_drain => waterflux_inst%qflx_snow_drain_col , & ! Output: [real(r8)  (:)   ] drainage from snow column                           
-          qflx_snomelt    => waterflux_inst%qflx_snomelt_col    , & ! Output: [real(r8)  (:)   ] snow melt (mm H2O /s)                   
-          qflx_snofrz     => waterflux_inst%qflx_snofrz_col     , & ! Output: [real(r8)  (:)   ] column-integrated snow freezing rate (kg m-2 s-1) [+]
+          qflx_snofrz_lyr => waterfluxbulk_inst%qflx_snofrz_lyr_col , & ! Output:  [real(r8)  (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+          qflx_snomelt_lyr => waterfluxbulk_inst%qflx_snomelt_lyr_col, & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
+          qflx_snow_drain => waterfluxbulk_inst%qflx_snow_drain_col , & ! Output: [real(r8)  (:)   ] drainage from snow column                           
+          qflx_snomelt    => waterfluxbulk_inst%qflx_snomelt_col    , & ! Output: [real(r8)  (:)   ] snow melt (mm H2O /s)                   
+          qflx_snofrz     => waterfluxbulk_inst%qflx_snofrz_col     , & ! Output: [real(r8)  (:)   ] column-integrated snow freezing rate (kg m-2 s-1) [+]
 
           t_soisno        => temperature_inst%t_soisno_col      , & ! Input:  [real(r8)  (:,:) ] soil temperature (Kelvin)             
           t_lake          => temperature_inst%t_lake_col        , & ! Input:  [real(r8)  (:,:) ] lake temperature (Kelvin)             

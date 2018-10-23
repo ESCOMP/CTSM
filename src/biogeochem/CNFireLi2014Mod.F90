@@ -34,8 +34,8 @@ module CNFireLi2014Mod
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use EnergyFluxType                     , only : energyflux_type
-  use SoilHydrologyType                  , only : soilhydrology_type  
-  use WaterstateType                     , only : waterstate_type
+  use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
+  use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -83,7 +83,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       atm2lnd_inst, energyflux_inst, soilhydrology_inst, waterstate_inst, &
+       atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
@@ -106,8 +106,8 @@ contains
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
-    type(soilhydrology_type)              , intent(in)    :: soilhydrology_inst
-    type(waterstate_type)                 , intent(in)    :: waterstate_inst
+    type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
+    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -164,9 +164,9 @@ contains
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
 
          btran2             => energyflux_inst%btran2_patch                    , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
-         fsat               => soilhydrology_inst%fsat_col                     , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
-         wf                 => waterstate_inst%wf_col                          , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.05 m         
-         wf2                => waterstate_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
+         fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
+         wf                 => waterdiagnosticbulk_inst%wf_col                          , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.05 m         
+         wf2                => waterdiagnosticbulk_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
          
          is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool                         
 

@@ -235,7 +235,6 @@ contains
     use EnergyFluxType  , only : energyflux_type
     use TemperatureType , only : temperature_type
     use SoilStateType   , only : soilstate_type
-    use WaterSTateType  , only : waterstate_type
     use SimpleMathMod   , only : array_normalization
     use PatchType       , only : patch
     !
@@ -316,8 +315,8 @@ contains
   !--------------------------------------------------------------------------------
   subroutine calc_root_moist_stress_clm45default(bounds, &
        nlevgrnd, fn, filterp, rootfr_unf, &
-       temperature_inst, soilstate_inst, energyflux_inst, waterstate_inst, &
-       soil_water_retention_curve) 
+       temperature_inst, soilstate_inst, energyflux_inst, waterstatebulk_inst, &
+       waterdiagnosticbulk_inst, soil_water_retention_curve) 
     !
     ! DESCRIPTIONS
     ! compute the root water stress using the default clm45 approach
@@ -331,7 +330,8 @@ contains
     use TemperatureType      , only : temperature_type
     use SoilStateType        , only : soilstate_type
     use EnergyFluxType       , only : energyflux_type
-    use WaterSTateType       , only : waterstate_type
+    use WaterStateBulkType       , only : waterstatebulk_type
+    use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use PatchType            , only : patch
     use clm_varctl           , only : iulog, use_hydrstress
@@ -346,7 +346,8 @@ contains
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -376,8 +377,8 @@ contains
          btran2        => energyflux_inst%btran2_patch      , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
          rresis        => energyflux_inst%rresis_patch      , & ! Output: [real(r8) (:,:) ]  root soil water stress (resistance) by layer (0-1)  (nlevgrnd)                          
 
-         h2osoi_vol    => waterstate_inst%h2osoi_vol_col    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-         h2osoi_liqvol => waterstate_inst%h2osoi_liqvol_col   & ! Output: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col   & ! Output: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          ) 
 
       do j = 1,nlevgrnd
@@ -443,7 +444,7 @@ contains
   !--------------------------------------------------------------------------------
   subroutine calc_root_moist_stress(bounds, nlevgrnd, fn, filterp, &
        canopystate_inst, energyflux_inst,  soilstate_inst, temperature_inst, &
-       waterstate_inst, soil_water_retention_curve)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, soil_water_retention_curve)
     !
     ! DESCRIPTIONS
     ! compute the root water stress using different approaches
@@ -457,7 +458,8 @@ contains
     use EnergyFluxType  , only : energyflux_type
     use TemperatureType , only : temperature_type
     use SoilStateType   , only : soilstate_type
-    use WaterSTateType  , only : waterstate_type
+    use WaterStateBulkType  , only : waterstatebulk_type
+    use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use abortutils      , only : endrun       
     !
@@ -471,7 +473,8 @@ contains
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -507,7 +510,8 @@ contains
             energyflux_inst=energyflux_inst,            &
             temperature_inst=temperature_inst,          &
             soilstate_inst=soilstate_inst,              &
-            waterstate_inst=waterstate_inst,            &
+            waterstatebulk_inst=waterstatebulk_inst,            &
+            waterdiagnosticbulk_inst=waterdiagnosticbulk_inst,            &
             rootfr_unf=rootfr_unf(bounds%begp:bounds%endp,1:nlevgrnd), &
             soil_water_retention_curve=soil_water_retention_curve)
 

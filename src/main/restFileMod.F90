@@ -529,6 +529,7 @@ contains
     end if
     call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
     call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
+    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glcmec+1, dimid)
 
     ! Define global attributes
 
@@ -702,9 +703,9 @@ contains
             new_line('x') // &
             '(Setting use_init_interp = .true. is needed when doing a' // &
             new_line('x') // &
-            'transient run with crops using an initial conditions file from a non-transient run,' // &
+            'transient run using an initial conditions file from a non-transient run,' // &
             new_line('x') // &
-            'or a non-transient run with crops using an initial conditions file from a transient run,' // &
+            'or a non-transient run using an initial conditions file from a transient run,' // &
             new_line('x') // &
             'or when running a resolution or configuration that differs from the initial conditions.)'
        call check_dim(ncid, nameg, numg, msg=msg)
@@ -713,10 +714,10 @@ contains
        call check_dim(ncid, namep, nump, msg=msg)
        if ( use_fates ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
     end if
-    call check_dim(ncid, 'levsno'  , nlevsno, &
-         msg = 'You can deal with this mismatch by rerunning with ' // &
-               'use_init_interp = .true. in user_nl_clm')
-    call check_dim(ncid, 'levgrnd' , nlevgrnd)
+    msg = 'You can deal with this mismatch by rerunning with ' // &
+         'use_init_interp = .true. in user_nl_clm'
+    call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
+    call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
     call check_dim(ncid, 'levurb'  , nlevurb)
     call check_dim(ncid, 'levlak'  , nlevlak) 
 

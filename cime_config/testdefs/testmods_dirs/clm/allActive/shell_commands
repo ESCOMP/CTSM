@@ -8,6 +8,5 @@
 # conditions file that wasn't itself generated with all_active =
 # .true., so we set CLM_FORCE_COLDSTART=on for this
 
-./xmlchange CLM_BLDNML_OPTS="-fire_emis" --append
 ./xmlchange CLM_FORCE_COLDSTART="on"
 

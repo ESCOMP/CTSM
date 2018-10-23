@@ -85,6 +85,7 @@ contains
 ! number of columns per hillslope = lun%ncolumns / lun%nhillslopes 
 ! 1st column index of each hillslope is coli+(n-1)*ncol_per_hill for n(1:nhillslope)
 ! last column index is coli+n*ncol_per_hill-1
+! This will be overwritten in HillslopeHydrologySurfaceDataMod
              ncol_per_hill = lun%ncolumns(l) / lun%nhillslopes(l)
              ! loop over hillslopes
              do nh = 1,lun%nhillslopes(l)

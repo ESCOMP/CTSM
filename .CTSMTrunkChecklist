@@ -1,0 +1,58 @@
+Checklist of steps to do to make a CTSM Trunk Tag        Mar/7th/2017
+
+CTSM Software Management team.
+
+See the wiki page for this on:
+
+https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
+
+(1) Do all testing on your fork/feature-branch
+
+   1a -- make sure any new failing tests are either fixed or approved as a new expected
+         fail
+   1b -- update the ExpectedFails list if expected fails changes in 1a
+        $EDITOR cime_config/testdefs/ExpectedTestFails.xml
+   1c -- make sure you understand any changes to the baselines -- to document in ChangeLog
+
+(2) Use diff and status to make sure any new files are in the repo and only the correct
+changes are on the branch
+
+   2a -- 'git status' to check that you've added any new files and haven't
+         added any non source files that aren't needed in the repository
+   2b -- 'git diff' to check that your changes are correct and you didn't accidentally
+         add something unintentionally
+   2c -- you could also update the content of the changelog here on the branch
+
+(3) Submit a pull request (PR) for the changes
+    Have someone review it if you are able. At minimum review it youself. The PR mechanism
+    on git is an excellent way to code review code for both yourself and others. Also make
+    sure all your changes are correct, changes that shouldn't have gone in don't, and all new
+    files are added in.
+
+(4) Merge the PR to master when review is approved
+
+(5) Compare master to branch show that they are identical
+
+git diff master remote/feature-branch
+
+This should show no diffs
+
+(6) Update ChangeLog
+   6a -- if you didn't update the content in 2c do it now
+         (Increment the science minor number if answers change in an important way)
+   6b -- update date stamp on ChangeLog
+      ./UpDateChangeLog.pl -update
+   6c -- commit new change files
+
+(7) Make the trunk tag
+
+(8) Send an email to clm-dev with the contents of the latest ChangeLog
+entry (until we have automated this for the git repo)
+
+NOTES:
+
+(1) -- Always test on your fork with a feature-branch so that we can change tag order if needed. Put 
+baselines in the next tag name, as we can easily change afterwards if needed.
+(6) or 2c -- Updating the ChangeLog needs to happen on the trunk shortly before the new
+trunk tag is made. There is a cronjob that emails errors when the ChangeLog was updated
+but the new trunk tag wasn't made.
