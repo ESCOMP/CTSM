@@ -3125,6 +3125,13 @@ contains
              avgflag='A', long_name='C13 net ecosystem exchange of carbon, includes fire flux, positive for source', &
              ptr_gcell=this%nee_grc)
 
+        this%nbp_grc(begg:endg) = spval
+        call hist_addfld1d (fname='C13_NBP', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 net biome production, includes fire, landuse,'&
+             //' harvest and hrv_xsmrpool flux (latter smoothed over the year), positive for sink'&
+             //' (same as net carbon exchange between land and atmosphere)', &
+             ptr_gcell=this%nbp_grc)
+
     endif
 
     !-------------------------------
@@ -3273,6 +3280,13 @@ contains
         call hist_addfld1d (fname='C14_NEE', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 net ecosystem exchange of carbon, includes fire flux, positive for source', &
              ptr_gcell=this%nee_grc)
+
+        this%nbp_grc(begg:endg) = spval
+        call hist_addfld1d (fname='C14_NBP', units='gC13/m^2/s', &
+             avgflag='A', long_name='C14 net biome production, includes fire, landuse,'&
+             //' harvest and hrv_xsmrpool flux (latter smoothed over the year), positive for sink'&
+             //' (same as net carbon exchange between land and atmosphere)', &
+             ptr_gcell=this%nbp_grc)
 
     endif
 
