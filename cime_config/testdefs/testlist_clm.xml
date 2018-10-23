@@ -980,7 +980,7 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/cmip6">
+  <test name="ERS_Ly3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/cmip6_deck_highfreq">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1486,7 +1486,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld5_D" grid="f09_g16" compset="I1850Clm50BgcCrop" testmods="clm/cmip6">
+  <test name="SMS_Ld5_D" grid="f09_g16" compset="I1850Clm50BgcCrop" testmods="clm/cmip6_deck_highfreq">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
