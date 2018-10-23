@@ -131,10 +131,6 @@ contains
     integer              :: mon                     ! month (1, ..., 12)
     integer              :: day                     ! day of month (1, ..., 31)
     integer              :: sec                     ! seconds of the day
-    integer              :: yr_prev                 ! year (0, ...) at start of timestep
-    integer              :: mon_prev                ! month (1, ..., 12) at start of timestep
-    integer              :: day_prev                ! day of month (1, ..., 31) at start of timestep
-    integer              :: sec_prev                ! seconds of the day at start of timestep
     character(len=256)   :: filer                   ! restart file name
     integer              :: ier                     ! error code
     logical              :: need_glacier_initialization ! true if we need to initialize glacier areas in this time step
@@ -393,9 +389,6 @@ contains
     ! snow accumulation exceeds 10 mm.
     ! ============================================================================
 
-    ! Get time as of beginning of time step
-    call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
-
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
@@ -596,7 +589,6 @@ contains
             bounds             = bounds_clump, &
             num_exposedvegp    = filter(nc)%num_exposedvegp, &
             filter_exposedvegp = filter(nc)%exposedvegp, &
-            time_prev          = sec_prev, &
             elai               = canopystate_inst%elai_patch(bounds_clump%begp:bounds_clump%endp), &
             t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
             eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
@@ -929,6 +921,7 @@ contains
        call BalanceCheck(bounds_clump, &
             atm2lnd_inst, solarabs_inst, waterflux_inst, &
             waterstate_inst, irrigation_inst, glacier_smb_inst, &
+            surfalb_inst, &
             energyflux_inst, canopystate_inst)
        call t_stopf('balchk')
 

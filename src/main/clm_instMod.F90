@@ -186,6 +186,7 @@ contains
     use accumulMod                         , only : print_accum_fields 
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
+    use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -391,7 +392,7 @@ contains
     end if ! end of if use_cn 
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
-    call bgc_vegetation_inst%Init(bounds, nlfilename)
+    call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps() )
 
     if (use_cn .or. use_fates) then
        call crop_inst%Init(bounds)

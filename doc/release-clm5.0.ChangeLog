@@ -1,4 +1,141 @@
 ===============================================================
+Tag name:  release-clm5.0.09
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Oct 23 00:00:50 MDT 2018
+One-line Summary: Bring in bit-for-bit changes from master up to ctsm1.0.dev012: AnnEt init, snowmip fields
+
+Purpose of this version:
+------------------------
+
+Bring in new diagnostic fields added by Justin Perket, Sean Swenson and Mark Flanner
+for Snow-MIP. Most of those are fields that represent "Snow Free" data.
+
+Also bring in fixes for a list of issues. Add handling of the new CO2 which includes
+both latitude-band and global average versions. Add some changes to make it easier
+for input data processing including NOT doing the slow 1km map file creation. Have
+the number of steps that are skipped at startup dependent on the time-step size. Add
+a test for some requirements of WACCMX (time-step and use of ESMF). Calculations of
+local time are now done in a global subroutine, that can handle negative longitudes.
+Fix how FFIX_TO_SMINN is handled for history output. The namelist logical "calc_human_stress_indices"
+changed from logical to a character string of three values: FAST, NONE, ALL. FAST
+is the default so the less expensive ones are output, NONE turns them all off, and ]
+ALL does all of them including the expensive ones.
+
+InitAccVars was mistakenly setting qflx_evap_tot_col rather than
+AnnET. This fix allows us to remove now-redundant cold start and restart
+code for AnnET.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev012
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): 
+  Fix #428 -- Update getco2_historical.ncl to handle latitude varying CO2
+  Fix #474 -- Add ability to send GRIDFILE to regridbatch.sh script
+  Fix #475 -- Have number of steps to skip balance-check based on time
+  Fix #476 -- Add a test for WACCMX standalone
+  Fix #450 -- Add option to use global average of terrain standard deviation on surfdata files
+  (partial fix with simplest option)
+  Fix #482 -- Add extra field on CO2 streams file for global/time-averaged data
+  Fix #481 -- FFIX_TO_SMINN needs to be output when FUN is on
+  Fix #491 -- Calculations of local noon assume that longitude is 0 to 360 rather than -180 to 180
+  Fix #480 InitAccVars for AnnET initializing the wrong variable
+  Fix #285 Remove an un-needed restart variable (partially)
+
+Science changes since: release-clm5.0.08
+
+  * None
+
+Software changes since: release-clm5.0.08
+
+  New fields and fix a list of issues
+
+Changes to User Interface since: release-clm5.0.08
+
+  New namelist:
+    use_ssre -- Turn on show free fields needed for SnowMIP
+
+  Changed namelist:
+    calc_human_stress_indices changed from logical to character with options: ALL, FAST, NONE
+
+  New history fields:
+    Mostly added Snow Free (SF) fields
+    ALBDSF
+    ALBISF
+    FSRSF
+    FSRSFND
+    FSRSFNDLN
+    FSRSFNI
+    FSRSFVD
+    FSRSFVDLN
+    FSRSFVI
+    SSRE_FSR
+    SSRE_FSRND
+    SSRE_FSRNDLN
+    SSRE_FSRNI
+    SSRE_FSRVD
+    SSRE_FSRVDLN
+    SSRE_FSRVI
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK (PTCLM tests fail)
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.08
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime_cesm2_0_rel_05
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch:
+    ctsm1.0.dev008, ctsm1.0.dev009, ctsm1.0.dev012
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #543 -- Update release branch to ctsm1.0.dev012
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.08
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Sep 28 14:17:52 MDT 2018

@@ -624,10 +624,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <!-- Historical Greenhouse gas concentrations from CAM -->
-<mkghg_bndtvghg           >atm/cam/ggas/ghg_hist_1765-2005_c091218.nc</mkghg_bndtvghg>
-<mkghg_bndtvghg rcp="2.6" >atm/cam/ggas/ghg_rcp26_1765-2500_c100405.nc</mkghg_bndtvghg>
-<mkghg_bndtvghg rcp="4.5" >atm/cam/ggas/ghg_rcp45_1765-2500_c100405.nc</mkghg_bndtvghg>
-<mkghg_bndtvghg rcp="6"   >atm/cam/ggas/ghg_rcp60_1765-2500_c100901.nc</mkghg_bndtvghg>
-<mkghg_bndtvghg rcp="8.5" >atm/cam/ggas/ghg_rcp85_1765-2500_c100203.nc</mkghg_bndtvghg>
+<mkghg_bndtvghg  hgrid="lat-bands" >atm/waccm/lb/LBC_17500116-20150116_CMIP6_0p5degLat_c180905.nc</mkghg_bndtvghg>
+<mkghg_bndtvghg  hgrid="global"    >/gpfs/fs1/p/acom/acom-climate/cesm2/inputdata/atm/waccm/lb/LBC_1750-2015_CMIP6_GlobAnnAvg_c180905.nc</mkghg_bndtvghg>
 
 </namelist_defaults>

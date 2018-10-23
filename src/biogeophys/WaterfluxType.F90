@@ -599,7 +599,7 @@ contains
 
     if (use_fun) then
        call extract_accum_field ('AnnET', rbufslp, nstep)
-       this%qflx_evap_tot_col(begc:endc) = rbufslp(begc:endc)
+       this%AnnET(begc:endc) = rbufslp(begc:endc)
     end if
 
     deallocate(rbufslp)
@@ -681,8 +681,6 @@ contains
     ! the sake of columns outside this filter
     this%qflx_ice_runoff_xs_col(bounds%begc:bounds%endc) = 0._r8
 
-    this%AnnEt(bounds%begc:bounds%endc)                 = 0._r8
-  
     ! needed for CNNLeaching 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
@@ -730,16 +728,6 @@ contains
        this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
     endif
     
-    
-    call restartvar(ncid=ncid, flag=flag, varname='AnnET', xtype=ncd_double,  &
-         dim1name='column', &
-         long_name='Annual ET ', units='mm/s', &
-         interpinic_flag='interp', readvar=readvar, data=this%AnnET)
-    if (flag == 'read' .and. .not. readvar) then
-       ! initial run, not restart: initialize qflx_snow_drain to zero
-       this%AnnET(bounds%begc:bounds%endc) = 0._r8
-    endif
-   
     call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
     call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)
 

@@ -250,6 +250,9 @@ contains
     ! max number of plant functional types in naturally vegetated landunit
     namelist /clm_inparm/ maxpatch_pft
 
+    ! flag for SSRE diagnostic
+    namelist /clm_inparm/ use_SSRE
+
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
@@ -587,6 +590,7 @@ contains
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_noio, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_SSRE, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! initial file variables
     call mpi_bcast (nrevsn, len(nrevsn), MPI_CHARACTER, 0, mpicom, ier)
@@ -799,7 +803,7 @@ contains
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity
     write(iulog,*) '    use_noio = ', use_noio
-
+    write(iulog,*) '    use_SSRE = ', use_SSRE
     write(iulog,*) 'input data files:'
     write(iulog,*) '   PFT physiology and parameters file = ',trim(paramfile)
     if (fsurdat == ' ') then

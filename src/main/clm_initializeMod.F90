@@ -289,6 +289,7 @@ contains
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
+    use BalanceCheckMod       , only : BalanceCheckInit
     !
     ! !ARGUMENTS    
     !
@@ -372,6 +373,9 @@ contains
     call t_stopf('init_orbd')
     
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+
+    ! Initialize Balance checking (after time-manager)
+    call BalanceCheckInit()
              
     ! History file variables
 
