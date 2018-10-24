@@ -19,7 +19,7 @@ module SoilHydrologyMod
   use landunit_varcon   , only : istsoil, istcrop
   use clm_time_manager  , only : get_step_size
   use NumericsMod       , only : truncate_small_values
-  use atm2lndType       , only : atm2lnd_type
+  use Wateratm2lndBulkType , only : wateratm2lndbulk_type
   use EnergyFluxType    , only : energyflux_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -802,7 +802,7 @@ contains
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Output: [real(r8) (:)   ]  perched water table depth (m)                     
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Output: [real(r8) (:)   ]  frost table depth (m)                             
-          wa                 =>    soilhydrology_inst%wa_col             , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
+          wa                 =>    waterstatebulk_inst%wa_col             , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical  
           
@@ -1125,7 +1125,7 @@ contains
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Input:  [real(r8) (:)   ] perched water table depth (m)                     
-          wa                 =>    soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
+          wa                 =>    waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
           ice                =>    soilhydrology_inst%ice_col            , & ! Input:  [real(r8) (:,:) ] soil layer moisture (mm)                         
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
@@ -2168,7 +2168,7 @@ contains
           hkdepth            =>    soilhydrology_inst%hkdepth_col        , & ! Input:  [real(r8) (:)   ] decay factor (m)                                  
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
-          wa                 =>    soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
+          wa                 =>    waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
           ice                =>    soilhydrology_inst%ice_col            , & ! Input:  [real(r8) (:,:) ] soil layer moisture (mm)                         
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
@@ -2409,7 +2409,7 @@ contains
         num_hillslope, filter_hillslopec,   &
         num_hydrologyc, filter_hydrologyc,  &
         num_urbanc, filter_urbanc,soilhydrology_inst, soilstate_inst, &
-        waterstatebulk_inst, waterfluxbulk_inst, atm2lnd_inst)
+        waterstatebulk_inst, waterfluxbulk_inst, wateratm2lndbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate subsurface drainage
@@ -2432,7 +2432,7 @@ contains
      integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilstate_type)     , intent(in)    :: soilstate_inst
-     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
+     type(wateratm2lndbulk_type)       , intent(in)    :: wateratm2lndbulk_inst
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
      type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
@@ -2515,8 +2515,8 @@ contains
           qflx_latflow_in    =>    waterfluxbulk_inst%qflx_latflow_in_col, & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
           qdischarge         =>    waterfluxbulk_inst%qdischarge_col     , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
 
-          tdepth             =>    atm2lnd_inst%tdepth_grc               , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
-          tdepth_bankfull    =>    atm2lnd_inst%tdepthmax_grc            , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
+          tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
+          tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
 
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           c_param            =>    soilhydrology_inst%c_param_col        , & ! Input:  [real(r8) (:)   ] baseflow exponent (Qb)                             
@@ -2529,7 +2529,7 @@ contains
           hkdepth            =>    soilhydrology_inst%hkdepth_col        , & ! Input:  [real(r8) (:)   ] decay factor (m)                                  
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
-          wa                 =>    soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
+          wa                 =>    waterstatebulk_inst%wa_col            , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
           ice                =>    soilhydrology_inst%ice_col            , & ! Input:  [real(r8) (:,:) ] soil layer moisture (mm)                         
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical

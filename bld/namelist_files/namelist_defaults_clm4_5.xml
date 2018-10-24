@@ -112,8 +112,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <building_temp_method phys="clm5_0">1</building_temp_method>
 <building_temp_method phys="clm4_5">0</building_temp_method>
 
-<calc_human_stress_indices phys="clm5_0">.true.</calc_human_stress_indices>
-<calc_human_stress_indices phys="clm4_5">.false.</calc_human_stress_indices>
+<calc_human_stress_indices phys="clm5_0">FAST</calc_human_stress_indices>
+<calc_human_stress_indices phys="clm4_5">NONE</calc_human_stress_indices>
 
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
@@ -2443,6 +2443,14 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
+
+<!-- =========================================  -->
+<!-- Defaults for water tracers                 -->
+<!-- =========================================  -->
+
+<enable_water_tracer_consistency_checks>.false.</enable_water_tracer_consistency_checks>
+
+<enable_water_isotopes>.false.</enable_water_isotopes>
 
 <!-- =========================================  -->
 <!-- Defaults for init_interp                   -->

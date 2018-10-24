@@ -23,6 +23,8 @@ module atm2lndMod
   use LandunitType   , only : lun                
   use ColumnType     , only : col
   use landunit_varcon, only : istice_mec, istsoil
+  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -52,8 +54,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine downscale_forcings(bounds, &
-!scs       topo_inst, atm2lnd_inst, eflx_sh_precip_conversion)
-       topo_inst, atm2lnd_inst, surfalb_inst, eflx_sh_precip_conversion)
+       topo_inst, atm2lnd_inst, surfalb_inst, wateratm2lndbulk_inst, eflx_sh_precip_conversion)
     !
     ! !DESCRIPTION:
     ! Downscale atmospheric forcing fields from gridcell to column.
@@ -80,7 +81,8 @@ contains
     type(bounds_type)  , intent(in)    :: bounds  
     class(topo_type)   , intent(in)    :: topo_inst
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
-    class(surfalb_type)   , intent(in)    :: surfalb_inst !scs
+    class(surfalb_type)   , intent(in)    :: surfalb_inst
+    type(wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
     real(r8)           , intent(out)   :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
     !
     ! !LOCAL VARIABLES:
@@ -114,14 +116,14 @@ contains
          ! Gridcell-level non-downscaled fields:
          forc_t_g     => atm2lnd_inst%forc_t_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_th_g    => atm2lnd_inst%forc_th_not_downscaled_grc   , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)
-         forc_q_g     => atm2lnd_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
+         forc_q_g     => wateratm2lndbulk_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_g  => atm2lnd_inst%forc_pbot_not_downscaled_grc , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_g   => atm2lnd_inst%forc_rho_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  atmospheric density (kg/m**3)           
          
          ! Column-level downscaled fields:
          forc_t_c     => atm2lnd_inst%forc_t_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_th_c    => atm2lnd_inst%forc_th_downscaled_col       , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
-         forc_q_c     => atm2lnd_inst%forc_q_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
+         forc_q_c     => wateratm2lndbulk_inst%forc_q_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_c  => atm2lnd_inst%forc_pbot_downscaled_col     , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col        & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
          )
@@ -214,13 +216,12 @@ contains
       if(use_hillslope) then
          call downscale_hillslope_solar(bounds, atm2lnd_inst, surfalb_inst)
       endif
-
-      call partition_precip(bounds, atm2lnd_inst, &
+      call partition_precip(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
            eflx_sh_precip_conversion(bounds%begc:bounds%endc))
 
       call downscale_longwave(bounds, downscale_filter_c, topo_inst, atm2lnd_inst)
 
-      call check_downscale_consistency(bounds, atm2lnd_inst)
+      call check_downscale_consistency(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
     end associate
 
@@ -253,7 +254,7 @@ contains
   end function rhos
 
   !-----------------------------------------------------------------------
-  subroutine partition_precip(bounds, atm2lnd_inst, eflx_sh_precip_conversion)
+  subroutine partition_precip(bounds, atm2lnd_inst, wateratm2lndbulk_inst, eflx_sh_precip_conversion)
     !
     ! !DESCRIPTION:
     ! Partition precipitation into rain/snow based on temperature.
@@ -264,6 +265,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds  
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
+    type(wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
     real(r8), intent(inout) :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
     !
     ! !LOCAL VARIABLES:
@@ -280,13 +282,13 @@ contains
 
     associate(&
          ! Gridcell-level non-downscaled fields:
-         forc_rain_g  => atm2lnd_inst%forc_rain_not_downscaled_grc , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_g  => atm2lnd_inst%forc_snow_not_downscaled_grc , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
+         forc_rain_g  => wateratm2lndbulk_inst%forc_rain_not_downscaled_grc , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
+         forc_snow_g  => wateratm2lndbulk_inst%forc_snow_not_downscaled_grc , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
          
          ! Column-level downscaled fields:
          forc_t_c     => atm2lnd_inst%forc_t_downscaled_col        , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
-         forc_rain_c  => atm2lnd_inst%forc_rain_downscaled_col     , & ! Output: [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_c  => atm2lnd_inst%forc_snow_downscaled_col       & ! Output: [real(r8) (:)]  snow rate [mm/s]
+         forc_rain_c  => wateratm2lndbulk_inst%forc_rain_downscaled_col     , & ! Output: [real(r8) (:)]  rain rate [mm/s]
+         forc_snow_c  => wateratm2lndbulk_inst%forc_snow_downscaled_col       & ! Output: [real(r8) (:)]  snow rate [mm/s]
          )
 
     ! Initialize column forcing
@@ -606,7 +608,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine check_downscale_consistency(bounds, atm2lnd_inst)
+  subroutine check_downscale_consistency(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
     !
     ! !DESCRIPTION:
     ! Check consistency of downscaling
@@ -618,6 +620,7 @@ contains
     implicit none
     type(bounds_type) , intent(in) :: bounds  
     type(atm2lnd_type), intent(in) :: atm2lnd_inst
+    type(wateratm2lndbulk_type), intent(in) :: wateratm2lndbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: g, l, c    ! indices
@@ -628,21 +631,21 @@ contains
          ! Gridcell-level fields:
          forc_t_g     => atm2lnd_inst%forc_t_not_downscaled_grc     , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_th_g    => atm2lnd_inst%forc_th_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)
-         forc_q_g     => atm2lnd_inst%forc_q_not_downscaled_grc     , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
+         forc_q_g     => wateratm2lndbulk_inst%forc_q_not_downscaled_grc     , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_g  => atm2lnd_inst%forc_pbot_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_g   => atm2lnd_inst%forc_rho_not_downscaled_grc   , & ! Input:  [real(r8) (:)]  atmospheric density (kg/m**3)           
-         forc_rain_g  => atm2lnd_inst%forc_rain_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_g  => atm2lnd_inst%forc_snow_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
+         forc_rain_g  => wateratm2lndbulk_inst%forc_rain_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
+         forc_snow_g  => wateratm2lndbulk_inst%forc_snow_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
          forc_lwrad_g => atm2lnd_inst%forc_lwrad_not_downscaled_grc , & ! Input:  [real(r8) (:)]  downward longwave (W/m**2)
          
          ! Column-level (downscaled) fields:
          forc_t_c     => atm2lnd_inst%forc_t_downscaled_col         , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_th_c    => atm2lnd_inst%forc_th_downscaled_col        , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)
-         forc_q_c     => atm2lnd_inst%forc_q_downscaled_col         , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
+         forc_q_c     => wateratm2lndbulk_inst%forc_q_downscaled_col         , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_c  => atm2lnd_inst%forc_pbot_downscaled_col      , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col       , & ! Input:  [real(r8) (:)]  atmospheric density (kg/m**3)           
-         forc_rain_c  => atm2lnd_inst%forc_rain_downscaled_col      , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_c  => atm2lnd_inst%forc_snow_downscaled_col      , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
+         forc_rain_c  => wateratm2lndbulk_inst%forc_rain_downscaled_col      , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
+         forc_snow_c  => wateratm2lndbulk_inst%forc_snow_downscaled_col      , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
          forc_lwrad_c => atm2lnd_inst%forc_lwrad_downscaled_col       & ! Input:  [real(r8) (:)]  downward longwave (W/m**2)
          )
 

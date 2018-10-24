@@ -1746,6 +1746,11 @@ sub process_namelist_inline_logic {
   #####################################
   setup_logic_irrigation_parameters($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ########################################
+  # namelist group: water_tracers_inparm #
+  ########################################
+  setup_logic_water_tracers($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
@@ -2782,6 +2787,20 @@ sub setup_logic_irrigation_parameters {
         }
      }
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_water_tracers {
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
+      my $var;
+      foreach $var ("enable_water_tracer_consistency_checks",
+                    "enable_water_isotopes") {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      }
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -3838,8 +3857,10 @@ sub write_output_files {
                  soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                  soilwater_movement_inparm rooting_profile_inparm
                  soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
-                 clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm
-                 cnprecision_inparm clm_glacier_behavior crop irrigation_inparm);
+                 clmu_inparm clm_soilstate_inparm clm_nitrogen 
+		 clm_snowhydrology_inparm hillslope_hydrology_inparm
+                 cnprecision_inparm clm_glacier_behavior 
+		 crop irrigation_inparm water_tracers_inparm);
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
     #             finidat_consistency_checks dynpft_consistency_checks);

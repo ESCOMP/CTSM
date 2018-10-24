@@ -38,6 +38,7 @@ module CanopyFluxesMod
   use WaterFluxBulkType         , only : waterfluxbulk_type
   use WaterStateBulkType        , only : waterstatebulk_type
   use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
   use CanopyHydrologyMod    , only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
@@ -136,7 +137,9 @@ contains
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
        clm_fates, nc, atm2lnd_inst, canopystate_inst,                                    &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
-       temperature_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, ch4_inst, ozone_inst, photosyns_inst, &
+       temperature_inst, waterfluxbulk_inst, waterstatebulk_inst,                        &
+       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
+       photosyns_inst, &
        humanindex_inst, soil_water_retention_curve, &
        downreg_patch, leafn_patch, froot_carbon, croot_carbon)
     !
@@ -177,7 +180,8 @@ contains
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
-    use HumanIndexMod      , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+    use HumanIndexMod      , only : all_human_stress_indices, fast_human_stress_indices, &
+                                    Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
@@ -196,9 +200,10 @@ contains
     type(surfalb_type)                     , intent(in)            :: surfalb_inst
     type(soilstate_type)                   , intent(inout)         :: soilstate_inst
     type(temperature_type)                 , intent(inout)         :: temperature_inst
-    type(waterstatebulk_type)                  , intent(inout)         :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type)                  , intent(inout)         :: waterdiagnosticbulk_inst
-    type(waterfluxbulk_type)                   , intent(inout)         :: waterfluxbulk_inst
+    type(waterstatebulk_type)              , intent(inout)         :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)         , intent(inout)         :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)               , intent(inout)         :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)            , intent(inout)         :: wateratm2lndbulk_inst
     type(ch4_type)                         , intent(inout)         :: ch4_inst
     class(ozone_base_type)                 , intent(inout)         :: ozone_inst
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
@@ -372,7 +377,7 @@ contains
          dleaf                  => pftcon%dleaf                                 , & ! Input:  characteristic leaf dimension (m)                                     
 
          forc_lwrad             => atm2lnd_inst%forc_lwrad_downscaled_col       , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)                       
-         forc_q                 => atm2lnd_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
          forc_th                => atm2lnd_inst%forc_th_downscaled_col          , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
          forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
@@ -1197,36 +1202,39 @@ contains
          rh_ref2m_r(p) = rh_ref2m(p)
 
          ! Human Heat Stress
-         if ( calc_human_stress_indices )then
-
+         if ( all_human_stress_indices .or. fast_human_stress_indices ) then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
-            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
-                          teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
             call Wet_BulbS(tc_ref2m(p),rh_ref2m(p), wbt_ref2m(p))
             call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
             call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
-            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
-            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
-
-            teq_ref2m_r(p)            = teq_ref2m(p)
-            ept_ref2m_r(p)            = ept_ref2m(p)
-            wb_ref2m_r(p)             = wb_ref2m(p)
+            if ( all_human_stress_indices ) then
+               call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
+                             teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+               call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+               call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+               call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            end if
             wbt_ref2m_r(p)            = wbt_ref2m(p)
             nws_hi_ref2m_r(p)         = nws_hi_ref2m(p)
             appar_temp_ref2m_r(p)     = appar_temp_ref2m(p)
             swbgt_ref2m_r(p)          = swbgt_ref2m(p)
             humidex_ref2m_r(p)        = humidex_ref2m(p)
-            discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
             discomf_index_ref2mS_r(p) = discomf_index_ref2mS(p)
-            thic_ref2m_r(p)           = thic_ref2m(p)
-            thip_ref2m_r(p)           = thip_ref2m(p)
-            swmp80_ref2m_r(p)         = swmp80_ref2m(p)
-            swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+            if ( all_human_stress_indices ) then
+               teq_ref2m_r(p)            = teq_ref2m(p)
+               ept_ref2m_r(p)            = ept_ref2m(p)
+               wb_ref2m_r(p)             = wb_ref2m(p)
+               discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
+               thic_ref2m_r(p)           = thic_ref2m(p)
+               thip_ref2m_r(p)           = thip_ref2m(p)
+               swmp80_ref2m_r(p)         = swmp80_ref2m(p)
+               swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+            end if
+
          end if
 
          ! Downward longwave radiation below the canopy

@@ -193,6 +193,7 @@ contains
     use HillslopeHydrologyFactoryMod       , only : create_and_init_hillslope_geomorphology_type
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
+    use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -285,7 +286,7 @@ contains
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties
 
-    call water_inst%Init(bounds, &
+    call water_inst%Init(bounds, NLFilename, &
          h2osno_col = h2osno_col(begc:endc), &
          snow_depth_col = snow_depth_col(begc:endc), &
          watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
@@ -312,7 +313,7 @@ contains
     call photosyns_inst%Init(bounds)
 
     call soilhydrology_inst%Init(bounds, nlfilename)
-    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst) ! sets time constant properties
+    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, water_inst%waterstatebulk_inst) ! sets time constant properties
 
     call saturated_excess_runoff_inst%Init(bounds)
     call infiltration_excess_runoff_inst%Init(bounds)
@@ -404,7 +405,7 @@ contains
     end if ! end of if use_cn 
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
-    call bgc_vegetation_inst%Init(bounds, nlfilename)
+    call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps() )
 
     if (use_cn .or. use_fates) then
        call crop_inst%Init(bounds)

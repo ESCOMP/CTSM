@@ -9,6 +9,8 @@ module test_downscale_forcings
   use unittestSimpleSubgridSetupsMod
   use unittestArrayMod
   use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
+  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+  use WaterInfoBulkType, only : water_info_bulk_type
   use TopoMod, only : topo_type
   use decompMod, only : bounds_type
   use filterColMod
@@ -23,6 +25,7 @@ module test_downscale_forcings
   @TestCase
   type, extends(TestCase) :: TestDownscaleForcings
      type(atm2lnd_type) :: atm2lnd_inst
+     type(wateratm2lndbulk_type) :: wateratm2lndbulk_inst
      type(topo_type_always_downscale) :: topo_inst
      real(r8), allocatable :: eflx_sh_precip_conversion(:)
    contains
@@ -66,14 +69,16 @@ contains
     class(TestDownscaleForcings), intent(inout) :: this
 
     call this%atm2lnd_inst%Clean()
+    call this%wateratm2lndbulk_inst%Clean()
     call this%topo_inst%Clean()
     call unittest_subgrid_teardown()
   end subroutine tearDown
 
   subroutine create_atm2lnd(this, forc_topo, forc_t, forc_th, forc_q, forc_pbot, forc_rho, &
        forc_lwrad, forc_rain, forc_snow, glcmec_downscale_longwave, longwave_downscaling_limit)
-    ! Initializes this%atm2lnd_inst and sets gridcell-level, non-downscaled forcing
-    ! fields based on inputs. Excluded inputs are given a default value
+    ! Initializes this%atm2lnd_inst and this%wateratm2lndbulk_inst, and sets
+    ! gridcell-level, non-downscaled forcing fields based on inputs. Excluded inputs are
+    ! given a default value
     class(TestDownscaleForcings), intent(inout) :: this
     real(r8), intent(in) :: forc_topo(:)
     real(r8), intent(in), optional :: forc_t(:)
@@ -129,6 +134,7 @@ contains
          lapse_rate_longwave = lapse_rate_longwave, &
          longwave_downscaling_limit = l_longwave_downscaling_limit)
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
+    call this%wateratm2lndbulk_inst%InitForTesting(bounds, water_info_bulk_type())
     this%atm2lnd_inst%forc_topo_grc(bounds%begg:bounds%endg) = forc_topo(:)
 
     if (present(forc_t)) then
@@ -144,9 +150,9 @@ contains
     end if
 
     if (present(forc_q)) then
-       this%atm2lnd_inst%forc_q_not_downscaled_grc(bounds%begg:bounds%endg) = forc_q(:)
+       this%wateratm2lndbulk_inst%forc_q_not_downscaled_grc(bounds%begg:bounds%endg) = forc_q(:)
     else
-       this%atm2lnd_inst%forc_q_not_downscaled_grc(bounds%begg:bounds%endg) = forc_q_default
+       this%wateratm2lndbulk_inst%forc_q_not_downscaled_grc(bounds%begg:bounds%endg) = forc_q_default
     end if
 
     if (present(forc_pbot)) then
@@ -168,15 +174,15 @@ contains
     end if
 
     if (present(forc_rain)) then
-       this%atm2lnd_inst%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg) = forc_rain(:)
+       this%wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg) = forc_rain(:)
     else
-       this%atm2lnd_inst%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg) = forc_rain_default
+       this%wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg) = forc_rain_default
     end if
 
     if (present(forc_snow)) then
-       this%atm2lnd_inst%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg) = forc_snow(:)
+       this%wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg) = forc_snow(:)
     else
-       this%atm2lnd_inst%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg) = forc_snow_default
+       this%wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(bounds%begg:bounds%endg) = forc_snow_default
     end if
 
     this%atm2lnd_inst%forc_hgt_grc(bounds%begg:bounds%endg) = forc_hgt
@@ -198,7 +204,8 @@ contains
     class(TestDownscaleForcings), intent(inout) :: this
 
     this%eflx_sh_precip_conversion = col_array()
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
+    call downscale_forcings(bounds, this%topo_inst, &
+         this%atm2lnd_inst, this%wateratm2lndbulk_inst, &
          this%eflx_sh_precip_conversion)
   end subroutine call_downscale_forcings
 
@@ -390,7 +397,7 @@ contains
     call this%call_downscale_forcings()
 
     ! Verify
-    @assertEqual(forc_q, this%atm2lnd_inst%forc_q_downscaled_col(begc))
+    @assertEqual(forc_q, this%wateratm2lndbulk_inst%forc_q_downscaled_col(begc))
 
   end subroutine topo_at_atmTopo_gives_identical_forc_q
 
