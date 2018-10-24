@@ -196,6 +196,9 @@ module clm_varctl
   logical, public :: use_fates = .false.            ! true => use fates
 
   ! These are INTERNAL to the FATES module
+  integer, public            :: fates_parteh_mode = -9                 ! 1 => carbon only
+                                                                       ! 2 => C+N+P (not enabled yet)
+                                                                       ! no others enabled
   logical, public            :: use_fates_spitfire = .false.           ! true => use spitfire model
   logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
   logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
