@@ -203,7 +203,7 @@ contains
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='litter C heterotrophic respiration', &
-             ptr_col=this%lithr_col)
+             ptr_col=this%lithr_col, default='inactive')
 
         this%somhr_col(begc:endc) = spval
         call hist_addfld1d (fname='SOILC_HR', units='gC/m^2/s', &
@@ -391,7 +391,7 @@ contains
         this%somhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_SOILC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 soil organic matter heterotrophic respiration', &
-             ptr_col=this%somhr_col)
+             ptr_col=this%somhr_col, default='inactive')
 
 
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
@@ -456,12 +456,12 @@ contains
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_LITTERC_HR', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 litter carbon heterotrophic respiration', &
-             ptr_col=this%lithr_col)
+             ptr_col=this%lithr_col, default='inactive')
 
         this%somhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_SOILC_HR', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 soil organic matter heterotrophic respiration', &
-             ptr_col=this%somhr_col)
+             ptr_col=this%somhr_col, default='inactive')
 
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
