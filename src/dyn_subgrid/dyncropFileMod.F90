@@ -191,7 +191,7 @@ contains
           
           col%wtlunit(c) = wtcft_cur(g,m)
           if (use_crop) then
-	     crop_inst%fertnitro_patch(p) = fertcft_cur(g,m)
+             crop_inst%fertnitro_patch(p) = fertcft_cur(g,m)
           end if
           col_set(c) = .true.
        end if
