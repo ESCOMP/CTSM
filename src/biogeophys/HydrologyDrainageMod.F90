@@ -124,6 +124,7 @@ contains
          qflx_infl          => waterfluxbulk_inst%qflx_infl_col          , & ! infiltration (mm H2O /s)   
          qflx_qrgwl         => waterfluxbulk_inst%qflx_qrgwl_col         , & ! qflx_surf at glaciers, wetlands, lakes
          qflx_runoff        => waterfluxbulk_inst%qflx_runoff_col        , & ! total runoff 
+         qflx_latflow_out   => waterfluxbulk_inst%qflx_latflow_out_col   , & ! lateral subsurface flow
                                                                          ! (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterfluxbulk_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff 

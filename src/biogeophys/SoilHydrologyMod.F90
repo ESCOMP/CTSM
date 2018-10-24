@@ -2518,9 +2518,6 @@ contains
           tdepth             =>    atm2lnd_inst%tdepth_grc               , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
           tdepth_bankfull    =>    atm2lnd_inst%tdepthmax_grc            , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
 
-          tdepth             =>    atm2lnd_inst%tdepth_grc               , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
-          tdepth_bankfull    =>    atm2lnd_inst%tdepthmax_grc            , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
-
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           c_param            =>    soilhydrology_inst%c_param_col        , & ! Input:  [real(r8) (:)   ] baseflow exponent (Qb)                             
           Dsmax              =>    soilhydrology_inst%dsmax_col          , & ! Input:  [real(r8) (:)   ] max. velocity of baseflow (mm/day)
