@@ -1,0 +1,4 @@
+
+file(GLOB TEST_SOURCES  *.f90 *.h)
+add_executable(rand_atm_rand_land ${TEST_SOURCES} )
+target_link_libraries(rand_atm_rand_land)

@@ -12,3 +12,5 @@ components/
 
 # generated python files
 *.pyc
+
+build/
