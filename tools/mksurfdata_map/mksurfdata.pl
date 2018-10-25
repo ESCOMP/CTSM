@@ -743,8 +743,8 @@ EOF
             if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
             }
-            $desc         = sprintf( "%s_%s_%ssimyr%4.4d-%4.4d", $ssp_rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
-            $desc_surfdat = sprintf( "%s_%s_%ssimyr%4.4d",       $ssp_rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
+            $desc         = sprintf( "%s_%s_%s_simyr%4.4d-%4.4d", $ssp_rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
+            $desc_surfdat = sprintf( "%s_%s_%s_simyr%4.4d",       $ssp_rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
 
             my $fsurdat_fname_base = "";
             my $fsurdat_fname = "";
