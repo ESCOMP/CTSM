@@ -7,6 +7,7 @@ class mksrfDataEntry_prog:
    # Class data
    year_start = 2016
    year_end   = 2100
+   ssp_rcp    = "SSP5-8.5"
    subdir     = "pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005"
    cdate      = 171005
    desc       = "SSP5RCP85_clm5"
@@ -40,7 +41,7 @@ class mksrfDataEntry_prog:
 
    def printentry( self, year ):
       "Print a single entry"
-      print '<mksrf_fvegtyp hgrid="0.25x0.25" sim_year="%d" crop="on"' % (year)
+      print '<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="%s" sim_year="%d" crop="on"' % (self.ssp_rcp, year)
       print '>lnd/clm2/rawdata/%s/mksrf_landuse_%s_%s.c%s.nc' % (self.subdir, self.desc, year, self.cdate)
       print '</mksrf_fvegtyp>\n'
 
