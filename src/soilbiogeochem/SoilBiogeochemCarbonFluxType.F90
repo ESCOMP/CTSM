@@ -203,7 +203,7 @@ contains
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='litter C heterotrophic respiration', &
-             ptr_col=this%lithr_col, default='inactive')
+             ptr_col=this%lithr_col)
 
         this%somhr_col(begc:endc) = spval
         call hist_addfld1d (fname='SOILC_HR', units='gC/m^2/s', &
@@ -386,7 +386,7 @@ contains
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_LITTERC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 fine root C litterfall to litter 3 C', &
-             ptr_col=this%lithr_col)
+             ptr_col=this%lithr_col, default='inactive')
 
         this%somhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_SOILC_HR', units='gC13/m^2/s', &
