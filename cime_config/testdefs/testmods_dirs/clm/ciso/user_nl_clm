@@ -1,2 +1,10 @@
  use_c13        = .true.
  use_c14        = .true.
+
+ ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for C
+ ! isotopes if running init_interp from a case without C isotopes to a case with C
+ ! isotopes (https://github.com/ESCOMP/ctsm/issues/67). Normally, an error-check prevents
+ ! you from doing this interpolation (until we have fixed that bug). However, we
+ ! sometimes want to bypass this error-check in system tests. This namelist flag bypasses
+ ! this error-check.
+ for_testing_allow_interp_non_ciso_to_ciso = .true.
