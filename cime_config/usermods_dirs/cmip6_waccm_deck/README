@@ -1,0 +1,16 @@
+WACCM DECK runs should be configured similarly to CAM DECK runs, but
+without virtual elevation classes over Antarctica.
+
+(2018-10-22) In discussions between Bill Sacks and Bill Lipscomb: We
+have decided NOT to turn on virtual Antarctica columns for any of the
+WACCM simulations (DECK or ScenarioMIP): these weren't turned on in the
+WACCM PI-Control or historical runs (either by accident or
+intentionally: I'm not sure which, and can't find emails describing this
+decision). Since this setting needs to be compatible with the REFCASE,
+it's simpler if we keep it consistent for all WACCM runs, and there
+seems to be only limited value in turning on virtual Antarctica columns
+in the remaining WACCM runs (1% CO2, 4xCO2 and ScenarioMIP) when they
+weren't on in the WACCM PI-Control or Historical runs. And Mike Mills
+says that there won't be any more sharing of initial conditions between
+CAM and WACCM CMIP6 runs, so it's fine if the two sets remain different
+in this respect.
