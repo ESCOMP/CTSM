@@ -138,7 +138,7 @@ OPTIONS
      -rundir "directory"           Directory to run in
                                    (by default current directory $opts{'rundir'})
 
-     -ssp-rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
+     -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
                                    "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
                                    and m.m is the radiative forcing in W/m^2 at the peak or 2100.
      
@@ -449,6 +449,7 @@ EOF
         "no_surfdata"  => \$opts{'no_surfdata'},
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
+        "ssp_rcp=s"    => \$opts{'ssp_rcp'},
         "rundir=s"     => \$opts{'rundir'},
         "soil_col=i"   => \$opts{'soil_col'},
         "soil_fmx=f"   => \$opts{'soil_fmx'},
