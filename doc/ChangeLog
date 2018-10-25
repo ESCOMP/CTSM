@@ -313,6 +313,127 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
+Tag name:  ctsm1.0.dev013
+Originator(s):  erik (Erik Kluzek)/slevisconsulting
+Date: Thu Oct 25 16:25:26 MDT 2018
+One-line Summary: Fix the fact that transient Bgc and SP cases had constant crop area in time
+
+Purpose of changes
+------------------
+
+Fix transient non-crop cases that had constant crop area so that crop area will change in time
+(and hence natural veg area will also change corresponding to it).
+
+Also bring in changes to update mksurfdata_map to handle SSP-RCP future scenarios. Right now
+it can handle SSP5-8.5 out of the box. Also add a new test for that.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):  #538
+   #538 -- In transient pft simulations with use_crop=.false., %crop does not advance from 1850 values
+
+Known bugs found since the previous tag (include github issue ID): #545
+   #545 -- Antarctica ice shelves are being treated as wetlands rather than glaciers
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): A few more namelist checks
+   Added a check to make sure do_transient_pfts was the same as do_transient_crops
+   Don't allow use_fertilizer for non-crop case
+   namelist checks that create_crop_landunit=T except for FATES
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New -ssp_rcp option to mksurfdata.pl
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New mksrfpft datasets in XML for SSP5-8.5
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Now, do_transient_pfts and do_transient_crops only work in unison, and hence
+   should be simplified to one logical called do_transient_veg
+
+Changes to tests or testing: Add new SSP5-8.5 mksurf test
+
+Code reviewed by: self, slevisconsulting, billsacks
+
+CTSM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (18 of the transient test namelists are different to baseline as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK (PTCLM tests fail)
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CTSM tag used for the baseline comparisons:  ctsm1.0.dev012
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5/clm5_0 transient simulations without Crop (either Bgc or SP)
+    - what platforms/compilers: All
+    - nature of change: crop areas increase in time and impact simulations
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: dll/clm50_r267_1deg_GSWP3V1_iso_hist_nocrop_transientfix
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #546, #540
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #546 -- Add in ability for mksurfdata_map to handle ssp_rcp scenarios and specifically SSP5-8.5
+   $540 -- Transient PFT issue
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev012
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Sep 29 11:49:35 MDT 2018
