@@ -623,6 +623,347 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fvegtyp hgrid="0.25x0.25" sim_year="2015" crop="on" >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2015.c170629.nc
 </mksrf_fvegtyp>
 
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2016" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2016.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2017" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2017.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2018" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2018.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2019" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2019.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2020" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2020.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2021" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2021.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2022" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2022.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2023" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2023.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2024" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2024.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2025" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2025.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2026" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2026.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2027" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2027.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2028" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2028.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2029" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2029.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2030" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2030.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2031" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2031.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2032" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2032.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2033" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2033.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2034" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2034.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2035" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2035.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2036" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2036.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2037" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2037.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2038" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2038.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2039" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2039.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2040" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2040.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2041" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2041.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2042" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2042.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2043" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2043.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2044" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2044.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2045" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2045.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2046" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2046.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2047" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2047.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2048" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2048.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2049" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2049.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2050" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2050.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2051" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2051.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2052" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2052.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2053" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2053.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2054" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2054.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2055" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2055.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2056" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2056.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2057" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2057.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2058" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2058.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2059" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2059.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2060" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2060.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2061" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2061.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2062" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2062.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2063" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2063.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2064" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2064.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2065" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2065.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2066" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2066.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2067" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2067.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2068" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2068.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2069" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2069.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2070" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2070.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2071" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2071.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2072" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2072.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2073" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2073.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2074" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2074.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2075" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2075.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2076" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2076.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2077" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2077.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2078" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2078.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2079" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2079.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2080" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2080.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2081" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2081.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2082" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2082.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2083" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2083.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2084" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2084.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2085" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2085.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2086" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2086.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2087" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2087.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2088" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2088.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2089" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2089.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2090" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2090.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2091" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2091.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2092" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2092.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2093" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2093.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2094" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2094.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2095" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2095.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2096" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2096.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2097" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2097.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2098" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2098.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2099" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2099.c171005.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2100" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2100.c171005.nc
+</mksrf_fvegtyp>
+
+
 <!-- Historical Greenhouse gas concentrations from CAM -->
 <mkghg_bndtvghg  hgrid="lat-bands" >atm/waccm/lb/LBC_17500116-20150116_CMIP6_0p5degLat_c180905.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"    >/gpfs/fs1/p/acom/acom-climate/cesm2/inputdata/atm/waccm/lb/LBC_1750-2015_CMIP6_GlobAnnAvg_c180905.nc</mkghg_bndtvghg>
