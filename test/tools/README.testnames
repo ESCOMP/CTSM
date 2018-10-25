@@ -42,14 +42,20 @@ m is the resolution
 c -- US-UMB with cycling on forcing and transient use-case
 g -- US-UMB with global forcing and grid PFT and soil
 y -- 1.9x2.5 with transient 1850-2100 for rcp=2.6 and glacier-MEC on
+T -- 1x1_numaIA
 Z -- 10x15 with crop on
 @ -- ne120np4
 # -- ne30np4
 
 i is the specific test (usually this implies...)
 
+1 -- Serial  script
+2 -- Serial
 3 -- OpenMP only
-4 -- serial
-7 -- OpenMP only second test (without DEBUG compiler mode on)
+4 -- serial, DEBUG
+7 -- OpenMP only second test, DEBUG
+8 -- OpenMP only third test, DEBUG
+9 -- Serial Script
+0 -- Serial Script
 
 
