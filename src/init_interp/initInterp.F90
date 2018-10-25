@@ -49,6 +49,7 @@ module initInterpMod
   private :: interp_1d_int
   private :: interp_2d_double
   private :: limit_snlsno
+  private :: check_interp_non_ciso_to_ciso
 
   ! Private data
  
@@ -227,11 +228,13 @@ contains
     end if
 
     ! --------------------------------------------
-    ! Open input and output initial conditions files (both just for reading now)
+    ! Open input and output initial conditions files
     ! --------------------------------------------
 
     call ncd_pio_openfile (ncidi, trim(filei) , 0)
     call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
+
+    call check_interp_non_ciso_to_ciso(ncidi)
 
     ! --------------------------------------------
     ! Determine dimensions and error checks on dimensions
@@ -1257,5 +1260,67 @@ contains
          dim1name=trim(vec_dimname))
     deallocate(snlsno)
   end subroutine limit_snlsno
+
+  !-----------------------------------------------------------------------
+  subroutine check_interp_non_ciso_to_ciso(ncidi)
+    !
+    ! !DESCRIPTION:
+    ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for
+    ! C isotopes if running init_interp from a case without C isotopes to a case with C
+    ! isotopes (https://github.com/ESCOMP/ctsm/issues/67). Here we check that the user
+    ! isn't trying to do an interpolation in that case. This check should be removed once
+    ! bug #67 is resolved.
+    !
+    ! !USES:
+    use clm_varctl, only : use_c13, use_c14, for_testing_allow_interp_non_ciso_to_ciso
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncidi
+    !
+    ! !LOCAL VARIABLES:
+    type(Var_desc_t)   :: vardesc         ! pio variable descriptor
+    integer            :: status          ! return code
+
+    character(len=*), parameter :: subname = 'check_interp_non_ciso_to_ciso'
+    !-----------------------------------------------------------------------
+
+    if (.not. for_testing_allow_interp_non_ciso_to_ciso) then
+       if (use_c13) then
+          call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
+          ! arbitrarily check leafc_13 (we could pick any c13 restart field)
+          status = pio_inq_varid(ncidi, name='leafc_13', vardesc=vardesc)
+          call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
+          if (status /= PIO_noerr) then
+             if (masterproc) then
+                write(iulog,*) 'Cannot interpolate from a run without c13 to a run with c13,'
+                write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
+                write(iulog,*) 'Either use an input initial conditions file with c13 information,'
+                write(iulog,*) 'or re-spinup from cold start.'
+             end if
+             call endrun(msg='Cannot interpolate from a run without c13 to a run with c13', &
+                  additional_msg=errMsg(sourcefile, __LINE__))
+          end if
+       end if
+
+       if (use_c14) then
+          call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
+          ! arbitrarily check leafc_14 (we could pick any c14 restart field)
+          status = pio_inq_varid(ncidi, name='leafc_14', vardesc=vardesc)
+          call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
+          if (status /= PIO_noerr) then
+             if (masterproc) then
+                write(iulog,*) 'Cannot interpolate from a run without c14 to a run with c14,'
+                write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
+                write(iulog,*) 'Either use an input initial conditions file with c14 information,'
+                write(iulog,*) 'or re-spinup from cold start.'
+             end if
+             call endrun(msg='Cannot interpolate from a run without c14 to a run with c14', &
+                  additional_msg=errMsg(sourcefile, __LINE__))
+          end if
+       end if
+    end if
+
+  end subroutine check_interp_non_ciso_to_ciso
+
 
 end module initInterpMod
