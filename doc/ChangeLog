@@ -315,7 +315,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 Tag name:  ctsm1.0.dev013
 Originator(s):  erik (Erik Kluzek)/slevisconsulting
-Date: Thu Oct 25 16:25:26 MDT 2018
+Date: Thu Oct 25 18:09:47 MDT 2018
 One-line Summary: Fix the fact that transient Bgc and SP cases had constant crop area in time
 
 Purpose of changes
