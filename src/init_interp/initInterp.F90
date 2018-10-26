@@ -1280,43 +1280,61 @@ contains
     ! !LOCAL VARIABLES:
     type(Var_desc_t)   :: vardesc         ! pio variable descriptor
     integer            :: status          ! return code
+    logical            :: missing_ciso    ! whether C isotope fields are missing from the input file, despite the run containing C isotopes
 
     character(len=*), parameter :: subname = 'check_interp_non_ciso_to_ciso'
     !-----------------------------------------------------------------------
 
-    if (.not. for_testing_allow_interp_non_ciso_to_ciso) then
-       if (use_c13) then
-          call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
-          ! arbitrarily check leafc_13 (we could pick any c13 restart field)
-          status = pio_inq_varid(ncidi, name='leafc_13', vardesc=vardesc)
-          call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
-          if (status /= PIO_noerr) then
-             if (masterproc) then
-                write(iulog,*) 'Cannot interpolate from a run without c13 to a run with c13,'
-                write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
-                write(iulog,*) 'Either use an input initial conditions file with c13 information,'
-                write(iulog,*) 'or re-spinup from cold start.'
-             end if
-             call endrun(msg='Cannot interpolate from a run without c13 to a run with c13', &
-                  additional_msg=errMsg(sourcefile, __LINE__))
-          end if
-       end if
+    missing_ciso = .false.
 
-       if (use_c14) then
-          call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
-          ! arbitrarily check leafc_14 (we could pick any c14 restart field)
-          status = pio_inq_varid(ncidi, name='leafc_14', vardesc=vardesc)
-          call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
-          if (status /= PIO_noerr) then
-             if (masterproc) then
-                write(iulog,*) 'Cannot interpolate from a run without c14 to a run with c14,'
-                write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
-                write(iulog,*) 'Either use an input initial conditions file with c14 information,'
-                write(iulog,*) 'or re-spinup from cold start.'
-             end if
-             call endrun(msg='Cannot interpolate from a run without c14 to a run with c14', &
-                  additional_msg=errMsg(sourcefile, __LINE__))
+    if (use_c13) then
+       call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
+       ! arbitrarily check leafc_13 (we could pick any c13 restart field)
+       status = pio_inq_varid(ncidi, name='leafc_13', vardesc=vardesc)
+       call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
+       if (status /= PIO_noerr) then
+          if (masterproc) then
+             write(iulog,*) 'Cannot interpolate from a run without c13 to a run with c13,'
+             write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
+             write(iulog,*) 'Either use an input initial conditions file with c13 information,'
+             write(iulog,*) 'or re-spinup from cold start.'
           end if
+          missing_ciso = .true.
+       end if
+    end if
+
+    if (use_c14) then
+       call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
+       ! arbitrarily check leafc_14 (we could pick any c14 restart field)
+       status = pio_inq_varid(ncidi, name='leafc_14', vardesc=vardesc)
+       call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
+       if (status /= PIO_noerr) then
+          if (masterproc) then
+             write(iulog,*) 'Cannot interpolate from a run without c14 to a run with c14,'
+             write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
+             write(iulog,*) 'Either use an input initial conditions file with c14 information,'
+             write(iulog,*) 'or re-spinup from cold start.'
+          end if
+          missing_ciso = .true.
+       end if
+    end if
+
+    if (for_testing_allow_interp_non_ciso_to_ciso) then
+       if (missing_ciso) then
+          write(iulog,*) ' '
+          write(iulog,*) 'Proceeding despite missing c13 and/or c14 fields on input finidat file,'
+          write(iulog,*) 'because for_testing_allow_interp_non_ciso_to_ciso is set.'
+          write(iulog,*) ' '
+       else
+          write(iulog,*) ' '
+          write(iulog,*) 'for_testing_allow_interp_non_ciso_to_ciso is .true., but it appears to be unnecessary in this run'
+          write(iulog,*) '(this is informational only - it does not indicate a problem)'
+          write(iulog,*) ' '
+       end if
+    else
+       if (missing_ciso) then
+          call endrun(msg='Cannot interpolate from a run without c13/c14 to a run with c13/c14', &
+               additional_msg=errMsg(sourcefile, __LINE__))
        end if
     end if
 
