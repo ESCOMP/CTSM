@@ -25,7 +25,7 @@ module SurfaceRadiationMod
   implicit none
   private
 
-  logical :: DEBUG = .false.  ! for debugging this module
+  logical, parameter :: debug = .false.  ! for debugging this module
 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -977,7 +977,7 @@ contains
           g = patch%gridcell(p)
 
           if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
-             if ( DEBUG ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
+             if ( debug ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
           endif
           ! Solar incident 
 
