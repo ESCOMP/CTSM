@@ -108,8 +108,8 @@
        throughput, which is particularly relevant for single-point cases
        (where datm dominates the runtime). -->
   <compset>
-    <alias>I2000Clm50BgcCropQianGsCmip6waccm</alias>
-    <lname>2000_DATM%QIA_CLM50%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <alias>IHistClm50BgcCropQianGsCmip6waccm</alias>
+    <lname>HIST_DATM%QIA_CLM50%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>
