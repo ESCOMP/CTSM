@@ -1981,6 +1981,16 @@ Flag to use the atmospheric time series of C13 concentrations from natural abund
 Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0. units are permil.
 </entry>
 
+<!-- BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) -->
+<entry id="for_testing_allow_interp_non_ciso_to_ciso" type="logical" category="clm_isotope"
+       group="clm_inparm" valid_values="" >
+There is a bug that causes incorrect values for C isotopes if running
+init_interp from a case without C isotopes to a case with C isotopes
+(https://github.com/ESCOMP/ctsm/issues/67). Normally, an error-check
+prevents you from doing this interpolation (until we have fixed that
+bug). However, we sometimes want to bypass this error-check in system
+tests. This namelist flag bypasses this error-check.
+</entry>
 
 <!-- permfrost-specific flags    -->
 

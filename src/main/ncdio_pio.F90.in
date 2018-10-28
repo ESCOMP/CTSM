@@ -104,7 +104,7 @@ module ncdio_pio
   interface ncd_io
      module procedure ncd_io_char_var0_start_glob
 
-     !DIMS 0
+     !DIMS 0,1
      module procedure ncd_io_{DIMS}d_log_glob
 
      !DIMS 0,1,2,3
@@ -1192,7 +1192,7 @@ contains
   end subroutine ncd_io_char_var0_start_glob
 
   !------------------------------------------------------------------------
-  !DIMS 0
+  !DIMS 0,1
   subroutine ncd_io_{DIMS}d_log_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -1212,10 +1212,12 @@ contains
     integer           :: start(2), count(2) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
+    logical           :: found              ! if true, found lat/lon dims on file
     integer           :: idata
     integer, pointer  :: idata1d(:)         ! Temporary integer data to send to file
     character(len=32) :: vname              ! variable error checking
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
+    integer           :: ndims
     character(len=*),parameter :: subname='ncd_io_{DIMS}d_log_glob'
     !-----------------------------------------------------------------------
 
@@ -1225,15 +1227,21 @@ contains
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
+
+       call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
+#if ({DIMS}==0)
        if (varpresent) then
+          status = pio_get_var(ncid, vardesc, idata)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
                 call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
                      errMsg(sourcefile, __LINE__))
              end if
           endif
-#if ({DIMS}==0)
-          status = pio_get_var(ncid, varid, idata)
+          if ( status /= PIO_NOERR )then
+             call shr_sys_abort(' ERROR: reading variable: '//trim(varname)//' ' &
+             // errMsg(sourcefile, __LINE__))
+          end if
           if ( idata == 0 )then
              data = .false.
           else if ( idata == 1 )then
@@ -1241,28 +1249,62 @@ contains
           else
              call shr_sys_abort(' ERROR: bad integer value for logical data'//errMsg(sourcefile, __LINE__))
           end if
+       end if
 #else
-          call shr_sys_abort('ncd_io_*_log_glob not implemented for DIMS > 0')
-#endif
+       if (varpresent) then
+          allocate(idata1d(size(data)))
+          if (single_column) then
+             call scam_field_offsets(ncid,'undefined', vardesc,&
+                  start, count, found=found, posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, idata1d)
+             else
+                status = pio_get_var(ncid, varid, idata1d)
+             end if
+          else
+             status = pio_get_var(ncid, varid, idata1d)
+          endif
+          if ( status /= PIO_NOERR )then
+             call shr_sys_abort(' ERROR: reading variable: '//trim(varname)//' ' &
+             // errMsg(sourcefile, __LINE__))
+          end if
+          if ( any(idata1d /= 0 .and. idata1d /= 1) )then
+             call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
+          end if
+          data = (idata1d == 1)
+          deallocate(idata1d)
        endif
+#endif
+       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = {DIMS}
+       if(present(nt)) ndims=ndims+1
+       call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
        start(1) = 1 ; count(1) = 1
        if (present(nt)) start(1) = nt
-       call ncd_inqvid  (ncid, varname, varid, vardesc)
        allocate(idata1d(1))
        if ( data )then
           idata1d(1) = 1
        else
           idata1d(1) = 0
        end if
-       status = pio_put_var(ncid, varid, start, count, idata1d)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
        deallocate(idata1d)
-#else
-       call shr_sys_abort('ncd_io_*_log_glob not implemented for DIMS > 0')
+#elif ({DIMS}==1)
+       start(1) = 1 ; count(1) = size(data)
+       start(2) = 1 ; count(2) = 1
+       if (present(nt)) start(2) = nt
+       allocate(idata1d(size(data)))
+       where( data )
+          idata1d = 1
+       elsewhere
+          idata1d = 0
+       end where
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), idata1d)
+       deallocate( idata1d )
 #endif
 
     endif   ! flag
@@ -1287,7 +1329,6 @@ contains
     logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
     !
     ! !LOCAL VARIABLES:
-    integer           :: m
     integer           :: varid              ! netCDF variable id
     integer           :: start({DIMS}+1), count({DIMS}+1) ! output bounds
     integer           :: status             ! error code
@@ -1295,9 +1336,9 @@ contains
     logical           :: found              ! if true, found lat/lon dims on file
     character(len=32) :: vname              ! variable error checking
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
-    {VTYPE} :: temp(1)
+    integer           :: ndims
+    {VTYPE}           :: temp(1)
     character(len=*),parameter :: subname='ncd_io_{DIMS}d_{TYPE}_glob'
-    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -1350,7 +1391,7 @@ contains
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
        start(1) = 1  ; count(1) = 1
-       if (present(nt)) start(1) = nt ; count(1) = 1
+       if (present(nt)) start(1) = nt
        temp(1) = data
        status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif ({DIMS}==1)
@@ -1376,7 +1417,7 @@ contains
        end if
 #endif
 
-    endif
+    endif   ! flag
 
   end subroutine ncd_io_{DIMS}d_{TYPE}_glob
 
