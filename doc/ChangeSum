@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev015    sacks 10/28/2018 CMIP6 compset modifiers, usermods for typical output, and other output enhancements
   ctsm1.0.dev014    sacks 10/26/2018 Miscellaneous minor, bit-for-bit bug fixes
   ctsm1.0.dev013     erik 10/25/2018 Fix the fact that transient Bgc and SP cases had constant crop area in time
   ctsm1.0.dev012     erik 09/29/2018 Add snow-free fields for snowmip, fix several issues
