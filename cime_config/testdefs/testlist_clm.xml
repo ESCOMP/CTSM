@@ -1932,4 +1932,13 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
+  <test name="SMS_Lm1" grid="f10_f10_musgs" compset="I1850Clm50BgcCropCmip6waccm" testmods="clm/basic">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >The main point of this test is simply to make sure that the CMIP6WACCMDECK moifierd works. Month-long so that we actually get some history output (because this test exercises a usermods directory with only monthly and yearly output).</option>
+    </options>
+  </test>
 </testlist>
