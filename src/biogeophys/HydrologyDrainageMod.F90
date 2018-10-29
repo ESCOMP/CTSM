@@ -15,6 +15,7 @@ module HydrologyDrainageMod
   use SoilStateType     , only : soilstate_type
   use TemperatureType   , only : temperature_type
   use WaterFluxBulkType     , only : waterfluxbulk_type
+  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use WaterBalanceType    , only : waterbalance_type
@@ -42,7 +43,7 @@ contains
        atm2lnd_inst, glc2lnd_inst, temperature_inst, &
        soilhydrology_inst, soilstate_inst, waterstatebulk_inst, &
        waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
-       glacier_smb_inst)
+       wateratm2lndbulk_inst, glacier_smb_inst)
     !
     ! !DESCRIPTION:
     ! Calculates soil/snow hydrology with drainage (subsurface runoff)
@@ -76,6 +77,7 @@ contains
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)     , intent(inout) :: wateratm2lndbulk_inst
     type(glacier_smb_type)   , intent(in)    :: glacier_smb_inst
     !
     ! !LOCAL VARIABLES:
@@ -86,9 +88,9 @@ contains
     associate(                                                         & ! Input: layer thickness depth (m)  
          dz                 => col%dz                                , & ! Input: column type
          ctype              => col%itype                             , & ! Input: gridcell flux of flood water from RTM            
-         qflx_floodg        => atm2lnd_inst%forc_flood_grc           , & ! Input: rain rate [mm/s]   
-         forc_rain          => atm2lnd_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
-         forc_snow          => atm2lnd_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
+         qflx_floodg        => wateratm2lndbulk_inst%forc_flood_grc           , & ! Input: rain rate [mm/s]   
+         forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
+         forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
          begwb              => waterbalancebulk_inst%begwb_col             , & ! Output:water mass end of the time step 
          endwb              => waterbalancebulk_inst%endwb_col             , & ! Output:water mass end of the time step     
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      
@@ -160,7 +162,7 @@ contains
       end do
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-           soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))
+           waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))
 
 
       

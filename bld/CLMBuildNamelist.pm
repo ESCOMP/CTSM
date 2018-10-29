@@ -1740,6 +1740,11 @@ sub process_namelist_inline_logic {
   #####################################
   setup_logic_irrigation_parameters($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ########################################
+  # namelist group: water_tracers_inparm #
+  ########################################
+  setup_logic_water_tracers($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
@@ -1880,7 +1885,11 @@ sub setup_logic_irrigate {
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate',
                 'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'} );
-    $nl_flags->{'irrigate'} = lc($nl->get_value('irrigate'));
+    if ( &value_is_true($nl->get_value('irrigate') ) ) {
+       $nl_flags->{'irrigate'} = ".true."
+    } else {
+       $nl_flags->{'irrigate'} = ".false."
+    }
   }
 }
 
@@ -2073,6 +2082,9 @@ sub setup_logic_create_crop_landunit {
                 'use_fates'=>$nl_flags->{'use_fates'} );
     if ( &value_is_true($nl_flags->{'use_fates'}) && &value_is_true($nl->get_value($var)) ) {
          $log->fatal_error( "$var is true and yet use_fates is being set, which contradicts that (use_fates requires $var to be .false." );
+    }
+    if ( (! &value_is_true($nl_flags->{'use_fates'})) && (! &value_is_true($nl->get_value($var))) ) {
+         $log->fatal_error( "$var is false which is ONLY allowed when FATES is being used" );
     }
   }
 }
@@ -2566,9 +2578,6 @@ sub setup_logic_do_transient_crops {
       if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
          $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
       }
-      elsif (!&value_is_true($nl->get_value('use_crop'))) {
-         $cannot_be_true = "$var can only be set to true when running with use_crop = true";
-      }
       elsif (&value_is_true($nl->get_value('use_fates'))) {
          # In principle, use_fates should be compatible with
          # do_transient_crops. However, this hasn't been tested, so to be safe,
@@ -2592,6 +2601,13 @@ sub setup_logic_do_transient_crops {
 
       if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
          $log->fatal_error($cannot_be_true);
+      }
+
+      my $dopft = "do_transient_pfts";
+      # Make sure the value agrees with the do_transient_pft flag
+      if ( (  &value_is_true($nl->get_value($var))) && (! &value_is_true($nl->get_value($dopft))) ||
+           (! &value_is_true($nl->get_value($var))) && (  &value_is_true($nl->get_value($dopft))) ) {
+         $log->fatal_error("$var and $dopft do NOT agree and need to");
       }
 
    }
@@ -2776,6 +2792,20 @@ sub setup_logic_irrigation_parameters {
         }
      }
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_water_tracers {
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
+      my $var;
+      foreach $var ("enable_water_tracer_consistency_checks",
+                    "enable_water_isotopes") {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      }
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -3047,9 +3077,12 @@ sub setup_logic_fertilizer {
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     $nl_flags->{'use_crop'} = $nl->get_value('use_crop');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fertilizer',
      'use_crop'=>$nl_flags->{'use_crop'} );
+     my $use_fert = $nl->get_value('use_fertilizer');
+     if ( (! &value_is_true($nl_flags->{'use_crop'})) && &value_is_true($use_fert) ) {
+       $log->fatal_error("use_ferilizer can NOT be on without prognostic crop\n" );
+     }
   }
 }
 
@@ -3062,9 +3095,11 @@ sub setup_logic_grainproduct {
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     $nl_flags->{'use_crop'} = $nl->get_value('use_crop');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_grainproduct',
      'use_crop'=>$nl_flags->{'use_crop'}, 'phys'=>$physv->as_string() );
+     if ( (! &value_is_true($nl_flags->{'use_crop'})) && &value_is_true($nl->get_value('use_grainproduct') ) ) {
+       $log->fatal_error("use_grainproduct can NOT be on without prognostic crop\n" );
+     }
   }
 }
 
@@ -3810,7 +3845,8 @@ sub write_output_files {
                  soilwater_movement_inparm rooting_profile_inparm
                  soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-                 cnprecision_inparm clm_glacier_behavior crop irrigation_inparm);
+                 cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
+                 water_tracers_inparm);
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
     #             finidat_consistency_checks dynpft_consistency_checks);

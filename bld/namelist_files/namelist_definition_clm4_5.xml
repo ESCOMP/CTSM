@@ -868,9 +868,13 @@ If TRUE, urban traffic flux will be activated (Currently NOT implemented).
 1 = prognostic calculation of interior building temp (clm5_0)
 </entry>
 
-<entry id="calc_human_stress_indices" type="logical" category="clm_physics"
-       group="clm_humanindex_inparm" valid_values="" >
-If TRUE, human stress indices will be calculated
+<entry id="calc_human_stress_indices" type="char*16" category="clm_physics"
+       group="clm_humanindex_inparm" valid_values="ALL,FAST,NONE" >
+Human heat stress indices:
+    ALL  = All indices will be calculated
+    FAST = A subset of indices will be calculated (will not include the computationally 
+           expensive wet bulb calculation and associated indices)
+    NONE = No indices will be calculated
 </entry>
 
 <entry id="wrtdia" type="logical" category="history"
@@ -1050,6 +1054,12 @@ Max number of plant functional types in naturally vegetated landunit.
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the dynamic root model
 </entry>
+
+<entry id="use_SSRE" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on on diagnostic Snow Radiative Effect
+</entry>
+
 
 <!--                                                   -->
 <!-- mkmapdata  namelist                               -->
@@ -1761,6 +1771,14 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 -999.9 means do NOT use a future scenario, just use historical data.
 </entry> 
 
+<entry id="ssp-rcp" type="character" category="default_settings"
+       group="default_settings"  
+       valid_values="hist,SSP1-2.6,SSP3-7.0,SSP4-3.4,SSP4-6.0,SSP5-8.5">
+Shared Socioeconomic Pathway and Representative Concentration Pathway combination for future scenarios 
+The form is SSPn-m.m Where n is the SSP number and m.m is RCP radiative forcing at peak or 2100 in W/m^2
+hist means do NOT use a future scenario, just use historical data.
+</entry> 
+
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
        valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
@@ -1963,6 +1981,16 @@ Flag to use the atmospheric time series of C13 concentrations from natural abund
 Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0. units are permil.
 </entry>
 
+<!-- BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) -->
+<entry id="for_testing_allow_interp_non_ciso_to_ciso" type="logical" category="clm_isotope"
+       group="clm_inparm" valid_values="" >
+There is a bug that causes incorrect values for C isotopes if running
+init_interp from a case without C isotopes to a case with C isotopes
+(https://github.com/ESCOMP/ctsm/issues/67). Normally, an error-check
+prevents you from doing this interpolation (until we have fixed that
+bug). However, we sometimes want to bypass this error-check in system
+tests. This namelist flag bypasses this error-check.
+</entry>
 
 <!-- permfrost-specific flags    -->
 
@@ -2215,7 +2243,6 @@ If TRUE, apply transient natural PFTs from flanduse_timeseries file.
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply transient crops from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
-(Also, only valid for use_crop = true.)
 </entry>
 
 <entry id="do_harvest" type="logical" category="physics"
@@ -2398,6 +2425,22 @@ below a given elevation, you risk forcing the system to evolve
 differently in areas below and above reset_snow_glc_ela.
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist options related to water tracers                                                 -->
+<!-- ========================================================================================  -->
+
+<entry id="enable_water_tracer_consistency_checks" type="logical" category="clm_physics"
+       group="water_tracers_inparm" >
+If .true., add water tracers needed to perform water tracer consistency checks.
+
+These consistency checks ensure that all water tracers are updated to remain in-sync with
+the related bulk quantities.
+</entry>
+
+<entry id="enable_water_isotopes" type="logical" category="clm_physics"
+       group="water_tracers_inparm" >
+If .true., run with water isotopes
+</entry>  
 
 <!-- ========================================================================================  -->
 <!-- Namelist options related to initInterp                                                    -->

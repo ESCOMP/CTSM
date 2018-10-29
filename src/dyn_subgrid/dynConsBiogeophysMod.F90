@@ -53,7 +53,7 @@ contains
   subroutine dyn_hwcontent_init(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
-       urbanparams_inst, soilstate_inst, soilhydrology_inst, &
+       urbanparams_inst, soilstate_inst, &
        waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
        waterfluxbulk_inst, temperature_inst, energyflux_inst)
     !
@@ -71,7 +71,6 @@ contains
     integer                  , intent(in)    :: filter_lakec(:)
     type(urbanparams_type)   , intent(in)    :: urbanparams_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
@@ -87,14 +86,14 @@ contains
     call dyn_water_content(bounds, &
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
-         soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, &
          liquid_mass = waterbalancebulk_inst%liq1_grc(bounds%begg:bounds%endg), &
          ice_mass    = waterbalancebulk_inst%ice1_grc(bounds%begg:bounds%endg))
 
     call dyn_heat_content( bounds, &
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
-         urbanparams_inst, soilstate_inst, soilhydrology_inst, &
+         urbanparams_inst, soilstate_inst, &
          temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
          heat_grc = temperature_inst%heat1_grc(bounds%begg:bounds%endg), &
          liquid_water_temp_grc = temperature_inst%liquid_water_temp1_grc(bounds%begg:bounds%endg))
@@ -105,7 +104,7 @@ contains
   subroutine dyn_hwcontent_final(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
-       urbanparams_inst, soilstate_inst, soilhydrology_inst, &
+       urbanparams_inst, soilstate_inst, &
        waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
        waterfluxbulk_inst, temperature_inst, energyflux_inst)
     !
@@ -123,7 +122,6 @@ contains
     integer                  , intent(in)    :: filter_lakec(:)
     type(urbanparams_type)   , intent(in)    :: urbanparams_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
     type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
@@ -145,14 +143,14 @@ contains
     call dyn_water_content(bounds, &
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
-         soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, &
          liquid_mass = waterbalancebulk_inst%liq2_grc(bounds%begg:bounds%endg), &
          ice_mass    = waterbalancebulk_inst%ice2_grc(bounds%begg:bounds%endg))
 
     call dyn_heat_content( bounds,                                &
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
-         urbanparams_inst, soilstate_inst, soilhydrology_inst, &
+         urbanparams_inst, soilstate_inst, &
          temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
          heat_grc = temperature_inst%heat2_grc(bounds%begg:bounds%endg), &
          liquid_water_temp_grc = temperature_inst%liquid_water_temp2_grc(bounds%begg:bounds%endg))
@@ -199,7 +197,7 @@ contains
   subroutine dyn_water_content(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, &
        liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
@@ -211,7 +209,6 @@ contains
     integer                  , intent(in)    :: filter_nolakec(:)
     integer                  , intent(in)    :: num_lakec
     integer                  , intent(in)    :: filter_lakec(:)
-    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstatebulk_type)    , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(in)    :: waterdiagnosticbulk_inst
     real(r8)                 , intent(out)   :: liquid_mass( bounds%begg: ) ! kg m-2
@@ -228,7 +225,7 @@ contains
     SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     call ComputeLiqIceMassNonLake(bounds, num_nolakec, filter_nolakec, &
-         soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, &
          liquid_mass_col(bounds%begc:bounds%endc), &
          ice_mass_col(bounds%begc:bounds%endc))
 
@@ -256,7 +253,7 @@ contains
   subroutine dyn_heat_content(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
-       urbanparams_inst, soilstate_inst, soilhydrology_inst, &
+       urbanparams_inst, soilstate_inst, &
        temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        heat_grc, liquid_water_temp_grc)
 
@@ -277,7 +274,6 @@ contains
     integer                  , intent(in)  :: filter_lakec(:)
     type(urbanparams_type)   , intent(in)  :: urbanparams_inst
     type(soilstate_type)     , intent(in)  :: soilstate_inst
-    type(soilhydrology_type) , intent(in)  :: soilhydrology_inst
     type(temperature_type)   , intent(in)  :: temperature_inst
     type(waterstatebulk_type)    , intent(in)  :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(in)  :: waterdiagnosticbulk_inst
@@ -303,7 +299,7 @@ contains
 
     call ComputeHeatNonLake(bounds, num_nolakec, filter_nolakec, &
          urbanparams_inst, soilstate_inst, &
-         temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, soilhydrology_inst, &
+         temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
          heat = heat_col(bounds%begc:bounds%endc), &
          heat_liquid = heat_liquid_col(bounds%begc:bounds%endc), &
          cv_liquid = cv_liquid_col(bounds%begc:bounds%endc))

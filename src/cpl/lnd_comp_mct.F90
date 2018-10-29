@@ -43,7 +43,7 @@ contains
     use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, set_nextsw_cday
-    use clm_initializeMod, only : initialize1, initialize2, lnd2atm_inst, lnd2glc_inst
+    use clm_initializeMod, only : initialize1, initialize2, water_inst, lnd2atm_inst, lnd2glc_inst
     use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog, noland
     use clm_varctl       , only : inst_index, inst_suffix, inst_name
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
@@ -248,7 +248,7 @@ contains
 
     ! Create land export state 
 
-    call lnd_export(bounds, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
+    call lnd_export(bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
 
     ! Fill in infodata settings
 
@@ -286,7 +286,7 @@ contains
     !
     ! !USES:
     use shr_kind_mod    ,  only : r8 => shr_kind_r8
-    use clm_initializeMod, only : lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
+    use clm_initializeMod, only : water_inst, lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
     use clm_driver      ,  only : clm_drv
     use clm_time_manager,  only : get_curr_date, get_nstep, get_curr_calday, get_step_size
     use clm_time_manager,  only : advance_timestep, set_nextsw_cday,update_rad_dtime
@@ -402,7 +402,8 @@ contains
          x2l = x2l_l%rattr, &
          glc_present = glc_present, &
          atm2lnd_inst = atm2lnd_inst, &
-         glc2lnd_inst = glc2lnd_inst)
+         glc2lnd_inst = glc2lnd_inst, &
+         wateratm2lndbulk_inst = water_inst%wateratm2lndbulk_inst)
     call t_stopf ('lc_lnd_import')
 
     ! Use infodata to set orbital values if updated mid-run
@@ -459,7 +460,7 @@ contains
        ! Create l2x_l export state - add river runoff input to l2x_l if appropriate
        
        call t_startf ('lc_lnd_export')
-       call lnd_export(bounds, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
+       call lnd_export(bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
        call t_stopf ('lc_lnd_export')
 
        ! Advance clm time step

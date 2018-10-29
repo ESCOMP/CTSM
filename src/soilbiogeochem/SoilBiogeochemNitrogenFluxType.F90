@@ -326,10 +326,12 @@ contains
          avgflag='A', long_name='symbiotic/asymbiotic N fixation to soil mineral N', &
          ptr_col=this%nfix_to_sminn_col, default=default)
 
-    this%ffix_to_sminn_col(begc:endc) = spval
-    call hist_addfld1d (fname='FFIX_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='free living  N fixation to soil mineral N', &
-         ptr_col=this%ffix_to_sminn_col, default=default)
+    if ( use_fun )then
+       this%ffix_to_sminn_col(begc:endc) = spval
+       call hist_addfld1d (fname='FFIX_TO_SMINN', units='gN/m^2/s', &
+            avgflag='A', long_name='free living  N fixation to soil mineral N', &
+            ptr_col=this%ffix_to_sminn_col, default='active')
+    end if
 
     do l = 1, ndecomp_cascade_transitions
        ! vertically integrated fluxes

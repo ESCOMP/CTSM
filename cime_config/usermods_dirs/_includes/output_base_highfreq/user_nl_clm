@@ -1,0 +1,30 @@
+!----------------------------------------------------------------------------------
+! Settings from output_base_highfreq
+!----------------------------------------------------------------------------------
+
+! h5 stream (daily average, gridcell-level)
+! day, Eday
+hist_mfilt(6) = 365
+hist_dov2xy(6) = .true.
+hist_nhtfrq(6) = -24
+hist_type1d_pertape(6) = ' '
+hist_fincl6 += 'SOILWATER_10CM', 'TOTSOILLIQ', 'TOTSOILICE', 'EFLX_LH_TOT', 'FSH', 'FGR12', 'FSM', 'QSNOEVAP', 'TLAI', 'QDRAI', 'QDRAI_PERCH', 'QOVER', 'QFLX_SUB_SNOW', 'FSA', 'FIRA', 'H2OSNO', 'SNOCAN', 'QSNOFRZ', 'QFLX_SNOW_DRAIN', 'SNOWDP', 'H2OSFC', 'TV', 'TG', 'TAUX', 'TAUY', 'QVEGT', 'TWS', 'H2OCAN', 'QVEGE', 'QSOIL', 'TSKIN', 'FSDS','FSNO','SNOFSRVD','SNOFSRVI','SNOFSRND','SNOFSRNI','FSDSVD','FSDSVI','FSDSND','FSDSNI','SNOWLIQ','SOILICE','SOILLIQ','QINTR','SNOBCMSL','TSOI','SNOTXMASS','SNOWICE','SNOWLIQ','QRUNOFF','RAIN','SNOW'
+
+! h6 stream (daily average, landunit-level)
+! Eday
+hist_mfilt(7) = 365
+hist_dov2xy(7) = .false.
+hist_nhtfrq(7) = -24
+hist_type1d_pertape(7) = 'LAND'
+hist_fincl7 += 'TREFMXAV','TREFMNAV'
+
+! h7 stream (3-hourly average, gridcell-level)
+! 3hr, E3hr, CF3hr
+! 3hr requires QRUNOFF for time mean, and SOILWATER_10CM, TSKIN for time point (I)
+! CF3hr requires QFLX_SUB_SNOW for time point (I)
+hist_mfilt(8) = 2920
+hist_dov2xy(8) = .true.
+hist_nhtfrq(8) = -3
+hist_type1d_pertape(8) = ' '
+hist_fincl8 += 'TSA','RH2M','SOILWATER_10CM:I','FSH','EFLX_LH_TOT','FSDS','QRUNOFF','QFLX_SUB_SNOW:I','TSKIN:I'
+

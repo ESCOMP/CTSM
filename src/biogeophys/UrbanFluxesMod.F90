@@ -10,7 +10,7 @@ module UrbanFluxesMod
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use decompMod            , only : bounds_type
   use clm_varpar           , only : numrad
-  use clm_varcon           , only : isecspday, degpsec, namel
+  use clm_varcon           , only : namel
   use clm_varctl           , only : iulog
   use abortutils           , only : endrun  
   use UrbanParamsType      , only : urbanparams_type
@@ -24,6 +24,7 @@ module UrbanFluxesMod
   use FrictionVelocityMod  , only : frictionvel_type
   use EnergyFluxType       , only : energyflux_type
   use WaterFluxBulkType        , only : waterfluxbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
   use HumanIndexMod        , only : humanindex_type
   use GridcellType         , only : grc                
   use LandunitType         , only : lun                
@@ -53,7 +54,8 @@ contains
   subroutine UrbanFluxes (bounds, num_nourbanl, filter_nourbanl,                        &
        num_urbanl, filter_urbanl, num_urbanc, filter_urbanc, num_urbanp, filter_urbanp, &
        atm2lnd_inst, urbanparams_inst, soilstate_inst, temperature_inst,                &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, frictionvel_inst, energyflux_inst, waterfluxbulk_inst,              &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, frictionvel_inst,                 &
+       energyflux_inst, waterfluxbulk_inst, wateratm2lndbulk_inst,                      &
        humanindex_inst) 
     !
     ! !DESCRIPTION: 
@@ -69,8 +71,9 @@ contains
     use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use QSatMod             , only : QSat
     use clm_varpar          , only : maxpatch_urb, nlevurb, nlevgrnd
-    use clm_time_manager    , only : get_curr_date, get_step_size, get_nstep
-    use HumanIndexMod       , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+    use clm_time_manager    , only : get_step_size, get_nstep, is_near_local_noon
+    use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
+                                     Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                      SwampCoolEff, KtoC, VaporPres
     !
@@ -92,6 +95,7 @@ contains
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
     !
@@ -176,9 +180,7 @@ contains
     real(r8) :: qflx_err(bounds%begl:bounds%endl)                    ! water vapor flux error (kg/m**2/s)
     real(r8) :: fwet_roof                                            ! fraction of roof surface that is wet (-)
     real(r8) :: fwet_road_imperv                                     ! fraction of impervious road surface that is wet (-)
-    integer  :: local_secp1(bounds%begl:bounds%endl)                 ! seconds into current date in local time (sec)
     real(r8) :: dtime                                                ! land model time step (sec)
-    integer  :: year,month,day,secs                                  ! calendar info for current time step
     logical  :: found                                                ! flag in search loop
     integer  :: indexl                                               ! index of first found in search loop
     integer  :: nstep                                                ! time step number
@@ -204,7 +206,7 @@ contains
          forc_t              =>   atm2lnd_inst%forc_t_not_downscaled_grc    , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (K)                       
          forc_th             =>   atm2lnd_inst%forc_th_not_downscaled_grc   , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (K)             
          forc_rho            =>   atm2lnd_inst%forc_rho_not_downscaled_grc  , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                 
-         forc_q              =>   atm2lnd_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
+         forc_q              =>   wateratm2lndbulk_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
          forc_pbot           =>   atm2lnd_inst%forc_pbot_not_downscaled_grc , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                         
          forc_u              =>   atm2lnd_inst%forc_u_grc                   , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)    
          forc_v              =>   atm2lnd_inst%forc_v_grc                   , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)   
@@ -320,16 +322,12 @@ contains
 
       ! Get current date
       dtime = get_step_size()
-      call get_curr_date (year, month, day, secs)
 
       ! Compute canyontop wind using Masson (2000)
 
       do fl = 1, num_urbanl
          l = filter_urbanl(fl)
          g = lun%gridcell(l)
-
-         local_secp1(l)        = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-         local_secp1(l)        = mod(local_secp1(l),isecspday)
 
          ! Error checks
 
@@ -870,36 +868,39 @@ contains
          rh_ref2m_u(p) = rh_ref2m(p)
 
          ! Human Heat Stress
-         if ( calc_human_stress_indices )then
-  
+         if ( all_human_stress_indices .or. fast_human_stress_indices )then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
-            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(g), rh_ref2m(p), q_ref2m(p), &
-                          teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
             call Wet_BulbS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p))
             call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
             call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
-            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
-            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            if ( all_human_stress_indices ) then
+               call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(g), rh_ref2m(p), q_ref2m(p), &
+                             teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+               call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+               call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+               call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            end if
   
-            teq_ref2m_u(p)            = teq_ref2m(p)
-            ept_ref2m_u(p)            = ept_ref2m(p)
-            wb_ref2m_u(p)             = wb_ref2m(p)
             wbt_ref2m_u(p)            = wbt_ref2m(p)
             nws_hi_ref2m_u(p)         = nws_hi_ref2m(p)
             appar_temp_ref2m_u(p)     = appar_temp_ref2m(p)
             swbgt_ref2m_u(p)          = swbgt_ref2m(p)
             humidex_ref2m_u(p)        = humidex_ref2m(p)
-            discomf_index_ref2m_u(p)  = discomf_index_ref2m(p)
             discomf_index_ref2mS_u(p) = discomf_index_ref2mS(p)
-            thic_ref2m_u(p)           = thic_ref2m(p)
-            thip_ref2m_u(p)           = thip_ref2m(p)
-            swmp80_ref2m_u(p)         = swmp80_ref2m(p)
-            swmp65_ref2m_u(p)         = swmp65_ref2m(p)
+            if ( all_human_stress_indices ) then
+               teq_ref2m_u(p)            = teq_ref2m(p)
+               ept_ref2m_u(p)            = ept_ref2m(p)
+               wb_ref2m_u(p)             = wb_ref2m(p)
+               discomf_index_ref2m_u(p)  = discomf_index_ref2m(p)
+               thic_ref2m_u(p)           = thic_ref2m(p)
+               thip_ref2m_u(p)           = thip_ref2m(p)
+               swmp80_ref2m_u(p)         = swmp80_ref2m(p)
+               swmp65_ref2m_u(p)         = swmp65_ref2m(p)
+            end if
          end if
 
          ! Variables needed by history tape
