@@ -405,41 +405,41 @@ contains
        this%c13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSUN', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C13 sunlit leaf photosynthesis', &
-            ptr_patch=this%c13_psnsun_patch)
+            ptr_patch=this%c13_psnsun_patch, default='inactive')
 
        this%c13_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSHA', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C13 shaded leaf photosynthesis', &
-            ptr_patch=this%c13_psnsha_patch)
+            ptr_patch=this%c13_psnsha_patch, default='inactive')
     end if
 
     if ( use_c14 ) then
        this%c14_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSUN', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C14 sunlit leaf photosynthesis', &
-            ptr_patch=this%c14_psnsun_patch)
+            ptr_patch=this%c14_psnsun_patch, default='inactive')
 
        this%c14_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSHA', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C14 shaded leaf photosynthesis', &
-            ptr_patch=this%c14_psnsha_patch)
+            ptr_patch=this%c14_psnsha_patch, default='inactive')
     end if
 
     if ( use_c13 ) then
        this%rc13_canair_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_CANAIR', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for canopy air', &
-            ptr_patch=this%rc13_canair_patch)
+            ptr_patch=this%rc13_canair_patch, default='inactive')
 
        this%rc13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSUN', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for sunlit photosynthesis', &
-            ptr_patch=this%rc13_psnsun_patch)
+            ptr_patch=this%rc13_psnsun_patch, default='inactive')
 
        this%rc13_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSHA', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for shaded photosynthesis', &
-            ptr_patch=this%rc13_psnsha_patch)
+            ptr_patch=this%rc13_psnsha_patch, default='inactive')
     endif
 
     ! Canopy physiology

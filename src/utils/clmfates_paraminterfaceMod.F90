@@ -15,7 +15,7 @@ module CLMFatesParamInterfaceMod
   private :: SetParameterDimensions
   private :: GetUsedDimensionSizes
 
-  logical :: DEBUG  = .false.
+  logical :: debug  = .false.
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
