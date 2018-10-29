@@ -1,4 +1,181 @@
 ===============================================================
+Tag name:  release-clm5.0.10
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Oct 29 06:55:41 MDT 2018
+One-line Summary: Bring in CMIP6 compset modifiers, output usermods and bit-for-bit fixes from dev014 and dev015
+
+Purpose of this version:
+------------------------
+
+Bring in all changes from ctsm1.0.dev014 and ctsm1.0.dev015:
+
+From ctsm1.0.dev015:
+
+(1) Support %BGC-CROP-CMIP6DECK and %BGC-CROP-CMIP6WACCMDECK compset
+    modifiers, so that we can turn on the necessary options
+    (output-related and others) via new CMIP6-specific compsets.
+
+(2) Turn on carbon isotopes in CMIP6 runs (from Erik Kluzek)
+
+(3) Remove setting of CCSM_BGC=CO2A in the cmip6 usermods
+
+(4) Add usermods directories for getting typical extra output that's
+    wanted in many cases: output_crop, output_crop_highfreq, output_bgc,
+    output_bgc_highfreq, output_sp, and output_sp_highfreq. These can be
+    enabled by adding something like '--user-mods-dir output_crop' on
+    the create_newcase line (that short-hand works for an I compset; for
+    F or B compsets, you need to provide the full path to the usermod
+    directory).
+
+(4) Allow holes in the number of history tapes. Holes are cases where,
+    for example, we have h0, h1 and h3 tapes, but no h2 tape (because
+    there are no fields on the h2 tape). (This is needed for (3).)
+
+(5) Fix reading and writing of 1-d logical global arrays. This fixes
+    ESCOMP/ctsm#24 for real (rather than just preventing an attempt to
+    read/write 1-d logical arrays, as was done in the previous 'fix').
+
+(6) Add C13_NBP and C14_NBP diagnostic fields (from Keith Oleson)
+
+(7) Make a bunch of carbon isotope diagnostic fields inactive by default
+
+(8) Don't allow interpolation (use_init_interp) from a case without
+    carbon isotopes to a case with carbon isotopes: Due to
+    https://github.com/ESCOMP/ctsm/issues/67, interpolation from a case
+    without carbon isotopes to a case with carbon isotopes yields
+    incorrect initialization values for the carbon isotopes. Now that
+    we're turning carbon isotopes on via some semi-out-of-the-box
+    usermods (for cmip6), it is becoming more important to check to make
+    sure someone doesn't shoot themselves in the foot this way.
+
+(9) Add tests of the new output usermods as well as of the CMIP6 compset
+    modifiers
+
+From ctsm1.0.dev014: Four miscellaneous minor, bit-for-bit bug fixes:
+
+(1) Py3 pylint check and address cime issue ESMCI/cime#2822 (from Jim
+    Edwards: ESCOMP/ctsm#526)
+
+(2) Change uppercase DEBUG variables to lowercase debug (requested by
+    Jim Edwards to avoid conflicting with the DEBUG CPP token)
+    (Fixes ESCOMP/ctsm#534)
+
+(3) Remove unnecessary line of code in LunaMod.F90 that was causing
+    problems with some compilers due to an uninitialized variable
+    (Fixes ESCOMP/ctsm#322)
+
+(4) Add r8 to 0 constant to fix build issue with XLF compiler (from Jim
+    Edwards: ESCOMP/ctsm#531)
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev015 (but doesn't yet
+include ctsm1.0.dev013)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #322 (ERS_D_Ld5.f19_g16.I2000Clm50BgcCruGs run FAIL (intel))
+- Fixes #534 (Rename DEBUG to debug in a few places)
+- Fixes #24 for real (ncd_io_1d_log_glob is broken)
+- Fixes #529 (Organize usermods_dirs to facilitate running cases with
+  the right output)
+
+Science changes since: release-clm5.0.09
+
+None
+
+Software changes since: release-clm5.0.09
+
+See above for full list
+
+Changes to User Interface since: release-clm5.0.09
+
+- New namelist variable, just for testing purposes:
+  for_testing_allow_interp_non_ciso_to_ciso. This bypasses an error
+  check, and should only be used in tests.
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+    hobart --- not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+    hobart --- not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+     hobart --- not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+  regular tests (prealpha):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+  regular tests (prebeta):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.09
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime_cesm2_0_rel_05
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch:
+- ctsm1.0.dev014
+- ctsm1.0.dev015
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/531 - fix build issue with xlf compiler
+- https://github.com/ESCOMP/ctsm/pull/526 - fix cime issue 2822 and pylint chk
+- https://github.com/ESCOMP/ctsm/pull/536 - Allow holes in the number of
+  history tapes and reorganize cmip6 usermods (main PR containing all of
+  these changes)
+- https://github.com/ESCOMP/ctsm/pull/527 - Add carbon_isotope user-mod
+  directory to turn on c13 and c14
+- https://github.com/ESCOMP/ctsm/pull/539 - Support a %CMIP6DECK compset
+  modifier
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.09
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Oct 23 00:00:50 MDT 2018
