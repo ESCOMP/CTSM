@@ -30,7 +30,6 @@ module lnd_comp_nuopc
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_SetScalar
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_GetScalar
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_Diagnose
-  use shr_nuopc_grid_mod    , only : shr_nuopc_grid_Meshinit
   use shr_nuopc_time_mod    , only : shr_nuopc_time_AlarmInit
 
   use lnd_import_export     , only : advertise_fields, realize_fields
@@ -75,8 +74,9 @@ module lnd_comp_nuopc
   integer                    :: dbrc
   character(*),parameter     :: modName =  "(lnd_comp_nuopc)"
   character(*),parameter     :: u_FILE_u = __FILE__
-  integer                :: shrlogunit ! original log unit
-  integer                :: shrloglev  ! original log level
+  integer                    :: shrlogunit ! original log unit
+  integer                    :: shrloglev  ! original log level
+  integer, pointer           :: gindex_ocn(:)
 
 !===============================================================================
 contains
@@ -131,6 +131,8 @@ contains
   !===============================================================================
 
   subroutine InitializeP0(gcomp, importState, exportState, clock, rc)
+
+    ! input/output variables
     type(ESMF_GridComp)   :: gcomp
     type(ESMF_State)      :: importState, exportState
     type(ESMF_Clock)      :: clock
@@ -149,26 +151,29 @@ contains
   !===============================================================================
 
   subroutine InitializeAdvertise(gcomp, importState, exportState, clock, rc)
+
+    ! uses
     use shr_nuopc_utils_mod, only : shr_nuopc_set_component_logging
     use shr_nuopc_utils_mod, only : shr_nuopc_get_component_instance
+
+    ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_VM)          :: vm
-    integer                :: lmpicom
-    character(ESMF_MAXSTR) :: cvalue
-    logical                :: exists
-    integer                :: lsize      ! local array size
-    integer                :: ierr       ! error code
-    integer                :: n,nflds
-    logical                :: isPresent
-    character(len=512)     :: diro
-    character(len=512)     :: logfile
-    integer :: localpet
-    integer                :: compid      ! component id
+    type(ESMF_VM)               :: vm
+    integer                     :: lmpicom
+    character(ESMF_MAXSTR)      :: cvalue
+    logical                     :: exists
+    integer                     :: ierr       ! error code
+    integer                     :: n,nflds
+    logical                     :: isPresent
+    character(len=512)          :: diro
+    character(len=512)          :: logfile
+    integer                     :: localpet
+    integer                     :: compid      ! component id
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
@@ -187,7 +192,7 @@ contains
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
-    ! initialize CLM MPI stuff
+    ! initialize CTSM MPI stuff
     !----------------------------------------------------------------------------
 
     call mpi_comm_dup(lmpicom, mpicom, ierr)
@@ -232,6 +237,8 @@ contains
   !===============================================================================
 
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
+
+    ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState
     type(ESMF_State)     :: exportState
@@ -246,6 +253,8 @@ contains
     type(ESMF_TimeInterval) :: timeStep              ! Model timestep
     type(ESMF_Calendar)     :: esmf_calendar         ! esmf calendar
     type(ESMF_CalKind_Flag) :: esmf_caltype          ! esmf calendar type
+    type(ESMF_Mesh)         :: Emesh, EMeshTemp      ! esmf meshes
+    type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
     integer                 :: ref_ymd               ! reference date (YYYYMMDD)
     integer                 :: ref_tod               ! reference time of day (sec)
     integer                 :: yy,mm,dd              ! Temporaries for time query
@@ -256,22 +265,12 @@ contains
     integer                 :: curr_ymd              ! Start date (YYYYMMDD)
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
-    integer                 :: dtime_clm             ! clm time-step
-    integer , allocatable   :: gindex(:)
-    real(r8), pointer       :: lat(:)
-    real(r8), pointer       :: lon(:)
-    real(r8), pointer       :: elemCoords(:,:)
-    real(r8), pointer       :: elemCornerCoords(:,:,:)
-    real(r8)                :: dx,dy
-    character(ESMF_MAXSTR)  :: cvalue
-    character(ESMF_MAXSTR)  :: convCIM, purpComp
-    type(ESMF_Grid)         :: Egrid
-    type(ESMF_Mesh)         :: Emesh
-    type(ESMF_VM)           :: vm
-    integer                 :: n, m
-    logical                 :: connected             ! is field connected?
-    integer                 :: lsize                 ! local size ofarrays
-    integer                 :: g,i,j                 ! indices
+    integer                 :: dtime_clm             ! ctsm time-step
+    integer , allocatable   :: gindex(:)             ! global index space for land and ocean points
+    integer , allocatable   :: gindex_lnd(:)         ! global index apce for just land points
+    character(ESMF_MAXSTR)  :: cvalue                ! config data
+    integer                 :: nlnd, nocn            ! local size ofarrays
+    integer                 :: g,n                   ! indices
     real(r8)                :: scmlat                ! single-column latitude
     real(r8)                :: scmlon                ! single-column longitude
     real(r8)                :: nextsw_cday           ! calday from clock of next radiation computation
@@ -282,11 +281,11 @@ contains
     character(len=CL)       :: hostname              ! hostname of machine running on
     character(len=CL)       :: model_version         ! Model version
     character(len=CL)       :: username              ! user running the model
-    integer                 :: nsrest                ! clm restart type
+    integer                 :: nsrest                ! ctsm restart type
     logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
     integer                 :: lbnum                 ! input to memory diagnostic
     type(bounds_type)       :: bounds                ! bounds
-    integer                 :: numg
+    character(ESMF_MAXSTR)  :: convCIM, purpComp
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -455,73 +454,65 @@ contains
     !----------------------
     ! Read namelist, grid and surface data
     !----------------------
+    
+    ! Note that the memory for gindex_ocn will be allocated in the following call
+    call initialize1(gindex_ocn)
 
-    call initialize1( )
-
-    !----------------------
-    ! Determine field arays
-    !----------------------
-
+   ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
-    lsize = bounds%endg - bounds%begg + 1
-
-    !--------------------------------
-    ! generate the mesh
-    ! grid_option specifies grid or mesh
-    !--------------------------------
-
-    allocate(gindex(lsize))
-    allocate(elemCoords(2,lsize))          ! (lon+lat) * n_gridcells
-    allocate(elemCornerCoords(2,4,lsize))  ! (lon+lat) * n_corners * n_gridcells
-
+    nlnd = bounds%endg - bounds%begg + 1
+    allocate(gindex_lnd(nlnd))
     do g = bounds%begg,bounds%endg
        n = 1 + (g - bounds%begg)
-       gindex(n) = ldecomp%gdc2glo(g)
-       elemCoords(1,n) = ldomain%lonc(g)
-       elemCoords(2,n) = ldomain%latc(g)
-       write(6,*)'CLM: g,lon,lat= ',g,ldomain%lonc(g),ldomain%latc(g)
-       ! TBD
-       ! tcraig, clm does not define corner values and there is no info about grid sizes (ie. dx, dy)
-       ! anywhere so make something up for now.  this has to be fixed if weights are generated on the fly!
-       ! someone from clm has to define the corner lon and lat for use here.
-       ! corners are defined counterclockwise
-       do m = 1,4
-          if (m == 1 .or. m == 4) dx = -0.05
-          if (m == 2 .or. m == 3) dx =  0.05
-          if (m == 1 .or. m == 2) dy = -0.05
-          if (m == 3 .or. m == 4) dy =  0.05
-          elemCornerCoords(1,m,n) = ldomain%lonc(g) + dx
-          elemCornerCoords(2,m,n) = ldomain%latc(g) + dy
-       enddo
+       gindex_lnd(n) = ldecomp%gdc2glo(g)
     end do
 
-    Emesh = ESMF_MeshCreate(parametricDim=2, &
-       coordSys=ESMF_COORDSYS_SPH_DEG, &
-       elementIds=gindex, &
-       elementType=ESMF_MESHELEMTYPE_QUAD, &
-       elementCoords=elemCoords, &
-       elementCornerCoords=elemCornerCoords, &
-       rc=rc)
+    ! create a global index that includes both land and ocean points
+    nocn = size(gindex_ocn)
+    allocate(gindex(nlnd + nocn))
+    do n = 1,nlnd+nocn
+       if (n <= nlnd) then
+          gindex(n) = gindex_lnd(n)
+       else
+          gindex(n) = gindex_ocn(n-nlnd)
+       end if
+    end do
+
+    ! create distGrid from global index array
+    DistGrid = ESMF_DistGridCreate(arbSeqIndexList=gindex, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    deallocate(gindex)
+
+    !--------------------------------
+    ! generate the mesh and realize fields
+    !--------------------------------
+
+    ! read in the mesh 
+    call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=cvalue, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    deallocate(gindex)
-    deallocate(elemCoords)
-    deallocate(elemCornerCoords)
+    EMeshTemp = ESMF_MeshCreate(filename=trim(cvalue), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (masterproc) then
+       write(iulog,*)'mesh file for domain is ',trim(cvalue)
+    end if
 
-    !--------------------------------
+    ! recreate the mesh using the above distGrid
+    EMesh = ESMF_MeshCreate(EMeshTemp, elementDistgrid=Distgrid, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+
     ! realize the actively coupled fields
-    !--------------------------------
+    call realize_fields(gcomp, Emesh, rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call realize_fields(gcomp,  Emesh, rc)
-
     !--------------------------------
-    ! Finish initializing clm
+    ! Finish initializing ctsm
     !--------------------------------
 
     call initialize2()
 
     !--------------------------------
-    ! Check that clm internal dtime aligns with clm coupling interval
+    ! Check that ctsm internal dtime aligns with ctsm coupling interval
     !--------------------------------
 
     call ESMF_ClockGet( clock, timeStep=timeStep, rc=rc)
@@ -532,10 +523,10 @@ contains
     dtime_clm = get_step_size()
 
     if (masterproc) then
-       write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_clm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
+       write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_ctsm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
     end if
     if (mod(dtime_sync,dtime_clm) /= 0) then
-       write(iulog,*)'clm dtime ',dtime_clm,' and clock dtime ',dtime_sync,' never align'
+       write(iulog,*)'ctsm dtime ',dtime_clm,' and clock dtime ',dtime_sync,' never align'
        rc = ESMF_FAILURE
        return
     end if
@@ -583,7 +574,7 @@ contains
     convCIM  = "CIM"
     purpComp = "Model Component Simulation Description"
     call ESMF_AttributeAdd(comp, convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "ShortName", "CLM", convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "ShortName", "CTSM", convention=convCIM, purpose=purpComp, rc=rc)
     call ESMF_AttributeSet(comp, "LongName", "Community Land Model", convention=convCIM, purpose=purpComp, rc=rc)
     call ESMF_AttributeSet(comp, "Description", "Community Land Model", convention=convCIM, purpose=purpComp, rc=rc)
     call ESMF_AttributeSet(comp, "ReleaseDate", "2017", convention=convCIM, purpose=purpComp, rc=rc)
@@ -622,11 +613,11 @@ contains
     type(ESMF_State)       :: importState, exportState
     character(ESMF_MAXSTR) :: cvalue
     character(ESMF_MAXSTR) :: case_name      ! case name
-    integer                :: ymd            ! CLM current date (YYYYMMDD)
-    integer                :: yr             ! CLM current year
-    integer                :: mon            ! CLM current month
-    integer                :: day            ! CLM current day
-    integer                :: tod            ! CLM current time of day (sec)
+    integer                :: ymd            ! CTSM current date (YYYYMMDD)
+    integer                :: yr             ! CTSM current year
+    integer                :: mon            ! CTSM current month
+    integer                :: day            ! CTSM current day
+    integer                :: tod            ! CTSM current time of day (sec)
     integer                :: ymd_sync       ! Sync date (YYYYMMDD)
     integer                :: yr_sync        ! Sync current year
     integer                :: mon_sync       ! Sync current month
@@ -641,7 +632,7 @@ contains
     logical                :: rof_prognostic ! .true. => running with a prognostic ROF model
     logical                :: glc_present    ! .true. => running with a non-stub GLC model
     real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
-    real(r8)               :: caldayp1       ! clm calday plus dtime offset
+    real(r8)               :: caldayp1       ! ctsm calday plus dtime offset
     integer                :: lbnum          ! input to memory diagnostic
     integer                :: g,i            ! counters
     real(r8)               :: calday         ! calendar day for nstep
@@ -794,10 +785,10 @@ contains
        endif
 
        !--------------------------------
-       ! Run clm
+       ! Run ctsm
        !--------------------------------
 
-       call t_barrierf('sync_clm_run1', mpicom)
+       call t_barrierf('sync_ctsm_run1', mpicom)
 
        call t_startf ('shr_orb_decl')
        calday = get_curr_calday()
@@ -805,7 +796,7 @@ contains
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
        call t_stopf ('shr_orb_decl')
 
-       call t_startf ('clm_run')
+       call t_startf ('ctsm_run')
 
        ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
        ! the timestep and is preferred for restart file names
@@ -818,7 +809,7 @@ contains
 
        call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
 
-       call t_stopf ('clm_run')
+       call t_stopf ('ctsm_run')
 
        !--------------------------------
        ! Pack export state
@@ -832,18 +823,18 @@ contains
        call t_stopf ('lc_lnd_export')
 
        !--------------------------------
-       ! Advance clm time step
+       ! Advance ctsm time step
        !--------------------------------
 
-       call t_startf ('lc_clm2_adv_timestep')
+       call t_startf ('lc_ctsm2_adv_timestep')
        call advance_timestep()
-       call t_stopf ('lc_clm2_adv_timestep')
+       call t_stopf ('lc_ctsm2_adv_timestep')
 
     end do
 
     ! Check that internal clock is in sync with master clock
     ! Note that the driver clock has not been updated yet - so at this point
-    ! CLM is actually 1 coupling intervals ahead of the driver clock
+    ! CTSM is actually 1 coupling intervals ahead of the driver clock
 
     call get_curr_date( yr, mon, day, tod, offset=-2*dtime )
     ymd = yr*10000 + mon*100 + day
@@ -857,10 +848,10 @@ contains
     call shr_cal_ymd2date(yr_sync, mon_sync, day_sync, ymd_sync)
 
     if ( (ymd /= ymd_sync) .and. (tod /= tod_sync) ) then
-       write(iulog,*)' clm ymd=',ymd     ,'  clm tod= ',tod
+       write(iulog,*)'ctsm ymd=',ymd     ,' ctsm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        rc = ESMF_FAILURE
-       call ESMF_LogWrite(subname//" CLM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR, rc=dbrc)
+       call ESMF_LogWrite(subname//" CTSM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR, rc=dbrc)
     end if
 
     !--------------------------------
@@ -1042,7 +1033,7 @@ contains
 
     if (masterproc) then
        write(iulog,F91)
-       write(iulog,F00) 'CLM: end of main integration loop'
+       write(iulog,F00) 'CTSM: end of main integration loop'
        write(iulog,F91)
     end if
 
