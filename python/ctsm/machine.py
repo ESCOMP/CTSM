@@ -5,7 +5,7 @@ import logging
 from collections import namedtuple
 from ctsm.joblauncher.job_launcher_factory import \
     create_job_launcher, JOB_LAUNCHER_NOBATCH
-from CIME.utils import get_charge_account  # pylint: disable=import-error
+from CIME.utils import get_project  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -130,5 +130,5 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
                    job_launcher=job_launcher)
 
 def _get_account():
-    account = get_charge_account()
+    account = get_project()
     return account
