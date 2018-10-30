@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.11     erik 10/30/2018 Bring fix for transient Bgc/Sp to release branch (from ctsm1.0.dev013)
 release-clm5.0.10    sacks 10/29/2018 Bring in CMIP6 compset modifiers, output usermods and bit-for-bit fixes from dev014 and dev015
   ctsm1.0.dev015    sacks 10/28/2018 CMIP6 compset modifiers, usermods for typical output, and other output enhancements
   ctsm1.0.dev014    sacks 10/26/2018 Miscellaneous minor, bit-for-bit bug fixes
