@@ -1,4 +1,92 @@
 ===============================================================
+Tag name:  release-clm5.0.11
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Oct 30 10:50:49 MDT 2018
+One-line Summary: Bring fix for transient Bgc/Sp to release branch (from ctsm1.0.dev013)
+
+Purpose of this version:
+------------------------
+
+Fix transient non-crop cases that had constant crop area so that crop area will change in time
+(and hence natural veg area will also change corresponding to it).
+
+Also bring in changes to update mksurfdata_map to handle SSP-RCP future scenarios. Right now
+it can handle SSP5-8.5 out of the box. Also add a new test for that.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #538
+   #538 -- In transient pft simulations with use_crop=.false., %crop does not advance from 1850 value
+
+Science changes since: release-clm5.0.10
+   Fix so crop areas will change beyond 1850 for transient Bgc or Sp cases for clm45/clm50
+
+Software changes since: release-clm5.0.10
+   None
+
+Changes to User Interface since: release-clm5.0.10
+  New -ssp_rcp option to mksurfdata.pl
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.10
+
+Changes answers relative to baseline: Yes, for transient clm45/clm50 Bgc/SP
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 transient Bgc/Sp
+    - what platforms/compilers: All
+    - nature of change: crop areas now increawse in time rather than remaining at 1850 levels
+    Simulation to demonstrate new climate:
+         - casename: dll/clm50_r267_1deg_GSWP3V1_iso_hist_nocrop_transientfix
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime_cesm2_0_rel_05
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev013
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #552 -- Move fix for transient non-crop to release-clm5.0 branch
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.10
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Oct 29 06:55:41 MDT 2018
