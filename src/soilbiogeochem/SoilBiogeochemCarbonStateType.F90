@@ -25,7 +25,7 @@ module SoilBiogeochemCarbonStateType
      
      ! all c pools involved in decomposition
      real(r8), pointer :: decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
-     real(r8), pointer :: decomp_soil_vr_col(:,:)      ! (gC/m3) vertically-resolved decomposing total soil c pool
+     real(r8), pointer :: decomp_soilc_vr_col  (:,:)   ! (gC/m3) vertically-resolved decomposing total soil c pool
      real(r8), pointer :: ctrunc_vr_col        (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
 
      ! summary (diagnostic) state variables, not involved in mass balance
@@ -103,8 +103,8 @@ contains
 
     allocate(this%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
     this%decomp_cpools_vr_col(:,:,:)= nan
-    allocate(this%decomp_soil_vr_col(begc:endc,1:nlevdecomp_full))  
-    this%decomp_soil_vr_col(:,:)= nan
+    allocate(this%decomp_soilc_vr_col(begc:endc,1:nlevdecomp_full))  
+    this%decomp_soilc_vr_col(:,:)= nan
 
     allocate(this%ctrunc_col     (begc :endc)) ; this%ctrunc_col     (:) = nan
     if ( .not. use_fates ) then
@@ -149,10 +149,10 @@ contains
     if (carbon_type == 'c12') then
 
        if ( nlevdecomp_full > 1 ) then
-          this%decomp_soil_vr_col(begc:endc,:) = spval
+          this%decomp_soilc_vr_col(begc:endc,:) = spval
           call hist_addfld2d (fname='SOILC_vr', units='gC/m^3',  type2d='levsoi', &
                avgflag='A', long_name='SOIL C (vertically resolved)', &
-               ptr_col=this%decomp_soil_vr_col)
+               ptr_col=this%decomp_soilc_vr_col)
        end if
 
        this%decomp_cpools_col(begc:endc,:) = spval
@@ -228,10 +228,10 @@ contains
     if ( carbon_type == 'c13' ) then
 
        if ( nlevdecomp_full > 1 ) then
-          this%decomp_soil_vr_col(begc:endc,:) = spval
+          this%decomp_soilc_vr_col(begc:endc,:) = spval
           call hist_addfld2d (fname='C13_SOILC_vr', units='gC13/m^3',  type2d='levsoi', &
                avgflag='A', long_name='C13 SOIL C (vertically resolved)', &
-               ptr_col=this%decomp_soil_vr_col, default='inactive')
+               ptr_col=this%decomp_soilc_vr_col, default='inactive')
        end if
 
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
@@ -297,10 +297,10 @@ contains
     if ( carbon_type == 'c14' ) then
 
        if ( nlevdecomp_full > 1 ) then
-          this%decomp_soil_vr_col(begc:endc,:) = spval
+          this%decomp_soilc_vr_col(begc:endc,:) = spval
           call hist_addfld2d (fname='C14_SOILC_vr', units='gC14/m^3',  type2d='levsoi', &
                avgflag='A', long_name='C14 SOIL C (vertically resolved)', &
-               ptr_col=this%decomp_soil_vr_col)
+               ptr_col=this%decomp_soilc_vr_col)
        end if
 
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
@@ -804,9 +804,6 @@ contains
     integer  :: c,j,k,l       ! indices
     integer  :: fc            ! filter indices
     real(r8) :: maxdepth      ! depth to integrate soil variables
-    integer           :: i_soil1        ! ndecomp_pools index for SOIL1
-    integer           :: i_soil2        ! ndecomp_pools index for SOIL2
-    integer           :: i_soil3        ! ndecomp_pools index for SOIL3
     !-----------------------------------------------------------------------
 
     ! vertically integrate each of the decomposing C pools
@@ -859,30 +856,25 @@ contains
 
     endif
 
-    ! Find ndecomp_pools indices for SOIL1, SOIL2, and SOIL3 and add together to
-    ! produce vertically-resolved decomposing total soil c pool
-    do l  = 1, ndecomp_pools
-       if ( nlevdecomp_full > 1 ) then
-          if (trim(decomp_cascade_con%decomp_pool_name_history(l)) == "SOIL1") then
-            i_soil1 = l
-          end if
-          if (trim(decomp_cascade_con%decomp_pool_name_history(l)) == "SOIL2") then
-            i_soil2 = l
-          end if
-          if (trim(decomp_cascade_con%decomp_pool_name_history(l)) == "SOIL3") then
-            i_soil3 = l
-          end if
-       end if
-    end do
+    ! Add soil carbon pools together to produce vertically-resolved decomposing total soil c pool
     if ( nlevdecomp_full > 1 ) then
        do j = 1, nlevdecomp
           do fc = 1,num_allc
              c = filter_allc(fc)
-             this%decomp_soil_vr_col(c,j) = this%decomp_cpools_vr_col(c,j,i_soil1) + &
-                                            this%decomp_cpools_vr_col(c,j,i_soil2) + &
-                                            this%decomp_cpools_vr_col(c,j,i_soil3)
+             this%decomp_soilc_vr_col(c,j) = 0._r8
           end do
-        end do
+       end do
+       do l = 1, ndecomp_pools
+          if ( decomp_cascade_con%is_soil(l) ) then
+             do j = 1, nlevdecomp
+                do fc = 1,num_allc
+                   c = filter_allc(fc)
+                   this%decomp_soilc_vr_col(c,j) = this%decomp_soilc_vr_col(c,j) + &
+                        this%decomp_cpools_vr_col(c,j,l)
+                end do
+             end do
+          end if
+       end do
     end if
 
     ! truncation carbon
