@@ -125,7 +125,7 @@ contains
     use CropType          , only : crop_type
     use landunit_varcon   , only : istcrop
     use clm_varpar        , only : cft_size, cft_lb, cft_ub
-    use clm_varctl        , only : use_crop, create_crop_landunit
+    use clm_varctl        , only : use_crop
     use surfrdUtilsMod    , only : collapse_crop_types
     use subgridWeightsMod , only : set_landunit_weight
     implicit none
@@ -166,11 +166,13 @@ contains
     allocate(fertcft_cur(bounds%begg:bounds%endg, cft_lb:cft_ub))
     call fertcft%get_current_data(fertcft_cur)
 
-    ! Call collapse_crop_types when we read 78-pft datasets (ie cft_size > 2),
-    ! while running with use_crop = .false.
-    ! This call also requires create_crop_landunit = .true.
-    ! Same if-statement and call appear in surfrdMod.F90.
-    if (.not. use_crop .and. create_crop_landunit .and. cft_size > 2) then
+    ! Call collapse_crop_types when we read 78-pft datasets (ie cft_size > 2).
+    ! For use_crop = .false. we collapse from 78 to 16 pfts.
+    ! For use_crop = .true. we collapse to the known list of crops and should
+    ! end up with more than 16 pfts.
+    ! The call collapse_crop_types appears in subroutine surfrd_veg_all twice:
+    ! once for use_crop = .false. and once later for use_crop = .true.
+    if (cft_size > 2) then
        call collapse_crop_types(wtcft_cur, fertcft_cur, cft_size, bounds%begg, bounds%endg, verbose = .false.)
     end if
 
