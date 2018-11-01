@@ -1145,7 +1145,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D" grid="f19_f19_mg17" compset="I2010Clm50S" testmods="clm/lm50cam6LndTuningMode">
+  <test name="SMS_D" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
