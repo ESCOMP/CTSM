@@ -102,6 +102,7 @@
     <default_value>UNSET</default_value>
     <values>
       <!-- Use rcp4.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
+      <value compset="^2010_"		>2010_control</value>
       <value compset="^2000_"		>2000_control</value>
       <value compset="^1850_"		>1850_control</value>
       <value compset="^HIST_"		>20thC_transient</value>

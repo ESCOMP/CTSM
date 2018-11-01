@@ -75,7 +75,7 @@ REQUIRED OPTIONS
                               "-res list" to list valid resolutions.
                               (default: 0.9x1.25)
      -sim_year "year"         Year to simulate for input datasets
-                              (i.e. 1850, 2000, 1850-2000, 1850-2100)
+                              (i.e. 1850, 2000, 2010, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
                               (default 2000)
 OPTIONS
@@ -2403,7 +2403,7 @@ sub setup_logic_initial_conditions {
     my $done = 2;
     my $use_init_interp_default = $nl->get_value($useinitvar);
     if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
-      $use_init_interp_default = ".false.";
+      $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
     }
     $settings{$useinitvar} = $use_init_interp_default;
     do {
