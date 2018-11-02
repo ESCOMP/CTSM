@@ -2402,10 +2402,11 @@ sub setup_logic_initial_conditions {
     my $try = 0;
     my $done = 2;
     my $use_init_interp_default = $nl->get_value($useinitvar);
+    $settings{$useinitvar} = $use_init_interp_default;
     if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
       $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
+      $settings{$useinitvar} = ".false.";
     }
-    $settings{$useinitvar} = $use_init_interp_default;
     do {
        $try++;
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );
@@ -2420,8 +2421,11 @@ sub setup_logic_initial_conditions {
           #}
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_sim_years" );
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
+          my $close = $nl->get_value("init_interp_how_close");
           foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
-             if ( abs($st_year - $sim_yr) < $nl->get_value("init_interp_how_close") ) {
+             my $how_close = abs($st_year - $sim_yr);
+             if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
+                $close = $how_close;
                 $settings{'sim_year'} = $sim_yr;
              }
           } 
