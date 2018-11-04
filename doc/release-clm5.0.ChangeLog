@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.12
 Originator(s):  erik (Erik Kluzek)
-Date: Fri Nov  2 10:46:16 MDT 2018
+Date: Sat Nov  3 21:19:25 MDT 2018
 One-line Summary: New IC files for clm45/clm50 coupled cases, add 2010 compset
 
 Purpose of this version:
@@ -28,8 +28,10 @@ CTSM Master Tag This Corresponds To: ctsm1.0.dev015 (with changes)
 Summary of changes:
 -------------------
 
-Issues fixed (include CTSM Issue #): #544
+Issues fixed (include CTSM Issue #): #558 #544 $504
+   #558 Replace a failing test in aux_cime_baselines
    #544 Transient cases coupled to CAM are matching the wrong IC file (2000 instead of 1850)
+   $504 Add a 2010 use_case
 
 Science changes since: release-clm5.0.11
    * None
