@@ -166,15 +166,13 @@ contains
     allocate(fertcft_cur(bounds%begg:bounds%endg, cft_lb:cft_ub))
     call fertcft%get_current_data(fertcft_cur)
 
-    ! Call collapse_crop_types when we read 78-pft datasets (ie cft_size > 2).
-    ! For use_crop = .false. we collapse from 78 to 16 pfts.
-    ! For use_crop = .true. we collapse to the known list of crops and should
-    ! end up with more than 16 pfts.
-    ! The call collapse_crop_types appears in subroutine surfrd_veg_all twice:
-    ! once for use_crop = .false. and once later for use_crop = .true.
-    if (cft_size > 2) then
-       call collapse_crop_types(wtcft_cur, fertcft_cur, cft_size, bounds%begg, bounds%endg, verbose = .false.)
-    end if
+    ! Call collapse_crop_types:
+    ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
+    !    configuration
+    ! For use_crop = .true. most likely collapsing 78 to the list of crops for
+    !    which the CLM includes parameterizations
+    ! The call collapse_crop_types also appears in subroutine surfrd_veg_all
+    call collapse_crop_types(wtcft_cur, fertcft_cur, cft_size, bounds%begg, bounds%endg, verbose = .false.)
 
     allocate(col_set(bounds%begc:bounds%endc))
     col_set(:) = .false.

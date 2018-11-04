@@ -780,20 +780,14 @@ contains
 
     ! Check the file format for CFT's and handle accordingly
     if ( actual_numcft > 0 ) then
-       ! Full crop on file and in CLM
-       if ( create_crop_landunit .and. actual_numcft > 2 .and. use_crop)then
-          call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
-       ! Generic crop in file and generic crop in model
-       else if ( create_crop_landunit .and. actual_numcft == 2 .and. cft_size == 2 )then
-          call surfrd_cftformat( ncid, begg, endg, wt_cft, fert_cft, cft_size, natpft_size )  ! Format where CFT's is read in a seperate landunit
-       ! Full crop in file, but model is only with generic crop
-       else if ( create_crop_landunit .and. actual_numcft > 2 .and. .not. use_crop)then
+       if ( create_crop_landunit )then
+          ! Cases: Full crop in file and in model
+          !        Generic crop in file and in model
+          !        Full crop in file, generic crop in model
           cftsize = actual_numcft
           allocate(array2DCFT (begg:endg,cft_lb:cftsize-1+cft_lb))
           allocate(array2DFERT(begg:endg,cft_lb:cftsize-1+cft_lb))
           call surfrd_cftformat( ncid, begg, endg, array2DCFT, array2DFERT, cftsize, natpft_size )
-          call collapse_crop_types(array2DCFT(begg:endg, :), array2DFERT(begg:endg, :), cftsize, begg, endg, &
-                                   verbose=.true., sumto=100._r8)
           wt_cft  (begg:,cft_lb:) = array2DCFT (begg:,cft_lb:cft_ub)
           fert_cft(begg:,cft_lb:) = array2DFERT(begg:,cft_lb:cft_ub)
           deallocate(array2DCFT)
@@ -832,18 +826,24 @@ contains
                ' must also have a separate crop landunit, and vice versa)'//&
                errMsg(sourcefile, __LINE__))
     end if
-    ! Convert from percent to fraction, check sums of nat vegetation add to 1
-    if ( cft_size > 0 )then
-       wt_cft(begg:endg,:) = wt_cft(begg:endg,:) / 100._r8
-       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
-    end if
+    ! Convert from percent to fraction
     wt_lunit(begg:endg,istsoil) = wt_lunit(begg:endg,istsoil) / 100._r8
     wt_lunit(begg:endg,istcrop) = wt_lunit(begg:endg,istcrop) / 100._r8
     wt_nat_patch(begg:endg,:)   = wt_nat_patch(begg:endg,:) / 100._r8
-    call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
+    wt_cft(begg:endg,:) = wt_cft(begg:endg,:) / 100._r8
 
-    ! Collapse crop landunits down when prognostic crops are on
-    if (use_crop) then
+    ! Check sum of vegetation adds to 1
+    call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
+    ! if ( use_fates ) wt_cft = 0 because called convert_cft_to_pft, else...
+    if ( .not. use_fates ) then
+       ! Check sum of vegetation adds to 1
+       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
+       ! Call collapse_crop_types:
+       ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
+       !    configuration
+       ! For use_crop = .true. most likely collapsing 78 to the list of crops for
+       !    which the CLM includes parameterizations
+       ! The call collapse_crop_types also appears in subroutine dyncrop_interp
        call collapse_crop_types(wt_cft(begg:endg, :), fert_cft(begg:endg, :), cft_size, begg, endg, verbose=.true.)
     end if
 
