@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc>Conditions to simulate 2010 land-use</use_case_desc>
+
+<sim_year>2000</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false.">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cn"   >2010</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cn"   >2010</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cndv" >2010</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cndv" >2010</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." >2010</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_5" use_cn=".true." >2010</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." >2010</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm5_0" use_cn=".true." >2010</stream_year_last_ndep>
+
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." >2010</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." >2010</stream_year_last_popdens>
+
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." >2010</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." >2010</stream_year_last_popdens>
+
+<stream_year_first_urbantv phys="clm5_0" >2010</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm5_0" >2010</stream_year_last_urbantv>
+
+</namelist_defaults>

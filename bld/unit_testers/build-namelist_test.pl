@@ -1215,6 +1215,7 @@ my @use_cases = ( "1850-2100_rcp2.6_transient",
                   "1850-2100_rcp8.5_transient",
                   "1850_control",
                   "2000_control",
+                  "2010_control",
                   "20thC_transient",
                  );
 foreach my $res ( @glc_res ) {

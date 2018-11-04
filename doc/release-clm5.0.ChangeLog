@@ -1,4 +1,103 @@
 ===============================================================
+Tag name:  release-clm5.0.12
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Nov  3 21:19:25 MDT 2018
+One-line Summary: New IC files for clm45/clm50 coupled cases, add 2010 compset
+
+Purpose of this version:
+------------------------
+
+Improve logic for picking initial condition files (finidat). Add new finidat files
+for when coupled to CAM (LND_TUNING_MODE=clm*_cam6.0) for both 1850 (from CMIP6 B1850 case)
+and 2000/2010 (from CMIP6 BHIST case).
+
+Logic for picking finidat files now will pick a finidat file that it interpolates from
+provided the default settings allow use_init_interp to be true. This makes it more likely
+to pick a file to startup from if at all possible, rather than dying with an error that
+a finidat couldn't be found (which the user could override to get the new behavior by adding
+use_init_interp=T to their user_nl_clm).
+
+In namelist settings for finding finidat files for sim_yr=2000, be explict on which tuning mode
+is being matched and duplicate the clm4_5/clm5_0 GSWP3v1/CRUv7 matches. This gets it to match
+the correct ones and allows them to be distinquished in the future.
+
+Added CLM_NML_USE_CASE=2010_control, and settings for sim_yr=2010, which is needed for some new CAM compsets.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev015 (with changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #558 #544 $504
+   #558 Replace a failing test in aux_cime_baselines
+   #544 Transient cases coupled to CAM are matching the wrong IC file (2000 instead of 1850)
+   $504 Add a 2010 use_case
+
+Science changes since: release-clm5.0.11
+   * None
+
+Software changes since: release-clm5.0.11
+   * Improve logic for finding initial conditions, don't abort if can find a file to interpolate from and interpolation is allowed
+
+Changes to User Interface since: release-clm5.0.11
+   * Added 2010_control to CLM_NML_USE_CASE
+   * Added -sim_yr 2010 to CLM_BLDNML_OPTS
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (106 tests differ from baseline because of new IC files)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.11
+
+Changes answers relative to baseline: No not for aux_clm tests!  Will change answers when coupled to CAM with new IC files
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: LND_TUNING_MODE=clm#_#_cam6.0
+    - what platforms/compilers: All
+    - nature of change: Updated initial conditions that use CMIP6 BHIST and B1850 
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.00
+   mosart: release-cesm2.0.00
+   cime:   cime_cesm2_0_rel_05
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #555
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #555 -- New initial conditions when coupled to CAM
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.11
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Oct 30 10:50:49 MDT 2018
