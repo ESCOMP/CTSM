@@ -14,6 +14,41 @@ module test_surfrdUtils
 contains
   
   @Test
+  subroutine test_collapse_crop_types_16_to_16()
+     use pftconMod, only : pftcon, nc3crop, nc3irrig
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     wt_cft(begg:,1) = 25.0_r8
+     wt_cft(begg:,2) = 75.0_r8
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,1) = 25.0_r8  ! these values do not matter; just make sure
+     fert_cft(begg:,2) = 75.0_r8  ! that they come back the same in this test
+     nc3crop     = 15
+     nc3irrig    = nc3crop + 1
+
+     ! Collapse crop types
+     ! HOW DO I KNOW VALUES THE SUBROUTINE GETS FOR irrigate, maxveg, use_crop?
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,nc3crop), (/25_r8,25_r8/))
+     @assertEqual(wt_cft(begg:,nc3irrig), (/75_r8,75_r8/))
+     @assertEqual(fert_cft(begg:,nc3crop), (/25_r8,25_r8/))
+     @assertEqual(fert_cft(begg:,nc3irrig), (/75_r8,75_r8/))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_16_to_16
+
+  @Test
   subroutine test_convert_cft_to_pft_with_zerocft()
      use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
      use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
