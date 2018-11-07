@@ -17,6 +17,7 @@ module CNDVDriverMod
   use clm_varcon               , only : grlnd
   use LandunitType             , only : lun                
   use PatchType                , only : patch                
+  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -38,7 +39,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNDVDriver(bounds, &
        num_natvegp, filter_natvegp, kyr, &
-       atm2lnd_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
+       atm2lnd_inst, wateratm2lndbulk_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
     !
     ! !DESCRIPTION:
     ! Drives the annual dynamic vegetation that works with CN
@@ -53,6 +54,7 @@ contains
     integer                         , intent(inout) :: filter_natvegp(:)       ! filter for naturally-vegetated patches
     integer                         , intent(in)    :: kyr                     ! used in routine climate20 below
     type(atm2lnd_type)              , intent(inout) :: atm2lnd_inst
+    type(wateratm2lndbulk_type)              , intent(inout) :: wateratm2lndbulk_inst
     type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
     type(dgvs_type)                 , intent(inout) :: dgvs_inst
@@ -107,7 +109,7 @@ contains
       ! present, we do not use the natveg filter in this subroutine.
 
       call Establishment(bounds, &
-           atm2lnd_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
+           atm2lnd_inst, wateratm2lndbulk_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
 
       ! Reset dgvm variables needed in next yr (too few to keep subr. dvreset)
 

@@ -12,8 +12,9 @@ import logging
 import os
 import subprocess
 import sys
+from threading import Timer
 
-from .global_constants import LOCAL_PATH_INDICATOR, LOG_FILE_NAME
+from .global_constants import LOCAL_PATH_INDICATOR
 
 # ---------------------------------------------------------------------
 #
@@ -64,13 +65,15 @@ def last_n_lines(the_string, n_lines, truncation_message=None):
 
     lines = the_string.splitlines(True)
     if len(lines) <= n_lines:
-        return the_string
+        return_val = the_string
     else:
         lines_subset = lines[-n_lines:]
         str_truncated = ''.join(lines_subset)
         if truncation_message:
             str_truncated = truncation_message + '\n' + str_truncated
-        return str_truncated
+        return_val = str_truncated
+
+    return return_val
 
 
 def indent_string(the_string, indent_level):
@@ -118,9 +121,9 @@ def str_to_bool(bool_str):
     """
     value = None
     str_lower = bool_str.lower()
-    if (str_lower == 'true') or (str_lower == 't'):
+    if str_lower in ('true', 't'):
         value = True
-    elif (str_lower == 'false') or (str_lower == 'f'):
+    elif str_lower in ('false', 'f'):
         value = False
     if value is None:
         msg = ('ERROR: invalid boolean string value "{0}". '
@@ -198,6 +201,32 @@ def expand_local_url(url, field):
 # subprocess
 #
 # ---------------------------------------------------------------------
+
+# Give the user a helpful message if we detect that a command seems to
+# be hanging.
+_HANGING_SEC = 300
+
+
+def _hanging_msg(working_directory, command):
+    print("""
+
+Command '{command}'
+from directory {working_directory}
+has taken {hanging_sec} seconds. It may be hanging.
+
+The command will continue to run, but you may want to abort
+manage_externals with ^C and investigate. A possible cause of hangs is
+when svn or git require authentication to access a private
+repository. On some systems, svn and git requests for authentication
+information will not be displayed to the user. In this case, the program
+will appear to hang. Ensure you can run svn and git manually and access
+all repositories without entering your authentication information.
+
+""".format(command=command,
+           working_directory=working_directory,
+           hanging_sec=_HANGING_SEC))
+
+
 def execute_subprocess(commands, status_to_caller=False,
                        output_to_caller=False):
     """Wrapper around subprocess.check_output to handle common
@@ -212,15 +241,19 @@ def execute_subprocess(commands, status_to_caller=False,
     status as an error and raises an exception.
 
     """
-    msg = 'In directory: {0}\nexecute_subprocess running command:'.format(
-        os.getcwd())
+    cwd = os.getcwd()
+    msg = 'In directory: {0}\nexecute_subprocess running command:'.format(cwd)
     logging.info(msg)
-    logging.info(commands)
+    commands_str = ' '.join(commands)
+    logging.info(commands_str)
     return_to_caller = status_to_caller or output_to_caller
     status = -1
     output = ''
+    hanging_timer = Timer(_HANGING_SEC, _hanging_msg,
+                          kwargs={"working_directory": cwd,
+                                  "command": commands_str})
+    hanging_timer.start()
     try:
-        logging.info(' '.join(commands))
         output = subprocess.check_output(commands, stderr=subprocess.STDOUT,
                                          universal_newlines=True)
         log_process_output(output)
@@ -246,15 +279,15 @@ def execute_subprocess(commands, status_to_caller=False,
         if not return_to_caller:
             msg_context = ('Process did not run successfully; '
                            'returned status {0}'.format(error.returncode))
-            msg = failed_command_msg(
-                msg_context,
-                commands,
-                output=error.output)
+            msg = failed_command_msg(msg_context, commands,
+                                     output=error.output)
             logging.error(error)
             logging.error(msg)
             log_process_output(error.output)
             fatal_error(msg)
         status = error.returncode
+    finally:
+        hanging_timer.cancel()
 
     if status_to_caller and output_to_caller:
         ret_value = (status, output)
@@ -293,8 +326,5 @@ def failed_command_msg(msg_context, command, output=None):
 
     if output:
         errmsg += 'See above for output from failed command.\n'
-
-    errmsg += 'Please check the log file {log} for more details.'.format(
-        log=LOG_FILE_NAME)
 
     return errmsg

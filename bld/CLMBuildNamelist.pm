@@ -1569,12 +1569,15 @@ sub process_namelist_inline_logic {
   setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_fertilizer($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_grainproduct($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
+    setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  }
   setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1737,11 +1740,20 @@ sub process_namelist_inline_logic {
   #####################################
   setup_logic_irrigation_parameters($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ########################################
+  # namelist group: water_tracers_inparm #
+  ########################################
+  setup_logic_water_tracers($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
   setup_logic_hydrology_switches($nl, $physv);
 
+  #########################################
+  # namelist group: clm_initinterp_inparm #
+  #########################################
+  setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1873,7 +1885,11 @@ sub setup_logic_irrigate {
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate',
                 'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'} );
-    $nl_flags->{'irrigate'} = lc($nl->get_value('irrigate'));
+    if ( &value_is_true($nl->get_value('irrigate') ) ) {
+       $nl_flags->{'irrigate'} = ".true."
+    } else {
+       $nl_flags->{'irrigate'} = ".false."
+    }
   }
 }
 
@@ -2067,8 +2083,23 @@ sub setup_logic_create_crop_landunit {
     if ( &value_is_true($nl_flags->{'use_fates'}) && &value_is_true($nl->get_value($var)) ) {
          $log->fatal_error( "$var is true and yet use_fates is being set, which contradicts that (use_fates requires $var to be .false." );
     }
+    if ( (! &value_is_true($nl_flags->{'use_fates'})) && (! &value_is_true($nl->get_value($var))) ) {
+         $log->fatal_error( "$var is false which is ONLY allowed when FATES is being used" );
+    }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_subgrid {
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   my $var = 'run_zero_weight_urban';
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+}
+
 #-------------------------------------------------------------------------------
 
 sub setup_logic_cnfire {
@@ -2103,7 +2134,7 @@ sub setup_logic_cnfire {
 sub setup_logic_cnprec {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  if ( $physv->as_long() >= $physv->as_long("clm5_0") && &value_is_true($nl->get_value('use_cn')) ) {
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl_flags->{'use_cn'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
                  $nl, 'ncrit', 'use_cn'=>$nl_flags->{'use_cn'});
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults,
@@ -2363,7 +2394,10 @@ sub setup_logic_initial_conditions {
     }
     if ($opts->{'ignore_ic_date'}) {
       if ( &value_is_true($nl_flags->{'use_crop'}) ) {
-        $log->fatal_error("using ignore_ic_date is incompatable with crop!");
+        $log->warning("using ignore_ic_date is incompatable with crop! If you choose to ignore this error, " . 
+                      "the counters since planting for crops will be messed up. \nSo you should ignore at " . 
+                      "least the first season for crops. And since it will impact the 20 year means, ideally the " .
+                      "first 20 years should be ignored.");
       }
     } elsif ($opts->{'ignore_ic_year'}) {
        $settings{'ic_md'} = $ic_date;
@@ -2386,9 +2420,9 @@ sub setup_logic_initial_conditions {
           # Delete any date settings, except for crop
           delete( $settings{'ic_ymd'} );
           delete( $settings{'ic_md'}  );
-          if ( &value_is_true($nl_flags->{'use_crop'}) ) {
-             $settings{'ic_md'} = $ic_date;
-          }
+          #if ( &value_is_true($nl_flags->{'use_crop'}) ) {
+             #$settings{'ic_md'} = $ic_date;
+          #}
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_sim_years" );
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
           foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
@@ -2544,9 +2578,6 @@ sub setup_logic_do_transient_crops {
       if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
          $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
       }
-      elsif (!&value_is_true($nl->get_value('use_crop'))) {
-         $cannot_be_true = "$var can only be set to true when running with use_crop = true";
-      }
       elsif (&value_is_true($nl->get_value('use_fates'))) {
          # In principle, use_fates should be compatible with
          # do_transient_crops. However, this hasn't been tested, so to be safe,
@@ -2570,6 +2601,13 @@ sub setup_logic_do_transient_crops {
 
       if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
          $log->fatal_error($cannot_be_true);
+      }
+
+      my $dopft = "do_transient_pfts";
+      # Make sure the value agrees with the do_transient_pft flag
+      if ( (  &value_is_true($nl->get_value($var))) && (! &value_is_true($nl->get_value($dopft))) ||
+           (! &value_is_true($nl->get_value($var))) && (  &value_is_true($nl->get_value($dopft))) ) {
+         $log->fatal_error("$var and $dopft do NOT agree and need to");
       }
 
    }
@@ -2754,6 +2792,20 @@ sub setup_logic_irrigation_parameters {
         }
      }
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_water_tracers {
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
+      my $var;
+      foreach $var ("enable_water_tracer_consistency_checks",
+                    "enable_water_isotopes") {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      }
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -3025,9 +3077,12 @@ sub setup_logic_fertilizer {
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     $nl_flags->{'use_crop'} = $nl->get_value('use_crop');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fertilizer',
      'use_crop'=>$nl_flags->{'use_crop'} );
+     my $use_fert = $nl->get_value('use_fertilizer');
+     if ( (! &value_is_true($nl_flags->{'use_crop'})) && &value_is_true($use_fert) ) {
+       $log->fatal_error("use_ferilizer can NOT be on without prognostic crop\n" );
+     }
   }
 }
 
@@ -3040,9 +3095,11 @@ sub setup_logic_grainproduct {
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     $nl_flags->{'use_crop'} = $nl->get_value('use_crop');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_grainproduct',
      'use_crop'=>$nl_flags->{'use_crop'}, 'phys'=>$physv->as_string() );
+     if ( (! &value_is_true($nl_flags->{'use_crop'})) && &value_is_true($nl->get_value('use_grainproduct') ) ) {
+       $log->fatal_error("use_grainproduct can NOT be on without prognostic crop\n" );
+     }
   }
 }
 
@@ -3705,6 +3762,26 @@ sub setup_logic_lnd2atm {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_initinterp {
+   #
+   # Options related to init_interp
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      my $var = 'init_interp_method';
+      if ( &value_is_true($nl->get_value("use_init_interp"))) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+      } else {
+         if (defined($nl->get_value($var))) {
+            $log->fatal_error("$var can only be set if use_init_interp is true");
+         }
+      }
+   }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_fates {
     #
     # Set some default options related to Ecosystem Demography
@@ -3768,7 +3845,8 @@ sub write_output_files {
                  soilwater_movement_inparm rooting_profile_inparm
                  soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-                 cnprecision_inparm clm_glacier_behavior crop irrigation_inparm);
+                 cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
+                 water_tracers_inparm);
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
     #             finidat_consistency_checks dynpft_consistency_checks);

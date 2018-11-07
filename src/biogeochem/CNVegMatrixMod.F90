@@ -102,7 +102,7 @@ contains
      
      real(r8):: dt        ! time step (seconds)
      real(r8):: secspyear        ! time step (seconds)
-     real(r8),dimension(1:3*nvegcpool) :: tempdump
+!KO     real(r8),dimension(1:3*nvegcpool) :: tempdump
  
 !	
 !
@@ -1354,34 +1354,34 @@ contains
          grainc_xfer(p)         = vegmatrixc_new(igrain_xf)
          end if
          
-         if (is_end_curr_year())then
-            tempdump(1)  = leafc(p)
-            tempdump(2)  = leafc_storage(p)
-            tempdump(3)  = leafc_xfer(p)
-            tempdump(4)  = frootc(p)
-            tempdump(5)  = frootc_storage(p)
-            tempdump(6)  = frootc_xfer(p)
-            tempdump(7)  = livestemc(p)
-            tempdump(8)  = livestemc_storage(p)
-            tempdump(9)  = livestemc_xfer(p)
-            tempdump(10) = deadstemc(p)
-            tempdump(11) = deadstemc_storage(p)
-            tempdump(12) = deadstemc_xfer(p)
-            tempdump(13) = livecrootc(p)
-            tempdump(14) = livecrootc_storage(p)
-            tempdump(15) = livecrootc_xfer(p)
-            tempdump(16) = deadcrootc(p)
-            tempdump(17) = deadcrootc_storage(p)
-            tempdump(18) = deadcrootc_xfer(p)
-            where(tempdump .lt. 1.e-8)
-               tempdump = 1.e-8
-            end where
+!KO         if (is_end_curr_year())then
+!KO            tempdump(1)  = leafc(p)
+!KO            tempdump(2)  = leafc_storage(p)
+!KO            tempdump(3)  = leafc_xfer(p)
+!KO            tempdump(4)  = frootc(p)
+!KO            tempdump(5)  = frootc_storage(p)
+!KO            tempdump(6)  = frootc_xfer(p)
+!KO            tempdump(7)  = livestemc(p)
+!KO            tempdump(8)  = livestemc_storage(p)
+!KO            tempdump(9)  = livestemc_xfer(p)
+!KO            tempdump(10) = deadstemc(p)
+!KO            tempdump(11) = deadstemc_storage(p)
+!KO            tempdump(12) = deadstemc_xfer(p)
+!KO            tempdump(13) = livecrootc(p)
+!KO            tempdump(14) = livecrootc_storage(p)
+!KO            tempdump(15) = livecrootc_xfer(p)
+!KO            tempdump(16) = deadcrootc(p)
+!KO            tempdump(17) = deadcrootc_storage(p)
+!KO            tempdump(18) = deadcrootc_xfer(p)
+!KO            where(tempdump .lt. 1.e-8)
+!KO               tempdump = 1.e-8
+!KO            end where
             
 !!!!!->           write(bounds%begp+1105000000,"(I,18E17.9)"),p,(tempdump(i),i=1,18)
 !            write(bounds%begp+1105000000,"(I,18E17.9)"),p,leafc(p),leafc_storage(p),leafc_xfer(p),frootc(p),frootc_storage(p),frootc_xfer(p),&
 !            livestemc(p),livestemc_storage(p),livestemc_xfer(p),deadstemc(p),deadstemc_storage(p),deadstemc_xfer(p),&
 !            livecrootc(p),livecrootc_storage(p),livecrootc_xfer(p),deadcrootc(p),deadcrootc_storage(p),deadcrootc_xfer(p)
-         end if
+!KO         end if
 
          if ( use_c13 ) then
           cs13_veg%leafc_patch(p)               = vegmatrixc13_new(ileaf)
@@ -1478,11 +1478,11 @@ contains
                   matrix_calloc_acc(igrain_st)  = matrix_calloc_grainst_acc(p)               
                end if
 
-               where(matrix_calloc_acc .lt. 1.e-8)
-                  tempdump(1:18) = 0
-               else where
-                  tempdump(1:18) = matrix_calloc_acc(1:18)
-               end where
+!KO               where(matrix_calloc_acc .lt. 1.e-8)
+!KO                  tempdump(1:18) = 0
+!KO               else where
+!KO                  tempdump(1:18) = matrix_calloc_acc(1:18)
+!KO               end where
 
 !               write(bounds%begp+1101000000,"(I,18E17.9)"),p,matrix_calloc_acc
 !!!!!->               write(bounds%begp+1101000000,"(I,18E17.9)"),p,(tempdump(i),i=1,18)
@@ -1506,44 +1506,44 @@ contains
                matrix_ctransfer_acc(ideadstem,ilivestem)         = matrix_ctransfer_livestem_to_deadstem_acc(p)
                matrix_ctransfer_acc(ideadcroot,ilivecroot)       = matrix_ctransfer_livecroot_to_deadcroot_acc(p)
                
-               tempdump(1)  = matrix_ctransfer_acc(ileaf_xf,ileaf_st)
-               tempdump(2)  = matrix_ctransfer_acc(ileaf,ileaf_xf)
-               tempdump(3)  = matrix_ctransfer_acc(ifroot_xf,ifroot_st)
-               tempdump(4)  = matrix_ctransfer_acc(ifroot,ifroot_xf)
-               tempdump(5)  = matrix_ctransfer_acc(ilivestem_xf,ilivestem_st)
-               tempdump(6)  = matrix_ctransfer_acc(ilivestem,ilivestem_xf)
-               tempdump(7)  = matrix_ctransfer_acc(ideadstem_xf,ideadstem_st)
-               tempdump(8)  = matrix_ctransfer_acc(ideadstem,ideadstem_xf)
-               tempdump(9)  = matrix_ctransfer_acc(ilivecroot_xf,ilivecroot_st)
-               tempdump(10) = matrix_ctransfer_acc(ilivecroot,ilivecroot_xf)
-               tempdump(11) = matrix_ctransfer_acc(ideadcroot_xf,ideadcroot_st)
-               tempdump(12) = matrix_ctransfer_acc(ideadcroot,ideadcroot_xf)
-               if(abs(matrix_cturnover_livestem_acc(p))-abs(matrix_cturnover_gm_livestem_acc(p))-abs(matrix_cturnover_fire_livestem_acc(p)) .lt. 1.e-8)then
-                  tempdump(13) = (matrix_ctransfer_acc(ideadstem,ilivestem) - matrix_ctransfer_fire_livestem_to_deadstem_acc(p))/1.e-8
-               else
-                  tempdump(13) = (matrix_ctransfer_acc(ideadstem,ilivestem) - matrix_ctransfer_fire_livestem_to_deadstem_acc(p)) &
-                  / (abs(matrix_cturnover_livestem_acc(p))-abs(matrix_cturnover_gm_livestem_acc(p))-abs(matrix_cturnover_fire_livestem_acc(p)))
-               end if
-               if(abs(matrix_cturnover_livecroot_acc(p))-abs(matrix_cturnover_gm_livecroot_acc(p))-abs(matrix_cturnover_fire_livecroot_acc(p)) .lt. 1.e-8)then
-                  tempdump(14) = (matrix_ctransfer_acc(ideadcroot,ilivecroot) - matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p))/1.e-8
-               else
-                  tempdump(14) = (matrix_ctransfer_acc(ideadcroot,ilivecroot) - matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)) &
-                  / (abs(matrix_cturnover_livecroot_acc(p))-abs(matrix_cturnover_gm_livecroot_acc(p))-abs(matrix_cturnover_fire_livecroot_acc(p)))
-               end if
-               if(abs(matrix_cturnover_fire_livestem_acc(p)) .lt. 1.e-8)then
-                  tempdump(15) = matrix_ctransfer_fire_livestem_to_deadstem_acc(p)/1.e-8
-               else
-                  tempdump(15) = matrix_ctransfer_fire_livestem_to_deadstem_acc(p)/abs(matrix_cturnover_fire_livestem_acc(p))
-               end if
-               if(abs(matrix_cturnover_fire_livecroot_acc(p)) .lt. 1.e-8)then
-                  tempdump(16) = matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)/1.e-8
-               else
-                  tempdump(16) = matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)/abs(matrix_cturnover_fire_livecroot_acc(p))
-               end if
+!KO               tempdump(1)  = matrix_ctransfer_acc(ileaf_xf,ileaf_st)
+!KO               tempdump(2)  = matrix_ctransfer_acc(ileaf,ileaf_xf)
+!KO               tempdump(3)  = matrix_ctransfer_acc(ifroot_xf,ifroot_st)
+!KO               tempdump(4)  = matrix_ctransfer_acc(ifroot,ifroot_xf)
+!KO               tempdump(5)  = matrix_ctransfer_acc(ilivestem_xf,ilivestem_st)
+!KO               tempdump(6)  = matrix_ctransfer_acc(ilivestem,ilivestem_xf)
+!KO               tempdump(7)  = matrix_ctransfer_acc(ideadstem_xf,ideadstem_st)
+!KO               tempdump(8)  = matrix_ctransfer_acc(ideadstem,ideadstem_xf)
+!KO               tempdump(9)  = matrix_ctransfer_acc(ilivecroot_xf,ilivecroot_st)
+!KO               tempdump(10) = matrix_ctransfer_acc(ilivecroot,ilivecroot_xf)
+!KO               tempdump(11) = matrix_ctransfer_acc(ideadcroot_xf,ideadcroot_st)
+!KO               tempdump(12) = matrix_ctransfer_acc(ideadcroot,ideadcroot_xf)
+!KO               if(abs(matrix_cturnover_livestem_acc(p))-abs(matrix_cturnover_gm_livestem_acc(p))-abs(matrix_cturnover_fire_livestem_acc(p)) .lt. 1.e-8)then
+!KO                  tempdump(13) = (matrix_ctransfer_acc(ideadstem,ilivestem) - matrix_ctransfer_fire_livestem_to_deadstem_acc(p))/1.e-8
+!KO               else
+!KO                  tempdump(13) = (matrix_ctransfer_acc(ideadstem,ilivestem) - matrix_ctransfer_fire_livestem_to_deadstem_acc(p)) &
+!KO                  / (abs(matrix_cturnover_livestem_acc(p))-abs(matrix_cturnover_gm_livestem_acc(p))-abs(matrix_cturnover_fire_livestem_acc(p)))
+!KO               end if
+!KO               if(abs(matrix_cturnover_livecroot_acc(p))-abs(matrix_cturnover_gm_livecroot_acc(p))-abs(matrix_cturnover_fire_livecroot_acc(p)) .lt. 1.e-8)then
+!KO                  tempdump(14) = (matrix_ctransfer_acc(ideadcroot,ilivecroot) - matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p))/1.e-8
+!KO               else
+!KO                  tempdump(14) = (matrix_ctransfer_acc(ideadcroot,ilivecroot) - matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)) &
+!KO                  / (abs(matrix_cturnover_livecroot_acc(p))-abs(matrix_cturnover_gm_livecroot_acc(p))-abs(matrix_cturnover_fire_livecroot_acc(p)))
+!KO               end if
+!KO               if(abs(matrix_cturnover_fire_livestem_acc(p)) .lt. 1.e-8)then
+!KO                  tempdump(15) = matrix_ctransfer_fire_livestem_to_deadstem_acc(p)/1.e-8
+!KO               else
+!KO                  tempdump(15) = matrix_ctransfer_fire_livestem_to_deadstem_acc(p)/abs(matrix_cturnover_fire_livestem_acc(p))
+!KO               end if
+!KO               if(abs(matrix_cturnover_fire_livecroot_acc(p)) .lt. 1.e-8)then
+!KO                  tempdump(16) = matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)/1.e-8
+!KO               else
+!KO                  tempdump(16) = matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)/abs(matrix_cturnover_fire_livecroot_acc(p))
+!KO               end if
 
-               where(abs(tempdump) .lt. 1.e-8)
-                  tempdump = 0
-               end where
+!KO               where(abs(tempdump) .lt. 1.e-8)
+!KO                  tempdump = 0
+!KO               end where
 
 !!!!!->               write(bounds%begp+1102000000,"(I,16E17.9)"),p,(tempdump(i),i=1,16)
 
@@ -1580,172 +1580,172 @@ contains
                   matrix_ctransfer_acc(igrain_xf,igrain_xf)      = matrix_cturnover_grainxf_acc(p)               
                end if
 
-               if(leafc0(p) < 1.e-8)then
-                  tempdump(19) = matrix_cturnover_gm_leaf_acc(p)/1.e-8
-                  tempdump(37) = matrix_cturnover_fire_leaf_acc(p)/1.e-8
-                  tempdump(1)  = matrix_cturnover_leaf_acc(p)/1.e-8-tempdump(19)-tempdump(37)
-               else
-                  tempdump(19) = matrix_cturnover_gm_leaf_acc(p)/leafc0(p)
-                  tempdump(37) = matrix_cturnover_fire_leaf_acc(p)/leafc0(p)
-                  tempdump(1)  = matrix_cturnover_leaf_acc(p)/leafc0(p)-tempdump(19)-tempdump(37)
-               end if
-               if(leafc0_storage(p) < 1.e-8)then
-                  tempdump(20)  = matrix_cturnover_gm_leafst_acc(p)/1.e-8
-                  tempdump(38)  = matrix_cturnover_fire_leafst_acc(p)/1.e-8
-                  tempdump(2)   = matrix_cturnover_leafst_acc(p)/1.e-8-tempdump(20)-tempdump(38)
-               else
-                  tempdump(20)  = matrix_cturnover_gm_leafst_acc(p)/leafc0_storage(p)
-                  tempdump(38)  = matrix_cturnover_fire_leafst_acc(p)/leafc0_storage(p)
-                  tempdump(2)   = matrix_cturnover_leafst_acc(p)/leafc0_storage(p)-tempdump(20)-tempdump(38)
-               end if
-               if(leafc0_xfer(p) < 1.e-8)then
-                  tempdump(21)  = matrix_cturnover_gm_leafxf_acc(p)/1.e-8
-                  tempdump(39)  = matrix_cturnover_fire_leafxf_acc(p)/1.e-8
-                  tempdump(3)   = matrix_cturnover_leafxf_acc(p)/1.e-8-tempdump(21)-tempdump(39)
-               else
-                  tempdump(21)  = matrix_cturnover_gm_leafxf_acc(p)/leafc0_xfer(p)
-                  tempdump(39)  = matrix_cturnover_fire_leafxf_acc(p)/leafc0_xfer(p)
-                  tempdump(3)   = matrix_cturnover_leafxf_acc(p)/leafc0_xfer(p)-tempdump(21)-tempdump(39)
-               end if
-               if(frootc0(p) < 1.e-8)then
-                  tempdump(22) = matrix_cturnover_gm_froot_acc(p)/1.e-8
-                  tempdump(40) = matrix_cturnover_fire_froot_acc(p)/1.e-8
-                  tempdump(4)  = matrix_cturnover_froot_acc(p)/1.e-8-tempdump(22)-tempdump(40)
-               else
-                  tempdump(22) = matrix_cturnover_gm_froot_acc(p)/frootc0(p)
-                  tempdump(40) = matrix_cturnover_fire_froot_acc(p)/frootc0(p)
-                  tempdump(4)  = matrix_cturnover_froot_acc(p)/frootc0(p)-tempdump(22)-tempdump(40)
-               end if
-               if(frootc0_storage(p) < 1.e-8)then
-                  tempdump(23)  = matrix_cturnover_gm_frootst_acc(p)/1.e-8
-                  tempdump(41)  = matrix_cturnover_fire_frootst_acc(p)/1.e-8
-                  tempdump(5)   = matrix_cturnover_frootst_acc(p)/1.e-8-tempdump(23)-tempdump(41)
-               else
-                  tempdump(23)  = matrix_cturnover_gm_frootst_acc(p)/frootc0_storage(p)
-                  tempdump(41)  = matrix_cturnover_fire_frootst_acc(p)/frootc0_storage(p)
-                  tempdump(5)   = matrix_cturnover_frootst_acc(p)/frootc0_storage(p)-tempdump(23)-tempdump(41)
-               end if
-               if(frootc0_xfer(p) < 1.e-8)then
-                  tempdump(24)  = matrix_cturnover_gm_frootxf_acc(p)/1.e-8
-                  tempdump(42)  = matrix_cturnover_fire_frootxf_acc(p)/1.e-8
-                  tempdump(6)   = matrix_cturnover_frootxf_acc(p)/1.e-8-tempdump(24)-tempdump(42)
-               else
-                  tempdump(24)  = matrix_cturnover_gm_frootxf_acc(p)/frootc0_xfer(p)
-                  tempdump(42)  = matrix_cturnover_fire_frootxf_acc(p)/frootc0_xfer(p)
-                  tempdump(6)   = matrix_cturnover_frootxf_acc(p)/frootc0_xfer(p)-tempdump(24)-tempdump(42)
-               end if
-               if(livestemc0(p) < 1.e-8)then
-                  tempdump(25) = matrix_cturnover_gm_livestem_acc(p)/1.e-8
-                  tempdump(43) = matrix_cturnover_fire_livestem_acc(p)/1.e-8
-                  tempdump(7)  = matrix_cturnover_livestem_acc(p)/1.e-8-tempdump(25)-tempdump(43)
-               else
-                  tempdump(25) = matrix_cturnover_gm_livestem_acc(p)/livestemc0(p)
-                  tempdump(43) = matrix_cturnover_fire_livestem_acc(p)/livestemc0(p)
-                  tempdump(7)  = matrix_cturnover_livestem_acc(p)/livestemc0(p)-tempdump(25)-tempdump(43)
-               end if
-               if(livestemc0_storage(p) < 1.e-8)then
-                  tempdump(26)  = matrix_cturnover_gm_livestemst_acc(p)/1.e-8
-                  tempdump(44)  = matrix_cturnover_fire_livestemst_acc(p)/1.e-8
-                  tempdump(8)   = matrix_cturnover_livestemst_acc(p)/1.e-8-tempdump(26)-tempdump(44)
-               else
-                  tempdump(26)  = matrix_cturnover_gm_livestemst_acc(p)/livestemc0_storage(p)
-                  tempdump(44)  = matrix_cturnover_fire_livestemst_acc(p)/livestemc0_storage(p)
-                  tempdump(8)   = matrix_cturnover_livestemst_acc(p)/livestemc0_storage(p)-tempdump(26)-tempdump(44)
-               end if
-               if(livestemc0_xfer(p) < 1.e-8)then
-                  tempdump(27)  = matrix_cturnover_gm_livestemxf_acc(p)/1.e-8
-                  tempdump(45)  = matrix_cturnover_fire_livestemxf_acc(p)/1.e-8
-                  tempdump(9)   = matrix_cturnover_livestemxf_acc(p)/1.e-8-tempdump(27)-tempdump(45)
-               else
-                  tempdump(27)  = matrix_cturnover_gm_livestemxf_acc(p)/livestemc0_xfer(p)
-                  tempdump(45)  = matrix_cturnover_fire_livestemxf_acc(p)/livestemc0_xfer(p)
-                  tempdump(9)   = matrix_cturnover_livestemxf_acc(p)/livestemc0_xfer(p)-tempdump(27)-tempdump(45)
-               end if
-               if(deadstemc0(p) < 1.e-8)then
-                  tempdump(28) = matrix_cturnover_gm_deadstem_acc(p)/1.e-8
-                  tempdump(46) = matrix_cturnover_fire_deadstem_acc(p)/1.e-8
-                  tempdump(10) = matrix_cturnover_deadstem_acc(p)/1.e-8-tempdump(28)-tempdump(46)
-               else
-                  tempdump(28) = matrix_cturnover_gm_deadstem_acc(p)/deadstemc0(p)
-                  tempdump(46) = matrix_cturnover_fire_deadstem_acc(p)/deadstemc0(p)
-                  tempdump(10) = matrix_cturnover_deadstem_acc(p)/deadstemc0(p)-tempdump(28)-tempdump(46)
-               end if
-               if(deadstemc0_storage(p) < 1.e-8)then
-                  tempdump(29)  = matrix_cturnover_gm_deadstemst_acc(p)/1.e-8
-                  tempdump(47)  = matrix_cturnover_fire_deadstemst_acc(p)/1.e-8
-                  tempdump(11)  = matrix_cturnover_deadstemst_acc(p)/1.e-8-tempdump(29)-tempdump(47)
-               else
-                  tempdump(29)  = matrix_cturnover_gm_deadstemst_acc(p)/deadstemc0_storage(p)
-                  tempdump(47)  = matrix_cturnover_fire_deadstemst_acc(p)/deadstemc0_storage(p)
-                  tempdump(11)  = matrix_cturnover_deadstemst_acc(p)/deadstemc0_storage(p)-tempdump(29)-tempdump(47)
-               end if
-               if(deadstemc0_xfer(p) < 1.e-8)then
-                  tempdump(30)  = matrix_cturnover_gm_deadstemxf_acc(p)/1.e-8
-                  tempdump(48)  = matrix_cturnover_fire_deadstemxf_acc(p)/1.e-8
-                  tempdump(12)  = matrix_cturnover_deadstemxf_acc(p)/1.e-8-tempdump(30)-tempdump(48)
-               else
-                  tempdump(30)  = matrix_cturnover_gm_deadstemxf_acc(p)/deadstemc0_xfer(p)
-                  tempdump(48)  = matrix_cturnover_fire_deadstemxf_acc(p)/deadstemc0_xfer(p)
-                  tempdump(12)  = matrix_cturnover_deadstemxf_acc(p)/deadstemc0_xfer(p)-tempdump(30)-tempdump(48)
-               end if
-               if(livecrootc0(p) < 1.e-8)then
-                  tempdump(31) = matrix_cturnover_gm_livecroot_acc(p)/1.e-8
-                  tempdump(49) = matrix_cturnover_fire_livecroot_acc(p)/1.e-8
-                  tempdump(13) = matrix_cturnover_livecroot_acc(p)/1.e-8-tempdump(31)-tempdump(49)
-               else
-                  tempdump(31) = matrix_cturnover_gm_livecroot_acc(p)/livecrootc0(p)
-                  tempdump(49) = matrix_cturnover_fire_livecroot_acc(p)/livecrootc0(p)
-                  tempdump(13) = matrix_cturnover_livecroot_acc(p)/livecrootc0(p)-tempdump(31)-tempdump(49)
-               end if
-               if(livecrootc0_storage(p) < 1.e-8)then
-                  tempdump(32)  = matrix_cturnover_gm_livecrootst_acc(p)/1.e-8
-                  tempdump(50)  = matrix_cturnover_fire_livecrootst_acc(p)/1.e-8
-                  tempdump(14)  = matrix_cturnover_livecrootst_acc(p)/1.e-8-tempdump(32)-tempdump(50)
-               else
-                  tempdump(32)  = matrix_cturnover_gm_livecrootst_acc(p)/livecrootc0_storage(p)
-                  tempdump(50)  = matrix_cturnover_fire_livecrootst_acc(p)/livecrootc0_storage(p)
-                  tempdump(14)  = matrix_cturnover_livecrootst_acc(p)/livecrootc0_storage(p)-tempdump(32)-tempdump(50)
-               end if
-               if(livecrootc0_xfer(p) < 1.e-8)then
-                  tempdump(33)  = matrix_cturnover_gm_livecrootxf_acc(p)/1.e-8
-                  tempdump(51)  = matrix_cturnover_fire_livecrootxf_acc(p)/1.e-8
-                  tempdump(15)  = matrix_cturnover_livecrootxf_acc(p)/1.e-8-tempdump(33)-tempdump(51)
-               else
-                  tempdump(33)  = matrix_cturnover_gm_livecrootxf_acc(p)/livecrootc0_xfer(p)
-                  tempdump(51)  = matrix_cturnover_fire_livecrootxf_acc(p)/livecrootc0_xfer(p)
-                  tempdump(15)  = matrix_cturnover_livecrootxf_acc(p)/livecrootc0_xfer(p)-tempdump(33)-tempdump(51)
-               end if
-               if(deadcrootc0(p) < 1.e-8)then
-                  tempdump(34) = matrix_cturnover_gm_deadcroot_acc(p)/1.e-8
-                  tempdump(52) = matrix_cturnover_fire_deadcroot_acc(p)/1.e-8
-                  tempdump(16) = matrix_cturnover_deadcroot_acc(p)/1.e-8-tempdump(34)-tempdump(52)
-               else
-                  tempdump(34) = matrix_cturnover_gm_deadcroot_acc(p)/deadcrootc0(p)
-                  tempdump(52) = matrix_cturnover_fire_deadcroot_acc(p)/deadcrootc0(p)
-                  tempdump(16) = matrix_cturnover_deadcroot_acc(p)/deadcrootc0(p)-tempdump(34)-tempdump(52)
-               end if
-               if(deadcrootc0_storage(p) < 1.e-8)then
-                  tempdump(35)  = matrix_cturnover_gm_deadcrootst_acc(p)/1.e-8
-                  tempdump(53)  = matrix_cturnover_fire_deadcrootst_acc(p)/1.e-8
-                  tempdump(17)  = matrix_cturnover_deadcrootst_acc(p)/1.e-8-tempdump(35)-tempdump(53)
-               else
-                  tempdump(35)  = matrix_cturnover_gm_deadcrootst_acc(p)/deadcrootc0_storage(p)
-                  tempdump(53)  = matrix_cturnover_fire_deadcrootst_acc(p)/deadcrootc0_storage(p)
-                  tempdump(17)  = matrix_cturnover_deadcrootst_acc(p)/deadcrootc0_storage(p)-tempdump(35)-tempdump(53)
-               end if
-               if(deadcrootc0_xfer(p) < 1.e-8)then
-                  tempdump(36)  = matrix_cturnover_gm_deadcrootxf_acc(p)/1.e-8
-                  tempdump(54)  = matrix_cturnover_fire_deadcrootxf_acc(p)/1.e-8
-                  tempdump(18)  = matrix_cturnover_deadcrootxf_acc(p)/1.e-8-tempdump(36)-tempdump(54)
-               else
-                  tempdump(36)  = matrix_cturnover_gm_deadcrootxf_acc(p)/deadcrootc0_xfer(p)
-                  tempdump(54)  = matrix_cturnover_fire_deadcrootxf_acc(p)/deadcrootc0_xfer(p)
-                  tempdump(18)  = matrix_cturnover_deadcrootxf_acc(p)/deadcrootc0_xfer(p)-tempdump(36)-tempdump(54)
-               end if
+!KO            if(leafc0(p) < 1.e-8)then
+!                 tempdump(19) = matrix_cturnover_gm_leaf_acc(p)/1.e-8
+!                 tempdump(37) = matrix_cturnover_fire_leaf_acc(p)/1.e-8
+!                 tempdump(1)  = matrix_cturnover_leaf_acc(p)/1.e-8-tempdump(19)-tempdump(37)
+!              else
+!                 tempdump(19) = matrix_cturnover_gm_leaf_acc(p)/leafc0(p)
+!                 tempdump(37) = matrix_cturnover_fire_leaf_acc(p)/leafc0(p)
+!                 tempdump(1)  = matrix_cturnover_leaf_acc(p)/leafc0(p)-tempdump(19)-tempdump(37)
+!              end if
+!              if(leafc0_storage(p) < 1.e-8)then
+!                 tempdump(20)  = matrix_cturnover_gm_leafst_acc(p)/1.e-8
+!                 tempdump(38)  = matrix_cturnover_fire_leafst_acc(p)/1.e-8
+!                 tempdump(2)   = matrix_cturnover_leafst_acc(p)/1.e-8-tempdump(20)-tempdump(38)
+!              else
+!                 tempdump(20)  = matrix_cturnover_gm_leafst_acc(p)/leafc0_storage(p)
+!                 tempdump(38)  = matrix_cturnover_fire_leafst_acc(p)/leafc0_storage(p)
+!                 tempdump(2)   = matrix_cturnover_leafst_acc(p)/leafc0_storage(p)-tempdump(20)-tempdump(38)
+!              end if
+!              if(leafc0_xfer(p) < 1.e-8)then
+!                 tempdump(21)  = matrix_cturnover_gm_leafxf_acc(p)/1.e-8
+!                 tempdump(39)  = matrix_cturnover_fire_leafxf_acc(p)/1.e-8
+!                 tempdump(3)   = matrix_cturnover_leafxf_acc(p)/1.e-8-tempdump(21)-tempdump(39)
+!              else
+!                 tempdump(21)  = matrix_cturnover_gm_leafxf_acc(p)/leafc0_xfer(p)
+!                 tempdump(39)  = matrix_cturnover_fire_leafxf_acc(p)/leafc0_xfer(p)
+!                 tempdump(3)   = matrix_cturnover_leafxf_acc(p)/leafc0_xfer(p)-tempdump(21)-tempdump(39)
+!              end if
+!              if(frootc0(p) < 1.e-8)then
+!                 tempdump(22) = matrix_cturnover_gm_froot_acc(p)/1.e-8
+!                 tempdump(40) = matrix_cturnover_fire_froot_acc(p)/1.e-8
+!                 tempdump(4)  = matrix_cturnover_froot_acc(p)/1.e-8-tempdump(22)-tempdump(40)
+!              else
+!                 tempdump(22) = matrix_cturnover_gm_froot_acc(p)/frootc0(p)
+!                 tempdump(40) = matrix_cturnover_fire_froot_acc(p)/frootc0(p)
+!                 tempdump(4)  = matrix_cturnover_froot_acc(p)/frootc0(p)-tempdump(22)-tempdump(40)
+!              end if
+!              if(frootc0_storage(p) < 1.e-8)then
+!                 tempdump(23)  = matrix_cturnover_gm_frootst_acc(p)/1.e-8
+!                 tempdump(41)  = matrix_cturnover_fire_frootst_acc(p)/1.e-8
+!                 tempdump(5)   = matrix_cturnover_frootst_acc(p)/1.e-8-tempdump(23)-tempdump(41)
+!              else
+!                 tempdump(23)  = matrix_cturnover_gm_frootst_acc(p)/frootc0_storage(p)
+!                 tempdump(41)  = matrix_cturnover_fire_frootst_acc(p)/frootc0_storage(p)
+!                 tempdump(5)   = matrix_cturnover_frootst_acc(p)/frootc0_storage(p)-tempdump(23)-tempdump(41)
+!              end if
+!              if(frootc0_xfer(p) < 1.e-8)then
+!                 tempdump(24)  = matrix_cturnover_gm_frootxf_acc(p)/1.e-8
+!                 tempdump(42)  = matrix_cturnover_fire_frootxf_acc(p)/1.e-8
+!                 tempdump(6)   = matrix_cturnover_frootxf_acc(p)/1.e-8-tempdump(24)-tempdump(42)
+!              else
+!                 tempdump(24)  = matrix_cturnover_gm_frootxf_acc(p)/frootc0_xfer(p)
+!                 tempdump(42)  = matrix_cturnover_fire_frootxf_acc(p)/frootc0_xfer(p)
+!                 tempdump(6)   = matrix_cturnover_frootxf_acc(p)/frootc0_xfer(p)-tempdump(24)-tempdump(42)
+!              end if
+!              if(livestemc0(p) < 1.e-8)then
+!                 tempdump(25) = matrix_cturnover_gm_livestem_acc(p)/1.e-8
+!                 tempdump(43) = matrix_cturnover_fire_livestem_acc(p)/1.e-8
+!                 tempdump(7)  = matrix_cturnover_livestem_acc(p)/1.e-8-tempdump(25)-tempdump(43)
+!              else
+!                 tempdump(25) = matrix_cturnover_gm_livestem_acc(p)/livestemc0(p)
+!                 tempdump(43) = matrix_cturnover_fire_livestem_acc(p)/livestemc0(p)
+!                 tempdump(7)  = matrix_cturnover_livestem_acc(p)/livestemc0(p)-tempdump(25)-tempdump(43)
+!              end if
+!              if(livestemc0_storage(p) < 1.e-8)then
+!                 tempdump(26)  = matrix_cturnover_gm_livestemst_acc(p)/1.e-8
+!                 tempdump(44)  = matrix_cturnover_fire_livestemst_acc(p)/1.e-8
+!                 tempdump(8)   = matrix_cturnover_livestemst_acc(p)/1.e-8-tempdump(26)-tempdump(44)
+!              else
+!                 tempdump(26)  = matrix_cturnover_gm_livestemst_acc(p)/livestemc0_storage(p)
+!                 tempdump(44)  = matrix_cturnover_fire_livestemst_acc(p)/livestemc0_storage(p)
+!                 tempdump(8)   = matrix_cturnover_livestemst_acc(p)/livestemc0_storage(p)-tempdump(26)-tempdump(44)
+!              end if
+!              if(livestemc0_xfer(p) < 1.e-8)then
+!                 tempdump(27)  = matrix_cturnover_gm_livestemxf_acc(p)/1.e-8
+!                 tempdump(45)  = matrix_cturnover_fire_livestemxf_acc(p)/1.e-8
+!                 tempdump(9)   = matrix_cturnover_livestemxf_acc(p)/1.e-8-tempdump(27)-tempdump(45)
+!              else
+!                 tempdump(27)  = matrix_cturnover_gm_livestemxf_acc(p)/livestemc0_xfer(p)
+!                 tempdump(45)  = matrix_cturnover_fire_livestemxf_acc(p)/livestemc0_xfer(p)
+!                 tempdump(9)   = matrix_cturnover_livestemxf_acc(p)/livestemc0_xfer(p)-tempdump(27)-tempdump(45)
+!              end if
+!              if(deadstemc0(p) < 1.e-8)then
+!                 tempdump(28) = matrix_cturnover_gm_deadstem_acc(p)/1.e-8
+!                 tempdump(46) = matrix_cturnover_fire_deadstem_acc(p)/1.e-8
+!                 tempdump(10) = matrix_cturnover_deadstem_acc(p)/1.e-8-tempdump(28)-tempdump(46)
+!              else
+!                 tempdump(28) = matrix_cturnover_gm_deadstem_acc(p)/deadstemc0(p)
+!                 tempdump(46) = matrix_cturnover_fire_deadstem_acc(p)/deadstemc0(p)
+!                 tempdump(10) = matrix_cturnover_deadstem_acc(p)/deadstemc0(p)-tempdump(28)-tempdump(46)
+!              end if
+!              if(deadstemc0_storage(p) < 1.e-8)then
+!                 tempdump(29)  = matrix_cturnover_gm_deadstemst_acc(p)/1.e-8
+!                 tempdump(47)  = matrix_cturnover_fire_deadstemst_acc(p)/1.e-8
+!                 tempdump(11)  = matrix_cturnover_deadstemst_acc(p)/1.e-8-tempdump(29)-tempdump(47)
+!              else
+!                 tempdump(29)  = matrix_cturnover_gm_deadstemst_acc(p)/deadstemc0_storage(p)
+!                 tempdump(47)  = matrix_cturnover_fire_deadstemst_acc(p)/deadstemc0_storage(p)
+!                 tempdump(11)  = matrix_cturnover_deadstemst_acc(p)/deadstemc0_storage(p)-tempdump(29)-tempdump(47)
+!              end if
+!              if(deadstemc0_xfer(p) < 1.e-8)then
+!                 tempdump(30)  = matrix_cturnover_gm_deadstemxf_acc(p)/1.e-8
+!                 tempdump(48)  = matrix_cturnover_fire_deadstemxf_acc(p)/1.e-8
+!                 tempdump(12)  = matrix_cturnover_deadstemxf_acc(p)/1.e-8-tempdump(30)-tempdump(48)
+!              else
+!                 tempdump(30)  = matrix_cturnover_gm_deadstemxf_acc(p)/deadstemc0_xfer(p)
+!                 tempdump(48)  = matrix_cturnover_fire_deadstemxf_acc(p)/deadstemc0_xfer(p)
+!                 tempdump(12)  = matrix_cturnover_deadstemxf_acc(p)/deadstemc0_xfer(p)-tempdump(30)-tempdump(48)
+!              end if
+!              if(livecrootc0(p) < 1.e-8)then
+!                 tempdump(31) = matrix_cturnover_gm_livecroot_acc(p)/1.e-8
+!                 tempdump(49) = matrix_cturnover_fire_livecroot_acc(p)/1.e-8
+!                 tempdump(13) = matrix_cturnover_livecroot_acc(p)/1.e-8-tempdump(31)-tempdump(49)
+!              else
+!                 tempdump(31) = matrix_cturnover_gm_livecroot_acc(p)/livecrootc0(p)
+!                 tempdump(49) = matrix_cturnover_fire_livecroot_acc(p)/livecrootc0(p)
+!                 tempdump(13) = matrix_cturnover_livecroot_acc(p)/livecrootc0(p)-tempdump(31)-tempdump(49)
+!              end if
+!              if(livecrootc0_storage(p) < 1.e-8)then
+!                 tempdump(32)  = matrix_cturnover_gm_livecrootst_acc(p)/1.e-8
+!                 tempdump(50)  = matrix_cturnover_fire_livecrootst_acc(p)/1.e-8
+!                 tempdump(14)  = matrix_cturnover_livecrootst_acc(p)/1.e-8-tempdump(32)-tempdump(50)
+!              else
+!                 tempdump(32)  = matrix_cturnover_gm_livecrootst_acc(p)/livecrootc0_storage(p)
+!                 tempdump(50)  = matrix_cturnover_fire_livecrootst_acc(p)/livecrootc0_storage(p)
+!                 tempdump(14)  = matrix_cturnover_livecrootst_acc(p)/livecrootc0_storage(p)-tempdump(32)-tempdump(50)
+!              end if
+!              if(livecrootc0_xfer(p) < 1.e-8)then
+!                 tempdump(33)  = matrix_cturnover_gm_livecrootxf_acc(p)/1.e-8
+!                 tempdump(51)  = matrix_cturnover_fire_livecrootxf_acc(p)/1.e-8
+!                 tempdump(15)  = matrix_cturnover_livecrootxf_acc(p)/1.e-8-tempdump(33)-tempdump(51)
+!              else
+!                 tempdump(33)  = matrix_cturnover_gm_livecrootxf_acc(p)/livecrootc0_xfer(p)
+!                 tempdump(51)  = matrix_cturnover_fire_livecrootxf_acc(p)/livecrootc0_xfer(p)
+!                 tempdump(15)  = matrix_cturnover_livecrootxf_acc(p)/livecrootc0_xfer(p)-tempdump(33)-tempdump(51)
+!              end if
+!              if(deadcrootc0(p) < 1.e-8)then
+!                 tempdump(34) = matrix_cturnover_gm_deadcroot_acc(p)/1.e-8
+!                 tempdump(52) = matrix_cturnover_fire_deadcroot_acc(p)/1.e-8
+!                 tempdump(16) = matrix_cturnover_deadcroot_acc(p)/1.e-8-tempdump(34)-tempdump(52)
+!              else
+!                 tempdump(34) = matrix_cturnover_gm_deadcroot_acc(p)/deadcrootc0(p)
+!                 tempdump(52) = matrix_cturnover_fire_deadcroot_acc(p)/deadcrootc0(p)
+!                 tempdump(16) = matrix_cturnover_deadcroot_acc(p)/deadcrootc0(p)-tempdump(34)-tempdump(52)
+!              end if
+!              if(deadcrootc0_storage(p) < 1.e-8)then
+!                 tempdump(35)  = matrix_cturnover_gm_deadcrootst_acc(p)/1.e-8
+!                 tempdump(53)  = matrix_cturnover_fire_deadcrootst_acc(p)/1.e-8
+!                 tempdump(17)  = matrix_cturnover_deadcrootst_acc(p)/1.e-8-tempdump(35)-tempdump(53)
+!              else
+!                 tempdump(35)  = matrix_cturnover_gm_deadcrootst_acc(p)/deadcrootc0_storage(p)
+!                 tempdump(53)  = matrix_cturnover_fire_deadcrootst_acc(p)/deadcrootc0_storage(p)
+!                 tempdump(17)  = matrix_cturnover_deadcrootst_acc(p)/deadcrootc0_storage(p)-tempdump(35)-tempdump(53)
+!              end if
+!              if(deadcrootc0_xfer(p) < 1.e-8)then
+!                 tempdump(36)  = matrix_cturnover_gm_deadcrootxf_acc(p)/1.e-8
+!                 tempdump(54)  = matrix_cturnover_fire_deadcrootxf_acc(p)/1.e-8
+!                 tempdump(18)  = matrix_cturnover_deadcrootxf_acc(p)/1.e-8-tempdump(36)-tempdump(54)
+!              else
+!                 tempdump(36)  = matrix_cturnover_gm_deadcrootxf_acc(p)/deadcrootc0_xfer(p)
+!                 tempdump(54)  = matrix_cturnover_fire_deadcrootxf_acc(p)/deadcrootc0_xfer(p)
+!                 tempdump(18)  = matrix_cturnover_deadcrootxf_acc(p)/deadcrootc0_xfer(p)-tempdump(36)-tempdump(54)
+!              end if
                
-               where(abs(tempdump) .lt. 1.e-8)
-                  tempdump = 0
-               endwhere
+!              where(abs(tempdump) .lt. 1.e-8)
+!                 tempdump = 0
+!              endwhere
 
 !!!!!->               write(bounds%begp+1103000000,"(I,54E17.9)"),p,(tempdump(i),i=1,54)
 !               write(bounds%begp+1103000000,"(I,54E17.9)"),p,matrix_cturnover_leaf_acc(p),matrix_cturnover_leafst_acc(p),matrix_cturnover_leafxf_acc(p),&

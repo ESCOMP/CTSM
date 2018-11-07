@@ -1,0 +1,5 @@
+./xmlchange DATM_CPLHIST_CASE=b.e20.B1850.f09_g17.pi_control.all.221.cplhist
+./xmlchange DATM_CPLHIST_DIR=/glade/p/cesm/bgcwg_dev/forcing/b.e20.B1850.f09_g17.pi_control.all.221.cplhist/cpl/hist.mon
+./xmlchange DATM_CPLHIST_YR_ALIGN=1
+./xmlchange DATM_CPLHIST_YR_END=84
+./xmlchange DATM_CPLHIST_YR_START=82

@@ -1,4 +1,4 @@
-components/clm/tools/mkprocdata_map/clm/README                Oct 30, 2012
+$CTSMROOT/tools/mkprocdata_map/clm/README                Oct 30, 2012
 
 This directory contains scripts for regridding CLM output from an
 unstructured grid (1-d output using the lndgrid dimension) to a 2-d

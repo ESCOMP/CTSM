@@ -111,7 +111,7 @@ module clm_varctl
   ! from finidat if use_init_interp is .true.
 
   character(len=fname_len), public :: finidat_interp_source = ' '
-  character(len=fname_len), public :: finidat_interp_dest   = 'finidat_interp_dest.nc'     
+  character(len=fname_len), public :: finidat_interp_dest   = ''
 
   !----------------------------------------------------------
   ! Crop & Irrigation logic
@@ -129,6 +129,9 @@ module clm_varctl
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
+
+  ! true => allocate and run urban landunits everywhere where we have valid urban data
+  logical, public :: run_zero_weight_urban = .false.
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          
@@ -192,6 +195,14 @@ module clm_varctl
   logical, public :: use_soil_matrixcn = .false.! true => use cn matrix  
   logical, public :: isspinup = .false.  !.false.              ! true => use acc spinup
   logical, public :: is_outmatrix = .false. !.false.              ! true => use acc spinup
+
+  ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for C
+  ! isotopes if running init_interp from a case without C isotopes to a case with C
+  ! isotopes (https://github.com/ESCOMP/ctsm/issues/67). Normally, an error-check prevents
+  ! you from doing this interpolation (until we have fixed that bug). However, we
+  ! sometimes want to bypass this error-check in system tests. This namelist flag bypasses
+  ! this error-check.
+  logical, public :: for_testing_allow_interp_non_ciso_to_ciso = .false.
 
   !----------------------------------------------------------
   !  FATES switches
@@ -312,6 +323,10 @@ module clm_varctl
   ! FATES
   !----------------------------------------------------------
   character(len=fname_len), public :: fates_paramfile  = ' '
+  !----------------------------------------------------------
+  ! SSRE diagnostic
+  !----------------------------------------------------------
+  logical, public :: use_SSRE = .false.   ! flag for SSRE diagnostic
 
   !----------------------------------------------------------
   ! Migration of CPP variables

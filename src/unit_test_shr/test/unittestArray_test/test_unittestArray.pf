@@ -76,4 +76,11 @@ contains
     @assertIsNan(arr(2))
   end subroutine col_array_uninit
 
+  @Test
+  subroutine test_logical_array_to_int(this)
+    class(TestUnittestArray), intent(inout) :: this
+
+    @assertEqual([1, 0, 1], logical_array_to_int([.true., .false., .true.]))
+  end subroutine test_logical_array_to_int
+
 end module test_unittestArray

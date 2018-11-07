@@ -12,12 +12,12 @@ module UrbanRadiationMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use clm_varpar        , only : numrad
-  use clm_varcon        , only : isecspday, degpsec, namel
+  use clm_varcon        , only : namel
   use clm_varctl        , only : iulog
   use abortutils        , only : endrun  
   use UrbanParamsType   , only : urbanparams_type
   use atm2lndType       , only : atm2lnd_type
-  use WaterStateType    , only : waterstate_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use TemperatureType   , only : temperature_type
   use SolarAbsorbedType , only : solarabs_type 
   use SurfaceAlbedoType , only : surfalb_type
@@ -50,7 +50,7 @@ contains
        num_urbanl, filter_urbanl                                      , &
        num_urbanc, filter_urbanc                                      , &
        num_urbanp, filter_urbanp                                      , &
-       atm2lnd_inst, waterstate_inst, temperature_inst, urbanparams_inst, &
+       atm2lnd_inst, waterdiagnosticbulk_inst, temperature_inst, urbanparams_inst, &
        solarabs_inst, surfalb_inst, energyflux_inst)
     !
     ! !DESCRIPTION: 
@@ -61,7 +61,7 @@ contains
     use clm_varcon          , only : spval, sb, tfrz
     use column_varcon       , only : icol_road_perv, icol_road_imperv
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager    , only : get_curr_date, get_step_size
+    use clm_time_manager    , only : get_step_size
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -74,7 +74,7 @@ contains
     integer                , intent(in)    :: num_urbanp         ! number of urban patches in clump
     integer                , intent(in)    :: filter_urbanp(:)   ! urban pft filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
     type(solarabs_type)    , intent(inout) :: solarabs_inst
@@ -83,10 +83,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fp,fl,p,c,l,g              ! indices
-    integer  :: local_secp1                ! seconds into current date in local time
     real(r8) :: dtime                      ! land model time step (sec)
-    integer  :: year,month,day             ! temporaries (not used)
-    integer  :: secs                       ! seconds into current date
 
     real(r8), parameter :: mpe    = 1.e-06_r8 ! prevents overflow for division by zero
     real(r8), parameter :: snoem  = 0.97_r8   ! snow emissivity (should use value from Biogeophysics1)
@@ -126,7 +123,7 @@ contains
          forc_solar         =>    atm2lnd_inst%forc_solar_grc                , & ! Input:  [real(r8) (:)   ]  incident solar radiation (W/m**2)                 
          forc_lwrad         =>    atm2lnd_inst%forc_lwrad_not_downscaled_grc , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)   
 
-         frac_sno           =>    waterstate_inst%frac_sno_col               , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno           =>    waterdiagnosticbulk_inst%frac_sno_col               , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
 
          t_ref2m            =>    temperature_inst%t_ref2m_patch             , & ! Input:  [real(r8) (:)   ]  2 m height surface air temperature (K)            
          t_grnd             =>    temperature_inst%t_grnd_col                , & ! Input:  [real(r8) (:)   ]  ground temperature (K)                            
@@ -250,7 +247,6 @@ contains
       end if
 
       dtime = get_step_size()
-      call get_curr_date (year, month, day, secs)
 
       ! Determine variables needed for history output and communication with atm
       ! Loop over urban patches in clump

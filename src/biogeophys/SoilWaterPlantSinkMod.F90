@@ -16,7 +16,7 @@ module SoilWaterPlantSinkMod
 contains
    
    subroutine Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
-         filter_hydrologyc, soilstate_inst, canopystate_inst, waterflux_inst, energyflux_inst)
+         filter_hydrologyc, soilstate_inst, canopystate_inst, waterfluxbulk_inst, energyflux_inst)
       
       ! ---------------------------------------------------------------------------------
       ! This is a wrapper for calculating the effective root fraction and soil
@@ -32,14 +32,14 @@ contains
       !
       ! There are only two quantities that are the result of this routine, and its
       ! children:
-      !   waterflux_inst%qflx_rootsoi_col(c,j)
+      !   waterfluxbulk_inst%qflx_rootsoi_col(c,j)
       !   soilstate_inst%rootr_col(c,j)
       !
       !
       ! ---------------------------------------------------------------------------------
 
       use SoilStateType       , only : soilstate_type
-      use WaterFluxType       , only : waterflux_type
+      use WaterFluxBulkType       , only : waterfluxbulk_type
       use CanopyStateType     , only : canopystate_type
       use EnergyFluxType      , only : energyflux_type
       use ColumnType          , only : col 
@@ -50,7 +50,7 @@ contains
       integer                 , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
       integer                 , intent(in)    :: filter_hydrologyc(num_hydrologyc) ! column filter for soil points
       type(soilstate_type)    , intent(inout) :: soilstate_inst
-      type(waterflux_type)    , intent(inout) :: waterflux_inst
+      type(waterfluxbulk_type)    , intent(inout) :: waterfluxbulk_inst
       type(canopystate_type)  , intent(in)    :: canopystate_inst
       type(energyflux_type)   , intent(in)    :: energyflux_inst
 
@@ -76,10 +76,10 @@ contains
       num_filterc_tot = num_filterc_tot+num_filterc
       if(use_hydrstress) then
          call Compute_EffecRootFrac_And_VertTranSink_HydStress_Roads(bounds, &
-               num_filterc,filterc, soilstate_inst, waterflux_inst)
+               num_filterc,filterc, soilstate_inst, waterfluxbulk_inst)
       else
          call Compute_EffecRootFrac_And_VertTranSink_Default(bounds, &
-               num_filterc,filterc, soilstate_inst, waterflux_inst)
+               num_filterc,filterc, soilstate_inst, waterfluxbulk_inst)
       end if
 
 
@@ -102,11 +102,11 @@ contains
       num_filterc_tot = num_filterc_tot+num_filterc
       if(use_hydrstress) then
          call Compute_EffecRootFrac_And_VertTranSink_HydStress(bounds, &
-               num_filterc, filterc, waterflux_inst, soilstate_inst, &
+               num_filterc, filterc, waterfluxbulk_inst, soilstate_inst, &
                canopystate_inst, energyflux_inst)
       else
          call Compute_EffecRootFrac_And_VertTranSink_Default(bounds, &
-               num_filterc,filterc, soilstate_inst, waterflux_inst)
+               num_filterc,filterc, soilstate_inst, waterfluxbulk_inst)
       end if
       
 
@@ -123,11 +123,11 @@ contains
       num_filterc_tot = num_filterc_tot+num_filterc
       if (use_hydrstress) then
          call Compute_EffecRootFrac_And_VertTranSink_HydStress(bounds, &
-              num_filterc, filterc, waterflux_inst, soilstate_inst, &
+              num_filterc, filterc, waterfluxbulk_inst, soilstate_inst, &
               canopystate_inst,energyflux_inst)
       else
          call Compute_EffecRootFrac_And_VertTranSink_Default(bounds, &
-              num_filterc,filterc, soilstate_inst, waterflux_inst)
+              num_filterc,filterc, soilstate_inst, waterfluxbulk_inst)
       end if
 
       if (num_hydrologyc /= num_filterc_tot) then
@@ -144,10 +144,10 @@ contains
    ! ====================================================================================
 
    subroutine Compute_EffecRootFrac_And_VertTranSink_HydStress_Roads(bounds, &
-         num_filterc,filterc, soilstate_inst, waterflux_inst)
+         num_filterc,filterc, soilstate_inst, waterfluxbulk_inst)
       
       use SoilStateType    , only : soilstate_type
-      use WaterFluxType    , only : waterflux_type
+      use WaterFluxBulkType    , only : waterfluxbulk_type
       use clm_varpar       , only : nlevsoi
       use clm_varpar       , only : max_patch_per_col
       use PatchType        , only : patch
@@ -158,7 +158,7 @@ contains
       integer                 , intent(in)    :: num_filterc
       integer                 , intent(in)    :: filterc(:) 
       type(soilstate_type)    , intent(inout) :: soilstate_inst
-      type(waterflux_type)    , intent(inout) :: waterflux_inst
+      type(waterfluxbulk_type)    , intent(inout) :: waterfluxbulk_inst
 
       ! Locals
       integer :: j
@@ -170,11 +170,11 @@ contains
 
 
       associate(& 
-            qflx_rootsoi_col    => waterflux_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  
+            qflx_rootsoi_col    => waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  
                                                                           ! vegetation/soil water exchange (mm H2O/s) (+ = to atm)
-            qflx_tran_veg_patch => waterflux_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  
+            qflx_tran_veg_patch => waterfluxbulk_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  
                                                                           ! vegetation transpiration (mm H2O/s) (+ = to atm) 
-            qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
+            qflx_tran_veg_col   => waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
                                                                           ! vegetation transpiration (mm H2O/s) (+ = to atm)
             rootr_patch         => soilstate_inst%rootr_patch         , & ! Input:  [real(r8) (:,:) ]  
                                                                           ! effective fraction of roots in each soil layer  
@@ -240,7 +240,7 @@ contains
    ! ==================================================================================
    
    subroutine Compute_EffecRootFrac_And_VertTranSink_HydStress( bounds, &
-           num_filterc, filterc, waterflux_inst, soilstate_inst, &
+           num_filterc, filterc, waterfluxbulk_inst, soilstate_inst, &
            canopystate_inst, energyflux_inst)
 
 
@@ -250,7 +250,7 @@ contains
         use clm_varpar       , only : nlevsoi
         use clm_varpar       , only : max_patch_per_col
         use SoilStateType    , only : soilstate_type
-        use WaterFluxType    , only : waterflux_type
+        use WaterFluxBulkType    , only : waterfluxbulk_type
         use CanopyStateType  , only : canopystate_type
         use PatchType        , only : patch
         use ColumnType       , only : col
@@ -264,7 +264,7 @@ contains
         type(bounds_type)    , intent(in)    :: bounds          ! bounds
         integer              , intent(in)    :: num_filterc     ! number of column soil points in column filter
         integer              , intent(in)    :: filterc(:)      ! column filter for soil points
-        type(waterflux_type) , intent(inout) :: waterflux_inst
+        type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
         type(soilstate_type) , intent(inout) :: soilstate_inst
         type(canopystate_type) , intent(in)  :: canopystate_inst
         type(energyflux_type), intent(in)    :: energyflux_inst
@@ -280,13 +280,13 @@ contains
         associate(&
               k_soil_root         => soilstate_inst%k_soil_root_patch   , & ! Input:  [real(r8) (:,:) ]  
                                                                             ! soil-root interface conductance (mm/s)
-              qflx_phs_neg_col    => waterflux_inst%qflx_phs_neg_col    , & ! Input:  [real(r8) (:)   ]  n
+              qflx_phs_neg_col    => waterfluxbulk_inst%qflx_phs_neg_col    , & ! Input:  [real(r8) (:)   ]  n
                                                                             ! net neg hydraulic redistribution flux(mm H2O/s)
-              qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
+              qflx_tran_veg_col   => waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
                                                                             ! vegetation transpiration (mm H2O/s) (+ = to atm)
-              qflx_tran_veg_patch => waterflux_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  
+              qflx_tran_veg_patch => waterfluxbulk_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  
                                                                             ! vegetation transpiration (mm H2O/s) (+ = to atm)
-              qflx_rootsoi_col    => waterflux_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:)   ]
+              qflx_rootsoi_col    => waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:)   ]
                                                                             ! col root and soil water 
                                                                             ! exchange [mm H2O/s] [+ into root]
               rootr_col           => soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]
@@ -343,7 +343,7 @@ contains
      ! ==================================================================================
 
      subroutine Compute_EffecRootFrac_And_VertTranSink_Default(bounds, num_filterc, &
-           filterc, soilstate_inst, waterflux_inst)
+           filterc, soilstate_inst, waterfluxbulk_inst)
 
     !
     ! Generic routine to apply transpiration as a sink condition that
@@ -356,7 +356,7 @@ contains
     use shr_kind_mod     , only : r8 => shr_kind_r8
     use clm_varpar       , only : nlevsoi, max_patch_per_col
     use SoilStateType    , only : soilstate_type
-    use WaterFluxType    , only : waterflux_type
+    use WaterFluxBulkType    , only : waterfluxbulk_type
     use PatchType        , only : patch
     use ColumnType       , only : col
     use clm_varctl       , only : use_hydrstress
@@ -366,7 +366,7 @@ contains
     type(bounds_type)    , intent(in)    :: bounds                          ! bounds
     integer              , intent(in)    :: num_filterc                     ! number of column soil points in column filter
     integer              , intent(in)    :: filterc(num_filterc)            ! column filter for soil points
-    type(waterflux_type) , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
     type(soilstate_type) , intent(inout) :: soilstate_inst
     !
     ! !LOCAL VARIABLES:
@@ -374,11 +374,11 @@ contains
     integer  :: pi                                                    ! patch index
     real(r8) :: temp(bounds%begc:bounds%endc)                         ! accumulator for rootr weighting
     associate(& 
-          qflx_rootsoi_col    => waterflux_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  
+          qflx_rootsoi_col    => waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  
                                                                         ! vegetation/soil water exchange (m H2O/s) (+ = to atm)
-          qflx_tran_veg_patch => waterflux_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  
+          qflx_tran_veg_patch => waterfluxbulk_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  
                                                                         ! vegetation transpiration (mm H2O/s) (+ = to atm) 
-          qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
+          qflx_tran_veg_col   => waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
                                                                         ! vegetation transpiration (mm H2O/s) (+ = to atm)
           rootr_patch         => soilstate_inst%rootr_patch         , & ! Input: [real(r8) (:,:) ]
                                                                         ! effective fraction of roots in each soil layer  

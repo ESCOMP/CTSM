@@ -103,6 +103,10 @@ contains
          avgflag='A', long_name='column-level topographic height', &
          ptr_col=this%topo_col, default='inactive')
 
+    call hist_addfld1d(fname='TOPO_COL_ICE', units='m', &
+         avgflag='A', long_name='column-level topographic height (ice landunits only)', &
+         ptr_col=this%topo_col, l2g_scale_type='ice', default='inactive')
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -167,16 +171,19 @@ contains
     ! TODO(wjs, 2016-04-05) Rename these restart variables to get rid of 'glc' in their
     ! names. However, this will require some changes to init_interp, too.
 
+    ! This one is not actually an area, but has interpinic_flag='area' because we want to
+    ! interpolate it under the same conditions under which we interpolate areas.
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_topoglc', xtype=ncd_double,   &
          dim1name='column',                                                             &
          long_name='mean elevation on glacier elevation classes', units='m',            &
-         interpinic_flag='skip', readvar=readvar, data=this%topo_col)
+         interpinic_flag='area', readvar=readvar, data=this%topo_col)
 
     if (flag /= 'read') then
        do p=bounds%begp,bounds%endp
           c = patch%column(p)
           rparr(p) = this%topo_col(c)
        enddo
+       ! This one has interpinic_flag = 'skip' because it isn't read back in
        call restartvar(ncid=ncid, flag=flag, varname='pfts1d_topoglc', xtype=ncd_double,   &
             dim1name='pft',                                                             &
             long_name='mean elevation on glacier elevation classes', units='m',            &
