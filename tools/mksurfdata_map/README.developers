@@ -14,6 +14,8 @@ I.  Adding a new raw data file
 
 II. Adding mapping files for a raw data file with a new grid / landmask
 
+III. Checks that should be done when making new surface datasets
+
 ============================================================================
 I. Adding a new raw data file
 ============================================================================
@@ -175,4 +177,27 @@ laid out here.
       don't use that, you'll need to add the files to the inputdata
       directory yourself
 
+============================================================================
+III. Checks that should be done when making new surface datasets
+============================================================================
 
+Remaking all surface datasets carries the risk of introducing unintended
+changes, particularly when you are expecting answer changes (so you
+don't notice unintended answer changes that are mixed with the expected
+changes).
+
+Here are some things to check after making a new set of surface
+datasets:
+
+- For at least one global dataset (probably a production resolution
+  rather than a low resolution that is just used for testing): Compare
+  the new dataset against the previous version:
+
+  - Compare header (via ncdump -h) and/or log file: ensure that the same
+    source data were used, except where you expect differences
+
+  - Compare all fields with a tool like cprnc: make sure that the only
+    fields that differ are those you expect to differ
+
+  - Visually compare all fields that differ: make sure differences look
+    reasonable and as expected
