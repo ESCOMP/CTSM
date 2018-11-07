@@ -345,12 +345,9 @@ contains
           nocn_global = nocn_global + 1
        endif
     enddo
-    write(6,*)'DEBUG: nocn_global = ',nocn_global
-    write(6,*)'DEBUG: nlnd_global = ',nlnd_global
 
     ! create the a global index array for ocean points
     nocn_local = nocn_global / npes
-    write(6,*)'DEBUG: nocn_local = ',nocn_local
 
     my_ocn_start = nocn_local*iam + min(iam, mod(nocn_global, npes)) + 1
     if (iam < mod(nocn_global, npes)) then
