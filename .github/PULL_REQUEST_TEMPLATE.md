@@ -1,17 +1,20 @@
-[ 50 character, one line summary ]
+### Description of changes
 
-[ Description of the changes in this commit. It should be enough
-  information for someone not following this development to understand. 
-  Lines should be wrapped at about 72 characters. ]
+### Specific notes
 
-User interface changes?: [ No/Yes ]
-[ If yes, describe what changed, and steps taken to ensure backward compatibilty ]
+Contributors other than yourself, if any:
 
-Fixes: [Github issue #s] And brief description of each issue.
+CTSM Issues Fixed (include github issue #):
 
-Testing:
-  test removed:
-  unit tests:
-  system tests:
-  manual testing:
+Are answers expected to change (and if so in what way)?
 
+Any User Interface Changes (namelist or namelist defaults changes)?
+
+Testing performed, if any:
+(List what testing you did to show your changes worked as expected)
+(This can be manual testing or running of the different test suites)
+(Documentation on system testing is here: https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide)
+(aux_clm on cheyenne for gnu/pgi and hobart for gnu/pgi/nag is the standard for tags on master)
+
+**NOTE: Be sure to check your Coding style against the standard:**
+https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines

@@ -272,7 +272,7 @@ contains
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
-    use DaylengthMod          , only : InitDaylength, daylength
+    use DaylengthMod          , only : InitDaylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
     use fileutils             , only : getfil
     use initInterpMod         , only : initInterp
@@ -289,11 +289,12 @@ contains
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
+    use BalanceCheckMod       , only : BalanceCheckInit
     !
     ! !ARGUMENTS    
     !
     ! !LOCAL VARIABLES:
-    integer               :: c,i,g,j,k,l,p! indices
+    integer               :: c,i,j,k,l,p! indices
     integer               :: yr           ! current year (0, ...)
     integer               :: mon          ! current month (1 -> 12)
     integer               :: day          ! current day (1 -> 31)
@@ -316,7 +317,6 @@ contains
     logical               :: lexist
     integer               :: closelatidx,closelonidx
     real(r8)              :: closelat,closelon
-    real(r8)              :: max_decl      ! temporary, for calculation of max_dayl
     integer               :: begp, endp
     integer               :: begc, endc
     integer               :: begl, endl
@@ -372,17 +372,11 @@ contains
 
     call t_stopf('init_orbd')
     
-    call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1)
+    call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+
+    ! Initialize Balance checking (after time-manager)
+    call BalanceCheckInit()
              
-    ! Initialize maximum daylength, based on latitude and maximum declination
-    ! given by the obliquity use negative value for S. Hem
-
-    do g = bounds_proc%begg,bounds_proc%endg
-       max_decl = obliqr
-       if (grc%lat(g) < 0._r8) max_decl = -max_decl
-       grc%max_dayl(g) = daylength(grc%lat(g), max_decl)
-    end do
-
     ! History file variables
 
     if (use_cn) then
@@ -549,7 +543,8 @@ contains
 
        ! Interpolate finidat onto new template file
        call getfil( finidat_interp_source, fnamer,  0 )
-       call initInterp(filei=fnamer, fileo=finidat_interp_dest, bounds=bounds_proc)
+       call initInterp(filei=fnamer, fileo=finidat_interp_dest, bounds=bounds_proc, &
+            glc_behavior=glc_behavior)
 
        ! Read new interpolated conditions file back in
        call restFile_read(bounds_proc, finidat_interp_dest, glc_behavior)
@@ -595,7 +590,7 @@ contains
 
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
-    call waterflux_inst%initAccVars(bounds_proc)
+    call water_inst%initAccVars(bounds_proc)
     call energyflux_inst%initAccVars(bounds_proc)
     call canopystate_inst%initAccVars(bounds_proc)
 
@@ -628,7 +623,7 @@ contains
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
-            waterstate_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
+            water_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
        call t_stopf('init_map2gc')
     end if
 
@@ -643,7 +638,7 @@ contains
        call t_startf('init_lnd2glc')
        call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-            temperature_inst, glacier_smb_inst, topo_inst, &
+            temperature_inst, water_inst%waterfluxbulk_inst, topo_inst, &
             init=.true.)
        call t_stopf('init_lnd2glc')
     end do
@@ -663,7 +658,9 @@ contains
     ! --------------------------------------------------------------
    
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
-       call clm_fates%init_coldstart(waterstate_inst,canopystate_inst,soilstate_inst, frictionvel_inst)
+       call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
+            water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
+            soilstate_inst, frictionvel_inst)
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
@@ -694,6 +691,15 @@ contains
     call t_stopf('init_wlog')
 
     call t_stopf('clm_init2')
+
+    if (water_inst%DoConsistencyCheck()) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
+       end do
+       !$OMP END PARALLEL DO
+    end if
 
   end subroutine initialize2
 

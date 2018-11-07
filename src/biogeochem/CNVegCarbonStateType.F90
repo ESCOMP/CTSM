@@ -1141,7 +1141,7 @@ contains
        this%leafc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LEAFC', units='gC13/m^2', &
             avgflag='A', long_name='C13 leaf C', &
-            ptr_patch=this%leafc_patch)
+            ptr_patch=this%leafc_patch, default='inactive')
 
        this%leafc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LEAFC_STORAGE', units='gC13/m^2', &
@@ -1161,7 +1161,7 @@ contains
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_FROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 fine root C', &
-            ptr_patch=this%frootc_patch)
+            ptr_patch=this%frootc_patch, default='inactive')
 
        this%frootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_FROOTC_STORAGE', units='gC13/m^2', &
@@ -1176,7 +1176,7 @@ contains
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVESTEMC', units='gC13/m^2', &
             avgflag='A', long_name='C13 live stem C', &
-            ptr_patch=this%livestemc_patch)
+            ptr_patch=this%livestemc_patch, default='inactive')
 
        this%livestemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVESTEMC_STORAGE', units='gC13/m^2', &
@@ -1191,7 +1191,7 @@ contains
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADSTEMC', units='gC13/m^2', &
             avgflag='A', long_name='C13 dead stem C', &
-            ptr_patch=this%deadstemc_patch)
+            ptr_patch=this%deadstemc_patch, default='inactive')
 
        this%deadstemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADSTEMC_STORAGE', units='gC13/m^2', &
@@ -1206,7 +1206,7 @@ contains
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVECROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 live coarse root C', &
-            ptr_patch=this%livecrootc_patch)
+            ptr_patch=this%livecrootc_patch, default='inactive')
 
        this%livecrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVECROOTC_STORAGE', units='gC13/m^2', &
@@ -1221,7 +1221,7 @@ contains
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADCROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 dead coarse root C', &
-            ptr_patch=this%deadcrootc_patch)
+            ptr_patch=this%deadcrootc_patch, default='inactive')
 
        this%deadcrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADCROOTC_STORAGE', units='gC13/m^2', &
@@ -1246,12 +1246,12 @@ contains
        this%cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_CPOOL', units='gC13/m^2', &
             avgflag='A', long_name='C13 temporary photosynthate C pool', &
-            ptr_patch=this%cpool_patch)
+            ptr_patch=this%cpool_patch, default='inactive')
 
        this%xsmrpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_XSMRPOOL', units='gC13/m^2', &
             avgflag='A', long_name='C13 temporary photosynthate C pool', &
-            ptr_patch=this%xsmrpool_patch)
+            ptr_patch=this%xsmrpool_patch, default='inactive')
 
        this%ctrunc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PFT_CTRUNC', units='gC13/m^2', &
@@ -1261,12 +1261,12 @@ contains
        this%dispvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DISPVEGC', units='gC13/m^2', &
             avgflag='A', long_name='C13 displayed veg carbon, excluding storage and cpool', &
-            ptr_patch=this%dispvegc_patch)
+            ptr_patch=this%dispvegc_patch, default='inactive')
 
        this%storvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_STORVEGC', units='gC13/m^2', &
             avgflag='A', long_name='C13 stored vegetation carbon, excluding cpool', &
-            ptr_patch=this%storvegc_patch)
+            ptr_patch=this%storvegc_patch, default='inactive')
 
        this%totvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_TOTVEGC', units='gC13/m^2', &
@@ -1276,17 +1276,17 @@ contains
        this%totc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_TOTPFTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total patch-level carbon, including cpool', &
-            ptr_patch=this%totc_patch)
+            ptr_patch=this%totc_patch, default='inactive')
 
        this%seedc_grc(begg:endg) = spval
        call hist_addfld1d (fname='C13_SEEDC', units='gC13/m^2', &
             avgflag='A', long_name='C13 pool for seeding new PFTs via dynamic landcover', &
-            ptr_gcell=this%seedc_grc)
+            ptr_gcell=this%seedc_grc, default='inactive')
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total column carbon, incl veg and cpool but excl product pools', &
-            ptr_col=this%totc_col)
+            ptr_col=this%totc_col, default='inactive')
 
        this%totecosysc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
@@ -1297,11 +1297,11 @@ contains
           this%grainc_patch(begp:endp) = spval
           call hist_addfld1d (fname='C13_GRAINC', units='gC/m^2', &
                avgflag='A', long_name='C13 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch)
+               ptr_patch=this%grainc_patch, default='inactive')
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C13_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C13 C used for crop seed that needs to be repaid', &
-               ptr_patch=this%cropseedc_deficit_patch)
+               ptr_patch=this%cropseedc_deficit_patch, default='inactive')
        end if
 
 
@@ -1316,7 +1316,7 @@ contains
        this%leafc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LEAFC', units='gC14/m^2', &
             avgflag='A', long_name='C14 leaf C', &
-            ptr_patch=this%leafc_patch)
+            ptr_patch=this%leafc_patch, default='inactive')
 
        this%leafc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LEAFC_STORAGE', units='gC14/m^2', &
@@ -1336,7 +1336,7 @@ contains
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_FROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 fine root C', &
-            ptr_patch=this%frootc_patch)
+            ptr_patch=this%frootc_patch, default='inactive')
 
        this%frootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_FROOTC_STORAGE', units='gC14/m^2', &
@@ -1351,7 +1351,7 @@ contains
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVESTEMC', units='gC14/m^2', &
             avgflag='A', long_name='C14 live stem C', &
-            ptr_patch=this%livestemc_patch)
+            ptr_patch=this%livestemc_patch, default='inactive')
 
        this%livestemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVESTEMC_STORAGE', units='gC14/m^2', &
@@ -1366,7 +1366,7 @@ contains
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADSTEMC', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead stem C', &
-            ptr_patch=this%deadstemc_patch)
+            ptr_patch=this%deadstemc_patch, default='inactive')
 
        this%deadstemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADSTEMC_STORAGE', units='gC14/m^2', &
@@ -1381,7 +1381,7 @@ contains
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVECROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 live coarse root C', &
-            ptr_patch=this%livecrootc_patch)
+            ptr_patch=this%livecrootc_patch, default='inactive')
 
        this%livecrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVECROOTC_STORAGE', units='gC14/m^2', &
@@ -1396,7 +1396,7 @@ contains
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADCROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead coarse root C', &
-            ptr_patch=this%deadcrootc_patch)
+            ptr_patch=this%deadcrootc_patch, default='inactive')
 
        this%deadcrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADCROOTC_STORAGE', units='gC14/m^2', &
@@ -1421,27 +1421,27 @@ contains
        this%cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_CPOOL', units='gC14/m^2', &
             avgflag='A', long_name='C14 temporary photosynthate C pool', &
-            ptr_patch=this%cpool_patch)
+            ptr_patch=this%cpool_patch, default='inactive')
 
        this%xsmrpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_XSMRPOOL', units='gC14/m^2', &
             avgflag='A', long_name='C14 temporary photosynthate C pool', &
-            ptr_patch=this%xsmrpool_patch)
+            ptr_patch=this%xsmrpool_patch, default='inactive')
 
        this%ctrunc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PFT_CTRUNC', units='gC14/m^2', &
             avgflag='A', long_name='C14 patch-level sink for C truncation', &
-            ptr_patch=this%ctrunc_patch)
+            ptr_patch=this%ctrunc_patch, default='inactive')
 
        this%dispvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DISPVEGC', units='gC14/m^2', &
             avgflag='A', long_name='C14 displayed veg carbon, excluding storage and cpool', &
-            ptr_patch=this%dispvegc_patch)
+            ptr_patch=this%dispvegc_patch, default='inactive')
 
        this%storvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_STORVEGC', units='gC14/m^2', &
             avgflag='A', long_name='C14 stored vegetation carbon, excluding cpool', &
-            ptr_patch=this%storvegc_patch)
+            ptr_patch=this%storvegc_patch, default='inactive')
 
        this%totvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_TOTVEGC', units='gC14/m^2', &
@@ -1451,17 +1451,17 @@ contains
        this%totc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_TOTPFTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total patch-level carbon, including cpool', &
-            ptr_patch=this%totc_patch)
+            ptr_patch=this%totc_patch, default='inactive')
 
        this%seedc_grc(begg:endg) = spval
        call hist_addfld1d (fname='C14_SEEDC', units='gC14/m^2', &
             avgflag='A', long_name='C14 pool for seeding new PFTs via dynamic landcover', &
-            ptr_gcell=this%seedc_grc)
+            ptr_gcell=this%seedc_grc, default='inactive')
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTCOLC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total column carbon, incl veg and cpool but excl product pools', &
-            ptr_col=this%totc_col)
+            ptr_col=this%totc_col, default='inactive')
 
        this%totecosysc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
@@ -1472,11 +1472,11 @@ contains
           this%grainc_patch(begp:endp) = spval
           call hist_addfld1d (fname='C14_GRAINC', units='gC/m^2', &
                avgflag='A', long_name='C14 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch)
+               ptr_patch=this%grainc_patch, default='inactive')
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C14_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C14 C used for crop seed that needs to be repaid', &
-               ptr_patch=this%cropseedc_deficit_patch)
+               ptr_patch=this%cropseedc_deficit_patch, default='inactive')
        end if
 
 
@@ -2817,10 +2817,10 @@ contains
                          this%grainc_patch(i)         = 0._r8 
                          this%grainc_storage_patch(i) = 0._r8 
                          this%grainc_xfer_patch(i)    = 0._r8 
-                         this%grainc0_patch(i)         = 0._r8 
-                         this%grainc0_storage_patch(i) = 0._r8 
-                         this%grainc0_xfer_patch(i)    = 0._r8 
                          if(use_matrixcn)then
+                            this%grainc0_patch(i)         = 0._r8 
+                            this%grainc0_storage_patch(i) = 0._r8 
+                            this%grainc0_xfer_patch(i)    = 0._r8 
                             this%matrix_cap_grainc_patch(i)       = 0._r8 
                             this%matrix_cap_grainc_storage_patch(i)       = 0._r8 
                             this%matrix_cap_grainc_xfer_patch(i)       = 0._r8 

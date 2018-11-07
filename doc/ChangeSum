@@ -1,5 +1,37 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev016    sacks 11/01/2018 Update cime, fix FATES DEBUG token, add script to easily run system tests
+  ctsm1.0.dev015    sacks 10/28/2018 CMIP6 compset modifiers, usermods for typical output, and other output enhancements
+  ctsm1.0.dev014    sacks 10/26/2018 Miscellaneous minor, bit-for-bit bug fixes
+  ctsm1.0.dev013     erik 10/25/2018 Fix the fact that transient Bgc and SP cases had constant crop area in time
+  ctsm1.0.dev012     erik 09/29/2018 Add snow-free fields for snowmip, fix several issues
+  ctsm1.0.dev011    sacks 09/12/2018 Add water tracer consistency checks, and other water tracer work
+  ctsm1.0.dev010    sacks 08/30/2018 Update cime to cime5.7.3
+  ctsm1.0.dev009    sacks 08/22/2018 Fix initialization of AnnET in InitAccVars
+  ctsm1.0.dev008     erik 08/14/2018 Update 1850 ndep file and last year for streams for Historical transient cases
+  ctsm1.0.dev007    sacks 08/05/2018 Avoid glacier dynamic landunit adjustments in first time step
+  ctsm1.0.dev006    sacks 08/04/2018 Minor bug fixes, cleanup, documentation and enhancements
+  ctsm1.0.dev005    sacks 08/03/2018 Rework water data types to accommodate isotopes and other tracers
+  ctsm1.0.dev004     erik 07/18/2018 Add some new diagnostic fields, fix a few issues, update cmip6 output
+  ctsm1.0.dev003     erik 07/15/2018 Update cime/cism to work on upgraded hobart and with glade changes on cheyenne
+  ctsm1.0.dev002     erik 07/06/2018 Fix NFIX flux variables so special land-units are zeroed out, tools update, add some *_MAX fields on mksurfdata_map for transient cases
+  ctsm1.0.dev001    sacks 06/22/2018 Begin separating SoilHydrology flux calculations
+   clm5.0.dev013     erik 06/12/2018 cleanup and update cime and cism
+   clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
+   clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing
+   clm5.0.dev010     erik 05/15/2018 Update cime version to version in cesm2.0.beta10, changes answers for 1850 compsets because of orbit
+   clm5.0.dev009    sacks 05/10/2018 New init_interp method
+   clm5.0.dev008     erik 04/27/2018 With FUN subtract out soil nitrification flux of plant uptake of soil NH3 and NO3
+   clm5.0.dev007     erik 04/24/2018 Bring in a few answer changing things: FATES, cism updates, IC file fix, 
+                                     testing 1850 compset use 1850 orbit
+   clm5.0.dev006    sacks 04/12/2018 Don't allocate memory for zero-weight natveg patches and urban
+   clm5.0.dev005    sacks 04/10/2018 Two fixes for init_interp
+   clm5.0.dev004     erik 04/09/2018 List of important bug fixes
+   clm5.0.dev003     erik 03/09/2018 Bug fixes for energy imbalance associated with surface water and lakes
+   clm5.0.dev002    sacks 02/25/2018 Add some land ice diagnostic vars needed for CMIP6
+   clm5.0.dev001     erik 02/14/2018 Fix LND_TUNING_MODE for fully coupled case, update some README files/PTCLM
+   clm5.0.dev000     erik 02/05/2018 Double tag of clm5.0.000 with new naming convention, some updated documentation
+  clm5.0.000         erik 02/05/2018 Double tag of clm4_5_18_r275 for clm5.0 release
   clm4_5_18_r275     erik 02/05/2018 Update initial condition files, update fates, new CMIP6 pop-dens, more lnd_tuning_mod options, updated ndep for fully coupled
   clm4_5_18_r274    sacks 01/30/2018 Fix auto-detection of CIME_MODEL in a standalone checkout
   clm4_5_18_r273    sacks 01/26/2018 Support a standalone checkout from git

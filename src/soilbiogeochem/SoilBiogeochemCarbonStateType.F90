@@ -337,7 +337,7 @@ contains
           longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C'
           call hist_addfld1d (fname=fieldname, units='gC13/m^2', &
                avgflag='A', long_name=longname, &
-               ptr_col=data1dptr)
+               ptr_col=data1dptr, default='inactive')
        end do
 
        if(use_soil_matrixcn)then
@@ -394,14 +394,14 @@ contains
           this%totlitc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C13_TOTLITC_1m', units='gC13/m^2', &
                avgflag='A', long_name='C13 total litter carbon to 1 meter', &
-               ptr_col=this%totlitc_1m_col)
+               ptr_col=this%totlitc_1m_col, default='inactive')
        end if
 
        if ( nlevdecomp_full > 1 ) then
           this%totsomc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C13_TOTSOMC_1m', units='gC13/m^2', &
                avgflag='A', long_name='C13 total soil organic matter carbon to 1 meter', &
-               ptr_col=this%totsomc_1m_col)
+               ptr_col=this%totsomc_1m_col, default='inactive')
        endif
 
        this%ctrunc_col(begc:endc) = spval
@@ -437,7 +437,7 @@ contains
           fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C'
           longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C'
           call hist_addfld1d (fname=fieldname, units='gC14/m^2', &
-               avgflag='A', long_name=longname, ptr_col=data1dptr)
+               avgflag='A', long_name=longname, ptr_col=data1dptr, default='inactive')
 
           if ( nlevdecomp_full > 1 ) then
              data1dptr => this%decomp_cpools_1m_col(:,l)
@@ -514,12 +514,12 @@ contains
           this%totlitc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C14_TOTLITC_1m', units='gC14/m^2', &
                avgflag='A', long_name='C14 total litter carbon to 1 meter', &
-               ptr_col=this%totlitc_1m_col)
+               ptr_col=this%totlitc_1m_col, default='inactive')
 
           this%totsomc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C14_TOTSOMC_1m', units='gC14/m^2', &
                avgflag='A', long_name='C14 total soil organic matter carbon to 1 meter', &
-               ptr_col=this%totsomc_1m_col)
+               ptr_col=this%totsomc_1m_col, default='inactive')
        endif
 
        this%ctrunc_col(begc:endc) = spval

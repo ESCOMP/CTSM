@@ -222,7 +222,7 @@ contains
     !
     ! !USES
     use clm_instur, only : wt_lunit, wt_nat_patch
-    use subgridMod, only : subgrid_get_info_natveg
+    use subgridMod, only : subgrid_get_info_natveg, natveg_patch_exists
     use clm_varpar, only : numpft, maxpatch_pft, natpft_lb, natpft_ub
     !
     ! !ARGUMENTS:
@@ -237,7 +237,9 @@ contains
     integer  :: npatches                         ! number of patches in landunit
     integer  :: ncols
     integer  :: nlunits
-    integer  :: pitype                           ! patch itype
+    integer  :: npatches_added                   ! number of patches actually added
+    integer  :: ncols_added                      ! number of columns actually added
+    integer  :: nlunits_added                    ! number of landunits actually added
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
     !------------------------------------------------------------------------
 
@@ -247,16 +249,29 @@ contains
           npatches=npatches, ncols=ncols, nlunits=nlunits)
     wtlunit2gcell = wt_lunit(gi, ltype)
 
-    if (npatches > 0) then
+    nlunits_added = 0
+    ncols_added = 0
+    npatches_added = 0
+
+    if (nlunits > 0) then
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
+       nlunits_added = nlunits_added + 1
        
        ! Assume one column on the landunit
        call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
+       ncols_added = ncols_added + 1
 
        do m = natpft_lb,natpft_ub
-          call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
+          if (natveg_patch_exists(gi, m)) then
+             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
+             npatches_added = npatches_added + 1
+          end if
        end do
     end if
+
+    SHR_ASSERT(nlunits_added == nlunits, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(ncols_added == ncols, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(npatches_added == npatches, errMsg(sourcefile, __LINE__))
 
   end subroutine set_landunit_veg_compete
   
@@ -431,6 +446,9 @@ contains
     integer  :: npatches                         ! number of pfts in landunit
     integer  :: ncols
     integer  :: nlunits
+    integer  :: npatches_added                   ! number of patches actually added
+    integer  :: ncols_added                      ! number of columns actually added
+    integer  :: nlunits_added                    ! number of landunits actually added
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
     !------------------------------------------------------------------------
 
@@ -439,6 +457,10 @@ contains
     call subgrid_get_info_crop(gi, &
          npatches=npatches, ncols=ncols, nlunits=nlunits)
     wtlunit2gcell = wt_lunit(gi, ltype)
+
+    nlunits_added = 0
+    ncols_added = 0
+    npatches_added = 0
 
     if (nlunits > 0) then
 
@@ -455,6 +477,7 @@ contains
        end if
 
        call add_landunit(li=li, gi=gi, ltype=my_ltype, wtgcell=wtlunit2gcell)
+       nlunits_added = nlunits_added + 1
        
        ! Set column and patch properties for this landunit 
        ! (each column has its own pft)
@@ -462,12 +485,18 @@ contains
        do cft = cft_lb, cft_ub
           if (crop_patch_exists(gi, cft)) then
              call add_column(ci=ci, li=li, ctype=((istcrop*100) + cft), wtlunit=wt_cft(gi,cft))
+             ncols_added = ncols_added + 1
              call add_patch(pi=pi, ci=ci, ptype=cft, wtcol=1.0_r8)
+             npatches_added = npatches_added + 1
           end if
        end do
 
     end if
-       
+
+    SHR_ASSERT(nlunits_added == nlunits, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(ncols_added == ncols, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(npatches_added == npatches, errMsg(sourcefile, __LINE__))
+
   end subroutine set_landunit_crop_noncompete
 
   !------------------------------------------------------------------------------
@@ -527,13 +556,13 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
-    wtlunit2gcell = wt_lunit(gi, ltype)
-
-    n = ltype - isturb_MIN + 1
-    wtlunit_roof = urbinp%wtlunit_roof(gi,n)
-    wtroad_perv  = urbinp%wtroad_perv(gi,n)
-
     if (npatches > 0) then
+
+       wtlunit2gcell = wt_lunit(gi, ltype)
+
+       n = ltype - isturb_MIN + 1
+       wtlunit_roof = urbinp%wtlunit_roof(gi,n)
+       wtroad_perv  = urbinp%wtroad_perv(gi,n)
 
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
 

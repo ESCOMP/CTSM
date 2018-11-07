@@ -14,9 +14,9 @@
 
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
-    <desc lnd="CLM40[%SP][%CN][%CNDV][%CN-CROP][%CNDV-CROP]"                                                        >clm4.0:</desc>
-    <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]" >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                              >clm5.0:</desc>
+    <desc lnd="CLM40[%SP][%CN][%CNDV][%CN-CROP][%CNDV-CROP]"                                                                         >clm4.0:</desc>
+    <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
+    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK]">clm5.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
     <desc option="CN"              >CN: Carbon Nitrogen model</desc>
     <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation</desc>
@@ -29,6 +29,8 @@
     <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: (experimental)</desc>
     <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
     <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
+    <desc option="BGC-CROP-CMIP6DECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 DECK experiments:</desc>
+    <desc option="BGC-CROP-CMIP6WACCMDECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 WACCM DECK experiments:</desc>
   </description>
 
   <entry id="COMP_LND">
@@ -56,7 +58,7 @@
     <desc>Tuning parameters and initial conditions should be optimized for what CLM model version and what meteorlogical forcing combination?
     </desc>
     <default_value>UNSET</default_value>
-    <valid_values>clm4_0_CRUv7,clm4_0_GSWP3v1,clm5_0_cam6_0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
+    <valid_values>clm4_0_CRUv7,clm4_0_GSWP3v1,clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
     <values>
       <value compset=             "CLM40" >clm4_0_CRUv7</value>
       <value compset="DATM%CRU_CLM40"     >clm4_0_CRUv7</value>
@@ -65,11 +67,11 @@
       <value compset=             "CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSWP3v1</value>
-      <value compset="CAM.+_CLM45"        >clm4_5_cam6_0</value>
+      <value compset="CAM.+_CLM45"        >clm4_5_cam6.0</value>
       <value compset=             "CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSWP3v1</value>
-      <value compset="CAM.+_CLM50"        >clm5_0_cam6_0</value>
+      <value compset="CAM.+_CLM50"        >clm5_0_cam6.0</value>
     </values>
   </entry>
 
@@ -100,15 +102,15 @@
     <default_value>UNSET</default_value>
     <values>
       <!-- Use rcp4.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
-      <value compset="2000.*"		>2000_control</value>
-      <value compset="1850.*_"		>1850_control</value>
-      <value compset="HIST.*_"		>20thC_transient</value>
-      <value compset="RCP6.*_"		>1850-2100_rcp6_transient</value>
-      <value compset="RCP4.*_"		>1850-2100_rcp4.5_transient</value>
-      <value compset="RCP2.*_"		>1850-2100_rcp2.6_transient</value>
-      <value compset="RCP8.*_"		>1850-2100_rcp8.5_transient</value>
-      <value compset="AMIP.*_"		>20thC_transient</value>
-      <value compset="PIPD_"           >1850-2100_rcp4.5_transient</value>
+      <value compset="^2000_"		>2000_control</value>
+      <value compset="^1850_"		>1850_control</value>
+      <value compset="^HIST_"		>20thC_transient</value>
+      <value compset="^RCP6_"		>1850-2100_rcp6_transient</value>
+      <value compset="^RCP4_"		>1850-2100_rcp4.5_transient</value>
+      <value compset="^RCP2_"		>1850-2100_rcp2.6_transient</value>
+      <value compset="^RCP8_"		>1850-2100_rcp8.5_transient</value>
+      <value compset="^AMIP_"		>20thC_transient</value>
+      <value compset="^PIPD_"           >1850-2100_rcp4.5_transient</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
@@ -222,6 +224,19 @@
       A value of on forces the model to spin up from a cold-start
       (arbitrary initial conditions). Setting this value in the xml file will take
       precedence over any settings for finidat in the $CASEROOT/user_clm_clm file.</desc>
+  </entry>
+
+  <entry id="CLM_USER_MODS">
+    <type>char</type>
+    <valid_values></valid_values>
+    <default_value></default_value>
+    <values match="last">
+      <value compset="_CLM50%[^_]*CMIP6DECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
+      <value compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
+    </values>
+    <group>run_component_clm</group>
+    <file>env_case.xml</file>
+    <desc>User mods to apply to specific compset matches. </desc>
   </entry>
 
   <help>

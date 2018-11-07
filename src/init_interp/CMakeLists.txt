@@ -8,6 +8,7 @@ list(APPEND clm_sources
   initInterpMultilevelInterp.F90
   initInterpMultilevelSnow.F90
   initInterpMultilevelSplit.F90
+  initInterpUtils.F90
   )
 
 sourcelist_to_parent(clm_sources)

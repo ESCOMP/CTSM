@@ -1,2 +1,0 @@
-finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IGM1850GSWCLM50BGCCROP.0481-01-01.1.9x2.5_gx1v6_gl5_simyr1850_c170419.nc'
-use_init_interp = .true.

@@ -1,6 +1,8 @@
-Naming Convention for CLM use-cases                       Jan/2011
+$CTSMROOT/namelist_files/use_cases/README                   Jun/08/2018
 
-It's important that this naming convention be followed so that the PTCLM.py
+Naming Convention for CLM use-cases
+
+It's important that this naming convention be followed so that the PTCLMmkdata.py
 utility can parse the use-cases appropriately. The build-namelist script also
 checks for conformance with these conventions and won't work for names that
 don't follow the convention.

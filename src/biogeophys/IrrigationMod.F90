@@ -10,13 +10,9 @@ module IrrigationMod
   !     needed for the next call to ApplyIrrigation. This should be called once per
   !     timestep.
   ! 
-  !   - Call ApplyIrrigation in order to calculate qflx_irrig. This should be called
-  !     exactly once per time step, before the first time qflx_irrig is needed by other
-  !     parts of the code. It is acceptable for this to be called earlier in the timestep
-  !     than CalcIrrigationNeeded.
-  !
-  !   - Access the timestep's irrigation flux via qflx_irrig_patch or
-  !     qflx_irrig_col. These should be treated as read-only.
+  !   - Call ApplyIrrigation in order to calculate qflx_irrig_patch and qflx_irrig_col. It
+  !     is acceptable for this to be called earlier in the timestep than
+  !     CalcIrrigationNeeded.
   !
   ! Design notes:
   !
@@ -51,10 +47,11 @@ module IrrigationMod
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
-  use clm_varcon       , only : isecspday, degpsec, denh2o, spval, namec
+  use clm_varcon       , only : isecspday, denh2o, spval, namec
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+  use WaterFluxBulkType    , only : waterfluxbulk_type
   use GridcellType     , only : grc                
   use ColumnType       , only : col                
   use PatchType        , only : patch                
@@ -120,10 +117,6 @@ module IrrigationMod
 
   type, public :: irrigation_type
      private
-     ! Public data members
-     ! Note: these should be treated as read-only by other modules
-     real(r8), pointer, public :: qflx_irrig_patch(:) ! patch irrigation flux (mm H2O/s)
-     real(r8), pointer, public :: qflx_irrig_col  (:) ! col irrigation flux (mm H2O/s)
 
      ! Private data members; set in initialization:
      type(irrigation_params_type) :: params
@@ -506,9 +499,7 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
 
-    allocate(this%qflx_irrig_patch         (begp:endp))          ; this%qflx_irrig_patch         (:)   = nan
     allocate(this%qflx_irrig_demand_patch  (begp:endp))          ; this%qflx_irrig_demand_patch  (:)   = nan
-    allocate(this%qflx_irrig_col           (begc:endc))          ; this%qflx_irrig_col           (:)   = nan
     allocate(this%relsat_wilting_point_col (begc:endc,nlevsoi)) ; this%relsat_wilting_point_col (:,:) = nan
     allocate(this%relsat_target_col        (begc:endc,nlevsoi)) ; this%relsat_target_col        (:,:) = nan
     allocate(this%irrig_rate_patch         (begp:endp))          ; this%irrig_rate_patch         (:)   = nan
@@ -537,11 +528,6 @@ contains
     !-----------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
-
-    this%qflx_irrig_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QIRRIG', units='mm/s', &
-         avgflag='A', long_name='water added through irrigation', &
-         ptr_patch=this%qflx_irrig_patch)
 
     this%qflx_irrig_demand_patch(begp:endp) = spval
     call hist_addfld1d (fname='QIRRIG_DEMAND', units='mm/s', &
@@ -733,9 +719,7 @@ contains
     character(len=*), parameter :: subname = 'Clean'
     !-----------------------------------------------------------------------
     
-    deallocate(this%qflx_irrig_patch)
     deallocate(this%qflx_irrig_demand_patch)
-    deallocate(this%qflx_irrig_col)
     deallocate(this%relsat_wilting_point_col)
     deallocate(this%relsat_target_col)
     deallocate(this%irrig_rate_patch)
@@ -750,19 +734,21 @@ contains
   ! ========================================================================
   
   !-----------------------------------------------------------------------
-  subroutine ApplyIrrigation(this, bounds)
+  subroutine ApplyIrrigation(this, bounds, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
     !
-    ! Should be called once, AND ONLY ONCE, per time step. After this is called, you may
-    ! access qflx_irrig_patch or qflx_irrig_col.
+    ! Sets waterfluxbulk_inst%qflx_irrig_patch and waterfluxbulk_inst%qflx_irrig_col.
+    !
+    ! Should be called once, AND ONLY ONCE, per time step.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: p  ! patch index
@@ -772,34 +758,41 @@ contains
 
     !-----------------------------------------------------------------------
 
-    ! This should be called exactly once per time step, so that this counter decrease
+    ! This should be called exactly once per time step, so that the counter decrease
     ! works correctly.
+
+    associate( &
+         qflx_irrig_patch => waterfluxbulk_inst%qflx_irrig_patch , & ! Output: [real(r8) (:)] patch irrigation flux (mm H2O/s)
+         qflx_irrig_col   => waterfluxbulk_inst%qflx_irrig_col     & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
+         )
 
     do p = bounds%begp, bounds%endp
        g = patch%gridcell(p)
 
        if (this%n_irrig_steps_left_patch(p) > 0) then
-          this%qflx_irrig_patch(p)         = this%irrig_rate_patch(p)
+          qflx_irrig_patch(p)              = this%irrig_rate_patch(p)
           this%qflx_irrig_demand_patch(p)  = this%irrig_rate_demand_patch(p)
           this%n_irrig_steps_left_patch(p) = this%n_irrig_steps_left_patch(p) - 1
        else
-          this%qflx_irrig_patch(p)        = 0._r8
+          qflx_irrig_patch(p)             = 0._r8
           this%qflx_irrig_demand_patch(p) = 0._r8
        end if
 
     end do
 
     call p2c (bounds = bounds, &
-         parr = this%qflx_irrig_patch(bounds%begp:bounds%endp), &
-         carr = this%qflx_irrig_col(bounds%begc:bounds%endc), &
+         parr = qflx_irrig_patch(bounds%begp:bounds%endp), &
+         carr = qflx_irrig_col(bounds%begc:bounds%endc), &
          p2c_scale_type = 'unity')
+
+    end associate
 
   end subroutine ApplyIrrigation
 
 
   !-----------------------------------------------------------------------
   subroutine CalcIrrigationNeeded(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       time_prev, elai, t_soisno, eff_porosity, h2osoi_liq, volr, rof_prognostic)
+       elai, t_soisno, eff_porosity, h2osoi_liq, volr, rof_prognostic)
     !
     ! !DESCRIPTION:
     ! Calculate whether and how much irrigation is needed for each column. However, this
@@ -811,9 +804,6 @@ contains
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-
-    ! time of day (in seconds since 0Z) at start of timestep
-    integer, intent(in) :: time_prev
 
     ! number of points in filter_exposedvegp
     integer, intent(in) :: num_exposedvegp
@@ -911,7 +901,7 @@ contains
 
        check_for_irrig_patch(p) = this%PointNeedsCheckForIrrig( &
             pft_type=patch%itype(p), elai=elai(p), &
-            time_prev=time_prev, londeg=grc%londeg(g))
+            londeg=grc%londeg(g))
        if (check_for_irrig_patch(p)) then
           c = patch%column(p)
           check_for_irrig_col(c) = .true.
@@ -1033,27 +1023,24 @@ contains
   end subroutine CalcIrrigationNeeded
 
   !-----------------------------------------------------------------------
-  function PointNeedsCheckForIrrig(this, pft_type, elai, time_prev, londeg) &
+  function PointNeedsCheckForIrrig(this, pft_type, elai, londeg) &
        result(check_for_irrig)
     !
     ! !DESCRIPTION:
     ! Determine whether a given patch needs to be checked for irrigation now.
     !
     ! !USES:
-    use pftconMod, only : pftcon
+    use clm_time_manager, only : get_local_time
+    use pftconMod       , only : pftcon
     !
     ! !ARGUMENTS:
     logical :: check_for_irrig  ! function result
     class(irrigation_type), intent(in) :: this
     integer , intent(in) :: pft_type  ! type of pft in this patch
     real(r8), intent(in) :: elai      ! one-sided leaf area index with burying by snow
-    integer , intent(in) :: time_prev ! time of day (in seconds since 0Z) at start of timestep
     real(r8), intent(in) :: londeg    ! longitude (degrees)
     !
     ! !LOCAL VARIABLES:
-    ! local time at start of time step (seconds after solar midnight)
-    integer  :: local_time
-
     ! number of seconds since the prescribed irrigation start time
     integer  :: seconds_since_irrig_start_time
 
@@ -1063,8 +1050,7 @@ contains
     if (pftcon%irrigated(pft_type) == 1._r8 .and. &
          elai > this%params%irrig_min_lai) then
        ! see if it's the right time of day to start irrigating:
-       local_time = modulo(time_prev + nint(londeg/degpsec), isecspday)
-       seconds_since_irrig_start_time = modulo(local_time - this%params%irrig_start_time, isecspday)
+       seconds_since_irrig_start_time = get_local_time( londeg, starttime=this%params%irrig_start_time, offset=-this%dtime )
        if (seconds_since_irrig_start_time < this%dtime) then
           check_for_irrig         = .true.
        else

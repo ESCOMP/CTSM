@@ -266,14 +266,9 @@ contains
          rf_decomp_cascade              =>    soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Output:  [real(r8)           (:,:,:) ]  respired fraction in decomposition step (frac)       
          pathfrac_decomp_cascade        =>    soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Output:  [real(r8)           (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
          
-         cascade_step_name              =>    decomp_cascade_con%cascade_step_name                  , & ! Output:   [character(len=8)  (:)     ]  name of transition                               
          cascade_donor_pool             =>    decomp_cascade_con%cascade_donor_pool                 , & ! Output:   [integer           (:)     ]  which pool is C taken from for a given decomposition step 
          cascade_receiver_pool          =>    decomp_cascade_con%cascade_receiver_pool              , & ! Output:   [integer           (:)     ]  which pool is C added to for a given decomposition step   
          floating_cn_ratio_decomp_pools =>    decomp_cascade_con%floating_cn_ratio_decomp_pools     , & ! Output:   [logical           (:)     ]  TRUE => pool has fixed C:N ratio                          
-         decomp_pool_name_restart       =>    decomp_cascade_con%decomp_pool_name_restart           , & ! Output:   [character(len=8)  (:)     ]  name of pool for restart files                   
-         decomp_pool_name_history       =>    decomp_cascade_con%decomp_pool_name_history           , & ! Output:   [character(len=8)  (:)     ]  name of pool for history files                   
-         decomp_pool_name_long          =>    decomp_cascade_con%decomp_pool_name_long              , & ! Output:   [character(len=20) (:)     ]  name of pool for netcdf long names              
-         decomp_pool_name_short         =>    decomp_cascade_con%decomp_pool_name_short             , & ! Output:   [character(len=8)  (:)     ]  name of pool for netcdf short names              
          is_litter                      =>    decomp_cascade_con%is_litter                          , & ! Output:   [logical           (:)     ]  TRUE => pool is a litter pool                             
          is_soil                        =>    decomp_cascade_con%is_soil                            , & ! Output:   [logical           (:)     ]  TRUE => pool is a soil pool                               
          is_cwd                         =>    decomp_cascade_con%is_cwd                             , & ! Output:   [logical           (:)     ]  TRUE => pool is a cwd pool                                
@@ -309,10 +304,10 @@ contains
 
       i_litr1 = i_met_lit
       floating_cn_ratio_decomp_pools(i_litr1) = .true.
-      decomp_pool_name_restart(i_litr1) = 'litr1'
-      decomp_pool_name_history(i_litr1) = 'LITR1'
-      decomp_pool_name_long(i_litr1) = 'litter 1'
-      decomp_pool_name_short(i_litr1) = 'L1'
+      decomp_cascade_con%decomp_pool_name_restart(i_litr1) = 'litr1'
+      decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
+      decomp_cascade_con%decomp_pool_name_long(i_litr1) = 'litter 1'
+      decomp_cascade_con%decomp_pool_name_short(i_litr1) = 'L1'
       is_litter(i_litr1) = .true.
       is_soil(i_litr1) = .false.
       is_cwd(i_litr1) = .false.
@@ -324,10 +319,10 @@ contains
 
       i_litr2 = i_cel_lit
       floating_cn_ratio_decomp_pools(i_litr2) = .true.
-      decomp_pool_name_restart(i_litr2) = 'litr2'
-      decomp_pool_name_history(i_litr2) = 'LITR2'
-      decomp_pool_name_long(i_litr2) = 'litter 2'
-      decomp_pool_name_short(i_litr2) = 'L2'
+      decomp_cascade_con%decomp_pool_name_restart(i_litr2) = 'litr2'
+      decomp_cascade_con%decomp_pool_name_history(i_litr2) = 'LITR2'
+      decomp_cascade_con%decomp_pool_name_long(i_litr2) = 'litter 2'
+      decomp_cascade_con%decomp_pool_name_short(i_litr2) = 'L2'
       is_litter(i_litr2) = .true.
       is_soil(i_litr2) = .false.
       is_cwd(i_litr2) = .false.
@@ -339,10 +334,10 @@ contains
 
       i_litr3 = i_lig_lit
       floating_cn_ratio_decomp_pools(i_litr3) = .true.
-      decomp_pool_name_restart(i_litr3) = 'litr3'
-      decomp_pool_name_history(i_litr3) = 'LITR3'
-      decomp_pool_name_long(i_litr3) = 'litter 3'
-      decomp_pool_name_short(i_litr3) = 'L3'
+      decomp_cascade_con%decomp_pool_name_restart(i_litr3) = 'litr3'
+      decomp_cascade_con%decomp_pool_name_history(i_litr3) = 'LITR3'
+      decomp_cascade_con%decomp_pool_name_long(i_litr3) = 'litter 3'
+      decomp_cascade_con%decomp_pool_name_short(i_litr3) = 'L3'
       is_litter(i_litr3) = .true.
       is_soil(i_litr3) = .false.
       is_cwd(i_litr3) = .false.
@@ -354,10 +349,10 @@ contains
 
       if (.not. use_fates) then
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
-         decomp_pool_name_restart(i_cwd) = 'cwd'
-         decomp_pool_name_history(i_cwd) = 'CWD'
-         decomp_pool_name_long(i_cwd) = 'coarse woody debris'
-         decomp_pool_name_short(i_cwd) = 'CWD'
+         decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
+         decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
+         decomp_cascade_con%decomp_pool_name_long(i_cwd) = 'coarse woody debris'
+         decomp_cascade_con%decomp_pool_name_short(i_cwd) = 'CWD'
          is_litter(i_cwd) = .false.
          is_soil(i_cwd) = .false.
          is_cwd(i_cwd) = .true.
@@ -374,10 +369,10 @@ contains
          i_soil1 = 4
       endif
       floating_cn_ratio_decomp_pools(i_soil1) = .false.
-      decomp_pool_name_restart(i_soil1) = 'soil1'
-      decomp_pool_name_history(i_soil1) = 'SOIL1'
-      decomp_pool_name_long(i_soil1) = 'soil 1'
-      decomp_pool_name_short(i_soil1) = 'S1'
+      decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
+      decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
+      decomp_cascade_con%decomp_pool_name_long(i_soil1) = 'soil 1'
+      decomp_cascade_con%decomp_pool_name_short(i_soil1) = 'S1'
       is_litter(i_soil1) = .false.
       is_soil(i_soil1) = .true.
       is_cwd(i_soil1) = .false.
@@ -393,10 +388,10 @@ contains
          i_soil2 = 5
       endif
       floating_cn_ratio_decomp_pools(i_soil2) = .false.
-      decomp_pool_name_restart(i_soil2) = 'soil2'
-      decomp_pool_name_history(i_soil2) = 'SOIL2'
-      decomp_pool_name_long(i_soil2) = 'soil 2'
-      decomp_pool_name_short(i_soil2) = 'S2'
+      decomp_cascade_con%decomp_pool_name_restart(i_soil2) = 'soil2'
+      decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
+      decomp_cascade_con%decomp_pool_name_long(i_soil2) = 'soil 2'
+      decomp_cascade_con%decomp_pool_name_short(i_soil2) = 'S2'
       is_litter(i_soil2) = .false.
       is_soil(i_soil2) = .true.
       is_cwd(i_soil2) = .false.
@@ -412,10 +407,10 @@ contains
          i_soil3 = 6
       endif
       floating_cn_ratio_decomp_pools(i_soil3) = .false.
-      decomp_pool_name_restart(i_soil3) = 'soil3'
-      decomp_pool_name_history(i_soil3) = 'SOIL3'
-      decomp_pool_name_long(i_soil3) = 'soil 3'
-      decomp_pool_name_short(i_soil3) = 'S3'
+      decomp_cascade_con%decomp_pool_name_restart(i_soil3) = 'soil3'
+      decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
+      decomp_cascade_con%decomp_pool_name_long(i_soil3) = 'soil 3'
+      decomp_cascade_con%decomp_pool_name_short(i_soil3) = 'S3'
       is_litter(i_soil3) = .false.
       is_soil(i_soil3) = .true.
       is_cwd(i_soil3) = .false.
@@ -431,10 +426,10 @@ contains
          i_soil4 = 7
       endif
       floating_cn_ratio_decomp_pools(i_soil4) = .false.
-      decomp_pool_name_restart(i_soil4) = 'soil4'
-      decomp_pool_name_history(i_soil4) = 'SOIL4'
-      decomp_pool_name_long(i_soil4) = 'soil 4'
-      decomp_pool_name_short(i_soil4) = 'S4'
+      decomp_cascade_con%decomp_pool_name_restart(i_soil4) = 'soil4'
+      decomp_cascade_con%decomp_pool_name_history(i_soil4) = 'SOIL4'
+      decomp_cascade_con%decomp_pool_name_long(i_soil4) = 'soil 4'
+      decomp_cascade_con%decomp_pool_name_short(i_soil4) = 'S4'
       is_litter(i_soil4) = .false.
       is_soil(i_soil4) = .true.
       is_cwd(i_soil4) = .false.
@@ -446,10 +441,10 @@ contains
 
       i_atm = 0  !! for terminal pools (i.e. 100% respiration)
       floating_cn_ratio_decomp_pools(i_atm) = .false.
-      decomp_pool_name_restart(i_atm) = 'atmosphere'
-      decomp_pool_name_history(i_atm) = 'atmosphere'
-      decomp_pool_name_long(i_atm) = 'atmosphere'
-      decomp_pool_name_short(i_atm) = ''
+      decomp_cascade_con%decomp_pool_name_restart(i_atm) = 'atmosphere'
+      decomp_cascade_con%decomp_pool_name_history(i_atm) = 'atmosphere'
+      decomp_cascade_con%decomp_pool_name_long(i_atm) = 'atmosphere'
+      decomp_cascade_con%decomp_pool_name_short(i_atm) = ''
       is_litter(i_atm) = .true.
       is_soil(i_atm) = .false.
       is_cwd(i_atm) = .false.
@@ -474,49 +469,49 @@ contains
 
       !----------------  list of transitions and their time-independent coefficients  ---------------!
       i_l1s1 = 1
-      cascade_step_name(i_l1s1) = 'L1S1'
+      decomp_cascade_con%cascade_step_name(i_l1s1) = 'L1S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
       cascade_donor_pool(i_l1s1) = i_litr1
       cascade_receiver_pool(i_l1s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
 
       i_l2s2 = 2
-      cascade_step_name(i_l2s2) = 'L2S2'
+      decomp_cascade_con%cascade_step_name(i_l2s2) = 'L2S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s2) = rf_l2s2
       cascade_donor_pool(i_l2s2) = i_litr2
       cascade_receiver_pool(i_l2s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s2) = 1.0_r8
 
       i_l3s3 = 3
-      cascade_step_name(i_l3s3) = 'L3S3'
+      decomp_cascade_con%cascade_step_name(i_l3s3) = 'L3S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s3) = rf_l3s3
       cascade_donor_pool(i_l3s3) = i_litr3
       cascade_receiver_pool(i_l3s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s3) = 1.0_r8
 
       i_s1s2 = 4
-      cascade_step_name(i_s1s2) = 'S1S2'
+      decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2
       cascade_donor_pool(i_s1s2) = i_soil1
       cascade_receiver_pool(i_s1s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = 1.0_r8
 
       i_s2s3 = 5
-      cascade_step_name(i_s2s3) = 'S2S3'
+      decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
       cascade_donor_pool(i_s2s3) = i_soil2
       cascade_receiver_pool(i_s2s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 1.0_r8
 
       i_s3s4 = 6 
-      cascade_step_name(i_s3s4) = 'S3S4'
+      decomp_cascade_con%cascade_step_name(i_s3s4) = 'S3S4'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = rf_s3s4
       cascade_donor_pool(i_s3s4) = i_soil3
       cascade_receiver_pool(i_s3s4) = i_soil4
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = 1.0_r8
 
       i_s4atm = 7
-      cascade_step_name(i_s4atm) = 'S4'
+      decomp_cascade_con%cascade_step_name(i_s4atm) = 'S4'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.
       cascade_donor_pool(i_s4atm) = i_soil4
       cascade_receiver_pool(i_s4atm) = i_atm
@@ -524,14 +519,14 @@ contains
 
       if (.not. use_fates) then
          i_cwdl2 = 8
-         cascade_step_name(i_cwdl2) = 'CWDL2'
+         decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 0._r8
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_litr2
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
          
          i_cwdl3 = 9
-         cascade_step_name(i_cwdl3) = 'CWDL3'
+         decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = 0._r8
          cascade_donor_pool(i_cwdl3) = i_cwd
          cascade_receiver_pool(i_cwdl3) = i_litr3

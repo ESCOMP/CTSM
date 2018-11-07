@@ -24,8 +24,8 @@ module  PhotosynthesisMod
   use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
   use atm2lndType         , only : atm2lnd_type
   use CanopyStateType     , only : canopystate_type
-  use WaterStateType      , only : waterstate_type
-  use WaterfluxType       , only : waterflux_type
+  use WaterDiagnosticBulkType      , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType       , only : waterfluxbulk_type
   use SoilStateType       , only : soilstate_type
   use TemperatureType     , only : temperature_type
   use SolarAbsorbedType   , only : solarabs_type
@@ -107,7 +107,8 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: tpu_z_phs_patch   (:,:,:) ! patch triose phosphate utilization rate (umol CO2/m**2/s)
      real(r8), pointer, private :: gs_mol_sun_patch  (:,:) ! patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
      real(r8), pointer, private :: gs_mol_sha_patch  (:,:) ! patch shaded leaf stomatal conductance (umol H2O/m**2/s)
-
+     real(r8), pointer, private :: gs_mol_sun_ln_patch (:,:) ! patch sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+     real(r8), pointer, private :: gs_mol_sha_ln_patch (:,:) ! patch shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
      real(r8), pointer, private :: ac_patch          (:,:) ! patch Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: aj_patch          (:,:) ! patch RuBP-limited gross photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: ap_patch          (:,:) ! patch product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
@@ -250,6 +251,8 @@ contains
     allocate(this%kp_z_phs_patch    (begp:endp,2,1:nlevcan)) ; this%kp_z_phs_patch    (:,:,:) = nan
     allocate(this%gs_mol_sun_patch  (begp:endp,1:nlevcan))   ; this%gs_mol_sun_patch  (:,:)   = nan
     allocate(this%gs_mol_sha_patch  (begp:endp,1:nlevcan))   ; this%gs_mol_sha_patch  (:,:)   = nan
+    allocate(this%gs_mol_sun_ln_patch (begp:endp,1:nlevcan)) ; this%gs_mol_sun_ln_patch (:,:)   = nan
+    allocate(this%gs_mol_sha_ln_patch (begp:endp,1:nlevcan)) ; this%gs_mol_sha_ln_patch (:,:)   = nan
     allocate(this%ac_patch          (begp:endp,1:nlevcan)) ; this%ac_patch          (:,:) = nan
     allocate(this%aj_patch          (begp:endp,1:nlevcan)) ; this%aj_patch          (:,:) = nan
     allocate(this%ap_patch          (begp:endp,1:nlevcan)) ; this%ap_patch          (:,:) = nan
@@ -402,41 +405,41 @@ contains
        this%c13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSUN', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C13 sunlit leaf photosynthesis', &
-            ptr_patch=this%c13_psnsun_patch)
+            ptr_patch=this%c13_psnsun_patch, default='inactive')
 
        this%c13_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSHA', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C13 shaded leaf photosynthesis', &
-            ptr_patch=this%c13_psnsha_patch)
+            ptr_patch=this%c13_psnsha_patch, default='inactive')
     end if
 
     if ( use_c14 ) then
        this%c14_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSUN', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C14 sunlit leaf photosynthesis', &
-            ptr_patch=this%c14_psnsun_patch)
+            ptr_patch=this%c14_psnsun_patch, default='inactive')
 
        this%c14_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSHA', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C14 shaded leaf photosynthesis', &
-            ptr_patch=this%c14_psnsha_patch)
+            ptr_patch=this%c14_psnsha_patch, default='inactive')
     end if
 
     if ( use_c13 ) then
        this%rc13_canair_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_CANAIR', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for canopy air', &
-            ptr_patch=this%rc13_canair_patch)
+            ptr_patch=this%rc13_canair_patch, default='inactive')
 
        this%rc13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSUN', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for sunlit photosynthesis', &
-            ptr_patch=this%rc13_psnsun_patch)
+            ptr_patch=this%rc13_psnsun_patch, default='inactive')
 
        this%rc13_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSHA', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for shaded photosynthesis', &
-            ptr_patch=this%rc13_psnsha_patch)
+            ptr_patch=this%rc13_psnsha_patch, default='inactive')
     endif
 
     ! Canopy physiology
@@ -485,7 +488,28 @@ contains
           ptr_patch=ptr_1d)
 
     endif
+    this%gs_mol_sun_ln_patch(begp:endp,:) = spval
+    this%gs_mol_sha_ln_patch(begp:endp,:) = spval
+    if (nlevcan>1) then
+       call hist_addfld2d (fname='GSSUNLN', units='umol H20/m2/s', type2d='nlevcan', &
+          avgflag='A', long_name='sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+          ptr_patch=this%gs_mol_sun_ln_patch, set_lake=spval, set_urb=spval)
 
+       call hist_addfld2d (fname='GSSHALN', units='umol H20/m2/s', type2d='nlevcan', &
+          avgflag='A', long_name='shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+          ptr_patch=this%gs_mol_sha_ln_patch, set_lake=spval, set_urb=spval)
+    else
+       ptr_1d => this%gs_mol_sun_ln_patch(begp:endp,1)
+       call hist_addfld1d (fname='GSSUNLN', units='umol H20/m2/s', &
+          avgflag='A', long_name='sunlit leaf stomatal conductance at local noon', &
+          ptr_patch=ptr_1d)
+
+       ptr_1d => this%gs_mol_sha_ln_patch(begp:endp,1)
+       call hist_addfld1d (fname='GSSHALN', units='umol H20/m2/s', &
+          avgflag='A', long_name='shaded leaf stomatal conductance at local noon', &
+          ptr_patch=ptr_1d)
+
+    endif
     if(use_luna)then  
        if(nlevcan>1)then
          call hist_addfld2d (fname='Vcmx25Z', units='umol/m2/s', type2d='nlevcan', &
@@ -770,6 +794,18 @@ contains
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='shaded leaf stomatal conductance', units='umol H20/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GSSUNLN', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+         units='umol H20/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sun_ln_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GSSHALN', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
+         units='umol H20/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_ln_patch)
     
     call restartvar(ncid=ncid, flag=flag, varname='lnca', xtype=ncd_double,  &
        dim1name='pft', long_name='leaf N concentration', units='gN leaf/m^2', &
@@ -919,7 +955,9 @@ contains
     ! a multi-layer canopy
     !
     ! !USES:
-    use clm_varcon     , only : rgas, tfrz
+    use clm_varcon        , only : rgas, tfrz, spval
+    use GridcellType      , only : grc
+    use clm_time_manager  , only : get_step_size, is_near_local_noon
     use clm_varctl     , only : cnallocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
@@ -1062,6 +1100,9 @@ contains
     real(r8) :: sum_nscaler              
     real(r8) :: total_lai                
     integer  :: nptreemax                
+
+    real(r8) :: dtime                           ! land model time step (sec)
+    integer  :: g                               ! index
     !------------------------------------------------------------------------------
 
     ! Temperature and soil water response functions
@@ -1112,6 +1153,8 @@ contains
          an         => photosyns_inst%an_patch               , & ! Output: [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)
          gb_mol     => photosyns_inst%gb_mol_patch           , & ! Output: [real(r8) (:)   ]  leaf boundary layer conductance (umol H2O/m**2/s)
          gs_mol     => photosyns_inst%gs_mol_patch           , & ! Output: [real(r8) (:,:) ]  leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sun_ln => photosyns_inst%gs_mol_sun_ln_patch , & ! Output: [real(r8) (:,:) ]  sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+         gs_mol_sha_ln => photosyns_inst%gs_mol_sha_ln_patch , & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
          vcmax_z    => photosyns_inst%vcmax_z_patch          , & ! Output: [real(r8) (:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)
          cp         => photosyns_inst%cp_patch               , & ! Output: [real(r8) (:)   ]  CO2 compensation point (Pa)
          kc         => photosyns_inst%kc_patch               , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for CO2 (Pa)
@@ -1170,6 +1213,10 @@ contains
       ! Photosynthesis and stomatal conductance parameters, from:
       ! Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
       !==============================================================================!
+
+      ! Determine seconds of current time step
+
+      dtime = get_step_size()
 
       ! vcmax25 parameters, from CN
 
@@ -1528,6 +1575,7 @@ contains
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
+         g = patch%gridcell(p)
 
          ! Leaf boundary layer conductance, umol/m**2/s
 
@@ -1601,6 +1649,21 @@ contains
                ! End of ci iteration.  Check for an < 0, in which case gs_mol = bbb
 
                if (an(p,iv) < 0._r8) gs_mol(p,iv) = bbb(p)
+
+               ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
+               if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
+                  if (phase == 'sun') then
+                     gs_mol_sun_ln(p,iv) = gs_mol(p,iv)
+                  else if (phase == 'sha') then
+                     gs_mol_sha_ln(p,iv) = gs_mol(p,iv)
+                  end if
+               else
+                  if (phase == 'sun') then
+                     gs_mol_sun_ln(p,iv) = spval
+                  else if (phase == 'sha') then
+                     gs_mol_sha_ln(p,iv) = spval
+                  end if
+               end if
 
                ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 
@@ -2355,9 +2418,9 @@ contains
   subroutine PhotosynthesisHydraulicStress ( bounds, fn, filterp, &
        esat_tv, eair, oair, cair, rb, bsun, bsha, btran, dayl_factor, leafn, &
        qsatl, qaf, &
-       atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, &
+       atm2lnd_inst, temperature_inst, soilstate_inst, waterdiagnosticbulk_inst, &
        surfalb_inst, solarabs_inst, canopystate_inst, ozone_inst, &
-       photosyns_inst, waterflux_inst, froot_carbon, croot_carbon)
+       photosyns_inst, waterfluxbulk_inst, froot_carbon, croot_carbon)
     !
     ! !DESCRIPTION:
     ! Leaf photosynthesis and stomatal conductance calculation as described by
@@ -2368,7 +2431,9 @@ contains
     ! method
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, rpi
+    use clm_varcon        , only : rgas, tfrz, rpi, spval
+    use GridcellType      , only : grc
+    use clm_time_manager  , only : get_step_size, is_near_local_noon
     use clm_varctl        , only : cnallocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
@@ -2401,8 +2466,8 @@ contains
     type(surfalb_type)     , intent(in)    :: surfalb_inst
     type(solarabs_type)    , intent(in)    :: solarabs_inst
     type(canopystate_type) , intent(inout) :: canopystate_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     class(ozone_base_type) , intent(in)    :: ozone_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
@@ -2558,8 +2623,8 @@ contains
     real(r8) :: sum_nscaler
     real(r8) :: total_lai                
     integer  :: nptreemax                
-!scs
-    integer  :: j                       ! index
+    real(r8) :: dtime                           ! land model time step (sec)
+    integer  :: j,g                     ! index
     real(r8) :: rs_resis                ! combined soil-root resistance [s]
     real(r8) :: r_soil                  ! root spacing [m]
     real(r8) :: root_biomass_density    ! root biomass density [g/m3]
@@ -2670,7 +2735,9 @@ contains
          an_sun     => photosyns_inst%an_sun_patch           , & ! Output: [real(r8) (:,:) ]  net sunlit leaf photosynthesis (umol CO2/m**2/s)
          an_sha     => photosyns_inst%an_sha_patch           , & ! Output: [real(r8) (:,:) ]  net shaded leaf photosynthesis (umol CO2/m**2/s)
          gs_mol_sun => photosyns_inst%gs_mol_sun_patch       , & ! Output: [real(r8) (:,:) ]  sunlit leaf stomatal conductance (umol H2O/m**2/s)
-         gs_mol_sha => photosyns_inst%gs_mol_sha_patch         & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sha => photosyns_inst%gs_mol_sha_patch       , & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sun_ln => photosyns_inst%gs_mol_sun_ln_patch , & ! Output: [real(r8) (:,:) ]  sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+         gs_mol_sha_ln => photosyns_inst%gs_mol_sha_ln_patch   & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
          )
 
       par_z_sun     =>    solarabs_inst%parsun_z_patch        ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)
@@ -2709,6 +2776,10 @@ contains
       ! Photosynthesis and stomatal conductance parameters, from:
       ! Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
       !==============================================================================!
+
+      ! Determine seconds off current time step
+
+      dtime = get_step_size()
 
       ! vcmax25 parameters, from CN
 
@@ -3146,6 +3217,7 @@ contains
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
+         g = patch%gridcell(p)
 
          ! Leaf boundary layer conductance, umol/m**2/s
 
@@ -3173,21 +3245,18 @@ contains
                   gsminsha = nan
                end if
                call calcstress(p,c,vegwp(p,:),bsun(p),bsha(p),gb_mol(p),gsminsun, gsminsha, &
-                    qsatl(p),qaf(p), atm2lnd_inst,canopystate_inst,waterstate_inst, &
-                    soilstate_inst,temperature_inst, waterflux_inst)
+                    qsatl(p),qaf(p), atm2lnd_inst,canopystate_inst,waterdiagnosticbulk_inst, &
+                    soilstate_inst,temperature_inst, waterfluxbulk_inst)
 
                ac(p,sun,iv) = 0._r8
                aj(p,sun,iv) = 0._r8
                ap(p,sun,iv) = 0._r8
                ag(p,sun,iv) = 0._r8
-!KO               an_sun(p,iv) = ag(p,sun,iv) - bsun(p) * lmr_z_sun(p,iv)
-!KO
                if(crop(patch%itype(p))== 0 .or. .not. modifyphoto_and_lmr_forcrop) then
                   an_sun(p,iv) = ag(p,sun,iv) - bsun(p) * lmr_z_sun(p,iv)
                else
                   an_sun(p,iv) = ag(p,sun,iv) - lmr_z_sun(p,iv)
                endif
-!KO
                psn_z_sun(p,iv) = 0._r8
                psn_wc_z_sun(p,iv) = 0._r8
                psn_wj_z_sun(p,iv) = 0._r8
@@ -3200,14 +3269,11 @@ contains
                aj(p,sha,iv) = 0._r8
                ap(p,sha,iv) = 0._r8
                ag(p,sha,iv) = 0._r8
-!KO               an_sha(p,iv) = ag(p,sha,iv) - bsha(p) * lmr_z_sha(p,iv)
-!KO
                if(crop(patch%itype(p))== 0 .or. .not. modifyphoto_and_lmr_forcrop) then
                   an_sha(p,iv) = ag(p,sha,iv) - bsha(p) * lmr_z_sha(p,iv)
                else
                   an_sha(p,iv) = ag(p,sha,iv) - lmr_z_sha(p,iv)
                endif
-!KO
                psn_z_sha(p,iv) = 0._r8
                psn_wc_z_sha(p,iv) = 0._r8
                psn_wj_z_sha(p,iv) = 0._r8
@@ -3261,7 +3327,7 @@ contains
                                je_sha, cair(p), oair(p), lmr_z_sun(p,iv), lmr_z_sha(p,iv), &
                                par_z_sun(p,iv), par_z_sha(p,iv), rh_can, gs_mol_sun(p,iv), gs_mol_sha(p,iv), &
                                qsatl(p), qaf(p), iter1, iter2, atm2lnd_inst, photosyns_inst, &
-                               canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst, waterflux_inst)
+                               canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst, waterfluxbulk_inst)
                if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   gsminsun     = medlynintercept(patch%itype(p))
                   gsminsha     = medlynintercept(patch%itype(p))
@@ -3278,6 +3344,14 @@ contains
 
                if (an_sun(p,iv) < 0._r8) gs_mol_sun(p,iv) = max( bsun(p)*gsminsun, 1._r8 )
                if (an_sha(p,iv) < 0._r8) gs_mol_sha(p,iv) = max( bsha(p)*gsminsha, 1._r8 )
+               ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
+               if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
+                  gs_mol_sun_ln(p,iv) = gs_mol_sun(p,iv)
+                  gs_mol_sha_ln(p,iv) = gs_mol_sha(p,iv)
+               else
+                  gs_mol_sun_ln(p,iv) = spval
+                  gs_mol_sha_ln(p,iv) = spval
+               end if
 
                ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 
@@ -3397,17 +3471,11 @@ contains
             psncan_wc_sun = psncan_wc_sun + psn_wc_z_sun(p,iv) * lai_z_sun(p,iv)
             psncan_wj_sun = psncan_wj_sun + psn_wj_z_sun(p,iv) * lai_z_sun(p,iv)
             psncan_wp_sun = psncan_wp_sun + psn_wp_z_sun(p,iv) * lai_z_sun(p,iv)
-!KO            lmrcan_sun = lmrcan_sun + lmr_z_sun(p,iv) * lai_z_sun(p,iv)
-!KO
-!           lmrcan_sun = lmrcan_sun + lmr_z_sun(p,iv) * lai_z_sun(p,iv) * bsun(p)
-!KO
-!KO
             if(crop(patch%itype(p))== 0 .and. modifyphoto_and_lmr_forcrop) then
                lmrcan_sun = lmrcan_sun + lmr_z_sun(p,iv) * lai_z_sun(p,iv) * bsun(p)
             else
                lmrcan_sun = lmrcan_sun + lmr_z_sun(p,iv) * lai_z_sun(p,iv)
             endif
-!KO
             gscan_sun = gscan_sun + lai_z_sun(p,iv) / (rb(p)+rs_z_sun(p,iv))
             laican_sun = laican_sun + lai_z_sun(p,iv)
          end do
@@ -3438,17 +3506,11 @@ contains
             psncan_wc_sha = psncan_wc_sha + psn_wc_z_sha(p,iv) * lai_z_sha(p,iv)
             psncan_wj_sha = psncan_wj_sha + psn_wj_z_sha(p,iv) * lai_z_sha(p,iv)
             psncan_wp_sha = psncan_wp_sha + psn_wp_z_sha(p,iv) * lai_z_sha(p,iv)
-!KO            lmrcan_sha = lmrcan_sha + lmr_z_sha(p,iv) * lai_z_sha(p,iv)
-!KO
-!           lmrcan_sha = lmrcan_sha + lmr_z_sha(p,iv) * lai_z_sha(p,iv) * bsha(p)
-!KO
-!KO
             if(crop(patch%itype(p))== 0 .and. modifyphoto_and_lmr_forcrop) then
                lmrcan_sha = lmrcan_sha + lmr_z_sha(p,iv) * lai_z_sha(p,iv) * bsha(p)
             else
                lmrcan_sha = lmrcan_sha + lmr_z_sha(p,iv) * lai_z_sha(p,iv)
             endif
-!KO
             gscan_sha = gscan_sha + lai_z_sha(p,iv) / (rb(p)+rs_z_sha(p,iv))
             laican_sha = laican_sha + lai_z_sha(p,iv)
          end do
@@ -3488,7 +3550,7 @@ contains
   subroutine hybrid_PHS(x0sun, x0sha, p, iv, c, gb_mol, bsun, bsha, jesun, jesha, &
        cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
        gs_mol_sun, gs_mol_sha, qsatl, qaf, iter1, iter2, atm2lnd_inst, photosyns_inst, &
-       canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst, waterflux_inst)
+       canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst, waterfluxbulk_inst)
     !
     !! DESCRIPTION:
     !use a hybrid solver to find the root of the ci_func equation for sunlit and shaded leaves
@@ -3530,8 +3592,8 @@ contains
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(canopystate_type) , intent(inout) :: canopystate_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     !
@@ -3568,7 +3630,7 @@ contains
     !------------------------------------------------------------------------------
     
     associate(                                                    &
-         qflx_tran_veg => waterflux_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          vegwp         => canopystate_inst%vegwp_patch            & ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
     )
 
@@ -3578,6 +3640,8 @@ contains
     bflag = .false.
     b0sun = -1._r8
     b0sha = -1._r8
+    gs0sun = 0._r8   ! Initialize to zero as good form, not used on first itteration below because of bflag
+    gs0sha = 0._r8   ! Initialize to zero as good form, not used on first itteration below because of bflag
     bsun  = 1._r8
     bsha  = 1._r8
     iter1 = 0
@@ -3596,8 +3660,8 @@ contains
        ! this ci_func_PHS call updates bsun/bsha (except on first iter)
        call ci_func_PHS(x,x0sun, x0sha, f0sun, f0sha, p, iv, c, bsun, bsha, bflag, gb_mol, gs0sun, gs0sha,&
             gs_mol_sun, gs_mol_sha, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
-            qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterstate_inst, soilstate_inst, &
-            temperature_inst, waterflux_inst)
+            qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, &
+            temperature_inst, waterfluxbulk_inst)
        
        ! update bsun/bsha convergence vars
        dbsun=b0sun-bsun
@@ -3609,8 +3673,8 @@ contains
        ! this ci_func_PHS call creates second point for ci interpolation
        call ci_func_PHS(x,x1sun, x1sha, f1sun, f1sha, p, iv, c, bsun, bsha, bflag, gb_mol, gs0sun, gs0sha,&
             gs_mol_sun, gs_mol_sha, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
-            qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterstate_inst, soilstate_inst, &
-            temperature_inst, waterflux_inst)
+            qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, &
+            temperature_inst, waterfluxbulk_inst)
        
        do                !inner loop finds ci
           if ( (abs(f0sun) < eps1) .and. (abs(f0sha) < eps1) ) then
@@ -3641,8 +3705,8 @@ contains
           
           call ci_func_PHS(x,x1sun, x1sha, f1sun, f1sha, p, iv, c, bsun, bsha, bflag, gb_mol, gs0sun, gs0sha,&
                gs_mol_sun, gs_mol_sha, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
-               qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterstate_inst, soilstate_inst, &
-               temperature_inst, waterflux_inst)
+               qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, &
+               temperature_inst, waterfluxbulk_inst)
 
           if ( (abs(dxsun) < tolsun ) .and. (abs(dxsha) <tolsha) ) then
              x0sun=x1sun
@@ -3672,7 +3736,7 @@ contains
              call brent_PHS(xsun, x0sun, x1sun, f0sun, f1sun, xsha, x0sha, x1sha, f0sha, f1sha, &
                   tolsun, p, iv, c, gb_mol, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha,&
                   rh_can, gs_mol_sun, gs_mol_sha, bsun, bsha, qsatl, qaf, atm2lnd_inst, photosyns_inst, &
-                  canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst, waterflux_inst)
+                  canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst, waterfluxbulk_inst)
              x0sun=xsun
              x0sha=xsha
              exit
@@ -3683,8 +3747,8 @@ contains
              x1sha=minxsha
              call ci_func_PHS(x,x1sun, x1sha, f1sun, f1sha, p, iv, c, bsun, bsha, bflag, gb_mol, gs0sun, gs0sha,&
                   gs_mol_sun, gs_mol_sha, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
-                  qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterstate_inst, soilstate_inst, &
-                  temperature_inst, waterflux_inst)
+                  qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, &
+                  temperature_inst, waterfluxbulk_inst)
              exit
           endif
           
@@ -3714,7 +3778,7 @@ contains
     
     !set vegwp for the final gs_mol solution
     call getvegwp(p, c, x, gb_mol, gs_mol_sun, gs_mol_sha, qsatl, qaf, soilflux, &
-         atm2lnd_inst, canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst)
+         atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
     vegwp(p,:)=x
     if (soilflux<0._r8) soilflux = 0._r8
     qflx_tran_veg(p) = soilflux
@@ -3728,7 +3792,7 @@ contains
   subroutine brent_PHS(xsun, x1sun, x2sun, f1sun, f2sun, xsha, x1sha, x2sha, f1sha, f2sha, &
        tol, ip, iv, ic, gb_mol, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha,&
        rh_can, gs_mol_sun, gs_mol_sha, bsun, bsha, qsatl, qaf, atm2lnd_inst, photosyns_inst, &
-       canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst, waterflux_inst)
+       canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst, waterfluxbulk_inst)
     !------------------------------------------------------------------------------
     implicit none
     !
@@ -3763,12 +3827,14 @@ contains
     type(atm2lnd_type)     , intent(in)       :: atm2lnd_inst
     type(photosyns_type)   , intent(inout)    :: photosyns_inst
     type(canopystate_type) , intent(inout)    :: canopystate_inst
-    type(waterstate_type)  , intent(inout)    :: waterstate_inst
-    type(waterflux_type)   , intent(inout)    :: waterflux_inst
+    type(waterdiagnosticbulk_type)  , intent(inout)    :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)   , intent(inout)    :: waterfluxbulk_inst
     type(soilstate_type)   , intent(inout)    :: soilstate_inst
     type(temperature_type) , intent(in)       :: temperature_inst
     !------------------------------------------------------------------------------
     ! !LOCAL VARIABLES:
+    real(r8)                :: gs0sun               ! sunlit leaf stomatal conductance (umol H2O/m**2/s)
+    real(r8)                :: gs0sha               ! shaded leaf stomatal conductance (umol H2O/m**2/s)
     integer                 :: phase                ! sun==1, sha==2
     integer , parameter     :: nphs = 2             ! number of phases for sun/shade
     integer , parameter     :: itmax = 20           ! maximum number of iterations
@@ -3860,10 +3926,12 @@ contains
           endif
        enddo
        
-       call ci_func_PHS(x,b(sun), b(sha), fb(sun), fb(sha), ip, iv, ic, bsun, bsha, bflag, gb_mol, gs_mol_sun, gs_mol_sha,&
+       gs0sun = gs_mol_sun
+       gs0sha = gs_mol_sha
+       call ci_func_PHS(x,b(sun), b(sha), fb(sun), fb(sha), ip, iv, ic, bsun, bsha, bflag, gb_mol, gs0sun, gs0sha, &
             gs_mol_sun, gs_mol_sha, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
-            qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterstate_inst, soilstate_inst, &
-            temperature_inst, waterflux_inst)
+            qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, &
+            temperature_inst, waterfluxbulk_inst)
        
        if( (fb(sun) == 0._r8) .and. (fb(sha) == 0._r8) ) exit
     enddo
@@ -3879,8 +3947,8 @@ contains
   !------------------------------------------------------------------------------
   subroutine ci_func_PHS(x,cisun, cisha, fvalsun, fvalsha, p, iv, c, bsun, bsha, bflag, gb_mol, gs0sun, gs0sha,&
        gs_mol_sun, gs_mol_sha, jesun, jesha, cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
-       qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterstate_inst, soilstate_inst, &
-       temperature_inst, waterflux_inst)
+       qsatl, qaf, atm2lnd_inst, photosyns_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, &
+       temperature_inst, waterfluxbulk_inst)
     !------------------------------------------------------------------------------
     !
     ! !DESCRIPTION:
@@ -3916,8 +3984,8 @@ contains
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
-    type(waterflux_type)   , intent(in)    :: waterflux_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)   , intent(in)    :: waterfluxbulk_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
 
@@ -3966,8 +4034,8 @@ contains
     if (bflag) then   !zqz what if bsun==0 ... doesn't break... but follow up
 
        call calcstress(p,c,x,bsun,bsha,gb_mol,gs0sun,gs0sha,qsatl,qaf, &
-            atm2lnd_inst,canopystate_inst,waterstate_inst,soilstate_inst, &
-            temperature_inst, waterflux_inst)
+            atm2lnd_inst,canopystate_inst,waterdiagnosticbulk_inst,soilstate_inst, &
+            temperature_inst, waterfluxbulk_inst)
     endif
     
     if (c3flag(p)) then
@@ -4128,8 +4196,8 @@ contains
   
   !------------------------------------------------------------------------------
   subroutine calcstress(p,c,x,bsun,bsha,gb_mol,gs_mol_sun,gs_mol_sha,qsatl,qaf, &
-       atm2lnd_inst,canopystate_inst,waterstate_inst,soilstate_inst, &
-       temperature_inst, waterflux_inst)
+       atm2lnd_inst,canopystate_inst,waterdiagnosticbulk_inst,soilstate_inst, &
+       temperature_inst, waterfluxbulk_inst)
     !
     ! DESCRIPTIONS
     ! compute the transpiration stress using a plant hydraulics approach
@@ -4152,10 +4220,10 @@ contains
     real(r8)               , intent(in)  :: qaf             ! humidity of canopy air [kg/kg]
     type(atm2lnd_type)     , intent(in)  :: atm2lnd_inst
     type(canopystate_type) , intent(in)  :: canopystate_inst
-    type(waterstate_type)  , intent(in)  :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(in)  :: waterdiagnosticbulk_inst
     type(soilstate_type)   , intent(in)  :: soilstate_inst
     type(temperature_type) , intent(in)  :: temperature_inst
-    type(waterflux_type)   , intent(in)  :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(in)  :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     real(r8) :: wtl                   ! heat conductance for leaf [m/s]
@@ -4187,12 +4255,12 @@ contains
          elai          => canopystate_inst%elai_patch           , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
          esai          => canopystate_inst%esai_patch           , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow
          tsai          => canopystate_inst%tsai_patch           , & ! Input:  [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
-         fdry          => waterstate_inst%fdry_patch            , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]
+         fdry          => waterdiagnosticbulk_inst%fdry_patch            , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]
          forc_rho      => atm2lnd_inst%forc_rho_downscaled_col  , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)
          forc_pbot     => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
          tgcm          => temperature_inst%thm_patch            , & ! Input:  [real(r8) (:)   ]  air temperature at agcm reference height (kelvin)
          bsw           => soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"
-         qflx_tran_veg => waterflux_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          sucsat        => soilstate_inst%sucsat_col               & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)
          )
 
@@ -4211,7 +4279,7 @@ contains
     !compute transpiration demand
     havegs=.true.
     call getqflx(p,c,gb_mol,gs0sun,gs0sha,qflx_sun,qflx_sha,qsatl,qaf,havegs, &
-         atm2lnd_inst, canopystate_inst, waterstate_inst, temperature_inst)
+         atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, temperature_inst)
     
     if ((laisun(p)>tol_lai .or. laisha(p)>tol_lai).and.&
          (qflx_sun>0._r8 .or. qflx_sha>0._r8))then
@@ -4223,7 +4291,7 @@ contains
        iter=iter+1
 
        call spacF(p,c,x,f,qflx_sun,qflx_sha, &
-            atm2lnd_inst,canopystate_inst,waterstate_inst,soilstate_inst,temperature_inst,waterflux_inst)
+            atm2lnd_inst,canopystate_inst,soilstate_inst,temperature_inst,waterfluxbulk_inst)
           
        if ( sqrt(sum(f*f)) < tolf*(qflx_sun+qflx_sha) ) then  !fluxes balanced -> exit
           flag = .false.
@@ -4235,7 +4303,7 @@ contains
        end if
        
        call spacA(p,c,x,A,qflx_sun,qflx_sha,flag, &
-            atm2lnd_inst,canopystate_inst,waterstate_inst,soilstate_inst,temperature_inst,waterflux_inst)
+            atm2lnd_inst,canopystate_inst,soilstate_inst,temperature_inst,waterfluxbulk_inst)
 
        if (flag) then
           ! cannot invert the matrix, solve for x algebraically assuming no flux                            
@@ -4291,7 +4359,7 @@ contains
     if (flag) then
        ! solve algebraically
        call getvegwp(p, c, x, gb_mol, gs0sun, gs0sha, qsatl, qaf, soilflux, &
-               atm2lnd_inst, canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst)
+               atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
        bsun = plc(x(sun),p,c,sun,veg)
        bsha = plc(x(sha),p,c,sha,veg)
     else     
@@ -4302,7 +4370,7 @@ contains
     ! retrieve stressed stomatal conductance
     havegs=.FALSE.
     call getqflx(p,c,gb_mol,gs0sun,gs0sha,qsun,qsha,qsatl,qaf,havegs, &
-         atm2lnd_inst, canopystate_inst, waterstate_inst, temperature_inst)
+         atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, temperature_inst)
     
     ! compute water stress
     ! .. generally -> B= gs_stressed / gs_unstressed
@@ -4328,7 +4396,7 @@ contains
        gs0sun=bsun*gs_mol_sun
        gs0sha=bsha*gs_mol_sha
        call getvegwp(p, c, x, gb_mol, gs0sun, gs0sha, qsatl, qaf, soilflux, &
-            atm2lnd_inst, canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst)
+            atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
        if (soilflux<0._r8) soilflux = 0._r8
        qflx_tran_veg(p) = soilflux
     endif
@@ -4342,8 +4410,8 @@ contains
    
   !------------------------------------------------------------------------------
   subroutine spacA(p,c,x,invA,qflx_sun,qflx_sha,flag, &
-       atm2lnd_inst,canopystate_inst,waterstate_inst,soilstate_inst, &
-       temperature_inst, waterflux_inst)
+       atm2lnd_inst,canopystate_inst,soilstate_inst, &
+       temperature_inst, waterfluxbulk_inst)
     
     !
     ! DESCRIPTION
@@ -4370,10 +4438,9 @@ contains
     logical                , intent(out) :: flag            ! tells calling function that the matrix is not invertible
     type(atm2lnd_type)     , intent(in)  :: atm2lnd_inst
     type(canopystate_type) , intent(in)  :: canopystate_inst
-    type(waterstate_type)  , intent(in)  :: waterstate_inst
     type(soilstate_type)   , intent(in)  :: soilstate_inst
     type(temperature_type) , intent(in)  :: temperature_inst
-    type(waterflux_type)   , intent(in)  :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(in)  :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     real(r8) :: wtl                   ! heat conductance for leaf [m/s]
@@ -4525,8 +4592,8 @@ contains
   
   !------------------------------------------------------------------------------
   subroutine spacF(p,c,x,f,qflx_sun,qflx_sha, &
-       atm2lnd_inst,canopystate_inst,waterstate_inst,soilstate_inst, &
-       temperature_inst, waterflux_inst)
+       atm2lnd_inst,canopystate_inst,soilstate_inst, &
+       temperature_inst, waterfluxbulk_inst)
     !
     ! DESCRIPTION
     ! Returns f, the flux divergence across each vegetation segment
@@ -4546,10 +4613,9 @@ contains
     real(r8)               , intent(in)  :: qflx_sha        ! Shaded leaf transpiration [kg/m2/s] 
     type(atm2lnd_type)     , intent(in)  :: atm2lnd_inst
     type(canopystate_type) , intent(in)  :: canopystate_inst
-    type(waterstate_type)  , intent(in)  :: waterstate_inst
     type(soilstate_type)   , intent(in)  :: soilstate_inst
     type(temperature_type) , intent(in)  :: temperature_inst
-    type(waterflux_type)   , intent(in)  :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(in)  :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     real(r8) :: wtl                   ! heat conductance for leaf [m/s]
@@ -4572,7 +4638,7 @@ contains
          tsai          => canopystate_inst%tsai_patch           , & ! Input:  [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
          smp           => soilstate_inst%smp_l_col              , & ! Input: [real(r8) (:,:) ]  soil matrix potential [mm]
          ivt           => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
-         qflx_tran_veg => waterflux_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          z             => col%z                                   & ! Input:  [real(r8) (:,:) ]  layer node depth (m)
          )
     
@@ -4608,7 +4674,7 @@ contains
   
   !--------------------------------------------------------------------------------
   subroutine getvegwp(p, c, x, gb_mol, gs_mol_sun, gs_mol_sha, qsatl, qaf, soilflux, &
-       atm2lnd_inst, canopystate_inst, waterstate_inst, soilstate_inst, temperature_inst)
+       atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
     ! !DESCRIPTION:
     !  Calculates transpiration and returns corresponding vegwp in x
     !
@@ -4630,7 +4696,7 @@ contains
     real(r8)               , intent(out) :: soilflux         ! total soil column transpiration [mm/s]
     type(atm2lnd_type)     , intent(in)  :: atm2lnd_inst
     type(canopystate_type) , intent(in)  :: canopystate_inst
-    type(waterstate_type)  , intent(in)  :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(in)  :: waterdiagnosticbulk_inst
     type(soilstate_type)   , intent(in)  :: soilstate_inst
     type(temperature_type) , intent(in)  :: temperature_inst
     !
@@ -4666,7 +4732,7 @@ contains
     !compute transpiration demand
     havegs=.true.
     call getqflx(p,c,gb_mol,gs_mol_sun,gs_mol_sha,qflx_sun,qflx_sha,qsatl,qaf,havegs, &
-         atm2lnd_inst, canopystate_inst, waterstate_inst, temperature_inst)
+         atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, temperature_inst)
     
     !calculate root water potential
     if ( abs(sum(k_soil_root(p,1:nlevsoi))) == 0._r8 ) then
@@ -4709,7 +4775,7 @@ contains
   
   !--------------------------------------------------------------------------------
   subroutine getqflx(p,c,gb_mol,gs_mol_sun,gs_mol_sha,qflx_sun,qflx_sha,qsatl,qaf,havegs, &
-       atm2lnd_inst, canopystate_inst, waterstate_inst, temperature_inst)
+       atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, temperature_inst)
     ! !DESCRIPTION:
     !  calculate sunlit and shaded transpiration using gb_MOL and gs_MOL
     ! !USES:
@@ -4730,7 +4796,7 @@ contains
     logical  , intent(in)     :: havegs     ! signals direction of calculation gs->qflx or qflx->gs
     type(atm2lnd_type)     , intent(in)  :: atm2lnd_inst
     type(canopystate_type) , intent(in)  :: canopystate_inst
-    type(waterstate_type)  , intent(in)  :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(in)  :: waterdiagnosticbulk_inst
     type(temperature_type) , intent(in)  :: temperature_inst
     !
     ! !LOCAL VARIABLES:
@@ -4746,7 +4812,7 @@ contains
          laisha        => canopystate_inst%laisha_patch         , & ! Input: [real(r8) (:)   ]  shaded leaf area
          elai          => canopystate_inst%elai_patch           , & ! Input: [real(r8) (:)   ]  one-sided leaf area index with burying by snow
          esai          => canopystate_inst%esai_patch           , & ! Input: [real(r8) (:)   ]  one-sided stem area index with burying by snow
-         fdry          => waterstate_inst%fdry_patch            , & ! Input: [real(r8) (:)   ]  fraction of foliage that is green and dry [-]
+         fdry          => waterdiagnosticbulk_inst%fdry_patch            , & ! Input: [real(r8) (:)   ]  fraction of foliage that is green and dry [-]
          forc_rho      => atm2lnd_inst%forc_rho_downscaled_col  , & ! Input: [real(r8) (:)   ]  density (kg/m**3)
          forc_pbot     => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input: [real(r8) (:)   ]  atmospheric pressure (Pa)
          tgcm          => temperature_inst%thm_patch              & ! Input: [real(r8) (:)   ]  air temperature at agcm reference height (kelvin)
