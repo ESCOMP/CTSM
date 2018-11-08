@@ -117,8 +117,7 @@ contains
          qflx_runoff_u      => waterfluxbulk_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
-         qflx_sfc_irrig     => waterfluxbulk_inst%qflx_sfc_irrig_col     , & ! surface irrigation flux (mm H2O /s)   
-         qflx_gw_con_irrig  => waterfluxbulk_inst%qflx_gw_con_irrig_col    & ! confined groundwater irrigation flux (mm H2O /s)   
+         qflx_sfc_irrig     => waterfluxbulk_inst%qflx_sfc_irrig_col       & ! surface irrigation flux (mm H2O /s)   
          )
 
       ! Determine time step and step size
@@ -160,12 +159,6 @@ contains
             end if
          end do
       end do
-
-       ! remove groundwater irrigation from aquifer
-       do fc = 1, num_nolakec
-          c = filter_nolakec(fc)
-          wa(c) = wa(c) - qflx_gw_con_irrig(c) * dtime
-       enddo
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
            waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))

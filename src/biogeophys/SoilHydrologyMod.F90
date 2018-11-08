@@ -51,6 +51,7 @@ module SoilHydrologyMod
   public :: LateralFlowPowerLaw  ! Calculate lateral flow based on power law drainage function
   public :: RenewCondensation    ! Misc. corrections
   public :: CalcAvailableUnconfinedAquifer  ! Calculate water in unconfined aquifer available for groundwater irrigation use
+  public :: WithdrawGroundwaterIrrigation   ! Remove groundwater irrigation from unconfined and confined aquifers
   
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: QflxH2osfcSurf      ! Compute qflx_h2osfc_surf
@@ -2189,8 +2190,6 @@ contains
           qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
           qflx_qrgwl         =>    waterfluxbulk_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
           qflx_rsub_sat      =>    waterfluxbulk_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ] soil saturation excess [mm h2o/s]                 
-          qflx_gw_uncon_irrig => waterfluxbulk_inst%qflx_gw_uncon_irrig_col  , & ! Input:  [real(r8) (:) unconfined groundwater irrigation flux (mm H2O /s)
-
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
           )
@@ -2292,19 +2291,9 @@ contains
              ! make sure no extra water removed from soil column
              rsub_top(c) = rsub_top(c) - rsub_top_tot/dtime
           endif
-
-          ! remove groundwater irrigation from deepest layer
-          rsub_top_layer = qflx_gw_uncon_irrig(c)* dtime
-          h2osoi_liq(c,nbedrock(c)) = h2osoi_liq(c,nbedrock(c)) - rsub_top_layer
-          s_y = watsat(c,nbedrock(c)) &
-                     * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nbedrock(c)))**(-1./bsw(c,nbedrock(c))))
-          s_y=max(s_y,0.02_r8)
-          zwt(c) = zwt(c) + rsub_top_layer/s_y/1000._r8
-          zwt(c) = min(zi(c,nbedrock(c)),zwt(c))
           
           zwt(c) = max(0.0_r8,zwt(c))
           zwt(c) = min(80._r8,zwt(c))
-          
        end do
 
        !  excessive water above saturation added to the above unsaturated layer like a bucket
@@ -2578,6 +2567,103 @@ contains
      end associate
 
    end subroutine CalcAvailableUnconfinedAquifer
+!#9
+   !-----------------------------------------------------------------------
+   subroutine WithdrawGroundwaterIrrigation(bounds, num_hydrologyc, filter_hydrologyc, &
+        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
+        waterstatebulk_inst, waterfluxbulk_inst)
+     !
+     ! !DESCRIPTION:
+     ! Remove groundwater irrigation from unconfined and confined aquifers
+     !
+     ! !USES:
+
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)        , intent(in)    :: bounds               
+     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
+     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+     type(soilstate_type)     , intent(in)    :: soilstate_inst
+     type(waterfluxbulk_type) , intent(in)    :: waterfluxbulk_inst
+     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+     !
+     ! !LOCAL VARIABLES:
+     character(len=32) :: subname = 'WithdrawGroundwaterIrrigation'  ! subroutine name
+     integer  :: c,j,fc                                  ! indices
+     real(r8) :: dtime                                   ! land model time step (sec)
+     integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
+     real(r8) :: s_y
+     real(r8) :: irrig_total
+     real(r8) :: irrig_layer
+     !-----------------------------------------------------------------------
+
+     associate(                                                            & 
+          nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
+          z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
+          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ] interface level below a "z" level (m)           
+          dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
+          bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
+          hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity at saturation (mm H2O /s)
+          sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
+          watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
+          zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
+
+          qflx_gw_uncon_irrig =>   waterfluxbulk_inst%qflx_gw_uncon_irrig_col, & ! Input:  [real(r8) (:) unconfined groundwater irrigation flux (mm H2O /s)
+          qflx_gw_con_irrig  => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! confined groundwater irrigation flux (mm H2O /s)   
+          wa                 =>    waterstatebulk_inst%wa_col                , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
+          
+
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
+          )
+
+       ! Get time step
+
+       dtime = get_step_size()
+
+       !-- Remove groundwater from unconfined aquifer  -----------
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+
+          irrig_total = qflx_gw_uncon_irrig(c)*dtime
+          
+          ! should never be negative... but include for completeness
+          if(irrig_total < 0.) then
+             
+             call endrun(msg="negative groundwater irrigation!"//errmsg(sourcefile, __LINE__))
+             
+          else 
+             do j = jwt(c)+1, nbedrock(c)
+                ! use analytical expression for specific yield
+                s_y = watsat(c,j) &
+                     * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+                s_y=max(s_y,0.02_r8)
+                irrig_layer=min(irrig_total,(s_y*(zi(c,j) - zwt(c))*1.e3))
+                irrig_layer=max(irrig_layer,0._r8)
+                h2osoi_liq(c,j) = h2osoi_liq(c,j) - irrig_layer
+                   
+                irrig_total = irrig_total - irrig_layer
+
+                if (irrig_total <= 0.) then 
+                   exit
+                endif
+             enddo
+          endif
+       end do
+
+       ! zwt is not being updated, as it will be updated
+       ! after HydrologyNoDrainage
+       
+       !-- Remove groundwater from confined aquifer  -----------
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          wa(c) = wa(c) - qflx_gw_con_irrig(c) * dtime
+       enddo
+
+     end associate
+
+   end subroutine WithdrawGroundwaterIrrigation
 
 
 !#0

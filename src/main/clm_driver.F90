@@ -43,6 +43,7 @@ module clm_driver
   use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
+  use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
   !
   use AerosolMod             , only : AerosolMasses  
   use SnowSnicarMod          , only : SnowAge_grain
@@ -443,6 +444,12 @@ contains
             water_inst%waterfluxbulk_inst, &
             available_gw_uncon = water_inst%waterdiagnosticbulk_inst%available_gw_uncon_col(bounds_clump%begc:bounds_clump%endc))
        call t_stopf('drvinit')
+
+       ! Remove groundwater irrigation
+       call WithdrawGroundwaterIrrigation(bounds_clump, filter(nc)%num_hydrologyc, &
+            filter(nc)%hydrologyc, soilhydrology_inst, soilstate_inst, &
+            water_inst%waterstatebulk_inst, &
+            water_inst%waterfluxbulk_inst)
 
        ! ============================================================================
        ! Canopy Hydrology
