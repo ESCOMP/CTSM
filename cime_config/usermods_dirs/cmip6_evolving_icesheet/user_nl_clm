@@ -1,1 +1,7 @@
+!----------------------------------------------------------------------------------
+! Settings from cmip6_evolving_icesheet
+!----------------------------------------------------------------------------------
+
+! h3 stream (yearly average, gridcell-level)
 hist_fincl4 += 'ICE_MODEL_FRACTION'
+

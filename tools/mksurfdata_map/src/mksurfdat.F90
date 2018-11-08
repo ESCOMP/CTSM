@@ -139,6 +139,8 @@ program mksurfdat
     real(r8), allocatable  :: p3(:)              ! coefficient for qflx_surf_lag for finundated (s/mm)
     real(r8), allocatable  :: zwt0(:)            ! decay factor for finundated (m)
 
+    real(r8) :: std_elev = -999.99_r8            ! Standard deviation of elevation (m) to use for entire grid
+
     integer, allocatable :: harvind1D(:)         ! Indices of 1D harvest fields
     integer, allocatable :: harvind2D(:)         ! Indices of 2D harvest fields
 
@@ -214,6 +216,7 @@ program mksurfdat
          fsurdat,                  &
          fdyndat,                  &   
          fsurlog,                  &
+         std_elev,                 &
          urban_skip_abort_on_invalid_data_check
 
 !-----------------------------------------------------------------------
@@ -655,7 +658,7 @@ program mksurfdat
     
     ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
     call mktopostats (ldomain, mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
-         ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope)
+         ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
 
     ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
     call mkVICparams (ldomain, mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
