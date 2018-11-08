@@ -21,7 +21,7 @@ module lnd_import_export
   use atm2lndType           , only : atm2lnd_type
   use glc2lndMod            , only : glc2lnd_type
   use domainMod             , only : ldomain
-  use spmdMod               , only : masterproc, mpicom, comp_id
+  use spmdMod               , only : masterproc
   use seq_drydep_mod        , only : seq_drydep_readnl, seq_drydep_init, n_drydep
   use shr_megan_mod         , only : shr_megan_readnl, shr_megan_mechcomps_n
   use shr_fire_emis_mod     , only : shr_fire_emis_readnl, shr_fire_emis_mechcomps_n, shr_fire_emis_ztop_token
@@ -1125,6 +1125,8 @@ contains
 
   subroutine state_setexport(state, fldname, bounds, input, minus, rc)
 
+    use shr_const_mod, only : fillvalue=>SHR_CONST_SPVAL
+
     ! ----------------------------------------------
     ! Map input array to export state field 
     ! ----------------------------------------------
@@ -1158,7 +1160,7 @@ contains
        call state_getfldptr(state, trim(fldname), fldptr, bounds%begg, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       fldptr(:) = 0._r8
+       fldptr(:) = fillvalue
 
        ! set fldptr values to input array
        if (present(minus)) then

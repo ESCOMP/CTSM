@@ -197,7 +197,8 @@ contains
 
     call mpi_comm_dup(lmpicom, mpicom, ierr)
 
-    ! TODO: do we really need this config variable any more
+    ! Note still need compid for those parts of the code that use the data model 
+    ! functionality through subroutine calls
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) compid  ! convert from string to integer
