@@ -25,7 +25,7 @@ module SurfaceRadiationMod
   implicit none
   private
 
-  logical :: DEBUG = .false.  ! for debugging this module
+  logical, parameter :: debug = .false.  ! for debugging this module
 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -54,7 +54,13 @@ module SurfaceRadiationMod
      real(r8), pointer, private  :: fsr_vis_d_patch       (:) ! patch reflected direct beam vis solar radiation (W/m**2)
      real(r8), pointer, private  :: fsr_vis_i_patch       (:) ! patch reflected diffuse vis solar radiation (W/m**2)
      real(r8), pointer, private  :: fsr_vis_d_ln_patch    (:) ! patch reflected direct beam vis solar radiation at local noon (W/m**2)
-
+     ! diagnostic fluxes:
+     real(r8), pointer, private  :: fsrSF_vis_d_patch     (:) ! snow-free patch reflected direct beam vis solar radiation (W/m**2)
+     real(r8), pointer, private  :: fsrSF_vis_i_patch     (:) ! snow-free patch reflected diffuse vis solar radiation (W/m**2)
+     real(r8), pointer, private  :: fsrSF_vis_d_ln_patch  (:) ! snow-free patch reflected direct beam vis solar radiation at local noon (W/m**2)
+     real(r8), pointer, private  :: ssre_fsr_vis_d_patch  (:) ! snow radiative effect
+     real(r8), pointer, private  :: ssre_fsr_vis_i_patch  (:) ! snow radiative effect
+     real(r8), pointer, private  :: ssre_fsr_vis_d_ln_patch(:)! snow radiative effect
      real(r8), pointer, private  :: fsds_sno_vd_patch     (:) ! patch incident visible, direct radiation on snow  (for history files)  [W/m2]
      real(r8), pointer, private  :: fsds_sno_nd_patch     (:) ! patch incident near-IR, direct radiation on snow  (for history files)  [W/m2]
      real(r8), pointer, private  :: fsds_sno_vi_patch     (:) ! patch incident visible, diffuse radiation on snow (for history files) [W/m2]
@@ -122,6 +128,12 @@ contains
     allocate(this%fsr_vis_d_patch       (begp:endp))              ; this%fsr_vis_d_patch       (:)   = nan
     allocate(this%fsr_vis_d_ln_patch    (begp:endp))              ; this%fsr_vis_d_ln_patch    (:)   = nan
     allocate(this%fsr_vis_i_patch       (begp:endp))              ; this%fsr_vis_i_patch       (:)   = nan
+    allocate(this%fsrSF_vis_d_patch     (begp:endp))              ; this%fsrSF_vis_d_patch     (:)   = nan
+    allocate(this%fsrSF_vis_d_ln_patch  (begp:endp))              ; this%fsrSF_vis_d_ln_patch  (:)   = nan
+    allocate(this%fsrSF_vis_i_patch     (begp:endp))              ; this%fsrSF_vis_i_patch     (:)   = nan
+    allocate(this%ssre_fsr_vis_d_patch  (begp:endp))              ; this%ssre_fsr_vis_d_patch  (:)   = nan
+    allocate(this%ssre_fsr_vis_d_ln_patch(begp:endp))             ; this%ssre_fsr_vis_d_ln_patch(:)  = nan
+    allocate(this%ssre_fsr_vis_i_patch  (begp:endp))              ; this%ssre_fsr_vis_i_patch  (:)   = nan
     allocate(this%fsr_sno_vd_patch      (begp:endp))              ; this%fsr_sno_vd_patch      (:)   = nan
     allocate(this%fsr_sno_nd_patch      (begp:endp))              ; this%fsr_sno_nd_patch      (:)   = nan
     allocate(this%fsr_sno_vi_patch      (begp:endp))              ; this%fsr_sno_vi_patch      (:)   = nan
@@ -147,6 +159,7 @@ contains
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     use clm_varcon    , only : spval
     use histFileMod   , only : hist_addfld1d, hist_addfld2d
+    use clm_varctl    , only : use_SSRE
     !
     ! !ARGUMENTS:
     class(surfrad_type) :: this
@@ -217,12 +230,30 @@ contains
     call hist_addfld1d (fname='FSRVD', units='W/m^2',  &
          avgflag='A', long_name='direct vis reflected solar radiation', &
          ptr_patch=this%fsr_vis_d_patch, c2l_scale_type='urbanf')
-
     this%fsr_vis_i_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSRVI', units='W/m^2',  &
          avgflag='A', long_name='diffuse vis reflected solar radiation', &
          ptr_patch=this%fsr_vis_i_patch, c2l_scale_type='urbanf')
+    ! diagnostic fluxes
+    if (use_SSRE) then
+       this%fsrSF_vis_d_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSRSFVD', units='W/m^2',  &
+            avgflag='A', long_name='direct vis reflected solar radiation', &
+            ptr_patch=this%fsrSF_vis_d_patch, c2l_scale_type='urbanf')
+       this%fsrSF_vis_i_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSRSFVI', units='W/m^2',  &
+            avgflag='A', long_name='diffuse vis reflected solar radiation', &
+            ptr_patch=this%fsrSF_vis_i_patch, c2l_scale_type='urbanf')
 
+       this%ssre_fsr_vis_d_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SSRE_FSRVD', units='W/m^2',  &
+            avgflag='A', long_name='surface snow radiatve effect on direct vis reflected solar radiation', &
+            ptr_patch=this%ssre_fsr_vis_d_patch, c2l_scale_type='urbanf')
+       this%ssre_fsr_vis_i_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SSRE_FSRVI', units='W/m^2',  &
+            avgflag='A', long_name='surface snow radiatve effect on diffuse vis reflected solar radiation', &
+            ptr_patch=this%ssre_fsr_vis_i_patch, c2l_scale_type='urbanf')
+    end if
     this%fsds_vis_d_ln_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSDSVDLN', units='W/m^2',  &
          avgflag='A', long_name='direct vis incident solar radiation at local noon', &
@@ -242,7 +273,17 @@ contains
     call hist_addfld1d (fname='FSRVDLN', units='W/m^2',  &
          avgflag='A', long_name='direct vis reflected solar radiation at local noon', &
          ptr_patch=this%fsr_vis_d_ln_patch, c2l_scale_type='urbanf')
-
+    ! diagnostic flux
+    if (use_SSRE) then
+       this%fsrSF_vis_d_ln_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSRSFVDLN', units='W/m^2',  &
+            avgflag='A', long_name='direct vis reflected solar radiation at local noon', &
+            ptr_patch=this%fsrSF_vis_d_ln_patch, c2l_scale_type='urbanf')
+       this%ssre_fsr_vis_d_ln_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SSRE_FSRVDLN', units='W/m^2',  &
+            avgflag='A', long_name='surface snow radiatve effect on direct vis reflected solar radiation at local noon', &
+            ptr_patch=this%ssre_fsr_vis_d_ln_patch, c2l_scale_type='urbanf')
+    end if
     this%fsds_sno_vd_patch(begp:endp) = spval
     call hist_addfld1d (fname='SNOFSDSVD', units='W/m^2',  &
          avgflag='A', long_name='direct vis incident solar radiation on snow', &
@@ -435,10 +476,10 @@ contains
      !
      ! !USES:
      use clm_varpar       , only : numrad, nlevsno
-     use clm_varcon       , only : spval, degpsec, isecspday
+     use clm_varcon       , only : spval
      use landunit_varcon  , only : istsoil, istcrop 
-     use clm_varctl       , only : subgridflag, use_snicar_frc, iulog
-     use clm_time_manager , only : get_curr_date, get_step_size
+     use clm_varctl       , only : subgridflag, use_snicar_frc, iulog, use_SSRE
+     use clm_time_manager , only : get_step_size, is_near_local_noon
      use SnowSnicarMod    , only : DO_SNO_OC
      use abortutils       , only : endrun
      !
@@ -471,13 +512,13 @@ contains
      integer  :: i                                   ! layer index [idx]
      real(r8) :: rnir                                ! reflected solar radiation [nir] (W/m**2)
      real(r8) :: rvis                                ! reflected solar radiation [vis] (W/m**2)
+     real(r8) :: rnirSF                              ! snow-free reflected solar radiation [nir] (W/m**2)
+     real(r8) :: rvisSF                              ! snow-free reflected solar radiation [vis] (W/m**2)
      real(r8) :: trd(bounds%begp:bounds%endp,numrad) ! transmitted solar radiation: direct (W/m**2)
      real(r8) :: tri(bounds%begp:bounds%endp,numrad) ! transmitted solar radiation: diffuse (W/m**2)
      real(r8) :: cad(bounds%begp:bounds%endp,numrad) ! direct beam absorbed by canopy (W/m**2)
      real(r8) :: cai(bounds%begp:bounds%endp,numrad) ! diffuse radiation absorbed by canopy (W/m**2)
-     integer  :: local_secp1                         ! seconds into current date in local time
      real(r8) :: dtime                               ! land model time step (sec)
-     integer  :: year,month,day,secs                 ! calendar info for current time step
      real(r8) :: sabg_snl_sum                        ! temporary, absorbed energy in all active snow layers [W/m2]
      real(r8) :: absrad_pur                          ! temp: absorbed solar radiation by pure snow [W/m2]
      real(r8) :: absrad_bc                           ! temp: absorbed solar radiation without BC [W/m2]
@@ -488,8 +529,6 @@ contains
      real(r8) :: sabg_oc(bounds%begp:bounds%endp)    ! solar radiation absorbed by ground without OC [W/m2]
      real(r8) :: sabg_dst(bounds%begp:bounds%endp)   ! solar radiation absorbed by ground without dust [W/m2]
      real(r8) :: parveg(bounds%begp:bounds%endp)     ! absorbed par by vegetation (W/m**2)
-     !
-     integer, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
      !
      !------------------------------------------------------------------------------
 
@@ -520,6 +559,8 @@ contains
           albsoi          =>    surfalb_inst%albsoi_col           , & ! Input:  [real(r8) (:,:) ] diffuse soil albedo (col,bnd) [frc] 
           albd            =>    surfalb_inst%albd_patch           , & ! Input:  [real(r8) (:,:) ] surface albedo (direct)               
           albi            =>    surfalb_inst%albi_patch           , & ! Input:  [real(r8) (:,:) ] surface albedo (diffuse)              
+          albdSF          =>    surfalb_inst%albdSF_patch         , & ! Input:  [real(r8) (:,:) ] snow-free surface albedo (direct)
+          albiSF          =>    surfalb_inst%albiSF_patch         , & ! Input:  [real(r8) (:,:) ] snow-free surface albedo (diffuse)
           fabd            =>    surfalb_inst%fabd_patch           , & ! Input:  [real(r8) (:,:) ] flux absorbed by canopy per unit direct flux
           fabd_sun        =>    surfalb_inst%fabd_sun_patch       , & ! Input:  [real(r8) (:,:) ] flux absorbed by sunlit canopy per unit direct flux
           fabd_sha        =>    surfalb_inst%fabd_sha_patch       , & ! Input:  [real(r8) (:,:) ] flux absorbed by shaded canopy per unit direct flux
@@ -543,6 +584,8 @@ contains
           fsun            =>    canopystate_inst%fsun_patch       , & ! Output: [real(r8) (:)   ] sunlit fraction of canopy               
           fsa             =>    solarabs_inst%fsa_patch           , & ! Output: [real(r8) (:)   ] solar radiation absorbed (total) (W/m**2)
           fsr             =>    solarabs_inst%fsr_patch           , & ! Output: [real(r8) (:)   ] solar radiation reflected (W/m**2)      
+          fsrSF           =>    solarabs_inst%fsrSF_patch         , & ! Output: [real(r8) (:)   ] diagnostic snow-free solar radiation reflected (W/m**2)      
+          ssre_fsr        =>    solarabs_inst%ssre_fsr_patch      , & ! Output: [real(r8) (:)   ] diagnostic snow-free solar radiation reflected (W/m**2)      
           sabv            =>    solarabs_inst%sabv_patch          , & ! Output: [real(r8) (:)   ] solar radiation absorbed by vegetation (W/m**2)
           sabg            =>    solarabs_inst%sabg_patch          , & ! Output: [real(r8) (:)   ] solar radiation absorbed by ground (W/m**2)
           sabg_pen        =>    solarabs_inst%sabg_pen_patch      , & ! Output: [real(r8) (:)   ] solar (rural) radiation penetrating top soisno layer (W/m**2)
@@ -555,14 +598,25 @@ contains
           fsds_nir_d      =>    solarabs_inst%fsds_nir_d_patch    , & ! Output: [real(r8) (:)   ] incident direct beam nir solar radiation (W/m**2)
           fsds_nir_d_ln   =>    solarabs_inst%fsds_nir_d_ln_patch , & ! Output: [real(r8) (:)   ] incident direct beam nir solar rad at local noon (W/m**2)
           fsds_nir_i      =>    solarabs_inst%fsds_nir_i_patch    , & ! Output: [real(r8) (:)   ] incident diffuse nir solar radiation (W/m**2)
+          fsrSF_nir_d     =>    solarabs_inst%fsrSF_nir_d_patch   , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar radiation (W/m**2)
+          fsrSF_nir_i     =>    solarabs_inst%fsrSF_nir_i_patch   , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse nir solar radiation (W/m**2)
+          fsrSF_nir_d_ln  =>    solarabs_inst%fsrSF_nir_d_ln_patch, & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar rad at local noon (W/m**2)
+          ssre_fsr_nir_d  =>    solarabs_inst%ssre_fsr_nir_d_patch, & ! Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar radiation (W/m**2)
+          ssre_fsr_nir_i  =>    solarabs_inst%ssre_fsr_nir_i_patch, & ! Output: [real(r8) (:)   ] snow-free reflected diffuse nir solar radiation (W/m**2)
+          ssre_fsr_nir_d_ln=>   solarabs_inst%ssre_fsr_nir_d_ln_patch,&!Output: [real(r8) (:)   ] snow-free reflected direct beam nir solar rad at local noon (W/m**2)
           fsa_r           =>    solarabs_inst%fsa_r_patch         , & ! Output: [real(r8) (:)   ] rural solar radiation absorbed (total) (W/m**2)
-          sub_surf_abs_SW =>    solarabs_inst%sub_surf_abs_SW_patch , & ! Output: [real(r8) (:)   ] fraction of solar radiation absorbed below first snow layer (W/M**2)
+          sub_surf_abs_SW =>    solarabs_inst%sub_surf_abs_SW_patch,& ! Output: [real(r8) (:)   ] fraction of solar radiation absorbed below first snow layer (W/M**2)
 
           parveg_ln       =>    surfrad_inst%parveg_ln_patch      , & ! Output: [real(r8) (:)   ] absorbed par by vegetation at local noon (W/m**2)
           fsr_vis_d       =>    surfrad_inst%fsr_vis_d_patch      , & ! Output: [real(r8) (:)   ] reflected direct beam vis solar radiation (W/m**2)
           fsr_vis_i       =>    surfrad_inst%fsr_vis_i_patch      , & ! Output: [real(r8) (:)   ] reflected diffuse vis solar radiation (W/m**2)
+          fsrSF_vis_d     =>    surfrad_inst%fsrSF_vis_d_patch    , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar radiation (W/m**2)
+          fsrSF_vis_i     =>    surfrad_inst%fsrSF_vis_i_patch    , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse vis solar radiation (W/m**2)
+          ssre_fsr_vis_d  =>    surfrad_inst%ssre_fsr_vis_d_patch , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar radiation (W/m**2)
+          ssre_fsr_vis_i  =>    surfrad_inst%ssre_fsr_vis_i_patch , & ! Output: [real(r8) (:)   ] snow-free reflected diffuse vis solar radiation (W/m**2)
           fsds_vis_i_ln   =>    surfrad_inst%fsds_vis_i_ln_patch  , & ! Output: [real(r8) (:)   ] incident diffuse beam vis solar rad at local noon (W/m**2)
           fsr_vis_d_ln    =>    surfrad_inst%fsr_vis_d_ln_patch   , & ! Output: [real(r8) (:)   ] reflected direct beam vis solar rad at local noon (W/m**2)
+          fsrSF_vis_d_ln  =>    surfrad_inst%fsrSF_vis_d_ln_patch , & ! Output: [real(r8) (:)   ] snow-free reflected direct beam vis solar rad at local noon (W/m**2)
           fsds_vis_d      =>    surfrad_inst%fsds_vis_d_patch     , & ! Output: [real(r8) (:)   ] incident direct beam vis solar radiation (W/m**2)
           fsds_vis_i      =>    surfrad_inst%fsds_vis_i_patch     , & ! Output: [real(r8) (:)   ] incident diffuse vis solar radiation (W/m**2)
           fsds_vis_d_ln   =>    surfrad_inst%fsds_vis_d_ln_patch  , & ! Output: [real(r8) (:)   ] incident direct beam vis solar rad at local noon (W/m**2)
@@ -589,7 +643,6 @@ contains
        ! Determine seconds off current time step
      
        dtime = get_step_size()
-       call get_curr_date (year, month, day, secs)
 
        ! Initialize fluxes
 
@@ -843,7 +896,12 @@ contains
           rvis = albd(p,1)*forc_solad(g,1) + albi(p,1)*forc_solai(g,1)
           rnir = albd(p,2)*forc_solad(g,2) + albi(p,2)*forc_solai(g,2)
           fsr(p) = rvis + rnir
-
+          if (use_SSRE) then
+             rvisSF = albdSF(p,1)*forc_solad(g,1) + albiSF(p,1)*forc_solai(g,1)
+             rnirSF = albdSF(p,2)*forc_solad(g,2) + albiSF(p,2)*forc_solai(g,2)
+             fsrSF(p) = rvisSF + rnirSF
+             ssre_fsr(p) = fsr(p)-fsrSF(p)
+          end if
           fsds_vis_d(p) = forc_solad(g,1)
           fsds_nir_d(p) = forc_solad(g,2)
           fsds_vis_i(p) = forc_solai(g,1)
@@ -852,10 +910,18 @@ contains
           fsr_nir_d(p)  = albd(p,2)*forc_solad(g,2)
           fsr_vis_i(p)  = albi(p,1)*forc_solai(g,1)
           fsr_nir_i(p)  = albi(p,2)*forc_solai(g,2)
+          if (use_SSRE) then
+             fsrSF_vis_d(p)  = albdSF(p,1)*forc_solad(g,1)
+             fsrSF_nir_d(p)  = albdSF(p,2)*forc_solad(g,2)
+             fsrSF_vis_i(p)  = albiSF(p,1)*forc_solai(g,1)
+             fsrSF_nir_i(p)  = albiSF(p,2)*forc_solai(g,2)
 
-          local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-          local_secp1 = mod(local_secp1,isecspday)
-          if (local_secp1 == isecspday/2) then
+             ssre_fsr_vis_d(p) = fsrSF_vis_d(p)-fsr_vis_d(p)
+             ssre_fsr_nir_d(p) = fsrSF_nir_d(p)-fsr_nir_d(p)
+             ssre_fsr_vis_i(p) = fsrSF_vis_i(p)-fsr_vis_i(p)
+             ssre_fsr_nir_i(p) = fsrSF_nir_i(p)-fsr_nir_i(p)
+          end if
+          if ( is_near_local_noon( grc%londeg(g), deltasec=nint(dtime)/2 ) )then
              fsds_vis_d_ln(p) = forc_solad(g,1)
              fsds_nir_d_ln(p) = forc_solad(g,2)
              fsr_vis_d_ln(p) = albd(p,1)*forc_solad(g,1)
@@ -870,7 +936,15 @@ contains
              fsds_vis_i_ln(p) = spval
              parveg_ln(p)     = spval
           end if
-
+          if (use_SSRE) then
+             if ( is_near_local_noon( grc%londeg(g), deltasec=nint(dtime)/2 ) )then
+                fsrSF_vis_d_ln(p) = albdSF(p,1)*forc_solad(g,1)
+                fsrSF_nir_d_ln(p) = albdSF(p,2)*forc_solad(g,2)
+             else
+                fsrSF_vis_d_ln(p) = spval
+                fsrSF_nir_d_ln(p) = spval
+             end if
+          end if
           ! diagnostic variables (downwelling and absorbed radiation partitioning) for history files
           ! (OPTIONAL)
           c = patch%column(p)
@@ -897,16 +971,14 @@ contains
           endif
        end do
 
+       ! TODO: urban snow-free albedos:
        do fp = 1,num_urbanp
           p = filter_urbanp(fp)
           g = patch%gridcell(p)
 
-          local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-          local_secp1 = mod(local_secp1,isecspday)
-
-        if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
-           if ( DEBUG ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
-        endif
+          if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
+             if ( debug ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
+          endif
           ! Solar incident 
 
           fsds_vis_d(p) = forc_solad(g,1)
@@ -915,7 +987,7 @@ contains
           fsds_nir_i(p) = forc_solai(g,2)
 
           ! Determine local noon incident solar
-          if (local_secp1 == noonsec) then
+          if ( is_near_local_noon( grc%londeg(g), deltasec=nint(dtime)/2 ) )then
              fsds_vis_d_ln(p) = forc_solad(g,1)
              fsds_nir_d_ln(p) = forc_solad(g,2)
              fsds_vis_i_ln(p) = forc_solai(g,1)
@@ -936,7 +1008,7 @@ contains
           fsr_nir_i(p) = albi(p,2) * forc_solai(g,2)
 
           ! Determine local noon reflected solar
-          if (local_secp1 == noonsec) then
+          if ( is_near_local_noon( grc%londeg(g), deltasec=nint(dtime)/2 ) )then
              fsr_vis_d_ln(p) = fsr_vis_d(p)
              fsr_nir_d_ln(p) = fsr_nir_d(p)
           else

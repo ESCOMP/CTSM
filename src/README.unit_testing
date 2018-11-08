@@ -1,13 +1,11 @@
-# To run all CTSM unit tests on caldera, run the following command:
+# To run all CTSM unit tests, run the following command:
 #
-# The creation of a temporary directory ensures that you are doing a completely
-# clean build of the unit tests. (The use of the --clean flag to run_tests.py
-# cleans most, but not all of the files created by the unit test build.) For
-# rerunning the tests after an incremental change, you can instead use an
-# existing build directory.
+# This reuses the existing 'unit_tests.temp' directory (if present) in
+# order to do an incremental rebuild of the unit tests from the last
+# time you ran them from this directory.
 
 # From a standalone CTSM checkout:
-../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`
+../cime/scripts/fortran_unit_testing/run_tests.py --build-dir unit_tests.temp
 
 # If you are within a full CESM checkout, you would instead do:
-# ../../../cime/scripts/fortran_unit_testing/run_tests.py --build-dir `mktemp -d --tmpdir=. unit_tests.XXXXXXXX`
+# ../../../cime/scripts/fortran_unit_testing/run_tests.py --build-dir unit_tests.temp
