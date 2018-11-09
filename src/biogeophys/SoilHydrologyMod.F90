@@ -2570,7 +2570,7 @@ contains
 !#9
    !-----------------------------------------------------------------------
    subroutine WithdrawGroundwaterIrrigation(bounds, num_hydrologyc, filter_hydrologyc, &
-        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
+        soilhydrology_inst, soilstate_inst, &
         waterstatebulk_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
