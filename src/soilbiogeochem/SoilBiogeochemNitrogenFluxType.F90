@@ -77,7 +77,7 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: man_n_appl_col                             (:)   ! Manure N (TAN+organic) applied on soil (gN/m2/s)
      real(r8), pointer :: man_n_grz_col                              (:)   ! Manure N from grazing animals (gN/m2/s)
      real(r8), pointer :: man_n_mix_col                              (:)   ! Manure N from produced in mixed systems (gN/m2/s)
-     real(r8), pointer :: man_n_barns_col                            (:) ! Manure N from produced in animal housings (gN/m2/s)
+     real(r8), pointer :: man_n_barns_col                            (:)   ! Manure N from produced in animal housings (gN/m2/s)
      real(r8), pointer :: fert_n_appl_col                            (:)   ! Fertilizer N  applied on soil (gN/m2/s)
      real(r8), pointer :: otherfert_n_appl_col                       (:)   ! Non-urea fertilizer N  applied on soil (gN/m2/s)
      real(r8), pointer :: man_n_transf_col                           (:)   ! Manure N removed from the crop column (into the natural veg. column in the gcell) 
