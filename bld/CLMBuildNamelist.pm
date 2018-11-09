@@ -2784,6 +2784,11 @@ sub setup_logic_irrigation_parameters {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
      }
 
+     my $lower = $nl->get_value( 'lower_boundary_condition' );
+     if ( ($lower == 3 || $lower == 4) && (&value_is_true($nl->get_value( 'use_groundwater_irrigation' ))) ) {
+        $log->fatal_error("use_groundwater_irrigation can only be used when lower_boundary_condition is NOT 3 or 4");
+     }
+
      $var = "irrig_river_volume_threshold";
      if ( &value_is_true($nl->get_value("limit_irrigation_if_rof_enabled")) ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
