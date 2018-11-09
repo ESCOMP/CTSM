@@ -644,6 +644,7 @@ contains
     ! !USES:
     use clm_instur      , only : fert_cft, irrig_method, wt_nat_patch
     use clm_varpar      , only : natpft_size, cft_size, natpft_lb
+    use IrrigationMod   , only : irrig_method_unset
     ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: begg, endg
@@ -688,7 +689,7 @@ contains
                ' must also have a separate crop landunit, and vice versa)'//&
                errMsg(sourcefile, __LINE__))
     end if
-    irrig_method = 0
+    irrig_method = irrig_method_unset
 
     call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=wt_nat_patch, &
          dim1name=grlnd, readvar=readvar)

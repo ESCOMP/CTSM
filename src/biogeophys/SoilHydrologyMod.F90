@@ -2007,14 +2007,11 @@ contains
      type(waterfluxbulk_type)      , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
-     integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
      integer  :: c,j,fc,i                                ! indices
      integer  :: k,k_zwt
      real(r8) :: sat_lev
      real(r8) :: s1,s2,m,b   ! temporary variables used to interpolate theta
      integer  :: sat_flag
-     real(r8) :: s_y
-     real(r8) :: available_water_layer
      
      !-----------------------------------------------------------------------
 
@@ -2026,8 +2023,6 @@ contains
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
           h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-          bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
-          sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
           zwt                =>    soilhydrology_inst%zwt_col              & ! Output: [real(r8) (:)   ]  water table depth (m)                             
           )
@@ -2259,7 +2254,7 @@ contains
           endif
 
           !--  Now remove water via rsub_top
-          rsub_top_tot = - (rsub_top(c)* dtime)
+          rsub_top_tot = - rsub_top(c)* dtime
 
           !should never be positive... but include for completeness
           if(rsub_top_tot > 0.) then !rising water table

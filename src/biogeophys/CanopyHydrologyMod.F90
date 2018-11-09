@@ -316,7 +316,7 @@ contains
                    
                    ! determine fraction of input precipitation that is snow and rain
                    fracsnow(p) = forc_snow(c)/(forc_snow(c) + qflx_liq_above_canopy(p))
-                   fracrain(p) = forc_rain(c)/(forc_snow(c) + qflx_liq_above_canopy(p))
+                   fracrain(p) = qflx_liq_above_canopy(p)/(forc_snow(c) + qflx_liq_above_canopy(p))
 
                    ! The leaf water capacities for solid and liquid are different,
                    ! generally double for snow, but these are of somewhat less
@@ -347,7 +347,7 @@ contains
 
                    if (snowveg_on .or. snowveg_onrad) then
                       ! Intercepted precipitation [mm/s]
-                      qflx_prec_intr(p) = forc_snow(c)*fpisnow + (forc_rain(c) + qflx_irrig_sprinkler(p))*fpi
+                      qflx_prec_intr(p) = forc_snow(c)*fpisnow + qflx_liq_above_canopy(p)*fpi
                       ! storage of intercepted snowfall, rain, and dew
                       snocan(p) = max(0._r8, snocan(p) + dtime*forc_snow(c)*fpisnow)    
                       liqcan(p) = max(0._r8, liqcan(p) + dtime*qflx_liq_above_canopy(p)*fpi)
