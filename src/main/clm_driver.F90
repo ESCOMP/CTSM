@@ -44,6 +44,7 @@ module clm_driver
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
   use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
+  use SoilWaterMovementMod   , only : use_aquifer_layer
   !
   use AerosolMod             , only : AerosolMasses  
   use SnowSnicarMod          , only : SnowAge_grain
@@ -341,7 +342,8 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
             soilhydrology_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst)
+            water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst, &
+            use_aquifer_layer = use_aquifer_layer())
 
        call t_stopf('begwbal')
 
