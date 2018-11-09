@@ -117,15 +117,11 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst)
+       soilhydrology_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterbalancebulk_inst, &
+       use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step
-
-    !
-    ! !USES:
-    use SoilWaterMovementMod , only : use_aquifer_layer
-
     !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds     
@@ -134,9 +130,10 @@ contains
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(soilhydrology_type)  , intent(inout) :: soilhydrology_inst
-    type(waterstatebulk_type)     , intent(inout) :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type)     , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)     , intent(inout) :: waterbalancebulk_inst
+    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
+    type(waterbalance_type)   , intent(inout) :: waterbalancebulk_inst
+    logical                   , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer :: c, j, fc                  ! indices
@@ -149,7 +146,7 @@ contains
          begwb        =>    waterbalancebulk_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
 
-      if(use_aquifer_layer()) then 
+      if(use_aquifer_layer) then
          do fc = 1, num_nolakec
             c = filter_nolakec(fc)
             if (col%hydrologically_active(c)) then

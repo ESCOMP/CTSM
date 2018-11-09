@@ -241,7 +241,8 @@ contains
   
   !------------------------------------------------------------------------
   subroutine IrrigationInit(this, bounds, NLFilename, &
-       soilstate_inst, soil_water_retention_curve)
+       soilstate_inst, soil_water_retention_curve, &
+       use_aquifer_layer)
     use SoilStateType , only : soilstate_type
 
     class(irrigation_type) , intent(inout) :: this
@@ -249,8 +250,9 @@ contains
     character(len=*)       , intent(in)    :: NLFilename ! Namelist filename
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    logical                , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
 
-    call this%ReadNamelist(NLFilename)
+    call this%ReadNamelist(NLFilename, use_aquifer_layer)
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds, soilstate_inst, soil_water_retention_curve)
@@ -292,7 +294,7 @@ contains
   end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
-  subroutine ReadNamelist(this, NLFilename)
+  subroutine ReadNamelist(this, NLFilename, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Read the irrigation namelist
@@ -305,8 +307,9 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
     class(irrigation_type) , intent(inout) :: this
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    logical, intent(in) :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
 
@@ -394,19 +397,19 @@ contains
        write(iulog,*) 'irrig_depth = ', irrig_depth
        write(iulog,*) 'irrig_threshold_fraction = ', irrig_threshold_fraction
        write(iulog,*) 'limit_irrigation_if_rof_enabled = ', limit_irrigation_if_rof_enabled
-       write(iulog,*) 'use_groundwate_irrigation = ', use_groundwater_irrigation
+       write(iulog,*) 'use_groundwater_irrigation = ', use_groundwater_irrigation
        if (limit_irrigation_if_rof_enabled) then
           write(iulog,*) 'irrig_river_volume_threshold = ', irrig_river_volume_threshold
        end if
        write(iulog,*) ' '
 
-       call this%CheckNamelistValidity()
+       call this%CheckNamelistValidity(use_aquifer_layer)
     end if
 
   end subroutine ReadNamelist
 
   !-----------------------------------------------------------------------
-  subroutine CheckNamelistValidity(this)
+  subroutine CheckNamelistValidity(this, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Check for validity of input parameters.
@@ -416,11 +419,9 @@ contains
     ! Only needs to be called by the master task, since parameters are the same for all
     ! tasks.
     !
-    ! !USES:
-    use SoilWaterMovementMod , only : use_aquifer_layer
-    !
     ! !ARGUMENTS:
     class(irrigation_type), intent(in) :: this
+    logical, intent(in) :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
 
@@ -491,7 +492,7 @@ contains
        end if
     end if
 
-    if (use_aquifer_layer() .and. use_groundwater_irrigation) then
+    if (use_aquifer_layer .and. use_groundwater_irrigation) then
           write(iulog,*) ' ERROR: use_groundwater_irrigation and use_aquifer_layer may not be used simultaneously'
           call endrun(msg=' ERROR: use_groundwater_irrigation and use_aquifer_layer cannot both be set to true' // &
                errMsg(sourcefile, __LINE__))
