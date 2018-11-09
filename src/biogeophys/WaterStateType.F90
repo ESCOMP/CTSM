@@ -44,7 +44,8 @@ module WaterstateType
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
 !KO
      real(r8), pointer :: h2osoi_liqice_5cm_col  (:)   ! col liquid water + ice lens in top 5cm of soil (kg/m2)
-!KO
+     !KO
+     real(r8), pointer :: h2osoi_tend_tsl_col    (:)   ! col moisture tendency due to vertical movement at topmost layer (m3/m3/s) 
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
@@ -191,9 +192,12 @@ contains
     allocate(this%h2osoi_liqice_10cm_col (begc:endc))                     ; this%h2osoi_liqice_10cm_col (:)   = nan   
 !KO
     if ( use_fan ) then
-       allocate(this%h2osoi_liqice_5cm_col (begc:endc))                   ; this%h2osoi_liqice_5cm_col  (:)   = nan   
+       allocate(this%h2osoi_liqice_5cm_col (begc:endc))                   ; this%h2osoi_liqice_5cm_col  (:)   = nan
+
     end if
-!KO
+    !KO
+    allocate(this%h2osoi_tend_tsl_col   (begc:endc))                   ; this%h2osoi_tend_tsl_col    (:)   = nan
+    
     allocate(this%h2osoi_vol_col         (begc:endc, 1:nlevgrnd))         ; this%h2osoi_vol_col         (:,:) = nan
     allocate(this%air_vol_col            (begc:endc, 1:nlevgrnd))         ; this%air_vol_col            (:,:) = nan
     allocate(this%h2osoi_liqvol_col      (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liqvol_col      (:,:) = nan
@@ -324,8 +328,14 @@ contains
        call hist_addfld1d (fname='SOILWATER_5CM',  units='kg/m2', &
             avgflag='A', long_name='soil liquid water + ice in top 5cm of soil (veg landunits only)', &
             ptr_col=this%h2osoi_liqice_5cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+
     end if
-!KO
+    !KO
+    this%h2osoi_tend_tsl_col(begc:endc) = spval
+    call hist_addfld1d (fname='SOILWATERTEND_TSL',  units='m3/m3/s', &
+         avgflag='A', long_name='tsl tendency for fan', &
+         ptr_col=this%h2osoi_tend_tsl_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+
     this%h2osoi_liq_tot_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTSOILLIQ',  units='kg/m2', &
          avgflag='A', long_name='vertically summed soil liquid water (veg landunits only)', &

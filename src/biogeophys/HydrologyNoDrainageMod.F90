@@ -202,10 +202,13 @@ contains
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterflux_inst, energyflux_inst)
       
       if ( use_fates ) call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterflux_inst)
-      
+      !if ( use_fan ) call store_tsl_moisture(waterstate_inst)
+      if ( .true. ) call store_tsl_moisture(waterstate_inst)
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
+      !if ( use_fan ) call eval_tsl_moist_tend(waterstate_inst)
+      if ( .true. ) call eval_tsl_moist_tend(waterstate_inst)
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -596,6 +599,28 @@ contains
 
     end associate
 
+
+  contains
+
+    subroutine store_tsl_moisture(waterstate_inst)
+      type(waterstate_type), intent(inout) :: waterstate_inst
+      print *, 'store flux'
+      associate(h2osoi_tend_tsl => waterstate_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
+           h2osoi_liq_tsl => waterstate_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
+        h2osoi_tend_tsl = h2osoi_liq_tsl
+      end associate
+    end subroutine store_tsl_moisture
+
+    subroutine eval_tsl_moist_tend(waterstate_inst)
+      type(waterstate_type), intent(inout) :: waterstate_inst
+      print *, 'eval tend'
+      associate(h2osoi_tend_tsl => waterstate_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
+           h2osoi_liq_tsl => waterstate_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
+        h2osoi_tend_tsl = (h2osoi_liq_tsl - h2osoi_tend_tsl) / dtime
+      end associate
+      print *, 'done'
+    end subroutine eval_tsl_moist_tend
+    
   end subroutine HydrologyNoDrainage
 
 end Module HydrologyNoDrainageMod
