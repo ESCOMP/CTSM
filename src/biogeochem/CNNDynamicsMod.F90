@@ -378,7 +378,11 @@ contains
        ! tendency. However, it is unclear how to do this in a numerically consistent
        ! way. Following a naive finite differencing approach led to worse agreement in
        ! stand-alone simulations so the term is currenltly neglected here.
-       watertend = 0.0_r8 
+       watertend = 0.0_r8
+
+       ! Try using watertend evaluated in waterstatetype:
+       ! watertend = waterstate_inst%h2osoi_tend_tsl_col(c)
+       
        tg = temperature_inst%t_grnd_col(c)
        theta = waterstate_inst%h2osoi_vol_col(c,1)
        thetasat = soilstate_inst%watsat_col(c,1)
