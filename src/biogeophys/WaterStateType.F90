@@ -841,6 +841,8 @@ contains
                end if
             end do
          end if
+         if (use_fan) this%h2osoi_tend_tsl_col(c) = 0.0_r8
+
       end do
 
 
