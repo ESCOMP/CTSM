@@ -3086,15 +3086,11 @@ contains
           call ncd_defvar(varname='cols1d_jxy', xtype=ncd_int, dim1name=namec, &
                long_name='2d latitude index of corresponding column', ncid=ncid)
 
-          call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
+          call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name=namec, &
                long_name='1d grid index of corresponding column', ncid=ncid)
-
-          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
-               long_name='1d landunit index of corresponding column', ncid=ncid)
 
           call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name=namec, &
                long_name='1d landunit index of corresponding column', ncid=ncid)
-
 
           call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name=namec, &
                long_name='column weight relative to corresponding gridcell', ncid=ncid)
@@ -3126,14 +3122,11 @@ contains
           call ncd_defvar(varname='pfts1d_jxy', xtype=ncd_int, dim1name=namep, &
                long_name='2d latitude index of corresponding pft', ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name='pft', &
+          call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name=namep, &
                long_name='1d grid index of corresponding pft', ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
+          call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name=namep, &
                long_name='1d landunit index of corresponding pft', ncid=ncid)
-
-          call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
-               long_name='1d column index of corresponding pft', ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name=namep, &
                long_name='1d column index of corresponding pft', ncid=ncid)
