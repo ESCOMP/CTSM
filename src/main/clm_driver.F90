@@ -439,11 +439,13 @@ contains
        call t_stopf('drvinit')
 
        ! Remove groundwater irrigation
-       call WithdrawGroundwaterIrrigation(bounds_clump, filter(nc)%num_hydrologyc, &
-            filter(nc)%hydrologyc, soilhydrology_inst, soilstate_inst, &
-            water_inst%waterstatebulk_inst, &
-            water_inst%waterfluxbulk_inst)
-
+       if (irrigation_inst%UseGroundwaterIrrigation()) then 
+          call WithdrawGroundwaterIrrigation(bounds_clump, filter(nc)%num_hydrologyc, &
+               filter(nc)%hydrologyc, soilhydrology_inst, soilstate_inst, &
+               water_inst%waterstatebulk_inst, &
+               water_inst%waterfluxbulk_inst)
+       endif
+       
        ! ============================================================================
        ! Canopy Hydrology
        ! (1) water storage of intercepted precipitation

@@ -147,6 +147,7 @@ module IrrigationMod
      ! Public simply to support unit testing; should not be used from CLM code
      procedure, public :: InitForTesting ! version of Init meant for unit testing
      procedure, public :: RelsatToH2osoi ! convert from relative saturation to kg/m2 water for a single column and layer
+     procedure, public :: UseGroundwaterIrrigation ! Returns true if groundwater irrigation enabled
 
      ! Private routines
      procedure, private :: ReadNamelist
@@ -1308,4 +1309,21 @@ contains
 
   end function RelsatToH2osoi
 
+  !-----------------------------------------------------------------------
+  function UseGroundwaterIrrigation(this)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if we're using groundwater irrigation in this run
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(irrigation_type), intent(in) :: this
+
+    logical :: UseGroundwaterIrrigation  ! function result
+    !-----------------------------------------------------------------------
+
+    UseGroundwaterIrrigation = this%params%use_groundwater_irrigation
+    
+  end function UseGroundwaterIrrigation
+  
 end module IrrigationMod

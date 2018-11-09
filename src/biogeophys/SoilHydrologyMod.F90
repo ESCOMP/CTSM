@@ -2502,7 +2502,7 @@ contains
      !
      ! !DESCRIPTION:
      ! Calculate water in unconfined aquifer (i.e. soil column) that
-     ! is available for groundwater recharge.
+     ! is available for groundwater withdrawal.
      !
      ! !USES:
      !
@@ -2569,12 +2569,15 @@ contains
    end subroutine CalcAvailableUnconfinedAquifer
 !#9
    !-----------------------------------------------------------------------
-   subroutine WithdrawGroundwaterIrrigation(bounds, num_hydrologyc, filter_hydrologyc, &
-        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
+   subroutine WithdrawGroundwaterIrrigation(bounds, &
+        num_hydrologyc, filter_hydrologyc, &
+        soilhydrology_inst, soilstate_inst, &
         waterstatebulk_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Remove groundwater irrigation from unconfined and confined aquifers
+     ! This routine is called when use_groundwater_irrigation = .true.
+     ! It is not compatible with use_aquifer_layer
      !
      ! !USES:
 
@@ -2611,9 +2614,7 @@ contains
 
           qflx_gw_uncon_irrig =>   waterfluxbulk_inst%qflx_gw_uncon_irrig_col, & ! Input:  [real(r8) (:) unconfined groundwater irrigation flux (mm H2O /s)
           qflx_gw_con_irrig  => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! confined groundwater irrigation flux (mm H2O /s)   
-          wa                 =>    waterstatebulk_inst%wa_col                , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
-          
-
+          wa                 =>    waterstatebulk_inst%wa_col                , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
           )
@@ -2634,6 +2635,14 @@ contains
              call endrun(msg="negative groundwater irrigation!"//errmsg(sourcefile, __LINE__))
              
           else 
+             jwt(c) = nlevsoi
+             ! allow jwt to equal zero when zwt is in top layer
+             do j = 1,nlevsoi
+                if(zwt(c) <= zi(c,j)) then
+                   jwt(c) = j-1
+                   exit
+                end if
+             enddo
              do j = jwt(c)+1, nbedrock(c)
                 ! use analytical expression for specific yield
                 s_y = watsat(c,j) &
