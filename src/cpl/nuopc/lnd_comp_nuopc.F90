@@ -34,7 +34,6 @@ module lnd_comp_nuopc
 
   use lnd_import_export     , only : advertise_fields, realize_fields
   use lnd_import_export     , only : import_fields, export_fields
-  use perf_mod              , only : t_startf, t_stopf, t_barrierf
   use spmdMod               , only : masterproc, mpicom, spmd_init
   use decompMod             , only : bounds_type, ldecomp, get_proc_bounds
   use domainMod             , only : ldomain
@@ -53,6 +52,7 @@ module lnd_comp_nuopc
   use clm_initializeMod     , only : lnd2atm_inst
   use clm_initializeMod     , only : lnd2glc_inst
   use clm_driver            , only : clm_drv
+  use perf_mod              , only : t_startf, t_stopf, t_barrierf
 
   implicit none
   private ! except
@@ -70,13 +70,10 @@ module lnd_comp_nuopc
   ! Private module data
   !--------------------------------------------------------------------------
 
-  integer, parameter         :: dbug = 10
-  integer                    :: dbrc
+  integer, parameter         :: dbug = 1
   character(*),parameter     :: modName =  "(lnd_comp_nuopc)"
-  character(*),parameter     :: u_FILE_u = __FILE__
-  integer                    :: shrlogunit ! original log unit
-  integer                    :: shrloglev  ! original log level
-  integer, pointer           :: gindex_ocn(:)
+  character(*),parameter     :: u_FILE_u = &
+       __FILE__
 
 !===============================================================================
 contains
@@ -85,10 +82,12 @@ contains
   subroutine SetServices(gcomp, rc)
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
+
+    integer :: dbrc
     character(len=*),parameter  :: subname=trim(modName)//':(SetServices) '
 
     rc = ESMF_SUCCESS
-    if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
     ! the NUOPC gcomp component will register the generic methods
     call NUOPC_CompDerive(gcomp, model_routine_SS, rc=rc)
@@ -124,7 +123,7 @@ contains
          specRoutine=ModelFinalize, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine SetServices
 
@@ -174,12 +173,15 @@ contains
     character(len=512)          :: logfile
     integer                     :: localpet
     integer                     :: compid      ! component id
+    integer                     :: dbrc
+    integer                     :: shrlogunit ! original log unit
+    integer                     :: shrloglev  ! original log level
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
     !----------------------------------------------------------------------------
     ! generate local mpi comm
@@ -231,7 +233,7 @@ contains
 
     call shr_file_setLogLevel(shrloglev)
     call shr_file_setLogUnit (shrlogunit)
-    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine InitializeAdvertise
 
@@ -247,6 +249,8 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
+    type(ESMF_Mesh)         :: Emesh, EMeshTemp      ! esmf meshes
+    type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
     type(ESMF_Time)         :: stopTime              ! Stop time
@@ -254,8 +258,6 @@ contains
     type(ESMF_TimeInterval) :: timeStep              ! Model timestep
     type(ESMF_Calendar)     :: esmf_calendar         ! esmf calendar
     type(ESMF_CalKind_Flag) :: esmf_caltype          ! esmf calendar type
-    type(ESMF_Mesh)         :: Emesh, EMeshTemp      ! esmf meshes
-    type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
     integer                 :: ref_ymd               ! reference date (YYYYMMDD)
     integer                 :: ref_tod               ! reference time of day (sec)
     integer                 :: yy,mm,dd              ! Temporaries for time query
@@ -267,8 +269,9 @@ contains
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
     integer                 :: dtime_clm             ! ctsm time-step
-    integer , allocatable   :: gindex(:)             ! global index space for land and ocean points
-    integer , allocatable   :: gindex_lnd(:)         ! global index apce for just land points
+    integer, pointer        :: gindex(:)             ! global index space for land and ocean points
+    integer, pointer        :: gindex_lnd(:)         ! global index space for just land points
+    integer, pointer        :: gindex_ocn(:)         ! global index space for just ocean points
     character(ESMF_MAXSTR)  :: cvalue                ! config data
     integer                 :: nlnd, nocn            ! local size ofarrays
     integer                 :: g,n                   ! indices
@@ -286,12 +289,15 @@ contains
     logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
     integer                 :: lbnum                 ! input to memory diagnostic
     type(bounds_type)       :: bounds                ! bounds
+    integer                 :: shrlogunit ! original log unit
+    integer                 :: shrloglev  ! original log level
     character(ESMF_MAXSTR)  :: convCIM, purpComp
+    integer                 :: dbrc
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -301,10 +307,6 @@ contains
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
 
-    !----------------------
-    ! Determine field indices of import/export arrays
-    !----------------------
-
 #if (defined _MEMTRACE)
     if (masterproc) then
        lbnum=1
@@ -313,7 +315,7 @@ contains
 #endif
 
     !----------------------
-    ! Obtain orbital values
+    ! Obtain attribute values
     !----------------------
 
     ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
@@ -431,7 +433,7 @@ contains
     end if
 
     !----------------------
-    ! Initialize time info
+    ! Initialize CTSM time manager
     !----------------------
 
     call set_timemgr_init(       &
@@ -443,6 +445,11 @@ contains
          stop_ymd_in=stop_ymd,   &
          stop_tod_in=stop_tod)
 
+    !----------------------
+    ! Read namelist, grid and surface data
+    !----------------------
+    
+    ! set default values for run control variables
     call clm_varctl_set(&
          caseid_in=caseid, ctitle_in=ctitle,                     &
          brnch_retain_casename_in=brnch_retain_casename,         &
@@ -452,14 +459,10 @@ contains
          hostname_in=hostname, &
          username_in=username)
 
-    !----------------------
-    ! Read namelist, grid and surface data
-    !----------------------
-    
-    ! Note that the memory for gindex_ocn will be allocated in the following call
+    ! note that the memory for gindex_ocn will be allocated in the following call
     call initialize1(gindex_ocn)
 
-   ! obtain global index array for just land points which includes mask=0 or ocean points
+    ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
     nlnd = bounds%endg - bounds%begg + 1
     allocate(gindex_lnd(nlnd))
@@ -594,17 +597,21 @@ contains
     endif
 #endif
 
-    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine InitializeRealize
 
   !===============================================================================
 
   subroutine ModelAdvance(gcomp, rc)
+
+    !------------------------
+    ! Run CTSM
+    !------------------------
+
+    ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
-
-    ! Run CTSM
 
     ! local variables:
     type(ESMF_Clock)       :: clock
@@ -642,11 +649,14 @@ contains
     real(r8)               :: eccf           ! earth orbit eccentricity factor
     type(bounds_type)      :: bounds         ! bounds
     character(len=32)      :: rdate          ! date char string for restart file names
+    integer                :: shrlogunit ! original log unit
+    integer                :: shrloglev  ! original log level
+    integer                :: dbrc
     character(len=*),parameter  :: subname=trim(modName)//':(ModelAdvance) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_getLogLevel(shrloglev)
@@ -712,7 +722,7 @@ contains
     rof_prognostic = .false. !***TODO***
 
     !--------------------------------
-    ! Unpack export state
+    ! Unpack import state
     !--------------------------------
 
     call t_startf ('lc_lnd_import')
@@ -786,7 +796,7 @@ contains
        endif
 
        !--------------------------------
-       ! Run ctsm
+       ! Run CTSM
        !--------------------------------
 
        call t_barrierf('sync_ctsm_run1', mpicom)
@@ -862,10 +872,11 @@ contains
     if (dbug > 1) then
        call shr_nuopc_methods_State_diagnose(exportState,subname//':ES',rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
+    if (masterproc) then
        call ESMF_ClockPrint(clock, options="currTime", preString="------>Advancing LND from: ", rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
        call ESMF_ClockPrint(clock, options="stopTime", preString="--------------------------------> to: ", rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
@@ -877,7 +888,7 @@ contains
     call shr_file_setLogLevel(shrloglev)
     call shr_file_setLogUnit (shrlogunit)
 
-    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -909,14 +920,14 @@ contains
     integer                  :: stop_n         ! Number until stop interval
     integer                  :: stop_ymd       ! Stop date (YYYYMMDD)
     type(ESMF_ALARM)         :: stop_alarm
-    integer                  :: dbrc
     character(len=128)       :: name
     integer                  :: alarmcount
+    integer                  :: dbrc
     character(len=*),parameter :: subname=trim(modName)//':(ModelSetRunClock) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
     ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
@@ -1009,7 +1020,7 @@ contains
     call ESMF_ClockSet(mclock, currTime=dcurrtime, timeStep=dtimestep, stopTime=mstoptime, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine ModelSetRunClock
 
@@ -1020,6 +1031,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
+    integer                 :: dbrc
     character(*), parameter :: F00   = "('(lnd_comp_nuopc) ',8a)"
     character(*), parameter :: F91   = "('(lnd_comp_nuopc) ',73('-'))"
     character(len=*),parameter  :: subname=trim(modName)//':(ModelFinalize) '
@@ -1030,7 +1042,7 @@ contains
     !--------------------------------
 
     rc = ESMF_SUCCESS
-    if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
     if (masterproc) then
        write(iulog,F91)
@@ -1038,7 +1050,7 @@ contains
        write(iulog,F91)
     end if
 
-    if (dbug > 5) call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine ModelFinalize
 

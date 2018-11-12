@@ -62,9 +62,7 @@ module lnd_import_export
   logical                :: flds_co2b        ! use case
   logical                :: flds_co2c        ! use case
   integer                :: glc_nec
-  integer, parameter     :: dbug = 10
-  integer, parameter     :: debug_import = 1 ! internal debug level
-  integer, parameter     :: debug_export = 1 ! internal debug level
+  integer, parameter     :: debug = 1        ! internal debug level
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
@@ -441,7 +439,7 @@ contains
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    if (dbug > 5) call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
 
     ! Get import state
     call NUOPC_ModelGet(gcomp, importState=importState, rc=rc)
@@ -1108,7 +1106,7 @@ contains
        end do
 
        ! write debug output if appropriate
-       if (masterproc .and. debug_import > 0 .and. get_nstep() < 5) then
+       if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
           do g = bounds%begg,bounds%endg
              i = 1 + g - bounds%begg
              write(iulog,F01)'import: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,output(g)
@@ -1160,7 +1158,10 @@ contains
        call state_getfldptr(state, trim(fldname), fldptr, bounds%begg, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       fldptr(:) = fillvalue
+       ! TODO: if fillvalue = shr_const_spval the snowhl sent to the atm will have the spval over some points
+       ! rather than 0 - this is very odd and needs to be understood
+       !fldptr(:) = fillvalue
+       fldptr(:) = 0._r8
 
        ! set fldptr values to input array
        if (present(minus)) then
@@ -1174,7 +1175,7 @@ contains
        end if
 
        ! write debug output if appropriate
-       if (masterproc .and. debug_import > 0 .and. get_nstep() < 5) then
+       if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
           do g = bounds%begg,bounds%endg
              i = 1 + g - bounds%begg
              write(iulog,F01)'export: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,input(g)
@@ -1213,10 +1214,7 @@ contains
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
-
-    if (dbug > 10) then
-      call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO, rc=dbrc)
-    endif
+    call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO, rc=dbrc)
 
     call ESMF_StateGet(State, itemName=trim(fldname), field=lfield, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1245,9 +1243,7 @@ contains
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     endif  ! status
 
-    if (dbug > 10) then
-      call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO, rc=dbrc)
-    endif
+    call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO, rc=dbrc)
 
   end subroutine state_getfldptr
 
