@@ -226,7 +226,7 @@ contains
        write(iulog, *) trim(subname) // ' clm knows how to model corn, temperate cereals, and soybean'
        write(iulog, *) trim(subname) // ' all other crops are lumped with the generic crop pft'
     else if (verbose .and. masterproc .and. .not. use_crop) then
-       write(iulog, *) trim(subname) // ' merging prognostic crops into C3 generic crops'
+       write(iulog, *) trim(subname) // ' merging crops into C3 generic crops'
     end if
 
     do g = begg, endg
