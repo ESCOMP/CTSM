@@ -181,13 +181,12 @@ contains
     character(len=*), parameter :: subname = 'collapse_crop_types'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
-
     if (cftsize <= 0) then  ! Currently this applies only if use_fates
        call endrun(msg = subname//' can only be called if cftsize > 0' // &
             errMsg(sourcefile, __LINE__))
     end if
+    SHR_ASSERT_ALL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
 
     TotalSum = 1.0_r8
     if ( present(sumto) ) TotalSum = sumto  ! sumto may be 100._r8 for example
@@ -198,7 +197,7 @@ contains
 
     if (.not. irrigate) then
        if (verbose .and. masterproc) then
-          write(iulog,*) trim(subname)//' crop=.T. and irrigate=.F., so merging irrigated pfts with rainfed'
+          write(iulog,*) trim(subname)//' irrigate=.F., so merging irrigated pfts with rainfed'
        end if
 
        do g = begg, endg
