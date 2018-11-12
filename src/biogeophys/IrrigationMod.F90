@@ -46,6 +46,8 @@ module IrrigationMod
   use decompMod        , only : bounds_type, get_proc_global
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
+  use clm_instur       , only : irrig_method
+  use pftconMod        , only : pftcon
   use clm_varctl       , only : iulog
   use clm_varcon       , only : isecspday, denh2o, spval, ispval, namec, nameg
   use clm_varpar       , only : nlevsoi, nlevgrnd
@@ -156,6 +158,7 @@ module IrrigationMod
      procedure, private :: InitHistory => IrrigationInitHistory
      procedure, private :: InitCold => IrrigationInitCold
      procedure, private :: CalcIrrigNstepsPerDay   ! given dtime, calculate irrig_nsteps_per_day
+     procedure, private :: SetIrrigMethod          ! set irrig_method_patch based on surface dataset
      procedure, private :: PointNeedsCheckForIrrig ! whether a given point needs to be checked for irrigation now
      procedure, private :: CalcDeficitVolrLimited  ! calculate deficit limited by river volume for each patch
   end type irrigation_type
@@ -180,9 +183,9 @@ module IrrigationMod
   ! Irrigation methods
   integer, parameter, public  :: irrig_method_unset = 0
   ! Drip is defined here as irrigation applied directly to soil surface
-  integer, parameter, private :: irrig_method_drip = 1
+  integer, parameter, public :: irrig_method_drip = 1
   ! Sprinkler is applied directly to canopy
-  integer, parameter, private :: irrig_method_sprinkler = 2
+  integer, parameter, public :: irrig_method_sprinkler = 2
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -288,6 +291,7 @@ contains
     call this%InitAllocate(bounds)
     this%params = params
     this%dtime = dtime
+    call this%SetIrrigMethod(bounds)
     this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(dtime)
     this%relsat_wilting_point_col(:,:) = relsat_wilting_point(:,:)
     this%relsat_target_col(:,:) = relsat_target(:,:)
@@ -573,8 +577,6 @@ contains
     !
     ! !USES:
     use SoilStateType , only : soilstate_type
-    use clm_instur    , only : irrig_method
-    use pftconMod     , only : pftcon
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
@@ -583,10 +585,7 @@ contains
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
-    integer :: m ! dummy index
-    integer :: p ! patch index
     integer :: c ! col index
-    integer :: g ! gridcell index
     integer :: j ! level index
 
     character(len=*), parameter :: subname = 'InitCold'
@@ -623,23 +622,7 @@ contains
        end do
     end do
 
-    do p = bounds%begp,bounds%endp
-       g = patch%gridcell(p)
-       if (pftcon%irrigated(patch%itype(p)) == 1._r8) then 
-          m = patch%itype(p)
-          this%irrig_method_patch(p) = irrig_method(g,m)
-          ! ensure irrig_method is valid; if not set, use drip irrigation
-          if(irrig_method(g,m) == irrig_method_unset) then
-             this%irrig_method_patch(p) = irrig_method_drip
-          else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
-             write(iulog,*) subname //' invalid irrigation method specified'
-             call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
-                  errMsg(sourcefile, __LINE__))
-          end if
-       else
-          this%irrig_method_patch(p) = irrig_method_drip
-       end if
-    end do
+    call this%SetIrrigMethod(bounds)
        
     this%dtime = get_step_size()
     this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(this%dtime)
@@ -670,6 +653,43 @@ contains
 
   end function CalcIrrigNstepsPerDay
 
+  !-----------------------------------------------------------------------
+  subroutine SetIrrigMethod(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Set this%irrig_method_patch based on surface dataset
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type) , intent(inout) :: this
+    type(bounds_type)      , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p ! patch index
+    integer :: g ! gridcell index
+    integer :: m ! patch itype
+
+    character(len=*), parameter :: subname = 'SetIrrigMethod'
+    !-----------------------------------------------------------------------
+
+    do p = bounds%begp,bounds%endp
+       g = patch%gridcell(p)
+       if (pftcon%irrigated(patch%itype(p)) == 1._r8) then
+          m = patch%itype(p)
+          this%irrig_method_patch(p) = irrig_method(g,m)
+          ! ensure irrig_method is valid; if not set, use drip irrigation
+          if(irrig_method(g,m) == irrig_method_unset) then
+             this%irrig_method_patch(p) = irrig_method_drip
+          else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
+             write(iulog,*) subname //' invalid irrigation method specified'
+             call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
+                  errMsg(sourcefile, __LINE__))
+          end if
+       else
+          this%irrig_method_patch(p) = irrig_method_drip
+       end if
+    end do
+
+  end subroutine SetIrrigMethod
 
 
   !-----------------------------------------------------------------------
