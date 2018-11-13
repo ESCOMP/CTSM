@@ -31,6 +31,9 @@ module test_irrigation
 
   @TestCase
   type, extends(TestCase) :: TestIrrigation
+     integer :: single_p  ! for single-point tests: patch of interest (for non-single-point tests, this is undefined)
+     integer :: single_c  ! for single-point tests: column of interest (for non-single-point tests, this is undefined)
+     integer :: single_g  ! for single-point tests: gridcell of interest (for non-single-point tests, this is undefined)
      integer :: numf
      integer, allocatable :: filter(:)
      type(irrigation_type) :: irrigation
@@ -148,6 +151,9 @@ contains
     class(TestIrrigation), intent(inout) :: this
 
     call setup_single_veg_patch(pft_type=pft_type)
+    this%single_p = bounds%begp
+    this%single_c = bounds%begc
+    this%single_g = bounds%begg
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
   end subroutine setupSinglePatch
 
@@ -719,8 +725,8 @@ contains
 
     ! Check result
     call this%computeDeficits(deficits)
-    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    expected = sum(deficits(this%single_p,1:nlevsoi)) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
 
   end subroutine irrigation_flux_is_correct
 
@@ -741,11 +747,11 @@ contains
 
     ! Check result
     call this%computeDeficits(deficits)
-    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    expected = sum(deficits(this%single_p,1:nlevsoi)) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
     ! Make sure all irrigation comes from drip (both patch and column-level)
-    @assertEqual(expected, this%waterflux%qflx_irrig_drip_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected, this%waterflux%qflx_irrig_drip_col(bounds%begc), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_irrig_drip_patch(this%single_p), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_irrig_drip_col(this%single_c), tolerance=tol)
 
   end subroutine drip
 
@@ -766,11 +772,11 @@ contains
 
     ! Check result
     call this%computeDeficits(deficits)
-    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    expected = sum(deficits(this%single_p,1:nlevsoi)) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
     ! Make sure all irrigation comes from sprinkler (both patch and column-level)
-    @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_col(bounds%begc), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_patch(this%single_p), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_col(this%single_c), tolerance=tol)
 
   end subroutine sprinkler
 
@@ -787,7 +793,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
   end subroutine no_irrigation_for_wet_soil
 
   @Test
@@ -803,21 +809,21 @@ contains
     call this%setupSinglePatch()
     call this%setupIrrigation()
     h2osoi_target_layer1 = this%irrigation%RelsatToH2osoi( &
-         relsat = this%relsat_target(bounds%begc,1), &
-         eff_porosity = this%eff_porosity(bounds%begc,1), &
-         dz = col%dz(bounds%begc,1))
-    this%h2osoi_liq(bounds%begc,1) = h2osoi_target_layer1 + surplus
+         relsat = this%relsat_target(this%single_c,1), &
+         eff_porosity = this%eff_porosity(this%single_c,1), &
+         dz = col%dz(this%single_c,1))
+    this%h2osoi_liq(this%single_c,1) = h2osoi_target_layer1 + surplus
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
-    expected = (sum(deficits(bounds%begp,2:nlevsoi)) - surplus) / this%irrigation_params%irrig_length
+    expected = (sum(deficits(this%single_p,2:nlevsoi)) - surplus) / this%irrigation_params%irrig_length
     ! This first assertion makes sure the test has been set up reasonably - to give a net deficit
     @assertLessThan(0._r8, expected)
     ! Here is the main assertion:
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
   end subroutine surplus_offsets_deficit
 
   @Test
@@ -828,14 +834,14 @@ contains
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation(maxpft=2)
-    patch%itype(bounds%begp) = 2
+    patch%itype(this%single_p) = 2
     pftcon%irrigated(1:2) = [1.0, 0.0]
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
 
   end subroutine no_irrigation_for_unirrigated_pfts
 
@@ -846,13 +852,13 @@ contains
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation()
-    this%elai(bounds%begp) = 0._r8
+    this%elai(this%single_p) = 0._r8
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
 
   end subroutine no_irrigation_for_lai0
 
@@ -869,17 +875,17 @@ contains
     ! assumption that this will make it fall above the threshold for triggering irrigation
     do j = 1, nlevsoi
        h2osoi_target = this%irrigation%RelsatToH2osoi( &
-            relsat = this%relsat_target(bounds%begc,j), &
-            eff_porosity = this%eff_porosity(bounds%begc,j), &
-            dz = col%dz(bounds%begc,j))
-       this%h2osoi_liq(bounds%begc,j) = h2osoi_target * 0.99_r8
+            relsat = this%relsat_target(this%single_c,j), &
+            eff_porosity = this%eff_porosity(this%single_c,j), &
+            dz = col%dz(this%single_c,j))
+       this%h2osoi_liq(this%single_c,j) = h2osoi_target * 0.99_r8
     end do
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
   end subroutine no_irrigation_for_soil_moisture_above_threshold
 
   @Test
@@ -896,7 +902,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
 
   end subroutine no_irrigation_at_wrong_time
 
@@ -916,10 +922,10 @@ contains
          irrig_river_volume_threshold=irrig_river_volume_threshold)
 
     call this%computeDeficits(deficits)
-    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+    total_deficit = sum(deficits(this%single_p,1:nlevsoi))
 
     ! Set volr to be just above the limiting amount
-    call this%setVolr(g = begg, &
+    call this%setVolr(g = this%single_g, &
          irrig_deficit = total_deficit, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
          volr_diff_from_threshold = 10._r8, &
@@ -930,10 +936,10 @@ contains
 
     ! Check result
     expected = total_deficit / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
     ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
-    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(this%single_p), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(this%single_c), tolerance=tol)
   end subroutine unlimited_irrigation_for_non_limiting_volr
 
   @Test
@@ -953,10 +959,10 @@ contains
          use_groundwater_irrigation = .false.)
 
     call this%computeDeficits(deficits)
-    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+    total_deficit = sum(deficits(this%single_p,1:nlevsoi))
 
     ! Set volr to be somewhat below the limiting amount
-    call this%setVolr(g = begg, &
+    call this%setVolr(g = this%single_g, &
          irrig_deficit = total_deficit, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
          volr_diff_from_threshold = -10._r8, &
@@ -966,10 +972,10 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
     ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
-    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(this%single_p), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(this%single_c), tolerance=tol)
   end subroutine limited_irrigation_for_limiting_volr_no_groundwater
 
   @Test
@@ -989,13 +995,13 @@ contains
     call this%setupIrrigation(test_limit_irrigation=.true., &
          irrig_river_volume_threshold=irrig_river_volume_threshold, &
          use_groundwater_irrigation = .true.)
-    this%available_gw_uncon(bounds%begc) = huge(1._r8)
+    this%available_gw_uncon(this%single_c) = huge(1._r8)
 
     call this%computeDeficits(deficits)
-    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+    total_deficit = sum(deficits(this%single_p,1:nlevsoi))
 
     ! Set volr to be somewhat below the limiting amount
-    call this%setVolr(g = begg, &
+    call this%setVolr(g = this%single_g, &
          irrig_deficit = total_deficit, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
          volr_diff_from_threshold = -10._r8, &
@@ -1007,13 +1013,13 @@ contains
     ! Check result
     expected_total = total_deficit / this%irrigation_params%irrig_length
     expected_gw_uncon = expected_total - volr_limited_irrig_rate
-    call this%assertTotalIrrigationEquals(bounds%begp, expected_total)
+    call this%assertTotalIrrigationEquals(this%single_p, expected_total)
     ! Make sure that irrigation is properly divided into surface and groundwater (both
     ! patch and column-level)
-    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
-    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
-    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc), tolerance=tol)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(this%single_p), tolerance=tol)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(this%single_c), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(this%single_p), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(this%single_c), tolerance=tol)
   end subroutine limiting_volr_with_groundwater_uncon
 
   @Test
@@ -1038,10 +1044,10 @@ contains
          use_groundwater_irrigation = .true.)
 
     call this%computeDeficits(deficits)
-    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+    total_deficit = sum(deficits(this%single_p,1:nlevsoi))
 
     ! Set volr to be somewhat below the limiting amount
-    call this%setVolr(g = begg, &
+    call this%setVolr(g = this%single_g, &
          irrig_deficit = total_deficit, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
          volr_diff_from_threshold = -10._r8, &
@@ -1050,7 +1056,7 @@ contains
     ! Set available_gw_uncon to be 1/4 of the non-river-supplied irrigation
     expected_total = total_deficit / this%irrigation_params%irrig_length
     expected_gw = expected_total - volr_limited_irrig_rate
-    this%available_gw_uncon(bounds%begc) = expected_gw * dtime / 4._r8
+    this%available_gw_uncon(this%single_c) = expected_gw * dtime / 4._r8
     expected_gw_uncon = expected_gw / 4._r8
     expected_gw_con = expected_gw - expected_gw_uncon
 
@@ -1063,15 +1069,15 @@ contains
     @assertGreaterThan(expected_gw_uncon, 0._r8)
     @assertGreaterThan(expected_gw_con, 0._r8)
     ! Now do the actual assertions on the irrigation routine
-    call this%assertTotalIrrigationEquals(bounds%begp, expected_total)
+    call this%assertTotalIrrigationEquals(this%single_p, expected_total)
     ! Make sure that irrigation is properly divided into surface and groundwater (both
     ! patch and column-level)
-    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
-    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
-    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc), tolerance=tol)
-    @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_col(bounds%begc), tolerance=tol)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(this%single_p), tolerance=tol)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(this%single_c), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(this%single_p), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(this%single_c), tolerance=tol)
+    @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_patch(this%single_p), tolerance=tol)
+    @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_col(this%single_c), tolerance=tol)
   end subroutine limiting_volr_with_groundwater_uncon_and_con
 
   @Test
@@ -1089,13 +1095,13 @@ contains
     ! adjust the soil water amount. Irrigation should continue at the original rate.
     call this%calculateAndApplyIrrigation()
     call this%computeDeficits(deficits)
-    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    expected = sum(deficits(this%single_p,1:nlevsoi)) / this%irrigation_params%irrig_length
     call advance_timestep()
     this%h2osoi_liq = 100._r8
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
 
   end subroutine irrigation_continues_at_same_rate_for_multiple_time_steps
 
@@ -1118,11 +1124,11 @@ contains
        call this%calculateAndApplyIrrigation()
        call advance_timestep()
     end do
-    call this%assertTotalIrrigationGreaterThanZero(bounds%begp)
+    call this%assertTotalIrrigationGreaterThanZero(this%single_p)
 
     ! Ensure that irrigation flux goes to 0 in the following time step
     call this%calculateAndApplyIrrigation()
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
 
   end subroutine irrigation_continues_for_correct_number_of_time_steps
   
@@ -1149,18 +1155,18 @@ contains
        call advance_timestep()
     end do
     ! The following assertion is mainly here to make sure the test is working as intended
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
 
     ! Now reset time, change soil moisture, and make sure that irrigation happens as expected
     call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
     this%h2osoi_liq(:,:) = 100._r8
     call this%calculateAndApplyIrrigation()
     call this%computeDeficits(deficits)
-    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    expected = sum(deficits(this%single_p,1:nlevsoi)) / this%irrigation_params%irrig_length
     ! Make sure that the test has been set up reasonably - to give a net deficit
     @assertLessThan(0._r8, expected)
     ! Here's the main assertion:
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
 
   end subroutine irrigation_flux_is_correct_on_second_day
     
@@ -1182,8 +1188,8 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     ! Now on to the real assertion
-    expected = sum(deficits(bounds%begp,1:nlevirrig)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    expected = sum(deficits(this%single_p,1:nlevirrig)) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
   end subroutine irrigation_excludes_deep_layers
 
   @Test
@@ -1196,15 +1202,15 @@ contains
     call this%setupSinglePatch()
     call this%setupIrrigation()
     ! Make the last layer a bedrock layer:
-    col%nbedrock(bounds%begc) = nlevsoi - 1
+    col%nbedrock(this%single_c) = nlevsoi - 1
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
-    expected = sum(deficits(bounds%begp,1:(nlevsoi-1))) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    expected = sum(deficits(this%single_p,1:(nlevsoi-1))) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
   end subroutine irrigation_excludes_bedrock_layers
 
   @Test
@@ -1214,13 +1220,13 @@ contains
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation()
-    this%t_soisno(bounds%begc, :) = 272._r8
+    this%t_soisno(this%single_c, :) = 272._r8
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero(this%single_p)
 
   end subroutine no_irrigation_for_frozen_soil
 
@@ -1233,7 +1239,7 @@ contains
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation()
-    this%t_soisno(bounds%begc, 2) = 272._r8
+    this%t_soisno(this%single_c, 2) = 272._r8
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
@@ -1241,8 +1247,8 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     ! Only include deficit from top layer, since 2nd layer is frozen
-    expected = deficits(bounds%begp, 1) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    expected = deficits(this%single_p, 1) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(this%single_p, expected)
 
   end subroutine no_irrigation_below_frozen_soil_layer
 
