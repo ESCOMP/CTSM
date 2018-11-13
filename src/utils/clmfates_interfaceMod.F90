@@ -224,7 +224,7 @@ contains
       ! ---------------------------------------------------------------------------------
      
       use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : numpft_ed => numpft
+      use FatesInterfaceMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -263,7 +263,7 @@ contains
 
       
       ! Parameter Routines
-      call param_derived%Init( numpft_ed )
+      call param_derived%Init( numpft_fates )
       
 
       verbose_output = .false.
@@ -471,7 +471,7 @@ contains
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
-            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in)
+            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in,numpft_fates)
          end if
 
          if( this%fates(nc)%nsites == 0 ) then
@@ -2423,7 +2423,7 @@ contains
    use FatesInterfaceMod, only : nlevheight
    use EDtypesMod, only : nfsc, ncwd
    use EDtypesMod, only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : numpft_ed => numpft
+   use FatesInterfaceMod, only : numpft_fates => numpft
    use clm_varpar, only : nlevgrnd
 
    implicit none
@@ -2444,13 +2444,13 @@ contains
    fates%ground_end = nlevgrnd
    
    fates%sizepft_class_begin = 1
-   fates%sizepft_class_end = nlevsclass * numpft_ed
+   fates%sizepft_class_end = nlevsclass * numpft_fates
    
    fates%size_class_begin = 1
    fates%size_class_end = nlevsclass
 
    fates%pft_class_begin = 1
-   fates%pft_class_end = numpft_ed
+   fates%pft_class_end = numpft_fates
 
    fates%age_class_begin = 1
    fates%age_class_end = nlevage
@@ -2462,10 +2462,10 @@ contains
    fates%sizeage_class_end   = nlevsclass * nlevage
 
    fates%agepft_class_begin = 1
-   fates%agepft_class_end   = nlevage * numpft_ed
+   fates%agepft_class_end   = nlevage * numpft_fates
    
    fates%sizeagepft_class_begin = 1
-   fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_ed
+   fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_fates
    
    fates%fuel_begin = 1
    fates%fuel_end = nfsc
@@ -2480,7 +2480,7 @@ contains
    fates%cnlf_end = nlevleaf * nclmax
    
    fates%cnlfpft_begin = 1
-   fates%cnlfpft_end = nlevleaf * nclmax * numpft_ed
+   fates%cnlfpft_end = nlevleaf * nclmax * numpft_fates
    
  end subroutine hlm_bounds_to_fates_bounds
 
