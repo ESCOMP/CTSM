@@ -20,9 +20,15 @@ set up these tests:
 Because of these considerations, it was not straightforward to pull out routines
 that could operate on a single point, and just do the testing on these
 single-point routines. So instead, I am just testing the public, multi-point
-routines. However, for simplicity, most of my tests just use a single point in
+routines. But for simplicity, most of my tests just focus on a single point in
 the arrays - and then I have just enough multi-point tests to ensure that the
-routines truly do work with multiple points.
+routines truly do work with multiple points. However, even the "single-point"
+tests actually include three points, where point 2 is the point of interest and
+points 1 and 3 just exist to give some (but not complete) assurance that we
+don't accidentally do whole-array assignments (foo = bar(p)) where we meant to
+do single-element assignments (foo(p) = bar(p)) (because, if we did such an
+assignment, this would overwrite the values in points 1 and 3, which otherwise
+should remain unchanged).
 
 Furthermore, I have been influenced lately by advice to "test behavior, not
 methods", and to test through the public interface. And in this case, it
