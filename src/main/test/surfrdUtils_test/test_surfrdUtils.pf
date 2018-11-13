@@ -46,7 +46,6 @@ contains
      call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true.)
 
      ! Now check that are correct
-     write(*,*) 'EDW!', wt_cft, fert_cft
      @assertEqual(wt_cft(begg:,1), (/0.0_r8,0.0_r8/))
      @assertEqual(fert_cft(begg:,1), (/0.0_r8,0.0_r8/))
 

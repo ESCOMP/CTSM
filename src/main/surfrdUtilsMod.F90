@@ -183,78 +183,78 @@ contains
 
     if (cftsize > 0) then  ! The opposite applies only if use_fates
 
-    SHR_ASSERT_ALL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
 
-    TotalSum = 1.0_r8
-    if ( present(sumto) ) TotalSum = sumto  ! sumto may be 100._r8 for example
+       TotalSum = 1.0_r8
+       if ( present(sumto) ) TotalSum = sumto  ! e.g. sumto may = 100._r8
 
-    ! ------------------------------------------------------------------------
-    ! If not using irrigation, merge irrigated CFTs into rainfed CFTs
-    ! ------------------------------------------------------------------------
+       ! -----------------------------------------------------------------------
+       ! If not using irrigation, merge irrigated CFTs into rainfed CFTs
+       ! -----------------------------------------------------------------------
 
-    if (.not. irrigate) then
-       if (verbose .and. masterproc) then
-          write(iulog,*) trim(subname)//' irrigate=.F., so merging irrigated pfts with rainfed'
+       if (.not. irrigate) then
+          if (verbose .and. masterproc) then
+             write(iulog,*) trim(subname)//' irrigate=.F., so merging irrigated pfts with rainfed'
+          end if
+
+          do g = begg, endg
+             ! Left Hand Side: merged rainfed+irrigated crop pfts from nc3crop
+             !                 to maxveg-1, stride 2
+             ! Right Hand Side: rainfed crop pfts from nc3crop to maxveg-1,
+             !                  stride 2
+             ! plus             irrigated crop pfts from nc3irrig to maxveg,
+             !                  stride 2
+             ! where stride 2 means "every other"
+             wt_cft(g, nc3crop:maxveg-1:2) = &
+                  wt_cft(g, nc3crop:maxveg-1:2) + wt_cft(g, nc3irrig:maxveg:2)
+             wt_cft(g, nc3irrig:maxveg:2)  = 0._r8
+          end do
+
+          call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': irrigation', sumto=TotalSum)
+       end if
+
+       ! -----------------------------------------------------------------------
+       ! Merge CFTs into the list of crops that CLM knows how to model
+       ! -----------------------------------------------------------------------
+
+       if (verbose .and. masterproc .and. use_crop) then
+          write(iulog, *) trim(subname) // ' merging wheat, barley, and rye into temperate cereals'
+          write(iulog, *) trim(subname) // ' clm knows how to model corn, temperate cereals, and soybean'
+          write(iulog, *) trim(subname) // ' all other crops are lumped with the generic crop pft'
+       else if (verbose .and. masterproc .and. .not. use_crop) then
+          write(iulog, *) trim(subname) // ' merging crops into C3 generic crops'
        end if
 
        do g = begg, endg
-          ! Left Hand Side: merged rainfed+irrigated crop pfts from nc3crop to
-          !                 maxveg-1, stride 2
-          ! Right Hand Side: rainfed crop pfts from nc3crop to maxveg-1,
-          !                  stride 2
-          ! plus             irrigated crop pfts from nc3irrig to maxveg,
-          !                  stride 2
-          ! where stride 2 means "every other"
-          wt_cft(g, nc3crop:maxveg-1:2) = &
-               wt_cft(g, nc3crop:maxveg-1:2) + wt_cft(g, nc3irrig:maxveg:2)
-          wt_cft(g, nc3irrig:maxveg:2)  = 0._r8
-       end do
-
-       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': irrigation', sumto=TotalSum)
-    end if
-
-    ! ------------------------------------------------------------------------
-    ! Merge CFTs into the list of crops that CLM knows how to model
-    ! ------------------------------------------------------------------------
-
-    if (verbose .and. masterproc .and. use_crop) then
-       write(iulog, *) trim(subname) // ' merging wheat, barley, and rye into temperate cereals'
-       write(iulog, *) trim(subname) // ' clm knows how to model corn, temperate cereals, and soybean'
-       write(iulog, *) trim(subname) // ' all other crops are lumped with the generic crop pft'
-    else if (verbose .and. masterproc .and. .not. use_crop) then
-       write(iulog, *) trim(subname) // ' merging crops into C3 generic crops'
-    end if
-
-    do g = begg, endg
-       do m = 1, maxveg
-          if (m /= pftcon%mergetoclmpft(m)) then
-             wt_cft_to = wt_cft(g, pftcon%mergetoclmpft(m))
-             wt_cft_from = wt_cft(g, m)
-             wt_cft_merge = wt_cft_to + wt_cft_from
-             wt_cft(g, pftcon%mergetoclmpft(m)) = wt_cft_merge
-             wt_cft(g, m) = 0._r8
-             if (wt_cft_merge > 0._r8) then
-                fert_cft(g,pftcon%mergetoclmpft(m)) = (wt_cft_to * fert_cft(g,pftcon%mergetoclmpft(m)) + &
-                                                      wt_cft_from * fert_cft(g,m)) / wt_cft_merge
+          do m = 1, maxveg
+             if (m /= pftcon%mergetoclmpft(m)) then
+                wt_cft_to = wt_cft(g, pftcon%mergetoclmpft(m))
+                wt_cft_from = wt_cft(g, m)
+                wt_cft_merge = wt_cft_to + wt_cft_from
+                wt_cft(g, pftcon%mergetoclmpft(m)) = wt_cft_merge
+                wt_cft(g, m) = 0._r8
+                if (wt_cft_merge > 0._r8) then
+                   fert_cft(g,pftcon%mergetoclmpft(m)) = (wt_cft_to * fert_cft(g,pftcon%mergetoclmpft(m)) + &
+                                                         wt_cft_from * fert_cft(g,m)) / wt_cft_merge
+                end if
+                pftcon%is_pft_known_to_model(m) = .false.
              end if
-             pftcon%is_pft_known_to_model(m) = .false.
-          end if
+          end do
+
        end do
 
-    end do
-
-    call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': mergetoclmpft', sumto=TotalSum)
-    if ( .not. use_crop )then
-       if ( any(wt_cft(begg:endg,cft_ub+1:) /= 0.0_r8) )then
-          call endrun(msg = subname//' without prognostic crops (use_crop=F) and weight of CFT of prognostic crop'//&
-               ' is not zero as expected' // errMsg(sourcefile, __LINE__))
+       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': mergetoclmpft', sumto=TotalSum)
+       if ( .not. use_crop )then
+          if ( any(wt_cft(begg:endg,cft_ub+1:) /= 0.0_r8) )then
+             call endrun(msg = subname//' without prognostic crops (use_crop=F) and weight of CFT of prognostic crop'//&
+                  ' is not zero as expected' // errMsg(sourcefile, __LINE__))
+          end if
+          if ( any(fert_cft(begg:endg,cft_ub+1:) /= 0.0_r8) )then
+             call endrun(msg = subname//' without prognostic crops (use_crop=F) and fertilizer of prognostic crop'// &
+                  ' is not zero as expected' // errMsg(sourcefile, __LINE__))
+          end if
        end if
-       if ( any(fert_cft(begg:endg,cft_ub+1:) /= 0.0_r8) )then
-          call endrun(msg = subname//' without prognostic crops (use_crop=F) and fertilizer of prognostic crop'// &
-               ' is not zero as expected' // errMsg(sourcefile, __LINE__))
-       end if
-    end if
 
     end if
 

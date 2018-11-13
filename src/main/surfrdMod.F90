@@ -835,17 +835,17 @@ contains
     ! Check sum of vegetation adds to 1
     call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
     ! if ( use_fates ) wt_cft = 0 because called convert_cft_to_pft, else...
-    if ( .not. use_fates ) then  ! this if-statement may be redundant here
+    if ( .not. use_fates ) then
        ! Check sum of vegetation adds to 1
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
-       ! Call collapse_crop_types:
-       ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
-       !    configuration
-       ! For use_crop = .true. most likely collapsing 78 to the list of crops for
-       !    which the CLM includes parameterizations
-       ! The call collapse_crop_types also appears in subroutine dyncrop_interp
-       call collapse_crop_types(wt_cft(begg:endg, :), fert_cft(begg:endg, :), cft_size, begg, endg, verbose=.true.)
     end if
+    ! Call collapse_crop_types:
+    ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
+    !    configuration
+    ! For use_crop = .true. most likely collapsing 78 to the list of crops for
+    !    which the CLM includes parameterizations
+    ! The call collapse_crop_types also appears in subroutine dyncrop_interp
+    call collapse_crop_types(wt_cft(begg:endg, :), fert_cft(begg:endg, :), cft_size, begg, endg, verbose=.true.)
 
   end subroutine surfrd_veg_all
 
