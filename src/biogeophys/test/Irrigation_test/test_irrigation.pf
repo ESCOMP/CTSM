@@ -27,6 +27,7 @@ module test_irrigation
   real(r8), parameter :: tol = 1.e-13_r8
   integer , parameter :: dtime = 1800  ! model time step, seconds
   integer , parameter :: irrig_start = 21600
+  integer , parameter :: pft_type = 1  ! pft type in target patch for single-patch tests
 
   @TestCase
   type, extends(TestCase) :: TestIrrigation
@@ -55,6 +56,9 @@ module test_irrigation
      procedure :: setupIrrigation
      procedure :: setupEnvironment
      procedure :: teardownEnvironment
+
+     ! Set volr for a gridcell and return volr-limited irrigation rate
+     procedure :: setVolr
 
      ! Computes irrigation deficit for every patch and level
      procedure :: computeDeficits
@@ -143,13 +147,13 @@ contains
     ! Sets up grid with single veg patch; also sets up this%filter appropriately
     class(TestIrrigation), intent(inout) :: this
 
-    call setup_single_veg_patch(pft_type=1)
+    call setup_single_veg_patch(pft_type=pft_type)
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
   end subroutine setupSinglePatch
 
   !-----------------------------------------------------------------------
   subroutine setupIrrigation(this, maxpft, test_limit_irrigation, nlevirrig, &
-       irrig_river_volume_threshold)
+       irrig_river_volume_threshold, use_groundwater_irrigation, my_irrig_method)
     !
     ! !DESCRIPTION:
     ! Do the setup needed for most tests.
@@ -160,7 +164,7 @@ contains
     ! at every level EXCEPT for relsat_wilting_point and relsat_target, which vary
     ! linearly by level and col number.
     !
-    ! Irrigation method is set up to be drip
+    ! Irrigation method is set up to be drip by default
     !
     ! volr is set up to be non-limiting
     !
@@ -187,6 +191,12 @@ contains
     ! not given, defaults to 0.1
     real(r8), intent(in), optional :: irrig_river_volume_threshold
 
+    ! Whether to use groundwater irrigation (false by default)
+    logical, intent(in), optional :: use_groundwater_irrigation
+
+    ! Irrigation method (drip by default); just set for the module-level pft_type parameter
+    integer, intent(in), optional :: my_irrig_method
+
     !
     ! !LOCAL VARIABLES:
     integer :: c,j
@@ -195,6 +205,7 @@ contains
     integer :: l_nlevirrig
     real(r8) :: irrig_depth
     real(r8) :: l_irrig_river_volume_threshold
+    logical :: l_use_groundwater_irrigation
     !-----------------------------------------------------------------------
 
     limit_irrigation_if_rof_enabled = .false.
@@ -217,7 +228,12 @@ contains
        l_irrig_river_volume_threshold = irrig_river_volume_threshold
     end if
 
-    call this%setupEnvironment(maxpft=l_maxpft)
+    l_use_groundwater_irrigation = .false.
+    if (present(use_groundwater_irrigation)) then
+       l_use_groundwater_irrigation = use_groundwater_irrigation
+    end if
+
+    call this%setupEnvironment(maxpft=l_maxpft, my_irrig_method=my_irrig_method)
 
     ! Set the irrigation depth to be just barely big enough to include the desired layers
     irrig_depth = col%z(bounds%begc,l_nlevirrig) + 1.e-9_r8
@@ -232,7 +248,7 @@ contains
          irrig_threshold_fraction = 0.5_r8, &
          irrig_river_volume_threshold = l_irrig_river_volume_threshold, &
          limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled, &
-         use_groundwater_irrigation = .false.)
+         use_groundwater_irrigation = l_use_groundwater_irrigation)
 
     ! Allocate fluxes output from irrigation routines. Note that, in the production code,
     ! these are initialized to 0 in InitCold.
@@ -277,7 +293,7 @@ contains
   end subroutine setupIrrigation
 
   !-----------------------------------------------------------------------
-  subroutine setupEnvironment(this, maxpft)
+  subroutine setupEnvironment(this, maxpft, my_irrig_method)
     !
     ! !DESCRIPTION:
     ! Sets up the external environment used by Irrigation - i.e., things accessed via
@@ -291,16 +307,37 @@ contains
     ! !ARGUMENTS:
     class(TestIrrigation), intent(in) :: this
     integer, intent(in) :: maxpft  ! max pft type that needs to be supported
+
+    ! Irrigation method (drip by default); just set for the module-level pft_type parameter
+    integer, intent(in), optional :: my_irrig_method
+
     !
+    ! !LOCAL VARIABLES:
     integer :: c,j
+    integer :: l_my_irrig_method
+    integer :: different_irrig_method
 
     !-----------------------------------------------------------------------
+
+    l_my_irrig_method = irrig_method_drip
+    if (present(my_irrig_method)) then
+       l_my_irrig_method = my_irrig_method
+    end if
 
     allocate(pftcon%irrigated(0:maxpft), source=1.0_r8)
 
     ! In the production code, irrig_method goes cft_lb:cft_ub; but it's safe to allocate
     ! more space than we really need here.
-    allocate(irrig_method(bounds%begg:bounds%endg, 0:maxpft), source=irrig_method_drip)
+    allocate(irrig_method(bounds%begg:bounds%endg, 0:maxpft))
+    ! To help ensure that we read irrig_method from the correct index, set everything
+    ! except the desired index to a different method
+    if (l_my_irrig_method == irrig_method_drip) then
+       different_irrig_method = irrig_method_sprinkler
+    else
+       different_irrig_method = irrig_method_drip
+    end if
+    irrig_method(:,:) = different_irrig_method
+    irrig_method(bounds%begg:bounds%endg, pft_type) = l_my_irrig_method
 
     col%dz(:,1:nlevgrnd) = 1.0_r8
     do j = 1, nlevgrnd
@@ -341,6 +378,48 @@ contains
     deallocate(irrig_method)
 
   end subroutine teardownEnvironment
+
+  !-----------------------------------------------------------------------
+  subroutine setVolr(this, g, irrig_deficit, irrig_river_volume_threshold, &
+       volr_diff_from_threshold, volr_limited_irrig_rate)
+    !
+    ! !DESCRIPTION:
+    ! Set volr for a gridcell and return the volr-limited irrigation rate
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Gridcell index
+    integer, intent(in) :: g
+
+    ! Irrigation deficit for this grid cell (kg m-2) (i.e., mm)
+    real(r8), intent(in) :: irrig_deficit
+
+    ! Parameter used in IrrigationMod (fraction)
+    real(r8), intent(in) :: irrig_river_volume_threshold
+
+    ! Amount above (positive) or below (negative) the threshold point to set volr (m^3)
+    real(r8), intent(in) :: volr_diff_from_threshold
+
+    ! Computed volr-limited irrigation rate (kg m-2 s-1) (i.e., mm/s)
+    real(r8), intent(out) :: volr_limited_irrig_rate
+
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: volr_threshold ! m3
+
+    character(len=*), parameter :: subname = 'setVolr'
+    !-----------------------------------------------------------------------
+
+    volr_threshold = (irrig_deficit * grc%area(g) * mm_times_km2_to_m3) / &
+         (1._r8 - irrig_river_volume_threshold)
+    this%volr(g) = volr_threshold + volr_diff_from_threshold
+
+    volr_limited_irrig_rate = ((this%volr(g) * (1._r8 - irrig_river_volume_threshold)) &
+         / grc%area(g) * m3_over_km2_to_mm) / &
+         this%irrigation_params%irrig_length
+
+  end subroutine setVolr
 
   !-----------------------------------------------------------------------
   subroutine computeDeficits(this, deficits)
@@ -646,6 +725,56 @@ contains
   end subroutine irrigation_flux_is_correct
 
   @Test
+  subroutine drip(this)
+    ! Make sure that, if a point is set up for drip irrigation, then all irrigation comes
+    ! from drip
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation(my_irrig_method = irrig_method_drip)
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    ! Make sure all irrigation comes from drip (both patch and column-level)
+    @assertEqual(expected, this%waterflux%qflx_irrig_drip_patch(bounds%begp), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_irrig_drip_col(bounds%begc), tolerance=tol)
+
+  end subroutine drip
+
+  @Test
+  subroutine sprinkler(this)
+    ! Make sure that, if a point is set up for drip irrigation, then all irrigation comes
+    ! from drip
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation(my_irrig_method = irrig_method_sprinkler)
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    ! Make sure all irrigation comes from sprinkler (both patch and column-level)
+    @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_col(bounds%begc), tolerance=tol)
+
+  end subroutine sprinkler
+
+  @Test
   subroutine no_irrigation_for_wet_soil(this)
     class(TestIrrigation), intent(inout) :: this
 
@@ -778,7 +907,7 @@ contains
     real(r8), allocatable :: deficits(:,:)
     real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
     real(r8) :: total_deficit ! kg m-2 (i.e., mm)
-    real(r8) :: volr_threshold ! m3
+    real(r8) :: volr_limited_irrig_rate  ! (unused)
     real(r8) :: expected
 
     ! Setup
@@ -790,9 +919,11 @@ contains
     total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
 
     ! Set volr to be just above the limiting amount
-    volr_threshold = (total_deficit * grc%area(begg) * mm_times_km2_to_m3) / &
-         (1._r8 - irrig_river_volume_threshold)
-    this%volr(begg) = volr_threshold + 10._r8
+    call this%setVolr(g = begg, &
+         irrig_deficit = total_deficit, &
+         irrig_river_volume_threshold = irrig_river_volume_threshold, &
+         volr_diff_from_threshold = 10._r8, &
+         volr_limited_irrig_rate = volr_limited_irrig_rate)
     
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
@@ -800,40 +931,148 @@ contains
     ! Check result
     expected = total_deficit / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
   end subroutine unlimited_irrigation_for_non_limiting_volr
 
   @Test
-  subroutine limited_irrigation_for_limiting_volr(this)
+  subroutine limited_irrigation_for_limiting_volr_no_groundwater(this)
+    ! liming volr with no groundwater irrigation
     use GridcellType, only : grc
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
     real(r8) :: total_deficit ! kg m-2 (i.e., mm)
-    real(r8) :: volr_threshold ! m3
     real(r8) :: expected
 
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation(test_limit_irrigation=.true., &
-         irrig_river_volume_threshold=irrig_river_volume_threshold)
+         irrig_river_volume_threshold=irrig_river_volume_threshold, &
+         use_groundwater_irrigation = .false.)
 
     call this%computeDeficits(deficits)
     total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
 
     ! Set volr to be somewhat below the limiting amount
-    volr_threshold = (total_deficit * grc%area(begg) * mm_times_km2_to_m3) / &
-         (1._r8 - irrig_river_volume_threshold)
-    this%volr(begg) = volr_threshold - 10._r8
+    call this%setVolr(g = begg, &
+         irrig_deficit = total_deficit, &
+         irrig_river_volume_threshold = irrig_river_volume_threshold, &
+         volr_diff_from_threshold = -10._r8, &
+         volr_limited_irrig_rate = expected)
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    expected = ((this%volr(begg) * (1._r8 - irrig_river_volume_threshold)) &
-                / grc%area(begg) * m3_over_km2_to_mm) / &
-               this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(bounds%begp, expected)
-  end subroutine limited_irrigation_for_limiting_volr
+    ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
+  end subroutine limited_irrigation_for_limiting_volr_no_groundwater
+
+  @Test
+  subroutine limiting_volr_with_groundwater_uncon(this)
+    ! limiting volr, with the difference made up by groundwater from the unconfined aquifer
+    use GridcellType, only : grc
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
+    real(r8) :: total_deficit ! kg m-2 (i.e., mm)
+    real(r8) :: volr_limited_irrig_rate
+    real(r8) :: expected_total
+    real(r8) :: expected_gw_uncon  ! expected rate from the unconfined aquifer
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation(test_limit_irrigation=.true., &
+         irrig_river_volume_threshold=irrig_river_volume_threshold, &
+         use_groundwater_irrigation = .true.)
+    this%available_gw_uncon(bounds%begc) = huge(1._r8)
+
+    call this%computeDeficits(deficits)
+    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+
+    ! Set volr to be somewhat below the limiting amount
+    call this%setVolr(g = begg, &
+         irrig_deficit = total_deficit, &
+         irrig_river_volume_threshold = irrig_river_volume_threshold, &
+         volr_diff_from_threshold = -10._r8, &
+         volr_limited_irrig_rate = volr_limited_irrig_rate)
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    expected_total = total_deficit / this%irrigation_params%irrig_length
+    expected_gw_uncon = expected_total - volr_limited_irrig_rate
+    call this%assertTotalIrrigationEquals(bounds%begp, expected_total)
+    ! Make sure that irrigation is properly divided into surface and groundwater (both
+    ! patch and column-level)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc), tolerance=tol)
+  end subroutine limiting_volr_with_groundwater_uncon
+
+  @Test
+  subroutine limiting_volr_with_groundwater_uncon_and_con(this)
+    ! limiting volr, with the difference made up by groundwater from both the unconfined
+    ! and confined aquifer
+    use GridcellType, only : grc
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
+    real(r8) :: total_deficit ! kg m-2 (i.e., mm)
+    real(r8) :: volr_limited_irrig_rate
+    real(r8) :: expected_total  ! expected total rate
+    real(r8) :: expected_gw  ! expected total rate from groundwater
+    real(r8) :: expected_gw_uncon  ! expected rate from the unconfined aquifer
+    real(r8) :: expected_gw_con    ! expected rate from the confined aquifer
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation(test_limit_irrigation=.true., &
+         irrig_river_volume_threshold=irrig_river_volume_threshold, &
+         use_groundwater_irrigation = .true.)
+
+    call this%computeDeficits(deficits)
+    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+
+    ! Set volr to be somewhat below the limiting amount
+    call this%setVolr(g = begg, &
+         irrig_deficit = total_deficit, &
+         irrig_river_volume_threshold = irrig_river_volume_threshold, &
+         volr_diff_from_threshold = -10._r8, &
+         volr_limited_irrig_rate = volr_limited_irrig_rate)
+
+    ! Set available_gw_uncon to be 1/4 of the non-river-supplied irrigation
+    expected_total = total_deficit / this%irrigation_params%irrig_length
+    expected_gw = expected_total - volr_limited_irrig_rate
+    this%available_gw_uncon(bounds%begc) = expected_gw * dtime / 4._r8
+    expected_gw_uncon = expected_gw / 4._r8
+    expected_gw_con = expected_gw - expected_gw_uncon
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    ! First make sure the test is set up reasonably
+    @assertGreaterThan(expected_total, 0._r8)
+    @assertGreaterThan(expected_gw_uncon, 0._r8)
+    @assertGreaterThan(expected_gw_con, 0._r8)
+    ! Now do the actual assertions on the irrigation routine
+    call this%assertTotalIrrigationEquals(bounds%begp, expected_total)
+    ! Make sure that irrigation is properly divided into surface and groundwater (both
+    ! patch and column-level)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp), tolerance=tol)
+    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc), tolerance=tol)
+    @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_patch(bounds%begp), tolerance=tol)
+    @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_col(bounds%begc), tolerance=tol)
+  end subroutine limiting_volr_with_groundwater_uncon_and_con
 
   @Test
   subroutine irrigation_continues_at_same_rate_for_multiple_time_steps(this)
@@ -1205,8 +1444,10 @@ contains
 
     ! Other setup
     ! Keep irrig_river_volume_threshold set to 0 to simplify the calculations here
+    ! Set use_groundwater_irrigation to false to simplify things, too
     call this%setupIrrigation(maxpft=2, test_limit_irrigation=.true., &
-         irrig_river_volume_threshold=0._r8)
+         irrig_river_volume_threshold=0._r8, &
+         use_groundwater_irrigation = .false.)
     ! The first 2 patches are irrigated, the 3rd is unirrigated
     pftcon%irrigated(1:2) = [1.0, 0.0]
 
