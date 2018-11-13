@@ -835,7 +835,7 @@ contains
     ! Check sum of vegetation adds to 1
     call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
     ! if ( use_fates ) wt_cft = 0 because called convert_cft_to_pft, else...
-    if ( .not. use_fates ) then
+    if ( .not. use_fates ) then  ! this if-statement may be redundant here
        ! Check sum of vegetation adds to 1
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
        ! Call collapse_crop_types:

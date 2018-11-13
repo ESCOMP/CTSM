@@ -181,10 +181,8 @@ contains
     character(len=*), parameter :: subname = 'collapse_crop_types'
     !-----------------------------------------------------------------------
 
-    if (cftsize <= 0) then  ! Currently this applies only if use_fates
-       call endrun(msg = subname//' can only be called if cftsize > 0' // &
-            errMsg(sourcefile, __LINE__))
-    end if
+    if (cftsize > 0) then  ! The opposite applies only if use_fates
+
     SHR_ASSERT_ALL((ubound(wt_cft)   == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
 
@@ -256,6 +254,8 @@ contains
           call endrun(msg = subname//' without prognostic crops (use_crop=F) and fertilizer of prognostic crop'// &
                ' is not zero as expected' // errMsg(sourcefile, __LINE__))
        end if
+    end if
+
     end if
 
   end subroutine collapse_crop_types
