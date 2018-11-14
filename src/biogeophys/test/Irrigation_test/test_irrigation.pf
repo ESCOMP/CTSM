@@ -18,7 +18,7 @@ module test_irrigation
   use ColumnType    , only : col
   use GridcellType  , only : grc
   use pftconMod , only : pftcon
-  use unittestSimpleSubgridSetupsMod, only : setup_ncells_single_veg_patch
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
   use unittestFilterBuilderMod, only : filter_from_range
 
   implicit none
@@ -28,11 +28,9 @@ module test_irrigation
   integer , parameter :: dtime = 1800  ! model time step, seconds
   integer , parameter :: irrig_start = 21600
   integer , parameter :: pft_type = 1  ! pft type in target patch for single-patch tests
-  real(r8), parameter :: flux_uninit = 12345._r8
 
   @TestCase
   type, extends(TestCase) :: TestIrrigation
-     logical :: is_single_point = .false.  ! true if this is a single-point test (and so single_p, single_c and single_g are defined)
      integer :: single_p  ! for single-point tests: patch of interest (for non-single-point tests, this is undefined)
      integer :: single_c  ! for single-point tests: column of interest (for non-single-point tests, this is undefined)
      integer :: single_g  ! for single-point tests: gridcell of interest (for non-single-point tests, this is undefined)
@@ -98,10 +96,6 @@ module test_irrigation
      ! Assert that total irrigation withdrawal and application are both greater than zero
      ! for a given patch
      procedure :: assertTotalIrrigationGreaterThanZero
-
-     ! In a single-point test, assert that the fluxes in the non-points-of-interest
-     ! remain unchanged from their initial values
-     procedure :: assertOtherPointsUnchanged
   end type TestIrrigation
 
   real(r8), parameter :: mm_times_km2_to_m3 = 1.e3_r8
@@ -153,18 +147,14 @@ contains
   end subroutine tearDown
 
   subroutine setupSinglePatch(this)
-    ! Sets up a grid for testing a single veg patch. This actually sets up three grid
-    ! cells, each with a single veg patch; the 2nd grid cell / patch is the point of
-    ! interest. Also sets up this%filter to just include the 2nd patch. This way, we can
-    ! ensure that values in points 1 and 3 remain unchanged.
+    ! Sets up grid with single veg patch; also sets up this%filter appropriately
     class(TestIrrigation), intent(inout) :: this
 
-    call setup_ncells_single_veg_patch(ncells=3, pft_type=pft_type)
-    this%is_single_point = .true.
-    this%single_p = bounds%begp + 1
-    this%single_c = bounds%begc + 1
-    this%single_g = bounds%begg + 1
-    call filter_from_range(start=this%single_p, end=this%single_p, numf=this%numf, filter=this%filter)
+    call setup_single_veg_patch(pft_type=pft_type)
+    this%single_p = bounds%begp
+    this%single_c = bounds%begc
+    this%single_g = bounds%begg
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
   end subroutine setupSinglePatch
 
   !-----------------------------------------------------------------------
@@ -216,8 +206,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c,j
-    real(r8) :: flux_init_p(bounds%begp:bounds%endp)
-    real(r8) :: flux_init_c(bounds%begc:bounds%endc)
     logical :: limit_irrigation_if_rof_enabled
     integer :: l_maxpft
     integer :: l_nlevirrig
@@ -270,25 +258,16 @@ contains
 
     ! Allocate fluxes output from irrigation routines. Note that, in the production code,
     ! these are initialized to 0 in InitCold.
-    if (this%is_single_point) then
-       flux_init_p(:) = flux_uninit
-       flux_init_p(this%single_p) = 0._r8
-       flux_init_c(:) = flux_uninit
-       flux_init_c(this%single_c) = 0._r8
-    else
-       flux_init_p(:) = 0._r8
-       flux_init_c(:) = 0._r8
-    end if
-    allocate(this%waterflux%qflx_sfc_irrig_patch(bounds%begp:bounds%endp), source=flux_init_p)
-    allocate(this%waterflux%qflx_sfc_irrig_col(bounds%begc:bounds%endc), source=flux_init_c)
-    allocate(this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp:bounds%endp), source=flux_init_p)
-    allocate(this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc:bounds%endc), source=flux_init_c)
-    allocate(this%waterflux%qflx_gw_con_irrig_patch(bounds%begp:bounds%endp), source=flux_init_p)
-    allocate(this%waterflux%qflx_gw_con_irrig_col(bounds%begc:bounds%endc), source=flux_init_c)
-    allocate(this%waterflux%qflx_irrig_drip_patch(bounds%begp:bounds%endp), source=flux_init_p)
-    allocate(this%waterflux%qflx_irrig_drip_col(bounds%begc:bounds%endc), source=flux_init_c)
-    allocate(this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp:bounds%endp), source=flux_init_p)
-    allocate(this%waterflux%qflx_irrig_sprinkler_col(bounds%begc:bounds%endc), source=flux_init_c)
+    allocate(this%waterflux%qflx_sfc_irrig_patch(bounds%begp:bounds%endp), source=0._r8)
+    allocate(this%waterflux%qflx_sfc_irrig_col(bounds%begc:bounds%endc), source=0._r8)
+    allocate(this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp:bounds%endp), source=0._r8)
+    allocate(this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc:bounds%endc), source=0._r8)
+    allocate(this%waterflux%qflx_gw_con_irrig_patch(bounds%begp:bounds%endp), source=0._r8)
+    allocate(this%waterflux%qflx_gw_con_irrig_col(bounds%begc:bounds%endc), source=0._r8)
+    allocate(this%waterflux%qflx_irrig_drip_patch(bounds%begp:bounds%endp), source=0._r8)
+    allocate(this%waterflux%qflx_irrig_drip_col(bounds%begc:bounds%endc), source=0._r8)
+    allocate(this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp:bounds%endp), source=0._r8)
+    allocate(this%waterflux%qflx_irrig_sprinkler_col(bounds%begc:bounds%endc), source=0._r8)
 
     ! Set inputs to irrigation routines
     allocate(this%elai(bounds%begp:bounds%endp), source=10._r8)
@@ -521,32 +500,19 @@ contains
          rof_prognostic = .true.)
 
     ! The expectation is that the filter used in CalcIrrigationNeeded is a subset of the
-    ! filter used in ApplyIrrigation. (The one situation where the ApplyIrrigation filter
-    ! might include points not in the CalcIrrigationNeeded filter is if a point that was
-    ! inactive at the time of the CalcIrrigationNeeded call has become active for the
-    ! ApplyIrrigation call; in this case, if there were still some irrigation time steps
-    ! left when it had become inactive, then ApplyIrrigation might start re-irrigating
-    ! there. But this behavior is probably okay; in any case, it doesn't seem worth
-    ! testing for.)
-    !
-    ! In order to (a) keep the unit tests simpler, and (b) ensure that it
-    ! works for the ApplyIrrigation filter to have points not in the
+    ! filter used in ApplyIrrigation. In order to (a) keep the unit tests simpler, and (b)
+    ! ensure that it works for the ApplyIrrigation filter to have points not in the
     ! CalcIrrigationNeededFilter, we send ApplyIrrigation a filter that includes all
-    ! points. However, for "single-point" tests, we just use the single actual point, to
-    ! avoid resetting fluxes outside the point-of-interest to 0 (because the tests of
-    ! maintaining the original value in those points are slightly stronger if we use
-    ! non-zero values).
-    if (this%is_single_point) then
-       call filter_from_range(start=this%single_p, end=this%single_p, &
-            numf=apply_nump, filter=apply_filterp)
-       call filter_from_range(start=this%single_c, end=this%single_c, &
-            numf=apply_numc, filter=apply_filterc)
-    else
-       call filter_from_range(start=bounds%begp, end=bounds%endp, &
-            numf=apply_nump, filter=apply_filterp)
-       call filter_from_range(start=bounds%begc, end=bounds%endc, &
-            numf=apply_numc, filter=apply_filterc)
-    end if
+    ! points. (The one situation where the ApplyIrrigation filter might include points not
+    ! in the CalcIrrigationNeeded filter is if a point that was inactive at the time of
+    ! the CalcIrrigationNeeded call has become active for the ApplyIrrigation call; in
+    ! this case, if there were still some irrigation time steps left when it had become
+    ! inactive, then ApplyIrrigation might start re-irrigating there. But this behavior
+    ! is probably okay; in any case, it doesn't seem worth testing for.)
+    call filter_from_range(start=bounds%begp, end=bounds%endp, &
+         numf=apply_nump, filter=apply_filterp)
+    call filter_from_range(start=bounds%begc, end=bounds%endc, &
+         numf=apply_numc, filter=apply_filterc)
 
     call this%irrigation%ApplyIrrigation( &
          bounds = bounds, &
@@ -735,59 +701,13 @@ contains
 
   end subroutine assertTotalIrrigationGreaterThanZero
 
-  !-----------------------------------------------------------------------
-  subroutine assertOtherPointsUnchanged(this)
-    !
-    ! !DESCRIPTION:
-    ! In a single-point test, assert that the fluxes in the non-points-of-interest remain
-    ! unchanged from their initial values.
-    !
-    ! This provides some (though not complete) measure of assurance that we do not have
-    ! code that sets whole arrays when we mean to just assign to a given element - i.e.,
-    ! that we do not have:
-    !    foo = bar(p)
-    ! when we mean:
-    !    foo(p) = bar(p)
-    !
-    ! !ARGUMENTS:
-    class(TestIrrigation), intent(in) :: this
-    !
-    ! !LOCAL VARIABLES:
-    integer :: p
-
-    character(len=*), parameter :: subname = 'assertOtherPointsUnchanged'
-    !-----------------------------------------------------------------------
-
-    ! This should only be called in a "single-point" test
-    @assertTrue(this%is_single_point)
-
-    ! It's enough to check the patch values, since the column values are set from the
-    ! patch values
-    do p = bounds%begp, bounds%endp
-       if (p == this%single_p) then
-          cycle
-       end if
-       @assertEqual(flux_uninit, this%waterflux%qflx_sfc_irrig_patch(p))
-       @assertEqual(flux_uninit, this%waterflux%qflx_gw_uncon_irrig_patch(p))
-       @assertEqual(flux_uninit, this%waterflux%qflx_gw_con_irrig_patch(p))
-
-       @assertEqual(flux_uninit, this%waterflux%qflx_irrig_drip_patch(p))
-       @assertEqual(flux_uninit, this%waterflux%qflx_irrig_sprinkler_patch(p))
-    end do
-
-  end subroutine assertOtherPointsUnchanged
 
   ! ========================================================================
   ! Begin actual tests
   ! ========================================================================
 
   ! ------------------------------------------------------------------------
-  ! Tests on a single patch.
-  !
-  ! Note that these actually use three grid cells, where grid cell #2 is the grid cell of
-  ! interest, and the other two just serve to help ensure that we don't have code that
-  ! assigns to whole arrays (foo = bar(p)) when we really mean to just assign to a single
-  ! element (foo(p) = bar(p)).
+  ! Tests on a single patch
   ! ------------------------------------------------------------------------
 
   @Test
@@ -807,7 +727,6 @@ contains
     call this%computeDeficits(deficits)
     expected = sum(deficits(this%single_p,1:nlevsoi)) / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(this%single_p, expected)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine irrigation_flux_is_correct
 
@@ -833,7 +752,6 @@ contains
     ! Make sure all irrigation comes from drip (both patch and column-level)
     @assertEqual(expected, this%waterflux%qflx_irrig_drip_patch(this%single_p), tolerance=tol)
     @assertEqual(expected, this%waterflux%qflx_irrig_drip_col(this%single_c), tolerance=tol)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine drip
 
@@ -859,7 +777,6 @@ contains
     ! Make sure all irrigation comes from sprinkler (both patch and column-level)
     @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_patch(this%single_p), tolerance=tol)
     @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_col(this%single_c), tolerance=tol)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine sprinkler
 
@@ -877,7 +794,6 @@ contains
 
     ! Check result
     call this%assertTotalIrrigationZero(this%single_p)
-    call this%assertOtherPointsUnchanged()
   end subroutine no_irrigation_for_wet_soil
 
   @Test
@@ -908,7 +824,6 @@ contains
     @assertLessThan(0._r8, expected)
     ! Here is the main assertion:
     call this%assertTotalIrrigationEquals(this%single_p, expected)
-    call this%assertOtherPointsUnchanged()
   end subroutine surplus_offsets_deficit
 
   @Test
@@ -927,7 +842,6 @@ contains
 
     ! Check result
     call this%assertTotalIrrigationZero(this%single_p)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine no_irrigation_for_unirrigated_pfts
 
@@ -945,7 +859,6 @@ contains
 
     ! Check result
     call this%assertTotalIrrigationZero(this%single_p)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine no_irrigation_for_lai0
 
@@ -973,7 +886,6 @@ contains
 
     ! Check result
     call this%assertTotalIrrigationZero(this%single_p)
-    call this%assertOtherPointsUnchanged()
   end subroutine no_irrigation_for_soil_moisture_above_threshold
 
   @Test
@@ -991,7 +903,6 @@ contains
 
     ! Check result
     call this%assertTotalIrrigationZero(this%single_p)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine no_irrigation_at_wrong_time
 
@@ -1029,7 +940,6 @@ contains
     ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
     @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(this%single_p), tolerance=tol)
     @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(this%single_c), tolerance=tol)
-    call this%assertOtherPointsUnchanged()
   end subroutine unlimited_irrigation_for_non_limiting_volr
 
   @Test
@@ -1066,7 +976,6 @@ contains
     ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
     @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(this%single_p), tolerance=tol)
     @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(this%single_c), tolerance=tol)
-    call this%assertOtherPointsUnchanged()
   end subroutine limited_irrigation_for_limiting_volr_no_groundwater
 
   @Test
@@ -1111,7 +1020,6 @@ contains
     @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(this%single_c), tolerance=tol)
     @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(this%single_p), tolerance=tol)
     @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(this%single_c), tolerance=tol)
-    call this%assertOtherPointsUnchanged()
   end subroutine limiting_volr_with_groundwater_uncon
 
   @Test
@@ -1170,7 +1078,6 @@ contains
     @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(this%single_c), tolerance=tol)
     @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_patch(this%single_p), tolerance=tol)
     @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_col(this%single_c), tolerance=tol)
-    call this%assertOtherPointsUnchanged()
   end subroutine limiting_volr_with_groundwater_uncon_and_con
 
   @Test
@@ -1195,7 +1102,6 @@ contains
 
     ! Check result
     call this%assertTotalIrrigationEquals(this%single_p, expected)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine irrigation_continues_at_same_rate_for_multiple_time_steps
 
@@ -1223,7 +1129,6 @@ contains
     ! Ensure that irrigation flux goes to 0 in the following time step
     call this%calculateAndApplyIrrigation()
     call this%assertTotalIrrigationZero(this%single_p)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine irrigation_continues_for_correct_number_of_time_steps
   
@@ -1262,7 +1167,6 @@ contains
     @assertLessThan(0._r8, expected)
     ! Here's the main assertion:
     call this%assertTotalIrrigationEquals(this%single_p, expected)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine irrigation_flux_is_correct_on_second_day
     
@@ -1286,7 +1190,6 @@ contains
     ! Now on to the real assertion
     expected = sum(deficits(this%single_p,1:nlevirrig)) / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(this%single_p, expected)
-    call this%assertOtherPointsUnchanged()
   end subroutine irrigation_excludes_deep_layers
 
   @Test
@@ -1308,7 +1211,6 @@ contains
     call this%computeDeficits(deficits)
     expected = sum(deficits(this%single_p,1:(nlevsoi-1))) / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(this%single_p, expected)
-    call this%assertOtherPointsUnchanged()
   end subroutine irrigation_excludes_bedrock_layers
 
   @Test
@@ -1325,7 +1227,6 @@ contains
 
     ! Check result
     call this%assertTotalIrrigationZero(this%single_p)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine no_irrigation_for_frozen_soil
 
@@ -1348,7 +1249,6 @@ contains
     ! Only include deficit from top layer, since 2nd layer is frozen
     expected = deficits(this%single_p, 1) / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(this%single_p, expected)
-    call this%assertOtherPointsUnchanged()
 
   end subroutine no_irrigation_below_frozen_soil_layer
 
