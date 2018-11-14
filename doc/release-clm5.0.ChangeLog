@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  release-clm5.0.13
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Nov 14 11:28:00 MST 2018
+One-line Summary: Update externals with new CO2/presearo/rtm/mosart, add science_support, change testing
+
+Purpose of this version:
+------------------------
+
+Update externals with new CO2 and prescribed aerosols. As well as rtm and mosart that now
+properly does history output in double precision. Add science support to three new transient
+compsets for clm4_0/clm4_5/clm5_0. Do some changes to testing.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev015 (with changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): Fixes #560 #558
+  #560 New science supported compsets
+  #558 Add IHist test for aux_cime_baselines
+CIME Issues fixed (include issue #): #2688 #2687
+  #2688 Prescribed aerosols for CMIP6 forcing
+  #2687 New CO2 streams for CMIP6
+
+Science changes since: release-clm5.0.012
+   New CMIP6 prescribed aerosol forcing 
+   New CMIP6 CO2 streams
+   New rtm/mosart history properly output in double-precision 
+   (old "single"-precision mode was incorrect). It was actually
+   still double in terms of size, but in rare cases could be off
+   by single precision rounding level.
+
+Software changes since: release-clm5.0.012
+   Added science_support for several compsets (at f09_g17 and f19_g17):
+       HIST_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV
+       HIST_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV
+       HIST_DATM%GSWP3v1_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV
+   Add testing for above
+
+Changes to User Interface since: release-clm5.0.012
+   rtm/mosart history output is double precision
+   - Added clim_2010 option for DATM_PRESAERO
+      Added 20tr.latbnd option for DATM_CO2_TSERIES
+      GSWP3v1 and CRUNCEPv7 forcing sets appropriate years for compsets starting with 2010
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.12
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Nearly everything (only 5 test cases were identical)
+    - what platforms/compilers: All
+    - nature of change: CO2 for transient cases is different, and presearo is different for everything
+       Modest change to climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_04
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #563
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #563 -- Update externals (cime, mosart, rtm) for release branch, add new science support compsets/tests
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.12
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Nov  3 21:19:25 MDT 2018
