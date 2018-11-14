@@ -117,6 +117,12 @@ module IrrigationMod
      ! use groundwater supply for irrigation (in addition to surface water)
      logical :: use_groundwater_irrigation
 
+     ! Irrigation method to use if not set on the surface dataset
+     ! (This won't be needed once we can rely on irrig_method always being on the surface
+     ! dataset, but it is useful until then - particularly for testing. See also
+     ! https://github.com/ESCOMP/ctsm/issues/565.)
+     integer :: irrig_method_default
+
   end type irrigation_params_type
 
   type, public :: irrigation_type
@@ -201,7 +207,8 @@ contains
        irrig_start_time, irrig_length, &
        irrig_target_smp, &
        irrig_depth, irrig_threshold_fraction, irrig_river_volume_threshold, &
-       limit_irrigation_if_rof_enabled, use_groundwater_irrigation) &
+       limit_irrigation_if_rof_enabled, use_groundwater_irrigation, &
+       irrig_method_default) &
        result(this)
     !
     ! !DESCRIPTION:
@@ -220,6 +227,7 @@ contains
     real(r8), intent(in) :: irrig_river_volume_threshold
     logical , intent(in) :: limit_irrigation_if_rof_enabled
     logical , intent(in) :: use_groundwater_irrigation
+    integer , intent(in) :: irrig_method_default
     !
     ! !LOCAL VARIABLES:
     
@@ -235,6 +243,7 @@ contains
     this%irrig_river_volume_threshold = irrig_river_volume_threshold
     this%limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled
     this%use_groundwater_irrigation = use_groundwater_irrigation
+    this%irrig_method_default = irrig_method_default
 
   end function irrigation_params_constructor
 
@@ -328,6 +337,8 @@ contains
     real(r8) :: irrig_river_volume_threshold
     logical  :: limit_irrigation_if_rof_enabled
     logical  :: use_groundwater_irrigation
+    character(len=64) :: irrig_method_default
+    integer  :: irrig_method_default_int
 
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -339,7 +350,7 @@ contains
     namelist /irrigation_inparm/ irrig_min_lai, irrig_start_time, irrig_length, &
          irrig_target_smp, irrig_depth, irrig_threshold_fraction, &
          irrig_river_volume_threshold, limit_irrigation_if_rof_enabled, &
-         use_groundwater_irrigation
+         use_groundwater_irrigation, irrig_method_default
     
     ! Initialize options to garbage defaults, forcing all to be specified explicitly in
     ! order to get reasonable results
@@ -352,6 +363,7 @@ contains
     irrig_river_volume_threshold = nan
     limit_irrigation_if_rof_enabled = .false.
     use_groundwater_irrigation = .false.
+    irrig_method_default = ' '
 
     if (masterproc) then
        unitn = getavu()
@@ -378,6 +390,9 @@ contains
     call shr_mpi_bcast(irrig_river_volume_threshold, mpicom)
     call shr_mpi_bcast(limit_irrigation_if_rof_enabled, mpicom)
     call shr_mpi_bcast(use_groundwater_irrigation, mpicom)
+    call shr_mpi_bcast(irrig_method_default, mpicom)
+
+    call translate_irrig_method_default
 
     this%params = irrigation_params_type( &
          irrig_min_lai = irrig_min_lai, &
@@ -388,7 +403,8 @@ contains
          irrig_threshold_fraction = irrig_threshold_fraction, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
          limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled, &
-         use_groundwater_irrigation = use_groundwater_irrigation)
+         use_groundwater_irrigation = use_groundwater_irrigation, &
+         irrig_method_default = irrig_method_default_int)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -402,14 +418,28 @@ contains
        write(iulog,*) 'irrig_depth = ', irrig_depth
        write(iulog,*) 'irrig_threshold_fraction = ', irrig_threshold_fraction
        write(iulog,*) 'limit_irrigation_if_rof_enabled = ', limit_irrigation_if_rof_enabled
-       write(iulog,*) 'use_groundwater_irrigation = ', use_groundwater_irrigation
        if (limit_irrigation_if_rof_enabled) then
           write(iulog,*) 'irrig_river_volume_threshold = ', irrig_river_volume_threshold
        end if
+       write(iulog,*) 'use_groundwater_irrigation = ', use_groundwater_irrigation
+       write(iulog,*) 'irrig_method_default = ', irrig_method_default
        write(iulog,*) ' '
 
        call this%CheckNamelistValidity(use_aquifer_layer)
     end if
+
+  contains
+    subroutine translate_irrig_method_default
+      select case (irrig_method_default)
+      case ('drip')
+         irrig_method_default_int = irrig_method_drip
+      case ('sprinkler')
+         irrig_method_default_int = irrig_method_sprinkler
+      case default
+         write(iulog,*) 'ERROR: unknown irrig_method_default: ', trim(irrig_method_default)
+         call endrun('Unknown irrig_method_default')
+      end select
+    end subroutine translate_irrig_method_default
 
   end subroutine ReadNamelist
 
@@ -678,14 +708,14 @@ contains
           this%irrig_method_patch(p) = irrig_method(g,m)
           ! ensure irrig_method is valid; if not set, use drip irrigation
           if(irrig_method(g,m) == irrig_method_unset) then
-             this%irrig_method_patch(p) = irrig_method_drip
+             this%irrig_method_patch(p) = this%params%irrig_method_default
           else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
              write(iulog,*) subname //' invalid irrigation method specified'
              call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
                   errMsg(sourcefile, __LINE__))
           end if
        else
-          this%irrig_method_patch(p) = irrig_method_drip
+          this%irrig_method_patch(p) = this%params%irrig_method_default
        end if
     end do
 

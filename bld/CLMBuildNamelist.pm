@@ -2780,7 +2780,8 @@ sub setup_logic_irrigation_parameters {
      my $var;
      foreach $var ("irrig_min_lai", "irrig_start_time", "irrig_length",
                    "irrig_target_smp", "irrig_depth", "irrig_threshold_fraction",
-                   "limit_irrigation_if_rof_enabled","use_groundwater_irrigation") {
+                   "limit_irrigation_if_rof_enabled","use_groundwater_irrigation",
+                   "irrig_method_default") {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
      }
 

@@ -248,7 +248,8 @@ contains
          irrig_threshold_fraction = 0.5_r8, &
          irrig_river_volume_threshold = l_irrig_river_volume_threshold, &
          limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled, &
-         use_groundwater_irrigation = l_use_groundwater_irrigation)
+         use_groundwater_irrigation = l_use_groundwater_irrigation, &
+         irrig_method_default = irrig_method_drip)
 
     ! Allocate fluxes output from irrigation routines. Note that, in the production code,
     ! these are initialized to 0 in InitCold.
