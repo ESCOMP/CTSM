@@ -527,6 +527,13 @@ contains
        end if
     end if
 
+    if (use_groundwater_irrigation .and. .not. limit_irrigation_if_rof_enabled) then
+       write(iulog,*) ' ERROR: use_groundwater_irrigation only makes sense if limit_irrigation_if_rof_enabled is set.'
+       write(iulog,*) '(If limit_irrigation_if_rof_enabled is .false., then groundwater extraction will never be invoked.)'
+       call endrun(msg=' ERROR: use_groundwater_irrigation only makes sense if limit_irrigation_if_rof_enabled is set' // &
+            errMsg(sourcefile, __LINE__))
+    end if
+
     if (use_aquifer_layer .and. use_groundwater_irrigation) then
           write(iulog,*) ' ERROR: use_groundwater_irrigation and use_aquifer_layer may not be used simultaneously'
           call endrun(msg=' ERROR: use_groundwater_irrigation and use_aquifer_layer cannot both be set to true' // &

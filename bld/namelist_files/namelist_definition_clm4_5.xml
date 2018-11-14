@@ -440,6 +440,11 @@ is turned off regardless of the setting of this namelist variable.
 <entry id="use_groundwater_irrigation" type="logical" category="clm_physics"
        group="irrigation_inparm" valid_values="" >
 If TRUE, supply irrigation from groundwater (in addition to surface water).
+
+Can only be set if limit_irrigation_if_rof_enabled is true (otherwise
+groundwater extraction is never invoked).
+
+Cannot be combined with lower_boundary_condition = 3 or 4
 </entry>
 
 <entry id="irrig_method_default" type="char*32" category="clm_physics"
