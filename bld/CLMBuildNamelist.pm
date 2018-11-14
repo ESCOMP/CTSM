@@ -75,7 +75,7 @@ REQUIRED OPTIONS
                               "-res list" to list valid resolutions.
                               (default: 0.9x1.25)
      -sim_year "year"         Year to simulate for input datasets
-                              (i.e. 1850, 2000, 2010, 1850-2000, 1850-2100)
+                              (i.e. PtVg, 1850, 2000, 2010, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
                               (default 2000)
 OPTIONS

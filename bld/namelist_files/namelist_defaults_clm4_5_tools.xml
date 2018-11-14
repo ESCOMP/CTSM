@@ -623,6 +623,16 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fvegtyp hgrid="0.25x0.25" sim_year="2015" crop="on" >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2015.c170629.nc
 </mksrf_fvegtyp>
 
+<!-- Potential Vegetation dataset -->
+<mksrf_fvegtyp hgrid="0.25x0.25" sim_year="PtVg" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.simyrPtVg.c181106/mksrf_landuse_potvegclm50_LUH2.c181106.nc
+</mksrf_fvegtyp>
+
+<!-- 
+      Future scenarios 
+-->
+
+<!-- SSP4-RCP 8.5 -->
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="SSP5-8.5" sim_year="2016" crop="on"
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2016-2100.c171005/mksrf_landuse_SSP5RCP85_clm5_2016.c171005.nc
 </mksrf_fvegtyp>

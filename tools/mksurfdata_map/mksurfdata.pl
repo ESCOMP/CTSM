@@ -267,10 +267,10 @@ sub write_transient_timeseries_file {
       $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
       print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
       for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
+        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='$yr',ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $vegtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
-        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=$yr,ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
+        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='$yr',ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $hrvtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $hrvtypyr, $yr;
         if ( $yr % 100 == 0 ) {
@@ -519,7 +519,7 @@ EOF
        }
      } else {
        # single year.
-       if ( ! $definition->is_valid_value( "sim_year", $sim_year ) ) {
+       if ( ! $definition->is_valid_value( "sim_year", "'$sim_year'" ) ) {
          print "** Invalid simulation year: $sim_year\n";
          usage();
        }
@@ -697,7 +697,7 @@ EOF
             #
             # Skip if urban unless sim_year=2000
             #
-            if ( $urb_pt && $sim_year != 2000 ) {
+            if ( $urb_pt && $sim_year ne '2000' ) {
                print "For urban -- skip this simulation year = $sim_year\n";
                next SIM_YEAR;
             }
@@ -721,15 +721,15 @@ EOF
                $transient = 1;
             }
             # determine simulation year to use for the surface dataset:
-            my $sim_yr_surfdat = $sim_yr0;
+            my $sim_yr_surfdat = "$sim_yr0";
             
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='${sim_yr_surfdat}'$mkcrop -var mksrf_fvegtyp -namelist clmexp";
             my $vegtyp = `$cmd`;
             chomp( $vegtyp );
             if ( $vegtyp eq "" ) {
                die "** trouble getting vegtyp file with: $cmd\n";
             }
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='${sim_yr_surfdat}'$mkcrop -var mksrf_fvegtyp -namelist clmexp";
             my $hrvtyp = `$cmd`;
             chomp( $hrvtyp );
             if ( $hrvtyp eq "" ) {
@@ -743,8 +743,8 @@ EOF
             if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
             }
-            $desc         = sprintf( "%s_%s_%s_simyr%4.4d-%4.4d", $ssp_rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
-            $desc_surfdat = sprintf( "%s_%s_%s_simyr%4.4d",       $ssp_rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
+            $desc         = sprintf( "%s_%s_%s_simyr%s-%4.4d", $ssp_rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
+            $desc_surfdat = sprintf( "%s_%s_%s_simyr%s",       $ssp_rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
 
             my $fsurdat_fname_base = "";
             my $fsurdat_fname = "";
