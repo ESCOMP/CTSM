@@ -31,6 +31,8 @@ module Wateratm2lndBulkType
      real(r8), pointer :: volrmch_grc                   (:)   ! rof volr main channel (m3)
      real(r8), pointer :: volr_grc                      (:)   ! rof volr total volume (m3)
      real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)
+     real(r8), pointer :: rain_to_snow_conversion_col   (:)   ! amount of rain converted to snow via precipitation repartitioning (mm/s)
+     real(r8), pointer :: snow_to_rain_conversion_col   (:)   ! amount of snow converted to rain via precipitation repartitioning (mm/s)
      real(r8) , pointer :: prec365_col                  (:)   ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
      real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)
      real(r8) , pointer :: prec10_patch                 (:)   ! patch 10-day running mean of tot. precipitation (mm/s)
@@ -121,6 +123,8 @@ contains
     allocate(this%volr_grc                      (begg:endg))        ; this%volr_grc    (:)   = ival
     allocate(this%volrmch_grc                   (begg:endg))        ; this%volrmch_grc (:)   = ival
     allocate(this%forc_rh_grc                   (begg:endg))        ; this%forc_rh_grc (:)   = ival
+    allocate(this%rain_to_snow_conversion_col   (begc:endc))        ; this%rain_to_snow_conversion_col(:) = nan
+    allocate(this%snow_to_rain_conversion_col   (begc:endc))        ; this%snow_to_rain_conversion_col(:) = nan
     allocate(this%prec365_col                   (begc:endc))        ; this%prec365_col (:)   = nan
     allocate(this%prec60_patch                  (begp:endp))        ; this%prec60_patch(:)   = nan
     allocate(this%prec10_patch                  (begp:endp))        ; this%prec10_patch(:)   = nan
@@ -474,7 +478,6 @@ contains
     ! atm->lnd
     deallocate(this%forc_rh_grc)
 
-
     ! atm->lnd not downscaled
     deallocate(this%forc_q_not_downscaled_grc)
     deallocate(this%forc_rain_not_downscaled_grc)
@@ -498,6 +501,10 @@ contains
        deallocate(this%prec24_patch)
        deallocate(this%rh24_patch)
     end if
+
+    ! others
+    deallocate(this%rain_to_snow_conversion_col)
+    deallocate(this%snow_to_rain_conversion_col)
 
   end subroutine Clean
 
