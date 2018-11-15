@@ -1,5 +1,5 @@
 
 file(GLOB_RECURSE SOURCES *.f90 *.h)
-add_executable("rand_atm_rand_land" ${SOURCES})
-target_link_libraries(rand_atm_rand_land lilac)
+add_executable("rand_atm_rand_lnd" ${SOURCES})
+target_link_libraries(rand_atm_rand_lnd lilac)
 target_include_directories(lilac PUBLIC ${CMAKE_BINARY_DIR}/lilac)
