@@ -50,7 +50,7 @@ module IrrigationMod
   use pftconMod        , only : pftcon
   use clm_varctl       , only : iulog
   use clm_varcon       , only : isecspday, denh2o, spval, ispval, namec, nameg
-  use clm_varpar       , only : nlevsoi, nlevgrnd, cft_lb, cft_ub
+  use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use WaterFluxBulkType      , only : waterfluxbulk_type
@@ -711,7 +711,8 @@ contains
     do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
        m = patch%itype(p)
-       if (m >= cft_lb .and. m <= cft_ub .and. pftcon%irrigated(m) == 1._r8) then
+       if (m >= lbound(irrig_method, 2) .and. m <= ubound(irrig_method, 2) &
+            .and. pftcon%irrigated(m) == 1._r8) then
           this%irrig_method_patch(p) = irrig_method(g,m)
           ! ensure irrig_method is valid; if not set, use drip irrigation
           if(irrig_method(g,m) == irrig_method_unset) then
