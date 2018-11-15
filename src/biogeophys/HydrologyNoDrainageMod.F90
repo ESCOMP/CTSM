@@ -75,9 +75,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Calculate amount of water available for groundwater irrigation
-    call CalcAvailableUnconfinedAquifer(bounds, num_hydrologyc, &
-         filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
-         waterdiagnosticbulk_inst)
+    if (irrigation_inst%UseGroundwaterIrrigation()) then
+       call CalcAvailableUnconfinedAquifer(bounds, num_hydrologyc, &
+            filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
+            waterdiagnosticbulk_inst)
+    end if
 
     ! Calculate irrigation flux
     call irrigation_inst%ApplyIrrigation(bounds, num_soilc, &
@@ -91,7 +93,7 @@ contains
             filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
             waterstatebulk_inst, &
             waterfluxbulk_inst)
-    endif
+    end if
 
   end subroutine IrrigationWithdrawals
 

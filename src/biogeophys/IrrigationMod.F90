@@ -855,6 +855,9 @@ contains
     !
     ! Should be called once, AND ONLY ONCE, per time step.
     !
+    ! It is acceptable for available_gw_uncon to be undefined if
+    ! this%UseGroundwaterIrrigation is .false.
+    !
     ! !USES:
     !
     ! !ARGUMENTS:
