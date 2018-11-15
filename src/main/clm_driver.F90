@@ -38,12 +38,10 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes 
   use LakeFluxesMod          , only : LakeFluxes
   !
-  use HydrologyNoDrainageMod , only : HydrologyNoDrainage ! (formerly Hydrology2Mod)
+  use HydrologyNoDrainageMod , only : IrrigationWithdrawals, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
   use LakeHydrologyMod       , only : LakeHydrology
-  use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
-  use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
   use SoilWaterMovementMod   , only : use_aquifer_layer
   !
   use AerosolMod             , only : AerosolMasses  
@@ -427,27 +425,27 @@ contains
        call setExposedvegpFilter(bounds_clump, &
             canopystate_inst%frac_veg_nosno_patch(bounds_clump%begp:bounds_clump%endp))
 
-       ! Amount of water available for groundwater irrigation
-       call CalcAvailableUnconfinedAquifer(bounds_clump, filter(nc)%num_hydrologyc, &
-            filter(nc)%hydrologyc, soilhydrology_inst, soilstate_inst, &
-              water_inst%waterdiagnosticbulk_inst)
-
-       ! Irrigation flux
-       ! input is main channel storage
-       call irrigation_inst%ApplyIrrigation(bounds_clump, filter(nc)%num_soilc, &
-            filter(nc)%soilc, filter(nc)%num_soilp, filter(nc)%soilp, &
-            water_inst%waterfluxbulk_inst, &
-            available_gw_uncon = water_inst%waterdiagnosticbulk_inst%available_gw_uncon_col(bounds_clump%begc:bounds_clump%endc))
        call t_stopf('drvinit')
 
-       ! Remove groundwater irrigation
-       if (irrigation_inst%UseGroundwaterIrrigation()) then 
-          call WithdrawGroundwaterIrrigation(bounds_clump, filter(nc)%num_hydrologyc, &
-               filter(nc)%hydrologyc, soilhydrology_inst, soilstate_inst, &
-               water_inst%waterstatebulk_inst, &
-               water_inst%waterfluxbulk_inst)
-       endif
-       
+       call t_startf('irrigationwithdraw')
+
+       call IrrigationWithdrawals( &
+            bounds = bounds_clump, &
+            num_hydrologyc = filter(nc)%num_hydrologyc, &
+            filter_hydrologyc = filter(nc)%hydrologyc, &
+            num_soilc = filter(nc)%num_soilc, &
+            filter_soilc = filter(nc)%soilc, &
+            num_soilp = filter(nc)%num_soilp, &
+            filter_soilp = filter(nc)%soilp, &
+            soilhydrology_inst = soilhydrology_inst, &
+            soilstate_inst = soilstate_inst, &
+            irrigation_inst = irrigation_inst, &
+            waterdiagnosticbulk_inst = water_inst%waterdiagnosticbulk_inst, &
+            waterfluxbulk_inst = water_inst%waterfluxbulk_inst, &
+            waterstatebulk_inst = water_inst%waterstatebulk_inst)
+
+       call t_stopf('irrigationwithdraw')
+
        ! ============================================================================
        ! Canopy Hydrology
        ! (1) water storage of intercepted precipitation

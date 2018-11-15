@@ -2505,7 +2505,7 @@ contains
      type(bounds_type)        , intent(in)         :: bounds  
      integer                  , intent(in)         :: num_hydrologyc       ! number of column soil points in column filter
      integer                  , intent(in)         :: filter_hydrologyc(:) ! column filter for soil points
-     type(soilhydrology_type) , intent(inout)      :: soilhydrology_inst
+     type(soilhydrology_type) , intent(in)         :: soilhydrology_inst
      type(soilstate_type)     , intent(in)         :: soilstate_inst
      type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
      !
@@ -2524,8 +2524,8 @@ contains
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
           sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
-          zwt                =>    soilhydrology_inst%zwt_col            , & ! Output: [real(r8) (:)   ]  water table depth (m)                             
-          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col                                                                              & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/m2)
+          zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ]  water table depth (m)
+          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col  & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/m2)
           )
 
        ! calculate amount of water in saturated zone that
