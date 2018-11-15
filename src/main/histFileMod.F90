@@ -3059,7 +3059,7 @@ contains
           call ncd_defvar(varname='land1d_jxy', xtype=ncd_int, dim1name=namel, &
                long_name='2d latitude index of corresponding landunit', ncid=ncid)
 
-          call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name='landunit', &
+          call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name=namel, &
                long_name='1d grid index of corresponding landunit', ncid=ncid)
 
           call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name=namel, &
@@ -3234,7 +3234,7 @@ contains
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
        do c = bounds%begc,bounds%endc
-         icarr(c) =  GetGlobalIndex(decomp_index=col%gridcell(c), clmlevel=namel)
+         icarr(c) =  GetGlobalIndex(decomp_index=col%gridcell(c), clmlevel=nameg)
        enddo
        call ncd_io(varname='cols1d_gi'     , data=icarr, dim1name=namec, ncid=ncid, flag='write')
        do c = bounds%begc,bounds%endc
@@ -3273,11 +3273,11 @@ contains
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
 
        do p=bounds%begp,bounds%endp
-          iparr(p) = GetGlobalIndex(decomp_index=patch%gridcell(p), clmlevel=namec)
+          iparr(p) = GetGlobalIndex(decomp_index=patch%gridcell(p), clmlevel=nameg)
        enddo
        call ncd_io(varname='pfts1d_gi'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
        do p=bounds%begp,bounds%endp
-          iparr(p) = GetGlobalIndex(decomp_index=patch%landunit(p), clmlevel=namec)
+          iparr(p) = GetGlobalIndex(decomp_index=patch%landunit(p), clmlevel=namel)
        enddo
        call ncd_io(varname='pfts1d_li'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
        do p=bounds%begp,bounds%endp
