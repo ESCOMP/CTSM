@@ -1,2 +1,3 @@
 # Add tests here
-add_subdirectory(hello_world)
+add_subdirectory(rand_atm_rand_lnd)
+target_include_directories(lilac PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

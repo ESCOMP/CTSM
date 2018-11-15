@@ -31,7 +31,7 @@ set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${dialect}")
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_COMPILER_LINE}")
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_LINK_LINE} -g -cpp")
 # TODO: This should not be necessary but certain header files are missing from the build
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I /usr/include/ -I/usr/src/lilac/external/esmf/src/Infrastructure/Util/include -I/usr/src/lilac/external/esmf/build_config/Linux.gfortran.default -I /usr/src/lilac/external/esmf/src/include")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I/usr/include/ -I/usr/src/esmf/src/Infrastructure/Util/include/ -I/usr/src/esmf/build_config/Linux.gfortran.default -I /usr/src/esmf/src/include")
 message("CMAKE_Fortran_FLAGS:" ${CMAKE_Fortran_FLAGS})
 
 add_subdirectory(lilac)

@@ -14,3 +14,4 @@ components/
 *.pyc
 
 build/
+_build/

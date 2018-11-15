@@ -6,6 +6,7 @@ module lilac
   implicit none
 
   character(*), parameter :: modname =  "(core)"
+  integer, parameter :: LILAC_SUCCESS = ESMF_SUCCESS
 
   !--------------------------------------------------------------------------
   ! Public interfaces
