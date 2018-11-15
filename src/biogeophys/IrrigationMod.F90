@@ -46,6 +46,8 @@ module IrrigationMod
   use decompMod        , only : bounds_type, get_proc_global
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
+  use clm_instur       , only : irrig_method
+  use pftconMod        , only : pftcon
   use clm_varctl       , only : iulog
   use clm_varcon       , only : isecspday, denh2o, spval, ispval, namec, nameg
   use clm_varpar       , only : nlevsoi, nlevgrnd
@@ -115,6 +117,12 @@ module IrrigationMod
      ! use groundwater supply for irrigation (in addition to surface water)
      logical :: use_groundwater_irrigation
 
+     ! Irrigation method to use if not set on the surface dataset
+     ! (This won't be needed once we can rely on irrig_method always being on the surface
+     ! dataset, but it is useful until then - particularly for testing. See also
+     ! https://github.com/ESCOMP/ctsm/issues/565.)
+     integer :: irrig_method_default
+
   end type irrigation_params_type
 
   type, public :: irrigation_type
@@ -156,6 +164,7 @@ module IrrigationMod
      procedure, private :: InitHistory => IrrigationInitHistory
      procedure, private :: InitCold => IrrigationInitCold
      procedure, private :: CalcIrrigNstepsPerDay   ! given dtime, calculate irrig_nsteps_per_day
+     procedure, private :: SetIrrigMethod          ! set irrig_method_patch based on surface dataset
      procedure, private :: PointNeedsCheckForIrrig ! whether a given point needs to be checked for irrigation now
      procedure, private :: CalcDeficitVolrLimited  ! calculate deficit limited by river volume for each patch
   end type irrigation_type
@@ -180,9 +189,9 @@ module IrrigationMod
   ! Irrigation methods
   integer, parameter, public  :: irrig_method_unset = 0
   ! Drip is defined here as irrigation applied directly to soil surface
-  integer, parameter, private :: irrig_method_drip = 1
+  integer, parameter, public :: irrig_method_drip = 1
   ! Sprinkler is applied directly to canopy
-  integer, parameter, private :: irrig_method_sprinkler = 2
+  integer, parameter, public :: irrig_method_sprinkler = 2
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -198,7 +207,8 @@ contains
        irrig_start_time, irrig_length, &
        irrig_target_smp, &
        irrig_depth, irrig_threshold_fraction, irrig_river_volume_threshold, &
-       limit_irrigation_if_rof_enabled, use_groundwater_irrigation) &
+       limit_irrigation_if_rof_enabled, use_groundwater_irrigation, &
+       irrig_method_default) &
        result(this)
     !
     ! !DESCRIPTION:
@@ -217,6 +227,7 @@ contains
     real(r8), intent(in) :: irrig_river_volume_threshold
     logical , intent(in) :: limit_irrigation_if_rof_enabled
     logical , intent(in) :: use_groundwater_irrigation
+    integer , intent(in) :: irrig_method_default
     !
     ! !LOCAL VARIABLES:
     
@@ -232,6 +243,7 @@ contains
     this%irrig_river_volume_threshold = irrig_river_volume_threshold
     this%limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled
     this%use_groundwater_irrigation = use_groundwater_irrigation
+    this%irrig_method_default = irrig_method_default
 
   end function irrigation_params_constructor
 
@@ -288,6 +300,7 @@ contains
     call this%InitAllocate(bounds)
     this%params = params
     this%dtime = dtime
+    call this%SetIrrigMethod(bounds)
     this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(dtime)
     this%relsat_wilting_point_col(:,:) = relsat_wilting_point(:,:)
     this%relsat_target_col(:,:) = relsat_target(:,:)
@@ -324,6 +337,8 @@ contains
     real(r8) :: irrig_river_volume_threshold
     logical  :: limit_irrigation_if_rof_enabled
     logical  :: use_groundwater_irrigation
+    character(len=64) :: irrig_method_default
+    integer  :: irrig_method_default_int
 
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -335,7 +350,7 @@ contains
     namelist /irrigation_inparm/ irrig_min_lai, irrig_start_time, irrig_length, &
          irrig_target_smp, irrig_depth, irrig_threshold_fraction, &
          irrig_river_volume_threshold, limit_irrigation_if_rof_enabled, &
-         use_groundwater_irrigation
+         use_groundwater_irrigation, irrig_method_default
     
     ! Initialize options to garbage defaults, forcing all to be specified explicitly in
     ! order to get reasonable results
@@ -348,6 +363,7 @@ contains
     irrig_river_volume_threshold = nan
     limit_irrigation_if_rof_enabled = .false.
     use_groundwater_irrigation = .false.
+    irrig_method_default = ' '
 
     if (masterproc) then
        unitn = getavu()
@@ -374,6 +390,9 @@ contains
     call shr_mpi_bcast(irrig_river_volume_threshold, mpicom)
     call shr_mpi_bcast(limit_irrigation_if_rof_enabled, mpicom)
     call shr_mpi_bcast(use_groundwater_irrigation, mpicom)
+    call shr_mpi_bcast(irrig_method_default, mpicom)
+
+    call translate_irrig_method_default
 
     this%params = irrigation_params_type( &
          irrig_min_lai = irrig_min_lai, &
@@ -384,7 +403,8 @@ contains
          irrig_threshold_fraction = irrig_threshold_fraction, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
          limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled, &
-         use_groundwater_irrigation = use_groundwater_irrigation)
+         use_groundwater_irrigation = use_groundwater_irrigation, &
+         irrig_method_default = irrig_method_default_int)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -398,14 +418,28 @@ contains
        write(iulog,*) 'irrig_depth = ', irrig_depth
        write(iulog,*) 'irrig_threshold_fraction = ', irrig_threshold_fraction
        write(iulog,*) 'limit_irrigation_if_rof_enabled = ', limit_irrigation_if_rof_enabled
-       write(iulog,*) 'use_groundwater_irrigation = ', use_groundwater_irrigation
        if (limit_irrigation_if_rof_enabled) then
           write(iulog,*) 'irrig_river_volume_threshold = ', irrig_river_volume_threshold
        end if
+       write(iulog,*) 'use_groundwater_irrigation = ', use_groundwater_irrigation
+       write(iulog,*) 'irrig_method_default = ', irrig_method_default
        write(iulog,*) ' '
 
        call this%CheckNamelistValidity(use_aquifer_layer)
     end if
+
+  contains
+    subroutine translate_irrig_method_default
+      select case (irrig_method_default)
+      case ('drip')
+         irrig_method_default_int = irrig_method_drip
+      case ('sprinkler')
+         irrig_method_default_int = irrig_method_sprinkler
+      case default
+         write(iulog,*) 'ERROR: unknown irrig_method_default: ', trim(irrig_method_default)
+         call endrun('Unknown irrig_method_default')
+      end select
+    end subroutine translate_irrig_method_default
 
   end subroutine ReadNamelist
 
@@ -493,6 +527,13 @@ contains
        end if
     end if
 
+    if (use_groundwater_irrigation .and. .not. limit_irrigation_if_rof_enabled) then
+       write(iulog,*) ' ERROR: use_groundwater_irrigation only makes sense if limit_irrigation_if_rof_enabled is set.'
+       write(iulog,*) '(If limit_irrigation_if_rof_enabled is .false., then groundwater extraction will never be invoked.)'
+       call endrun(msg=' ERROR: use_groundwater_irrigation only makes sense if limit_irrigation_if_rof_enabled is set' // &
+            errMsg(sourcefile, __LINE__))
+    end if
+
     if (use_aquifer_layer .and. use_groundwater_irrigation) then
           write(iulog,*) ' ERROR: use_groundwater_irrigation and use_aquifer_layer may not be used simultaneously'
           call endrun(msg=' ERROR: use_groundwater_irrigation and use_aquifer_layer cannot both be set to true' // &
@@ -573,8 +614,6 @@ contains
     !
     ! !USES:
     use SoilStateType , only : soilstate_type
-    use clm_instur    , only : irrig_method
-    use pftconMod     , only : pftcon
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
@@ -583,10 +622,7 @@ contains
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
-    integer :: m ! dummy index
-    integer :: p ! patch index
     integer :: c ! col index
-    integer :: g ! gridcell index
     integer :: j ! level index
 
     character(len=*), parameter :: subname = 'InitCold'
@@ -623,23 +659,7 @@ contains
        end do
     end do
 
-    do p = bounds%begp,bounds%endp
-       g = patch%gridcell(p)
-       if (pftcon%irrigated(patch%itype(p)) == 1._r8) then 
-          m = patch%itype(p)
-          this%irrig_method_patch(p) = irrig_method(g,m)
-          ! ensure irrig_method is valid; if not set, use drip irrigation
-          if(irrig_method(g,m) == irrig_method_unset) then
-             this%irrig_method_patch(p) = irrig_method_drip
-          else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
-             write(iulog,*) subname //' invalid irrigation method specified'
-             call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
-                  errMsg(sourcefile, __LINE__))
-          end if
-       else
-          this%irrig_method_patch(p) = irrig_method_drip
-       end if
-    end do
+    call this%SetIrrigMethod(bounds)
        
     this%dtime = get_step_size()
     this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(this%dtime)
@@ -670,6 +690,43 @@ contains
 
   end function CalcIrrigNstepsPerDay
 
+  !-----------------------------------------------------------------------
+  subroutine SetIrrigMethod(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Set this%irrig_method_patch based on surface dataset
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type) , intent(inout) :: this
+    type(bounds_type)      , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p ! patch index
+    integer :: g ! gridcell index
+    integer :: m ! patch itype
+
+    character(len=*), parameter :: subname = 'SetIrrigMethod'
+    !-----------------------------------------------------------------------
+
+    do p = bounds%begp,bounds%endp
+       g = patch%gridcell(p)
+       if (pftcon%irrigated(patch%itype(p)) == 1._r8) then
+          m = patch%itype(p)
+          this%irrig_method_patch(p) = irrig_method(g,m)
+          ! ensure irrig_method is valid; if not set, use drip irrigation
+          if(irrig_method(g,m) == irrig_method_unset) then
+             this%irrig_method_patch(p) = this%params%irrig_method_default
+          else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
+             write(iulog,*) subname //' invalid irrigation method specified'
+             call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
+                  errMsg(sourcefile, __LINE__))
+          end if
+       else
+          this%irrig_method_patch(p) = this%params%irrig_method_default
+       end if
+    end do
+
+  end subroutine SetIrrigMethod
 
 
   !-----------------------------------------------------------------------
