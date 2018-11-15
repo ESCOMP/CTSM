@@ -128,6 +128,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : UpdateH2OVeg
+   use FatesPlantHydraulicsMod, only : RestartHydrStates
 
    implicit none
    
@@ -1138,6 +1139,16 @@ contains
                         this%fates(nc)%bc_in(s) )
                end do
 
+               ! ------------------------------------------------------------------------
+               ! Re-populate all the hydraulics variables that are dependent
+               ! on the key hydro state variables and plant carbon/geometry
+               ! ------------------------------------------------------------------------
+               if (use_fates_planthydro) then
+                  call RestartHydrStates(this%fates(nc)%sites,  &
+                                         this%fates(nc)%nsites, &
+                                         this%fates(nc)%bc_in,  &
+                                         this%fates(nc)%bc_out)
+               end if
 
                ! ------------------------------------------------------------------------
                ! Update diagnostics of FATES ecosystem structure used in HLM.
@@ -1148,12 +1159,11 @@ contains
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
                ! ------------------------------------------------------------------------
-               call this%fates_restart%update_3dpatch_radiation(nc, &
-                                                                this%fates(nc)%nsites, &
+               call this%fates_restart%update_3dpatch_radiation(this%fates(nc)%nsites, &
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
                     
-               
+              
 
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
