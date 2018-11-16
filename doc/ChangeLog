@@ -1,4 +1,142 @@
 ===============================================================
+Tag name:  ctsm1.0.dev016
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Nov  1 07:27:48 MDT 2018
+One-line Summary: Update cime, fix FATES DEBUG token, add script to easily run system tests
+
+Purpose of changes
+------------------
+
+(1) Update to latest version of cime master
+
+(2) Update FATES with a minor change: change DEBUG to debug, to allow
+    working with a preprocessor-defined DEBUG token
+
+(3) Add a script (run_sys_tests) that allows easily running all system
+    tests (see
+    https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide#running-test-suites-with-the-run-sys-tests-wrapper
+    for details)
+
+(4) As part of (3), start work on a CTSM python library and associated
+    test infrastructure.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes ESCOMP/ctsm#535 (Run Fortran unit tests as part of create_test)
+
+CIME Issues fixed (include issue #):
+- Various - see CIME ChangeLog for details
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] clm4_5
+
+[X] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- New run_sys_tests wrapper
+- Fortran unit tests now run as part of aux_clm
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, baselines fail as expected
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev015
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All I compsets (except spinup test that uses cplhist datm forcing)
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Potentially new climate
+
+  Changes answers for I compsets due to datm update as part of the cime
+  update: new presaero and CO2 datasets
+  (https://github.com/esmci/cime/pull/2828)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.7.3 -> cime5.7.5
+- fates: fates_s1.8.1_a3.0.0 -> fates_s1.8.1_a3.0.0_rev2
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/escomp/ctsm/pull/493 (Wrapper to system tests, and
+  start of a ctsm python library)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev015
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Oct 28 14:29:30 MDT 2018
