@@ -1,4 +1,96 @@
 ===============================================================
+Tag name:  ctsm1.0.dev017
+Originator(s):  slevis (Samuel Levis, Slevis Consulting LLC,303-665-1310)
+Date:  Fri Nov 16 14:54:37 MST 2018
+One-line Summary: Merge the collapse2gencrop branch
+
+Purpose of changes
+------------------
+
+These changes allow the model to not need to read 16-pft
+datasets and rather read 78-pft datasets. The 78-pft datasets were
+developed for use with prognostic crops originally. The current changes
+allow the model to use the 78-pft datasets in 16-pft runs by
+collapsing the crop pfts (cfts) from specific types to the model's
+generic crop types. The changes are generic so that the model may still
+read 16-pft datasets for 16-pft runs. Ultimately these changes will
+permit users to run with any number of pfts, while the ctsm group
+maintains a single set of input pft data.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+maxpatch_pft made obsolete
+
+Substantial timing or memory changes:
+Cheyenne gnu 7 TPUTCOMP FAILs
+Hobart gnu 1 TPUTCOMP FAIL
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+New test   <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/collapse_pfts_78_to_16_f10">
+New unit tests in test_surfrdUtils.pf, all containing the prefix
+test_collapse_crop_types_*
+
+Code reviewed by:
+Erik Kluzek and Bill Sacks
+
+CTSM testing:
+Regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm):
+
+    cheyenne ---- 
+gnu 7 TPUTCOM FAILs
+intel [in progress]
+
+    hobart ------ 
+gnu 1 TPUTCOMP FAIL
+intel PASS
+nag 4 TPUTCOMP FAILs
+
+CTSM tag used for the baseline comparisons: 
+ctsm1.0.dev016
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids): #483
+
+Sam Levis cloned Erik Kluzek's collapse2gencrop branch and then
+tested, corrected errors, resolved conflicts, added unit tests, while
+updating to newer tags as needed.
+
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev016
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Nov  1 07:27:48 MDT 2018
