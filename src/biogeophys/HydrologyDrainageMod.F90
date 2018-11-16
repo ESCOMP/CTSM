@@ -91,7 +91,6 @@ contains
          qflx_floodg        => wateratm2lndbulk_inst%forc_flood_grc      , & ! Input: rain rate [mm/s]   
          forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
          forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
-         wa                 => waterstatebulk_inst%wa_col                , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
          begwb              => waterbalancebulk_inst%begwb_col           , & ! Output:water mass end of the time step 
          endwb              => waterbalancebulk_inst%endwb_col           , & ! Output:water mass end of the time step     
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      

@@ -619,7 +619,7 @@ contains
                dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           if ( masterproc ) &
-                write(iulog,*) ' WARNING: irrigation_method NOT on surfdata file zero out'
+                write(iulog,*) ' WARNING: irrigation_method NOT on surfdata file; using default'
           irrig_method = irrig_method_unset
        end if
     else
