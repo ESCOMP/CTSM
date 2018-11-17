@@ -38,7 +38,9 @@ maxpatch_pft made obsolete
 
 Substantial timing or memory changes:
 Cheyenne gnu 7 TPUTCOMP FAILs
+Cheyenne intel 4 TPUTCOMP & 8 MEMCOMP FAILs
 Hobart gnu 1 TPUTCOMP FAIL
+Hobart nag 4 TPUTCOMP FAILs
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
@@ -61,7 +63,7 @@ Regular
 
     cheyenne ---- 
 gnu 7 TPUTCOM FAILs
-intel [in progress]
+intel 4 TPUTCOMP & 8 MEMCOMP FAILs
 
     hobart ------ 
 gnu 1 TPUTCOMP FAIL
