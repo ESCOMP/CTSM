@@ -1227,6 +1227,7 @@ contains
            ! Called prior to init_patches(). Site level rhizosphere shells must
            ! be set prior to cohort initialization.
            ! ----------------------------------------------------------------------------
+
            if (use_fates_planthydro) then
 
               do s = 1,this%fates(nc)%nsites
@@ -1258,10 +1259,10 @@ contains
                     eff_porosity = max(0.01_r8,soilstate_inst%watsat_col(c,j)-vol_ice)
                     this%fates(nc)%bc_in(s)%eff_porosity_sl(j) = eff_porosity
                  end do
-
+                 
               end do
 
-              if (use_fates_planthydro) call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
+              call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
 
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
