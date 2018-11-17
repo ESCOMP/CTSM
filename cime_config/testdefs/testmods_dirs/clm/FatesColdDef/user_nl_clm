@@ -1,3 +1,7 @@
+hist_mfilt        = 365
+hist_nhtfrq       = -24
+hist_empty_htapes = .true.
+use_fates_spitfire= .true.
 hist_fincl1       = 'NPP','GPP','BTRAN','H2OSOI','TLAI','LITTER_IN','LITTER_OUT',
    'FIRE_AREA','SCORCH_HEIGHT','FIRE_INTENSITY','FIRE_TFC_ROS','fire_fuel_mef',
    'fire_fuel_bulkd','fire_fuel_sav','FIRE_NESTEROV_INDEX','PFTbiomass',
