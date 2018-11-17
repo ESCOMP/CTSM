@@ -3742,7 +3742,7 @@ sub setup_logic_fates {
               $var = "fates_inventory_ctrl_filename";
               if ( ! defined($nl->get_value($var))  ) {
                  $log->fatal_error("$var is required when use_fates_inventory_init is set" );
-              } elsif ( ! -f "$nl->get_value($var)" ) {
+              } elsif ( ! -f $nl->get_value($var) ) {
                  $log->fatal_error("$var does NOT point to a valid filename" );
               }
            }
