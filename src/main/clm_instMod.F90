@@ -543,7 +543,8 @@ contains
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterstate_inst=waterstate_inst, &
             canopystate_inst=canopystate_inst, &
-            frictionvel_inst=frictionvel_inst)
+            frictionvel_inst=frictionvel_inst, &
+            soilstate_inst=soilstate_inst)
 
     end if
 

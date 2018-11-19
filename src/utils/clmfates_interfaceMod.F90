@@ -908,7 +908,7 @@ contains
    ! ====================================================================================
 
    subroutine restart( this, bounds_proc, ncid, flag, waterstate_inst, &
-                             canopystate_inst, frictionvel_inst )
+                             canopystate_inst, frictionvel_inst, soilstate_inst)
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -943,6 +943,7 @@ contains
       type(waterstate_type)          , intent(inout) :: waterstate_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
       type(frictionvel_type)         , intent(inout) :: frictionvel_inst
+      type(soilstate_type)           , intent(inout) :: soilstate_inst
       
       ! Locals
       type(bounds_type) :: bounds_clump
@@ -954,6 +955,7 @@ contains
       integer                 :: s   ! Fates site index
       integer                 :: g   ! grid-cell index
       integer                 :: dk_index
+      integer                 :: nlevsoil
       character(len=fates_long_string_length) :: ioname
       integer                 :: nvar
       integer                 :: ivar
@@ -1144,6 +1146,14 @@ contains
                ! on the key hydro state variables and plant carbon/geometry
                ! ------------------------------------------------------------------------
                if (use_fates_planthydro) then
+
+                  do s = 1,this%fates(nc)%nsites
+                     c = this%f2hmap(nc)%fcolumn(s)
+                     nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+                     this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil) = &
+                          soilstate_inst%hksat_col(c,1:nlevsoil)
+                  end do
+
                   call RestartHydrStates(this%fates(nc)%sites,  &
                                          this%fates(nc)%nsites, &
                                          this%fates(nc)%bc_in,  &
