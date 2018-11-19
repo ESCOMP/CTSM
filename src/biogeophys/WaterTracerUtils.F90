@@ -124,7 +124,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalcTracerFromBulk(num_pts, filter_pts, &
-       bulk_val, bulk_source, tracer_source, tracer_val)
+       bulk_source, bulk_val, tracer_source, tracer_val)
     !
     ! !DESCRIPTION:
     ! Calculate a tracer variable from a corresponding bulk variable when the ratio of
@@ -140,8 +140,8 @@ contains
     ! !ARGUMENTS:
     integer  , intent(in)    :: num_pts          ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)    ! filter in which tracer_val should be updated
-    real(r8) , intent(in)    :: bulk_val(:)      ! values of the variable of interest, for bulk
     real(r8) , intent(in)    :: bulk_source(:)   ! values of the source for this variable, for bulk
+    real(r8) , intent(in)    :: bulk_val(:)      ! values of the variable of interest, for bulk
     real(r8) , intent(in)    :: tracer_source(:) ! values of the source for this variable, for the tracer
     real(r8) , intent(inout) :: tracer_val(:)    ! output values of the variable of interest, for the tracer
     !

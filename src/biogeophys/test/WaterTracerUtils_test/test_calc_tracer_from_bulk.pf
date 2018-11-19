@@ -39,15 +39,15 @@ contains
     class(TestCalc), intent(inout) :: this
   end subroutine tearDown
 
-  subroutine doCall3pt(this, bulk_val, bulk_source, tracer_source, tracer_vals, &
+  subroutine doCall3pt(this, bulk_source, bulk_val, tracer_source, tracer_vals, &
        num_pts, filter_pts)
     ! Wraps a call to CalcTracerFromBulk with 3 points. Point 2 is the point of interest,
     ! and its inputs and outputs are given by the arguments to this routine. Points 1 and
     ! 3 have hard-coded inputs. Tests should do assertions on all 3 points, to ensure
     ! that (for example) point 1 isn't accidentally overwritten when setting point 2.
     class(TestCalc), intent(inout) :: this
-    real(r8), intent(in)  :: bulk_val      ! bulk value in point 2
     real(r8), intent(in)  :: bulk_source   ! bulk source value in point 2
+    real(r8), intent(in)  :: bulk_val      ! bulk value in point 2
     real(r8), intent(in)  :: tracer_source ! tracer source value in point 2
     real(r8), intent(out) :: tracer_vals(:) ! tracer values in all 3 points
 
@@ -72,8 +72,8 @@ contains
     call CalcTracerFromBulk( &
          num_pts = l_num_pts, &
          filter_pts = l_filter_pts, &
-         bulk_val = [bulk_val_other, bulk_val, bulk_val_other], &
          bulk_source = [bulk_source_other, bulk_source, bulk_source_other], &
+         bulk_val = [bulk_val_other, bulk_val, bulk_val_other], &
          tracer_source = [tracer_source_other, tracer_source, tracer_source_other], &
          tracer_val = tracer_vals)
 
@@ -85,8 +85,8 @@ contains
     real(r8) :: tracer_vals(3)
 
     call this%doCall3pt( &
-         bulk_val = 30._r8, &
          bulk_source = 300._r8, &
+         bulk_val = 30._r8, &
          tracer_source = 60._r8, &
          tracer_vals = tracer_vals)
 
@@ -104,8 +104,8 @@ contains
     call filter_from_range(1, 1, num_pts, filter_pts)
 
     call this%doCall3pt( &
-         bulk_val = 30._r8, &
          bulk_source = 300._r8, &
+         bulk_val = 30._r8, &
          tracer_source = 60._r8, &
          tracer_vals = tracer_vals, &
          num_pts = num_pts, &
@@ -120,8 +120,8 @@ contains
     real(r8) :: tracer_vals(3)
 
     call this%doCall3pt( &
-         bulk_val = 0._r8, &
          bulk_source = 0._r8, &
+         bulk_val = 0._r8, &
          tracer_source = 0._r8, &
          tracer_vals = tracer_vals)
 
@@ -135,8 +135,8 @@ contains
     character(len=:), allocatable :: expected_msg
 
     call this%doCall3pt( &
-         bulk_val = 1._r8, &
          bulk_source = 0._r8, &
+         bulk_val = 1._r8, &
          tracer_source = 0._r8, &
          tracer_vals = tracer_vals)
 
@@ -151,8 +151,8 @@ contains
     character(len=:), allocatable :: expected_msg
 
     call this%doCall3pt( &
-         bulk_val = 0._r8, &
          bulk_source = 0._r8, &
+         bulk_val = 0._r8, &
          tracer_source = 1._r8, &
          tracer_vals = tracer_vals)
 
