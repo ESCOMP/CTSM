@@ -70,7 +70,7 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds  
-    type(water_type)      , intent(in)    :: water_inst
+    type(water_type)      , intent(inout) :: water_inst
     type(surfalb_type)    , intent(in)    :: surfalb_inst
     type(energyflux_type) , intent(in)    :: energyflux_inst
     type(lnd2atm_type)    , intent(inout) :: lnd2atm_inst 
