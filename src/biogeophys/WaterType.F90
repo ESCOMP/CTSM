@@ -162,7 +162,6 @@ module WaterType
      procedure, public :: InitAccVars
      procedure, public :: UpdateAccVars
      procedure, public :: Restart
-     procedure, public :: SetAtm2lndNondownscaledTracers
      procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
      procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
@@ -703,36 +702,6 @@ contains
     end do
 
   end subroutine Restart
-
-  !-----------------------------------------------------------------------
-  subroutine SetAtm2lndNondownscaledTracers(this, bounds)
-    !
-    ! !DESCRIPTION:
-    ! Set tracer values for the non-downscaled atm2lnd water quantities
-    !
-    ! !ARGUMENTS:
-    class(water_type), intent(inout) :: this
-    type(bounds_type), intent(in)    :: bounds
-    !
-    ! !LOCAL VARIABLES:
-    integer :: i
-
-    character(len=*), parameter :: subname = 'SetAtm2lndNondownscaledTracers'
-    !-----------------------------------------------------------------------
-
-    do i = this%tracers_beg, this%tracers_end
-       associate( &
-            wateratm2lnd_inst => this%bulk_and_tracers(i)%wateratm2lnd_inst)
-
-       if (.not. wateratm2lnd_inst%IsCommunicatedWithCoupler()) then
-          call wateratm2lnd_inst%SetNondownscaledTracers( &
-               bounds, this%wateratm2lndbulk_inst)
-       end if
-
-       end associate
-    end do
-
-  end subroutine SetAtm2lndNondownscaledTracers
 
   !-----------------------------------------------------------------------
   function IsIsotope(this, i)

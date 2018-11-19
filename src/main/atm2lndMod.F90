@@ -22,6 +22,7 @@ module atm2lndMod
   use LandunitType   , only : lun                
   use ColumnType     , only : col
   use landunit_varcon, only : istice_mec
+  use WaterType      , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
   !
   ! !PUBLIC TYPES:
@@ -30,7 +31,8 @@ module atm2lndMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: downscale_forcings           ! Downscale atm forcing fields from gridcell to column
+  public :: set_atm2lnd_non_downscaled_tracers ! Set tracer values for the non-downscaled atm2lnd water quantities
+  public :: downscale_forcings                 ! Downscale atm forcing fields from gridcell to column
 
   ! The following routine is public for the sake of unit testing; it should not be
   ! called by production code outside this module
@@ -49,6 +51,36 @@ module atm2lndMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine set_atm2lnd_non_downscaled_tracers(bounds, water_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set tracer values for the non-downscaled atm2lnd water quantities
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in) :: bounds
+    type(water_type)  , intent(in) :: water_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'set_atm2lnd_non_downscaled_tracers'
+    !-----------------------------------------------------------------------
+
+    do i = water_inst%tracers_beg, water_inst%tracers_end
+       associate( &
+            wateratm2lnd_inst => water_inst%bulk_and_tracers(i)%wateratm2lnd_inst)
+
+       if (.not. wateratm2lnd_inst%IsCommunicatedWithCoupler()) then
+          call wateratm2lnd_inst%SetNondownscaledTracers( &
+               bounds, water_inst%wateratm2lndbulk_inst)
+       end if
+
+       end associate
+    end do
+
+  end subroutine set_atm2lnd_non_downscaled_tracers
 
   !-----------------------------------------------------------------------
   subroutine downscale_forcings(bounds, &

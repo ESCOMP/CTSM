@@ -61,7 +61,7 @@ module clm_driver
   !
   use filterMod              , only : setFilters
   !
-  use atm2lndMod             , only : downscale_forcings
+  use atm2lndMod             , only : set_atm2lnd_non_downscaled_tracers, downscale_forcings
   use lnd2atmMod             , only : lnd2atm
   use lnd2glcMod             , only : lnd2glc_type
   !
@@ -171,7 +171,7 @@ contains
        ! FIXME(wjs, 2018-09-06) Probably combine this with a later call rather than having
        ! it be its own call. At that point, we'll need to remove the following
        ! TracerConsistencyCheck.
-       call water_inst%SetAtm2lndNondownscaledTracers(bounds_clump)
+       call set_atm2lnd_non_downscaled_tracers(bounds_clump, water_inst)
 
        if (water_inst%DoConsistencyCheck()) then
           ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
