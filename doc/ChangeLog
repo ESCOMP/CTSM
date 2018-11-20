@@ -34,7 +34,10 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Changes made to namelist defaults (e.g., changed parameter values):
-maxpatch_pft made obsolete
+- maxpatch_pft made obsolete
+- nnegcrit was increased because of failure in the TRENDY simulations.
+This was done in the source, rather than the namelist but does have an
+effect on user behavior.
 
 Substantial timing or memory changes:
 Cheyenne gnu 7 TPUTCOMP FAILs
@@ -45,6 +48,22 @@ Hobart nag 4 TPUTCOMP FAILs
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
 NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Renamed parameters:
+maxpatch_pft is obsolete; remove from namelist-related scripts in future PR
+numpft + 1 ---> maxsoil_patches
+maxpatch_pft ---> maxsoil_patches in CNDV
+numpft ---> maxveg
+numpft_ed ---> maxveg_fates
+
+Several modules were made default private. The list of variables in them
+that are public are explicitly listed now:
+LakeCon.F90
+clm_initializeMod.F90
+clm_instMod.F90 
+clm_varpar.F90
+pftconMod.F90
+subgridAveMod.F90
 
 Changes to tests or testing:
 New test   <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/collapse_pfts_78_to_16_f10">
