@@ -138,8 +138,8 @@ contains
 
     ! A conversion of 40 in the bulk results with 4 for the tracer, since
     ! tracer_snow/bulk_snow = 1/10
-    @assertEqual(14._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc))
-    @assertEqual(5._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc))
+    @assertEqual(14._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc), tolerance=tol)
+    @assertEqual(5._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc), tolerance=tol)
   end subroutine downscaled_precip_snowToRain
 
   @Test
@@ -161,8 +161,30 @@ contains
 
     ! A conversion of 40 in the bulk results with 4 for the tracer, since
     ! tracer_snow/bulk_snow = 1/10
-    @assertEqual(5._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc))
-    @assertEqual(14._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc))
+    @assertEqual(5._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc), tolerance=tol)
+    @assertEqual(14._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc), tolerance=tol)
   end subroutine downscaled_precip_rainToSnow
+
+  @Test
+  subroutine downscaled_precip_rainToZero(this)
+    ! Test downscaled rain and snow when all rain is converted to snow
+    class(TestSetTracers), intent(inout) :: this
+
+    call this%setInputs1Col( &
+         bulk_rain_not_downscaled = 90._r8, &
+         bulk_snow_not_downscaled = 10._r8, &
+         tracer_rain_not_downscaled = 9._r8, &
+         tracer_snow_not_downscaled = 10._r8, &
+         bulk_rain_to_snow = 90._r8 - 1.e-14_r8, &
+         bulk_snow_to_rain = 0._r8)
+
+    call this%wateratm2lnd_tracer%SetDownscaledTracers(bounds, &
+         this%num_allc, this%filter_allc, &
+         this%wateratm2lnd_bulk)
+
+    ! tracer rain should end up EXACTLY 0 even if there are small roundoff errors in rain_to_snow
+    @assertEqual(0._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc))
+    @assertEqual(19._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc), tolerance=tol)
+  end subroutine downscaled_precip_rainToZero
 
 end module test_set_tracers

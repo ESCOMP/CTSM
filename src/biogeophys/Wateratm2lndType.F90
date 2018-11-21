@@ -374,10 +374,14 @@ contains
     do fc = 1, num_allc
        c = filter_allc(fc)
        g = col%gridcell(c)
-       this%forc_rain_downscaled_col(c) = this%forc_rain_not_downscaled_grc(g) + &
-            this%snow_to_rain_conversion_col(c) - this%rain_to_snow_conversion_col(c)
-       this%forc_snow_downscaled_col(c) = this%forc_snow_not_downscaled_grc(g) + &
-            this%rain_to_snow_conversion_col(c) - this%snow_to_rain_conversion_col(c)
+       this%forc_rain_downscaled_col(c) = AdjustPrecipTracer( &
+            not_downscaled = this%forc_rain_not_downscaled_grc(g), &
+            addition = this%snow_to_rain_conversion_col(c), &
+            subtraction = this%rain_to_snow_conversion_col(c))
+       this%forc_snow_downscaled_col(c) = AdjustPrecipTracer( &
+            not_downscaled = this%forc_snow_not_downscaled_grc(g), &
+            addition = this%rain_to_snow_conversion_col(c), &
+            subtraction = this%snow_to_rain_conversion_col(c))
     end do
 
     end associate
@@ -427,6 +431,25 @@ contains
       end associate
 
     end subroutine SetOneDownscaledTracer
+
+    pure function AdjustPrecipTracer(not_downscaled, addition, subtraction) result(downscaled)
+      real(r8) :: downscaled
+      real(r8), intent(in) :: not_downscaled
+      real(r8), intent(in) :: addition
+      real(r8), intent(in) :: subtraction
+
+      real(r8), parameter :: tolerance = 1.e-13_r8
+
+      downscaled = not_downscaled + addition - subtraction
+      if (not_downscaled /= 0._r8) then
+         if (abs(downscaled / not_downscaled) < tolerance) then
+            ! Roundoff correction: If it seems that the downscaled quantity is supposed
+            ! to go to exactly 0, then make sure it is indeed exactly 0 rather than
+            ! roundoff-level different from 0.
+            downscaled = 0._r8
+         end if
+      end if
+    end function AdjustPrecipTracer
 
   end subroutine SetDownscaledTracers
 
