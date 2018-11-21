@@ -61,8 +61,7 @@ module clm_driver
   !
   use filterMod              , only : setFilters
   !
-  use atm2lndMod             , only : set_atm2lnd_non_downscaled_tracers
-  use atm2lndMod             , only : downscale_forcings, set_atm2lnd_downscaled_tracers
+  use atm2lndMod             , only : downscale_forcings, set_atm2lnd_water_tracers
   use lnd2atmMod             , only : lnd2atm
   use lnd2glcMod             , only : lnd2glc_type
   !
@@ -164,27 +163,6 @@ contains
 
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
-
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-    do nc = 1, nclumps
-       call get_clump_bounds(nc, bounds_clump)
-
-       ! FIXME(wjs, 2018-09-06) Probably combine this with a later call rather than having
-       ! it be its own call. At that point, we'll need to remove the following
-       ! TracerConsistencyCheck.
-       call set_atm2lnd_non_downscaled_tracers(bounds_clump, water_inst)
-
-       if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'start of driver loop')
-             call t_stopf("tracer_consistency_check")
-          end if
-       end if
-    end do
-    !$OMP END PARALLEL DO
 
     ! ========================================================================
     ! In the first time step of a startup or hybrid run, we want to update CLM's glacier
@@ -339,23 +317,6 @@ contains
          glc_behavior)
     call t_stopf('dyn_subgrid')
 
-    ! FIXME(wjs, 2018-09-13) Soon, I will remove this, and just keep a check lower down in
-    ! the driver loop.
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-    do nc = 1, nclumps
-       call get_clump_bounds(nc, bounds_clump)
-       if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after dynSubgrid_driver')
-             call t_stopf("tracer_consistency_check")
-          end if
-       end if
-    end do
-    !$OMP END PARALLEL DO
-
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
@@ -382,18 +343,6 @@ contains
             water_inst, soilhydrology_inst)
 
        call t_stopf('begwbal')
-
-       ! FIXME(wjs, 2018-09-13) Soon, I will remove this, and just keep a check lower down
-       ! in the driver loop.
-       if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after WaterBalanceInit')
-             call t_stopf("tracer_consistency_check")
-          end if
-       end if
 
        call t_startf('begcnbal_col')
        if (use_cn) then
@@ -464,18 +413,6 @@ contains
             water_inst%waterdiagnosticbulk_inst, &
             energyflux_inst)
 
-       ! FIXME(wjs, 2018-09-13) Soon, I will remove this, and just keep a check lower down
-       ! in the driver loop.
-       if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after clm_drv_init')
-             call t_stopf("tracer_consistency_check")
-          end if
-       end if
-
        call topo_inst%UpdateTopo(bounds_clump, &
             filter(nc)%num_icemecc, filter(nc)%icemecc, &
             glc2lnd_inst, glc_behavior, &
@@ -485,7 +422,7 @@ contains
             topo_inst, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, &
             eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
-       call set_atm2lnd_downscaled_tracers(bounds_clump, &
+       call set_atm2lnd_water_tracers(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, &
             water_inst)
 
