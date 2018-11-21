@@ -39,11 +39,19 @@ module BalanceCheckMod
   ! !PUBLIC TYPES:
   implicit none
   save
+  private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
 
+  public :: BalanceCheckInit         ! Initialization of Water and energy balance check
   public :: BeginWaterBalance        ! Initialize water balance check
   public :: BalanceCheck             ! Water and energy balance check
+  public :: GetBalanceCheckSkipSteps ! Get the number of steps to skip for the balance check
+  public :: BalanceCheckClean        ! Clean up for BalanceCheck
+
+  ! !PRIVATE MEMBER DATA:
+  real(r8), private, parameter :: skip_size = 3600.0_r8   ! Time steps to skip the balance check at startup (sec)
+  integer,  private            :: skip_steps = -999       ! Number of time steps to skip the balance check for
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -54,6 +62,63 @@ module BalanceCheckMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine BalanceCheckInit( )
+  !-----------------------------------------------------------------------
+    !
+    ! !DESCRIPTION:
+    ! Initialize balance check
+    !
+    ! !USES:
+    use spmdMod           , only : masterproc
+    use clm_time_manager  , only : get_step_size
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: dtime                    ! land model time step (sec)
+    !-----------------------------------------------------------------------
+    dtime = get_step_size()
+    ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded to the nearest integer
+    skip_steps = max(2, nint( (skip_size / dtime) ) )
+
+    if ( masterproc ) write(iulog,*) ' Skip balance checking for the first ', skip_steps, ' time steps'
+
+  end subroutine BalanceCheckInit
+
+  !-----------------------------------------------------------------------
+  subroutine BalanceCheckClean( )
+  !-----------------------------------------------------------------------
+    !
+    ! !DESCRIPTION:
+    ! Clean up BalanceCheck
+    !
+    ! !USES:
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    skip_steps = -999
+  end subroutine BalanceCheckClean
+
+  !-----------------------------------------------------------------------
+  function GetBalanceCheckSkipSteps( ) result( get_skip )
+  !-----------------------------------------------------------------------
+    !
+    ! !DESCRIPTION:
+    ! Get the number of steps to skip for the balance check
+    !
+    ! !ARGUMENTS:
+    integer :: get_skip    ! function result
+    ! !LOCAL VARIABLES:
+    if ( skip_steps > 0 )then
+       get_skip = skip_steps
+    else
+       get_skip = -999
+       call endrun('ERROR:: GetBalanceCheckSkipSteps called before BalanceCheckInit')
+    end if
+  end function GetBalanceCheckSkipSteps
+  !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
@@ -151,7 +216,7 @@ contains
    subroutine BalanceCheck( bounds, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
         waterdiagnosticbulk_inst, waterbalance_inst, wateratm2lnd_inst, &
-        energyflux_inst, canopystate_inst, surfalb_inst)
+        surfalb_inst, energyflux_inst, canopystate_inst)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -183,9 +248,9 @@ contains
      type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
      class(waterbalance_type), intent(inout) :: waterbalance_inst
      class(wateratm2lnd_type) , intent(in) :: wateratm2lnd_inst
+     type(surfalb_type)    , intent(in)    :: surfalb_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
      type(canopystate_type), intent(inout) :: canopystate_inst
-     type(surfalb_type)    , intent(in)    :: surfalb_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: p,c,l,g,fc                             ! indices
@@ -352,7 +417,7 @@ contains
           if ((col%itype(indexc) == icol_roof .or. &
                col%itype(indexc) == icol_road_imperv .or. &
                col%itype(indexc) == icol_road_perv) .and. &
-               abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
+               abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > skip_steps) ) then
 
              write(iulog,*)'clm urban model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep                 = ',nstep
@@ -378,7 +443,7 @@ contains
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
 
-          else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
+          else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > skip_steps) ) then
 
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep                 = ',nstep
@@ -474,7 +539,7 @@ contains
                ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                ' errh2osno= ',errh2osno(indexc)
 
-          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (DAnstep > 2) ) then
+          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (DAnstep > skip_steps) ) then
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep              = ',nstep
              write(iulog,*)'errh2osno          = ',errh2osno(indexc)
@@ -565,7 +630,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (DAnstep > 2) ) then
+       if ( found  .and. (DAnstep > skip_steps) ) then
           write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsol        = ',errsol(indexp)
@@ -595,7 +660,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (DAnstep > 2) ) then
+       if ( found  .and. (DAnstep > skip_steps) ) then
           write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)' 
           write(iulog,*)'nstep        = ',nstep 
           write(iulog,*)'errlon       = ',errlon(indexp)
@@ -618,7 +683,7 @@ contains
              end if
           end if
        end do
-       if ( found  .and. (DAnstep > 2) ) then
+       if ( found  .and. (DAnstep > skip_steps) ) then
           write(iulog,*)'WARNING: BalanceCheck: surface flux energy balance error (W/m2)'
           write(iulog,*)'nstep          = ' ,nstep
           write(iulog,*)'errseb         = ' ,errseb(indexp)
@@ -661,7 +726,7 @@ contains
           write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
-          if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (DAnstep > 2) ) then
+          if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (DAnstep > skip_steps) ) then
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if

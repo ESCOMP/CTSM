@@ -574,7 +574,7 @@ contains
     
     call extract_accum_field ('GDDPLANT', rbufslp, nstep)
     do p = begp,endp
-      rbufslp(p) = max(0.,this%gddplant_patch(p)-rbufslp(p))
+      rbufslp(p) = max(0.0_r8,this%gddplant_patch(p)-rbufslp(p))
     end do
     call update_accum_field  ('GDDPLANT', rbufslp, nstep)
     do p = begp,endp

@@ -77,6 +77,8 @@ usage() {
   echo "     Displays this help message"
   echo "[-v|--verbose]"
   echo "     Toggle verbose usage -- log more information on what is happening "
+  echo "[--fast]"
+  echo "     Toggle fast maps only -- only create the maps that can be done quickly "
   echo ""
   echo " You can also set the following env variables:"
   echo "  ESMFBIN_PATH - Path to ESMF binaries "
@@ -134,6 +136,7 @@ verbose="no"
 list="no"
 outgrid=""
 gridfile="default"
+fast="no"
 
 while [ $# -gt 0 ]; do
    case $1 in
@@ -145,6 +148,9 @@ while [ $# -gt 0 ]; do
 	   ;;
        -d|--debug)
 	   debug="YES"
+	   ;;
+       --fast)
+	   fast="YES"
 	   ;;
        -l|--list)
 	   debug="YES"
@@ -498,6 +504,9 @@ until ((nfile>${#INGRID[*]})); do
    # Skip if file already exists
    if [ -f "${OUTFILE[nfile]}" ]; then
       echo "Skipping creation of ${OUTFILE[nfile]} as already exists"
+   # Skip if large file and Fast mode is on
+   elif [ "$fast" = "YES" ] && [ "${SRC_LRGFIL[nfile]}" = "netcdf4" ]; then
+      echo "Skipping creation of ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
    else
 
       cmd="$mpirun $ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "

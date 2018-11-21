@@ -1,2 +1,3 @@
  hist_nhtfrq    = 0,-240
  hist_mfilt     = 1,1
+ calc_human_stress_indices = 'ALL'

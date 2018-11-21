@@ -29,8 +29,29 @@
 if [ -z "$RES" ]; then
    echo "Run for all valid resolutions"
    resols=`../../bld/queryDefaultNamelist.pl -res list -silent`
+   if [ ! -z "$GRIDFILE" ]; then
+      echo "When GRIDFILE set RES also needs to be set for a single resolution"
+      exit 1
+   fi
 else
    resols="$RES"
+fi
+if [ -z "$GRIDFILE" ]; then
+  grid=""
+else
+   if [[ ${#resols[@]} > 1 ]]; then
+      echo "When GRIDFILE is specificed only one resolution can also be given (# resolutions ${#resols[@]})"
+      echo "Resolutions input is: $resols"
+      exit 1
+   fi
+   grid="-f $GRIDFILE"
+fi
+
+if [ -z "$MKMAPDATA_OPTIONS" ]; then
+   echo "Run with standard options"
+   options=" "
+else
+   options="$MKMAPDATA_OPTIONS"
 fi
 echo "Create mapping files for this list of resolutions: $resols"
 
@@ -39,7 +60,7 @@ echo "Create mapping files for this list of resolutions: $resols"
 for res in $resols; do
    echo "Create mapping files for: $res"
 #----------------------------------------------------------------------
-   cmdargs="-r $res"
+   cmdargs="-r $res $grid $options"
 
    # For single-point and regional resolutions, tell mkmapdata that
    # output type is regional
@@ -47,6 +68,10 @@ for res in $resols; do
        res_type="regional"
    else
        res_type="global"
+   fi
+   # Assume if you are providing a gridfile that the grid is regional
+   if [ $grid != "" ];then
+       res_type="regional"
    fi
 
    cmdargs="$cmdargs -t $res_type"
