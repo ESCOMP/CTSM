@@ -49,7 +49,7 @@ contains
     real(r8), intent(in)  :: bulk_source   ! bulk source value in point 2
     real(r8), intent(in)  :: bulk_val      ! bulk value in point 2
     real(r8), intent(in)  :: tracer_source ! tracer source value in point 2
-    real(r8), intent(out) :: tracer_vals(:) ! tracer values in all 3 points
+    real(r8), intent(out) :: tracer_vals(17:) ! tracer values in all 3 points
 
     ! If provided, num_pts and filter_pts give the filter to run over. If not provided,
     ! this routine will build a filter that runs over all 3 points.
@@ -58,6 +58,13 @@ contains
 
     integer :: l_num_pts
     integer, allocatable :: l_filter_pts(:)
+
+    ! Use an arbitrary lower bound that isn't 1, in order to make sure the routine
+    ! properly handles non-1 lower bounds. Note that this needs to agree with the lower
+    ! bound of tracer_vals.
+    real(r8) :: bulk_sources(17:19)
+    real(r8) :: bulk_vals(17:19)
+    real(r8) :: tracer_sources(17:19)
 
     @assertEqual(3, size(tracer_vals))
     if (present(num_pts) .and. present(filter_pts)) then
@@ -69,12 +76,16 @@ contains
        call filter_from_range(1, 3, l_num_pts, l_filter_pts)
     end if
 
+    bulk_sources(:) = [bulk_source_other, bulk_source, bulk_source_other]
+    bulk_vals(:) = [bulk_val_other, bulk_val, bulk_val_other]
+    tracer_sources(:) = [tracer_source_other, tracer_source, tracer_source_other]
     call CalcTracerFromBulk( &
+         lb = 1, &
          num_pts = l_num_pts, &
          filter_pts = l_filter_pts, &
-         bulk_source = [bulk_source_other, bulk_source, bulk_source_other], &
-         bulk_val = [bulk_val_other, bulk_val, bulk_val_other], &
-         tracer_source = [tracer_source_other, tracer_source, tracer_source_other], &
+         bulk_source = bulk_sources, &
+         bulk_val = bulk_vals, &
+         tracer_source = tracer_sources, &
          tracer_val = tracer_vals)
 
   end subroutine doCall3pt

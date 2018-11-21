@@ -8,13 +8,15 @@ module Wateratm2lndType
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : iulog
   use clm_varcon     , only : spval
+  use ColumnType     , only : col
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d, CalcTracerFromBulkFixedRatio
+  use WaterTracerUtils, only : AllocateVar1d, CalcTracerFromBulk, CalcTracerFromBulkFixedRatio
   !
   implicit none
   save
@@ -33,12 +35,17 @@ module Wateratm2lndType
      real(r8), pointer :: forc_rain_downscaled_col      (:)   ! downscaled atm rain rate [mm/s]
      real(r8), pointer :: forc_snow_downscaled_col      (:)   ! downscaled atm snow rate [mm/s]
 
+     real(r8), pointer :: rain_to_snow_conversion_col   (:)   ! amount of rain converted to snow via precipitation repartitioning (mm/s)
+     real(r8), pointer :: snow_to_rain_conversion_col   (:)   ! amount of snow converted to rain via precipitation repartitioning (mm/s)
+
    contains
 
      procedure, public  :: Init
      procedure, public  :: Restart
      procedure, public  :: IsCommunicatedWithCoupler
      procedure, public  :: SetNondownscaledTracers
+     procedure, public  :: SetDownscaledTracers
+     procedure, public  :: Clean
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
@@ -116,6 +123,12 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          ival=ival)
+    call AllocateVar1d(var = this%rain_to_snow_conversion_col, name = 'rain_to_snow_conversion_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%snow_to_rain_conversion_col, name = 'snow_to_rain_conversion_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
   end subroutine InitAllocate
 
@@ -313,5 +326,134 @@ contains
 
   end subroutine SetNondownscaledTracers
 
+  !-----------------------------------------------------------------------
+  subroutine SetDownscaledTracers(this, bounds, num_allc, filter_allc, &
+       bulk)
+    !
+    ! !DESCRIPTION:
+    ! Set tracer values for the downscaled atm2lnd water quantities from the bulk quantities
+    !
+    ! !ARGUMENTS:
+    class(wateratm2lnd_type) , intent(inout) :: this
+    type(bounds_type)        , intent(in)    :: bounds
+    integer                  , intent(in)    :: num_allc       ! number of column points in filter_allc
+    integer                  , intent(in)    :: filter_allc(:) ! column filter for all points
+    class(wateratm2lnd_type) , intent(in)    :: bulk
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c, g
+
+    character(len=*), parameter :: subname = 'SetDownscaledTracers'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begg => bounds%begg, &
+         endg => bounds%endg, &
+         begc => bounds%begc, &
+         endc => bounds%endc &
+         )
+
+    call SetOneDownscaledTracer( &
+         bulk_not_downscaled = bulk%forc_q_not_downscaled_grc(begg:endg), &
+         tracer_not_downscaled = this%forc_q_not_downscaled_grc(begg:endg), &
+         bulk_downscaled = bulk%forc_q_downscaled_col(begc:endc), &
+         tracer_downscaled = this%forc_q_downscaled_col(begc:endc))
+
+    call SetOneDownscaledTracer( &
+         bulk_not_downscaled = bulk%forc_rain_not_downscaled_grc(begg:endg), &
+         tracer_not_downscaled = this%forc_rain_not_downscaled_grc(begg:endg), &
+         bulk_downscaled = bulk%rain_to_snow_conversion_col(begc:endc), &
+         tracer_downscaled = this%rain_to_snow_conversion_col(begc:endc))
+
+    call SetOneDownscaledTracer( &
+         bulk_not_downscaled = bulk%forc_snow_not_downscaled_grc(begg:endg), &
+         tracer_not_downscaled = this%forc_snow_not_downscaled_grc(begg:endg), &
+         bulk_downscaled = bulk%snow_to_rain_conversion_col(begc:endc), &
+         tracer_downscaled = this%snow_to_rain_conversion_col(begc:endc))
+
+    do fc = 1, num_allc
+       c = filter_allc(fc)
+       g = col%gridcell(c)
+       this%forc_rain_downscaled_col(c) = this%forc_rain_not_downscaled_grc(g) + &
+            this%snow_to_rain_conversion_col(c) - this%rain_to_snow_conversion_col(c)
+       this%forc_snow_downscaled_col(c) = this%forc_snow_not_downscaled_grc(g) + &
+            this%rain_to_snow_conversion_col(c) - this%snow_to_rain_conversion_col(c)
+    end do
+
+    end associate
+
+  contains
+    subroutine SetOneDownscaledTracer(bulk_not_downscaled, tracer_not_downscaled, &
+         bulk_downscaled, tracer_downscaled)
+      real(r8), intent(in) :: bulk_not_downscaled( bounds%begg: )
+      real(r8), intent(in) :: tracer_not_downscaled( bounds%begg: )
+      real(r8), intent(in) :: bulk_downscaled( bounds%begc: )
+      real(r8), intent(inout) :: tracer_downscaled( bounds%begc: )
+
+      integer  :: fc, c, g
+      real(r8) :: bulk_not_downscaled_col(bounds%begc:bounds%endc)
+      real(r8) :: tracer_not_downscaled_col(bounds%begc:bounds%endc)
+
+      SHR_ASSERT_ALL((ubound(bulk_not_downscaled) == [bounds%endg]), errMsg(sourcefile, __LINE__))
+      SHR_ASSERT_ALL((ubound(tracer_not_downscaled) == [bounds%endg]), errMsg(sourcefile, __LINE__))
+      SHR_ASSERT_ALL((ubound(bulk_downscaled) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+      SHR_ASSERT_ALL((ubound(tracer_downscaled) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+
+      associate( &
+           begc => bounds%begc, &
+           endc => bounds%endc &
+           )
+
+      do fc = 1, num_allc
+         c = filter_allc(fc)
+         g = col%gridcell(c)
+         ! Note that this copying of bulk_not_downscaled to bulk_not_downscaled_col will
+         ! be repeated for every tracer. At some point we might want to optimize this so
+         ! that it's just done once and shared for all tracers (probably by doing this
+         ! copy outside of the loop over tracers that calls SetDownscaledTracers).
+         bulk_not_downscaled_col(c) = bulk_not_downscaled(g)
+         tracer_not_downscaled_col(c) = tracer_not_downscaled(g)
+      end do
+
+      call CalcTracerFromBulk( &
+           lb = begc, &
+           num_pts = num_allc, &
+           filter_pts = filter_allc, &
+           bulk_source = bulk_not_downscaled_col(begc:endc), &
+           bulk_val = bulk_downscaled(begc:endc), &
+           tracer_source = tracer_not_downscaled_col(begc:endc), &
+           tracer_val = tracer_downscaled(begc:endc))
+
+      end associate
+
+    end subroutine SetOneDownscaledTracer
+
+  end subroutine SetDownscaledTracers
+
+  !-----------------------------------------------------------------------
+  subroutine Clean(this)
+    !
+    ! !DESCRIPTION:
+    ! Deallocate memory associated with this instance
+    !
+    ! !ARGUMENTS:
+    class(wateratm2lnd_type), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Clean'
+    !-----------------------------------------------------------------------
+
+    deallocate(this%forc_q_not_downscaled_grc)
+    deallocate(this%forc_rain_not_downscaled_grc)
+    deallocate(this%forc_snow_not_downscaled_grc)
+    deallocate(this%forc_q_downscaled_col)
+    deallocate(this%forc_flood_grc)
+    deallocate(this%forc_rain_downscaled_col)
+    deallocate(this%forc_snow_downscaled_col)
+    deallocate(this%rain_to_snow_conversion_col)
+    deallocate(this%snow_to_rain_conversion_col)
+
+  end subroutine Clean
 
 end module Wateratm2lndType

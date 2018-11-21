@@ -32,6 +32,7 @@ module atm2lndMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: set_atm2lnd_non_downscaled_tracers ! Set tracer values for the non-downscaled atm2lnd water quantities
+  public :: set_atm2lnd_downscaled_tracers     ! Set tracer values for the downscaled atm2lnd water quantities
   public :: downscale_forcings                 ! Downscale atm forcing fields from gridcell to column
 
   ! The following routine is public for the sake of unit testing; it should not be
@@ -81,6 +82,36 @@ contains
     end do
 
   end subroutine set_atm2lnd_non_downscaled_tracers
+
+  !-----------------------------------------------------------------------
+  subroutine set_atm2lnd_downscaled_tracers(bounds, num_allc, filter_allc, water_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set tracer values for the downscaled atm2lnd water quantities
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in) :: bounds
+    integer           , intent(in) :: num_allc       ! number of column points in filter_allc
+    integer           , intent(in) :: filter_allc(:) ! column filter for all points
+    type(water_type)  , intent(in) :: water_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'set_atm2lnd_downscaled_tracers'
+    !-----------------------------------------------------------------------
+
+    do i = water_inst%tracers_beg, water_inst%tracers_end
+       associate( &
+            wateratm2lnd_inst => water_inst%bulk_and_tracers(i)%wateratm2lnd_inst)
+
+       call wateratm2lnd_inst%SetDownscaledTracers( &
+            bounds, num_allc, filter_allc, water_inst%wateratm2lndbulk_inst)
+
+       end associate
+    end do
+
+  end subroutine set_atm2lnd_downscaled_tracers
 
   !-----------------------------------------------------------------------
   subroutine downscale_forcings(bounds, &

@@ -123,7 +123,7 @@ contains
   end subroutine AllocateVar2d
 
   !-----------------------------------------------------------------------
-  subroutine CalcTracerFromBulk(num_pts, filter_pts, &
+  subroutine CalcTracerFromBulk(lb, num_pts, filter_pts, &
        bulk_source, bulk_val, tracer_source, tracer_val)
     !
     ! !DESCRIPTION:
@@ -138,12 +138,13 @@ contains
     ! values elsewhere
     !
     ! !ARGUMENTS:
-    integer  , intent(in)    :: num_pts          ! number of points in the filter
-    integer  , intent(in)    :: filter_pts(:)    ! filter in which tracer_val should be updated
-    real(r8) , intent(in)    :: bulk_source(:)   ! values of the source for this variable, for bulk
-    real(r8) , intent(in)    :: bulk_val(:)      ! values of the variable of interest, for bulk
-    real(r8) , intent(in)    :: tracer_source(:) ! values of the source for this variable, for the tracer
-    real(r8) , intent(inout) :: tracer_val(:)    ! output values of the variable of interest, for the tracer
+    integer  , intent(in)    :: lb                 ! lower bound for arrays
+    integer  , intent(in)    :: num_pts            ! number of points in the filter
+    integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
+    real(r8) , intent(in)    :: bulk_source(lb:)   ! values of the source for this variable, for bulk
+    real(r8) , intent(in)    :: bulk_val(lb:)      ! values of the variable of interest, for bulk
+    real(r8) , intent(in)    :: tracer_source(lb:) ! values of the source for this variable, for the tracer
+    real(r8) , intent(inout) :: tracer_val(lb:)    ! output values of the variable of interest, for the tracer
     !
     ! !LOCAL VARIABLES:
     integer :: num

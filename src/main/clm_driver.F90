@@ -61,7 +61,8 @@ module clm_driver
   !
   use filterMod              , only : setFilters
   !
-  use atm2lndMod             , only : set_atm2lnd_non_downscaled_tracers, downscale_forcings
+  use atm2lndMod             , only : set_atm2lnd_non_downscaled_tracers
+  use atm2lndMod             , only : downscale_forcings, set_atm2lnd_downscaled_tracers
   use lnd2atmMod             , only : lnd2atm
   use lnd2glcMod             , only : lnd2glc_type
   !
@@ -483,6 +484,10 @@ contains
        call downscale_forcings(bounds_clump, &
             topo_inst, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, &
             eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
+
+       call set_atm2lnd_downscaled_tracers(bounds_clump, &
+            filter(nc)%num_allc, filter(nc)%allc, &
+            water_inst)
 
        if (water_inst%DoConsistencyCheck()) then
           ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
