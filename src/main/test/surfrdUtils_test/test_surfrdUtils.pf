@@ -23,13 +23,18 @@ contains
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 0
      integer :: m
-     real(r8) :: wt_cft(begg:endg,1)  ! needed to call the subroutine...
+     real(r8) :: wt_cft(begg:endg,1)  ! need second dimension > 0 to call the subroutine...
      real(r8) :: fert_cft(begg:endg,1)  ! ...successfully
+     real(r8) :: wt_cft_expected(begg:endg,1)
+     real(r8) :: fert_cft_expected(begg:endg,1)
+
+     wt_cft(begg:,1) = 0.0_r8  ! input values
+     fert_cft(begg:,1) = 0.0_r8  ! input values
+     wt_cft_expected(begg:,1) = 0.0_r8  ! output values
+     fert_cft_expected(begg:,1) = 0.0_r8  ! output values
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
-     wt_cft(begg:,1) = 0.0_r8
-     fert_cft(begg:,1) = 0.0_r8
      nc3crop     = 15
      nc3irrig    = nc3crop + 1
      do m = 1, nc3irrig
@@ -46,8 +51,8 @@ contains
      call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true.)
 
      ! Now check that are correct
-     @assertEqual(wt_cft(begg:,1), (/0.0_r8,0.0_r8/))
-     @assertEqual(fert_cft(begg:,1), (/0.0_r8,0.0_r8/))
+     @assertEqual(wt_cft(begg:,1), wt_cft_expected(begg:,1))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_none
@@ -65,15 +70,25 @@ contains
      integer :: m
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     wt_cft(begg:,1) = 25.0_r8  ! input values
+     wt_cft(begg:,2) = 75.0_r8  ! input values
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,1) = 25.0_r8  ! magnitude of these values does not matter
+     fert_cft(begg:,2) = 75.0_r8  ! as long as they come back the same in this test
+
+     wt_cft_expected(begg:,1) = 100.0_r8  ! output values
+     wt_cft_expected(begg:,2) = 0.0_r8  ! output values
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = 25.0_r8  ! output values
+     fert_cft_expected(begg:,2) = 75.0_r8  ! output values
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
-     wt_cft(begg:,1) = 25.0_r8
-     wt_cft(begg:,2) = 75.0_r8
-     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
-                              "should not trigger an error")
-     fert_cft(begg:,1) = 25.0_r8  ! these values do not matter; just make sure
-     fert_cft(begg:,2) = 75.0_r8  ! that they come back the same in this test
      nc3crop     = 15
      nc3irrig    = nc3crop + 1
      do m = 1, nc3irrig
@@ -94,13 +109,13 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,1), (/100.0_r8,100.0_r8/))
-     @assertEqual(wt_cft(begg:,2), (/0.0_r8,0.0_r8/))
+     @assertEqual(wt_cft(begg:,1), wt_cft_expected(begg:,1))
+     @assertEqual(wt_cft(begg:,2), wt_cft_expected(begg:,2))
      ! INTENTIONAL? As written, subr. collapse_crop_types does NOT take
      ! -----------  the avg fert_cft of the irrigated and unirrigated when
      !              irrigate = .false.. Assuming intentional for now.
-     @assertEqual(fert_cft(begg:,1), (/25.0_r8,25.0_r8/))
-     @assertEqual(fert_cft(begg:,2), (/75.0_r8,75.0_r8/))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+     @assertEqual(fert_cft(begg:,2), fert_cft_expected(begg:,2))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_16_to_15
@@ -118,15 +133,25 @@ contains
      integer :: m
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     wt_cft(begg:,1) = 25.0_r8  ! input values
+     wt_cft(begg:,2) = 75.0_r8  ! input values
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,1) = 25.0_r8  ! magnitude of these values does not matter
+     fert_cft(begg:,2) = 75.0_r8  ! as long as they come back the same in this test
+
+     wt_cft_expected(begg:,1) = 25.0_r8  ! output values
+     wt_cft_expected(begg:,2) = 75.0_r8  ! output values
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = 25.0_r8  ! output values
+     fert_cft_expected(begg:,2) = 75.0_r8  ! output values
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
-     wt_cft(begg:,1) = 25.0_r8
-     wt_cft(begg:,2) = 75.0_r8
-     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
-                              "should not trigger an error")
-     fert_cft(begg:,1) = 25.0_r8  ! these values do not matter; just make sure
-     fert_cft(begg:,2) = 75.0_r8  ! that they come back the same in this test
      nc3crop     = 15
      nc3irrig    = nc3crop + 1
      do m = 1, nc3irrig
@@ -147,10 +172,10 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,1), (/25.0_r8,25.0_r8/))
-     @assertEqual(wt_cft(begg:,2), (/75.0_r8,75.0_r8/))
-     @assertEqual(fert_cft(begg:,1), (/25.0_r8,25.0_r8/))
-     @assertEqual(fert_cft(begg:,2), (/75.0_r8,75.0_r8/))
+     @assertEqual(wt_cft(begg:,1), wt_cft_expected(begg:,1))
+     @assertEqual(wt_cft(begg:,2), wt_cft_expected(begg:,2))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+     @assertEqual(fert_cft(begg:,2), fert_cft_expected(begg:,2))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_16_to_16
@@ -169,19 +194,33 @@ contains
      integer :: m
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     wt_cft(begg:,1) = 15.0_r8  ! input values
+     wt_cft(begg:,2) = 20.0_r8  ! input values
+     wt_cft(begg:,3) = 30.0_r8  ! input values
+     wt_cft(begg:,4) = 35.0_r8  ! input values
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,1) = 15.0_r8  ! input values
+     fert_cft(begg:,2) = 20.0_r8  ! input values
+     fert_cft(begg:,3) = 30.0_r8  ! input values
+     fert_cft(begg:,4) = 35.0_r8  ! input values
+
+     wt_cft_expected(begg:,1) = 45.0_r8  ! output values
+     wt_cft_expected(begg:,2) = 55.0_r8  ! output values
+     wt_cft_expected(begg:,3) = 0.0_r8  ! output values
+     wt_cft_expected(begg:,4) = 0.0_r8  ! output values
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = 25.0_r8  ! output values
+     fert_cft_expected(begg:,2) = 29.54545454545454545_r8  ! output values
+     fert_cft_expected(begg:,3) = 0.0_r8  ! output values
+     fert_cft_expected(begg:,4) = 0.0_r8  ! output values
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
-     wt_cft(begg:,1) = 15.0_r8
-     wt_cft(begg:,2) = 20.0_r8
-     wt_cft(begg:,3) = 30.0_r8
-     wt_cft(begg:,4) = 35.0_r8
-     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
-                              "should not trigger an error")
-     fert_cft(begg:,1) = 15.0_r8  ! these values do not matter; just make sure
-     fert_cft(begg:,2) = 20.0_r8
-     fert_cft(begg:,3) = 30.0_r8
-     fert_cft(begg:,4) = 35.0_r8  ! that they come back the same in this test
      nc3crop     = 15
      nc3irrig    = nc3crop + 1
      do m = 1, nc3irrig
@@ -204,10 +243,10 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,1), (/45.0_r8,45.0_r8/))
-     @assertEqual(wt_cft(begg:,2), (/55.0_r8,55.0_r8/))
-     @assertEqual(fert_cft(begg:,1), (/25.0_r8,25.0_r8/))
-     @assertEqual(fert_cft(begg:,2), (/29.54545454545454545_r8,29.54545454545454545_r8/))
+     @assertEqual(wt_cft(begg:,1), wt_cft_expected(begg:,1))
+     @assertEqual(wt_cft(begg:,2), wt_cft_expected(begg:,2))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+     @assertEqual(fert_cft(begg:,2), fert_cft_expected(begg:,2))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_18_to_16
@@ -226,19 +265,33 @@ contains
      integer :: m
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     wt_cft(begg:,1) = 15.0_r8  ! input values
+     wt_cft(begg:,2) = 20.0_r8  ! input values
+     wt_cft(begg:,3) = 30.0_r8  ! input values
+     wt_cft(begg:,4) = 35.0_r8  ! input values
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,1) = 15.0_r8  ! input values
+     fert_cft(begg:,2) = 20.0_r8  ! input values
+     fert_cft(begg:,3) = 30.0_r8  ! input values
+     fert_cft(begg:,4) = 35.0_r8  ! input values
+
+     wt_cft_expected(begg:,1) = 100.0_r8  ! output values
+     wt_cft_expected(begg:,2) = 0.0_r8  ! output values
+     wt_cft_expected(begg:,3) = 0.0_r8  ! output values
+     wt_cft_expected(begg:,4) = 0.0_r8  ! output values
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = 24.75_r8  ! output values
+     fert_cft_expected(begg:,2) = 0.0_r8  ! output values
+     fert_cft_expected(begg:,3) = 0.0_r8  ! output values
+     fert_cft_expected(begg:,4) = 0.0_r8  ! output values
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
-     wt_cft(begg:,1) = 15.0_r8
-     wt_cft(begg:,2) = 20.0_r8
-     wt_cft(begg:,3) = 30.0_r8
-     wt_cft(begg:,4) = 35.0_r8
-     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
-                              "should not trigger an error")
-     fert_cft(begg:,1) = 15.0_r8  ! these values do not matter; just make sure
-     fert_cft(begg:,2) = 20.0_r8
-     fert_cft(begg:,3) = 30.0_r8
-     fert_cft(begg:,4) = 35.0_r8  ! that they come back the same in this test
      nc3crop     = 15
      nc3irrig    = nc3crop + 1
      do m = 1, nc3irrig
@@ -261,9 +314,9 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,1), (/100.0_r8,100.0_r8/))
-     @assertEqual(wt_cft(begg:,2), (/0.0_r8,0.0_r8/))
-     @assertEqual(fert_cft(begg:,1), (/24.75_r8,24.75_r8/))
+     @assertEqual(wt_cft(begg:,1), wt_cft_expected(begg:,1))
+     @assertEqual(wt_cft(begg:,2), wt_cft_expected(begg:,2))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_18_to_15
@@ -282,19 +335,33 @@ contains
      integer :: m
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     wt_cft(begg:,1) = 15.0_r8  ! input values
+     wt_cft(begg:,2) = 20.0_r8  ! input values
+     wt_cft(begg:,3) = 30.0_r8  ! input values
+     wt_cft(begg:,4) = 35.0_r8  ! input values
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,1) = 15.0_r8  ! magnitude of these values does not matter
+     fert_cft(begg:,2) = 20.0_r8
+     fert_cft(begg:,3) = 30.0_r8
+     fert_cft(begg:,4) = 35.0_r8  ! as long as they come back the same in this test
+
+     wt_cft_expected(begg:,1) = 15.0_r8  ! output values
+     wt_cft_expected(begg:,2) = 20.0_r8  ! output values
+     wt_cft_expected(begg:,3) = 30.0_r8  ! output values
+     wt_cft_expected(begg:,4) = 35.0_r8  ! output values
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = 15.0_r8  ! output values
+     fert_cft_expected(begg:,2) = 20.0_r8  ! output values
+     fert_cft_expected(begg:,3) = 30.0_r8  ! output values
+     fert_cft_expected(begg:,4) = 35.0_r8  ! output values
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
-     wt_cft(begg:,1) = 15.0_r8
-     wt_cft(begg:,2) = 20.0_r8
-     wt_cft(begg:,3) = 30.0_r8
-     wt_cft(begg:,4) = 35.0_r8
-     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
-                              "should not trigger an error")
-     fert_cft(begg:,1) = 15.0_r8  ! these values do not matter; just make sure
-     fert_cft(begg:,2) = 20.0_r8
-     fert_cft(begg:,3) = 30.0_r8
-     fert_cft(begg:,4) = 35.0_r8  ! that they come back the same in this test
      nc3crop     = 15
      nc3irrig    = nc3crop + 1
      do m = 1, nc3irrig
@@ -317,14 +384,14 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,1), (/15.0_r8,15.0_r8/))
-     @assertEqual(wt_cft(begg:,2), (/20.0_r8,20.0_r8/))
-     @assertEqual(wt_cft(begg:,3), (/30.0_r8,30.0_r8/))
-     @assertEqual(wt_cft(begg:,4), (/35.0_r8,35.0_r8/))
-     @assertEqual(fert_cft(begg:,1), (/15.0_r8,15.0_r8/))
-     @assertEqual(fert_cft(begg:,2), (/20.0_r8,20.0_r8/))
-     @assertEqual(fert_cft(begg:,3), (/30.0_r8,30.0_r8/))
-     @assertEqual(fert_cft(begg:,4), (/35.0_r8,35.0_r8/))
+     @assertEqual(wt_cft(begg:,1), wt_cft_expected(begg:,1))
+     @assertEqual(wt_cft(begg:,2), wt_cft_expected(begg:,2))
+     @assertEqual(wt_cft(begg:,3), wt_cft_expected(begg:,3))
+     @assertEqual(wt_cft(begg:,4), wt_cft_expected(begg:,4))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+     @assertEqual(fert_cft(begg:,2), fert_cft_expected(begg:,2))
+     @assertEqual(fert_cft(begg:,3), fert_cft_expected(begg:,3))
+     @assertEqual(fert_cft(begg:,4), fert_cft_expected(begg:,4))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_18_to_18
@@ -343,23 +410,41 @@ contains
      integer :: m
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     wt_cft(begg:,1) = 5.0_r8  ! input values
+     wt_cft(begg:,2) = 10.0_r8  ! input values
+     wt_cft(begg:,3) = 20.0_r8  ! input values
+     wt_cft(begg:,4) = 30.0_r8  ! input values
+     wt_cft(begg:,5) = 15.0_r8  ! input values
+     wt_cft(begg:,6) = 20.0_r8  ! input values
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,1) = 5.0_r8  ! input values
+     fert_cft(begg:,2) = 10.0_r8  ! input values
+     fert_cft(begg:,3) = 20.0_r8  ! input values
+     fert_cft(begg:,4) = 30.0_r8  ! input values
+     fert_cft(begg:,5) = 15.0_r8  ! input values
+     fert_cft(begg:,6) = 20.0_r8  ! input values
+
+     wt_cft_expected(begg:,1) = 5.0_r8  ! output values
+     wt_cft_expected(begg:,2) = 10.0_r8  ! output values
+     wt_cft_expected(begg:,3) = 0.0_r8  ! output values
+     wt_cft_expected(begg:,4) = 0.0_r8  ! output values
+     wt_cft_expected(begg:,5) = 35.0_r8  ! output values
+     wt_cft_expected(begg:,6) = 50.0_r8  ! output values
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = 5.0_r8  ! output values
+     fert_cft_expected(begg:,2) = 10.0_r8  ! output values
+     fert_cft_expected(begg:,3) = 20.0_r8  ! output values
+     fert_cft_expected(begg:,4) = 30.0_r8  ! output values
+     fert_cft_expected(begg:,5) = 17.857142857142857142857_r8  ! output values
+     fert_cft_expected(begg:,6) = 26.0_r8  ! output values
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
-     wt_cft(begg:,1) = 5.0_r8
-     wt_cft(begg:,2) = 10.0_r8
-     wt_cft(begg:,3) = 20.0_r8
-     wt_cft(begg:,4) = 30.0_r8
-     wt_cft(begg:,5) = 15.0_r8
-     wt_cft(begg:,6) = 20.0_r8
-     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
-                              "should not trigger an error")
-     fert_cft(begg:,1) = 5.0_r8  ! these values do not matter; just make sure
-     fert_cft(begg:,2) = 10.0_r8
-     fert_cft(begg:,3) = 20.0_r8
-     fert_cft(begg:,4) = 30.0_r8
-     fert_cft(begg:,5) = 15.0_r8
-     fert_cft(begg:,6) = 20.0_r8  ! that they come back the same in this test
      nc3crop     = 15
      nc3irrig    = nc3crop + 1
      do m = 1, nc3irrig
@@ -384,18 +469,18 @@ contains
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     @assertEqual(wt_cft(begg:,1), (/5.0_r8,5.0_r8/))
-     @assertEqual(wt_cft(begg:,2), (/10.0_r8,10.0_r8/))
-     @assertEqual(wt_cft(begg:,3), (/0.0_r8,0.0_r8/))
-     @assertEqual(wt_cft(begg:,4), (/0.0_r8,0.0_r8/))
-     @assertEqual(wt_cft(begg:,5), (/35.0_r8,35.0_r8/))
-     @assertEqual(wt_cft(begg:,6), (/50.0_r8,50.0_r8/))
-     @assertEqual(fert_cft(begg:,1), (/5.0_r8,5.0_r8/))
-     @assertEqual(fert_cft(begg:,2), (/10.0_r8,10.0_r8/))
-     @assertEqual(fert_cft(begg:,3), (/20.0_r8,20.0_r8/))
-     @assertEqual(fert_cft(begg:,4), (/30.0_r8,30.0_r8/))
-     @assertEqual(fert_cft(begg:,5), (/17.857142857142857142857_r8,17.857142857142857142857_r8/))
-     @assertEqual(fert_cft(begg:,6), (/26.0_r8,26.0_r8/))
+     @assertEqual(wt_cft(begg:,1), wt_cft_expected(begg:,1))
+     @assertEqual(wt_cft(begg:,2), wt_cft_expected(begg:,2))
+     @assertEqual(wt_cft(begg:,3), wt_cft_expected(begg:,3))
+     @assertEqual(wt_cft(begg:,4), wt_cft_expected(begg:,4))
+     @assertEqual(wt_cft(begg:,5), wt_cft_expected(begg:,5))
+     @assertEqual(wt_cft(begg:,6), wt_cft_expected(begg:,6))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+     @assertEqual(fert_cft(begg:,2), fert_cft_expected(begg:,2))
+     @assertEqual(fert_cft(begg:,3), fert_cft_expected(begg:,3))
+     @assertEqual(fert_cft(begg:,4), fert_cft_expected(begg:,4))
+     @assertEqual(fert_cft(begg:,5), fert_cft_expected(begg:,5))
+     @assertEqual(fert_cft(begg:,6), fert_cft_expected(begg:,6))
 
      call pftcon%clean()
   end subroutine test_collapse_crop_types_20_to_18
