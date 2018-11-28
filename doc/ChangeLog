@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev017
 Originator(s):  slevis (Samuel Levis, Slevis Consulting LLC,303-665-1310)
-Date: Wed Nov 28 13:39:03 MST 2018
+Date: Wed Nov 28 14:27:50 MST 2018
 One-line Summary: Merge the collapse2gencrop branch
 
 Purpose of changes
@@ -49,6 +49,12 @@ Substantial timing or memory changes: No
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
 NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+   The "irrigate" attribute should now be removed from all fsurdat files for namelist generation.
+   Thus irrigate on or off is now an option for non-crop cases.
+
 
 Renamed parameters:
 maxpatch_pft is obsolete; remove from namelist-related scripts in future PR
