@@ -52,7 +52,7 @@ contains
     ! that bound the initial model date)
     !
     ! !USES:
-    use clm_varpar     , only : numpft, maxpatch_pft, natpft_size
+    use clm_varpar     , only : maxveg, natpft_size
     use ncdio_pio
     use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
     !
@@ -67,13 +67,6 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
-
-    ! Error check
-
-    if ( maxpatch_pft /= numpft+1 )then
-       call endrun(msg=' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case'//&
-            errMsg(sourcefile, __LINE__) )
-    end if
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
@@ -260,7 +253,7 @@ contains
     character(len=32) :: subname='dynpft_interp' ! subroutine name
     !-----------------------------------------------------------------------
 
-    ! assumes that maxpatch_pft = numpft + 1, that each landunit has only 1 column, 
+    ! assumes that each landunit has only 1 column, 
     ! and SCAM and CNDV have not been defined
     !
     ! NOTE(wjs, 2014-12-10) I'm not sure if there is still the requirement that SCAM

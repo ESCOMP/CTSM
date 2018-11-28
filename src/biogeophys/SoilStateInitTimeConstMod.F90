@@ -95,7 +95,7 @@ contains
     use spmdMod             , only : masterproc
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use ncdio_pio           , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
-    use clm_varpar          , only : numpft, numrad
+    use clm_varpar          , only : numrad
     use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
