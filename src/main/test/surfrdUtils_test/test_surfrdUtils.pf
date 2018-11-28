@@ -60,8 +60,8 @@ contains
      wt_cft(begg:,1) = 0.0_r8
      fert_cft(begg:,1) = 0.0_r8
      ! Output values expected
-     wt_cft_expected(begg:,1) = 0.0_r8
-     fert_cft_expected(begg:,1) = 0.0_r8
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1)
+     fert_cft_expected(begg:,1) = fert_cft(begg:,1)
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
@@ -92,20 +92,17 @@ contains
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
 
      ! Input values
-     wt_cft(begg:,1) = 25.0_r8
-     wt_cft(begg:,2) = 75.0_r8
+     wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
      call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft(begg:,1) = 25.0_r8  ! magnitude of these values does not matter
-     fert_cft(begg:,2) = 75.0_r8  ! as long as they come back the same in this test
+     fert_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(fert_cft))  ! magnitude of these values does not matter as long as they come back the same in this test
 
      ! Output values expected
-     wt_cft_expected(begg:,1) = 100.0_r8
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1) + wt_cft(begg:,2)
      wt_cft_expected(begg:,2) = 0.0_r8
      call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft_expected(begg:,1) = 25.0_r8
-     fert_cft_expected(begg:,2) = 75.0_r8
+     fert_cft_expected = fert_cft
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
@@ -143,20 +140,16 @@ contains
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
 
      ! Input values
-     wt_cft(begg:,1) = 25.0_r8
-     wt_cft(begg:,2) = 75.0_r8
+     wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
      call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft(begg:,1) = 25.0_r8  ! magnitude of these values does not matter
-     fert_cft(begg:,2) = 75.0_r8  ! as long as they come back the same in this test
+     fert_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(fert_cft))  ! magnitude of these values does not matter as long as they come back the same in this test
 
      ! Output values expected
-     wt_cft_expected(begg:,1) = 25.0_r8
-     wt_cft_expected(begg:,2) = 75.0_r8
+     wt_cft_expected = wt_cft
      call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft_expected(begg:,1) = 25.0_r8
-     fert_cft_expected(begg:,2) = 75.0_r8
+     fert_cft_expected = fert_cft
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
@@ -192,24 +185,23 @@ contains
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
 
      ! Input values
-     wt_cft(begg:,1) = 15.0_r8
-     wt_cft(begg:,2) = 20.0_r8
-     wt_cft(begg:,3) = 30.0_r8
-     wt_cft(begg:,4) = 35.0_r8
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
      call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft(begg:,1) = 15.0_r8
-     fert_cft(begg:,2) = 20.0_r8
-     fert_cft(begg:,3) = 30.0_r8
-     fert_cft(begg:,4) = 35.0_r8
+     fert_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(fert_cft))
 
      ! Output values expected
-     wt_cft_expected(begg:,1) = 45.0_r8  ! collapsing to nc3crop & nc3irrig...
-     wt_cft_expected(begg:,2) = 55.0_r8  ! ...so only entries 1 & 2 matter
+     ! Collapsing to nc3crop & nc3irrig so only entries 1 & 2 matter
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1) + wt_cft(begg:,3)
+     wt_cft_expected(begg:,2) = wt_cft(begg:,2) + wt_cft(begg:,4)
      call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft_expected(begg:,1) = 25.0_r8  ! collapsing to nc3crop & nc3irrig...
-     fert_cft_expected(begg:,2) = 29.54545454545454545_r8  ! ...so only entries 1 & 2 matter
+     fert_cft_expected(begg:,1) = (fert_cft(begg:,1) * wt_cft(begg:,1) +  &
+                                   fert_cft(begg:,3) * wt_cft(begg:,3)) / &
+                                  (wt_cft(begg:,1) + wt_cft(begg:,3))
+     fert_cft_expected(begg:,2) = (fert_cft(begg:,2) * wt_cft(begg:,2) +  &
+                                   fert_cft(begg:,4) * wt_cft(begg:,4)) / &
+                                  (wt_cft(begg:,2) + wt_cft(begg:,4))
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
@@ -247,23 +239,23 @@ contains
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
 
      ! Input values
-     wt_cft(begg:,1) = 15.0_r8
-     wt_cft(begg:,2) = 20.0_r8
-     wt_cft(begg:,3) = 30.0_r8
-     wt_cft(begg:,4) = 35.0_r8
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
      call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft(begg:,1) = 15.0_r8
-     fert_cft(begg:,2) = 20.0_r8
-     fert_cft(begg:,3) = 30.0_r8
-     fert_cft(begg:,4) = 35.0_r8
+     fert_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(fert_cft))
 
      ! Output values expected
-     wt_cft_expected(begg:,1) = 100.0_r8  ! collapsing everything to nc3crop...
-     wt_cft_expected(begg:,2) = 0.0_r8  ! ...so only entries 1 and 2 matter here
+     ! Collapsing to nc3crop so only entries 1 & 2 matter
+     wt_cft_expected(begg:,1) = sum(wt_cft(begg:,:), dim=2) 
+     wt_cft_expected(begg:,2) = 0.0_r8
      call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft_expected(begg:,1) = 24.75_r8  ! collapsing everything to nc3crop
+     ! Collapsing to nc3crop so only entry 1 matters
+     fert_cft_expected(begg:,1) = (fert_cft(begg:,1) *                   &
+                                   (wt_cft(begg:,1) + wt_cft(begg:,2)) + &
+                                   fert_cft(begg:,3) *                   &
+                                   (wt_cft(begg:,3) + wt_cft(begg:,4))) / &
+                                  wt_cft_expected(begg:,1)
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
@@ -301,28 +293,16 @@ contains
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
 
      ! Input values
-     wt_cft(begg:,1) = 15.0_r8
-     wt_cft(begg:,2) = 20.0_r8
-     wt_cft(begg:,3) = 30.0_r8
-     wt_cft(begg:,4) = 35.0_r8
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
      call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft(begg:,1) = 15.0_r8  ! magnitude of these values does not matter
-     fert_cft(begg:,2) = 20.0_r8
-     fert_cft(begg:,3) = 30.0_r8
-     fert_cft(begg:,4) = 35.0_r8  ! as long as they come back the same in this test
+     fert_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(fert_cft))  ! magnitude of these values does not matter as long as they come back the same in this test
 
      ! Output values expected
-     wt_cft_expected(begg:,1) = 15.0_r8
-     wt_cft_expected(begg:,2) = 20.0_r8
-     wt_cft_expected(begg:,3) = 30.0_r8
-     wt_cft_expected(begg:,4) = 35.0_r8
+     wt_cft_expected(begg:,:) = wt_cft(begg:,:)
      call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft_expected(begg:,1) = 15.0_r8
-     fert_cft_expected(begg:,2) = 20.0_r8
-     fert_cft_expected(begg:,3) = 30.0_r8
-     fert_cft_expected(begg:,4) = 35.0_r8
+     fert_cft_expected(begg:,:) = fert_cft(begg:,:)
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
@@ -360,36 +340,24 @@ contains
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
 
      ! Input values
-     wt_cft(begg:,1) = 5.0_r8
-     wt_cft(begg:,2) = 10.0_r8
-     wt_cft(begg:,3) = 20.0_r8
-     wt_cft(begg:,4) = 30.0_r8
-     wt_cft(begg:,5) = 15.0_r8
-     wt_cft(begg:,6) = 20.0_r8
+     wt_cft(begg:,:) = reshape((/ 5._r8, 5._r8, 10._r8, 10._r8, 20._r8, 20._r8, 30._r8, 30._r8, 15._r8, 15._r8, 20._r8, 20._r8 /), shape(wt_cft))
      call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft(begg:,1) = 5.0_r8
-     fert_cft(begg:,2) = 10.0_r8
-     fert_cft(begg:,3) = 20.0_r8
-     fert_cft(begg:,4) = 30.0_r8
-     fert_cft(begg:,5) = 15.0_r8
-     fert_cft(begg:,6) = 20.0_r8
+     fert_cft(begg:,:) = reshape((/ 5._r8, 5._r8, 10._r8, 10._r8, 20._r8, 20._r8, 30._r8, 30._r8, 15._r8, 15._r8, 20._r8, 20._r8 /), shape(fert_cft))
 
      ! Output values expected
-     wt_cft_expected(begg:,1) = 5.0_r8
-     wt_cft_expected(begg:,2) = 10.0_r8
-     wt_cft_expected(begg:,3) = 0.0_r8
-     wt_cft_expected(begg:,4) = 0.0_r8
-     wt_cft_expected(begg:,5) = 35.0_r8
-     wt_cft_expected(begg:,6) = 50.0_r8
+     wt_cft_expected(begg:,1:2) = wt_cft(begg:,1:2)
+     wt_cft_expected(begg:,3:4) = 0.0_r8
+     wt_cft_expected(begg:,5:6) = wt_cft(begg:,3:4) + wt_cft(begg:,5:6)
      call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     fert_cft_expected(begg:,1) = 5.0_r8
-     fert_cft_expected(begg:,2) = 10.0_r8
-     fert_cft_expected(begg:,3) = 20.0_r8
-     fert_cft_expected(begg:,4) = 30.0_r8
-     fert_cft_expected(begg:,5) = 17.857142857142857142857_r8
-     fert_cft_expected(begg:,6) = 26.0_r8
+     fert_cft_expected(begg:,1:4) = fert_cft(begg:,1:4)
+     fert_cft_expected(begg:,5) = (fert_cft(begg:,3) * wt_cft(begg:,3) + &
+                                   fert_cft(begg:,5) * wt_cft(begg:,5)) / &
+                                  wt_cft_expected(begg:,5)
+     fert_cft_expected(begg:,6) = (fert_cft(begg:,4) * wt_cft(begg:,4) + &
+                                   fert_cft(begg:,6) * wt_cft(begg:,6)) / &
+                                  wt_cft_expected(begg:,6)
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
