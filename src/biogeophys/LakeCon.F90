@@ -16,6 +16,7 @@ module LakeCon
   ! !PUBLIC TYPES:
   implicit none
   save
+  private   ! By default make everything private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: LakeConInit
@@ -27,7 +28,7 @@ module LakeCon
 
   ! temperature of maximum water density (K)
   ! This is from Hostetler and Bartlein (1990); more updated sources suggest 277.13 K.
-  real(r8), parameter :: tdmax = 277._r8   
+  real(r8), public, parameter :: tdmax = 277._r8   
 
   !------------------------------------------------------------------
   ! Lake Model tuneable constants 
@@ -35,33 +36,33 @@ module LakeCon
 
   ! lake emissivity. This is used for both frozen and unfrozen lakes. 
   ! This is pulled in from CLM4 and the reference is unclear.
-  real(r8), parameter :: emg_lake = 0.97_r8
+  real(r8), public, parameter :: emg_lake = 0.97_r8
 
   ! The fraction of the visible (e.g. vis not nir from atm) sunlight
   ! absorbed in ~1 m of water (the surface layer za_lake).
   ! This is roughly the fraction over 700 nm but may depend on the details
   ! of atmospheric radiative transfer. As long as NIR = 700 nm and up, this can be zero.
-  real(r8) :: betavis = 0.0_r8            
+  real(r8), public :: betavis = 0.0_r8            
 
   ! Momentum Roughness length over frozen lakes without snow  (m)
   ! Typical value found in the literature, and consistent with Mironov expressions.
   ! See e.g. Morris EM 1989, Andreas EL 1987, Guest & Davidson 1991 (as cited in Vavrus 1996)
-  real(r8), parameter :: z0frzlake = 0.001_r8  
+  real(r8), public, parameter :: z0frzlake = 0.001_r8  
 
   ! Base of surface light absorption layer for lakes (m)
-  real(r8), parameter :: za_lake = 0.6_r8           
+  real(r8), public, parameter :: za_lake = 0.6_r8           
 
   ! For calculating prognostic roughness length
-  real(r8), parameter :: cur0    = 0.01_r8  ! min. Charnock parameter
-  real(r8), parameter :: cus     = 0.1_r8   ! empirical constant for roughness under smooth flow
-  real(r8), parameter :: curm    = 0.1_r8   ! maximum Charnock parameter
+  real(r8), public, parameter :: cur0    = 0.01_r8  ! min. Charnock parameter
+  real(r8), public, parameter :: cus     = 0.1_r8   ! empirical constant for roughness under smooth flow
+  real(r8), public, parameter :: curm    = 0.1_r8   ! maximum Charnock parameter
 
   ! The following will be set in initLake based on namelists. !TODO - fix this commend
-  real(r8)            :: fcrit              ! critical dimensionless fetch for Charnock parameter.
-  real(r8)            :: minz0lake          ! (m) Minimum allowed roughness length for unfrozen lakes.
+  real(r8), public    :: fcrit              ! critical dimensionless fetch for Charnock parameter.
+  real(r8), public    :: minz0lake          ! (m) Minimum allowed roughness length for unfrozen lakes.
 
   ! For calculating enhanced diffusivity
-  real(r8), parameter :: n2min = 7.5e-5_r8 ! (s^-2) (yields diffusivity about 6 times km) ! Fang & Stefan 1996
+  real(r8), public, parameter :: n2min = 7.5e-5_r8 ! (s^-2) (yields diffusivity about 6 times km) ! Fang & Stefan 1996
 
   ! Note, this will be adjusted in initLake if the timestep is not 1800 s.
   ! Lake top numerics can oscillate with 0.01m top layer and 1800 s timestep.
@@ -78,13 +79,13 @@ module LakeCon
   ! We choose not to do that here because t_grnd can vary independently of the top model
   ! layer temperature, while it is fixed to the top layer temperature if tbot > tfrz and
   ! the lake is frozen, or if there is an unstable density gradient in the top unfrozen lake layer.
-  real(r8)            :: lsadz = 0.03_r8 ! m
+  real(r8), public    :: lsadz = 0.03_r8 ! m
 
   !! The following will be set in initLake based on namelists.
-  real(r8)            :: pudz          ! (m) Optional minimum total ice thickness required to allow lake puddling.
+  real(r8), public    :: pudz          ! (m) Optional minimum total ice thickness required to allow lake puddling.
   ! Currently used for sensitivity tests only.
-  real(r8)            :: depthcrit     ! (m) Depth beneath which to increase mixing. See discussion in Subin et al. 2011
-  real(r8)            :: mixfact       ! Mixing increase factor.
+  real(r8), public    :: depthcrit     ! (m) Depth beneath which to increase mixing. See discussion in Subin et al. 2011
+  real(r8), public    :: mixfact       ! Mixing increase factor.
 
   !!!!!!!!!!!
   ! Namelists (some of these have not been extensively tested and are hardwired to default values currently).

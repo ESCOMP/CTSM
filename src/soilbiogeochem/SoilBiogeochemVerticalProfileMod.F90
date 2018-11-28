@@ -46,7 +46,7 @@ contains
     use decompMod               , only : bounds_type
     use abortutils              , only : endrun
     use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp, zmin_bedrock
-    use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxpatch_pft
+    use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxsoil_patches
     use clm_varctl              , only : use_vertsoilc, iulog, use_bedrock
     use pftconMod               , only : noveg, pftcon
     use SoilBiogeochemStateType , only : soilbiogeochem_state_type
@@ -178,7 +178,7 @@ contains
          !      cinput_rootfr(bounds%begp:bounds%endp, :), &
          !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
          !      'unity')
-         do pi = 1,maxpatch_pft
+         do pi = 1,maxsoil_patches
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                if (pi <=  col%npatches(c)) then

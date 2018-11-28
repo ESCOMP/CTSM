@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev017   slevis 11/28/2018 Merge the collapse2gencrop branch
   ctsm1.0.dev016    sacks 11/01/2018 Update cime, fix FATES DEBUG token, add script to easily run system tests
   ctsm1.0.dev015    sacks 10/28/2018 CMIP6 compset modifiers, usermods for typical output, and other output enhancements
   ctsm1.0.dev014    sacks 10/26/2018 Miscellaneous minor, bit-for-bit bug fixes
