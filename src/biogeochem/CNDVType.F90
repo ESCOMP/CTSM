@@ -95,7 +95,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : numpft
+    use clm_varpar     , only : maxveg
     use pftconMod      , only : allom1s, allom2s, allom1, allom2, allom3, reinickerp
     use pftconMod      , only : ntree, nbrdlf_dcd_brl_shrub
     use pftconMod      , only : pftcon
@@ -127,17 +127,17 @@ contains
     allocate(this%greffic_patch     (begp:endp)) ;     this%greffic_patch     (:) = nan
     allocate(this%heatstress_patch  (begp:endp)) ;     this%heatstress_patch  (:) = nan
 
-    allocate(dgv_ecophyscon%crownarea_max (0:numpft)) 
-    allocate(dgv_ecophyscon%tcmin         (0:numpft))         
-    allocate(dgv_ecophyscon%tcmax         (0:numpft))         
-    allocate(dgv_ecophyscon%gddmin        (0:numpft))        
-    allocate(dgv_ecophyscon%twmax         (0:numpft))         
-    allocate(dgv_ecophyscon%reinickerp    (0:numpft))    
-    allocate(dgv_ecophyscon%allom1        (0:numpft))        
-    allocate(dgv_ecophyscon%allom2        (0:numpft))        
-    allocate(dgv_ecophyscon%allom3        (0:numpft))        
+    allocate(dgv_ecophyscon%crownarea_max (0:maxveg)) 
+    allocate(dgv_ecophyscon%tcmin         (0:maxveg))         
+    allocate(dgv_ecophyscon%tcmax         (0:maxveg))         
+    allocate(dgv_ecophyscon%gddmin        (0:maxveg))        
+    allocate(dgv_ecophyscon%twmax         (0:maxveg))         
+    allocate(dgv_ecophyscon%reinickerp    (0:maxveg))    
+    allocate(dgv_ecophyscon%allom1        (0:maxveg))        
+    allocate(dgv_ecophyscon%allom2        (0:maxveg))        
+    allocate(dgv_ecophyscon%allom3        (0:maxveg))        
 
-    do m = 0,numpft
+    do m = 0,maxveg
        dgv_ecophyscon%crownarea_max(m) = pftcon%pftpar20(m)
        dgv_ecophyscon%tcmin(m)         = pftcon%pftpar28(m)
        dgv_ecophyscon%tcmax(m)         = pftcon%pftpar29(m)

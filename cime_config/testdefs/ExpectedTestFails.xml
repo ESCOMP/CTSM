@@ -7,6 +7,7 @@
     <entry issue="#442"            >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
     <entry issue="#442"            >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
     <entry issue="#550"            >FAIL ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline COMPARE_base_rest</entry>
+    <entry issue="ESMCI/cime#2917" >FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel GENERATE</entry>
   </category>
   <category name="fates">
     <entry issue="NGEET/fates#315">FAIL ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-Fates COMPARE_base_rest</entry>

@@ -124,10 +124,11 @@ contains
     ! !USES:
     use CropType          , only : crop_type
     use landunit_varcon   , only : istcrop
-    use clm_varpar        , only : cft_lb, cft_ub
+    use clm_varpar        , only : cft_size, cft_lb, cft_ub
     use clm_varctl        , only : use_crop
     use surfrdUtilsMod    , only : collapse_crop_types
     use subgridWeightsMod , only : set_landunit_weight
+    implicit none
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
@@ -165,9 +166,13 @@ contains
     allocate(fertcft_cur(bounds%begg:bounds%endg, cft_lb:cft_ub))
     call fertcft%get_current_data(fertcft_cur)
 
-    if (use_crop) then
-       call collapse_crop_types(wtcft_cur, fertcft_cur, bounds%begg, bounds%endg, verbose = .false.)
-    end if
+    ! Call collapse_crop_types:
+    ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
+    !    configuration
+    ! For use_crop = .true. most likely collapsing 78 to the list of crops for
+    !    which the CLM includes parameterizations
+    ! The call collapse_crop_types also appears in subroutine surfrd_veg_all
+    call collapse_crop_types(wtcft_cur, fertcft_cur, cft_size, bounds%begg, bounds%endg, verbose = .false.)
 
     allocate(col_set(bounds%begc:bounds%endc))
     col_set(:) = .false.
