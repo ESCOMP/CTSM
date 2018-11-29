@@ -1,12 +1,14 @@
 ===============================================================
 Tag name:  release-clm5.0.14
 Originator(s):  erik (Erik Kluzek)
-Date:  Wed Nov 28 15:12:36 MST 2018
+Date: Thu Nov 29 11:46:41 MST 2018
 One-line Summary: Update cime and fix surface dataset for f05 1850 non-crop case
 
 Purpose of this version:
 ------------------------
 
+Update cime to next version being used in cesm2.1.0 release. And fix the XML for f05
+surface dataset for 1850 and non-crop. Test that all six f05 cases work (1850/2000/Hist,crop/non-crop).
 
 
 CTSM Master Tag This Corresponds To:
@@ -14,14 +16,16 @@ CTSM Master Tag This Corresponds To:
 Summary of changes:
 -------------------
 
-Issues fixed (include CTSM Issue #): 
-CIME Issues fixed (include issue #): 
+Issues fixed (include CTSM Issue #): #576
 
 Science changes since: release-clm5.0.13
+   None
 
 Software changes since: release-clm5.0.13
+   Fix XML for f05 1850 non-crop fsurdat file
 
 Changes to User Interface since: release-clm5.0.13
+   cpl auxilary history files names change
 
 Testing:
 --------
@@ -35,12 +39,10 @@ Testing:
   unit-tests (components/clm/src):
 
     cheyenne - PASS
-    hobart --- PASS
 
   tools-tests (components/clm/test/tools):
 
     cheyenne - OK
-    hobart --- OK
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
@@ -54,6 +56,14 @@ Testing:
     hobart_nag -------- OK
     hobart_pgi -------- OK
     hobart_intel ------ OK
+
+  Also following PASS:
+     SMS.f05_f05_mg17.I1850Clm50BgcCrop.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.I1850Clm50Sp.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.I2000Clm50BgcCrop.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.I2000Clm50Sp.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.IHistClm50BgcCrop.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.IHistClm50Sp.cheyenne_intel.clm-default
 
   regular tests (prealpha):
 
@@ -88,8 +98,9 @@ Externals being used:
 
 CTSM Tag versions pulled over from master development branch: none
 
-Pull Requests that document the changes (include PR ids):
+Pull Requests that document the changes (include PR ids): #579
 (https://github.com/ESCOMP/ctsm/pull)
+   #579 -- Fix bug in XML for surface dataset for f05 1850 non-crop
 
 ===============================================================
 ===============================================================
