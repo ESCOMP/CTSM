@@ -474,7 +474,6 @@ contains
     ! atm->lnd
     deallocate(this%forc_rh_grc)
 
-
     ! atm->lnd not downscaled
     deallocate(this%forc_q_not_downscaled_grc)
     deallocate(this%forc_rain_not_downscaled_grc)
