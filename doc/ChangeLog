@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev018
 Originator(s):  sacks (Bill Sacks)
-Date: Thu Nov 29 16:02:36 MST 2018
+Date: Thu Nov 29 16:03:50 MST 2018
 One-line Summary: Water tracer updates for initial things in driver loop
 
 Purpose of changes
@@ -119,8 +119,8 @@ Changes answers relative to baseline: YES
     - what code configurations: many
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-      roundoff-level changes in sensible heat flux from precip conversion;
-      everything else bit-for-bit
+      roundoff-level changes in sensible heat flux from precip conversion due to
+      refactoring this calculation; everything else bit-for-bit
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? via summarize_cprnc_diffs to see differences in the test suite
