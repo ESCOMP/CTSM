@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  release-clm5.0.14
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Nov 29 11:46:41 MST 2018
+One-line Summary: Update cime and fix surface dataset for f05 1850 non-crop case
+
+Purpose of this version:
+------------------------
+
+Update cime to next version being used in cesm2.1.0 release. And fix the XML for f05
+surface dataset for 1850 and non-crop. Test that all six f05 cases work (1850/2000/Hist,crop/non-crop).
+
+
+CTSM Master Tag This Corresponds To:
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #576
+
+Science changes since: release-clm5.0.13
+   None
+
+Software changes since: release-clm5.0.13
+   Fix XML for f05 1850 non-crop fsurdat file
+
+Changes to User Interface since: release-clm5.0.13
+   cpl auxilary history files names change
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+     hobart --- OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  Also following PASS:
+     SMS.f05_f05_mg17.I1850Clm50BgcCrop.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.I1850Clm50Sp.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.I2000Clm50BgcCrop.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.I2000Clm50Sp.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.IHistClm50BgcCrop.cheyenne_intel.clm-default
+     SMS.f05_f05_mg17.IHistClm50Sp.cheyenne_intel.clm-default
+
+  regular tests (prealpha):
+
+    cheyenne_intel - PASS
+    cheyenne_gnu --- PASS
+    hobart_nag ----- PASS
+
+  regular tests (prebeta):
+
+    cheyenne_intel - PASS
+    cheyenne_gnu --- PASS
+    hobart_nag ----- PASS
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.13
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_05
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: none
+
+Pull Requests that document the changes (include PR ids): #579
+(https://github.com/ESCOMP/ctsm/pull)
+   #579 -- Fix bug in XML for surface dataset for f05 1850 non-crop
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.13
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Nov 14 11:28:00 MST 2018
