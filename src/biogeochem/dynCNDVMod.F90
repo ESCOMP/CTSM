@@ -81,7 +81,7 @@ contains
 
     ! Interpolate pft weight to current time step
     ! Map interpolated pctpft to subgrid weights
-    ! assumes maxpatch_pft = numpft + 1, each landunit has 1 column, 
+    ! assumes maxsoil_patches includes bare ground, each landunit has 1 column, 
     ! SCAM not defined and create_croplandunit = .false.
 
     nstep         = get_nstep()
