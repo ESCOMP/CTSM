@@ -32,6 +32,12 @@ module WaterDiagnosticType
      real(r8), pointer :: snowice_col            (:)   ! col average snow ice lens
      real(r8), pointer :: snowliq_col            (:)   ! col average snow liquid water
 
+     real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
+                                                        ! in most cases, the vegetation scheme does not have a dynamic
+                                                        ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
+                                                        ! When FATES is coupled in with plant hydraulics turned on, this storage
+                                                        ! term is set to non-zero. (kg/m2 H2O)
+
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
      real(r8), pointer :: tws_grc                (:)   ! grc total water storage (mm H2O)
      real(r8), pointer :: q_ref2m_patch          (:)   ! patch 2 m height surface specific humidity (kg/kg)
@@ -96,6 +102,9 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%snowliq_col, name = 'snowliq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%total_plant_stored_h2o_col, name = 'total_plant_stored_h2o_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%h2osoi_liqice_10cm_col, name = 'h2osoi_liqice_10cm_col', &
@@ -239,6 +248,11 @@ contains
     !-----------------------------------------------------------------------
 
     ratio = this%info%get_ratio()
+
+    ! Water Stored in plants is almost always a static entity, with the exception
+    ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
+    this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
+
 
     do l = bounds%begl, bounds%endl 
        if (lun%urbpoi(l)) then
