@@ -28,7 +28,7 @@ module clm_initializeMod
   use clm_instMod       
   ! 
   implicit none
-  public   ! By default everything is public 
+  private  ! By default everything is private 
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
@@ -50,7 +50,7 @@ contains
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
     use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data 
+    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
     use controlMod       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
@@ -68,6 +68,8 @@ contains
     type(bounds_type) :: bounds_clump
     integer           :: nclumps                 ! number of clumps on this processor
     integer           :: nc                      ! clump index
+    integer           :: actual_maxsoil_patches  ! value from surface dataset
+    integer           :: actual_numcft           ! numcft from sfc dataset
     integer ,pointer  :: amask(:)                ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
@@ -87,10 +89,11 @@ contains
     endif
 
     call control_init()
-    call clm_varpar_init()
+    call ncd_pio_init()
+    call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
+    call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
-    call ncd_pio_init()
 
     if (masterproc) call control_print()
 
@@ -169,7 +172,7 @@ contains
 
     ! Read surface dataset and set up subgrid weight arrays
     
-    call surfrd_get_data(begg, endg, ldomain, fsurdat)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
     ! ------------------------------------------------------------------------
     ! Ask Fates to evaluate its own dimensioning needs.
@@ -289,6 +292,7 @@ contains
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
+    use BalanceCheckMod       , only : BalanceCheckInit
     !
     ! !ARGUMENTS    
     !
@@ -372,6 +376,9 @@ contains
     call t_stopf('init_orbd')
     
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+
+    ! Initialize Balance checking (after time-manager)
+    call BalanceCheckInit()
              
     ! History file variables
 

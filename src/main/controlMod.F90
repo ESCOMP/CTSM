@@ -214,7 +214,7 @@ contains
 
     namelist /clm_inparm/ no_frozen_nitrif_denitrif
 
-    namelist /clm_inparm/ use_c13, use_c14
+    namelist /clm_inparm/ use_c13, use_c14, for_testing_allow_interp_non_ciso_to_ciso
 
 
     ! FATES Flags
@@ -247,8 +247,12 @@ contains
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     namelist /clm_inparm/ maxpatch_pft
+
+    ! flag for SSRE diagnostic
+    namelist /clm_inparm/ use_SSRE
 
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
@@ -587,6 +591,7 @@ contains
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_noio, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_SSRE, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! initial file variables
     call mpi_bcast (nrevsn, len(nrevsn), MPI_CHARACTER, 0, mpicom, ier)
@@ -609,7 +614,8 @@ contains
     call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! BGC
@@ -624,6 +630,7 @@ contains
     ! isotopes
     call mpi_bcast (use_c13, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_c14, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -799,7 +806,7 @@ contains
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity
     write(iulog,*) '    use_noio = ', use_noio
-
+    write(iulog,*) '    use_SSRE = ', use_SSRE
     write(iulog,*) 'input data files:'
     write(iulog,*) '   PFT physiology and parameters file = ',trim(paramfile)
     if (fsurdat == ' ') then
@@ -860,6 +867,7 @@ contains
        write(iulog, *) '  use_c14                                                : ', use_c14
        write(iulog, *) '  use_c14_bombspike                                      : ', use_c14_bombspike
        write(iulog, *) '  atm_c14_filename                                       : ', atm_c14_filename
+       write(iulog, *) '  for_testing_allow_interp_non_ciso_to_ciso              : ', for_testing_allow_interp_non_ciso_to_ciso
     end if
 
     if (fsnowoptics == ' ') then
@@ -925,7 +933,6 @@ contains
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
-    write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   nsegspc              = ',nsegspc
     ! New fields
     write(iulog,*) ' perchroot (plant water stress based on unfrozen layers only) = ',perchroot
