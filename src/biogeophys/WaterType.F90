@@ -210,7 +210,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds, NLFilename, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize all water variables
@@ -223,6 +223,7 @@ contains
     real(r8)          , intent(in) :: snow_depth_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
 
@@ -230,14 +231,18 @@ contains
     !-----------------------------------------------------------------------
 
     call this%ReadNamelist(NLFilename)
-    call this%DoInit(bounds, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+    call this%DoInit(bounds = bounds, &
+         h2osno_col = h2osno_col, &
+         snow_depth_col = snow_depth_col, &
+         watsat_col = watsat_col, &
+         t_soisno_col = t_soisno_col, &
+         use_aquifer_layer = use_aquifer_layer)
 
   end subroutine Init
 
   !-----------------------------------------------------------------------
   subroutine InitForTesting(this, bounds, params, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Version of Init routine just for unit tests
@@ -252,21 +257,32 @@ contains
     real(r8)          , intent(in) :: snow_depth_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    logical , intent(in), optional :: use_aquifer_layer ! whether an aquifer layer is used in this run (false by default)
     !
     ! !LOCAL VARIABLES:
+    logical :: l_use_aquifer_layer
 
     character(len=*), parameter :: subname = 'InitForTesting'
     !-----------------------------------------------------------------------
 
+    l_use_aquifer_layer = .false.
+    if (present(use_aquifer_layer)) then
+       l_use_aquifer_layer = use_aquifer_layer
+    end if
+
     this%params = params
-    call this%DoInit(bounds, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+    call this%DoInit(bounds = bounds, &
+         h2osno_col = h2osno_col, &
+         snow_depth_col = snow_depth_col, &
+         watsat_col = watsat_col, &
+         t_soisno_col = t_soisno_col, &
+         use_aquifer_layer = l_use_aquifer_layer)
 
   end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
   subroutine DoInit(this, bounds, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col)
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Actually do the initialization (shared between main Init routine and InitForTesting)
@@ -280,6 +296,7 @@ contains
     real(r8)         , intent(in) :: snow_depth_col(bounds%begc:)
     real(r8)         , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    logical          , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
@@ -312,7 +329,8 @@ contains
          bulk_vars, &
          h2osno_input_col = h2osno_col(begc:endc),       &
          watsat_col = watsat_col(begc:endc, 1:),   &
-         t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
+         t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
+         use_aquifer_layer = use_aquifer_layer)
 
     call this%waterdiagnosticbulk_inst%InitBulk(bounds, &
          bulk_info, &
@@ -351,7 +369,8 @@ contains
             this%bulk_and_tracers(i)%vars, &
             h2osno_input_col = h2osno_col(begc:endc),       &
             watsat_col = watsat_col(begc:endc, 1:),   &
-            t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:) )
+            t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
+            use_aquifer_layer = use_aquifer_layer)
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &

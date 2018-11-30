@@ -1,4 +1,141 @@
 ===============================================================
+Tag name:  ctsm1.0.dev019
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Nov 30 13:36:57 MST 2018
+One-line Summary: Rework cold start initialization of wa and zwt
+
+Purpose of changes
+------------------
+
+Rework cold start initialization of wa and zwt when use_aquifer_layer is
+false to reduce answer changes in upcoming groundwater_irrigation
+branch.
+
+In the groundwater_irrigation branch
+(https://github.com/ESCOMP/ctsm/pull/523), Sean Swenson has stopped
+resetting wa_col each time step if use_aquifer_layer is false. However,
+this leads to having a substantially different value of wa_col when
+use_aquifer_layer is false: previously, it was reset to
+aquifer_water_baseline each time step, but with Sean's changes, it stays
+close to its initial values, which have been 4000 in most places. This
+tag changes the initial values to match the value it was being reset to,
+so it simply starts at aquifer_water_baseline - so the
+every-time-step-resetting to aquifer_water_baseline can be removed
+without massively changing the value of wa_col.
+
+In addition to changing the cold start initialization of wa_col, we are
+also changing the cold start initialization of zwt in this case where
+use_aquifer_layer is false: The old initialization of zwt wouldn't work
+as intended now that we have changed the initial value of wa_col; Sean
+Swenson suggested this new initialization method instead. This
+initialization to zi(c,nbedrock(c)) is correct if there are no saturated
+layers, and close enough for a decent cold start even if there are.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Sean Swenson
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, answers change as expected for some cases
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev018
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50 cold start or transient (Hist) cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Larger than roundoff, same climate (not investigated completely
+      rigorously through long simulations, but Sean Swenson and Bill
+      Sacks are both pretty confident that the resulting changes will be
+      small, partly based on difference statistics from the test suite,
+      and partly based on the fact that the only change in this tag is
+      in cold start initialization of some values).
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/577
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev018
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Nov 29 16:03:50 MST 2018
