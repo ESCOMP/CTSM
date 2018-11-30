@@ -441,6 +441,9 @@ contains
     if (this%params%enable_isotopes) then
        num_tracers = num_tracers + 2
     end if
+    if (this%params%enable_consistency_checks) then
+       num_tracers = num_tracers + 3
+    end if
 
     this%num_tracers = num_tracers
     if (this%num_tracers > 0) then
@@ -464,6 +467,21 @@ contains
        this%is_isotope(tracer_num) = .true.
        tracer_num = tracer_num + 1
     end if
+    if (this%params%enable_consistency_checks) then
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('TEST1',0.1_r8))
+       this%is_isotope(tracer_num) = .true.
+       tracer_num = tracer_num + 1
+
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('TEST2',1.0e-10_r8))
+       this%is_isotope(tracer_num) = .true.
+       tracer_num = tracer_num + 1
+
+       allocate(this%tracer_info(tracer_num)%info, source = water_info_isotope_type('TEST3',10.0_r8))
+       this%is_isotope(tracer_num) = .true.
+       tracer_num = tracer_num + 1
+    end if
+
+
 
     if (tracer_num - 1 /= this%num_tracers) then
        write(iulog,*) subname//' ERROR: tracer_num discrepancy'
@@ -667,6 +685,7 @@ contains
 
   end function GetBulkTracerIndex
 
+
   !-----------------------------------------------------------------------
   function DoConsistencyCheck(this) result(do_consistency_check)
     !
@@ -713,33 +732,29 @@ contains
 
     !for now, simply checking bulk vs the bulk tracer, but may eventually 
     !want to loop over all tracers in some situations
-    i = this%GetBulkTracerIndex()
-    if (i < 0) then
-       write(iulog,*) subname, ' Error: requesting tracer consistency check with bulk tracer not enabled'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    do i = 1, this%num_tracers
+       !check some variable here to see if we really want to check consistency
+       num_vars = this%tracer_vars(i)%get_num_vars()
+       SHR_ASSERT(num_vars == this%bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
 
-    num_vars = this%tracer_vars(i)%get_num_vars()
-    SHR_ASSERT(num_vars == this%bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
+       do var_num = 1, num_vars
+          name = this%tracer_vars(i)%get_description(var_num)
+          SHR_ASSERT(name == this%bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
 
-    do var_num = 1, num_vars
-       name = this%tracer_vars(i)%get_description(var_num)
-       SHR_ASSERT(name == this%bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
+          call this%tracer_vars(i)%get_bounds(var_num, bounds, begi, endi)
 
-       call this%tracer_vars(i)%get_bounds(var_num, bounds, begi, endi)
+          call this%bulk_vars%get_data(var_num, bulk)
+          call this%tracer_vars(i)%get_data(var_num, tracer)
 
-       call this%bulk_vars%get_data(var_num, bulk)
-       call this%tracer_vars(i)%get_data(var_num, tracer)
+          call CompareBulkToTracer(begi, endi, &
+               bulk   = bulk(begi:endi), &
+               tracer = tracer(begi:endi), &
+               ratio = this%tracer_info(i)%info%get_ratio(), &
+               caller_location = caller_location, &
+               name = name)
 
-       call CompareBulkToTracer(begi, endi, &
-            bulk   = bulk(begi:endi), &
-            tracer = tracer(begi:endi), &
-            ratio = this%tracer_info(i)%info%get_ratio(), &
-            caller_location = caller_location, &
-            name = name)
-
+       end do
     end do
-
   end subroutine TracerConsistencyCheck
 
 end module WaterType
