@@ -10,6 +10,7 @@ module WaterStateType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
   use clm_varctl     , only : iulog, use_bedrock
@@ -43,11 +44,11 @@ module WaterStateType
 
    contains
 
-     procedure          :: Init         
-     procedure          :: Restart      
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, public  :: Init
+     procedure, public  :: Restart
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type waterstate_type
 
@@ -389,6 +390,10 @@ contains
                do j = 1, nlevs
                   this%h2osoi_vol_col(c,j) = 1.0_r8
                end do
+            else
+               write(iulog,*) 'water_state_type InitCold: unhandled landunit type ', lun%itype(l)
+               call endrun(msg = 'unhandled landunit type', &
+                    additional_msg = errMsg(sourcefile, __LINE__))
             endif
             do j = 1, nlevs
                this%h2osoi_vol_col(c,j) = min(this%h2osoi_vol_col(c,j), watsat_col(c,j))

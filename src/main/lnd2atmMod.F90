@@ -70,7 +70,7 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds  
-    type(water_type)      , intent(in)    :: water_inst
+    type(water_type)      , intent(inout) :: water_inst
     type(surfalb_type)    , intent(in)    :: surfalb_inst
     type(energyflux_type) , intent(in)    :: energyflux_inst
     type(lnd2atm_type)    , intent(inout) :: lnd2atm_inst 
@@ -84,26 +84,19 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    call c2g(bounds, &
-         water_inst%waterstatebulk_inst%h2osno_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%h2osno_grc    (bounds%begg:bounds%endg), &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
+       call c2g(bounds, &
+            bulk_or_tracer%waterstate_inst%h2osno_col(bounds%begc:bounds%endc), &
+            bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-    do g = bounds%begg,bounds%endg
-       water_inst%waterlnd2atmbulk_inst%h2osno_grc(g) = water_inst%waterlnd2atmbulk_inst%h2osno_grc(g)/1000._r8
+       do g = bounds%begg,bounds%endg
+          bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g) = &
+               bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g)/1000._r8
+       end do
+       end associate
     end do
-
-    do i = 1, water_inst%num_tracers
-      call c2g(bounds, &
-           water_inst%waterstate_tracer_inst(i)%h2osno_col (bounds%begc:bounds%endc), &
-           water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc    (bounds%begg:bounds%endg), &
-           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-
-      do g = bounds%begg,bounds%endg
-         water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc(g) = water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc(g)/1000._r8
-      end do
-    end do
-
 
     call c2g(bounds, nlevgrnd, &
          water_inst%waterstatebulk_inst%h2osoi_vol_col (bounds%begc:bounds%endc, :), &
