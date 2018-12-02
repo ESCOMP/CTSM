@@ -12,6 +12,7 @@ module array_utils
   ! !USES:
 
   use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
+  use abortutils  , only : endrun
 
   implicit none
   private
@@ -55,11 +56,18 @@ contains
     character(len=*), parameter :: subname = 'find_k_max_indices'
     !-----------------------------------------------------------------------
 
+    if (k < 1 .or. k > size(data)) then
+       call endrun(subname//': must have 1 <= k <= size(data)')
+    end if
+
     allocate(max_indices(k))
     max_indices(:) = lb - 1
     max_vals(:) = -huge(1._r8)
 
     do i = lbound(data,1), ubound(data,1)
+       ! Determine where (if anywhere) data(i) should go in max_vals, relative to the
+       ! values we've seen so far. Note that max_vals will be arranged in sorted order,
+       ! with the largest value first.
        insertion_location = -1
        do j = 1, k
           if (data(i) > max_vals(j)) then

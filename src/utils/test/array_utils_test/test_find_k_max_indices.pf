@@ -5,6 +5,7 @@ module test_find_k_max_indices
   use pfunit_mod
   use array_utils
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils, only : endrun_msg
 
   implicit none
 
@@ -57,6 +58,8 @@ contains
 
   @Test
   subroutine insertAtLast(this)
+    ! Make sure we have a test that covers inserting the new element at the end of the
+    ! max_vals array
     class(TestFindKMax), intent(inout) :: this
     integer, allocatable :: max_indices(:)
 
@@ -71,6 +74,8 @@ contains
 
   @Test
   subroutine insertAtFirst(this)
+    ! Make sure we have a test that covers inserting the new element at the start of the
+    ! max_vals array
     class(TestFindKMax), intent(inout) :: this
     integer, allocatable :: max_indices(:)
 
@@ -85,6 +90,8 @@ contains
 
   @Test
   subroutine insertAtMiddle(this)
+    ! Make sure we have a test that covers inserting the new element in the middle of the
+    ! max_vals array
     class(TestFindKMax), intent(inout) :: this
     integer, allocatable :: max_indices(:)
 
@@ -99,6 +106,7 @@ contains
 
   @Test
   subroutine lbNot1(this)
+    ! Test with lower bound different from 1
     class(TestFindKMax), intent(inout) :: this
     integer, allocatable :: max_indices(:)
 
@@ -110,5 +118,84 @@ contains
 
     @assertEqual([5,4,3], max_indices)
   end subroutine lbNot1
+
+  @Test
+  subroutine k0_raisesException(this)
+    class (TestFindKMax), intent(inout) :: this
+    integer, allocatable :: max_indices(:)
+    character(len=:), allocatable :: expected_msg
+
+    call find_k_max_indices( &
+         data = [2._r8, 3._r8, 4._r8, 5._r8], &
+         lb = 1, &
+         k = 0, &
+         max_indices = max_indices)
+
+    expected_msg = endrun_msg( &
+         'find_k_max_indices: must have 1 <= k <= size(data)')
+    @assertExceptionRaised(expected_msg)
+  end subroutine k0_raisesException
+
+  @Test
+  subroutine kBig_raisesException(this)
+    class (TestFindKMax), intent(inout) :: this
+    integer, allocatable :: max_indices(:)
+    character(len=:), allocatable :: expected_msg
+
+    call find_k_max_indices( &
+         data = [2._r8, 3._r8, 4._r8, 5._r8], &
+         lb = 1, &
+         k = 5, &
+         max_indices = max_indices)
+
+    expected_msg = endrun_msg( &
+         'find_k_max_indices: must have 1 <= k <= size(data)')
+    @assertExceptionRaised(expected_msg)
+  end subroutine kBig_raisesException
+
+  @Test
+  subroutine kEquals1(this)
+    ! Test the edge case k=1
+    class(TestFindKMax), intent(inout) :: this
+    integer, allocatable :: max_indices(:)
+
+    call find_k_max_indices( &
+         data = [2._r8, 3._r8, 4._r8, 1._r8], &
+         lb = 1, &
+         k = 1, &
+         max_indices = max_indices)
+
+    @assertEqual([3], max_indices)
+  end subroutine kEquals1
+
+  @Test
+  subroutine reversed_kEqualsN(this)
+    ! Test the edge case k=n
+    class(TestFindKMax), intent(inout) :: this
+    integer, allocatable :: max_indices(:)
+
+    call find_k_max_indices( &
+         data = [2._r8, 3._r8, 4._r8, 5._r8], &
+         lb = 1, &
+         k = 4, &
+         max_indices = max_indices)
+
+    @assertEqual([4,3,2,1], max_indices)
+  end subroutine reversed_kEqualsN
+
+  @Test
+  subroutine nEquals1(this)
+    ! Test the edge case n = k = 1
+    class(TestFindKMax), intent(inout) :: this
+    integer, allocatable :: max_indices(:)
+
+    call find_k_max_indices( &
+         data = [2._r8], &
+         lb = 1, &
+         k = 1, &
+         max_indices = max_indices)
+
+    @assertEqual([1], max_indices)
+  end subroutine nEquals1
 
 end module test_find_k_max_indices
