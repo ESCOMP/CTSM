@@ -332,7 +332,7 @@ contains
     end if
     !KO
     this%h2osoi_tend_tsl_col(begc:endc) = spval
-    call hist_addfld1d (fname='SOILWATERTEND_TSL',  units='m3/m3/s', &
+    call hist_addfld1d (fname='SOILWATERTEND_TSL',  units='kg/m2/s', &
          avgflag='A', long_name='tsl tendency for fan', &
          ptr_col=this%h2osoi_tend_tsl_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
 
