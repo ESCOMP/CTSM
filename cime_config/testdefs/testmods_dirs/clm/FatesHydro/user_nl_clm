@@ -1,5 +1,4 @@
 hist_empty_htapes = .true.
-use_fates_ed_st3= .true.
 use_fates_planthydro= .true.
 hist_fincl1       = 'FATES_ERRH2O_SCPF','FATES_TRAN_SCPF','FATES_ROOTUPTAKE_SCPF','FATES_ROOTUPTAKE01_SCPF',
 'FATES_SAPFLOW_COL_SCPF','FATES_ITERH1_COL_SCPF','FATES_ATH_COL_SCPF','FATES_TTH_COL_SCPF',
