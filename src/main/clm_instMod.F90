@@ -327,7 +327,8 @@ contains
     allocate(soil_water_retention_curve, &
          source=create_soil_water_retention_curve())
 
-    call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve)
+    call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve, &
+         use_aquifer_layer = use_aquifer_layer())
 
     call topo_inst%Init(bounds)
 

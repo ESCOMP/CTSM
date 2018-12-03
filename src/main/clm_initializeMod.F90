@@ -13,7 +13,7 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec
+  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
@@ -162,6 +162,7 @@ contains
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
+    allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
     allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
     allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
 
@@ -670,7 +671,7 @@ contains
     ! initialize2 because it is used to initialize other variables; now it can be
     ! deallocated
 
-    deallocate(topo_glc_mec, fert_cft)
+    deallocate(topo_glc_mec, fert_cft, irrig_method)
 
     !------------------------------------------------------------       
     ! Write log output for end of initialization

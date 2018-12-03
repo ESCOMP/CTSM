@@ -1,4 +1,213 @@
 ===============================================================
+Tag name:  ctsm1.0.dev020
+Originator(s):  Sean Swenson, Bill Sacks
+Date: Mon Dec  3 11:51:24 MST 2018
+One-line Summary: New options for irrigation and crop fsat
+
+Purpose of changes
+------------------
+
+Introduce three new options:
+
+(1) Ability to withdraw irrigation water from groundwater if not enough
+    water is available from rivers. This is controlled via new namelist
+    flag, use_groundwater_irrigation. Water can be withdrawn from both
+    the unconfined (from the soil column) and confined (from wa)
+    aquifers.
+
+(2) Irrigation method: sprinkler (above canopy) vs. drip (below
+    canopy). This can be set on a per-crop and per-gridcell basis on the
+    surface dataset, but out-of-the-box support for creating the
+    necessary surface dataset field is not yet in place (see
+    ESCOMP/ctsm#565). For now, it can be controlled globally via a new
+    namelist flag, irrig_method_default. The default is drip, which was
+    what we were previously using implicitly.
+
+(3) Set crop fsat to zero. This is controlled by a new namelist option,
+    crop_fsat_equals_zero.
+
+Default behavior is the same as before for all three options.
+
+Also:
+
+- If use_aquifer_layer is false (which is the default for CLM50), no
+  longer reset wa_col every time step
+
+- Adds indices to vector history files giving column, landunit and
+  gridcell indices for each patch, etc. (Resolves ESCOMP/ctsm#81:
+  "Restart files are different for CLM when run over different number of
+  tasks" (issue name is a misnomer of the remaining to-dos in that
+  issue.)
+
+- Writes 3d time-constant fields on first history file for all tapes,
+  not just the first
+
+- Small performance improvements to irrigation
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#81 ("Restart files are different for CLM when run
+  over different number of tasks", but that name was a misnomer for the
+  remaining work needed on the issue)
+
+Known bugs introduced in this tag (include github issue ID):
+- ESCOMP/ctsm#565: Surface dataset enhancements needed for irrigation method
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variables:
+  - use_groundwater_irrigation
+  - irrig_method_default
+  - crop_fsat_equals_zero
+- Partial support for new surface dataset field: irrigation_method
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+- Added two tests of the new irrigation options
+- Added an _includes directory to hold things that should be included by
+  testmods (not used directly)
+
+
+Code reviewed by: Bill Sacks and Sean Swenson reviewed each other's code
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    Tests pass, namelists differ as expected
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ pass
+
+    ok: tests pass, some answers change as noted below
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev019
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Some CLM50 cases that are either cold start
+      or (unusually) use a CLM45 initial conditions file; it's possible
+      that non-cold-start configurations would see differences rarely.
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff, same climate
+
+      Differences arise due to no longer resetting wa_col to
+      aquifer_water_baseline every time step in BeginWaterBalanceSingle
+      if use_aquifer_layer is false (which is the default for
+      CLM50). (This change is needed to conserve water properly with the
+      new groundwater-based irrigation.) For the most part, wa_col
+      wasn't being changed when use_aquifer_layer is false (so no longer
+      resetting it has no effect if groundwater irrigation isn't being
+      used), but the one exception is the "work around of the negative
+      liquid water" added by Jinyun Tang in subroutine SoilWater (dated
+      Jan 14, 2015), which can be exercised when use_flexibleCN is
+      true. Sean Swenson did some experimentation, and found that the
+      code that updates wa_col is only exercised in the first time step
+      of a cold start run, and that finding is borne out in the test
+      suite results. However, it's possible that there are rare cases
+      when this is exercised later in a run.
+
+      I have confirmed that this branch is bit-for-bit with the baseline
+      if I revert the addition of the use_aquifer_layer conditional
+      around the wa_col resetting in
+      BeginWaterBalanceSingle. Alternatively, nearly all tests are
+      bit-for-bit with the baseline if I remove the one line updating
+      wa_col in subroutine SoilWater (and also remove the endrun for
+      water balance errors from BalanceCheck); the one exception is the
+      waccmx_offline test, which uses a CLM45 initial conditions file in
+      a CLM50 configuration.
+
+      The following tests had baseline failures:
+
+      Cold start tests:
+
+         ERP_D_Ld5.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-allActive
+         ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-cropColdStart
+         ERP_P180x2_D_Ld5.f19_g17.I2000Clm50BgcDvCrop.cheyenne_intel.clm-crop
+         ERP_P36x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.cheyenne_intel.clm-monthly
+         ERP_P72x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.cheyenne_intel.clm-monthly
+
+      Test that uses a CLM45 initial conditions file in a CLM50
+      configuration:
+
+         ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/523
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev019
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Nov 30 13:36:57 MST 2018

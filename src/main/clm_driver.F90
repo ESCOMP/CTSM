@@ -11,7 +11,7 @@ module clm_driver
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
-  use clm_varctl             , only : use_crop, ndep_from_cpl
+  use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -38,10 +38,11 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes 
   use LakeFluxesMod          , only : LakeFluxes
   !
-  use HydrologyNoDrainageMod , only : HydrologyNoDrainage ! (formerly Hydrology2Mod)
+  use HydrologyNoDrainageMod , only : IrrigationWithdrawals, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
   use LakeHydrologyMod       , only : LakeHydrology
+  use SoilWaterMovementMod   , only : use_aquifer_layer
   !
   use AerosolMod             , only : AerosolMasses  
   use SnowSnicarMod          , only : SnowAge_grain
@@ -336,7 +337,8 @@ contains
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
-            water_inst, soilhydrology_inst)
+            water_inst, soilhydrology_inst, &
+            use_aquifer_layer = use_aquifer_layer())
 
        call t_stopf('begwbal')
 
@@ -434,10 +436,30 @@ contains
        call setExposedvegpFilter(bounds_clump, &
             canopystate_inst%frac_veg_nosno_patch(bounds_clump%begp:bounds_clump%endp))
 
-       ! Irrigation flux
-       ! input is main channel storage
-       call irrigation_inst%ApplyIrrigation(bounds_clump, water_inst%waterfluxbulk_inst)
        call t_stopf('drvinit')
+
+       if (irrigate) then
+
+          call t_startf('irrigationwithdraw')
+
+          call IrrigationWithdrawals( &
+               bounds = bounds_clump, &
+               num_hydrologyc = filter(nc)%num_hydrologyc, &
+               filter_hydrologyc = filter(nc)%hydrologyc, &
+               num_soilc = filter(nc)%num_soilc, &
+               filter_soilc = filter(nc)%soilc, &
+               num_soilp = filter(nc)%num_soilp, &
+               filter_soilp = filter(nc)%soilp, &
+               soilhydrology_inst = soilhydrology_inst, &
+               soilstate_inst = soilstate_inst, &
+               irrigation_inst = irrigation_inst, &
+               waterdiagnosticbulk_inst = water_inst%waterdiagnosticbulk_inst, &
+               waterfluxbulk_inst = water_inst%waterfluxbulk_inst, &
+               waterstatebulk_inst = water_inst%waterstatebulk_inst)
+
+          call t_stopf('irrigationwithdraw')
+
+       end if
 
        ! ============================================================================
        ! Canopy Hydrology
@@ -453,7 +475,8 @@ contains
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
             atm2lnd_inst, canopystate_inst, temperature_inst, &
             aerosol_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &
+            water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterfluxbulk_inst, &
             water_inst%wateratm2lndbulk_inst)
        call t_stopf('canhydro')
 
@@ -604,28 +627,32 @@ contains
             humanindex_inst) 
        call t_stopf('bgplake')
 
-       ! ============================================================================
-       ! Determine irrigation needed for future time steps
-       ! ============================================================================
+       if (irrigate) then
 
-       ! NOTE(wjs, 2016-09-08) The placement of this call in the driver is historical: it
-       ! used to be that it had to come after btran was computed. Now it no longer depends
-       ! on btran, so it could be moved earlier in the driver loop - possibly even
-       ! immediately before ApplyIrrigation, which would be a more clear place to put it.
+          ! ============================================================================
+          ! Determine irrigation needed for future time steps
+          ! ============================================================================
+          
+          ! NOTE(wjs, 2016-09-08) The placement of this call in the driver is historical: it
+          ! used to be that it had to come after btran was computed. Now it no longer depends
+          ! on btran, so it could be moved earlier in the driver loop - possibly even
+          ! immediately before ApplyIrrigation, which would be a more clear place to put it.
+          
+          call t_startf('irrigationneeded')
+          call irrigation_inst%CalcIrrigationNeeded( &
+               bounds             = bounds_clump, &
+               num_exposedvegp    = filter(nc)%num_exposedvegp, &
+               filter_exposedvegp = filter(nc)%exposedvegp, &
+               elai               = canopystate_inst%elai_patch(bounds_clump%begp:bounds_clump%endp), &
+               t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
+               eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
+               h2osoi_liq         = water_inst%waterstatebulk_inst%h2osoi_liq_col&
+               (bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
+               volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
+               rof_prognostic     = rof_prognostic)
+          call t_stopf('irrigationneeded')
 
-       call t_startf('irrigationneeded')
-       call irrigation_inst%CalcIrrigationNeeded( &
-            bounds             = bounds_clump, &
-            num_exposedvegp    = filter(nc)%num_exposedvegp, &
-            filter_exposedvegp = filter(nc)%exposedvegp, &
-            elai               = canopystate_inst%elai_patch(bounds_clump%begp:bounds_clump%endp), &
-            t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
-            eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
-            h2osoi_liq         = water_inst%waterstatebulk_inst%h2osoi_liq_col&
-            (bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
-            volr               = water_inst%wateratm2lndbulk_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
-            rof_prognostic     = rof_prognostic)
-       call t_stopf('irrigationneeded')
+       end if
 
        ! ============================================================================
        ! DUST and VOC emissions

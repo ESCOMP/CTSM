@@ -52,17 +52,3 @@ test. This is important because, if an assertion fails, a test immediately
 exits. That means that manual teardown is skipped, whereas this automatic
 teardown still happens. This, in turn, is important so that the remaining tests
 can still run properly.
-
---- Notes about separation into multiple files ---
-
-I have separated tests based on what needs to be done for the setup and teardown
-of each test. Tests that need identical setup and teardown (or lack thereof) are
-grouped together.
-
-IrrigationWrapperMod contains routines that are used by both the singlepatch and
-multipatch tests. In terms of setup and teardown: I have put setup stuff in here
-that is in common for both the singlepatch and multipatch tests. I then do the
-symmetrical teardown here, as well (e.g., if a variable foo is allocated in
-IrrigationWrapperMod, I also deallocate it in the teardown routine in
-IrrigationWrapperMod). The setup done in the .pf files themselves is stuff that
-differs between singlepatch and multipatch (or between individual tests).
