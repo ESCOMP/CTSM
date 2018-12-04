@@ -198,7 +198,7 @@ contains
 
     call mpi_comm_dup(lmpicom, mpicom, ierr)
 
-    ! Note still need compid for those parts of the code that use the data model 
+    ! Note still need compid for those parts of the code that use the data model
     ! functionality through subroutine calls
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -447,7 +447,7 @@ contains
     !----------------------
     ! Read namelist, grid and surface data
     !----------------------
-    
+
     ! set default values for run control variables
     call clm_varctl_set(&
          caseid_in=caseid, ctitle_in=ctitle,                     &
@@ -490,7 +490,7 @@ contains
     ! generate the mesh and realize fields
     !--------------------------------
 
-    ! read in the mesh 
+    ! read in the mesh
     call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=cvalue, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -553,11 +553,11 @@ contains
     call set_nextsw_cday(nextsw_cday)
 
     ! Set scalars in export state
-    call shr_nuopc_methods_State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, mpicom, &
+    call shr_nuopc_methods_State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call shr_nuopc_methods_State_SetScalar(dble(ldomain%nj), flds_scalar_index_ny, exportState, mpicom, &
+    call shr_nuopc_methods_State_SetScalar(dble(ldomain%nj), flds_scalar_index_ny, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -681,7 +681,7 @@ contains
     !--------------------------------
 
     call shr_nuopc_methods_State_GetScalar(importState, &
-         flds_scalar_index_nextsw_cday, nextsw_cday, mpicom, &
+         flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
     call set_nextsw_cday( nextsw_cday )
 
@@ -902,6 +902,7 @@ contains
   !===============================================================================
 
   subroutine ModelSetRunClock(gcomp, rc)
+    use shr_nuopc_time_mod, only : shr_nuopc_time_set_component_stop_alarm
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
@@ -915,10 +916,7 @@ contains
     integer                  :: restart_n      ! Number until restart interval
     integer                  :: restart_ymd    ! Restart date (YYYYMMDD)
     type(ESMF_ALARM)         :: restart_alarm
-    character(len=256)       :: stop_option    ! Stop option units
-    integer                  :: stop_n         ! Number until stop interval
-    integer                  :: stop_ymd       ! Stop date (YYYYMMDD)
-    type(ESMF_ALARM)         :: stop_alarm
+
     character(len=128)       :: name
     integer                  :: alarmcount
     integer                  :: dbrc
@@ -983,28 +981,7 @@ contains
        call ESMF_AlarmSet(restart_alarm, clock=mclock, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       !----------------
-       ! Stop alarm
-       !----------------
-       call NUOPC_CompAttributeGet(gcomp, name="stop_option", value=stop_option, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call NUOPC_CompAttributeGet(gcomp, name="stop_n", value=cvalue, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) stop_n
-
-       call NUOPC_CompAttributeGet(gcomp, name="stop_ymd", value=cvalue, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) stop_ymd
-
-       call shr_nuopc_time_alarmInit(mclock, stop_alarm, stop_option, &
-            opt_n   = stop_n,           &
-            opt_ymd = stop_ymd,         &
-            RefTime = mcurrTime,           &
-            alarmname = 'alarm_stop', rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_AlarmSet(stop_alarm, clock=mclock, rc=rc)
+       call shr_nuopc_time_set_component_stop_alarm(gcomp, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     end if
