@@ -17,8 +17,7 @@ module lnd_comp_nuopc
   use shr_sys_mod           , only : shr_sys_abort
   use shr_log_mod           , only : shr_log_Unit
   use shr_file_mod          , only : shr_file_getlogunit, shr_file_setlogunit
-  use shr_file_mod          , only : shr_file_getloglevel, shr_file_setloglevel
-  use shr_file_mod          , only : shr_file_setIO, shr_file_getUnit
+  use shr_file_mod          , only : shr_file_getloglevel, shr_file_setloglevel, shr_file_getUnit
   use shr_orb_mod           , only : shr_orb_decl
   use shr_cal_mod           , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use shr_nuopc_scalars_mod , only : flds_scalar_name

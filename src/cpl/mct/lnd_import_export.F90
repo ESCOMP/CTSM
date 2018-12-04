@@ -7,6 +7,8 @@ module lnd_import_export
   use lnd2glcMod   , only: lnd2glc_type
   use atm2lndType  , only: atm2lnd_type
   use glc2lndMod   , only: glc2lnd_type 
+  use clm_time_manager, only : get_nstep
+  use spmdMod      , only: masterproc 
   use clm_cpl_indices
   !
   implicit none
@@ -259,6 +261,17 @@ contains
        end if
 
     end do
+
+    !DEBUG
+    if (masterproc) then
+       do g = bounds%begg,bounds%endg
+          write(iulog,100) get_nstep(), g, atm2lnd_inst%volr_grc(g)
+          write(iulog,101) get_nstep(), g, atm2lnd_inst%volrmch_grc(g)
+       end do
+100    format('(lnd_import_export) volr:',i5,2x,i5,2x,d21.14,2x)
+101    format('(lnd_import_export) volrmch:',i5,2x,i5,2x,d21.14,2x)
+    end if
+    !DEBUG
 
     ! NOTE(wjs, 2017-12-13) the x2l argument doesn't have the typical bounds
     ! subsetting (bounds%begg:bounds%endg). This mirrors the lack of these bounds in
