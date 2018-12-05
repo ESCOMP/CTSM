@@ -410,8 +410,11 @@ contains
             atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
 
        call downscale_forcings(bounds_clump, &
-            topo_inst, atm2lnd_inst, &
-            eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
+            topo_inst, glc_behavior, atm2lnd_inst, &
+            eflx_sh_precip_conversion = &
+            energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc), &
+            qflx_runoff_rain_to_snow_conversion = &
+            waterflux_inst%qflx_runoff_rain_to_snow_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
        ! Update filters that depend on variables set in clm_drv_init
        
