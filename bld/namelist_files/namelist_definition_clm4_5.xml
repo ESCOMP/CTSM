@@ -1071,6 +1071,12 @@ Toggle for mexico city specific logic.
 Max number of plant functional types in naturally vegetated landunit.
 </entry>
 
+<entry id="n_dom_soil_patches" type="integer" category="physics"
+       group="clm_inparm"
+       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,78" value="78">
+Number of dominant soil patches; determines number of active soil patches.
+</entry>
+
 <entry id="use_dynroot" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the dynamic root model

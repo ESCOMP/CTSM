@@ -22,6 +22,8 @@ module surfrdUtilsMod
   public :: renormalize         ! Renormalize an array
   public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT:w
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
+  public :: collapse_all_pfts  ! Collapse to dominant plant types
+  public :: collapse_crop_var  ! Collapse crop variables according to cft weights determined in previous "collapse" subroutines
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -111,7 +113,7 @@ contains
     !        Convert generic crop types that were read in as seperate CFT's on
     !        a crop landunit, and put them on the vegetated landunit.
     ! !USES:
-    use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
+    use clm_instur      , only : wt_lunit, wt_nat_patch  ! fert_cft unnecessary
     use clm_varpar      , only : cft_size, natpft_size
     use pftconMod       , only : nc3crop
     use landunit_varcon , only : istsoil, istcrop
@@ -144,6 +146,205 @@ contains
   end subroutine convert_cft_to_pft
 
   !-----------------------------------------------------------------------
+  subroutine collapse_all_pfts(wt_lunit, wt_nat_patch, natpft_size, wt_cft, cft_size, begg, endg, n_dom_soil_patches)
+    !
+    ! DESCRIPTION
+    ! Collapse to the top N dominant soil patches (n_dom_soil_patches) among all
+    ! present pfts, cfts, & bare ground.
+    ! - Bare ground could be up to 1 patch before collapsing.
+    ! - Pfts could be up to 14 before collapsing.
+    ! - Cfts could be up to 2 or 78 with use_crop = .F. or .T., respectively.
+    !
+    ! !USES:
+    use clm_varpar, only: natpft_lb, natpft_ub, cft_lb, cft_ub, maxveg
+    use landunit_varcon, only: istsoil, istcrop, max_lunit
+    use pftconMod, only: noveg, nc3crop, pftcon
+    use array_utils, only: find_k_max_indices
+    !
+    ! !ARGUMENTS:
+    ! Use begg and endg rather than 'bounds', because bounds may not be
+    ! available yet when this is called
+    integer, intent(in) :: begg  ! Beginning grid cell index
+    integer, intent(in) :: endg  ! Ending grid cell index
+    integer, intent(in) :: natpft_size  ! CFT size
+    integer, intent(in) :: cft_size  ! CFT size
+    integer, intent(in) :: n_dom_soil_patches  ! # dominant soil patches
+    ! These arrays modified in-place
+    ! Weights of landunits
+    real(r8), intent(inout) :: wt_lunit(begg:,:)
+    ! Weights of managed (cft) and unmanaged (nat_patch) soil patches per
+    ! grid cell
+    ! Dimensioned [g, natpft_lb:natpft_ub]
+    real(r8), intent(inout) :: wt_nat_patch(begg:, natpft_lb:)
+    ! Dimensioned [g, cft_lb:cft_lb+cft_size-1]
+    real(r8), intent(inout) :: wt_cft(begg:, cft_lb:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g  ! gridcell index
+    integer :: m  ! soil patch index
+    integer :: n  ! index of the order of the dominant soil patches
+    integer, allocatable :: max_indices(:)  ! array of dominant soil patch index values
+    real(r8) :: wt_all_patch(natpft_lb:cft_ub)
+    real(r8) :: wt_dom_nat_sum
+    real(r8) :: wt_dom_cft_sum
+    character(len=*), parameter :: subname = 'collapse_all_pfts'
+
+    !-----------------------------------------------------------------------
+    SHR_ASSERT_ALL((ubound(wt_lunit) == (/endg, max_lunit/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_nat_patch) == (/endg, natpft_lb+natpft_size-1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cft_lb+cft_size-1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_all_patch) == (/natpft_lb+natpft_size+cft_size-1/)), errMsg(sourcefile, __LINE__))
+
+    ! Find the top N dominant soil patches to collapse pft data to
+    ! n_dom_soil_patches < 0 is not allowed (error check in controlMod.F90)
+    ! n_dom_soil_patches == 0 or 78 currently mean "do not collapse pfts"
+    ! so skip over this subroutine's work
+    if (n_dom_soil_patches > 0 .and. n_dom_soil_patches < 78) then
+       allocate(max_indices(n_dom_soil_patches))
+       do g = begg, endg
+          ! Normalize nat and cft weights by their landunit weights in
+          ! the gridcell and concatenate into a single array before calling
+          ! find_k_max_indices
+          wt_all_patch(:natpft_ub) = wt_nat_patch(g,:) * &
+                                     wt_lunit(g,istsoil)
+          wt_all_patch(cft_lb:) = wt_cft(g,:) * &
+                                  wt_lunit(g,istcrop)
+          max_indices = 0._r8  ! initialize
+          call find_k_max_indices(wt_all_patch(:), &
+                                  natpft_lb, &
+                                  n_dom_soil_patches, &
+                                  max_indices)
+
+          ! Adjust wt_nat_patch, wt_cft, and their respective wt_lunit by
+          ! normalizing the dominant weights to 1 (currently they sum to <= 1)
+          ! and setting the remaining weights to 0.
+          ! TODO Possible to use existing function renormalize?
+          wt_dom_nat_sum = 0._r8  ! initialize the dominant pft sum
+          wt_dom_cft_sum = 0._r8  ! initialize the dominant cft sum
+          do n = 1, n_dom_soil_patches
+             m = max_indices(n)
+             if (m <= natpft_ub) then  ! calculate the dominant pft sum
+                wt_dom_nat_sum = wt_nat_patch(g,m) + wt_dom_nat_sum
+             else if (m >= cft_lb) then  ! calculate the dominant cft sum
+                wt_dom_cft_sum = wt_cft(g,m) + wt_dom_cft_sum
+             else  ! error message
+                call endrun(subname//': m must range [natpft_lb, cft_ub]')
+             end if
+          end do
+          ! Normalize dominant pft weights to 1; however,
+          ! if non-existent, then merge the nat and crop landunit weights
+          ! and set the pft weights and pft landunit weight to 0.
+          ! Don't bother merging if they're not both > 0.
+          if (wt_dom_nat_sum <= 0._r8) then
+             if (wt_lunit(g,istcrop) > 0._r8 .and. wt_lunit(g,istsoil) > 0._r8) then
+                wt_lunit(g,istcrop) = wt_lunit(g,istcrop) + wt_lunit(g,istsoil)
+             end if
+             wt_lunit(g,istsoil) = 0._r8
+             wt_nat_patch(g,:) = 0._r8
+             wt_nat_patch(g,noveg) = 1._r8  ! to pass error check below
+          else
+             do n = 1, n_dom_soil_patches
+                m = max_indices(n)
+                if (m <= natpft_ub) then
+                   wt_nat_patch(g,m) = wt_nat_patch(g,m) / wt_dom_nat_sum
+                end if
+             end do
+          end if
+          ! Normalize dominant cft weights to 1; however,
+          ! if non-existent, then merge the nat and crop landunit weights
+          ! and set the cft weights and cft landunit weight to 0.
+          ! Don't bother merging if they're not both > 0.
+          if (wt_dom_cft_sum <= 0._r8) then
+             if (wt_lunit(g,istcrop) > 0._r8 .and. wt_lunit(g,istsoil) > 0._r8) then
+                wt_lunit(g,istsoil) = wt_lunit(g,istsoil) + wt_lunit(g,istcrop)
+             end if
+             wt_lunit(g,istcrop) = 0._r8
+             wt_cft(g,:) = 0._r8
+             wt_cft(g,nc3crop) = 1._r8  ! to pass error check below
+          else
+             do n = 1, n_dom_soil_patches
+                m = max_indices(n)
+                if (m >= cft_lb) then
+                   wt_cft(g,m) = wt_cft(g,m) / wt_dom_cft_sum
+                end if
+             end do
+          end if
+          ! Set non-dominant pft and cft weights to 0 for cases where dominant
+          ! pfts or cfts were found
+          do m = 0, maxveg
+             if (.not. any(max_indices == m)) then
+                if (m <= natpft_ub .and. wt_dom_nat_sum > 0._r8) then
+                   wt_nat_patch(g,m) = 0._r8
+                else if (m >= cft_lb .and. wt_dom_cft_sum > 0._r8) then
+                   wt_cft(g,m) = 0._r8
+                end if
+                ! Set to .F. regardless of whether dominant pfts and cfts were
+                ! found
+                pftcon%is_pft_known_to_model(m) = .false.
+             end if
+          end do
+
+       end do
+
+       write(iulog,*) 'is_pft_known...', pftcon%is_pft_known_to_model  ! slevis diag
+
+       ! Error checks
+       call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
+       call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
+
+       deallocate(max_indices)
+    end if
+
+  end subroutine collapse_all_pfts
+
+  !-----------------------------------------------------------------------
+  subroutine collapse_crop_var(crop_var, cft_size, begg, endg)
+    !
+    ! DESCRIPTION
+    ! After collapsing pft & cft weights in collapse_all_pfts, now ensure that
+    ! crop-related variables are consistent with the new crop weights (wt_cft).
+    !
+    ! Crop-related variables (locally named crop_var in this subroutine):
+    !
+    ! !USES:
+    use clm_varpar, only: cft_lb, cft_ub
+    use pftconMod, only: pftcon
+    !
+    ! !ARGUMENTS:
+    ! Use begg and endg rather than 'bounds', because bounds may not be
+    ! available yet when this is called
+    integer, intent(in) :: begg  ! Beginning grid cell index
+    integer, intent(in) :: endg  ! Ending grid cell index
+    integer, intent(in) :: cft_size  ! CFT size
+
+    ! Crop variable dimensioned [g, cft_lb:cft_lb+cft_size-1] modified in-place
+    real(r8), intent(inout) :: crop_var(begg:, cft_lb:)
+
+    ! !LOCAL VARIABLES:
+    integer :: g  ! gridcell index
+    integer :: m  ! cft index
+
+    character(len=*), parameter :: subname = 'collapse_crop_var'
+    !-----------------------------------------------------------------------
+
+    if (cft_size > 0) then  ! The opposite applies only if use_fates
+
+       SHR_ASSERT_ALL((ubound(crop_var) == (/endg, cft_lb+cft_size-1/)), errMsg(sourcefile, __LINE__))
+
+       do g = begg, endg
+          do m = cft_lb, cft_ub
+             if (pftcon%is_pft_known_to_model(m) == .false.) then
+                crop_var(g,m) = 0._r8
+             end if
+          end do
+       end do
+
+    end if
+
+  end subroutine collapse_crop_var
+
+  !-----------------------------------------------------------------------
   subroutine collapse_crop_types(wt_cft, fert_cft, cftsize, begg, endg, verbose, sumto)
     !
     ! !DESCRIPTION:
@@ -162,7 +363,7 @@ contains
     integer, intent(in) :: endg     ! Ending grid cell index
     integer, intent(in) :: cftsize  ! CFT size
 
-    ! Weight and fertilizer of each CFT in each grid cell; dimensioned [g, cft_lb:cft_lb_cftsize-1]
+    ! Weight and fertilizer of each CFT in each grid cell; dimensioned [g, cft_lb:cft_lb+cftsize-1]
     ! This array is modified in-place
     real(r8), intent(inout) :: wt_cft(begg:, cft_lb:)
     real(r8), intent(inout) :: fert_cft(begg:, cft_lb:)

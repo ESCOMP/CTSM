@@ -56,6 +56,7 @@ module clm_varpar
 
   integer, public :: maxpatch_pft     ! obsolete: max number of plant functional types in naturally vegetated landunit (namelist setting)
   integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
+  integer, public :: n_dom_soil_patches  ! # of dominant soil patches; determines the number of active soil patches; default = 78 (= mxpft) set by namelist scripts
 
   ! constants for decomposition cascade
 

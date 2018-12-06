@@ -19,7 +19,7 @@ module controlMod
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
+  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno, n_dom_soil_patches
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -252,6 +252,10 @@ contains
     ! maxpatch_pft will eventually be removed from the perl and the namelist
     namelist /clm_inparm/ maxpatch_pft
 
+    ! Number of dominant soil patches. Enhance ctsm performance by reducing the
+    ! number of active soil patches to n_dom_soil_patches.
+    namelist /clm_inparm/ n_dom_soil_patches
+
     ! flag for SSRE diagnostic
     namelist /clm_inparm/ use_SSRE
 
@@ -352,6 +356,11 @@ contains
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (n_dom_soil_patches < 0) then
+          call endrun(msg=' ERROR: n_dom_soil_patches must be at least 0 ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -622,6 +631,11 @@ contains
     ! maxpatch_pft will eventually be removed from the perl and the namelist
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! Number of dominant soil patches. Enhance ctsm performance by reducing the
+    ! number of active soil patches to n_dom_soil_patches.
+    ! slevis: MPI_LOGICAL w maxpatch_pft? Doesn't matter since obsolete.
+    call mpi_bcast(n_dom_soil_patches, 1, MPI_INTEGER, 0, mpicom, ier)
+
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
     if (use_cn) then
@@ -823,6 +837,7 @@ contains
     else
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
+    write(iulog,*) '   Number of ACTIVE SOIL PATCHES =', n_dom_soil_patches
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &
