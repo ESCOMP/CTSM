@@ -123,7 +123,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, soilhydrology_inst)
+       water_inst, soilhydrology_inst, &
+       use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk water and
@@ -137,6 +138,7 @@ contains
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(water_type)          , intent(inout) :: water_inst
     type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
+    logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -151,7 +153,8 @@ contains
             soilhydrology_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
-            water_inst%bulk_and_tracers(i)%waterbalance_inst)
+            water_inst%bulk_and_tracers(i)%waterbalance_inst, &
+            use_aquifer_layer = use_aquifer_layer)
     end do
 
   end subroutine BeginWaterBalance
@@ -159,7 +162,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstate_inst, waterdiagnostic_inst, waterbalance_inst)
+       soilhydrology_inst, waterstate_inst, waterdiagnostic_inst, waterbalance_inst, &
+       use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk or a
@@ -175,6 +179,7 @@ contains
     class(waterstate_type)    , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)   :: waterdiagnostic_inst
     class(waterbalance_type)  , intent(inout) :: waterbalance_inst
+    logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer :: c, j, fc                  ! indices
@@ -189,14 +194,16 @@ contains
          h2osno_old => waterbalance_inst%h2osno_old_col   & ! Output: [real(r8) (:)   ]  snow water (mm H2O) at previous time step
          )
 
-   do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
-       if (col%hydrologically_active(c)) then
-          if(zwt(c) <= zi(c,nlevsoi)) then
-             wa(c) = aquifer_water_baseline
-          end if
-       end if
-    end do
+      if(use_aquifer_layer) then
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (col%hydrologically_active(c)) then
+               if(zwt(c) <= zi(c,nlevsoi)) then
+                  wa(c) = aquifer_water_baseline
+               end if
+            end if
+         end do
+      endif
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstate_inst, waterdiagnostic_inst, begwb(bounds%begc:bounds%endc))
@@ -305,8 +312,7 @@ contains
           qflx_ice_runoff_xs      =>    waterflux_inst%qflx_ice_runoff_xs_col   , & ! Input:  [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s)
           qflx_sl_top_soil        =>    waterflux_inst%qflx_sl_top_soil_col     , & ! Input:  [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 
-          qflx_irrig              =>    waterflux_inst%qflx_irrig_col          , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
-
+          qflx_sfc_irrig          =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
           qflx_glcice_dyn_water_flux => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
@@ -378,7 +384,7 @@ contains
                   - (forc_rain_col(c)        &
                   + forc_snow_col(c)         &
                   + qflx_floodc(c)           &
-                  + qflx_irrig(c)            &
+                  + qflx_sfc_irrig(c)        &
                   + qflx_glcice_dyn_water_flux(c) &
                   - qflx_evap_tot(c)         &
                   - qflx_surf(c)             &
@@ -427,7 +433,7 @@ contains
              write(iulog,*)'endwb                 = ',endwb(indexc)
              write(iulog,*)'begwb                 = ',begwb(indexc)
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
-             write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
+             write(iulog,*)'qflx_sfc_irrig        = ',qflx_sfc_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
@@ -454,7 +460,7 @@ contains
              write(iulog,*)'begwb                 = ',begwb(indexc)
              
              write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
-             write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
+             write(iulog,*)'qflx_sfc_irrig        = ',qflx_sfc_irrig(indexc)*dtime
              write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
              write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
              write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime

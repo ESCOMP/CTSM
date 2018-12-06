@@ -126,6 +126,9 @@ module clm_varctl
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
+  ! set saturated excess runoff to zero for crops
+  logical, public :: crop_fsat_equals_zero = .false.
+  
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
