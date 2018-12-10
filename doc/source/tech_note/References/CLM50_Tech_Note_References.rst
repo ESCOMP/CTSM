@@ -673,6 +673,14 @@ Nobel, C.B. Osmond, and H. Zeigler (editors) Encyclopedia of Plant
 Physiology. Vol. 12B. Physiological Plant Ecology. II. Water Relations
 and Carbon Assimilation. Springer-Verlag, New York.
 
+.. _FeddemaKauffman2016:
+
+|br|
+
+Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2).
+NCAR THESIS Tools Library. Retrieved from: https://svn-iam-thesis-release.cgd.ucar.edu/urban_properties/.
+doi:10.5065/D6R78CMT.
+
 .. _Ferrari1999:
 
 |br|
@@ -1967,6 +1975,14 @@ National Center for Atmospheric Research, Boulder, CO, 169 pp.
 Oleson, K.W., et al. 2013. Technical description of version 4.5 of the
 Community Land Model (CLM). NCAR Technical Note NCAR/TN-503+STR,
 National Center for Atmospheric Research, Boulder, CO, 420 pp.
+
+.. _OlesonFeddema2018:
+
+|br|
+
+Oleson, K.W., and Feddema, J. 2018. Parameterization and surface data
+improvements and new capabilities for the Community Land Model
+Urban (CLMU). JAMES, submitted. 
 
 .. _Olson1963:
 
