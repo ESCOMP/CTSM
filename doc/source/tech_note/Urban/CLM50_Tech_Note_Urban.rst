@@ -104,6 +104,26 @@ climate and socioeconomic considerations. The surface dataset creation
 routines (see CLM5.0 User’s Guide) aggregate the data to the desired
 resolution.
 
+An optional urban properties dataset, including a tool that allows for generating future
+urban development scenarios is also available (:ref:`Oleson and Feddema (2018) <OlesonFeddema2018>`).
+This will become the default dataset in future model versions.
+As described in :ref:`Oleson and Feddema (2018) <OlesonFeddema2018>` the urban properties dataset
+in :ref:`Jackson et al. (2010) <Jacksonetal2010>` was modified with respect to wall and roof thermal
+properties to correct for biases in heat transfer due to layer and building type averaging. 
+Further changes to the dataset reflect the need for scenario development, thus allowing for 
+the creation of hypothetical wall types, and the easier interchange of wall facets.
+The new urban properties tool is available as part of the Toolbox for Human-Earth System 
+Integration & Scaling (THESIS) tool set 
+(http://www.cgd.ucar.edu/iam/projects/thesis/thesis-urbanproperties-tool.html; 
+:ref:`Feddema and Kauffman (2016) <FeddemaKauffman2016>`). The driver script (urban_prop.csh) 
+specifies three input csv files (by default, mat_prop.csv, 
+lam_spec.csv, and city_spec.csv; (:numref:`Figure schematic of THESIS urban properties tool`)) 
+that describe the morphological, radiative, and thermal properties of urban areas, and 
+generates a global dataset at 0.05° latitude by longitude in NetCDF format (urban_properties_data.05deg.nc).
+A standalone NCL routine (gen_data_clm.ncl) can be run separately after the mksurfdata_map tool creates 
+the CLM surface dataset.  This creates a supplementary streams file of setpoints for the maximum 
+interior building temperature at yearly time resolution.
+
 .. Figure 12.1. Schematic representation of the urban land unit
 
 .. _Figure schematic representation of the urban landunit:
@@ -120,6 +140,15 @@ resolution.
 .. Figure:: image2.png
 
  Schematic of urban and atmospheric model coupling.  The urban model is forced by the atmospheric model wind (:math:`u_{atm}` ), temperature (:math:`T_{atm}` ), specific humidity (:math:`q_{atm}` ), precipitation (:math:`P_{atm}` ), solar (:math:`S_{atm} \, \downarrow` ) and longwave (:math:`L_{atm} \, \downarrow` ) radiation at reference height :math:`z'_{atm}`  (section :numref:`Atmospheric Coupling`). Fluxes from the urban landunit to the atmosphere are turbulent sensible (:math:`H`) and latent heat (:math:`\lambda E`), momentum (:math:`\tau` ), albedo (:math:`I\uparrow` ), emitted longwave (:math:`L\uparrow` ), and absorbed shortwave (:math:`\vec{S}`) radiation. Air temperature (:math:`T_{ac}` ), specific humidity (:math:`q_{ac}` ), and wind speed (:math:`u_{c}` ) within the urban canopy layer are diagnosed by the urban model. :math:`H` is the average building height.
+
+.. Figure 12.3. Schematic of THESIS urban properties tool
+
+.. _Figure schematic of THESIS urban properties tool:
+
+.. Figure:: image3.gif
+
+ Schematic of THESIS urban properties tool.  Executable scripts are in orange, input files are blue, and output files are green.  Items within the black box outline are either read in as input, executed, or output by the driver script (urban_prop.csh).  
+
 
 The urban model that was first released as a component of CLM4.0 is separately
 described in the urban technical note (:ref:`Oleson et al. (2010b) <Olesonetal2010b>`).
@@ -144,8 +173,9 @@ variable.  The maximum building temperatures that are defined in
 :ref:`Jackson et al. (2010) <Jacksonetal2010>` are implemented in year 1950 (thus
 air conditioning is off in prior years) and air conditioning is turned off in year
 2100 (because the buildings are not suitable for air conditioning in some extreme
-global warming scenarios).  These feature will be described in more detail in 
-a forthcoming paper. In addition, a module of heat stress indices calculated online
+global warming scenarios), 3) an optional updated urban properties dataset and new 
+scenario tool.  These features are described in more detail in :ref:`Oleson and Feddema (2018) <OlesonFeddema2018>`. 
+In addition, a module of heat stress indices calculated online
 in the model that can be used to assess human thermal comfort for rural and urban
 areas has been added.  This last development is described and evaluated by 
 :ref:`Buzan et al. (2015) <Buzanetal2015>`.
