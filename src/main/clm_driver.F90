@@ -461,6 +461,16 @@ contains
 
        end if
 
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after IrrigationWithdrawals')
+             call t_stopf("tracer_consistency_check")
+          end if
+       end if
+
        ! ============================================================================
        ! Canopy Hydrology
        ! (1) water storage of intercepted precipitation
