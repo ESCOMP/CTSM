@@ -186,6 +186,12 @@ module CNVegCarbonFluxType
 
      ! growth respiration fluxes                               
      real(r8), pointer :: xsmrpool_to_atm_patch                     (:)     ! excess MR pool harvest mortality (gC/m2/s)
+!KO
+     real(r8), pointer :: xsmrpool_loss_to_atm_patch                (:)     ! excess MR pool crop harvest loss to atm (gC/m2/s)
+     real(r8), pointer :: xsmrpool_loss_to_atm_col                  (:)     ! excess MR pool crop harvest loss to atm (gC/m2/s) (p2c)
+     real(r8), pointer :: xsmrpool_loss_store_patch                 (:)     ! excess MR pool crop harvest loss storage (gC/m2/s)
+     real(r8), pointer :: xsmrpool_loss_store_col                   (:)     ! excess MR pool crop harvest loss storage (gC/m2/s) (p2c)
+!KO
      real(r8), pointer :: cpool_leaf_gr_patch                       (:)     ! leaf growth respiration (gC/m2/s)
      real(r8), pointer :: cpool_leaf_storage_gr_patch               (:)     ! leaf growth respiration to storage (gC/m2/s)
      real(r8), pointer :: transfer_leaf_gr_patch                    (:)     ! leaf growth respiration from storage (gC/m2/s)
@@ -601,6 +607,12 @@ contains
     allocate(this%cpool_grain_storage_gr_patch              (begp:endp)) ; this%cpool_grain_storage_gr_patch              (:) = nan
     allocate(this%transfer_grain_gr_patch                   (begp:endp)) ; this%transfer_grain_gr_patch                   (:) = nan
     allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = nan
+!KO
+    allocate(this%xsmrpool_loss_to_atm_patch                (begp:endp)) ; this%xsmrpool_loss_to_atm_patch                (:) = nan
+    allocate(this%xsmrpool_loss_to_atm_col                  (begc:endc)) ; this%xsmrpool_loss_to_atm_col                  (:) = nan 
+    allocate(this%xsmrpool_loss_store_patch                 (begp:endp)) ; this%xsmrpool_loss_store_patch                 (:) = nan
+    allocate(this%xsmrpool_loss_store_col                   (begc:endc)) ; this%xsmrpool_loss_store_col                   (:) = nan
+!KO
     allocate(this%grainc_storage_to_xfer_patch              (begp:endp)) ; this%grainc_storage_to_xfer_patch              (:) = nan
     allocate(this%frootc_alloc_patch                        (begp:endp)) ; this%frootc_alloc_patch                        (:) = nan
     allocate(this%frootc_loss_patch                         (begp:endp)) ; this%frootc_loss_patch                         (:) = nan
@@ -3818,6 +3830,10 @@ contains
        do fi = 1,num_patch
           i = filter_patch(fi)
           this%xsmrpool_to_atm_patch(i)         = value_patch
+!KO
+          this%xsmrpool_loss_to_atm_patch(i)    = value_patch
+          this%xsmrpool_loss_store_patch(i)     = value_patch
+!KO
           this%livestemc_to_litter_patch(i)     = value_patch
           this%grainc_to_food_patch(i)          = value_patch
           this%grainc_to_seed_patch(i)          = value_patch
@@ -3880,6 +3896,7 @@ contains
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
+
     end do
 
     do fi = 1,num_patch
@@ -3938,8 +3955,11 @@ contains
        this%fire_closs_col(i)          = value_column 
        this%wood_harvestc_col(i)       = value_column 
        this%hrv_xsmrpool_to_atm_col(i) = value_column
-
        this%nep_col(i)                 = value_column
+!KO
+       this%xsmrpool_loss_to_atm_col(i)= value_column
+       this%xsmrpool_loss_store_col(i) = value_column
+!KO
 
     end do
 
@@ -4400,7 +4420,16 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          this%hrv_xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
          this%hrv_xsmrpool_to_atm_col(bounds%begc:bounds%endc))
-
+!KO
+    if (use_crop) then
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%xsmrpool_loss_to_atm_patch(bounds%begp:bounds%endp), &
+            this%xsmrpool_loss_to_atm_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%xsmrpool_loss_store_patch(bounds%begp:bounds%endp), &
+            this%xsmrpool_loss_store_col(bounds%begc:bounds%endc))
+    end if
+!KO
     call p2c(bounds, num_soilc, filter_soilc, &
          this%fire_closs_patch(bounds%begp:bounds%endp), &
          this%fire_closs_p2c_col(bounds%begc:bounds%endc))
