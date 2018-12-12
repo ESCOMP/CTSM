@@ -75,9 +75,6 @@ module test_irrigation
      ! Return total irrigation withdrawal for a given column
      procedure :: totalIrrigationWithdrawalCol
 
-     ! Return total irrigation application for a given column
-     procedure :: totalIrrigationApplicationCol
-
      ! Assert that total irrigation withdrawal and application both equal expected for a
      ! given patch
      procedure :: assertTotalIrrigationEquals
@@ -140,9 +137,7 @@ contains
     deallocate(this%waterflux%qflx_gw_con_irrig_patch)
     deallocate(this%waterflux%qflx_gw_con_irrig_col)
     deallocate(this%waterflux%qflx_irrig_drip_patch)
-    deallocate(this%waterflux%qflx_irrig_drip_col)
     deallocate(this%waterflux%qflx_irrig_sprinkler_patch)
-    deallocate(this%waterflux%qflx_irrig_sprinkler_col)
     call this%teardownEnvironment()
     call unittest_subgrid_teardown()
   end subroutine tearDown
@@ -264,9 +259,7 @@ contains
     allocate(this%waterflux%qflx_gw_con_irrig_patch(bounds%begp:bounds%endp), source=0._r8)
     allocate(this%waterflux%qflx_gw_con_irrig_col(bounds%begc:bounds%endc), source=0._r8)
     allocate(this%waterflux%qflx_irrig_drip_patch(bounds%begp:bounds%endp), source=0._r8)
-    allocate(this%waterflux%qflx_irrig_drip_col(bounds%begc:bounds%endc), source=0._r8)
     allocate(this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp:bounds%endp), source=0._r8)
-    allocate(this%waterflux%qflx_irrig_sprinkler_col(bounds%begc:bounds%endc), source=0._r8)
 
     ! Set inputs to irrigation routines
     allocate(this%elai(bounds%begp:bounds%endp), source=10._r8)
@@ -593,28 +586,6 @@ contains
   end function totalIrrigationWithdrawalCol
 
   !-----------------------------------------------------------------------
-  function totalIrrigationApplicationCol(this, c) result(total_application)
-    !
-    ! !DESCRIPTION:
-    ! Return total irrigation application for column c
-    !
-    ! !ARGUMENTS:
-    real(r8), allocatable :: total_application  ! function result
-    class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: c  ! column index
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'totalIrrigationApplicationCol'
-    !-----------------------------------------------------------------------
-
-    total_application = &
-         this%waterflux%qflx_irrig_drip_col(c) + &
-         this%waterflux%qflx_irrig_sprinkler_col(c)
-
-  end function totalIrrigationApplicationCol
-
-  !-----------------------------------------------------------------------
   subroutine assertTotalIrrigationEquals(this, p, expected)
     !
     ! !DESCRIPTION:
@@ -640,8 +611,8 @@ contains
   subroutine assertTotalIrrigationEqualsCol(this, c, expected)
     !
     ! !DESCRIPTION:
-    ! Assert that total irrigation withdrawal and application both equal expected for a
-    ! given column
+    ! Assert that total irrigation withdrawal equals expected for a given column (note
+    ! that there are no col-level application fluxes, so application is not checked here)
     !
     ! !ARGUMENTS:
     class(TestIrrigation), intent(in) :: this
@@ -654,8 +625,6 @@ contains
     !-----------------------------------------------------------------------
 
     @assertEqual(expected, this%totalIrrigationWithdrawalCol(c), tolerance=tol)
-    @assertEqual(expected, this%totalIrrigationApplicationCol(c), tolerance=tol)
-
   end subroutine assertTotalIrrigationEqualsCol
 
   !-----------------------------------------------------------------------
@@ -796,9 +765,8 @@ contains
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(bounds%begp, expected)
-    ! Make sure all irrigation comes from drip (both patch and column-level)
+    ! Make sure all irrigation comes from drip
     @assertEqual(expected, this%waterflux%qflx_irrig_drip_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected, this%waterflux%qflx_irrig_drip_col(bounds%begc), tolerance=tol)
 
   end subroutine drip
 
@@ -821,9 +789,8 @@ contains
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEquals(bounds%begp, expected)
-    ! Make sure all irrigation comes from sprinkler (both patch and column-level)
+    ! Make sure all irrigation comes from sprinkler
     @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp), tolerance=tol)
-    @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_col(bounds%begc), tolerance=tol)
 
   end subroutine sprinkler
 
@@ -1352,6 +1319,7 @@ contains
     real(r8), allocatable :: deficits(:,:)
     real(r8) :: total_deficit
     real(r8) :: col_total_deficit
+    real(r8) :: expected_patch_flux
     real(r8) :: expected_col_flux
 
     ! Setup grid
@@ -1371,8 +1339,10 @@ contains
     ! Note that only the second patch contributes to the average, because it is the only
     ! irrigated patch
     total_deficit = sum(deficits(bounds%begp+1, 1:nlevsoi))
+    expected_patch_flux = total_deficit / this%irrigation_params%irrig_length
     col_total_deficit = total_deficit * wt_irrig
     expected_col_flux = col_total_deficit / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(bounds%begp+1, expected_patch_flux)
     call this%assertTotalIrrigationEqualsCol(bounds%begc, expected_col_flux)
   end subroutine multiple_patches_per_column
 

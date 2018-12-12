@@ -897,9 +897,7 @@ contains
          qflx_gw_con_irrig_patch   => waterfluxbulk_inst%qflx_gw_con_irrig_patch   , & ! Output: [real(r8) (:)] patch confined groundwater irrigation flux (mm H2O/s)
          qflx_gw_con_irrig_col     => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! Output: [real(r8) (:)] col confined groundwater irrigation flux (mm H2O/s)
          qflx_irrig_drip_patch     => waterfluxbulk_inst%qflx_irrig_drip_patch     , & ! Output: [real(r8) (:)] patch drip irrigation flux (mm H2O/s)
-         qflx_irrig_drip_col       => waterfluxbulk_inst%qflx_irrig_drip_col       , & ! Output: [real(r8) (:)] col drip irrigation flux (mm H2O/s)
-         qflx_irrig_sprinkler_patch=> waterfluxbulk_inst%qflx_irrig_sprinkler_patch, & ! Output: [real(r8) (:)] patch sprinkler irrigation flux (mm H2O/s)
-         qflx_irrig_sprinkler_col  => waterfluxbulk_inst%qflx_irrig_sprinkler_col    & ! Output: [real(r8) (:)] col sprinkler irrigation flux (mm H2O/s)
+         qflx_irrig_sprinkler_patch=> waterfluxbulk_inst%qflx_irrig_sprinkler_patch  & ! Output: [real(r8) (:)] patch sprinkler irrigation flux (mm H2O/s)
          )
       
     do fp = 1, num_soilp
@@ -962,14 +960,6 @@ contains
 
     end do
 
-    call p2c (bounds, num_soilc, filter_soilc, &
-         patcharr = qflx_irrig_drip_patch(bounds%begp:bounds%endp), &
-         colarr = qflx_irrig_drip_col(bounds%begc:bounds%endc))
-    
-    call p2c (bounds, num_soilc, filter_soilc, &
-         patcharr = qflx_irrig_sprinkler_patch(bounds%begp:bounds%endp), &
-         colarr = qflx_irrig_sprinkler_col(bounds%begc:bounds%endc))
-    
     end associate
 
   end subroutine ApplyIrrigation

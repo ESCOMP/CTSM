@@ -101,9 +101,7 @@ module WaterFluxType
      real(r8), pointer :: qflx_gw_con_irrig_patch   (:)   ! patch confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_gw_con_irrig_col     (:)   ! col confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_irrig_drip_patch     (:)   ! patch drip irrigation
-     real(r8), pointer :: qflx_irrig_drip_col       (:)   ! col   drip irrigation
      real(r8), pointer :: qflx_irrig_sprinkler_patch(:)   ! patch sprinkler irrigation
-     real(r8), pointer :: qflx_irrig_sprinkler_col  (:)   ! col   sprinkler irrigation
 
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
@@ -355,16 +353,10 @@ contains
     call AllocateVar1d(var = this%qflx_irrig_drip_patch, name = 'qflx_irrig_drip_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_irrig_drip_col, name = 'qflx_irrig_drip_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
     call AllocateVar1d(var = this%qflx_irrig_sprinkler_patch, name = 'qflx_irrig_sprinkler_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_irrig_sprinkler_col, name = 'qflx_irrig_sprinkler_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     
     this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
          bounds = bounds, &
@@ -811,9 +803,7 @@ contains
     this%qflx_gw_con_irrig_patch (bounds%begp:bounds%endp)    = 0.0_r8
     this%qflx_gw_con_irrig_col (bounds%begc:bounds%endc)      = 0.0_r8
     this%qflx_irrig_drip_patch (bounds%begp:bounds%endp)      = 0.0_r8
-    this%qflx_irrig_drip_col (bounds%begc:bounds%endc)        = 0.0_r8
     this%qflx_irrig_sprinkler_patch (bounds%begp:bounds%endp) = 0.0_r8
-    this%qflx_irrig_sprinkler_col (bounds%begc:bounds%endc)   = 0.0_r8
     
     this%qflx_evap_grnd_col(bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_grnd_col (bounds%begc:bounds%endc) = 0.0_r8
