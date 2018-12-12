@@ -13,7 +13,7 @@ module test_surfrdUtils
 
 contains
   
-  subroutine setup_test_collapse_crop_types(cftsize)
+  subroutine setup_test_collapse_routines(cftsize)
      ! called during setup of all subroutines test_collapse_crop_types_*
      use pftconMod, only : pftcon, nc3crop, nc3irrig
      use clm_varpar, only : maxveg, cft_lb, cft_ub, natpft_size, natpft_lb, natpft_ub
@@ -41,7 +41,7 @@ contains
      cft_lb = natpft_ub + 1
      cft_ub = cft_lb + cftsize - 1
 
-  end subroutine setup_test_collapse_crop_types
+  end subroutine setup_test_collapse_routines
 
   @Test
   subroutine test_collapse_all_pfts_and_cfts_to_2()
@@ -63,7 +63,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
      allocate( wt_lunit(begg:endg,max_lunit) )
      allocate( wt_nat_patch(begg:endg,0:natpft_ub) )
      allocate( wt_nat_patch_expected(begg:endg,0:natpft_ub) )
@@ -76,7 +76,7 @@ contains
      call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
      wt_nat_patch(begg:,:) = 0._r8  ! initialize
-     wt_nat_patch(begg:,0) = (/  5._r8, 40._r8 /)  ! bare ground
+     wt_nat_patch(begg:,0) = (/  5._r8, 40._r8 /)  ! pft 0 is bare ground
      wt_nat_patch(begg:,1) = (/ 10._r8, 20._r8 /)  ! pft 1
      wt_nat_patch(begg:,2) = (/ 20._r8,  0._r8 /)  ! pft 2
      wt_nat_patch(begg:,3) = (/ 30._r8,  0._r8 /)  ! pft 3
@@ -85,8 +85,8 @@ contains
      wt_nat_patch(:,:) = wt_nat_patch(:,:) / 100._r8
      call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     wt_cft(begg:,:) = reshape((/ 5._r8, 30._r8, &  ! nc3crop
-                                 10._r8, 10._r8, &  ! nc3irrig
+     wt_cft(begg:,:) = reshape((/ 5._r8, 30._r8, &  ! cft 1 is nc3crop
+                                 10._r8, 10._r8, &  ! cft 2 is nc3irrig
                                  40._r8, 20._r8, &  ! cft 3
                                  30._r8,  5._r8, &  ! cft 4
                                  15._r8, 15._r8, &  ! cft 5
@@ -96,17 +96,21 @@ contains
                               "should not trigger an error")
 
      ! Output values expected
+     ! For the check_sums_equal_1 tests to pass
+     ! wt_nat_patch and wt_cft need their first array entries set to 1 when
+     ! their respective landunits are not present,
+     ! i.e., when wt_lunit(:,istsoil) = 0 or wt_lunit(:,istcrop) = 0,
      wt_lunit_expected(begg:,istsoil) = (/ 0._r8, 1._r8 /)  ! istsoil
      wt_lunit_expected(begg:,istcrop) = (/ 1._r8, 0._r8 /)  ! istcrop
      call check_sums_equal_1( wt_lunit_expected, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
      wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
-     wt_nat_patch_expected(begg:,0) = (/ 1._r8, 40._r8/70._r8 /)  ! bare soil
+     wt_nat_patch_expected(begg:,0) = (/ 1._r8, 40._r8/70._r8 /)  ! pft 0
      wt_nat_patch_expected(begg:,5) = (/ 0._r8, 30._r8/70._r8 /)  ! pft 5
      call check_sums_equal_1( wt_nat_patch_expected, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     wt_cft_expected(begg:,:) = reshape((/     0._r8, 1._r8, &  ! nc3crop
-                                               0._r8, 0._r8, &  ! nc3irrig
+     wt_cft_expected(begg:,:) = reshape((/     0._r8, 1._r8, &  ! cft 1
+                                               0._r8, 0._r8, &  ! cft 2
                                        40._r8/70._r8, 0._r8, &  ! cft 3
                                        30._r8/70._r8, 0._r8, &  ! cft 4
                                                0._r8, 0._r8, &  ! cft 5
@@ -128,11 +132,9 @@ contains
      call check_sums_equal_1( wt_cft, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
 
-     write(*,*) 'wt_cft = ', wt_cft
-     write(*,*) 'wt_cft_exp = ', wt_cft_expected
      @assertEqual(wt_lunit(begg:,:), wt_lunit_expected(begg:,:))
-     @assertEqual(wt_nat_patch(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=tol)
      @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:), tolerance=tol)
+     @assertEqual(wt_nat_patch(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=tol)
 
      deallocate( wt_nat_patch_expected )
      deallocate( wt_nat_patch )
@@ -163,7 +165,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
 
      ! Collapse crop types
      call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true.)
@@ -204,7 +206,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
      irrigate = .false.  ! named the test 16_to_15 because we collapse the...
      use_crop = .false.  ! ...irrigated with the unirrigated
 
@@ -251,7 +253,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
      irrigate = .true.
      use_crop = .false.
 
@@ -303,7 +305,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
      irrigate = .true.
      use_crop = .false.
      pftcon%mergetoclmpft(17) = nc3crop
@@ -357,7 +359,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
      irrigate = .false.
      use_crop = .false.
      pftcon%mergetoclmpft(17) = nc3crop
@@ -404,7 +406,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
      irrigate = .true.
      use_crop = .true.
      pftcon%mergetoclmpft(17) = 17
@@ -459,7 +461,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_crop_types(cftsize)
+     call setup_test_collapse_routines(cftsize)
      irrigate = .true.
      use_crop = .true.
      pftcon%mergetoclmpft(17) = 19
