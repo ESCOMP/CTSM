@@ -743,7 +743,7 @@ contains
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('water added through confined groundwater irrigation'), &
-         ptr_patch=this%qflx_gw_con_irrig_col)
+         ptr_col=this%qflx_gw_con_irrig_col)
 
     this%qflx_irrig_drip_patch(begp:endp) = spval
     call hist_addfld1d ( &
