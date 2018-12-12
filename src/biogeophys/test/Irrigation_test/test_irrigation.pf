@@ -1370,6 +1370,10 @@ contains
     ! computed correctly.
     !
     ! This version gets all irrigation from surface (river) water
+    !
+    ! NOTE(wjs, 2018-12-12) If we ever allow different patches in a column to have
+    ! different irrigation amounts (e.g., due to some pft-specific parameter), it would
+    ! be good to change this test to leverage that, to make it a stronger test.
     class(TestIrrigation), intent(inout) :: this
     real(r8), parameter :: wt_irrig1 = 0.5_r8
     real(r8), parameter :: wt_unirrig = 0.2_r8
@@ -1408,6 +1412,10 @@ contains
     ! computed correctly.
     !
     ! This version gets all irrigation from the unconfined aquifer
+    !
+    ! NOTE(wjs, 2018-12-12) If we ever allow different patches in a column to have
+    ! different irrigation amounts (e.g., due to some pft-specific parameter), it would
+    ! be good to change this test to leverage that, to make it a stronger test.
     class(TestIrrigation), intent(inout) :: this
     real(r8), parameter :: wt_irrig1 = 0.5_r8
     real(r8), parameter :: wt_unirrig = 0.2_r8
@@ -1451,6 +1459,10 @@ contains
     ! computed correctly.
     !
     ! This version gets all irrigation from the confined aquifer
+    !
+    ! NOTE(wjs, 2018-12-12) If we ever allow different patches in a column to have
+    ! different irrigation amounts (e.g., due to some pft-specific parameter), it would
+    ! be good to change this test to leverage that, to make it a stronger test.
     class(TestIrrigation), intent(inout) :: this
     real(r8), parameter :: wt_irrig1 = 0.5_r8
     real(r8), parameter :: wt_unirrig = 0.2_r8
