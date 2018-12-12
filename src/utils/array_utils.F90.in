@@ -4,10 +4,11 @@ module array_utils
   ! !DESCRIPTION:
   ! This module contains routines for working with arrays.
   !
-  ! NOTE(wjs, 2015-10-21) These routines could be moved to csm_share. However, I'm not
-  ! sure if some of these routines will stick around for long, since they are just here to
-  ! work around the fact that we don't specify -Mallocatable=03 with pgi (which in turn is
-  ! because that flag led to bugs with pgi14).
+  ! NOTES
+  ! Subroutines transpose_wrapper_* and pack_wrapper could be moved to csm_share
+  ! if they stick around for long; they are just here to work around the fact
+  ! that we don't specify -Mallocatable=03 with pgi (which in turn is because
+  ! that flag led to bugs with pgi14).
   !
   ! !USES:
 

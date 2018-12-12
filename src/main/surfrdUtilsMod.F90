@@ -113,7 +113,7 @@ contains
     !        Convert generic crop types that were read in as seperate CFT's on
     !        a crop landunit, and put them on the vegetated landunit.
     ! !USES:
-    use clm_instur      , only : wt_lunit, wt_nat_patch  ! fert_cft unnecessary
+    use clm_instur      , only : wt_lunit, wt_nat_patch
     use clm_varpar      , only : cft_size, natpft_size
     use pftconMod       , only : nc3crop
     use landunit_varcon , only : istsoil, istcrop
@@ -190,110 +190,112 @@ contains
     character(len=*), parameter :: subname = 'collapse_all_pfts'
 
     !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((ubound(wt_lunit) == (/endg, max_lunit/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_nat_patch) == (/endg, natpft_lb+natpft_size-1/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cft_lb+cft_size-1/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_all_patch) == (/natpft_lb+natpft_size+cft_size-1/)), errMsg(sourcefile, __LINE__))
 
-    ! Find the top N dominant soil patches to collapse pft data to
-    ! n_dom_soil_patches < 0 is not allowed (error check in controlMod.F90)
-    ! n_dom_soil_patches == 0 or 78 currently mean "do not collapse pfts"
-    ! so skip over this subroutine's work
-    if (n_dom_soil_patches > 0 .and. n_dom_soil_patches < 78) then
-       allocate(max_indices(n_dom_soil_patches))
-       do g = begg, endg
-          ! Normalize nat and cft weights by their landunit weights in
-          ! the gridcell and concatenate into a single array before calling
-          ! find_k_max_indices
-          wt_all_patch(:natpft_ub) = wt_nat_patch(g,:) * &
-                                     wt_lunit(g,istsoil)
-          wt_all_patch(cft_lb:) = wt_cft(g,:) * &
-                                  wt_lunit(g,istcrop)
-          max_indices = 0._r8  ! initialize
-          call find_k_max_indices(wt_all_patch(:), &
-                                  natpft_lb, &
-                                  n_dom_soil_patches, &
-                                  max_indices)
+    if (cft_size > 0) then  ! The opposite applies only if use_fates
 
-          ! Adjust wt_nat_patch, wt_cft, and their respective wt_lunit by
-          ! normalizing the dominant weights to 1 (currently they sum to <= 1)
-          ! and setting the remaining weights to 0.
-          ! TODO Possible to use existing function renormalize?
-          wt_dom_nat_sum = 0._r8  ! initialize the dominant pft sum
-          wt_dom_cft_sum = 0._r8  ! initialize the dominant cft sum
-          do n = 1, n_dom_soil_patches
-             m = max_indices(n)
-             if (m <= natpft_ub) then  ! calculate the dominant pft sum
-                wt_dom_nat_sum = wt_nat_patch(g,m) + wt_dom_nat_sum
-             else if (m >= cft_lb) then  ! calculate the dominant cft sum
-                wt_dom_cft_sum = wt_cft(g,m) + wt_dom_cft_sum
-             else  ! error message
-                call endrun(subname//': m must range [natpft_lb, cft_ub]')
-             end if
-          end do
-          ! Normalize dominant pft weights to 1; however,
-          ! if non-existent, then merge the nat and crop landunit weights
-          ! and set the pft weights and pft landunit weight to 0.
-          ! Don't bother merging if they're not both > 0.
-          if (wt_dom_nat_sum <= 0._r8) then
-             if (wt_lunit(g,istcrop) > 0._r8 .and. wt_lunit(g,istsoil) > 0._r8) then
-                wt_lunit(g,istcrop) = wt_lunit(g,istcrop) + wt_lunit(g,istsoil)
-             end if
-             wt_lunit(g,istsoil) = 0._r8
-             wt_nat_patch(g,:) = 0._r8
-             wt_nat_patch(g,noveg) = 1._r8  ! to pass error check below
-          else
+       SHR_ASSERT_ALL((ubound(wt_lunit) == (/endg, max_lunit/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL((ubound(wt_nat_patch) == (/endg, natpft_lb+natpft_size-1/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cft_lb+cft_size-1/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL((ubound(wt_all_patch) == (/natpft_lb+natpft_size+cft_size-1/)), errMsg(sourcefile, __LINE__))
+
+       ! Find the top N dominant soil patches to collapse pft data to
+       ! n_dom_soil_patches < 0 is not allowed (error check in controlMod.F90)
+       ! n_dom_soil_patches == 0 or 78 currently mean "do not collapse pfts"
+       ! so skip over this subroutine's work
+       if (n_dom_soil_patches > 0 .and. n_dom_soil_patches < maxveg) then
+          allocate(max_indices(n_dom_soil_patches))
+          do g = begg, endg
+             ! Normalize nat and cft weights by their landunit weights in
+             ! the gridcell and concatenate into a single array before calling
+             ! find_k_max_indices
+             wt_all_patch(:natpft_ub) = wt_nat_patch(g,:) * &
+                                        wt_lunit(g,istsoil)
+             wt_all_patch(cft_lb:) = wt_cft(g,:) * &
+                                     wt_lunit(g,istcrop)
+             max_indices = 0._r8  ! initialize
+             call find_k_max_indices(wt_all_patch(:), &
+                                     natpft_lb, &
+                                     n_dom_soil_patches, &
+                                     max_indices)
+
+             ! Adjust wt_nat_patch, wt_cft, and their respective wt_lunit by
+             ! normalizing the dominant weights to 1 (currently they sum to <= 1)
+             ! and setting the remaining weights to 0.
+             ! TODO Possible to use existing function renormalize?
+             wt_dom_nat_sum = 0._r8  ! initialize the dominant pft sum
+             wt_dom_cft_sum = 0._r8  ! initialize the dominant cft sum
              do n = 1, n_dom_soil_patches
                 m = max_indices(n)
-                if (m <= natpft_ub) then
-                   wt_nat_patch(g,m) = wt_nat_patch(g,m) / wt_dom_nat_sum
+                if (m <= natpft_ub) then  ! calculate the dominant pft sum
+                   wt_dom_nat_sum = wt_nat_patch(g,m) + wt_dom_nat_sum
+                else if (m >= cft_lb) then  ! calculate the dominant cft sum
+                   wt_dom_cft_sum = wt_cft(g,m) + wt_dom_cft_sum
+                else  ! error message
+                   call endrun(subname//': m must range [natpft_lb, cft_ub]')
                 end if
              end do
-          end if
-          ! Normalize dominant cft weights to 1; however,
-          ! if non-existent, then merge the nat and crop landunit weights
-          ! and set the cft weights and cft landunit weight to 0.
-          ! Don't bother merging if they're not both > 0.
-          if (wt_dom_cft_sum <= 0._r8) then
-             if (wt_lunit(g,istcrop) > 0._r8 .and. wt_lunit(g,istsoil) > 0._r8) then
-                wt_lunit(g,istsoil) = wt_lunit(g,istsoil) + wt_lunit(g,istcrop)
+             ! Normalize dominant pft weights to 1; however,
+             ! if non-existent, then merge the nat and crop landunit weights
+             ! and set the pft weights and pft landunit weight to 0.
+             ! Don't bother merging if they're not both > 0.
+             if (wt_dom_nat_sum <= 0._r8) then
+                if (wt_lunit(g,istcrop) > 0._r8 .and. wt_lunit(g,istsoil) > 0._r8) then
+                   wt_lunit(g,istcrop) = wt_lunit(g,istcrop) + wt_lunit(g,istsoil)
+                end if
+                wt_lunit(g,istsoil) = 0._r8
+                wt_nat_patch(g,:) = 0._r8
+                wt_nat_patch(g,noveg) = 1._r8  ! to pass error check below
+             else
+                do n = 1, n_dom_soil_patches
+                   m = max_indices(n)
+                   if (m <= natpft_ub) then
+                      wt_nat_patch(g,m) = wt_nat_patch(g,m) / wt_dom_nat_sum
+                   end if
+                end do
              end if
-             wt_lunit(g,istcrop) = 0._r8
-             wt_cft(g,:) = 0._r8
-             wt_cft(g,nc3crop) = 1._r8  ! to pass error check below
-          else
-             do n = 1, n_dom_soil_patches
-                m = max_indices(n)
-                if (m >= cft_lb) then
-                   wt_cft(g,m) = wt_cft(g,m) / wt_dom_cft_sum
+             ! Normalize dominant cft weights to 1; however,
+             ! if non-existent, then merge the nat and crop landunit weights
+             ! and set the cft weights and cft landunit weight to 0.
+             ! Don't bother merging if they're not both > 0.
+             if (wt_dom_cft_sum <= 0._r8) then
+                if (wt_lunit(g,istcrop) > 0._r8 .and. wt_lunit(g,istsoil) > 0._r8) then
+                   wt_lunit(g,istsoil) = wt_lunit(g,istsoil) + wt_lunit(g,istcrop)
+                end if
+                wt_lunit(g,istcrop) = 0._r8
+                wt_cft(g,:) = 0._r8
+                wt_cft(g,nc3crop) = 1._r8  ! to pass error check below
+             else
+                do n = 1, n_dom_soil_patches
+                   m = max_indices(n)
+                   if (m >= cft_lb) then
+                      wt_cft(g,m) = wt_cft(g,m) / wt_dom_cft_sum
+                   end if
+                end do
+             end if
+             ! Set non-dominant pft and cft weights to 0 for cases where dominant
+             ! pfts or cfts were found
+             do m = 0, maxveg
+                if (.not. any(max_indices == m)) then
+                   if (m <= natpft_ub .and. wt_dom_nat_sum > 0._r8) then
+                      wt_nat_patch(g,m) = 0._r8
+                   else if (m >= cft_lb .and. wt_dom_cft_sum > 0._r8) then
+                      wt_cft(g,m) = 0._r8
+                   end if
+                   ! Set to .F. regardless of whether dominant pfts and cfts were
+                   ! found
+                   pftcon%is_pft_known_to_model(m) = .false.
                 end if
              end do
-          end if
-          ! Set non-dominant pft and cft weights to 0 for cases where dominant
-          ! pfts or cfts were found
-          do m = 0, maxveg
-             if (.not. any(max_indices == m)) then
-                if (m <= natpft_ub .and. wt_dom_nat_sum > 0._r8) then
-                   wt_nat_patch(g,m) = 0._r8
-                else if (m >= cft_lb .and. wt_dom_cft_sum > 0._r8) then
-                   wt_cft(g,m) = 0._r8
-                end if
-                ! Set to .F. regardless of whether dominant pfts and cfts were
-                ! found
-                pftcon%is_pft_known_to_model(m) = .false.
-             end if
+
           end do
 
-       end do
+          ! Error checks
+          call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+          call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
+          call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
 
-       write(iulog,*) 'is_pft_known...', pftcon%is_pft_known_to_model  ! slevis diag
-
-       ! Error checks
-       call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
-       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
-       call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
-
-       deallocate(max_indices)
+          deallocate(max_indices)
+       end if
     end if
 
   end subroutine collapse_all_pfts
@@ -334,7 +336,7 @@ contains
 
        do g = begg, endg
           do m = cft_lb, cft_ub
-             if (pftcon%is_pft_known_to_model(m) == .false.) then
+             if (.not. pftcon%is_pft_known_to_model(m)) then
                 crop_var(g,m) = 0._r8
              end if
           end do
