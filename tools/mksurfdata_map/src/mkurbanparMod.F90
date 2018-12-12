@@ -14,6 +14,7 @@ module mkurbanparMod
 ! !USES:
    use shr_kind_mod, only : r8 => shr_kind_r8
    use shr_sys_mod , only : shr_sys_flush
+   use mkvarctl,     only : ispval
    implicit none
 
    private
@@ -29,7 +30,7 @@ module mkurbanparMod
 
 ! !PUBLIC DATA MEMBERS:
    integer :: numurbl           ! number of urban classes
-   integer :: nlevurb           ! number of urban layers
+   integer :: nlevurb = ispval  ! number of urban layers
 
    public :: numurbl
    public :: nlevurb

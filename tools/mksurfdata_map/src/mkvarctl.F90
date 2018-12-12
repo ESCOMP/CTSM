@@ -17,6 +17,7 @@ module mkvarctl
   save
 !
   real(r8), public, parameter :: spval = 1.e36    ! special value
+  integer,  public, parameter :: ispval = -9999   ! special value
 
   logical, public    :: outnc_large_files     ! output files in 64-bit format for large files
   logical, public    :: outnc_double          ! output ALL data in files as 64-bit
