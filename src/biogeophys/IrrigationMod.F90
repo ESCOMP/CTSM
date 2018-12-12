@@ -10,8 +10,8 @@ module IrrigationMod
   !     needed for the next call to ApplyIrrigation. This should be called once per
   !     timestep.
   ! 
-  !   - Call ApplyIrrigation in order to calculate qflx_irrig_patch and qflx_irrig_col. It
-  !     is acceptable for this to be called earlier in the timestep than
+  !   - Call ApplyIrrigation in order to calculate irrigation withdrawal and application
+  !     fluxes. It is acceptable for this to be called earlier in the timestep than
   !     CalcIrrigationNeeded.
   !
   ! Design notes:
@@ -852,7 +852,7 @@ contains
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
     !
-    ! Sets waterfluxbulk_inst%qflx_irrig_patch and waterfluxbulk_inst%qflx_irrig_col.
+    ! Sets irrigation withdrawal and application fluxes in waterfluxbulk_inst.
     !
     ! Should be called once, AND ONLY ONCE, per time step.
     !
@@ -877,9 +877,12 @@ contains
     real(r8), intent(in) :: available_gw_uncon( bounds%begc:)
     !
     ! !LOCAL VARIABLES:
-    integer :: p,fp  ! patch indices
-    integer :: c,fc  ! column indices
-    integer :: g     ! grid cell index
+    integer  :: p,fp  ! patch indices
+    integer  :: c,fc  ! column indices
+    integer  :: g     ! grid cell index
+    real(r8) :: qflx_sfc_irrig_patch(bounds%begp:bounds%endp)      ! patch surface irrigation flux (mm H2O/s)
+    real(r8) :: qflx_gw_uncon_irrig_patch(bounds%begp:bounds%endp) ! patch unconfined groundwater irrigation flux (mm H2O/s)
+    real(r8) :: qflx_gw_con_irrig_patch(bounds%begp:bounds%endp)   ! patch confined groundwater irrigation flux (mm H2O/s)
     
     character(len=*), parameter :: subname = 'ApplyIrrigation'
 
@@ -890,11 +893,8 @@ contains
     ! works correctly.
 
     associate( &
-         qflx_sfc_irrig_patch      => waterfluxbulk_inst%qflx_sfc_irrig_patch      , & ! Output: [real(r8) (:)] patch irrigation flux (mm H2O/s)
          qflx_sfc_irrig_col        => waterfluxbulk_inst%qflx_sfc_irrig_col        , & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
-         qflx_gw_uncon_irrig_patch => waterfluxbulk_inst%qflx_gw_uncon_irrig_patch , & ! Output: [real(r8) (:)] patch unconfined groundwater irrigation flux (mm H2O/s)
          qflx_gw_uncon_irrig_col   => waterfluxbulk_inst%qflx_gw_uncon_irrig_col   , & ! Output: [real(r8) (:)] col unconfined groundwater irrigation flux (mm H2O/s)
-         qflx_gw_con_irrig_patch   => waterfluxbulk_inst%qflx_gw_con_irrig_patch   , & ! Output: [real(r8) (:)] patch confined groundwater irrigation flux (mm H2O/s)
          qflx_gw_con_irrig_col     => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! Output: [real(r8) (:)] col confined groundwater irrigation flux (mm H2O/s)
          qflx_irrig_drip_patch     => waterfluxbulk_inst%qflx_irrig_drip_patch     , & ! Output: [real(r8) (:)] patch drip irrigation flux (mm H2O/s)
          qflx_irrig_sprinkler_patch=> waterfluxbulk_inst%qflx_irrig_sprinkler_patch  & ! Output: [real(r8) (:)] patch sprinkler irrigation flux (mm H2O/s)
@@ -919,6 +919,9 @@ contains
                 qflx_gw_uncon_irrig_patch(p) = available_gw_uncon(c) / this%dtime
                 qflx_gw_con_irrig_patch(p)   = (this%qflx_irrig_demand_patch(p) - qflx_sfc_irrig_patch(p) - qflx_gw_uncon_irrig_patch(p))
              endif
+          else
+             qflx_gw_uncon_irrig_patch(p) = 0._r8
+             qflx_gw_con_irrig_patch(p)   = 0._r8
           endif
           
           this%n_irrig_steps_left_patch(p) = this%n_irrig_steps_left_patch(p) - 1

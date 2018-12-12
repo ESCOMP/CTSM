@@ -94,11 +94,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
      real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
 
-     real(r8), pointer :: qflx_sfc_irrig_patch      (:)   ! patch surface irrigation flux (mm H2O/s) [+]           
      real(r8), pointer :: qflx_sfc_irrig_col        (:)   ! col surface irrigation flux (mm H2O/s) [+]             
-     real(r8), pointer :: qflx_gw_uncon_irrig_patch (:)   ! patch unconfined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_gw_uncon_irrig_col   (:)   ! col unconfined groundwater irrigation flux (mm H2O/s)
-     real(r8), pointer :: qflx_gw_con_irrig_patch   (:)   ! patch confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_gw_con_irrig_col     (:)   ! col confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_irrig_drip_patch     (:)   ! patch drip irrigation
      real(r8), pointer :: qflx_irrig_sprinkler_patch(:)   ! patch sprinkler irrigation
@@ -329,23 +326,14 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
 
-    call AllocateVar1d(var = this%qflx_sfc_irrig_patch, name = 'qflx_sfc_irrig_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%qflx_sfc_irrig_col, name = 'qflx_sfc_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
-    call AllocateVar1d(var = this%qflx_gw_uncon_irrig_patch, name = 'qflx_gw_uncon_irrig_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%qflx_gw_uncon_irrig_col, name = 'qflx_gw_uncon_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
-    call AllocateVar1d(var = this%qflx_gw_con_irrig_patch, name = 'qflx_gw_con_irrig_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%qflx_gw_con_irrig_col, name = 'qflx_gw_con_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -733,29 +721,29 @@ contains
          long_name=this%info%lname('surface water converted to ice'), &
          ptr_col=this%qflx_h2osfc_to_ice_col, default='inactive')
 
-    this%qflx_sfc_irrig_patch(begp:endp) = spval
+    this%qflx_sfc_irrig_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QIRRIG_FROM_SURFACE'), &
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('water added through surface water irrigation'), &
-         ptr_patch=this%qflx_sfc_irrig_patch)
+         ptr_col=this%qflx_sfc_irrig_col)
 
-    this%qflx_gw_uncon_irrig_patch(begp:endp) = spval
+    this%qflx_gw_uncon_irrig_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QIRRIG_FROM_GW_UNCONFINED'), &
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('water added through unconfined groundwater irrigation'), &
-         ptr_patch=this%qflx_gw_uncon_irrig_patch)
+         ptr_col=this%qflx_gw_uncon_irrig_col)
 
-    this%qflx_gw_con_irrig_patch(begp:endp) = spval
+    this%qflx_gw_con_irrig_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QIRRIG_FROM_GW_CONFINED'), &
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('water added through confined groundwater irrigation'), &
-         ptr_patch=this%qflx_gw_con_irrig_patch)
+         ptr_patch=this%qflx_gw_con_irrig_col)
 
     this%qflx_irrig_drip_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -796,11 +784,8 @@ contains
     this%qflx_dew_grnd_patch (bounds%begp:bounds%endp)        = 0.0_r8
     this%qflx_dew_snow_patch (bounds%begp:bounds%endp)        = 0.0_r8
 
-    this%qflx_sfc_irrig_patch (bounds%begp:bounds%endp)       = 0.0_r8
     this%qflx_sfc_irrig_col (bounds%begc:bounds%endc)         = 0.0_r8
-    this%qflx_gw_uncon_irrig_patch (bounds%begp:bounds%endp)  = 0.0_r8
     this%qflx_gw_uncon_irrig_col (bounds%begc:bounds%endc)    = 0.0_r8
-    this%qflx_gw_con_irrig_patch (bounds%begp:bounds%endp)    = 0.0_r8
     this%qflx_gw_con_irrig_col (bounds%begc:bounds%endc)      = 0.0_r8
     this%qflx_irrig_drip_patch (bounds%begp:bounds%endp)      = 0.0_r8
     this%qflx_irrig_sprinkler_patch (bounds%begp:bounds%endp) = 0.0_r8

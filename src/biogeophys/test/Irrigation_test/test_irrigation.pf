@@ -66,29 +66,30 @@ module test_irrigation
      ! Wrapper that calls both CalcIrrigationNeeded and ApplyIrrigation
      procedure :: calculateAndApplyIrrigation
 
-     ! Return total irrigation withdrawal for a given patch
-     procedure :: totalIrrigationWithdrawal
-
      ! Return total irrigation application for a given patch
-     procedure :: totalIrrigationApplication
+     procedure :: totalIrrigationApplicationPatch
 
      ! Return total irrigation withdrawal for a given column
      procedure :: totalIrrigationWithdrawalCol
 
      ! Assert that total irrigation withdrawal and application both equal expected for a
      ! given patch
-     procedure :: assertTotalIrrigationEquals
+     procedure :: assertTotalIrrigationEqualsPatch
 
      ! Assert that total irrigation withdrawal and application both equal expected for a
      ! given column
      procedure :: assertTotalIrrigationEqualsCol
 
+     ! Assert that total irrigation withdrawal and application both equal expected for a
+     ! given patch and column
+     procedure :: assertTotalIrrigationEquals
+
      ! Assert that total irrigation withdrawal and application are both exactly zero for a
-     ! given patch
+     ! given patch and column
      procedure :: assertTotalIrrigationZero
 
      ! Assert that total irrigation withdrawal and application are both greater than zero
-     ! for a given patch
+     ! for a given patch and column
      procedure :: assertTotalIrrigationGreaterThanZero
 
      ! For a column with two irrigated patches (begp and begp+2) and one unirrigated
@@ -130,11 +131,8 @@ contains
 
     call unittest_timemgr_teardown()
     call this%irrigation%Clean()
-    deallocate(this%waterflux%qflx_sfc_irrig_patch)
     deallocate(this%waterflux%qflx_sfc_irrig_col)
-    deallocate(this%waterflux%qflx_gw_uncon_irrig_patch)
     deallocate(this%waterflux%qflx_gw_uncon_irrig_col)
-    deallocate(this%waterflux%qflx_gw_con_irrig_patch)
     deallocate(this%waterflux%qflx_gw_con_irrig_col)
     deallocate(this%waterflux%qflx_irrig_drip_patch)
     deallocate(this%waterflux%qflx_irrig_sprinkler_patch)
@@ -252,11 +250,8 @@ contains
 
     ! Allocate fluxes output from irrigation routines. Note that, in the production code,
     ! these are initialized to 0 in InitCold.
-    allocate(this%waterflux%qflx_sfc_irrig_patch(bounds%begp:bounds%endp), source=0._r8)
     allocate(this%waterflux%qflx_sfc_irrig_col(bounds%begc:bounds%endc), source=0._r8)
-    allocate(this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp:bounds%endp), source=0._r8)
     allocate(this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc:bounds%endc), source=0._r8)
-    allocate(this%waterflux%qflx_gw_con_irrig_patch(bounds%begp:bounds%endp), source=0._r8)
     allocate(this%waterflux%qflx_gw_con_irrig_col(bounds%begc:bounds%endc), source=0._r8)
     allocate(this%waterflux%qflx_irrig_drip_patch(bounds%begp:bounds%endp), source=0._r8)
     allocate(this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp:bounds%endp), source=0._r8)
@@ -518,30 +513,7 @@ contains
   end subroutine calculateAndApplyIrrigation
 
   !-----------------------------------------------------------------------
-  function totalIrrigationWithdrawal(this, p) result(total_withdrawal)
-    !
-    ! !DESCRIPTION:
-    ! Return total irrigation withdrawal for patch p
-    !
-    ! !ARGUMENTS:
-    real(r8), allocatable :: total_withdrawal  ! function result
-    class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: p  ! patch index
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'totalIrrigationWithdrawal'
-    !-----------------------------------------------------------------------
-
-    total_withdrawal = &
-         this%waterflux%qflx_sfc_irrig_patch(p) + &
-         this%waterflux%qflx_gw_uncon_irrig_patch(p) + &
-         this%waterflux%qflx_gw_con_irrig_patch(p)
-
-  end function totalIrrigationWithdrawal
-
-  !-----------------------------------------------------------------------
-  function totalIrrigationApplication(this, p) result(total_application)
+  function totalIrrigationApplicationPatch(this, p) result(total_application)
     !
     ! !DESCRIPTION:
     ! Return total irrigation application for patch p
@@ -549,18 +521,25 @@ contains
     ! !ARGUMENTS:
     real(r8), allocatable :: total_application  ! function result
     class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: p  ! patch index
+    integer, intent(in), optional :: p  ! patch index (if not present, use bounds%begp)
     !
     ! !LOCAL VARIABLES:
+    integer :: l_p
 
-    character(len=*), parameter :: subname = 'totalIrrigationApplication'
+    character(len=*), parameter :: subname = 'totalIrrigationApplicationPatch'
     !-----------------------------------------------------------------------
 
-    total_application = &
-         this%waterflux%qflx_irrig_drip_patch(p) + &
-         this%waterflux%qflx_irrig_sprinkler_patch(p)
+    if (present(p)) then
+       l_p = p
+    else
+       l_p = bounds%begp
+    end if
 
-  end function totalIrrigationApplication
+    total_application = &
+         this%waterflux%qflx_irrig_drip_patch(l_p) + &
+         this%waterflux%qflx_irrig_sprinkler_patch(l_p)
+
+  end function totalIrrigationApplicationPatch
 
   !-----------------------------------------------------------------------
   function totalIrrigationWithdrawalCol(this, c) result(total_withdrawal)
@@ -571,53 +550,61 @@ contains
     ! !ARGUMENTS:
     real(r8), allocatable :: total_withdrawal  ! function result
     class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: c  ! column index
+    integer, intent(in), optional :: c  ! column index (if not present, use bounds%begc)
     !
     ! !LOCAL VARIABLES:
+    integer :: l_c
 
     character(len=*), parameter :: subname = 'totalIrrigationWithdrawalCol'
     !-----------------------------------------------------------------------
 
+    if (present(c)) then
+       l_c = c
+    else
+       l_c = bounds%begc
+    end if
+
     total_withdrawal = &
-         this%waterflux%qflx_sfc_irrig_col(c) + &
-         this%waterflux%qflx_gw_uncon_irrig_col(c) + &
-         this%waterflux%qflx_gw_con_irrig_col(c)
+         this%waterflux%qflx_sfc_irrig_col(l_c) + &
+         this%waterflux%qflx_gw_uncon_irrig_col(l_c) + &
+         this%waterflux%qflx_gw_con_irrig_col(l_c)
 
   end function totalIrrigationWithdrawalCol
 
   !-----------------------------------------------------------------------
-  subroutine assertTotalIrrigationEquals(this, p, expected)
+  subroutine assertTotalIrrigationEqualsPatch(this, expected, p)
     !
     ! !DESCRIPTION:
-    ! Assert that total irrigation withdrawal and application both equal expected for a
-    ! given patch
+    ! Assert that total irrigation application equals expected for a given patch
+    !
+    ! (Note that there is no patch-level withdrawal flux)
     !
     ! !ARGUMENTS:
     class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: p  ! patch index
     real(r8), intent(in) :: expected
+    integer, intent(in), optional :: p  ! patch index (if not present, use bounds%begp)
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'assertTotalIrrigationEquals'
+    character(len=*), parameter :: subname = 'assertTotalIrrigationEqualsPatch'
     !-----------------------------------------------------------------------
 
-    @assertEqual(expected, this%totalIrrigationWithdrawal(p), tolerance=tol)
-    @assertEqual(expected, this%totalIrrigationApplication(p), tolerance=tol)
+    @assertEqual(expected, this%totalIrrigationApplicationPatch(p), tolerance=tol)
 
-  end subroutine assertTotalIrrigationEquals
+  end subroutine assertTotalIrrigationEqualsPatch
 
   !-----------------------------------------------------------------------
-  subroutine assertTotalIrrigationEqualsCol(this, c, expected)
+  subroutine assertTotalIrrigationEqualsCol(this, expected, c)
     !
     ! !DESCRIPTION:
-    ! Assert that total irrigation withdrawal equals expected for a given column (note
-    ! that there are no col-level application fluxes, so application is not checked here)
+    ! Assert that total irrigation withdrawal equals expected for a given column
+    !
+    ! (Note that there is no column-level application flux)
     !
     ! !ARGUMENTS:
     class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: c  ! column index
     real(r8), intent(in) :: expected
+    integer, intent(in), optional :: c  ! col index (if not present, use bounds%begc)
     !
     ! !LOCAL VARIABLES:
 
@@ -625,47 +612,77 @@ contains
     !-----------------------------------------------------------------------
 
     @assertEqual(expected, this%totalIrrigationWithdrawalCol(c), tolerance=tol)
+
   end subroutine assertTotalIrrigationEqualsCol
 
   !-----------------------------------------------------------------------
-  subroutine assertTotalIrrigationZero(this, p)
+  subroutine assertTotalIrrigationEquals(this, expected, p, c)
     !
     ! !DESCRIPTION:
-    ! Assert that total irrigation withdrawal and application are both exactly zero for a
-    ! given patch
+    ! Assert that total irrigation withdrawal and application both equal expected for a
+    ! given patch and column
+    !
+    ! It only makes sense to use this routine if you have a single patch on the column,
+    ! so that the expected patch and column fluxes are the same. Otherwise, separately
+    ! call assertTotalIrrigationEqualsPatch and assertTotalIrrigationEqualsCol.
     !
     ! !ARGUMENTS:
     class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: p  ! patch index
+    real(r8), intent(in) :: expected
+    integer, intent(in), optional :: p  ! patch index (if not present, use bounds%begp)
+    integer, intent(in), optional :: c  ! col index (if not present, use bounds%begc)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'assertTotalIrrigationEquals'
+    !-----------------------------------------------------------------------
+
+    @assertEqual(expected, this%totalIrrigationWithdrawalCol(c), tolerance=tol)
+    @assertEqual(expected, this%totalIrrigationApplicationPatch(p), tolerance=tol)
+
+  end subroutine assertTotalIrrigationEquals
+
+  !-----------------------------------------------------------------------
+  subroutine assertTotalIrrigationZero(this, p, c)
+    !
+    ! !DESCRIPTION:
+    ! Assert that total irrigation withdrawal and application are both exactly zero for a
+    ! given patch and column
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(in) :: this
+    integer, intent(in), optional :: p  ! patch index (if not present, use bounds%begp)
+    integer, intent(in), optional :: c  ! col index (if not present, use bounds%begc)
     !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'assertTotalIrrigationZero'
     !-----------------------------------------------------------------------
 
-    @assertEqual(0._r8, this%totalIrrigationWithdrawal(p))
-    @assertEqual(0._r8, this%totalIrrigationApplication(p))
+    @assertEqual(0._r8, this%totalIrrigationWithdrawalCol(c))
+    @assertEqual(0._r8, this%totalIrrigationApplicationPatch(p))
 
   end subroutine assertTotalIrrigationZero
 
   !-----------------------------------------------------------------------
-  subroutine assertTotalIrrigationGreaterThanZero(this, p)
+  subroutine assertTotalIrrigationGreaterThanZero(this, p, c)
     !
     ! !DESCRIPTION:
     ! Assert that total irrigation withdrawal and application are both greater than zero
-    ! for a given patch
+    ! for a given patch and column
     !
     ! !ARGUMENTS:
     class(TestIrrigation), intent(in) :: this
-    integer, intent(in) :: p  ! patch index
+    integer, intent(in), optional :: p  ! patch index (if not present, use bounds%begp)
+    integer, intent(in), optional :: c  ! col index (if not present, use bounds%begc)
     !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'assertTotalIrrigationGreaterThanZero'
     !-----------------------------------------------------------------------
 
-    @assertLessThan(0._r8, this%totalIrrigationWithdrawal(p))
-    @assertLessThan(0._r8, this%totalIrrigationApplication(p))
+    @assertLessThan(0._r8, this%totalIrrigationWithdrawalCol(c))
+    @assertLessThan(0._r8, this%totalIrrigationApplicationPatch(p))
 
   end subroutine assertTotalIrrigationGreaterThanZero
 
@@ -701,15 +718,18 @@ contains
 
     expected1 = deficit_irrig1 / this%irrigation_params%irrig_length
     expected2 = deficit_irrig2 / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected1)
-    call this%assertTotalIrrigationEquals(bounds%begp+2, expected2)
+    call this%assertTotalIrrigationEqualsPatch(expected1, &
+         p = bounds%begp)
+    call this%assertTotalIrrigationEqualsPatch(expected2, &
+         p = bounds%begp+2)
     if (present(expected_fluxvar_patch)) then
        @assertEqual(expected1, expected_fluxvar_patch(bounds%begp), tolerance=tol)
        @assertEqual(expected2, expected_fluxvar_patch(bounds%begp+2), tolerance=tol)
     end if
     col_total_deficit = deficit_irrig1 * wt_irrig1 + deficit_irrig2 * wt_irrig2
     expected_col_flux = col_total_deficit / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEqualsCol(bounds%begc, expected_col_flux)
+    call this%assertTotalIrrigationEqualsCol(expected_col_flux, &
+         c = bounds%begc)
     if (present(expected_fluxvar_col)) then
        @assertEqual(expected_col_flux, expected_fluxvar_col(bounds%begc), tolerance=tol)
     end if
@@ -742,7 +762,7 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
 
   end subroutine irrigation_flux_is_correct
 
@@ -764,7 +784,7 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
     ! Make sure all irrigation comes from drip
     @assertEqual(expected, this%waterflux%qflx_irrig_drip_patch(bounds%begp), tolerance=tol)
 
@@ -788,7 +808,7 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
     ! Make sure all irrigation comes from sprinkler
     @assertEqual(expected, this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp), tolerance=tol)
 
@@ -807,7 +827,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
   end subroutine no_irrigation_for_wet_soil
 
   @Test
@@ -837,7 +857,7 @@ contains
     ! This first assertion makes sure the test has been set up reasonably - to give a net deficit
     @assertLessThan(0._r8, expected)
     ! Here is the main assertion:
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
   end subroutine surplus_offsets_deficit
 
   @Test
@@ -855,7 +875,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
 
   end subroutine no_irrigation_for_unirrigated_pfts
 
@@ -872,7 +892,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
 
   end subroutine no_irrigation_for_lai0
 
@@ -899,7 +919,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
   end subroutine no_irrigation_for_soil_moisture_above_threshold
 
   @Test
@@ -916,7 +936,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
 
   end subroutine no_irrigation_at_wrong_time
 
@@ -950,9 +970,8 @@ contains
 
     ! Check result
     expected = total_deficit / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
-    ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
-    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    call this%assertTotalIrrigationEquals(expected)
+    ! Make sure that all irrigation comes as surface irrigation
     @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
   end subroutine unlimited_irrigation_for_non_limiting_volr
 
@@ -986,9 +1005,8 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
-    ! Make sure that all irrigation comes as surface irrigation (patch and column-level)
-    @assertEqual(expected, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    call this%assertTotalIrrigationEquals(expected)
+    ! Make sure that all irrigation comes as surface irrigation
     @assertEqual(expected, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
   end subroutine limited_irrigation_for_limiting_volr_no_groundwater
 
@@ -1027,12 +1045,9 @@ contains
     ! Check result
     expected_total = total_deficit / this%irrigation_params%irrig_length
     expected_gw_uncon = expected_total - volr_limited_irrig_rate
-    call this%assertTotalIrrigationEquals(bounds%begp, expected_total)
-    ! Make sure that irrigation is properly divided into surface and groundwater (both
-    ! patch and column-level)
-    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    call this%assertTotalIrrigationEquals(expected_total)
+    ! Make sure that irrigation is properly divided into surface and groundwater
     @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
-    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp), tolerance=tol)
     @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc), tolerance=tol)
   end subroutine limiting_volr_with_groundwater_uncon
 
@@ -1083,14 +1098,10 @@ contains
     @assertGreaterThan(expected_gw_uncon, 0._r8)
     @assertGreaterThan(expected_gw_con, 0._r8)
     ! Now do the actual assertions on the irrigation routine
-    call this%assertTotalIrrigationEquals(bounds%begp, expected_total)
-    ! Make sure that irrigation is properly divided into surface and groundwater (both
-    ! patch and column-level)
-    @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_patch(bounds%begp), tolerance=tol)
+    call this%assertTotalIrrigationEquals(expected_total)
+    ! Make sure that irrigation is properly divided into surface and groundwater
     @assertEqual(volr_limited_irrig_rate, this%waterflux%qflx_sfc_irrig_col(bounds%begc), tolerance=tol)
-    @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_patch(bounds%begp), tolerance=tol)
     @assertEqual(expected_gw_uncon, this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc), tolerance=tol)
-    @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_patch(bounds%begp), tolerance=tol)
     @assertEqual(expected_gw_con, this%waterflux%qflx_gw_con_irrig_col(bounds%begc), tolerance=tol)
   end subroutine limiting_volr_with_groundwater_uncon_and_con
 
@@ -1115,7 +1126,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
 
   end subroutine irrigation_continues_at_same_rate_for_multiple_time_steps
 
@@ -1138,11 +1149,11 @@ contains
        call this%calculateAndApplyIrrigation()
        call advance_timestep()
     end do
-    call this%assertTotalIrrigationGreaterThanZero(bounds%begp)
+    call this%assertTotalIrrigationGreaterThanZero()
 
     ! Ensure that irrigation flux goes to 0 in the following time step
     call this%calculateAndApplyIrrigation()
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
 
   end subroutine irrigation_continues_for_correct_number_of_time_steps
   
@@ -1169,7 +1180,7 @@ contains
        call advance_timestep()
     end do
     ! The following assertion is mainly here to make sure the test is working as intended
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
 
     ! Now reset time, change soil moisture, and make sure that irrigation happens as expected
     call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
@@ -1180,7 +1191,7 @@ contains
     ! Make sure that the test has been set up reasonably - to give a net deficit
     @assertLessThan(0._r8, expected)
     ! Here's the main assertion:
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
 
   end subroutine irrigation_flux_is_correct_on_second_day
     
@@ -1203,7 +1214,7 @@ contains
     call this%computeDeficits(deficits)
     ! Now on to the real assertion
     expected = sum(deficits(bounds%begp,1:nlevirrig)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
   end subroutine irrigation_excludes_deep_layers
 
   @Test
@@ -1224,7 +1235,7 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:(nlevsoi-1))) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
   end subroutine irrigation_excludes_bedrock_layers
 
   @Test
@@ -1240,7 +1251,7 @@ contains
     call this%calculateAndApplyIrrigation()
 
     ! Check result
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero()
 
   end subroutine no_irrigation_for_frozen_soil
 
@@ -1262,7 +1273,7 @@ contains
     call this%computeDeficits(deficits)
     ! Only include deficit from top layer, since 2nd layer is frozen
     expected = deficits(bounds%begp, 1) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected)
+    call this%assertTotalIrrigationEquals(expected)
 
   end subroutine no_irrigation_below_frozen_soil_layer
 
@@ -1299,9 +1310,13 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     expected1 = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected1)
+    call this%assertTotalIrrigationEquals(expected1, &
+         p = bounds%begp, &
+         c = bounds%begc)
     expected2 = sum(deficits(bounds%endp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%endp, expected2)
+    call this%assertTotalIrrigationEquals(expected2, &
+         p = bounds%endp, &
+         c = bounds%endc)
     ! Make sure this test had some power, by ensuring that the two points differ:
     @assertTrue(expected1 /= expected2)
 
@@ -1342,8 +1357,10 @@ contains
     expected_patch_flux = total_deficit / this%irrigation_params%irrig_length
     col_total_deficit = total_deficit * wt_irrig
     expected_col_flux = col_total_deficit / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp+1, expected_patch_flux)
-    call this%assertTotalIrrigationEqualsCol(bounds%begc, expected_col_flux)
+    call this%assertTotalIrrigationEqualsPatch(expected_patch_flux, &
+         p = bounds%begp+1)
+    call this%assertTotalIrrigationEqualsCol(expected_col_flux, &
+         c = bounds%begc)
   end subroutine multiple_patches_per_column
 
   @Test
@@ -1381,7 +1398,6 @@ contains
          wt_irrig2 = wt_irrig2, &
          deficit_irrig1 = total_deficit1, &
          deficit_irrig2 = total_deficit2, &
-         expected_fluxvar_patch = this%waterflux%qflx_sfc_irrig_patch, &
          expected_fluxvar_col = this%waterflux%qflx_sfc_irrig_col)
   end subroutine multiple_irrigated_patches_per_column_sfcIrrig
 
@@ -1425,7 +1441,6 @@ contains
          wt_irrig2 = wt_irrig2, &
          deficit_irrig1 = total_deficit1, &
          deficit_irrig2 = total_deficit2, &
-         expected_fluxvar_patch = this%waterflux%qflx_gw_uncon_irrig_patch, &
          expected_fluxvar_col = this%waterflux%qflx_gw_uncon_irrig_col)
   end subroutine multiple_irrigated_patches_per_column_gwUnconIrrig
 
@@ -1469,7 +1484,6 @@ contains
          wt_irrig2 = wt_irrig2, &
          deficit_irrig1 = total_deficit1, &
          deficit_irrig2 = total_deficit2, &
-         expected_fluxvar_patch = this%waterflux%qflx_gw_con_irrig_patch, &
          expected_fluxvar_col = this%waterflux%qflx_gw_con_irrig_col)
   end subroutine multiple_irrigated_patches_per_column_gwConIrrig
 
@@ -1500,10 +1514,16 @@ contains
 
     ! Check result
     ! Irrigation happens within filter
-    call this%assertTotalIrrigationGreaterThanZero((bounds%begp + 1))
+    call this%assertTotalIrrigationGreaterThanZero( &
+         p = (bounds%begp + 1), &
+         c = (bounds%begc + 1))
     ! Irrigation does NOT happen outside filter
-    call this%assertTotalIrrigationZero(bounds%begp)
-    call this%assertTotalIrrigationZero(bounds%endp)
+    call this%assertTotalIrrigationZero( &
+         p = bounds%begp, &
+         c = bounds%begc)
+    call this%assertTotalIrrigationZero( &
+         p = bounds%endp, &
+         c = bounds%endc)
     
   end subroutine irrigation_only_happens_within_filter
 
@@ -1544,13 +1564,19 @@ contains
     ! Check result
     call this%computeDeficits(deficits)
     ! First patch should have no irrigation, because soil is all frozen
-    call this%assertTotalIrrigationZero(bounds%begp)
+    call this%assertTotalIrrigationZero( &
+         p = bounds%begp, &
+         c = bounds%begc)
     ! Second patch should have irrigation just based on top layer, because 2nd layer is frozen
     expected = deficits(bounds%begp+1, 1) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals((bounds%begp+1), expected)
+    call this%assertTotalIrrigationEquals(expected, &
+         p = (bounds%begp+1), &
+         c = (bounds%begc+1))
     ! Third patch should have irrigation from all layers
     expected = sum(deficits(bounds%endp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%endp, expected)
+    call this%assertTotalIrrigationEquals(expected, &
+         p = bounds%endp, &
+         c = bounds%endc)
 
   end subroutine test_multiple_patches_with_different_frozen_soil
 
@@ -1607,12 +1633,18 @@ contains
 
     ! Check result
     expected1 = total_deficit1*volr_fraction / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals(bounds%begp, expected1)
+    call this%assertTotalIrrigationEquals(expected1, &
+         p = bounds%begp, &
+         c = bounds%begc)
     expected2 = total_deficit2*volr_fraction / this%irrigation_params%irrig_length
-    call this%assertTotalIrrigationEquals((bounds%begp+1), expected2)
+    call this%assertTotalIrrigationEquals(expected2, &
+         p = (bounds%begp+1), &
+         c = (bounds%begc+1))
     ! Check of unirrigated patch isn't central to this test, but we might as well check
     ! it while we're at it:
-    call this%assertTotalIrrigationZero((bounds%begp+2))
+    call this%assertTotalIrrigationZero( &
+         p = (bounds%begp+2), &
+         c = (bounds%begc+2))
   end subroutine volr_limiting_with_multiple_columns
 
 end module test_irrigation
