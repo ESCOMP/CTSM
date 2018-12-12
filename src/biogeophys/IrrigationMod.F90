@@ -932,6 +932,18 @@ contains
        end if
     end do
 
+    call p2c (bounds, num_soilc, filter_soilc, &
+         patcharr = qflx_sfc_irrig_patch(bounds%begp:bounds%endp), &
+         colarr = qflx_sfc_irrig_col(bounds%begc:bounds%endc))
+
+    call p2c (bounds, num_soilc, filter_soilc, &
+         patcharr = qflx_gw_uncon_irrig_patch(bounds%begp:bounds%endp), &
+         colarr = qflx_gw_uncon_irrig_col(bounds%begc:bounds%endc))
+
+    call p2c (bounds, num_soilc, filter_soilc, &
+         patcharr = qflx_gw_con_irrig_patch(bounds%begp:bounds%endp), &
+         colarr = qflx_gw_con_irrig_col(bounds%begc:bounds%endc))
+
     do fp = 1, num_soilp
        p = filter_soilp(fp)
 
@@ -950,18 +962,6 @@ contains
 
     end do
 
-    call p2c (bounds, num_soilc, filter_soilc, &
-         patcharr = qflx_sfc_irrig_patch(bounds%begp:bounds%endp), &
-         colarr = qflx_sfc_irrig_col(bounds%begc:bounds%endc))
-    
-    call p2c (bounds, num_soilc, filter_soilc, &
-         patcharr = qflx_gw_uncon_irrig_patch(bounds%begp:bounds%endp), &
-         colarr = qflx_gw_uncon_irrig_col(bounds%begc:bounds%endc))
-    
-    call p2c (bounds, num_soilc, filter_soilc, &
-         patcharr = qflx_gw_con_irrig_patch(bounds%begp:bounds%endp), &
-         colarr = qflx_gw_con_irrig_col(bounds%begc:bounds%endc))
-    
     call p2c (bounds, num_soilc, filter_soilc, &
          patcharr = qflx_irrig_drip_patch(bounds%begp:bounds%endp), &
          colarr = qflx_irrig_drip_col(bounds%begc:bounds%endc))
