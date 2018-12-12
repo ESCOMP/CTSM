@@ -18,7 +18,7 @@ module test_irrigation
   use ColumnType    , only : col
   use GridcellType  , only : grc
   use pftconMod , only : pftcon
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
   use unittestFilterBuilderMod, only : filter_from_range
 
   implicit none
@@ -93,6 +93,10 @@ module test_irrigation
      ! Assert that total irrigation withdrawal and application are both greater than zero
      ! for a given patch
      procedure :: assertTotalIrrigationGreaterThanZero
+
+     ! For a column with two irrigated patches (begp and begp+2) and one unirrigated
+     ! patch (begp+1): assert that patch and column-level irrigation are as expected
+     procedure :: assertTotalIrrigationEqualsForTwoIrrigPatches
   end type TestIrrigation
 
   real(r8), parameter :: mm_times_km2_to_m3 = 1.e3_r8
@@ -696,6 +700,54 @@ contains
 
   end subroutine assertTotalIrrigationGreaterThanZero
 
+  !-----------------------------------------------------------------------
+  subroutine assertTotalIrrigationEqualsForTwoIrrigPatches(this, wt_irrig1, wt_irrig2, &
+       deficit_irrig1, deficit_irrig2, &
+       expected_fluxvar_patch, expected_fluxvar_col)
+    !
+    ! !DESCRIPTION:
+    ! For a column with two irrigated patches (begp and begp+2) and one unirrigated patch
+    ! (begp+1): assert that patch and column-level irrigation are as expected.
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(in) :: this
+    real(r8), intent(in) :: wt_irrig1  ! patch weight on the column for first irrigated patch (begp)
+    real(r8), intent(in) :: wt_irrig2  ! patch weight on the column for second irrigated patch (begp+2)
+    real(r8), intent(in) :: deficit_irrig1  ! total deficit for first irrigated patch (begp)
+    real(r8), intent(in) :: deficit_irrig2  ! total deficit for second irrigated patch (begp+2)
+
+    ! If present, assert that all of the flux is accounted for by this patch-level flux variable
+    real(r8), intent(in), optional :: expected_fluxvar_patch(bounds%begp:)
+
+    ! If present, assert that all of the flux as accounted for by this col-level flux variable
+    real(r8), intent(in), optional :: expected_fluxvar_col(bounds%begc:)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: expected1, expected2
+    real(r8) :: col_total_deficit
+    real(r8) :: expected_col_flux
+
+    character(len=*), parameter :: subname = 'assertTotalIrrigationEqualsForTwoIrrigPatches'
+    !-----------------------------------------------------------------------
+
+    expected1 = deficit_irrig1 / this%irrigation_params%irrig_length
+    expected2 = deficit_irrig2 / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEquals(bounds%begp, expected1)
+    call this%assertTotalIrrigationEquals(bounds%begp+2, expected2)
+    if (present(expected_fluxvar_patch)) then
+       @assertEqual(expected1, expected_fluxvar_patch(bounds%begp), tolerance=tol)
+       @assertEqual(expected2, expected_fluxvar_patch(bounds%begp+2), tolerance=tol)
+    end if
+    col_total_deficit = deficit_irrig1 * wt_irrig1 + deficit_irrig2 * wt_irrig2
+    expected_col_flux = col_total_deficit / this%irrigation_params%irrig_length
+    call this%assertTotalIrrigationEqualsCol(bounds%begc, expected_col_flux)
+    if (present(expected_fluxvar_col)) then
+       @assertEqual(expected_col_flux, expected_fluxvar_col(bounds%begc), tolerance=tol)
+    end if
+
+  end subroutine assertTotalIrrigationEqualsForTwoIrrigPatches
+
+
 
   ! ========================================================================
   ! Begin actual tests
@@ -1290,9 +1342,9 @@ contains
 
   @Test
   subroutine multiple_patches_per_column(this)
-    ! If we have multiple patches on a column, some with irrigation and some without,
-    ! make sure (a) irrigation still happens, and (b) the column-level average irrigation
-    ! flux is computed correctly
+    ! If we have multiple patches on a column, one with irrigation and some without, make
+    ! sure (a) irrigation still happens, and (b) the column-level average irrigation flux
+    ! is computed correctly
     class(TestIrrigation), intent(inout) :: this
     real(r8), parameter :: wt_unirrig_1 = 0.25_r8
     real(r8), parameter :: wt_irrig = 0.5_r8
@@ -1303,14 +1355,8 @@ contains
     real(r8) :: expected_col_flux
 
     ! Setup grid
-    call unittest_subgrid_setup_start()
-    call unittest_add_gridcell()
-    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=1._r8)
-    call unittest_add_column(my_li=li, ctype=1, wtlunit=1._r8)
-    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=wt_unirrig_1)
-    call unittest_add_patch(my_ci=ci, ptype=2, wtcol=wt_irrig)
-    call unittest_add_patch(my_ci=ci, ptype=3, wtcol=wt_unirrig_2)
-    call unittest_subgrid_setup_end()
+    call setup_n_veg_patches(pwtcol = [wt_unirrig_1, wt_irrig, wt_unirrig_2], &
+         pft_types = [1, 2, 3])
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
 
     ! Other setup
@@ -1329,6 +1375,133 @@ contains
     expected_col_flux = col_total_deficit / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEqualsCol(bounds%begc, expected_col_flux)
   end subroutine multiple_patches_per_column
+
+  @Test
+  subroutine multiple_irrigated_patches_per_column_sfcIrrig(this)
+    ! If we have multiple irrigated patches on a column, with multiple irrigated patches
+    ! along with one without, make sure the column-level and patch-level fluxes are
+    ! computed correctly.
+    !
+    ! This version gets all irrigation from surface (river) water
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: wt_irrig1 = 0.5_r8
+    real(r8), parameter :: wt_unirrig = 0.2_r8
+    real(r8), parameter :: wt_irrig2 = 0.3_r8
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: total_deficit1, total_deficit2
+
+    ! Setup grid
+    call setup_n_veg_patches(pwtcol = [wt_irrig1, wt_unirrig, wt_irrig2], &
+         pft_types = [1, 2, 3])
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation(maxpft=3)
+    pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    total_deficit1 = sum(deficits(bounds%begp, 1:nlevsoi))
+    total_deficit2 = sum(deficits(bounds%begp+2, 1:nlevsoi))
+    call this%assertTotalIrrigationEqualsForTwoIrrigPatches( &
+         wt_irrig1 = wt_irrig1, &
+         wt_irrig2 = wt_irrig2, &
+         deficit_irrig1 = total_deficit1, &
+         deficit_irrig2 = total_deficit2, &
+         expected_fluxvar_patch = this%waterflux%qflx_sfc_irrig_patch, &
+         expected_fluxvar_col = this%waterflux%qflx_sfc_irrig_col)
+  end subroutine multiple_irrigated_patches_per_column_sfcIrrig
+
+  @Test
+  subroutine multiple_irrigated_patches_per_column_gwUnconIrrig(this)
+    ! If we have multiple irrigated patches on a column, with multiple irrigated patches
+    ! along with one without, make sure the column-level and patch-level fluxes are
+    ! computed correctly.
+    !
+    ! This version gets all irrigation from the unconfined aquifer
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: wt_irrig1 = 0.5_r8
+    real(r8), parameter :: wt_unirrig = 0.2_r8
+    real(r8), parameter :: wt_irrig2 = 0.3_r8
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: total_deficit1, total_deficit2
+
+    ! Setup grid
+    call setup_n_veg_patches(pwtcol = [wt_irrig1, wt_unirrig, wt_irrig2], &
+         pft_types = [1, 2, 3])
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation( &
+         maxpft = 3, &
+         test_limit_irrigation = .true., &
+         use_groundwater_irrigation = .true.)
+    this%volr = 0._r8
+    this%available_gw_uncon(bounds%begc) = huge(1._r8)
+    pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    total_deficit1 = sum(deficits(bounds%begp, 1:nlevsoi))
+    total_deficit2 = sum(deficits(bounds%begp+2, 1:nlevsoi))
+    call this%assertTotalIrrigationEqualsForTwoIrrigPatches( &
+         wt_irrig1 = wt_irrig1, &
+         wt_irrig2 = wt_irrig2, &
+         deficit_irrig1 = total_deficit1, &
+         deficit_irrig2 = total_deficit2, &
+         expected_fluxvar_patch = this%waterflux%qflx_gw_uncon_irrig_patch, &
+         expected_fluxvar_col = this%waterflux%qflx_gw_uncon_irrig_col)
+  end subroutine multiple_irrigated_patches_per_column_gwUnconIrrig
+
+  @Test
+  subroutine multiple_irrigated_patches_per_column_gwConIrrig(this)
+    ! If we have multiple irrigated patches on a column, with multiple irrigated patches
+    ! along with one without, make sure the column-level and patch-level fluxes are
+    ! computed correctly.
+    !
+    ! This version gets all irrigation from the confined aquifer
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: wt_irrig1 = 0.5_r8
+    real(r8), parameter :: wt_unirrig = 0.2_r8
+    real(r8), parameter :: wt_irrig2 = 0.3_r8
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: total_deficit1, total_deficit2
+
+    ! Setup grid
+    call setup_n_veg_patches(pwtcol = [wt_irrig1, wt_unirrig, wt_irrig2], &
+         pft_types = [1, 2, 3])
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation( &
+         maxpft = 3, &
+         test_limit_irrigation = .true., &
+         use_groundwater_irrigation = .true.)
+    this%volr = 0._r8
+    this%available_gw_uncon(bounds%begc) = 0._r8
+    pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    total_deficit1 = sum(deficits(bounds%begp, 1:nlevsoi))
+    total_deficit2 = sum(deficits(bounds%begp+2, 1:nlevsoi))
+    call this%assertTotalIrrigationEqualsForTwoIrrigPatches( &
+         wt_irrig1 = wt_irrig1, &
+         wt_irrig2 = wt_irrig2, &
+         deficit_irrig1 = total_deficit1, &
+         deficit_irrig2 = total_deficit2, &
+         expected_fluxvar_patch = this%waterflux%qflx_gw_con_irrig_patch, &
+         expected_fluxvar_col = this%waterflux%qflx_gw_con_irrig_col)
+  end subroutine multiple_irrigated_patches_per_column_gwConIrrig
 
   @Test
   subroutine irrigation_only_happens_within_filter(this)
