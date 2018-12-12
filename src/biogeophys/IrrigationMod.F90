@@ -930,6 +930,10 @@ contains
           qflx_gw_uncon_irrig_patch(p)     = 0._r8
           qflx_gw_con_irrig_patch(p)       = 0._r8
        end if
+    end do
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
 
        ! Set drip/sprinkler irrigation based on irrigation method from input data
        qflx_irrig_drip_patch(p)      = 0._r8
