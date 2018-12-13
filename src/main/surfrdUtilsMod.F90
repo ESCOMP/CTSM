@@ -199,9 +199,9 @@ contains
        SHR_ASSERT_ALL((ubound(wt_all_patch) == (/natpft_lb+natpft_size+cft_size-1/)), errMsg(sourcefile, __LINE__))
 
        ! Find the top N dominant soil patches to collapse pft data to;
-       ! n_dom_soil_patches < 0 is not allowed (error check in controlMod.F90)
-       ! n_dom_soil_patches == 0 or 78 currently mean "do not collapse pfts"
-       ! so skip over this subroutine's work
+       ! n_dom_soil_patches <= 0 is not allowed (error check in controlMod.F90)
+       ! n_dom_soil_patches == 78 currently means "do not collapse pfts"
+       ! and skip over this subroutine's work
        if (n_dom_soil_patches > 0 .and. n_dom_soil_patches <= nc3irrig) then
           allocate(max_indices(n_dom_soil_patches))
           do g = begg, endg
