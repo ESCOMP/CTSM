@@ -54,7 +54,7 @@ contains
      use clm_varpar, only: natpft_size, natpft_ub
 
      implicit none
-     integer, parameter :: begg = 2, endg = 4, cftsize = 6
+     integer, parameter :: begg = 2, endg = 5, cftsize = 6
      integer, parameter :: n_dom_soil_patches = 2
      real(r8) :: expctd_1, expctd_2
      real(r8) :: wt_cft(begg:endg,cftsize)
@@ -71,27 +71,27 @@ contains
 
      ! INPUT VALUES
      wt_lunit(begg:,:) = 0._r8  ! initialize
-     wt_lunit(begg:,istsoil) = (/ 40._r8, 60._r8, 50._r8 /)  ! istsoil
-     wt_lunit(begg:,istcrop) = (/ 60._r8, 40._r8, 50._r8 /)  ! istcrop
+     wt_lunit(begg:,istsoil) = (/ 40._r8, 60._r8, 50._r8, 50._r8 /)
+     wt_lunit(begg:,istcrop) = (/ 60._r8, 40._r8, 50._r8, 50._r8 /)
      wt_lunit = wt_lunit / 100._r8
      call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
      wt_nat_patch(begg:,:) = 0._r8  ! initialize
-     wt_nat_patch(begg:,0) = (/  5._r8, 40._r8, 40._r8 /)  ! pft 0 (bare ground)
-     wt_nat_patch(begg:,1) = (/ 10._r8, 20._r8, 20._r8 /)  ! pft 1
-     wt_nat_patch(begg:,2) = (/ 20._r8,  0._r8,  0._r8 /)  ! pft 2
-     wt_nat_patch(begg:,3) = (/ 30._r8,  0._r8,  0._r8 /)  ! pft 3
-     wt_nat_patch(begg:,4) = (/ 15._r8, 10._r8, 10._r8 /)  ! pft 4
-     wt_nat_patch(begg:,5) = (/ 20._r8, 30._r8, 30._r8 /)  ! pft 5
+     wt_nat_patch(begg:,0) = (/ 30._r8, 40._r8, 40._r8, 30._r8 /)  ! pft0
+     wt_nat_patch(begg:,1) = (/ 20._r8, 20._r8, 20._r8, 20._r8 /)  ! pft1
+     wt_nat_patch(begg:,2) = (/  0._r8,  0._r8,  0._r8,  0._r8 /)  ! pft2
+     wt_nat_patch(begg:,3) = (/  0._r8,  0._r8,  0._r8,  0._r8 /)  ! pft3
+     wt_nat_patch(begg:,4) = (/ 10._r8, 10._r8, 10._r8, 10._r8 /)  ! pft4
+     wt_nat_patch(begg:,5) = (/ 40._r8, 30._r8, 30._r8, 40._r8 /)  ! pft5
      wt_nat_patch(:,:) = wt_nat_patch(:,:) / 100._r8
      call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     wt_cft(begg:,:) = reshape((/ 5._r8, 30._r8, 30._r8, &  ! cft 1 (nc3crop)
-                                 10._r8, 10._r8, 10._r8, &  ! cft 2 (nc3irrig)
-                                 40._r8, 20._r8, 20._r8, &  ! cft 3
-                                 30._r8,  5._r8,  5._r8, &  ! cft 4
-                                 15._r8, 15._r8, 15._r8, &  ! cft 5
-                                  0._r8, 20._r8, 20._r8 /), shape(wt_cft))
+     wt_cft(begg:,:) = reshape((/ 0._r8, 30._r8, 30._r8, 30._r8, &  ! cft1
+                                 10._r8, 10._r8, 10._r8, 10._r8, &  ! cft2
+                                 40._r8, 20._r8, 20._r8, 20._r8, &  ! cft3
+                                 30._r8,  5._r8,  5._r8,  0._r8, &  ! cft4
+                                  0._r8, 15._r8, 15._r8,  0._r8, &  ! cft5
+                                 20._r8, 20._r8, 20._r8, 40._r8 /), shape(wt_cft))
      wt_cft = wt_cft / 100._r8
      call check_sums_equal_1( wt_cft, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
@@ -101,23 +101,23 @@ contains
      ! wt_nat_patch and wt_cft need their first array entries set to 1 when
      ! their respective landunits are not present,
      ! i.e., when wt_lunit(:,istsoil) = 0 or wt_lunit(:,istcrop) = 0,
-     wt_lunit_expected(begg:,istsoil) = (/ 0._r8, 1._r8, 1._r8 /)  ! istsoil
-     wt_lunit_expected(begg:,istcrop) = (/ 1._r8, 0._r8, 0._r8 /)  ! istcrop
+     wt_lunit_expected(begg:,istsoil) = (/ 0._r8, 1._r8, 1._r8, 0.5_r8 /)
+     wt_lunit_expected(begg:,istcrop) = (/ 1._r8, 0._r8, 0._r8, 0.5_r8 /)
      call check_sums_equal_1( wt_lunit_expected, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
      expctd_1 = 40._r8 / 70._r8
      expctd_2 = 30._r8 / 70._r8
      wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
-     wt_nat_patch_expected(begg:,0) = (/ 1._r8, expctd_1, expctd_1 /)  ! pft 0
-     wt_nat_patch_expected(begg:,5) = (/ 0._r8, expctd_2, expctd_2 /)  ! pft 5
+     wt_nat_patch_expected(begg:,0) = (/ 1._r8, expctd_1, expctd_1, 0._r8 /)  ! pft 0
+     wt_nat_patch_expected(begg:,5) = (/ 0._r8, expctd_2, expctd_2, 1._r8 /)  ! pft 5
      call check_sums_equal_1( wt_nat_patch_expected, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
-     wt_cft_expected(begg:,:) = reshape((/ 0._r8, 1._r8, 1._r8, &  ! cft 1
-                                           0._r8, 0._r8, 0._r8, &  ! cft 2
-                                        expctd_1, 0._r8, 0._r8, &  ! cft 3
-                                        expctd_2, 0._r8, 0._r8, &  ! cft 4
-                                           0._r8, 0._r8, 0._r8, &  ! cft 5
-                                           0._r8, 0._r8, 0._r8 /), shape(wt_cft))
+     wt_cft_expected(begg:,:) = reshape((/ 0._r8, 1._r8, 1._r8, 0._r8, &  ! cft1
+                                           0._r8, 0._r8, 0._r8, 0._r8, &  ! cft2
+                                        expctd_1, 0._r8, 0._r8, 0._r8, &  ! cft3
+                                        expctd_2, 0._r8, 0._r8, 0._r8, &  ! cft4
+                                           0._r8, 0._r8, 0._r8, 0._r8, &  ! cft5
+                                           0._r8, 0._r8, 0._r8, 1._r8 /), shape(wt_cft))
      call check_sums_equal_1( wt_cft_expected, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
 
