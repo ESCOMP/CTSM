@@ -96,6 +96,7 @@ module WaterFluxType
 
      real(r8), pointer :: qflx_sfc_irrig_col        (:)   ! col surface irrigation flux (mm H2O/s) [+]             
      real(r8), pointer :: qflx_gw_uncon_irrig_col   (:)   ! col unconfined groundwater irrigation flux (mm H2O/s)
+     real(r8), pointer :: qflx_gw_uncon_irrig_lyr_col(:,:) ! col unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
      real(r8), pointer :: qflx_gw_con_irrig_col     (:)   ! col confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_irrig_drip_patch     (:)   ! patch drip irrigation
      real(r8), pointer :: qflx_irrig_sprinkler_patch(:)   ! patch sprinkler irrigation
@@ -333,6 +334,11 @@ contains
     call AllocateVar1d(var = this%qflx_gw_uncon_irrig_col, name = 'qflx_gw_uncon_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar2d(var = this%qflx_gw_uncon_irrig_lyr_col, name = 'qflx_gw_uncon_irrig_lyr_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = 1, dim2end = nlevsoi)
 
     call AllocateVar1d(var = this%qflx_gw_con_irrig_col, name = 'qflx_gw_con_irrig_col', &
          container = tracer_vars, &
@@ -786,6 +792,7 @@ contains
 
     this%qflx_sfc_irrig_col (bounds%begc:bounds%endc)         = 0.0_r8
     this%qflx_gw_uncon_irrig_col (bounds%begc:bounds%endc)    = 0.0_r8
+    this%qflx_gw_uncon_irrig_lyr_col(bounds%begc:bounds%endc,:) = 0.0_r8
     this%qflx_gw_con_irrig_col (bounds%begc:bounds%endc)      = 0.0_r8
     this%qflx_irrig_drip_patch (bounds%begp:bounds%endp)      = 0.0_r8
     this%qflx_irrig_sprinkler_patch (bounds%begp:bounds%endp) = 0.0_r8

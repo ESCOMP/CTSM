@@ -52,7 +52,7 @@ contains
     !
     ! !USES:
     use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
-    use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
+    use SoilHydrologyMod       , only : CalcIrrigWithdrawals, WithdrawGroundwaterIrrigation
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
@@ -89,10 +89,12 @@ contains
 
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
-       call WithdrawGroundwaterIrrigation(bounds, num_hydrologyc, &
+       call CalcIrrigWithdrawals(bounds, num_hydrologyc, &
             filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
-            waterstatebulk_inst, &
             waterfluxbulk_inst)
+
+       call WithdrawGroundwaterIrrigation(bounds, num_hydrologyc, &
+            filter_hydrologyc, waterfluxbulk_inst, waterstatebulk_inst)
     end if
 
   end subroutine IrrigationWithdrawals
