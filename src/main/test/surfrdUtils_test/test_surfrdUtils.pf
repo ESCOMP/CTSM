@@ -44,9 +44,88 @@ contains
   end subroutine setup_test_collapse_routines
 
   @Test
+  subroutine test_collapse_all_pfts_and_cfts_to_0()
+     ! This test starts with a use_crop = .false. 16-pft configuration:
+     ! a few unmanaged pfts and 2 generic crops. The test ends up with the same
+     ! output values as were used as inputs because n_dom_soil_patches = 0.
+     use pftconMod, only: pftcon
+     use landunit_varcon, only: istsoil, istcrop, max_lunit
+     use clm_instur, only: wt_lunit, wt_nat_patch
+     use clm_varpar, only: natpft_size, natpft_ub
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 5, cftsize = 2
+     integer, parameter :: n_dom_soil_patches = 0
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: wt_lunit_expected(begg:endg,max_lunit)
+     real(r8), allocatable :: wt_nat_patch_expected(:,:)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+     allocate( wt_lunit(begg:endg,max_lunit) )
+     allocate( wt_nat_patch(begg:endg,0:natpft_ub) )
+     allocate( wt_nat_patch_expected(begg:endg,0:natpft_ub) )
+
+     ! INPUT VALUES
+     wt_lunit(begg:,:) = 0._r8  ! initialize
+     wt_lunit(begg:,istsoil) = (/ 40._r8, 60._r8, 50._r8, 50._r8 /)
+     wt_lunit(begg:,istcrop) = (/ 60._r8, 40._r8, 50._r8, 50._r8 /)
+     wt_lunit = wt_lunit / 100._r8
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     wt_nat_patch(begg:,:) = 0._r8  ! initialize
+     wt_nat_patch(begg:,0) = (/ 30._r8, 40._r8, 40._r8, 30._r8 /)  ! pft0
+     wt_nat_patch(begg:,1) = (/ 20._r8, 20._r8, 20._r8, 20._r8 /)  ! pft1
+     wt_nat_patch(begg:,2) = (/  0._r8,  0._r8,  0._r8,  0._r8 /)  ! pft2
+     wt_nat_patch(begg:,3) = (/  0._r8,  0._r8,  0._r8,  0._r8 /)  ! pft3
+     wt_nat_patch(begg:,4) = (/ 10._r8, 10._r8, 10._r8, 10._r8 /)  ! pft4
+     wt_nat_patch(begg:,5) = (/ 40._r8, 30._r8, 30._r8, 40._r8 /)  ! pft5
+     wt_nat_patch(:,:) = wt_nat_patch(:,:) / 100._r8
+     call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     wt_cft(begg:,:) = reshape((/ 40._r8, 60._r8, 60._r8, 40._r8, &  ! cft1
+                                  60._r8, 40._r8, 40._r8, 60._r8 /), shape(wt_cft))
+     wt_cft = wt_cft / 100._r8
+     call check_sums_equal_1( wt_cft, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     ! OUTPUT VALUES EXPECTED
+     wt_lunit_expected = wt_lunit
+     wt_nat_patch_expected = wt_nat_patch
+     wt_cft_expected = wt_cft
+
+     ! Collapse pfts and cfts
+     call collapse_all_pfts( wt_lunit(begg:endg,:), &
+                             wt_nat_patch(begg:endg,:), natpft_size, &
+                             wt_cft(begg:endg,:), cftsize, &
+                             begg, endg, n_dom_soil_patches)
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     call check_sums_equal_1( wt_cft, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     @assertEqual(wt_lunit(begg:,:), wt_lunit_expected(begg:,:))
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:), tolerance=tol)
+     @assertEqual(wt_nat_patch(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=tol)
+
+     deallocate( wt_nat_patch_expected )
+     deallocate( wt_nat_patch )
+     deallocate( wt_lunit )
+
+     call pftcon%clean()
+  end subroutine test_collapse_all_pfts_and_cfts_to_0
+
+  @Test
   subroutine test_collapse_all_pfts_and_cfts_to_2()
-     ! This test starts with 4 non-generic and 2 generic crops => cftsize = 6
-     ! plus a few unmanaged pfts. The test collapses to n_dom_soil_patches = 2
+     ! This test starts with a use_crop = .true. 78-pft configuration:
+     ! a few unmanaged pfts, 2 generic crops, and 4 non-generic crops, so
+     ! cftsize = 6. The test collapses the vegetation to n_dom_soil_patches = 2
      ! dominant pfts/cfts.
      use pftconMod, only: pftcon
      use landunit_varcon, only: istsoil, istcrop, max_lunit

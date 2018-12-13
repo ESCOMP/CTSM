@@ -158,7 +158,7 @@ contains
     ! !USES:
     use clm_varpar, only: natpft_lb, natpft_ub, cft_lb, cft_ub, maxveg
     use landunit_varcon, only: istsoil, istcrop, max_lunit
-    use pftconMod, only: noveg, nc3crop, pftcon
+    use pftconMod, only: noveg, nc3crop, nc3irrig, pftcon
     use array_utils, only: find_k_max_indices
     !
     ! !ARGUMENTS:
@@ -198,11 +198,11 @@ contains
        SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cft_lb+cft_size-1/)), errMsg(sourcefile, __LINE__))
        SHR_ASSERT_ALL((ubound(wt_all_patch) == (/natpft_lb+natpft_size+cft_size-1/)), errMsg(sourcefile, __LINE__))
 
-       ! Find the top N dominant soil patches to collapse pft data to
+       ! Find the top N dominant soil patches to collapse pft data to;
        ! n_dom_soil_patches < 0 is not allowed (error check in controlMod.F90)
        ! n_dom_soil_patches == 0 or 78 currently mean "do not collapse pfts"
        ! so skip over this subroutine's work
-       if (n_dom_soil_patches > 0 .and. n_dom_soil_patches < maxveg) then
+       if (n_dom_soil_patches > 0 .and. n_dom_soil_patches <= nc3irrig) then
           allocate(max_indices(n_dom_soil_patches))
           do g = begg, endg
              ! Normalize nat and cft weights by their landunit weights in
