@@ -2593,6 +2593,7 @@ contains
      integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
      real(r8) :: s_y
      real(r8) :: irrig_total
+     real(r8) :: available_water_layer
      real(r8) :: irrig_layer
      !-----------------------------------------------------------------------
 
@@ -2643,8 +2644,15 @@ contains
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
                 s_y=max(s_y,0.02_r8)
-                irrig_layer=min(irrig_total,(s_y*(zi(c,j) - zwt(c))*1.e3))
-                irrig_layer=max(irrig_layer,0._r8)
+
+                if (j==jwt(c)+1) then
+                   available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))
+                else
+                   available_water_layer=max(0._r8,(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
+                endif
+
+                irrig_layer=min(irrig_total, available_water_layer)
+
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) - irrig_layer
                    
                 irrig_total = irrig_total - irrig_layer
