@@ -1073,9 +1073,9 @@ Max number of plant functional types in naturally vegetated landunit.
 
 <entry id="n_dom_soil_patches" type="integer" category="physics"
        group="clm_inparm"
-       valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,78" value="78">
+       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16" value="0">
 Number of dominant soil patches; determines number of active soil patches.
-<default>Default: 78</default>
+<default>Default: 0</default>
 </entry>
 
 <entry id="use_dynroot" type="logical" category="physics"

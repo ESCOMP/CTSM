@@ -359,8 +359,8 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (n_dom_soil_patches <= 0) then
-          call endrun(msg=' ERROR: expecting n_dom_soil_patches between 1 and 16' // &
+       if (n_dom_soil_patches < 0) then
+          call endrun(msg=' ERROR: expecting n_dom_soil_patches between 0 and 16 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
