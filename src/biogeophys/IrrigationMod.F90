@@ -52,6 +52,8 @@ module IrrigationMod
   use clm_varcon       , only : isecspday, denh2o, spval, ispval, namep, namec, nameg
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
+  use SoilHydrologyType, only : soilhydrology_type
+  use SoilStateType    , only : soilstate_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use WaterFluxBulkType      , only : waterfluxbulk_type
   use GridcellType     , only : grc                
@@ -150,12 +152,13 @@ module IrrigationMod
      procedure, public :: Restart
      procedure, public :: ApplyIrrigation
      procedure, public :: CalcIrrigationNeeded
+     procedure, public :: UseGroundwaterIrrigation ! Returns true if groundwater irrigation enabled
      procedure, public :: Clean => IrrigationClean ! deallocate memory
 
      ! Public simply to support unit testing; should not be used from CLM code
      procedure, public :: InitForTesting ! version of Init meant for unit testing
      procedure, public :: RelsatToH2osoi ! convert from relative saturation to kg/m2 water for a single column and layer
-     procedure, public :: UseGroundwaterIrrigation ! Returns true if groundwater irrigation enabled
+     procedure, public :: WrapCalcIrrigWithdrawals ! Wrap the call to CalcIrrigWithdrawals
 
      ! Private routines
      procedure, private :: ReadNamelist
@@ -847,7 +850,9 @@ contains
   
   !-----------------------------------------------------------------------
   subroutine ApplyIrrigation(this, bounds, num_soilc, &
-            filter_soilc, num_soilp, filter_soilp, waterfluxbulk_inst, available_gw_uncon)
+       filter_soilc, num_soilp, filter_soilp, &
+       soilhydrology_inst, soilstate_inst, &
+       waterfluxbulk_inst, available_gw_uncon)
     !
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
@@ -872,6 +877,8 @@ contains
     integer, intent(in) :: num_soilp
     ! patch filter for soil
     integer, intent(in) :: filter_soilp(:)
+    type(soilhydrology_type)   , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)       , intent(in)    :: soilstate_inst
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     ! column available water in saturated zone (kg/m2)
     real(r8), intent(in) :: available_gw_uncon( bounds%begc:)
@@ -952,6 +959,9 @@ contains
        end do
     end if
 
+    call this%WrapCalcIrrigWithdrawals(bounds, num_soilc, filter_soilc, &
+         soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+
     do fp = 1, num_soilp
        p = filter_soilp(fp)
        c = patch%column(p)
@@ -1004,6 +1014,32 @@ contains
 
   end subroutine ApplyIrrigation
 
+  !-----------------------------------------------------------------------
+  subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
+       soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+    !
+    ! !DESCRIPTION:
+    ! Wrap the call to the external subroutine, CalcIrrigWithdrawals
+    !
+    ! The purpose of this wrapping is to allow unit tests to override the behavior
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type)   , intent(in)    :: this
+    type(bounds_type)        , intent(in)    :: bounds
+    integer                  , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil
+    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
+    type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'WrapCalcIrrigWithdrawals'
+    !-----------------------------------------------------------------------
+
+    ! FIXME(wjs, 2018-12-13) Need to fill this in
+
+  end subroutine WrapCalcIrrigWithdrawals
 
   !-----------------------------------------------------------------------
   subroutine CalcIrrigationNeeded(this, bounds, num_exposedvegp, filter_exposedvegp, &

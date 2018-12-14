@@ -13,6 +13,9 @@ module test_irrigation
   use clm_instur, only : irrig_method
   use clm_varpar, only : nlevsoi, nlevgrnd
   use landunit_varcon, only : istsoil
+  use decompMod, only : bounds_type
+  use SoilHydrologyType, only : soilhydrology_type
+  use SoilStateType, only : soilstate_type
   use WaterFluxBulkType, only : waterfluxbulk_type
   use PatchType     , only : patch
   use ColumnType    , only : col
@@ -29,11 +32,20 @@ module test_irrigation
   integer , parameter :: irrig_start = 21600
   integer , parameter :: pft_type = 1  ! pft type in target patch for single-patch tests
 
+  type, extends(irrigation_type) :: irrigation_test_type
+     real(r8) :: gw_frac_from_uncon  ! Fraction of groundwater irrigation taken from unconfined aquifer
+     real(r8), allocatable :: gw_frac_from_con(:)  ! Fraction of groundwater irrigation taken from confined aquifer in various layers
+   contains
+     procedure, public :: InitForTesting    ! Call the main irrigation InitForTesting, and also initialize IrrigationTestType's test-specific data to reasonable values
+     procedure, public :: SetGwFractions            ! Set fraction of groundwater from various sources
+     procedure, public :: WrapCalcIrrigWithdrawals  ! Override WrapCalcIrrigWithdrawals for testing
+  end type irrigation_test_type
+
   @TestCase
   type, extends(TestCase) :: TestIrrigation
      integer :: numf
      integer, allocatable :: filter(:)
-     type(irrigation_type) :: irrigation
+     type(irrigation_test_type) :: irrigation
      type(waterfluxbulk_type) :: waterflux
 
      ! Irrigation parameters
@@ -101,6 +113,82 @@ module test_irrigation
   real(r8), parameter :: m3_over_km2_to_mm = 1.e-3_r8
 
 contains
+
+  ! ========================================================================
+  ! Methods on irrigation_test_type
+  ! ========================================================================
+
+  subroutine InitForTesting(this, bounds, params, dtime, &
+       relsat_wilting_point, relsat_target)
+    ! Call the main irrigation's InitForTesting, and also initialize IrrigationTestType's
+    ! test-specific data to reasonable values
+    !
+    ! Sets all groundwater irrigation to come from unconfined aquifer
+    !
+    ! Assumes nlevsoi has already been set
+    class(irrigation_test_type)  , intent(inout) :: this
+    type(bounds_type)            , intent(in)    :: bounds
+    type(irrigation_params_type) , intent(in)    :: params
+    integer                      , intent(in)    :: dtime ! model time step (sec)
+    real(r8)                     , intent(in)    :: relsat_wilting_point( bounds%begc: , 1: ) ! relative saturation at which smp = irrig_wilting_point_smp [col, nlevsoi]
+    real(r8)                     , intent(in)    :: relsat_target( bounds%begc: , 1: ) ! relative saturation at which smp = irrig_target_smp [col, nlevsoi]
+
+    call this%irrigation_type%InitForTesting( &
+         bounds = bounds, &
+         params = params, &
+         dtime = dtime, &
+         relsat_wilting_point = relsat_wilting_point, &
+         relsat_target = relsat_target)
+
+    this%gw_frac_from_uncon = 1._r8
+    allocate(this%gw_frac_from_con(nlevsoi))
+    this%gw_frac_from_con(:) = 0._r8
+  end subroutine InitForTesting
+
+  subroutine SetGwFractions(this, gw_frac_from_uncon, gw_frac_from_con)
+    ! Set fraction of groundwater from various sources
+    class(irrigation_test_type), intent(inout) :: this
+
+    ! fraction of groundwater taken from unconfined aquifer
+    real(r8), intent(in) :: gw_frac_from_uncon
+
+    ! fraction of groundwater taken from confined aquifer in various layers; this should
+    ! have at most nlevsoi values; it specifies the fraction of groundwater extracted
+    ! from the top N layers of soil
+    real(r8), intent(in) :: gw_frac_from_con(:)
+
+    ! Error checking on input argument
+    @assertLessThanOrEqual(size(gw_frac_from_con), size(this%gw_frac_from_con))
+
+    this%gw_frac_from_uncon = gw_frac_from_uncon
+    this%gw_frac_from_con(1:size(gw_frac_from_con)) = gw_frac_from_con(:)
+  end subroutine SetGwFractions
+
+  !-----------------------------------------------------------------------
+  subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
+       soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+    !
+    ! !DESCRIPTION:
+    ! Overrides WrapCalcIrrigWithdrawals for testing
+    !
+    ! !ARGUMENTS:
+    class(irrigation_test_type), intent(in)  :: this
+    type(bounds_type)        , intent(in)    :: bounds
+    integer                  , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil
+    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
+    type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'WrapCalcIrrigWithdrawals'
+    !-----------------------------------------------------------------------
+
+    ! FIXME(wjs, 2018-12-14) Need to fill this in
+
+  end subroutine WrapCalcIrrigWithdrawals
+
 
   ! ========================================================================
   ! Test helpers
@@ -471,7 +559,12 @@ contains
     integer, allocatable :: apply_filterp(:)
     integer :: apply_numc
     integer, allocatable :: apply_filterc(:)
-    
+
+    ! For the sake of the tests done here, it's currently fine for soilhydrology_inst and
+    ! soilstate_inst to be uninitialized
+    type(soilhydrology_type) :: soilhydrology_inst
+    type(soilstate_type) :: soilstate_inst
+
     character(len=*), parameter :: subname = 'calculateAndApplyIrrigation'
     !-----------------------------------------------------------------------
 
@@ -507,6 +600,8 @@ contains
          filter_soilc = apply_filterc, &
          num_soilp = apply_nump, &
          filter_soilp = apply_filterp, &
+         soilhydrology_inst = soilhydrology_inst, &
+         soilstate_inst = soilstate_inst, &
          waterfluxbulk_inst = this%waterflux, &
          available_gw_uncon = this%available_gw_uncon)
 
