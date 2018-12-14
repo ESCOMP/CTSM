@@ -13,7 +13,7 @@ module WaterStateType
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
-  use clm_varctl     , only : use_bedrock
+  use clm_varctl     , only : use_bedrock, iulog
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
