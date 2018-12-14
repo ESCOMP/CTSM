@@ -444,8 +444,6 @@ contains
 
           call IrrigationWithdrawals( &
                bounds = bounds_clump, &
-               num_hydrologyc = filter(nc)%num_hydrologyc, &
-               filter_hydrologyc = filter(nc)%hydrologyc, &
                num_soilc = filter(nc)%num_soilc, &
                filter_soilc = filter(nc)%soilc, &
                num_soilp = filter(nc)%num_soilp, &

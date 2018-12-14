@@ -52,6 +52,7 @@ module IrrigationMod
   use clm_varcon       , only : isecspday, denh2o, spval, ispval, namep, namec, nameg
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
+  use SoilHydrologyMod , only : CalcIrrigWithdrawals
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
@@ -950,6 +951,10 @@ contains
           end if
           qflx_gw_irrig_withdrawn_col(c) = qflx_gw_uncon_irrig_col(c) + qflx_gw_con_irrig_col(c)
        end do
+
+       call this%WrapCalcIrrigWithdrawals(bounds, num_soilc, filter_soilc, &
+            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+
     else
        do fc = 1, num_soilc
           c = filter_soilc(fc)
@@ -958,9 +963,6 @@ contains
           qflx_gw_irrig_withdrawn_col(c) = 0._r8
        end do
     end if
-
-    call this%WrapCalcIrrigWithdrawals(bounds, num_soilc, filter_soilc, &
-         soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
 
     do fp = 1, num_soilp
        p = filter_soilp(fp)
@@ -1037,7 +1039,9 @@ contains
     character(len=*), parameter :: subname = 'WrapCalcIrrigWithdrawals'
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2018-12-13) Need to fill this in
+    call CalcIrrigWithdrawals(bounds, num_soilc, &
+         filter_soilc, soilhydrology_inst, soilstate_inst, &
+         waterfluxbulk_inst)
 
   end subroutine WrapCalcIrrigWithdrawals
 

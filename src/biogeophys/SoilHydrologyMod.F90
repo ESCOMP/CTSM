@@ -2493,7 +2493,7 @@ contains
    end subroutine RenewCondensation
 !#8
    !-----------------------------------------------------------------------
-   subroutine CalcAvailableUnconfinedAquifer(bounds, num_hydrologyc, filter_hydrologyc, &
+   subroutine CalcAvailableUnconfinedAquifer(bounds, num_soilc, filter_soilc, &
         soilhydrology_inst, soilstate_inst, waterdiagnosticbulk_inst) 
      !
      ! !DESCRIPTION:
@@ -2504,8 +2504,8 @@ contains
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)         :: bounds  
-     integer                  , intent(in)         :: num_hydrologyc       ! number of column soil points in column filter
-     integer                  , intent(in)         :: filter_hydrologyc(:) ! column filter for soil points
+     integer                  , intent(in)         :: num_soilc       ! number of column soil points in column filter
+     integer                  , intent(in)         :: filter_soilc(:) ! column filter for soil points
      type(soilhydrology_type) , intent(in)         :: soilhydrology_inst
      type(soilstate_type)     , intent(in)         :: soilstate_inst
      type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
@@ -2532,8 +2532,8 @@ contains
        ! calculate amount of water in saturated zone that
        ! is available for groundwater irrigation
 
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
           available_gw_uncon(c) = 0._r8
 
           jwt(c) = nlevsoi
@@ -2566,7 +2566,7 @@ contains
 !#9
    !-----------------------------------------------------------------------
    subroutine CalcIrrigWithdrawals(bounds, &
-        num_hydrologyc, filter_hydrologyc, &
+        num_soilc, filter_soilc, &
         soilhydrology_inst, soilstate_inst, &
         waterfluxbulk_inst)
      !
@@ -2577,8 +2577,8 @@ contains
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds               
-     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
-     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+     integer                  , intent(in)    :: num_soilc       ! number of column soil points in column filter
+     integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil points
      type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
@@ -2612,15 +2612,15 @@ contains
        dtime = get_step_size()
 
        do j = 1, nlevsoi
-          do fc = 1, num_hydrologyc
-             c = filter_hydrologyc(fc)
+          do fc = 1, num_soilc
+             c = filter_soilc(fc)
              qflx_gw_uncon_irrig_lyr(c,j) = 0._r8
           end do
        end do
 
        !-- Remove groundwater from unconfined aquifer  -----------
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
 
           irrig_total = qflx_gw_uncon_irrig(c)*dtime
           
@@ -2668,7 +2668,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine WithdrawGroundwaterIrrigation(bounds, &
-        num_hydrologyc, filter_hydrologyc, &
+        num_soilc, filter_soilc, &
         waterfluxbulk_inst, waterstatebulk_inst)
      !
      ! !DESCRIPTION:
@@ -2678,8 +2678,8 @@ contains
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds               
-     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
-     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+     integer                  , intent(in)    :: num_soilc       ! number of column soil points in column filter
+     integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil points
      type(waterfluxbulk_type) , intent(in)    :: waterfluxbulk_inst
      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
      !
@@ -2701,16 +2701,16 @@ contains
      dtime = get_step_size()
 
      do j = 1, nlevsoi
-        do fc = 1, num_hydrologyc
-           c = filter_hydrologyc(fc)
+        do fc = 1, num_soilc
+           c = filter_soilc(fc)
            h2osoi_liq(c,j) = h2osoi_liq(c,j) - qflx_gw_uncon_irrig_lyr(c,j) * dtime
         end do
      end do
 
      ! zwt is not being updated, as it will be updated after HydrologyNoDrainage
        
-     do fc = 1, num_hydrologyc
-        c = filter_hydrologyc(fc)
+     do fc = 1, num_soilc
+        c = filter_soilc(fc)
         wa(c) = wa(c) - qflx_gw_con_irrig(c) * dtime
      end do
 

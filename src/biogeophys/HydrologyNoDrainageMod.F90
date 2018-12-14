@@ -40,7 +40,6 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine IrrigationWithdrawals(bounds, &
-       num_hydrologyc, filter_hydrologyc, &
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
@@ -52,12 +51,10 @@ contains
     !
     ! !USES:
     use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
-    use SoilHydrologyMod       , only : CalcIrrigWithdrawals, WithdrawGroundwaterIrrigation
+    use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
-    integer                        , intent(in)    :: num_hydrologyc       ! number of points in filter_hydrologyc
-    integer                        , intent(in)    :: filter_hydrologyc(:) ! column filter for hydrologically-active points
     integer                        , intent(in)    :: num_soilc            ! number of points in filter_soilc
     integer                        , intent(in)    :: filter_soilc(:)      ! column filter for soil points
     integer                        , intent(in)    :: num_soilp            ! number of points in filter_soilp
@@ -76,8 +73,8 @@ contains
 
     ! Calculate amount of water available for groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
-       call CalcAvailableUnconfinedAquifer(bounds, num_hydrologyc, &
-            filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
+       call CalcAvailableUnconfinedAquifer(bounds, num_soilc, &
+            filter_soilc, soilhydrology_inst, soilstate_inst, &
             waterdiagnosticbulk_inst)
     end if
 
@@ -90,12 +87,8 @@ contains
 
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
-       call CalcIrrigWithdrawals(bounds, num_hydrologyc, &
-            filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
-            waterfluxbulk_inst)
-
-       call WithdrawGroundwaterIrrigation(bounds, num_hydrologyc, &
-            filter_hydrologyc, waterfluxbulk_inst, waterstatebulk_inst)
+       call WithdrawGroundwaterIrrigation(bounds, num_soilc, &
+            filter_soilc, waterfluxbulk_inst, waterstatebulk_inst)
     end if
 
   end subroutine IrrigationWithdrawals
