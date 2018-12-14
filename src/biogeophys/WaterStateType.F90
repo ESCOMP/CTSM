@@ -42,6 +42,8 @@ module WaterStateType
 
      real(r8), pointer :: wa_col            (:)     ! col water in the unconfined aquifer (mm) 
 
+     real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
+
    contains
 
      procedure, public  :: Init
@@ -287,7 +289,7 @@ contains
     use clm_varcon      , only : tfrz, aquifer_water_baseline
     !
     ! !ARGUMENTS:
-    class(waterstate_type), intent(in)    :: this
+    class(waterstate_type), intent(inout) :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
@@ -454,7 +456,8 @@ contains
       end do
 
 
-      this%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline * ratio
+      this%aquifer_water_baseline = aquifer_water_baseline * ratio
+      this%wa_col(bounds%begc:bounds%endc)  = this%aquifer_water_baseline
       do c = bounds%begc,bounds%endc
          l = col%landunit(c)
          if (.not. lun%lakpoi(l)) then  !not lake
