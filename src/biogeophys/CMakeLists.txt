@@ -9,12 +9,15 @@ list(APPEND clm_sources
   EnergyFluxType.F90
   GlacierSurfaceMassBalanceMod.F90
   HumanIndexMod.F90
+  InfiltrationExcessRunoffMod.F90
   IrrigationMod.F90
   LakeCon.F90
   QSatMod.F90
   RootBiophysMod.F90
+  SaturatedExcessRunoffMod.F90
   SnowHydrologyMod.F90
   SnowSnicarMod.F90
+  SoilHydrologyMod.F90
   SoilHydrologyType.F90
   SoilStateType.F90
   SoilWaterRetentionCurveMod.F90
