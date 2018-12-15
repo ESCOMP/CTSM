@@ -33,8 +33,8 @@ module test_irrigation
   integer , parameter :: pft_type = 1  ! pft type in target patch for single-patch tests
 
   type, extends(irrigation_type) :: irrigation_test_type
-     real(r8) :: gw_frac_from_uncon  ! Fraction of groundwater irrigation taken from unconfined aquifer
-     real(r8), allocatable :: gw_frac_from_con(:)  ! Fraction of groundwater irrigation taken from confined aquifer in various layers
+     real(r8) :: gw_frac_from_con  ! Fraction of groundwater irrigation taken from confined aquifer (same for all columns)
+     real(r8), allocatable :: gw_frac_from_uncon(:)  ! Fraction of groundwater irrigation taken from unconfined aquifer in various layers (same for all columns)
    contains
      procedure, public :: InitForTesting    ! Call the main irrigation InitForTesting, and also initialize IrrigationTestType's test-specific data to reasonable values
      procedure, public :: SetGwFractions            ! Set fraction of groundwater from various sources
@@ -59,7 +59,6 @@ module test_irrigation
      real(r8), allocatable :: relsat_wilting_point(:,:)
      real(r8), allocatable :: relsat_target(:,:)
      real(r8), allocatable :: volr(:)
-     real(r8), allocatable :: available_gw_uncon(:)
 
    contains
      procedure :: setUp
@@ -123,7 +122,7 @@ contains
     ! Call the main irrigation's InitForTesting, and also initialize IrrigationTestType's
     ! test-specific data to reasonable values
     !
-    ! Sets all groundwater irrigation to come from unconfined aquifer
+    ! Sets all groundwater irrigation to come from confined aquifer
     !
     ! Assumes nlevsoi has already been set
     class(irrigation_test_type)  , intent(inout) :: this
@@ -140,33 +139,36 @@ contains
          relsat_wilting_point = relsat_wilting_point, &
          relsat_target = relsat_target)
 
-    this%gw_frac_from_uncon = 1._r8
-    allocate(this%gw_frac_from_con(nlevsoi))
-    this%gw_frac_from_con(:) = 0._r8
+    this%gw_frac_from_con = 1._r8
+    allocate(this%gw_frac_from_uncon(nlevsoi))
+    this%gw_frac_from_uncon(:) = 0._r8
   end subroutine InitForTesting
 
-  subroutine SetGwFractions(this, gw_frac_from_uncon, gw_frac_from_con)
+  subroutine SetGwFractions(this, gw_frac_from_con, gw_frac_from_uncon)
     ! Set fraction of groundwater from various sources
     class(irrigation_test_type), intent(inout) :: this
 
-    ! fraction of groundwater taken from unconfined aquifer
-    real(r8), intent(in) :: gw_frac_from_uncon
+    ! fraction of groundwater taken from confined aquifer
+    real(r8), intent(in) :: gw_frac_from_con
 
-    ! fraction of groundwater taken from confined aquifer in various layers; this should
-    ! have at most nlevsoi values; it specifies the fraction of groundwater extracted
-    ! from the top N layers of soil
-    real(r8), intent(in) :: gw_frac_from_con(:)
+    ! fraction of groundwater taken from unconfined aquifer in various layers; this should
+    ! have at most nlevsoi values; it specifies the fraction of groundwater extracted from
+    ! the top N layers of soil
+    real(r8), intent(in) :: gw_frac_from_uncon(:)
 
     ! Error checking on input argument
-    @assertLessThanOrEqual(size(gw_frac_from_con), size(this%gw_frac_from_con))
+    @assertLessThanOrEqual(size(gw_frac_from_uncon), size(this%gw_frac_from_uncon))
 
-    this%gw_frac_from_uncon = gw_frac_from_uncon
-    this%gw_frac_from_con(1:size(gw_frac_from_con)) = gw_frac_from_con(:)
+    this%gw_frac_from_con = gw_frac_from_con
+    this%gw_frac_from_uncon(1:size(gw_frac_from_uncon)) = gw_frac_from_uncon(:)
   end subroutine SetGwFractions
 
   !-----------------------------------------------------------------------
   subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
-       soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+       soilhydrology_inst, soilstate_inst, &
+       qflx_gw_demand, &
+       qflx_gw_uncon_irrig_lyr, &
+       qflx_gw_con_irrig)
     !
     ! !DESCRIPTION:
     ! Overrides WrapCalcIrrigWithdrawals for testing
@@ -178,14 +180,28 @@ contains
     integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
+
+    real(r8) , intent(in)    :: qflx_gw_demand( bounds%begc: )              ! groundwater irrigation demand (mm H2O/s)
+    real(r8) , intent(inout) :: qflx_gw_uncon_irrig_lyr( bounds%begc:, 1: ) ! unconfined aquifer groundwater irrigation withdrawal flux, separated by layer (mm H2O/s)
+    real(r8) , intent(inout) :: qflx_gw_con_irrig( bounds%begc: )           ! total confined aquifer groundwater irrigation withdrawal flux (mm H2O/s)
     !
     ! !LOCAL VARIABLES:
+    integer :: j, fc, c
 
     character(len=*), parameter :: subname = 'WrapCalcIrrigWithdrawals'
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2018-12-14) Need to fill this in
+    do j = 1, nlevsoi
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
+          qflx_gw_uncon_irrig_lyr(c,j) = qflx_gw_demand(c) * this%gw_frac_from_uncon(j)
+       end do
+    end do
+
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       qflx_gw_con_irrig(c) = qflx_gw_demand(c) * this%gw_frac_from_con
+    end do
 
   end subroutine WrapCalcIrrigWithdrawals
 
@@ -221,6 +237,7 @@ contains
     call this%irrigation%Clean()
     deallocate(this%waterflux%qflx_sfc_irrig_col)
     deallocate(this%waterflux%qflx_gw_uncon_irrig_col)
+    deallocate(this%waterflux%qflx_gw_uncon_irrig_lyr_col)
     deallocate(this%waterflux%qflx_gw_con_irrig_col)
     deallocate(this%waterflux%qflx_irrig_drip_patch)
     deallocate(this%waterflux%qflx_irrig_sprinkler_patch)
@@ -340,6 +357,7 @@ contains
     ! these are initialized to 0 in InitCold.
     allocate(this%waterflux%qflx_sfc_irrig_col(bounds%begc:bounds%endc), source=0._r8)
     allocate(this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc:bounds%endc), source=0._r8)
+    allocate(this%waterflux%qflx_gw_uncon_irrig_lyr_col(bounds%begc:bounds%endc,1:nlevsoi), source=0._r8)
     allocate(this%waterflux%qflx_gw_con_irrig_col(bounds%begc:bounds%endc), source=0._r8)
     allocate(this%waterflux%qflx_irrig_drip_patch(bounds%begp:bounds%endp), source=0._r8)
     allocate(this%waterflux%qflx_irrig_sprinkler_patch(bounds%begp:bounds%endp), source=0._r8)
@@ -354,9 +372,6 @@ contains
     ! By default, volr will be very limiting... but this should have no effect if
     ! limit_irrigation_if_rof_enabled is false (the default)
     allocate(this%volr(bounds%begg:bounds%endg), source=0._r8)
-    ! By default, available_gw_uncon is very limiting... but this should have no effect
-    ! if use_groundwater_irrigation is false (the default)
-    allocate(this%available_gw_uncon(bounds%begc:bounds%endc), source=0._r8)
 
     do j = 1, nlevsoi
        do c = bounds%begc, bounds%endc
@@ -602,8 +617,7 @@ contains
          filter_soilp = apply_filterp, &
          soilhydrology_inst = soilhydrology_inst, &
          soilstate_inst = soilstate_inst, &
-         waterfluxbulk_inst = this%waterflux, &
-         available_gw_uncon = this%available_gw_uncon)
+         waterfluxbulk_inst = this%waterflux)
 
   end subroutine calculateAndApplyIrrigation
 
@@ -784,6 +798,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine assertTotalIrrigationEqualsForTwoIrrigPatches(this, wt_irrig1, wt_irrig2, &
        deficit_irrig1, deficit_irrig2, &
+       deficit_fraction_met, &
        expected_fluxvar_patch, expected_fluxvar_col)
     !
     ! !DESCRIPTION:
@@ -797,6 +812,9 @@ contains
     real(r8), intent(in) :: deficit_irrig1  ! total deficit for first irrigated patch (begp)
     real(r8), intent(in) :: deficit_irrig2  ! total deficit for second irrigated patch (begp+2)
 
+    ! If present, we only expect to meet this fraction of the deficit
+    real(r8), intent(in), optional :: deficit_fraction_met
+
     ! If present, assert that all of the flux is accounted for by this patch-level flux variable
     real(r8), intent(in), optional :: expected_fluxvar_patch(bounds%begp:)
 
@@ -804,6 +822,7 @@ contains
     real(r8), intent(in), optional :: expected_fluxvar_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
+    real(r8) :: l_deficit_fraction_met
     real(r8) :: expected1, expected2
     real(r8) :: col_total_deficit
     real(r8) :: expected_col_flux
@@ -811,8 +830,14 @@ contains
     character(len=*), parameter :: subname = 'assertTotalIrrigationEqualsForTwoIrrigPatches'
     !-----------------------------------------------------------------------
 
-    expected1 = deficit_irrig1 / this%irrigation_params%irrig_length
-    expected2 = deficit_irrig2 / this%irrigation_params%irrig_length
+    if (present(deficit_fraction_met)) then
+       l_deficit_fraction_met = deficit_fraction_met
+    else
+       l_deficit_fraction_met = 1._r8
+    end if
+
+    expected1 = l_deficit_fraction_met * deficit_irrig1 / this%irrigation_params%irrig_length
+    expected2 = l_deficit_fraction_met * deficit_irrig2 / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEqualsPatch(expected1, &
          p = bounds%begp)
     call this%assertTotalIrrigationEqualsPatch(expected2, &
@@ -822,7 +847,7 @@ contains
        @assertEqual(expected2, expected_fluxvar_patch(bounds%begp+2), tolerance=tol)
     end if
     col_total_deficit = deficit_irrig1 * wt_irrig1 + deficit_irrig2 * wt_irrig2
-    expected_col_flux = col_total_deficit / this%irrigation_params%irrig_length
+    expected_col_flux = l_deficit_fraction_met * col_total_deficit / this%irrigation_params%irrig_length
     call this%assertTotalIrrigationEqualsCol(expected_col_flux, &
          c = bounds%begc)
     if (present(expected_fluxvar_col)) then
@@ -1122,7 +1147,9 @@ contains
     call this%setupIrrigation(test_limit_irrigation=.true., &
          irrig_river_volume_threshold=irrig_river_volume_threshold, &
          use_groundwater_irrigation = .true.)
-    this%available_gw_uncon(bounds%begc) = huge(1._r8)
+    call this%irrigation%SetGwFractions( &
+         gw_frac_from_con = 0._r8, &
+         gw_frac_from_uncon = [0.4_r8, 0.6_r8])
 
     call this%computeDeficits(deficits)
     total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
@@ -1177,10 +1204,11 @@ contains
          volr_diff_from_threshold = -10._r8, &
          volr_limited_irrig_rate = volr_limited_irrig_rate)
 
-    ! Set available_gw_uncon to be 1/4 of the non-river-supplied irrigation
+    call this%irrigation%SetGwFractions( &
+         gw_frac_from_con = 0.75_r8, &
+         gw_frac_from_uncon = [0.1_r8, 0.15_r8])
     expected_total = total_deficit / this%irrigation_params%irrig_length
     expected_gw = expected_total - volr_limited_irrig_rate
-    this%available_gw_uncon(bounds%begc) = expected_gw * dtime / 4._r8
     expected_gw_uncon = expected_gw / 4._r8
     expected_gw_con = expected_gw - expected_gw_uncon
 
@@ -1190,8 +1218,8 @@ contains
     ! Check result
     ! First make sure the test is set up reasonably
     @assertGreaterThan(expected_total, 0._r8)
-    @assertGreaterThan(expected_gw_uncon, 0._r8)
-    @assertGreaterThan(expected_gw_con, 0._r8)
+    @assertGreaterThan(expected_gw, 0._r8)
+    @assertLessThan(expected_gw, expected_total)
     ! Now do the actual assertions on the irrigation routine
     call this%assertTotalIrrigationEquals(expected_total)
     ! Make sure that irrigation is properly divided into surface and groundwater
@@ -1529,7 +1557,9 @@ contains
          test_limit_irrigation = .true., &
          use_groundwater_irrigation = .true.)
     this%volr = 0._r8
-    this%available_gw_uncon(bounds%begc) = huge(1._r8)
+    call this%irrigation%SetGwFractions( &
+         gw_frac_from_con = 0._r8, &
+         gw_frac_from_uncon = [0.6_r8, 0.4_r8])
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
@@ -1576,7 +1606,9 @@ contains
          test_limit_irrigation = .true., &
          use_groundwater_irrigation = .true.)
     this%volr = 0._r8
-    this%available_gw_uncon(bounds%begc) = 0._r8
+    call this%irrigation%SetGwFractions( &
+         gw_frac_from_con = 1._r8, &
+         gw_frac_from_uncon = [0._r8])
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
@@ -1593,6 +1625,58 @@ contains
          deficit_irrig2 = total_deficit2, &
          expected_fluxvar_col = this%waterflux%qflx_gw_con_irrig_col)
   end subroutine multiple_irrigated_patches_per_column_gwConIrrig
+
+  @Test
+  subroutine multiple_irrigated_patches_per_column_gwConIrrigUnmetDemand(this)
+    ! If we have multiple irrigated patches on a column, with multiple irrigated patches
+    ! along with one without, make sure the column-level and patch-level fluxes are
+    ! computed correctly.
+    !
+    ! This version gets all irrigation from the confined aquifer, but some irrigation
+    ! demand remains unmet.
+    !
+    ! NOTE(wjs, 2018-12-12) If we ever allow different patches in a column to have
+    ! different irrigation amounts (e.g., due to some pft-specific parameter), it would
+    ! be good to change this test to leverage that, to make it a stronger test.
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: wt_irrig1 = 0.5_r8
+    real(r8), parameter :: wt_unirrig = 0.2_r8
+    real(r8), parameter :: wt_irrig2 = 0.3_r8
+    real(r8), parameter :: deficit_fraction_met = 0.75_r8
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: total_deficit1, total_deficit2
+
+    ! Setup grid
+    call setup_n_veg_patches(pwtcol = [wt_irrig1, wt_unirrig, wt_irrig2], &
+         pft_types = [1, 2, 3])
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation( &
+         maxpft = 3, &
+         test_limit_irrigation = .true., &
+         use_groundwater_irrigation = .true.)
+    this%volr = 0._r8
+    call this%irrigation%SetGwFractions( &
+         gw_frac_from_con = deficit_fraction_met, &
+         gw_frac_from_uncon = [0._r8])
+    pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    total_deficit1 = sum(deficits(bounds%begp, 1:nlevsoi))
+    total_deficit2 = sum(deficits(bounds%begp+2, 1:nlevsoi))
+    call this%assertTotalIrrigationEqualsForTwoIrrigPatches( &
+         wt_irrig1 = wt_irrig1, &
+         wt_irrig2 = wt_irrig2, &
+         deficit_irrig1 = total_deficit1, &
+         deficit_irrig2 = total_deficit2, &
+         deficit_fraction_met = deficit_fraction_met, &
+         expected_fluxvar_col = this%waterflux%qflx_gw_con_irrig_col)
+  end subroutine multiple_irrigated_patches_per_column_gwConIrrigUnmetDemand
 
   @Test
   subroutine irrigation_only_happens_within_filter(this)

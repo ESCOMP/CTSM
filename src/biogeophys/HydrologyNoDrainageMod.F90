@@ -44,13 +44,12 @@ contains
        num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
        irrigation_inst, &
-       waterdiagnosticbulk_inst, waterfluxbulk_inst, waterstatebulk_inst)
+       waterfluxbulk_inst, waterstatebulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
     !
     ! !USES:
-    use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
     use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
     !
     ! !ARGUMENTS:
@@ -62,7 +61,6 @@ contains
     type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
     type(soilstate_type)           , intent(in)    :: soilstate_inst
     type(irrigation_type)          , intent(inout) :: irrigation_inst
-    type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
     type(waterfluxbulk_type)       , intent(inout) :: waterfluxbulk_inst
     type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
     !
@@ -71,19 +69,11 @@ contains
     character(len=*), parameter :: subname = 'IrrigationWithdrawals'
     !-----------------------------------------------------------------------
 
-    ! Calculate amount of water available for groundwater irrigation
-    if (irrigation_inst%UseGroundwaterIrrigation()) then
-       call CalcAvailableUnconfinedAquifer(bounds, num_soilc, &
-            filter_soilc, soilhydrology_inst, soilstate_inst, &
-            waterdiagnosticbulk_inst)
-    end if
-
     ! Calculate irrigation flux
     call irrigation_inst%ApplyIrrigation(bounds, num_soilc, &
          filter_soilc, num_soilp, filter_soilp, &
          soilhydrology_inst, soilstate_inst, &
-         waterfluxbulk_inst, &
-         available_gw_uncon = waterdiagnosticbulk_inst%available_gw_uncon_col(bounds%begc:bounds%endc))
+         waterfluxbulk_inst)
 
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then

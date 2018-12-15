@@ -451,7 +451,6 @@ contains
                soilhydrology_inst = soilhydrology_inst, &
                soilstate_inst = soilstate_inst, &
                irrigation_inst = irrigation_inst, &
-               waterdiagnosticbulk_inst = water_inst%waterdiagnosticbulk_inst, &
                waterfluxbulk_inst = water_inst%waterfluxbulk_inst, &
                waterstatebulk_inst = water_inst%waterstatebulk_inst)
 

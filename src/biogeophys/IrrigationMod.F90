@@ -853,7 +853,7 @@ contains
   subroutine ApplyIrrigation(this, bounds, num_soilc, &
        filter_soilc, num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
-       waterfluxbulk_inst, available_gw_uncon)
+       waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
@@ -861,11 +861,6 @@ contains
     ! Sets irrigation withdrawal and application fluxes in waterfluxbulk_inst.
     !
     ! Should be called once, AND ONLY ONCE, per time step.
-    !
-    ! It is acceptable for available_gw_uncon to be undefined if
-    ! this%UseGroundwaterIrrigation is .false.
-    !
-    ! !USES:
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
@@ -881,30 +876,29 @@ contains
     type(soilhydrology_type)   , intent(in)    :: soilhydrology_inst
     type(soilstate_type)       , intent(in)    :: soilstate_inst
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
-    ! column available water in saturated zone (kg/m2)
-    real(r8), intent(in) :: available_gw_uncon( bounds%begc:)
     !
     ! !LOCAL VARIABLES:
     integer  :: p,fp  ! patch indices
     integer  :: c,fc  ! column indices
     integer  :: g     ! grid cell index
+    integer  :: j     ! level index
     real(r8) :: qflx_sfc_irrig_patch(bounds%begp:bounds%endp)      ! patch surface irrigation flux (mm H2O/s)
-    real(r8) :: qflx_gw_demand_patch(bounds%begp:bounds%endp) ! patch amount of irrigation groundwater demand
-    real(r8) :: qflx_gw_demand_col(bounds%begc:bounds%endc) ! col amount of irrigation groundwater demand
-    real(r8) :: qflx_gw_irrig_withdrawn_col(bounds%begc:bounds%endc) ! col total amount of irrigation withdrawn from groundwater
-    real(r8) :: qflx_gw_irrig_applied  ! amount of groundwater irrigation for a single patch
-    real(r8) :: qflx_irrig_tot ! total amount of irrigation for a single patch
+    real(r8) :: qflx_gw_demand_patch(bounds%begp:bounds%endp) ! patch amount of irrigation groundwater demand (mm H2O/s)
+    real(r8) :: qflx_gw_demand_col(bounds%begc:bounds%endc) ! col amount of irrigation groundwater demand (mm H2O/s)
+    real(r8) :: qflx_gw_irrig_withdrawn_col(bounds%begc:bounds%endc) ! col total amount of irrigation withdrawn from groundwater (mm H2O/s)
+    real(r8) :: qflx_gw_irrig_applied  ! amount of groundwater irrigation for a single patch (mm H2O/s)
+    real(r8) :: qflx_irrig_tot ! total amount of irrigation for a single patch (mm H2O/s)
 
     character(len=*), parameter :: subname = 'ApplyIrrigation'
 
     !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((ubound(available_gw_uncon) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     ! This should be called exactly once per time step, so that the counter decrease
     ! works correctly.
 
     associate( &
          qflx_sfc_irrig_col        => waterfluxbulk_inst%qflx_sfc_irrig_col        , & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
+         qflx_gw_uncon_irrig_lyr_col => waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col, & ! Output: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
          qflx_gw_uncon_irrig_col   => waterfluxbulk_inst%qflx_gw_uncon_irrig_col   , & ! Output: [real(r8) (:)] col unconfined groundwater irrigation flux (mm H2O/s)
          qflx_gw_con_irrig_col     => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! Output: [real(r8) (:)] col confined groundwater irrigation flux (mm H2O/s)
          qflx_irrig_drip_patch     => waterfluxbulk_inst%qflx_irrig_drip_patch     , & ! Output: [real(r8) (:)] patch drip irrigation flux (mm H2O/s)
@@ -924,7 +918,7 @@ contains
        else
           qflx_sfc_irrig_patch(p)          = 0._r8
           this%qflx_irrig_demand_patch(p)  = 0._r8
-          qflx_gw_demand_patch(p) = 0._r8
+          qflx_gw_demand_patch(p)          = 0._r8
        end if
     end do
 
@@ -937,29 +931,38 @@ contains
          colarr = qflx_gw_demand_col(bounds%begc:bounds%endc))
 
     if (this%params%use_groundwater_irrigation) then
-       ! groundwater irrigation will supply remaining deficit
-       !
-       ! first take from unconfined aquifer, then confined aquifer
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
-          if (qflx_gw_demand_col(c)*this%dtime <= available_gw_uncon(c)) then
-             qflx_gw_uncon_irrig_col(c) = qflx_gw_demand_col(c)
-             qflx_gw_con_irrig_col(c)   = 0._r8
-          else
-             qflx_gw_uncon_irrig_col(c) = available_gw_uncon(c) / this%dtime
-             qflx_gw_con_irrig_col(c)   = qflx_gw_demand_col(c) - qflx_gw_uncon_irrig_col(c)
-          end if
-          qflx_gw_irrig_withdrawn_col(c) = qflx_gw_uncon_irrig_col(c) + qflx_gw_con_irrig_col(c)
-       end do
+       ! Supply as much of the remaining deficit as possible from groundwater irrigation
 
        call this%WrapCalcIrrigWithdrawals(bounds, num_soilc, filter_soilc, &
-            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+            soilhydrology_inst, soilstate_inst, &
+            qflx_gw_demand = qflx_gw_demand_col(bounds%begc:bounds%endc), &
+            qflx_gw_uncon_irrig_lyr = qflx_gw_uncon_irrig_lyr_col(bounds%begc:bounds%endc, :), &
+            qflx_gw_con_irrig = qflx_gw_con_irrig_col(bounds%begc:bounds%endc))
+
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
+          qflx_gw_uncon_irrig_col(c) = 0._r8
+       end do
+       do j = 1, nlevsoi
+          do fc = 1, num_soilc
+             c = filter_soilc(fc)
+             qflx_gw_uncon_irrig_col(c) = qflx_gw_uncon_irrig_col(c) + &
+                  qflx_gw_uncon_irrig_lyr_col(c,j)
+          end do
+       end do
+
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
+          qflx_gw_irrig_withdrawn_col(c) = qflx_gw_uncon_irrig_col(c) + qflx_gw_con_irrig_col(c)
+       end do
 
     else
        do fc = 1, num_soilc
           c = filter_soilc(fc)
-          qflx_gw_uncon_irrig_col(c) = 0._r8
-          qflx_gw_con_irrig_col(c)   = 0._r8
+          ! It isn't necessary to explicitly zero out the fluxes in WaterfluxType
+          ! (qflx_gw_uncon_irrig_lyr_col, qflx_gw_uncon_irrig_col, qflx_gw_con_irrig_col),
+          ! because they will remain at their cold start values of 0. We just need to
+          ! explicitly zero out the local variable.
           qflx_gw_irrig_withdrawn_col(c) = 0._r8
        end do
     end if
@@ -1018,7 +1021,10 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
-       soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+       soilhydrology_inst, soilstate_inst, &
+       qflx_gw_demand, &
+       qflx_gw_uncon_irrig_lyr, &
+       qflx_gw_con_irrig)
     !
     ! !DESCRIPTION:
     ! Wrap the call to the external subroutine, CalcIrrigWithdrawals
@@ -1032,16 +1038,25 @@ contains
     integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
-    type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
+
+    real(r8) , intent(in)    :: qflx_gw_demand( bounds%begc: )              ! groundwater irrigation demand (mm H2O/s)
+    real(r8) , intent(inout) :: qflx_gw_uncon_irrig_lyr( bounds%begc:, 1: ) ! unconfined aquifer groundwater irrigation withdrawal flux, separated by layer (mm H2O/s)
+    real(r8) , intent(inout) :: qflx_gw_con_irrig( bounds%begc: )           ! total confined aquifer groundwater irrigation withdrawal flux (mm H2O/s)
     !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'WrapCalcIrrigWithdrawals'
     !-----------------------------------------------------------------------
 
-    call CalcIrrigWithdrawals(bounds, num_soilc, &
-         filter_soilc, soilhydrology_inst, soilstate_inst, &
-         waterfluxbulk_inst)
+    call CalcIrrigWithdrawals( &
+         bounds = bounds, &
+         num_soilc = num_soilc, &
+         filter_soilc = filter_soilc, &
+         soilhydrology_inst = soilhydrology_inst, &
+         soilstate_inst = soilstate_inst, &
+         qflx_gw_demand = qflx_gw_demand(bounds%begc:bounds%endc), &
+         qflx_gw_uncon_irrig_lyr = qflx_gw_uncon_irrig_lyr(bounds%begc:bounds%endc, :), &
+         qflx_gw_con_irrig = qflx_gw_con_irrig(bounds%begc:bounds%endc))
 
   end subroutine WrapCalcIrrigWithdrawals
 
