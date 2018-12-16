@@ -1627,7 +1627,7 @@ contains
   end subroutine multiple_irrigated_patches_per_column_gwConIrrig
 
   @Test
-  subroutine multiple_irrigated_patches_per_column_gwConIrrigUnmetDemand(this)
+  subroutine multiple_irrigated_patches_per_column_gwConIrrigSomeUnmetDemand(this)
     ! If we have multiple irrigated patches on a column, with multiple irrigated patches
     ! along with one without, make sure the column-level and patch-level fluxes are
     ! computed correctly.
@@ -1676,7 +1676,54 @@ contains
          deficit_irrig2 = total_deficit2, &
          deficit_fraction_met = deficit_fraction_met, &
          expected_fluxvar_col = this%waterflux%qflx_gw_con_irrig_col)
-  end subroutine multiple_irrigated_patches_per_column_gwConIrrigUnmetDemand
+  end subroutine multiple_irrigated_patches_per_column_gwConIrrigSomeUnmetDemand
+
+  @Test
+  subroutine multiple_irrigated_patches_per_column_allDemandUnmet(this)
+    ! If we have multiple irrigated patches on a column, with multiple irrigated patches
+    ! along with one without, make sure the column-level and patch-level fluxes are
+    ! computed correctly.
+    !
+    ! This version has all demand unmet. This tests to make sure we don't have a divide
+    ! by zero or other error in this edge case.
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: wt_irrig1 = 0.5_r8
+    real(r8), parameter :: wt_unirrig = 0.2_r8
+    real(r8), parameter :: wt_irrig2 = 0.3_r8
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: total_deficit1, total_deficit2
+
+    ! Setup grid
+    call setup_n_veg_patches(pwtcol = [wt_irrig1, wt_unirrig, wt_irrig2], &
+         pft_types = [1, 2, 3])
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation( &
+         maxpft = 3, &
+         test_limit_irrigation = .true., &
+         use_groundwater_irrigation = .true.)
+    this%volr = 0._r8
+    call this%irrigation%SetGwFractions( &
+         gw_frac_from_con = 0._r8, &
+         gw_frac_from_uncon = [0._r8])
+    pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    total_deficit1 = sum(deficits(bounds%begp, 1:nlevsoi))
+    total_deficit2 = sum(deficits(bounds%begp+2, 1:nlevsoi))
+    call this%assertTotalIrrigationEqualsForTwoIrrigPatches( &
+         wt_irrig1 = wt_irrig1, &
+         wt_irrig2 = wt_irrig2, &
+         deficit_irrig1 = total_deficit1, &
+         deficit_irrig2 = total_deficit2, &
+         deficit_fraction_met = 0._r8, &
+         expected_fluxvar_col = this%waterflux%qflx_gw_con_irrig_col)
+  end subroutine multiple_irrigated_patches_per_column_allDemandUnmet
 
   @Test
   subroutine irrigation_only_happens_within_filter(this)
