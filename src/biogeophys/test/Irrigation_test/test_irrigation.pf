@@ -270,7 +270,11 @@ contains
     !
     ! volr is set up to be non-limiting
     !
-    ! Set up to *not* do groundwater irrigation by default
+    ! Set up to have use_groundwater_irrigation true by default, but this won't actually
+    ! trigger any groundwater irrigation by default given the non-limiting volr. (This is
+    ! done so that we still exercise the code block for use_groundwater_irrigation in
+    ! most test cases, making sure it works correctly in these various cases, e.g., when
+    ! we have no irrigation.)
     !
     ! Assumes that nlevgrnd and nlevsoi have been set, and that all necessary subgrid
     ! setup has been completed.
@@ -293,7 +297,7 @@ contains
     ! not given, defaults to 0.1
     real(r8), intent(in), optional :: irrig_river_volume_threshold
 
-    ! Whether to use groundwater irrigation (false by default)
+    ! Whether to use groundwater irrigation (true by default)
     logical, intent(in), optional :: use_groundwater_irrigation
 
     ! Irrigation method (drip by default); just set for the module-level pft_type parameter
@@ -330,7 +334,7 @@ contains
        l_irrig_river_volume_threshold = irrig_river_volume_threshold
     end if
 
-    l_use_groundwater_irrigation = .false.
+    l_use_groundwater_irrigation = .true.
     if (present(use_groundwater_irrigation)) then
        l_use_groundwater_irrigation = use_groundwater_irrigation
     end if
@@ -1073,7 +1077,8 @@ contains
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation(test_limit_irrigation=.true., &
-         irrig_river_volume_threshold=irrig_river_volume_threshold)
+         irrig_river_volume_threshold=irrig_river_volume_threshold, &
+         use_groundwater_irrigation = .false.)
 
     call this%computeDeficits(deficits)
     total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
@@ -1510,7 +1515,10 @@ contains
     call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
 
     ! Other setup
-    call this%setupIrrigation(maxpft=3)
+    ! Note that use_groundwater_irrigation is true, but with the by-default non-limiting
+    ! volr, we should still have all irrigation from surface water.
+    call this%setupIrrigation(maxpft=3, &
+         use_groundwater_irrigation = .true.)
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
