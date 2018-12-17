@@ -56,8 +56,8 @@ module IrrigationMod
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-  use WaterFluxBulkType      , only : waterfluxbulk_type
-  use GridcellType     , only : grc                
+  use WaterType        , only : water_type
+  use GridcellType     , only : grc
   use ColumnType       , only : col                
   use PatchType        , only : patch                
   use subgridAveMod    , only : p2c, c2g
@@ -853,12 +853,13 @@ contains
   subroutine ApplyIrrigation(this, bounds, num_soilc, &
        filter_soilc, num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
-       waterfluxbulk_inst)
+       water_inst)
     !
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
     !
-    ! Sets irrigation withdrawal and application fluxes in waterfluxbulk_inst.
+    ! Sets irrigation withdrawal and application fluxes in the waterflux components of
+    ! water_inst.
     !
     ! Should be called once, AND ONLY ONCE, per time step.
     !
@@ -873,9 +874,9 @@ contains
     integer, intent(in) :: num_soilp
     ! patch filter for soil
     integer, intent(in) :: filter_soilp(:)
-    type(soilhydrology_type)   , intent(in)    :: soilhydrology_inst
-    type(soilstate_type)       , intent(in)    :: soilstate_inst
-    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
+    type(water_type)         , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: p,fp  ! patch indices
@@ -896,13 +897,14 @@ contains
     ! This should be called exactly once per time step, so that the counter decrease
     ! works correctly.
 
+    ! Note that these associated variables refer to the bulk instance
     associate( &
-         qflx_sfc_irrig_col        => waterfluxbulk_inst%qflx_sfc_irrig_col        , & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
-         qflx_gw_uncon_irrig_lyr_col => waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col, & ! Output: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
-         qflx_gw_uncon_irrig_col   => waterfluxbulk_inst%qflx_gw_uncon_irrig_col   , & ! Output: [real(r8) (:)] col unconfined groundwater irrigation flux (mm H2O/s)
-         qflx_gw_con_irrig_col     => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! Output: [real(r8) (:)] col confined groundwater irrigation flux (mm H2O/s)
-         qflx_irrig_drip_patch     => waterfluxbulk_inst%qflx_irrig_drip_patch     , & ! Output: [real(r8) (:)] patch drip irrigation flux (mm H2O/s)
-         qflx_irrig_sprinkler_patch=> waterfluxbulk_inst%qflx_irrig_sprinkler_patch  & ! Output: [real(r8) (:)] patch sprinkler irrigation flux (mm H2O/s)
+         qflx_sfc_irrig_col          => water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col          , & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
+         qflx_gw_uncon_irrig_lyr_col => water_inst%waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col , & ! Output: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
+         qflx_gw_uncon_irrig_col     => water_inst%waterfluxbulk_inst%qflx_gw_uncon_irrig_col     , & ! Output: [real(r8) (:)] col unconfined groundwater irrigation flux (mm H2O/s)
+         qflx_gw_con_irrig_col       => water_inst%waterfluxbulk_inst%qflx_gw_con_irrig_col       , & ! Output: [real(r8) (:)] col confined groundwater irrigation flux (mm H2O/s)
+         qflx_irrig_drip_patch       => water_inst%waterfluxbulk_inst%qflx_irrig_drip_patch       , & ! Output: [real(r8) (:)] patch drip irrigation flux (mm H2O/s)
+         qflx_irrig_sprinkler_patch  => water_inst%waterfluxbulk_inst%qflx_irrig_sprinkler_patch    & ! Output: [real(r8) (:)] patch sprinkler irrigation flux (mm H2O/s)
          )
       
     do fp = 1, num_soilp

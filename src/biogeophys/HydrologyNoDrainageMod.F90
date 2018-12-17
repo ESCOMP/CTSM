@@ -19,6 +19,7 @@ Module HydrologyNoDrainageMod
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use IrrigationMod, only : irrigation_type
+  use WaterType , only : water_type
   use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
@@ -44,7 +45,7 @@ contains
        num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
        irrigation_inst, &
-       waterfluxbulk_inst, waterstatebulk_inst)
+       water_inst)
     !
     ! !DESCRIPTION:
     ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
@@ -61,8 +62,7 @@ contains
     type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
     type(soilstate_type)           , intent(in)    :: soilstate_inst
     type(irrigation_type)          , intent(inout) :: irrigation_inst
-    type(waterfluxbulk_type)       , intent(inout) :: waterfluxbulk_inst
-    type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
+    type(water_type)               , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
 
@@ -73,12 +73,12 @@ contains
     call irrigation_inst%ApplyIrrigation(bounds, num_soilc, &
          filter_soilc, num_soilp, filter_soilp, &
          soilhydrology_inst, soilstate_inst, &
-         waterfluxbulk_inst)
+         water_inst)
 
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
        call WithdrawGroundwaterIrrigation(bounds, num_soilc, &
-            filter_soilc, waterfluxbulk_inst, waterstatebulk_inst)
+            filter_soilc, water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst)
     end if
 
   end subroutine IrrigationWithdrawals

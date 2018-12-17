@@ -17,10 +17,12 @@ module test_irrigation
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType, only : soilstate_type
   use WaterFluxBulkType, only : waterfluxbulk_type
+  use WaterType, only : water_type
   use PatchType     , only : patch
   use ColumnType    , only : col
   use GridcellType  , only : grc
   use pftconMod , only : pftcon
+  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
   use unittestFilterBuilderMod, only : filter_from_range
 
@@ -46,7 +48,10 @@ module test_irrigation
      integer :: numf
      integer, allocatable :: filter(:)
      type(irrigation_test_type) :: irrigation
-     type(waterfluxbulk_type) :: waterflux
+     
+     type(unittest_water_type_factory_type) :: water_factory
+     type(water_type) :: water_inst
+     type(waterfluxbulk_type), pointer :: waterflux ! Convenience pointer to water_inst%waterfluxbulk_inst
 
      ! Irrigation parameters
      type(irrigation_params_type) :: irrigation_params
@@ -212,6 +217,7 @@ contains
 
   subroutine setUp(this)
     class(TestIrrigation), intent(inout) :: this
+    integer, parameter :: irrelevant_nlevsno = 3
 
     ! Setup time manager
     call unittest_timemgr_setup(dtime=dtime)
@@ -228,6 +234,12 @@ contains
     nlevsoi = 4
     nlevgrnd = nlevsoi + 1
 
+    call this%water_factory%init()
+    call this%water_factory%setup_before_subgrid( &
+         my_nlevsoi = nlevsoi, &
+         nlevgrnd_additional = nlevgrnd - nlevsoi, &
+         my_nlevsno = irrelevant_nlevsno)
+
   end subroutine setUp
 
   subroutine tearDown(this)
@@ -235,12 +247,7 @@ contains
 
     call unittest_timemgr_teardown()
     call this%irrigation%Clean()
-    deallocate(this%waterflux%qflx_sfc_irrig_col)
-    deallocate(this%waterflux%qflx_gw_uncon_irrig_col)
-    deallocate(this%waterflux%qflx_gw_uncon_irrig_lyr_col)
-    deallocate(this%waterflux%qflx_gw_con_irrig_col)
-    deallocate(this%waterflux%qflx_irrig_drip_patch)
-    deallocate(this%waterflux%qflx_irrig_sprinkler_patch)
+    call this%water_factory%teardown(this%water_inst)
     call this%teardownEnvironment()
     call unittest_subgrid_teardown()
   end subroutine tearDown
@@ -312,6 +319,7 @@ contains
     real(r8) :: irrig_depth
     real(r8) :: l_irrig_river_volume_threshold
     logical :: l_use_groundwater_irrigation
+    integer, parameter :: irrelevant_snl = 0
     !-----------------------------------------------------------------------
 
     limit_irrigation_if_rof_enabled = .false.
@@ -359,6 +367,9 @@ contains
 
     ! Allocate fluxes output from irrigation routines. Note that, in the production code,
     ! these are initialized to 0 in InitCold.
+    call this%water_factory%setup_after_subgrid(snl = irrelevant_snl)
+    call this%water_factory%create_water_type(this%water_inst)
+    this%waterflux => this%water_inst%waterfluxbulk_inst
     allocate(this%waterflux%qflx_sfc_irrig_col(bounds%begc:bounds%endc), source=0._r8)
     allocate(this%waterflux%qflx_gw_uncon_irrig_col(bounds%begc:bounds%endc), source=0._r8)
     allocate(this%waterflux%qflx_gw_uncon_irrig_lyr_col(bounds%begc:bounds%endc,1:nlevsoi), source=0._r8)
@@ -621,7 +632,7 @@ contains
          filter_soilp = apply_filterp, &
          soilhydrology_inst = soilhydrology_inst, &
          soilstate_inst = soilstate_inst, &
-         waterfluxbulk_inst = this%waterflux)
+         water_inst = this%water_inst)
 
   end subroutine calculateAndApplyIrrigation
 
