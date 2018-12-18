@@ -21,7 +21,6 @@ module WaterStateType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
-  use clm_varctl     , only : iulog
   !
   implicit none
   save
