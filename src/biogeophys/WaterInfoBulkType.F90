@@ -21,6 +21,7 @@ module WaterInfoBulkType
      procedure, public :: fname  ! Get a history/restart field name
      procedure, public :: lname  ! Get a history/restart long name
      procedure, public :: is_communicated_with_coupler
+     procedure, public :: is_included_in_consistency_check
   end type water_info_bulk_type
 
   interface water_info_bulk_type
@@ -91,5 +92,12 @@ contains
 
     coupled = .true.
   end function is_communicated_with_coupler
+
+  pure function is_included_in_consistency_check(this) result(included)
+    logical :: included
+    class(water_info_bulk_type), intent(in) :: this
+
+    included = .false.
+  end function is_included_in_consistency_check
 
 end module WaterInfoBulkType
