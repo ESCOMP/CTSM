@@ -65,6 +65,7 @@ contains
     type(water_type)               , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: i  ! tracer index
 
     character(len=*), parameter :: subname = 'IrrigationWithdrawals'
     !-----------------------------------------------------------------------
@@ -77,8 +78,11 @@ contains
 
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
-       call WithdrawGroundwaterIrrigation(bounds, num_soilc, &
-            filter_soilc, water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst)
+       do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+          call WithdrawGroundwaterIrrigation(bounds, num_soilc, filter_soilc, &
+               water_inst%bulk_and_tracers(i)%waterflux_inst, &
+               water_inst%bulk_and_tracers(i)%waterstate_inst)
+       end do
     end if
 
   end subroutine IrrigationWithdrawals

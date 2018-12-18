@@ -22,9 +22,11 @@ module SoilHydrologyMod
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
-  use WaterFluxBulkType     , only : waterfluxbulk_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use WaterFluxType     , only : waterflux_type
+  use WaterFluxBulkType , only : waterfluxbulk_type
+  use WaterStateType    , only : waterstate_type
+  use WaterStateBulkType, only : waterstatebulk_type
+  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use TemperatureType   , only : temperature_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
@@ -2612,7 +2614,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine WithdrawGroundwaterIrrigation(bounds, &
         num_soilc, filter_soilc, &
-        waterfluxbulk_inst, waterstatebulk_inst)
+        waterflux_inst, waterstate_inst)
      !
      ! !DESCRIPTION:
      ! Remove groundwater irrigation from unconfined and confined aquifers
@@ -2620,11 +2622,11 @@ contains
      ! It is not compatible with use_aquifer_layer
      !
      ! !ARGUMENTS:
-     type(bounds_type)        , intent(in)    :: bounds               
-     integer                  , intent(in)    :: num_soilc       ! number of column soil points in column filter
-     integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil points
-     type(waterfluxbulk_type) , intent(in)    :: waterfluxbulk_inst
-     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+     type(bounds_type)      , intent(in)    :: bounds               
+     integer                , intent(in)    :: num_soilc       ! number of column soil points in column filter
+     integer                , intent(in)    :: filter_soilc(:) ! column filter for soil points
+     class(waterflux_type)  , intent(in)    :: waterflux_inst
+     class(waterstate_type) , intent(inout) :: waterstate_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: fc, c, j
@@ -2634,11 +2636,11 @@ contains
      !-----------------------------------------------------------------------
 
      associate( &
-          qflx_gw_uncon_irrig_lyr => waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col, & ! Input: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
-          qflx_gw_con_irrig  => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! Input: [real(r8) (:,:) ] confined groundwater irrigation flux (mm H2O /s)   
+          qflx_gw_uncon_irrig_lyr => waterflux_inst%qflx_gw_uncon_irrig_lyr_col, & ! Input: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
+          qflx_gw_con_irrig  => waterflux_inst%qflx_gw_con_irrig_col     , & ! Input: [real(r8) (:,:) ] confined groundwater irrigation flux (mm H2O /s)
 
-          wa                 =>    waterstatebulk_inst%wa_col                , & ! Output: [real(r8) (:)   ] water in the unconfined aquifer (mm)
-          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+          wa                 =>    waterstate_inst%wa_col                , & ! Output: [real(r8) (:)   ] water in the unconfined aquifer (mm)
+          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
           )
 
      dtime = get_step_size()
