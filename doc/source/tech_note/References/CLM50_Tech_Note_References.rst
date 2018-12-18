@@ -2254,6 +2254,12 @@ Meeting, Boulder, CO.
 Roesch, A., M. Wild, H. Gilgen, and A. Ohmura. 2001. A new snow cover
 fraction parametrization for the ECHAM4 GCM, Clim. Dyn., 17:933–946.
 
+.. _Rogers2014:
+
+|br|
+
+Rogers, A., 2014: The use and misuse of Vcmax in Earth system models. Photosynt. Res., 119:1-15.
+
 .. _Rogersetal2017:
 
 |br|

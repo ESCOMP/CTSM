@@ -140,7 +140,6 @@ and :math:`\text{LMA}` is the inverse of specific leaf area at the canopy top (:
 Notes: :math:`SLA_{\text{0}}` is the specific leaf area at the canopy top (m :sup:`2` leaf/g biomass),
 and :math:`N_{\text{cb}}` is the fraction of leaf nitrogen in Rubisco (g N in Rubisco g :sup:`-1` N)
 
-
 We assume that plants optimize their nitrogen allocations (i.e., :math:`N_{\text{store}}`,  :math:`N_{\text{resp}}`,  :math:`N_{\text{lc}}`,  :math:`N_{\text{et}}`, :math:`N_{\text{cb}}`) to maximize the photosynthetic carbon gain, defined as
 the gross photosynthesis ( :math:`A` ) minus the maintenance respiration for
 photosynthetic enzymes ( :math:`R_{\text{psn}}` ), under specific
@@ -248,22 +247,21 @@ maximum photosynthetically active radiation during the day.
 Maximum rate of carboxylation
 ''''''''''''''''''''''''''''''
 
-The maximum rate of carboxylation at 25 :sup:`o`\ C varies with
+The maximum rate of carboxylation at 25\ :sup:`o`\ C varies with
 foliage nitrogen concentration and specific leaf area and is calculated
 as in :ref:`Thornton and Zimmermann (2007)<ThorntonZimmermann2007>`. At 25ºC,
 
 .. math::
   :label: 10.11)
 
-   V_{c\max 25} =N_{str} N_{cb} F_{NR} a_{R25}
+   V_{c\max 25} = N_{cb} NUE_{V_{c\max 25}}
 
-where :math:`N_{str}` is the area-based leaf nitrogen concentration (g N
-m\ :sup:`-2` leaf area), :math:`N_{cb}`  is the fraction of leaf
-nitrogen in Rubisco (g N in Rubisco g\ :sup:`-1` N, :numref:`Table Plant functional type (PFT) leaf N parameters`),
-:math:`F_{NR} =7.16` is the mass ratio of total Rubisco molecular mass
-to nitrogen in Rubisco (g Rubisco g\ :sup:`-1` N in Rubisco), and
-:math:`a_{R25} =60` is the specific activity of Rubisco (µmol
-CO\ :sub:`2` g\ :sup:`-1` Rubisco s\ :sup:`-1`).
+where :math:`N_{cb}` is nitrogen for carboxylation (g N m\ :sup:`-2` leaf, 
+:numref:`Table Plant functional type (PFT) leaf N parameters`),
+and :math:`NUE_{V_{c\max 25}}` = 47.3 x 6.25 and is the nitrogen use efficiency for :math:`V_{c\max 25}`. 
+The constant 47.3 is the specific Rubisco activity ( :math:`\mu` mol CO\ :sub:`2` g\ :sup:`-1` Rubisco s\ :sup:`-1`)
+measured at 25\ :sup:`o`\ C, and the constant 6.25 is the nitrogen binding factor for Rubisco
+(g Rubisco g\ :sup:`-1` N; :ref:`Rogers 2014<Rogers2014>`). 
 
 :math:`V_{c\max 25}`  additionally varies with daylength (:math:`DYL`)
 using the function :math:`f(DYL)`, which introduces seasonal variation
