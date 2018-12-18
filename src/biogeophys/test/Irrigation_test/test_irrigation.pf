@@ -666,7 +666,7 @@ contains
   end function totalIrrigationApplicationPatch
 
   !-----------------------------------------------------------------------
-  function totalIrrigationWithdrawalCol(this, c) result(total_withdrawal)
+  function totalIrrigationWithdrawalCol(this, use_per_layer_fluxes, c) result(total_withdrawal)
     !
     ! !DESCRIPTION:
     ! Return total irrigation withdrawal for column c
@@ -674,10 +674,15 @@ contains
     ! !ARGUMENTS:
     real(r8), allocatable :: total_withdrawal  ! function result
     class(TestIrrigation), intent(in) :: this
-    integer, intent(in), optional :: c  ! column index (if not present, use bounds%begc)
+    logical, intent(in) :: use_per_layer_fluxes ! if true, use per-layer uncon irrig fluxes rather than the diagnostic sum
+    integer, intent(in), optional :: c ! column index (if not present, use bounds%begc)
+
+    ! if present and true, use per-layer uncon irrig fluxes rather than the diagnostic
+    ! sum (false by default)
     !
     ! !LOCAL VARIABLES:
     integer :: l_c
+    real(r8) :: qflx_gw_uncon_irrig
 
     character(len=*), parameter :: subname = 'totalIrrigationWithdrawalCol'
     !-----------------------------------------------------------------------
@@ -688,9 +693,15 @@ contains
        l_c = bounds%begc
     end if
 
+    if (use_per_layer_fluxes) then
+       qflx_gw_uncon_irrig = sum(this%waterflux%qflx_gw_uncon_irrig_lyr_col(l_c,:))
+    else
+       qflx_gw_uncon_irrig = this%waterflux%qflx_gw_uncon_irrig_col(l_c)
+    end if
+
     total_withdrawal = &
          this%waterflux%qflx_sfc_irrig_col(l_c) + &
-         this%waterflux%qflx_gw_uncon_irrig_col(l_c) + &
+         qflx_gw_uncon_irrig + &
          this%waterflux%qflx_gw_con_irrig_col(l_c)
 
   end function totalIrrigationWithdrawalCol
@@ -735,7 +746,8 @@ contains
     character(len=*), parameter :: subname = 'assertTotalIrrigationEqualsCol'
     !-----------------------------------------------------------------------
 
-    @assertEqual(expected, this%totalIrrigationWithdrawalCol(c), tolerance=tol)
+    @assertEqual(expected, this%totalIrrigationWithdrawalCol(use_per_layer_fluxes=.false., c=c), tolerance=tol)
+    @assertEqual(expected, this%totalIrrigationWithdrawalCol(use_per_layer_fluxes=.true., c=c), tolerance=tol)
 
   end subroutine assertTotalIrrigationEqualsCol
 
@@ -761,8 +773,8 @@ contains
     character(len=*), parameter :: subname = 'assertTotalIrrigationEquals'
     !-----------------------------------------------------------------------
 
-    @assertEqual(expected, this%totalIrrigationWithdrawalCol(c), tolerance=tol)
-    @assertEqual(expected, this%totalIrrigationApplicationPatch(p), tolerance=tol)
+    call this%assertTotalIrrigationEqualsCol(expected, c)
+    call this%assertTotalIrrigationEqualsPatch(expected, p)
 
   end subroutine assertTotalIrrigationEquals
 
@@ -783,8 +795,8 @@ contains
     character(len=*), parameter :: subname = 'assertTotalIrrigationZero'
     !-----------------------------------------------------------------------
 
-    @assertEqual(0._r8, this%totalIrrigationWithdrawalCol(c))
-    @assertEqual(0._r8, this%totalIrrigationApplicationPatch(p))
+    call this%assertTotalIrrigationEqualsCol(0._r8, c)
+    call this%assertTotalIrrigationEqualsPatch(0._r8, p)
 
   end subroutine assertTotalIrrigationZero
 
@@ -805,7 +817,8 @@ contains
     character(len=*), parameter :: subname = 'assertTotalIrrigationGreaterThanZero'
     !-----------------------------------------------------------------------
 
-    @assertLessThan(0._r8, this%totalIrrigationWithdrawalCol(c))
+    @assertLessThan(0._r8, this%totalIrrigationWithdrawalCol(use_per_layer_fluxes=.false., c=c))
+    @assertLessThan(0._r8, this%totalIrrigationWithdrawalCol(use_per_layer_fluxes=.true., c=c))
     @assertLessThan(0._r8, this%totalIrrigationApplicationPatch(p))
 
   end subroutine assertTotalIrrigationGreaterThanZero
