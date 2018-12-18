@@ -367,8 +367,9 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
+
     call c2g( bounds, &
-         water_inst%waterfluxbulk_inst%qflx_irrig_col (bounds%begc:bounds%endc), &
+         water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qirrig_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 

@@ -49,7 +49,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info, vars, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
 
     class(waterstatebulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
@@ -58,10 +58,16 @@ contains
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
 
 
-    call this%Init(bounds, info, vars, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+    call this%Init(bounds = bounds, &
+         info = info, &
+         tracer_vars = vars, &
+         h2osno_input_col = h2osno_input_col, &
+         watsat_col = watsat_col, &
+         t_soisno_col = t_soisno_col, &
+         use_aquifer_layer = use_aquifer_layer)
 
     call this%InitBulkAllocate(bounds) 
 

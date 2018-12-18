@@ -82,6 +82,7 @@ module clm_instMod
   use SurfaceAlbedoMod                , only : SurfaceAlbedoInitTimeConst 
   use LakeCon                         , only : LakeConInit 
   use SoilBiogeochemPrecisionControlMod, only: SoilBiogeochemPrecisionControlInit
+  use SoilWaterMovementMod            , only : use_aquifer_layer
   !
   implicit none
   private  ! By default everything is private
@@ -280,7 +281,8 @@ contains
          h2osno_col = h2osno_col(begc:endc), &
          snow_depth_col = snow_depth_col(begc:endc), &
          watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
-         t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:))
+         t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:), &
+         use_aquifer_layer = use_aquifer_layer())
 
     call glacier_smb_inst%Init(bounds)
 
@@ -303,7 +305,8 @@ contains
     call photosyns_inst%Init(bounds)
 
     call soilhydrology_inst%Init(bounds, nlfilename)
-    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, water_inst%waterstatebulk_inst) ! sets time constant properties
+    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, water_inst%waterstatebulk_inst, &
+         use_aquifer_layer = use_aquifer_layer())
 
     call saturated_excess_runoff_inst%Init(bounds)
     call infiltration_excess_runoff_inst%Init(bounds)
@@ -324,7 +327,8 @@ contains
     allocate(soil_water_retention_curve, &
          source=create_soil_water_retention_curve())
 
-    call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve)
+    call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve, &
+         use_aquifer_layer = use_aquifer_layer())
 
     call topo_inst%Init(bounds)
 

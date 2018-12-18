@@ -760,6 +760,16 @@
       <option name="comment"  >Want a multi-year global crop restart test; this was 5 years when we were doing cold start, but 3 years is probably sufficient given that we have spun-up crop initial conditions</option>
     </options>
   </test>
+  <test name="ERP_P72x2_Lm7" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">Want an ERP test covering some non-default irrigation options. Long enough so that we're likely to exercise the various groundwater irrigation code.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
   <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/reseedresetsnow">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1793,6 +1803,16 @@
     <options>
       <option name="wallclock">00:20:00</option>
     </options>
+  </test>
+  <test name="SMS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate">
+    <machines>
+      <machine name="hobart" compiler="nag" category="aux_clm">
+        <options>
+          <option name="wallclock">0:20:00</option>
+          <option name="comment">Debug test covering some non-default irrigation options.</option>
+        </options>
+      </machine>
+    </machines>
   </test>
   <test name="SMS_D_Ln1" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/tracer_consistency">
     <machines>
