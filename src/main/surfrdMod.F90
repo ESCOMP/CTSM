@@ -760,8 +760,8 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : create_crop_landunit, use_fates
-    use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub, n_dom_soil_patches
+    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_soil_patches
+    use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
     use surfrdUtilsMod  , only : convert_cft_to_pft
@@ -877,13 +877,15 @@ contains
     ! - Bare ground could be up to 1 patch before collapsing.
     ! - Pfts could be up to 14 before collapsing.
     ! - Cfts could be up to 2 or 78 with use_crop = .F. or .T., respectively.
-    ! TODO The call collapse_all_pfts also appears in subroutine dynpft_interp
+    ! The calls to collapse_all_pfts and collapse_crop_var also appear in
+    ! subroutine dyncrop_interp
     call collapse_all_pfts(wt_lunit(begg:endg,:), &
                            wt_nat_patch(begg:endg,:), natpft_size, &
                            wt_cft(begg:endg,:), cft_size, &
                            begg, endg, n_dom_soil_patches)
-    ! Now collapse other variables as needed:
-    ! 1. fert_cft TODO Test it BUT ultimately may not need for fert_cft!
+    ! Now collapse crop variables as needed:
+    ! 1. fert_cft TODO Calling collapse_crop_var may be redundant because it
+    ! simply sets the crop variable to 0 where is_pft_known_to_model = .false.
     call collapse_crop_var(fert_cft(begg:endg,:), cft_size, begg, endg)
 
   end subroutine surfrd_veg_all

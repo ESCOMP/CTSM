@@ -19,7 +19,7 @@ module controlMod
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno, n_dom_soil_patches
+  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -47,7 +47,7 @@ module controlMod
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use seq_drydep_mod                   , only: drydep_method, DD_XLND, n_drydep
-  use clm_varctl                       
+  use clm_varctl
   !
   ! !PUBLIC TYPES:
   implicit none

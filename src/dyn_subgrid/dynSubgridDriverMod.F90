@@ -107,9 +107,9 @@ contains
        call dynpft_init(bounds_proc, dynpft_filename=get_flanduse_timeseries())
     end if
 
-    ! Initialize stuff for prescribed transient crops
-    if (get_do_transient_crops()) then
-       call dyncrop_init(bounds_proc, dyncrop_filename=get_flanduse_timeseries())
+    ! Initialize stuff for prescribed transient pfts and cfts
+    if (get_do_transient_crops() .or. get_do_transient_pfts()) then
+       call dyncrop_init(bounds_proc, dyncrop_filename=get_flanduse_timeseries(), dynpft_filename=get_flanduse_timeseries())  ! TODO rename dyn_pft_and_cft_init
     end if
 
     ! Initialize stuff for harvest. Note that, currently, the harvest data are on the
@@ -125,12 +125,9 @@ contains
     ! for cold start and use_init_interp-based initialization.
     ! ------------------------------------------------------------------------
 
-    if (get_do_transient_pfts()) then
-       call dynpft_interp(bounds_proc)
-    end if
-
-    if (get_do_transient_crops()) then
-       call dyncrop_interp(bounds_proc, crop_inst)
+    if (get_do_transient_crops() .or. get_do_transient_pfts()) then
+!      call dynpft_interp(bounds_proc)
+       call dyncrop_interp(bounds_proc, crop_inst)  ! TODO rename dyn_pft_and_cft_interp
     end if
 
     ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
@@ -233,12 +230,9 @@ contains
     ! Do land cover change that requires I/O, and thus must be outside a threaded region
     ! ==========================================================================
 
-    if (get_do_transient_pfts()) then
-       call dynpft_interp(bounds_proc)
-    end if
-
-    if (get_do_transient_crops()) then
-       call dyncrop_interp(bounds_proc,crop_inst)
+    if (get_do_transient_crops() .or. get_do_transient_pfts()) then
+!      call dynpft_interp(bounds_proc)
+       call dyncrop_interp(bounds_proc,crop_inst)  ! TODO rename dyn_pft_and_cft_interp
     end if
 
     if (get_do_harvest()) then
