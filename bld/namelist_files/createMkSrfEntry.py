@@ -7,10 +7,10 @@ class mksrfDataEntry_prog:
    # Class data
    year_start = 2016
    year_end   = 2100
-   ssp_rcp    = "SSP1-2.6"
-   subdir     = "pftcftdynharv.0.25x0.25.SSP1-2.6.simyr2016-2100.c181217"
+   ssp_rcp    = "SSP3-7.0"
+   subdir     = "pftcftdynharv.0.25x0.25.SSP3-7.0.simyr2016-2100.c181217"
    cdate      = 181217
-   desc       = "SSP1RCP26_clm5"
+   desc       = "SSP3RCP70_clm5"
 
    def parse_cmdline_args( self ):
       "Parse the command line arguments for create data entry list"
