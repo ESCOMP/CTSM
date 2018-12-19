@@ -140,7 +140,7 @@ contains
     use CropType          , only : crop_type
     use landunit_varcon   , only : istcrop, istsoil, max_lunit
     use clm_varpar        , only : cft_size, cft_lb, cft_ub, natpft_size, natpft_lb, natpft_ub
-    use clm_varctl        , only : use_crop, n_dom_soil_patches
+    use clm_varctl        , only : use_crop, n_dom_pfts
     use surfrdUtilsMod    , only : collapse_crop_types, collapse_all_pfts, collapse_crop_var
     use subgridWeightsMod , only : set_landunit_weight, get_landunit_weight
 
@@ -213,7 +213,7 @@ contains
     call collapse_all_pfts(wt_lunit(bounds%begg:bounds%endg,:), &
                            wtpatch_cur(bounds%begg:bounds%endg,:), natpft_size, &
                            wtcft_cur(bounds%begg:bounds%endg,:), cft_size, &
-                           bounds%begg, bounds%endg, n_dom_soil_patches)
+                           bounds%begg, bounds%endg, n_dom_pfts)
     ! Now collapse crop variables as needed:
     ! 1. fertcft_cur TODO Calling collapse_crop_var may be redundant because it
     ! simply sets the crop variable to 0 where is_pft_known_to_model = .false.

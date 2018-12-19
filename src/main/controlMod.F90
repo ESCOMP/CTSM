@@ -253,8 +253,8 @@ contains
     namelist /clm_inparm/ maxpatch_pft
 
     ! Number of dominant soil patches. Enhance ctsm performance by reducing the
-    ! number of active soil patches to n_dom_soil_patches.
-    namelist /clm_inparm/ n_dom_soil_patches
+    ! number of active soil patches to n_dom_pfts.
+    namelist /clm_inparm/ n_dom_pfts
 
     ! flag for SSRE diagnostic
     namelist /clm_inparm/ use_SSRE
@@ -359,8 +359,8 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (n_dom_soil_patches < 0) then
-          call endrun(msg=' ERROR: expecting n_dom_soil_patches between 0 and 16 where 0 is the default value that tells the model to do nothing ' // &
+       if (n_dom_pfts < 0) then
+          call endrun(msg=' ERROR: expecting n_dom_pfts between 0 and 16 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -632,9 +632,9 @@ contains
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Number of dominant soil patches. Enhance ctsm performance by reducing the
-    ! number of active soil patches to n_dom_soil_patches.
+    ! number of active soil patches to n_dom_pfts.
     ! slevis: MPI_LOGICAL w maxpatch_pft? Doesn't matter since obsolete.
-    call mpi_bcast(n_dom_soil_patches, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
@@ -837,7 +837,7 @@ contains
     else
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
-    write(iulog,*) '   Number of ACTIVE SOIL PATCHES =', n_dom_soil_patches
+    write(iulog,*) '   Number of ACTIVE SOIL PATCHES =', n_dom_pfts
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &

@@ -146,10 +146,10 @@ contains
   end subroutine convert_cft_to_pft
 
   !-----------------------------------------------------------------------
-  subroutine collapse_all_pfts(wt_lunit, wt_nat_patch, natpft_size, wt_cft, cft_size, begg, endg, n_dom_soil_patches)
+  subroutine collapse_all_pfts(wt_lunit, wt_nat_patch, natpft_size, wt_cft, cft_size, begg, endg, n_dom_pfts)
     !
     ! DESCRIPTION
-    ! Collapse to the top N dominant soil patches (n_dom_soil_patches) among all
+    ! Collapse to the top N dominant soil patches (n_dom_pfts) among all
     ! present pfts, cfts, & bare ground.
     ! - Bare ground could be up to 1 patch before collapsing.
     ! - Pfts could be up to 14 before collapsing.
@@ -168,7 +168,7 @@ contains
     integer, intent(in) :: endg  ! Ending grid cell index
     integer, intent(in) :: natpft_size  ! CFT size
     integer, intent(in) :: cft_size  ! CFT size
-    integer, intent(in) :: n_dom_soil_patches  ! # dominant soil patches
+    integer, intent(in) :: n_dom_pfts  ! # dominant soil patches
     ! These arrays modified in-place
     ! Weights of landunits
     real(r8), intent(inout) :: wt_lunit(begg:,:)
@@ -199,11 +199,11 @@ contains
        SHR_ASSERT_ALL((ubound(wt_all_patch) == (/natpft_lb+natpft_size+cft_size-1/)), errMsg(sourcefile, __LINE__))
 
        ! Find the top N dominant soil patches to collapse pft data to;
-       ! n_dom_soil_patches < 0 is not allowed (error check in controlMod.F90)
-       ! Default value n_dom_soil_patches = 0 means "do not collapse pfts"
+       ! n_dom_pfts < 0 is not allowed (error check in controlMod.F90)
+       ! Default value n_dom_pfts = 0 means "do not collapse pfts"
        ! and skip over this subroutine's work
-       if (n_dom_soil_patches > 0 .and. n_dom_soil_patches <= nc3irrig) then
-          allocate(max_indices(n_dom_soil_patches))
+       if (n_dom_pfts > 0 .and. n_dom_pfts <= nc3irrig) then
+          allocate(max_indices(n_dom_pfts))
           do g = begg, endg
              ! Normalize nat and cft weights by their landunit weights in
              ! the gridcell and concatenate into a single array before calling
@@ -215,7 +215,7 @@ contains
              max_indices = 0._r8  ! initialize
              call find_k_max_indices(wt_all_patch(:), &
                                      natpft_lb, &
-                                     n_dom_soil_patches, &
+                                     n_dom_pfts, &
                                      max_indices)
 
              ! Adjust wt_nat_patch, wt_cft, and their respective wt_lunit by
@@ -224,7 +224,7 @@ contains
              ! TODO Possible to use existing function renormalize?
              wt_dom_nat_sum = 0._r8  ! initialize the dominant pft sum
              wt_dom_cft_sum = 0._r8  ! initialize the dominant cft sum
-             do n = 1, n_dom_soil_patches
+             do n = 1, n_dom_pfts
                 m = max_indices(n)
                 if (m <= natpft_ub) then  ! calculate the dominant pft sum
                    wt_dom_nat_sum = wt_nat_patch(g,m) + wt_dom_nat_sum
@@ -246,7 +246,7 @@ contains
                 wt_nat_patch(g,:) = 0._r8
                 wt_nat_patch(g,noveg) = 1._r8  ! to pass error check below
              else
-                do n = 1, n_dom_soil_patches
+                do n = 1, n_dom_pfts
                    m = max_indices(n)
                    if (m <= natpft_ub) then
                       wt_nat_patch(g,m) = wt_nat_patch(g,m) / wt_dom_nat_sum
@@ -265,7 +265,7 @@ contains
                 wt_cft(g,:) = 0._r8
                 wt_cft(g,nc3crop) = 1._r8  ! to pass error check below
              else
-                do n = 1, n_dom_soil_patches
+                do n = 1, n_dom_pfts
                    m = max_indices(n)
                    if (m >= cft_lb) then
                       wt_cft(g,m) = wt_cft(g,m) / wt_dom_cft_sum

@@ -760,7 +760,7 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_soil_patches
+    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
@@ -872,7 +872,7 @@ contains
     call collapse_crop_types(wt_cft(begg:endg,:), fert_cft(begg:endg,:), cft_size, begg, endg, verbose=.true.)
 
     ! Call collapse_all_pfts: enhance ctsm performance with fewer active patches
-    ! Collapsing to the top N dominant soil patches (n_dom_soil_patches set in
+    ! Collapsing to the top N dominant soil patches (n_dom_pfts set in
     ! namelist) among all present pfts, cfts, & bare ground.
     ! - Bare ground could be up to 1 patch before collapsing.
     ! - Pfts could be up to 14 before collapsing.
@@ -882,7 +882,7 @@ contains
     call collapse_all_pfts(wt_lunit(begg:endg,:), &
                            wt_nat_patch(begg:endg,:), natpft_size, &
                            wt_cft(begg:endg,:), cft_size, &
-                           begg, endg, n_dom_soil_patches)
+                           begg, endg, n_dom_pfts)
     ! Now collapse crop variables as needed:
     ! 1. fert_cft TODO Calling collapse_crop_var may be redundant because it
     ! simply sets the crop variable to 0 where is_pft_known_to_model = .false.
