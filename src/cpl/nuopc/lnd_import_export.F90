@@ -62,7 +62,7 @@ module lnd_import_export
   logical                :: flds_co2b        ! use case
   logical                :: flds_co2c        ! use case
   integer                :: glc_nec
-  integer, parameter     :: debug = 1        ! internal debug level
+  integer, parameter     :: debug = 0        ! internal debug level
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
@@ -250,8 +250,6 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_shum'      )
    !call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_methane'   )
 
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volr'    )
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volrmch' )
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_lwdn'    )
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_rainc'   )
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_rainl'   )
@@ -294,7 +292,9 @@ contains
     end if
 
     ! from river
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_flood')
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_flood'   )
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volr'    )
+    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volrmch' )
 
     ! from glc
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask'               )
@@ -577,7 +577,7 @@ contains
        call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
     end if
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-       call state_getfldptr(importState, trim(fldname), dataPtr, begg, rc=rc )
+       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg,endg
           co2_ppmv_prog(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
@@ -595,7 +595,7 @@ contains
        call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
     end if
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-       call state_getfldptr(importState, trim(fldname), dataPtr, begg, rc=rc )
+       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg,endg
           co2_ppmv_diag(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
@@ -1097,7 +1097,7 @@ contains
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
 
        ! get field pointer
-       call state_getfldptr(state, trim(fldname), fldptr, bounds%begg, rc)
+       call state_getfldptr(state, trim(fldname), fldptr, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! determine output array
@@ -1155,7 +1155,7 @@ contains
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
 
        ! get field pointer
-       call state_getfldptr(state, trim(fldname), fldptr, bounds%begg, rc)
+       call state_getfldptr(state, trim(fldname), fldptr, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! TODO: if fillvalue = shr_const_spval the snowhl sent to the atm will have the spval over some points
@@ -1190,7 +1190,7 @@ contains
 
   !===============================================================================
 
-  subroutine state_getfldptr(State, fldname, fldptr, begg, rc)
+  subroutine state_getfldptr(State, fldname, fldptr, rc)
     ! ----------------------------------------------
     ! Get pointer to a state field
     ! ----------------------------------------------
@@ -1200,7 +1200,6 @@ contains
 
     type(ESMF_State),  intent(in)    :: State
     character(len=*),  intent(in)    :: fldname
-    integer,           intent(in)    :: begg
     real(R8), pointer, intent(out)   :: fldptr(:)
     integer,           intent(out)   :: rc
 
