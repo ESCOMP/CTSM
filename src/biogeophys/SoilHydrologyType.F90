@@ -25,13 +25,11 @@ Module SoilHydrologyType
      real(r8), pointer :: zwt_col           (:)     ! col water table depth
      real(r8), pointer :: zwts_col          (:)     ! col water table depth, the shallower of the two water depths
      real(r8), pointer :: zwt_perched_col   (:)     ! col perched water table depth
-     real(r8), pointer :: wa_col            (:)     ! col water in the unconfined aquifer (mm)
      real(r8), pointer :: qcharge_col       (:)     ! col aquifer recharge rate (mm/s) 
      real(r8), pointer :: fracice_col       (:,:)   ! col fractional impermeability (-)
      real(r8), pointer :: icefrac_col       (:,:)   ! col fraction of ice       
-     real(r8), pointer :: fcov_col          (:)     ! col fractional impermeable area
-     real(r8), pointer :: fsat_col          (:)     ! col fractional area with water table at surface
      real(r8), pointer :: h2osfc_thresh_col (:)     ! col level at which h2osfc "percolates"   (time constant)
+     real(r8), pointer :: xs_urban_col      (:)     ! col excess soil water above urban ponding limit
 
      ! VIC 
      real(r8), pointer :: hkdepth_col       (:)     ! col VIC decay factor (m) (time constant)                    
@@ -49,8 +47,10 @@ Module SoilHydrologyType
      real(r8), pointer :: moist_col         (:,:)   ! col VIC soil moisture (kg/m2) for VIC soil layers 
      real(r8), pointer :: moist_vol_col     (:,:)   ! col VIC volumetric soil moisture for VIC soil layers 
      real(r8), pointer :: max_moist_col     (:,:)   ! col VIC max layer moist + ice (mm) 
-     real(r8), pointer :: max_infil_col     (:)     ! col VIC maximum infiltration rate calculated in VIC
-     real(r8), pointer :: i_0_col           (:)     ! col VIC average saturation in top soil layers 
+     real(r8), pointer :: top_moist_col     (:)     ! col VIC soil moisture in top layers
+     real(r8), pointer :: top_max_moist_col (:)     ! col VIC maximum soil moisture in top layers
+     real(r8), pointer :: top_ice_col       (:)     ! col VIC ice len in top layers
+     real(r8), pointer :: top_moist_limited_col(:)  ! col VIC soil moisture in top layers, limited to no greater than top_max_moist_col
      real(r8), pointer :: ice_col           (:,:)   ! col VIC soil ice (kg/m2) for VIC soil layers
 
    contains
@@ -116,13 +116,11 @@ contains
     allocate(this%zwt_perched_col   (begc:endc))                 ; this%zwt_perched_col   (:)     = nan
     allocate(this%zwts_col          (begc:endc))                 ; this%zwts_col          (:)     = nan
 
-    allocate(this%wa_col            (begc:endc))                 ; this%wa_col            (:)     = nan
     allocate(this%qcharge_col       (begc:endc))                 ; this%qcharge_col       (:)     = nan
     allocate(this%fracice_col       (begc:endc,nlevgrnd))        ; this%fracice_col       (:,:)   = nan
     allocate(this%icefrac_col       (begc:endc,nlevgrnd))        ; this%icefrac_col       (:,:)   = nan
-    allocate(this%fcov_col          (begc:endc))                 ; this%fcov_col          (:)     = nan   
-    allocate(this%fsat_col          (begc:endc))                 ; this%fsat_col          (:)     = nan
     allocate(this%h2osfc_thresh_col (begc:endc))                 ; this%h2osfc_thresh_col (:)     = nan
+    allocate(this%xs_urban_col      (begc:endc))                 ; this%xs_urban_col      (:)     = nan
 
     allocate(this%hkdepth_col       (begc:endc))                 ; this%hkdepth_col       (:)     = nan
     allocate(this%b_infil_col       (begc:endc))                 ; this%b_infil_col       (:)     = nan
@@ -139,8 +137,10 @@ contains
     allocate(this%moist_col         (begc:endc,nlayert))         ; this%moist_col         (:,:)   = nan
     allocate(this%moist_vol_col     (begc:endc,nlayert))         ; this%moist_vol_col     (:,:)   = nan
     allocate(this%max_moist_col     (begc:endc,nlayer))          ; this%max_moist_col     (:,:)   = nan
-    allocate(this%max_infil_col     (begc:endc))                 ; this%max_infil_col     (:)     = nan
-    allocate(this%i_0_col           (begc:endc))                 ; this%i_0_col           (:)     = nan
+    allocate(this%top_moist_col     (begc:endc))                 ; this%top_moist_col     (:)     = nan
+    allocate(this%top_max_moist_col (begc:endc))                 ; this%top_max_moist_col (:)     = nan
+    allocate(this%top_ice_col       (begc:endc))                 ; this%top_ice_col       (:)     = nan
+    allocate(this%top_moist_limited_col(begc:endc))              ; this%top_moist_limited_col(:)  = nan
     allocate(this%ice_col           (begc:endc,nlayert))         ; this%ice_col           (:,:)   = nan
 
   end subroutine InitAllocate
@@ -163,25 +163,10 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
-    this%wa_col(begc:endc) = spval
-    call hist_addfld1d (fname='WA',  units='mm',  &
-         avgflag='A', long_name='water in the unconfined aquifer (vegetated landunits only)', &
-         ptr_col=this%wa_col, l2g_scale_type='veg')
-
     this%qcharge_col(begc:endc) = spval
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
          avgflag='A', long_name='aquifer recharge rate (vegetated landunits only)', &
          ptr_col=this%qcharge_col, l2g_scale_type='veg')
-
-    this%fcov_col(begc:endc) = spval
-    call hist_addfld1d (fname='FCOV',  units='unitless',  &
-         avgflag='A', long_name='fractional impermeable area', &
-         ptr_col=this%fcov_col, l2g_scale_type='veg')
-
-    this%fsat_col(begc:endc) = spval
-    call hist_addfld1d (fname='FSAT',  units='unitless',  &
-         avgflag='A', long_name='fractional area with water table at surface', &
-         ptr_col=this%fsat_col, l2g_scale_type='veg')
 
     this%num_substeps_col(begc:endc) = spval
     call hist_addfld1d (fname='NSUBSTEPS',  units='unitless',  &
@@ -254,11 +239,6 @@ contains
     if (flag == 'read' .and. .not. readvar) then
        this%frost_table_col(bounds%begc:bounds%endc) = col%zi(bounds%begc:bounds%endc,nlevsoi)
     end if
-
-    call restartvar(ncid=ncid, flag=flag, varname='WA', xtype=ncd_double,  & 
-         dim1name='column', &
-         long_name='water in the unconfined aquifer', units='mm', &
-         interpinic_flag='interp', readvar=readvar, data=this%wa_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='ZWT', xtype=ncd_double,  & 
          dim1name='column', &

@@ -1,5 +1,26 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev020    sacks 12/03/2018 New options for irrigation and crop fsat
+  ctsm1.0.dev019    sacks 11/30/2018 Rework cold start initialization of wa and zwt
+  ctsm1.0.dev018    sacks 11/29/2018 Water tracer updates for initial things in driver loop
+  ctsm1.0.dev017   slevis 11/28/2018 Merge the collapse2gencrop branch
+  ctsm1.0.dev016    sacks 11/01/2018 Update cime, fix FATES DEBUG token, add script to easily run system tests
+  ctsm1.0.dev015    sacks 10/28/2018 CMIP6 compset modifiers, usermods for typical output, and other output enhancements
+  ctsm1.0.dev014    sacks 10/26/2018 Miscellaneous minor, bit-for-bit bug fixes
+  ctsm1.0.dev013     erik 10/25/2018 Fix the fact that transient Bgc and SP cases had constant crop area in time
+  ctsm1.0.dev012     erik 09/29/2018 Add snow-free fields for snowmip, fix several issues
+  ctsm1.0.dev011    sacks 09/12/2018 Add water tracer consistency checks, and other water tracer work
+  ctsm1.0.dev010    sacks 08/30/2018 Update cime to cime5.7.3
+  ctsm1.0.dev009    sacks 08/22/2018 Fix initialization of AnnET in InitAccVars
+  ctsm1.0.dev008     erik 08/14/2018 Update 1850 ndep file and last year for streams for Historical transient cases
+  ctsm1.0.dev007    sacks 08/05/2018 Avoid glacier dynamic landunit adjustments in first time step
+  ctsm1.0.dev006    sacks 08/04/2018 Minor bug fixes, cleanup, documentation and enhancements
+  ctsm1.0.dev005    sacks 08/03/2018 Rework water data types to accommodate isotopes and other tracers
+  ctsm1.0.dev004     erik 07/18/2018 Add some new diagnostic fields, fix a few issues, update cmip6 output
+  ctsm1.0.dev003     erik 07/15/2018 Update cime/cism to work on upgraded hobart and with glade changes on cheyenne
+  ctsm1.0.dev002     erik 07/06/2018 Fix NFIX flux variables so special land-units are zeroed out, tools update, add some *_MAX fields on mksurfdata_map for transient cases
+  ctsm1.0.dev001    sacks 06/22/2018 Begin separating SoilHydrology flux calculations
+   clm5.0.dev013     erik 06/12/2018 cleanup and update cime and cism
    clm5.0.dev012    sacks 05/17/2018 Fixes for variable_year orbital mode
    clm5.0.dev011     erik 05/16/2018 1850 ndep update, cism update, PE layouts, turn BFBFLAG for testing
    clm5.0.dev010     erik 05/15/2018 Update cime version to version in cesm2.0.beta10, changes answers for 1850 compsets because of orbit

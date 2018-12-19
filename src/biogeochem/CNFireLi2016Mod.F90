@@ -34,8 +34,9 @@ module CNFireLi2016Mod
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use EnergyFluxType                     , only : energyflux_type
-  use SoilHydrologyType                  , only : soilhydrology_type  
-  use WaterstateType                     , only : waterstate_type
+  use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
+  use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -84,8 +85,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       atm2lnd_inst, energyflux_inst, soilhydrology_inst, waterstate_inst, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
+       wateratm2lndbulk_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area 
@@ -108,8 +109,9 @@ contains
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
-    type(soilhydrology_type)              , intent(in)    :: soilhydrology_inst
-    type(waterstate_type)                 , intent(in)    :: waterstate_inst
+    type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
+    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -171,20 +173,20 @@ contains
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
 
          btran2             => energyflux_inst%btran2_patch                    , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
-         fsat               => soilhydrology_inst%fsat_col                     , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
-         wf2                => waterstate_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
+         fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
+         wf2                => waterdiagnosticbulk_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
          
          is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool                         
          spinup_factor      => decomp_cascade_con%spinup_factor                , & ! Input:  [real(r8) (:)     ]  factor for AD spinup associated with each pool           
 
-         forc_rh            => atm2lnd_inst%forc_rh_grc                        , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
+         forc_rh            => wateratm2lndbulk_inst%forc_rh_grc                        , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
          forc_wind          => atm2lnd_inst%forc_wind_grc                      , & ! Input:  [real(r8) (:)     ]  atmospheric wind speed (m/s)                       
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)                  
-         forc_rain          => atm2lnd_inst%forc_rain_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled rain                                              
-         forc_snow          => atm2lnd_inst%forc_snow_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled snow                                              
-         prec60             => atm2lnd_inst%prec60_patch                       , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
-         prec10             => atm2lnd_inst%prec10_patch                       , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
-         rh30               => atm2lnd_inst%rh30_patch                         , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation 
+         forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled rain                                              
+         forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled snow                                              
+         prec60             => wateratm2lndbulk_inst%prec60_patch                       , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
+         prec10             => wateratm2lndbulk_inst%prec10_patch                       , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
+         rh30               => wateratm2lndbulk_inst%rh30_patch                         , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation 
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column                   
          gdp_lf             => cnveg_state_inst%gdp_lf_col                     , & ! Input:  [real(r8) (:)     ]  gdp data                                          

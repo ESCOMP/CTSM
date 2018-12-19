@@ -3,10 +3,10 @@
 smc#4 TSMscript_tools.sh mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
 blc#4 TBLscript_tools.sh mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
 
-sme14 TSMCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds T31.runoptions
-ble14 TBLCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds T31.runoptions
-sme@4 TSMCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds ne30.runoptions
-ble@4 TBLCFGtools.sh ../../cime/tools/mapping/gen_domain   CFGtools__ds ne30.runoptions
+sme14 TSMCFGtools.sh gen_domain   CFGtools__ds T31.runoptions
+ble14 TBLCFGtools.sh gen_domain   CFGtools__ds T31.runoptions
+sme@4 TSMCFGtools.sh gen_domain   CFGtools__ds ne30.runoptions
+ble@4 TBLCFGtools.sh gen_domain   CFGtools__ds ne30.runoptions
 
 smg54 TSMtools.sh mksurfdata_map   tools__s  namelist
 blg54 TBLtools.sh mksurfdata_map   tools__s  namelist
@@ -29,11 +29,15 @@ smi78 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^to
 bli78 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
 smiT4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools__ds
 bliT4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools__ds
+smiT2 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
+bliT2 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 
 smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 smi59 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 bli59 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
+smi79 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
+bli79 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
 
 smf84 TSMscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
 blf84 TBLscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools

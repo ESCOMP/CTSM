@@ -17,73 +17,73 @@ module clm_varpar
   ! !PUBLIC TYPES:
   implicit none
   save
+  private
 
   ! Note - model resolution is read in from the surface dataset
 
-  integer, parameter :: nlev_equalspace   = 15
-  integer, parameter :: toplev_equalspace =  6
-  integer            :: nlevsoi               ! number of hydrologically active soil layers
-  integer            :: nlevsoifl             ! number of soil layers on input file
-  integer            :: nlevgrnd              ! number of ground layers 
+  integer, public, parameter :: nlev_equalspace   = 15
+  integer, public, parameter :: toplev_equalspace =  6
+  integer, public    :: nlevsoi               ! number of hydrologically active soil layers
+  integer, public    :: nlevsoifl             ! number of soil layers on input file
+  integer, public    :: nlevgrnd              ! number of ground layers 
                                               ! (includes lower layers that are hydrologically inactive)
-  integer            :: nlevurb               ! number of urban layers
-  integer            :: nlevlak               ! number of lake layers
-  integer            :: nlevdecomp            ! number of biogeochemically active soil layers
-  integer            :: nlevdecomp_full       ! number of biogeochemical layers 
+  integer, public    :: nlevurb               ! number of urban layers
+  integer, public    :: nlevlak               ! number of lake layers
+  integer, public    :: nlevdecomp            ! number of biogeochemically active soil layers
+  integer, public    :: nlevdecomp_full       ! number of biogeochemical layers 
                                               ! (includes lower layers that are biogeochemically inactive)
-  integer            :: nlevsno     =  -1     ! maximum number of snow layers
-  integer, parameter :: ngases      =   3     ! CH4, O2, & CO2
-  integer, parameter :: nlevcan     =   1     ! number of leaf layers in canopy layer
-  integer, parameter :: nvegwcs     =   4     ! number of vegetation water conductance segments
+  integer, public    :: nlevsno     =  -1     ! maximum number of snow layers
+  integer, public, parameter :: ngases      =   3     ! CH4, O2, & CO2
+  integer, public, parameter :: nlevcan     =   1     ! number of leaf layers in canopy layer
+  integer, public, parameter :: nvegwcs     =   4     ! number of vegetation water conductance segments
   !ED variables
-  integer, parameter :: numwat      =   5     ! number of water types (soil, ice, 2 lakes, wetland)
-  integer, parameter :: numrad      =   2     ! number of solar radiation bands: vis, nir
-  integer, parameter :: ivis        =   1     ! index for visible band
-  integer, parameter :: inir        =   2     ! index for near-infrared band
-  integer, parameter :: numsolar    =   2     ! number of solar type bands: direct, diffuse
-  integer, parameter :: ndst        =   4     ! number of dust size classes (BGC only)
-  integer, parameter :: dst_src_nbr =   3     ! number of size distns in src soil (BGC only)
-  integer, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
-  integer, parameter :: mxpft       =  78     ! maximum number of PFT's for any mode;
+  integer, public, parameter :: numwat      =   5     ! number of water types (soil, ice, 2 lakes, wetland)
+  integer, public, parameter :: numrad      =   2     ! number of solar radiation bands: vis, nir
+  integer, public, parameter :: ivis        =   1     ! index for visible band
+  integer, public, parameter :: inir        =   2     ! index for near-infrared band
+  integer, public, parameter :: numsolar    =   2     ! number of solar type bands: direct, diffuse
+  integer, public, parameter :: ndst        =   4     ! number of dust size classes (BGC only)
+  integer, public, parameter :: dst_src_nbr =   3     ! number of size distns in src soil (BGC only)
+  integer, public, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
+  integer, public, parameter :: mxpft       =  78     ! maximum number of PFT's for any mode;
   ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
-  integer, parameter :: numveg      =  16     ! number of veg types (without specific crop)
-  integer, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
-  integer            :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
-  integer, parameter :: nvariants   =   2     ! number of variants of PFT constants
+  integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
+  integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
+  integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
 
-  integer :: numpft      = mxpft   ! actual # of pfts (without bare)
-  integer :: numcft      =  64     ! actual # of crops (includes unused CFTs that are merged into other CFTs)
-  integer :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
+  integer, public :: maxveg           ! # of pfts + cfts
+  integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
-  integer :: maxpatch_pft        ! max number of plant functional types in naturally vegetated landunit (namelist setting)
+  integer, public :: maxpatch_pft     ! obsolete: max number of plant functional types in naturally vegetated landunit (namelist setting)
+  integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
 
   ! constants for decomposition cascade
 
-  integer, parameter :: i_met_lit  = 1
-  integer, parameter :: i_cel_lit  = i_met_lit + 1
-  integer, parameter :: i_lig_lit  = i_cel_lit + 1
-  integer            :: i_cwd
+  integer, public, parameter :: i_met_lit  = 1
+  integer, public, parameter :: i_cel_lit  = i_met_lit + 1
+  integer, public, parameter :: i_lig_lit  = i_cel_lit + 1
+  integer, public    :: i_cwd
 
-  integer :: ndecomp_pools
-  integer :: ndecomp_cascade_transitions
+  integer, public :: ndecomp_pools
+  integer, public :: ndecomp_cascade_transitions
 
   ! Indices used in surface file read and set in clm_varpar_init
 
-  integer :: natpft_lb          ! In PATCH arrays, lower bound of Patches on the natural veg landunit (i.e., bare ground index)
-  integer :: natpft_ub          ! In PATCH arrays, upper bound of Patches on the natural veg landunit
-  integer :: natpft_size        ! Number of Patches on natural veg landunit (including bare ground)
+  integer, public :: natpft_lb          ! In PATCH arrays, lower bound of Patches on the natural veg landunit (i.e., bare ground index)
+  integer, public :: natpft_ub          ! In PATCH arrays, upper bound of Patches on the natural veg landunit
+  integer, public :: natpft_size        ! Number of Patches on natural veg landunit (including bare ground)
 
   ! The following variables pertain to arrays of all PFTs - e.g., those dimensioned (g,
   ! pft_index). These include unused CFTs that are merged into other CFTs. Thus, these
   ! variables do NOT give the actual number of CFTs on the crop landunit - that number
   ! will generally be less because CLM does not simulate all crop types (some crop types
   ! are merged into other types).
-  integer :: cft_lb             ! In arrays of PFTs, lower bound of PFTs on the crop landunit
-  integer :: cft_ub             ! In arrays of PFTs, upper bound of PFTs on the crop landunit
-  integer :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
+  integer, public :: cft_lb             ! In arrays of PFTs, lower bound of PFTs on the crop landunit
+  integer, public :: cft_ub             ! In arrays of PFTs, upper bound of PFTs on the crop landunit
+  integer, public :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
 
-  integer :: maxpatch_glcmec    ! max number of elevation classes
-  integer :: max_patch_per_col
+  integer, public :: maxpatch_glcmec    ! max number of elevation classes
+  integer, public :: max_patch_per_col
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public clm_varpar_init          ! set parameters
@@ -93,28 +93,25 @@ module clm_varpar
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init()
+  subroutine clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
     !
     ! !ARGUMENTS:
     implicit none
+    integer, intent(in) :: actual_maxsoil_patches  ! value from surface dataset
+    integer, intent(in) :: actual_numcft  ! Actual number of crops
     !
     ! !LOCAL VARIABLES:
     !
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    ! Crop settings and consistency checks
-
-    if (use_crop) then
-       numpft      = mxpft   ! actual # of patches (without bare)
-       numcft      =  64     ! actual # of crops
-    else
-       numpft      = numveg  ! actual # of patches (without bare)
-       numcft      =   2     ! actual # of crops
-    end if
+    ! actual_maxsoil_patches and actual_numcft were read directly from the
+    ! surface dataset
+    maxsoil_patches = actual_maxsoil_patches  ! # of patches with bare ground
+    maxveg = maxsoil_patches - 1  ! # of patches without bare ground
 
     ! For arrays containing all Patches (natural veg & crop), determine lower and upper bounds
     ! for (1) Patches on the natural vegetation landunit (includes bare ground, and includes
@@ -122,10 +119,10 @@ contains
     ! if create_crop_landunit=false)
 
     if (create_crop_landunit) then
-       natpft_size = (numpft + 1) - numcft    ! note that numpft doesn't include bare ground -- thus we add 1
-       cft_size    = numcft
+       natpft_size = maxsoil_patches - actual_numcft  ! includes bare ground
+       cft_size    = actual_numcft
     else
-       natpft_size = numpft + 1               ! note that numpft doesn't include bare ground -- thus we add 1
+       natpft_size = maxsoil_patches  ! includes bare ground
        cft_size    = 0
     end if
 
@@ -134,12 +131,12 @@ contains
     cft_lb = natpft_ub + 1
     cft_ub = cft_lb + cft_size - 1
 
-    ! TODO(wjs, 2015-10-04, bugz 2227) Using numcft in this 'max' gives a significant
+    ! TODO(wjs, 2015-10-04, bugz 2227) Using actual_numcft in this 'max' gives a significant
     ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
     ! or, better, removed from the code entirely (because it is a maintenance problem, and
     ! I can't imagine that looping idioms that use it help performance that much, and
     ! likely they hurt performance.)
-    max_patch_per_col= max(numpft+1, numcft, maxpatch_urb)
+    max_patch_per_col= max(maxsoil_patches, actual_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
     nlevurb     =  5

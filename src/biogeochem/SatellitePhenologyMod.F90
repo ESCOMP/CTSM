@@ -23,7 +23,7 @@ module SatellitePhenologyMod
   use fileutils       , only : getavu, relavu
   use PatchType       , only : patch                
   use CanopyStateType , only : canopystate_type
-  use WaterstateType  , only : waterstate_type
+  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
   use perf_mod        , only : t_startf, t_stopf
   use spmdMod         , only : masterproc
   use spmdMod         , only : mpicom, comp_id
@@ -298,7 +298,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SatellitePhenology(bounds, num_nolakep, filter_nolakep, &
-       waterstate_inst, canopystate_inst)
+       waterdiagnosticbulk_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
     ! Ecosystem dynamics: phenology, vegetation
@@ -311,7 +311,7 @@ contains
     type(bounds_type)      , intent(in)    :: bounds                          
     integer                , intent(in)    :: num_nolakep                               ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
@@ -321,8 +321,8 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                           &
-         frac_sno           => waterstate_inst%frac_sno_col   ,          & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)       
-         snow_depth         => waterstate_inst%snow_depth_col ,          & ! Input:  [real(r8) (:) ] snow height (m)                                                       
+         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   ,          & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)       
+         snow_depth         => waterdiagnosticbulk_inst%snow_depth_col ,          & ! Input:  [real(r8) (:) ] snow height (m)                                                       
          tlai               => canopystate_inst%tlai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow 
          tsai               => canopystate_inst%tsai_patch    ,          & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
          elai               => canopystate_inst%elai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow
@@ -461,7 +461,7 @@ contains
     ! read 12 months of veg data for dry deposition
     !
     ! !USES:
-    use clm_varpar  , only : numpft
+    use clm_varpar  , only : maxveg, maxsoil_patches
     use pftconMod   , only : noveg
     use domainMod   , only : ldomain
     use fileutils   , only : getfil
@@ -495,7 +495,7 @@ contains
 
     ! Determine necessary indices
 
-    allocate(mlai(bounds%begg:bounds%endg,0:numpft), stat=ier)
+    allocate(mlai(bounds%begg:bounds%endg,0:maxveg), stat=ier)
     if (ier /= 0) then
        write(iulog,*)subname, 'allocation error ' 
        call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -516,7 +516,7 @@ contains
        write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    call check_dim(ncid, 'lsmpft', numpft+1)
+    call check_dim(ncid, 'lsmpft', maxsoil_patches)
 
     if (single_column) then
        call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
@@ -529,13 +529,13 @@ contains
             dim1name=grlnd, nt=k)
 
        !! only vegetated patches have nonzero values
-       !! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] patches
+       !! Assign lai/sai/hgtt/hgtb to the top [maxsoil_patches] patches
        !! as determined in subroutine surfrd
 
        do p = bounds%begp,bounds%endp
           g =patch%gridcell(p)
           if (patch%itype(p) /= noveg) then     !! vegetated pft
-             do l = 0, numpft
+             do l = 0, maxveg
                 if (l == patch%itype(p)) then
                    annlai(k,p) = mlai(g,l)
                 end if
@@ -561,7 +561,7 @@ contains
     ! Read monthly vegetation data for two consec. months.
     !
     ! !USES:
-    use clm_varpar       , only : numpft
+    use clm_varpar       , only : maxveg
     use pftconMod        , only : noveg
     use fileutils        , only : getfil
     use spmdMod          , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
@@ -598,10 +598,10 @@ contains
     ! Determine necessary indices
 
     allocate(&
-         mlai(bounds%begg:bounds%endg,0:numpft), &
-         msai(bounds%begg:bounds%endg,0:numpft), &
-         mhgtt(bounds%begg:bounds%endg,0:numpft), &
-         mhgtb(bounds%begg:bounds%endg,0:numpft), &
+         mlai(bounds%begg:bounds%endg,0:maxveg), &
+         msai(bounds%begg:bounds%endg,0:maxveg), &
+         mhgtt(bounds%begg:bounds%endg,0:maxveg), &
+         mhgtb(bounds%begg:bounds%endg,0:maxveg), &
          stat=ier)
     if (ier /= 0) then
        write(iulog,*)subname, 'allocation big error '
@@ -640,13 +640,13 @@ contains
        if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file'//errMsg(sourcefile, __LINE__))
 
        ! Only vegetated patches have nonzero values
-       ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] patches
+       ! Assign lai/sai/hgtt/hgtb to the top [maxsoil_patches] patches
        ! as determined in subroutine surfrd
 
        do p = bounds%begp,bounds%endp
           g =patch%gridcell(p)
           if (patch%itype(p) /= noveg) then     ! vegetated pft
-             do l = 0, numpft
+             do l = 0, maxveg
                 if (l == patch%itype(p)) then
                    mlai2t(p,k) = mlai(g,l)
                    msai2t(p,k) = msai(g,l)

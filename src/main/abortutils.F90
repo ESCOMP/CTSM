@@ -42,7 +42,7 @@ CONTAINS
     !-----------------------------------------------------------------------
 
     if (present (additional_msg)) then
-       write(iulog,*)'ENDRUN: ', additional_msg
+       write(iulog,*)'ENDRUN: ', trim(additional_msg)
     else
        write(iulog,*)'ENDRUN:'
     end if

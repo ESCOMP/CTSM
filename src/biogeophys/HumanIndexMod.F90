@@ -39,7 +39,13 @@ module HumanIndexMod
 
 !
 ! !PUBLIC MEMBER DATA:
-  logical, public :: calc_human_stress_indices = .true.   ! If should calculate the set of human stress indices
+  character(len= *), parameter, public :: calc_human_stress_indices_all  = 'ALL'
+  character(len= *), parameter, public :: calc_human_stress_indices_fast = 'FAST'
+  character(len= *), parameter, public :: calc_human_stress_indices_none = 'NONE'
+  character(len= 16), public           :: calc_human_stress_indices = calc_human_stress_indices_fast
+  logical, public :: all_human_stress_indices  = .false. ! If should calculate the full set of human stress indices
+  logical, public :: fast_human_stress_indices = .true.  ! If should calculate the fast (limited) set of human 
+                                                         !  stress indices
   type,    public :: humanindex_type   
      real(r8), pointer :: tc_ref2m_patch              (:) ! Patch 2 m height surface air temperature (C)
      real(r8), pointer :: vap_ref2m_patch             (:) ! Patch 2 m height vapor pressure (Pa)
@@ -151,15 +157,27 @@ subroutine Init(this, bounds )
     type(bounds_type) :: bounds_tmp
 !EOP
 !-----------------------------------------------------------------------
-    if ( calc_human_stress_indices ) then
-       call this%InitAllocate ( bounds )
-       call this%InitHistory (  bounds )
-    else
+    if (trim(calc_human_stress_indices) == calc_human_stress_indices_all) then
+       all_human_stress_indices  = .true.
+       fast_human_stress_indices = .false.
+    else if (trim(calc_human_stress_indices) == calc_human_stress_indices_fast) then
+       all_human_stress_indices  = .false.
+       fast_human_stress_indices = .true.
+    else if (trim(calc_human_stress_indices) == calc_human_stress_indices_none) then
+       all_human_stress_indices  = .false.
+       fast_human_stress_indices = .false.
+    end if
+
+    ! Allocation always needs to be done...
+    if (trim(calc_human_stress_indices) == calc_human_stress_indices_none) then
        ! Associate statements need humanindex_inst to be allocated
        ! So allocate with size 1 when not being used
        bounds_tmp%begp = 1
        bounds_tmp%endp = 1
+       call this%InitAllocate ( bounds_tmp )
+    else
        call this%InitAllocate ( bounds )
+       call this%InitHistory (  bounds )
     end if
 
 end subroutine Init
@@ -183,50 +201,52 @@ subroutine InitAllocate(this, bounds)
 
     begp = bounds%begp; endp= bounds%endp
 
-    allocate(this%vap_ref2m_patch          (begp:endp))                      ; this%vap_ref2m_patch          (:)   = nan
-    allocate(this%humidex_ref2m_u_patch    (begp:endp))                      ; this%humidex_ref2m_u_patch    (:)   = nan
-    allocate(this%humidex_ref2m_patch      (begp:endp))                      ; this%humidex_ref2m_patch      (:)   = nan
-    allocate(this%humidex_ref2m_r_patch    (begp:endp))                      ; this%humidex_ref2m_r_patch    (:)   = nan
-    allocate(this%nws_hi_ref2m_patch       (begp:endp))                      ; this%nws_hi_ref2m_patch       (:)   = nan
-    allocate(this%nws_hi_ref2m_r_patch     (begp:endp))                      ; this%nws_hi_ref2m_r_patch     (:)   = nan
-    allocate(this%thip_ref2m_patch         (begp:endp))                      ; this%thip_ref2m_patch         (:)   = nan
-    allocate(this%thip_ref2m_r_patch       (begp:endp))                      ; this%thip_ref2m_r_patch       (:)   = nan
-    allocate(this%thic_ref2m_patch         (begp:endp))                      ; this%thic_ref2m_patch         (:)   = nan
-    allocate(this%thic_ref2m_r_patch       (begp:endp))                      ; this%thic_ref2m_r_patch       (:)   = nan
-    allocate(this%nws_hi_ref2m_u_patch     (begp:endp))                      ; this%nws_hi_ref2m_u_patch     (:)   = nan
-    allocate(this%thip_ref2m_u_patch       (begp:endp))                      ; this%thip_ref2m_u_patch       (:)   = nan
-    allocate(this%thic_ref2m_u_patch       (begp:endp))                      ; this%thic_ref2m_u_patch       (:)   = nan
-    allocate(this%tc_ref2m_patch            (begp:endp))                      ; this%tc_ref2m_patch             (:)   = nan
-    allocate(this%appar_temp_ref2m_patch    (begp:endp))                      ; this%appar_temp_ref2m_patch     (:)   = nan
-    allocate(this%appar_temp_ref2m_r_patch  (begp:endp))                      ; this%appar_temp_ref2m_r_patch   (:)   = nan
-    allocate(this%swbgt_ref2m_patch         (begp:endp))                      ; this%swbgt_ref2m_patch          (:)   = nan
-    allocate(this%swbgt_ref2m_r_patch       (begp:endp))                      ; this%swbgt_ref2m_r_patch        (:)   = nan
-    allocate(this%wbt_ref2m_patch           (begp:endp))                      ; this%wbt_ref2m_patch            (:)   = nan
-    allocate(this%wbt_ref2m_r_patch         (begp:endp))                      ; this%wbt_ref2m_r_patch          (:)   = nan
-    allocate(this%wb_ref2m_patch            (begp:endp))                      ; this%wb_ref2m_patch             (:)   = nan
-    allocate(this%wb_ref2m_r_patch          (begp:endp))                      ; this%wb_ref2m_r_patch           (:)   = nan
-    allocate(this%teq_ref2m_patch           (begp:endp))                      ; this%teq_ref2m_patch            (:)   = nan
-    allocate(this%teq_ref2m_r_patch         (begp:endp))                      ; this%teq_ref2m_r_patch          (:)   = nan
-    allocate(this%ept_ref2m_patch           (begp:endp))                      ; this%ept_ref2m_patch            (:)   = nan
-    allocate(this%ept_ref2m_r_patch         (begp:endp))                      ; this%ept_ref2m_r_patch          (:)   = nan
-    allocate(this%discomf_index_ref2m_patch (begp:endp))                      ; this%discomf_index_ref2m_patch  (:)   = nan
-    allocate(this%discomf_index_ref2m_r_patch(begp:endp))                     ; this%discomf_index_ref2m_r_patch(:)   = nan
-    allocate(this%discomf_index_ref2mS_patch(begp:endp))                      ; this%discomf_index_ref2mS_patch (:)   = nan
-    allocate(this%discomf_index_ref2mS_r_patch(begp:endp))                    ; this%discomf_index_ref2mS_r_patch(:)  = nan
-    allocate(this%discomf_index_ref2mS_u_patch(begp:endp))                    ; this%discomf_index_ref2mS_u_patch(:)  = nan
-    allocate(this%swmp65_ref2m_patch        (begp:endp))                      ; this%swmp65_ref2m_patch         (:)   = nan
-    allocate(this%swmp65_ref2m_r_patch      (begp:endp))                      ; this%swmp65_ref2m_r_patch       (:)   = nan
-    allocate(this%swmp80_ref2m_patch        (begp:endp))                      ; this%swmp80_ref2m_patch         (:)   = nan
-    allocate(this%swmp80_ref2m_r_patch      (begp:endp))                      ; this%swmp80_ref2m_r_patch       (:)   = nan
-    allocate(this%swmp80_ref2m_u_patch      (begp:endp))                      ; this%swmp80_ref2m_u_patch       (:)   = nan
-    allocate(this%appar_temp_ref2m_u_patch  (begp:endp))                      ; this%appar_temp_ref2m_u_patch   (:)   = nan
-    allocate(this%swbgt_ref2m_u_patch       (begp:endp))                      ; this%swbgt_ref2m_u_patch        (:)   = nan
-    allocate(this%wbt_ref2m_u_patch         (begp:endp))                      ; this%wbt_ref2m_u_patch          (:)   = nan
-    allocate(this%wb_ref2m_u_patch          (begp:endp))                      ; this%wb_ref2m_u_patch           (:)   = nan
-    allocate(this%teq_ref2m_u_patch         (begp:endp))                      ; this%teq_ref2m_u_patch          (:)   = nan
-    allocate(this%ept_ref2m_u_patch         (begp:endp))                      ; this%ept_ref2m_u_patch          (:)   = nan
-    allocate(this%discomf_index_ref2m_u_patch(begp:endp))                     ; this%discomf_index_ref2m_u_patch(:)   = nan
-    allocate(this%swmp65_ref2m_u_patch      (begp:endp))                      ; this%swmp65_ref2m_u_patch       (:)   = nan
+    allocate(this%vap_ref2m_patch              (begp:endp))                    ; this%vap_ref2m_patch             (:)  = nan
+    allocate(this%tc_ref2m_patch               (begp:endp))                    ; this%tc_ref2m_patch              (:)  = nan
+    allocate(this%humidex_ref2m_patch          (begp:endp))                    ; this%humidex_ref2m_patch         (:)  = nan
+    allocate(this%humidex_ref2m_u_patch        (begp:endp))                    ; this%humidex_ref2m_u_patch       (:)  = nan
+    allocate(this%humidex_ref2m_r_patch        (begp:endp))                    ; this%humidex_ref2m_r_patch       (:)  = nan
+    allocate(this%nws_hi_ref2m_patch           (begp:endp))                    ; this%nws_hi_ref2m_patch          (:)  = nan
+    allocate(this%nws_hi_ref2m_r_patch         (begp:endp))                    ; this%nws_hi_ref2m_r_patch        (:)  = nan
+    allocate(this%nws_hi_ref2m_u_patch         (begp:endp))                    ; this%nws_hi_ref2m_u_patch        (:)  = nan
+    allocate(this%appar_temp_ref2m_patch       (begp:endp))                    ; this%appar_temp_ref2m_patch      (:)  = nan
+    allocate(this%appar_temp_ref2m_r_patch     (begp:endp))                    ; this%appar_temp_ref2m_r_patch    (:)  = nan
+    allocate(this%appar_temp_ref2m_u_patch     (begp:endp))                    ; this%appar_temp_ref2m_u_patch    (:)  = nan
+    allocate(this%swbgt_ref2m_patch            (begp:endp))                    ; this%swbgt_ref2m_patch           (:)  = nan
+    allocate(this%swbgt_ref2m_r_patch          (begp:endp))                    ; this%swbgt_ref2m_r_patch         (:)  = nan
+    allocate(this%swbgt_ref2m_u_patch          (begp:endp))                    ; this%swbgt_ref2m_u_patch         (:)  = nan
+    allocate(this%wbt_ref2m_patch              (begp:endp))                    ; this%wbt_ref2m_patch             (:)  = nan
+    allocate(this%wbt_ref2m_r_patch            (begp:endp))                    ; this%wbt_ref2m_r_patch           (:)  = nan
+    allocate(this%wbt_ref2m_u_patch            (begp:endp))                    ; this%wbt_ref2m_u_patch           (:)  = nan
+    allocate(this%discomf_index_ref2mS_patch   (begp:endp))                    ; this%discomf_index_ref2mS_patch  (:)  = nan
+    allocate(this%discomf_index_ref2mS_r_patch (begp:endp))                    ; this%discomf_index_ref2mS_r_patch(:)  = nan
+    allocate(this%discomf_index_ref2mS_u_patch (begp:endp))                    ; this%discomf_index_ref2mS_u_patch(:)  = nan
+
+    allocate(this%wb_ref2m_patch               (begp:endp))                    ; this%wb_ref2m_patch              (:)  = nan
+    allocate(this%wb_ref2m_r_patch             (begp:endp))                    ; this%wb_ref2m_r_patch            (:)  = nan
+    allocate(this%wb_ref2m_u_patch             (begp:endp))                    ; this%wb_ref2m_u_patch            (:)  = nan
+    allocate(this%teq_ref2m_patch              (begp:endp))                    ; this%teq_ref2m_patch             (:)  = nan
+    allocate(this%teq_ref2m_r_patch            (begp:endp))                    ; this%teq_ref2m_r_patch           (:)  = nan
+    allocate(this%teq_ref2m_u_patch            (begp:endp))                    ; this%teq_ref2m_u_patch           (:)  = nan
+    allocate(this%ept_ref2m_patch              (begp:endp))                    ; this%ept_ref2m_patch             (:)  = nan
+    allocate(this%ept_ref2m_r_patch            (begp:endp))                    ; this%ept_ref2m_r_patch           (:)  = nan
+    allocate(this%ept_ref2m_u_patch            (begp:endp))                    ; this%ept_ref2m_u_patch           (:)  = nan
+    allocate(this%discomf_index_ref2m_patch    (begp:endp))                    ; this%discomf_index_ref2m_patch   (:)  = nan
+    allocate(this%discomf_index_ref2m_r_patch  (begp:endp))                    ; this%discomf_index_ref2m_r_patch (:)  = nan
+    allocate(this%discomf_index_ref2m_u_patch  (begp:endp))                    ; this%discomf_index_ref2m_u_patch (:)  = nan
+    allocate(this%thip_ref2m_patch             (begp:endp))                    ; this%thip_ref2m_patch            (:)  = nan
+    allocate(this%thip_ref2m_r_patch           (begp:endp))                    ; this%thip_ref2m_r_patch          (:)  = nan
+    allocate(this%thip_ref2m_u_patch           (begp:endp))                    ; this%thip_ref2m_u_patch          (:)  = nan
+    allocate(this%thic_ref2m_patch             (begp:endp))                    ; this%thic_ref2m_patch            (:)  = nan
+    allocate(this%thic_ref2m_r_patch           (begp:endp))                    ; this%thic_ref2m_r_patch          (:)  = nan
+    allocate(this%thic_ref2m_u_patch           (begp:endp))                    ; this%thic_ref2m_u_patch          (:)  = nan
+    allocate(this%swmp65_ref2m_patch           (begp:endp))                    ; this%swmp65_ref2m_patch          (:)  = nan
+    allocate(this%swmp65_ref2m_r_patch         (begp:endp))                    ; this%swmp65_ref2m_r_patch        (:)  = nan
+    allocate(this%swmp65_ref2m_u_patch         (begp:endp))                    ; this%swmp65_ref2m_u_patch        (:)  = nan
+    allocate(this%swmp80_ref2m_patch           (begp:endp))                    ; this%swmp80_ref2m_patch          (:)  = nan
+    allocate(this%swmp80_ref2m_r_patch         (begp:endp))                    ; this%swmp80_ref2m_r_patch        (:)  = nan
+    allocate(this%swmp80_ref2m_u_patch         (begp:endp))                    ; this%swmp80_ref2m_u_patch        (:)  = nan
+
 end subroutine InitAllocate
 
 
@@ -249,21 +269,6 @@ subroutine InitHistory(this, bounds)
 !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
-
-    this%appar_temp_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='APPAR_TEMP', units='C',  &
-            avgflag='A', long_name='2 m apparent temperature', &
-            ptr_patch=this%appar_temp_ref2m_patch, default='inactive')
-
-    this%appar_temp_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='APPAR_TEMP_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m apparent temperature', &
-            ptr_patch=this%appar_temp_ref2m_u_patch, set_nourb=spval, default='inactive')
-
-    this%appar_temp_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='APPAR_TEMP_R', units='C',  &
-            avgflag='A', long_name='Rural 2 m apparent temperature', &
-            ptr_patch=this%appar_temp_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%swbgt_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='SWBGT', units='C',  &
@@ -310,81 +315,6 @@ subroutine InitHistory(this, bounds)
             avgflag='A', long_name='Rural 2 m Stull Wet Bulb', &
             ptr_patch=this%wbt_ref2m_r_patch, set_spec=spval)
 
-    this%wb_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='WBA', units='C',  &
-            avgflag='A', long_name='2 m Wet Bulb', &
-            ptr_patch=this%wb_ref2m_patch, default='inactive')
-
-    this%wb_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='WBA_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m Wet Bulb', &
-            ptr_patch=this%wb_ref2m_u_patch, set_nourb=spval, default='inactive')
-
-    this%wb_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='WBA_R', units='C',  &
-            avgflag='A', long_name='Rural 2 m Wet Bulb', &
-            ptr_patch=this%wb_ref2m_r_patch, set_spec=spval, default='inactive')
-
-    this%teq_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TEQ', units='K',  &
-            avgflag='A', long_name='2 m Equiv Temp', &
-            ptr_patch=this%teq_ref2m_patch, default='inactive')
-
-    this%teq_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TEQ_U', units='K',  &
-            avgflag='A', long_name='Urban 2 m Equiv Temp', &
-            ptr_patch=this%teq_ref2m_u_patch, set_nourb=spval, default='inactive')
-
-    this%teq_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TEQ_R', units='K',  &
-            avgflag='A', long_name='Rural 2 m Equiv Temp', &
-            ptr_patch=this%teq_ref2m_r_patch, set_spec=spval, default='inactive')
-
-    this%ept_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='EPT', units='K',  &
-            avgflag='A', long_name='2 m Equiv Pot Temp', &
-            ptr_patch=this%ept_ref2m_patch, default='inactive')
-
-    this%ept_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='EPT_U', units='K',  &
-            avgflag='A', long_name='Urban 2 m Equiv Pot Temp', &
-            ptr_patch=this%ept_ref2m_u_patch, set_nourb=spval, default='inactive')
-
-    this%ept_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='EPT_R', units='K',  &
-            avgflag='A', long_name='Rural 2 m Equiv Pot Temp', &
-            ptr_patch=this%ept_ref2m_r_patch, set_spec=spval, default='inactive')
-
-    this%discomf_index_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='DISCOI', units='C',  &
-            avgflag='A', long_name='2 m Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2m_patch, default='inactive')
-
-    this%discomf_index_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='DISCOI_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2m_u_patch, set_nourb=spval, default='inactive')
-
-    this%discomf_index_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='DISCOI_R', units='C',  &
-            avgflag='A', long_name='Rural 2 m Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2m_r_patch, set_spec=spval, default='inactive')
-
-    this%discomf_index_ref2mS_patch(begp:endp) = spval
-    call hist_addfld1d (fname='DISCOIS', units='C',  &
-            avgflag='A', long_name='2 m Stull Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2mS_patch, default='inactive')
-
-    this%discomf_index_ref2mS_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='DISCOIS_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m Stull Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2mS_u_patch, set_nourb=spval, default='inactive')
-
-    this%discomf_index_ref2mS_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='DISCOIS_R', units='C',  &
-            avgflag='A', long_name='Rural 2 m Stull Discomfort Index', &
-            ptr_patch=this%discomf_index_ref2mS_r_patch, set_spec=spval, default='inactive')
-
     this%nws_hi_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='HIA', units='C',  &
             avgflag='A', long_name='2 m NWS Heat Index', &
@@ -400,65 +330,159 @@ subroutine InitHistory(this, bounds)
             avgflag='A', long_name='Rural 2 m NWS Heat Index', &
             ptr_patch=this%nws_hi_ref2m_r_patch, set_spec=spval)
 
-    this%thip_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='THIP', units='C',  &
-            avgflag='A', long_name='2 m Temp Hum Index Physiology', &
-            ptr_patch=this%thip_ref2m_patch, default='inactive')
+    if ( all_human_stress_indices )then
 
-    this%thip_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='THIP_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m Temp Hum Index Physiology', &
-            ptr_patch=this%thip_ref2m_u_patch, set_nourb=spval, default='inactive')
+       this%appar_temp_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='APPAR_TEMP', units='C',  &
+               avgflag='A', long_name='2 m apparent temperature', &
+               ptr_patch=this%appar_temp_ref2m_patch)
 
-    this%thip_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='THIP_R', units='C',  &
-            avgflag='A', long_name='Rural 2 m Temp Hum Index Physiology', &
-            ptr_patch=this%thip_ref2m_r_patch, set_spec=spval, default='inactive')
+       this%appar_temp_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='APPAR_TEMP_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m apparent temperature', &
+               ptr_patch=this%appar_temp_ref2m_u_patch, set_nourb=spval)
 
-    this%thic_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='THIC', units='C',  &
-            avgflag='A', long_name='2 m Temp Hum Index Comfort', &
-            ptr_patch=this%thic_ref2m_patch, default='inactive')
+       this%appar_temp_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='APPAR_TEMP_R', units='C',  &
+               avgflag='A', long_name='Rural 2 m apparent temperature', &
+               ptr_patch=this%appar_temp_ref2m_r_patch, set_spec=spval)
 
-    this%thic_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='THIC_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m Temp Hum Index Comfort', &
-            ptr_patch=this%thic_ref2m_u_patch, set_nourb=spval, default='inactive')
+       this%wb_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='WBA', units='C',  &
+               avgflag='A', long_name='2 m Wet Bulb', &
+               ptr_patch=this%wb_ref2m_patch)
 
-    this%thic_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='THIC_R', units='C',  &
-            avgflag='A', long_name='Rural 2 m Temp Hum Index Comfort', &
-            ptr_patch=this%thic_ref2m_r_patch, set_spec=spval, default='inactive')
+       this%wb_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='WBA_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m Wet Bulb', &
+               ptr_patch=this%wb_ref2m_u_patch, set_nourb=spval)
 
-    this%swmp65_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='SWMP65', units='C',  &
-            avgflag='A', long_name='2 m Swamp Cooler Temp 65% Eff', &
-            ptr_patch=this%swmp65_ref2m_patch, default='inactive')
+       this%wb_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='WBA_R', units='C',  &
+               avgflag='A', long_name='Rural 2 m Wet Bulb', &
+               ptr_patch=this%wb_ref2m_r_patch, set_spec=spval)
 
-    this%swmp65_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='SWMP65_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m Swamp Cooler Temp 65% Eff', &
-            ptr_patch=this%swmp65_ref2m_u_patch, set_nourb=spval, default='inactive')
+       this%teq_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TEQ', units='K',  &
+               avgflag='A', long_name='2 m Equiv Temp', &
+               ptr_patch=this%teq_ref2m_patch)
 
-    this%swmp65_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='SWMP65_R', units='C',  &
-            avgflag='A', long_name='Rural 2 m Swamp Cooler Temp 65% Eff', &
-            ptr_patch=this%swmp65_ref2m_r_patch, set_spec=spval, default='inactive')
+       this%teq_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TEQ_U', units='K',  &
+               avgflag='A', long_name='Urban 2 m Equiv Temp', &
+               ptr_patch=this%teq_ref2m_u_patch, set_nourb=spval)
 
-    this%swmp80_ref2m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='SWMP80', units='C',  &
-            avgflag='A', long_name='2 m Swamp Cooler Temp 80% Eff', &
-            ptr_patch=this%swmp80_ref2m_patch, default='inactive')
+       this%teq_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TEQ_R', units='K',  &
+               avgflag='A', long_name='Rural 2 m Equiv Temp', &
+               ptr_patch=this%teq_ref2m_r_patch, set_spec=spval)
 
-    this%swmp80_ref2m_u_patch(begp:endp) = spval
-    call hist_addfld1d (fname='SWMP80_U', units='C',  &
-            avgflag='A', long_name='Urban 2 m Swamp Cooler Temp 80% Eff', &
-            ptr_patch=this%swmp80_ref2m_u_patch, set_nourb=spval, default='inactive')
+       this%ept_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='EPT', units='K',  &
+               avgflag='A', long_name='2 m Equiv Pot Temp', &
+               ptr_patch=this%ept_ref2m_patch)
 
-    this%swmp80_ref2m_r_patch(begp:endp) = spval
-    call hist_addfld1d (fname='SWMP80_R', units='C',  &
-               avgflag='A', long_name='Rural 2 m Swamp Cooler Temp 80% Eff', &
-               ptr_patch=this%swmp80_ref2m_r_patch, set_spec=spval, default='inactive')
+       this%ept_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='EPT_U', units='K',  &
+               avgflag='A', long_name='Urban 2 m Equiv Pot Temp', &
+               ptr_patch=this%ept_ref2m_u_patch, set_nourb=spval)
+
+       this%ept_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='EPT_R', units='K',  &
+               avgflag='A', long_name='Rural 2 m Equiv Pot Temp', &
+               ptr_patch=this%ept_ref2m_r_patch, set_spec=spval)
+
+       this%discomf_index_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DISCOI', units='C',  &
+               avgflag='A', long_name='2 m Discomfort Index', &
+               ptr_patch=this%discomf_index_ref2m_patch)
+
+       this%discomf_index_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DISCOI_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m Discomfort Index', &
+               ptr_patch=this%discomf_index_ref2m_u_patch, set_nourb=spval)
+
+       this%discomf_index_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DISCOI_R', units='C',  &
+               avgflag='A', long_name='Rural 2 m Discomfort Index', &
+               ptr_patch=this%discomf_index_ref2m_r_patch, set_spec=spval)
+
+       this%thip_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='THIP', units='C',  &
+               avgflag='A', long_name='2 m Temp Hum Index Physiology', &
+               ptr_patch=this%thip_ref2m_patch)
+
+       this%thip_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='THIP_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m Temp Hum Index Physiology', &
+               ptr_patch=this%thip_ref2m_u_patch, set_nourb=spval)
+
+       this%thip_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='THIP_R', units='C',  &
+               avgflag='A', long_name='Rural 2 m Temp Hum Index Physiology', &
+               ptr_patch=this%thip_ref2m_r_patch, set_spec=spval)
+
+       this%thic_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='THIC', units='C',  &
+               avgflag='A', long_name='2 m Temp Hum Index Comfort', &
+               ptr_patch=this%thic_ref2m_patch)
+
+       this%thic_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='THIC_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m Temp Hum Index Comfort', &
+               ptr_patch=this%thic_ref2m_u_patch, set_nourb=spval)
+
+       this%thic_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='THIC_R', units='C',  &
+               avgflag='A', long_name='Rural 2 m Temp Hum Index Comfort', &
+               ptr_patch=this%thic_ref2m_r_patch, set_spec=spval)
+
+       this%swmp65_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SWMP65', units='C',  &
+               avgflag='A', long_name='2 m Swamp Cooler Temp 65% Eff', &
+               ptr_patch=this%swmp65_ref2m_patch)
+
+       this%swmp65_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SWMP65_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m Swamp Cooler Temp 65% Eff', &
+               ptr_patch=this%swmp65_ref2m_u_patch, set_nourb=spval)
+
+       this%swmp65_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SWMP65_R', units='C',  &
+               avgflag='A', long_name='Rural 2 m Swamp Cooler Temp 65% Eff', &
+               ptr_patch=this%swmp65_ref2m_r_patch, set_spec=spval)
+
+       this%swmp80_ref2m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SWMP80', units='C',  &
+               avgflag='A', long_name='2 m Swamp Cooler Temp 80% Eff', &
+               ptr_patch=this%swmp80_ref2m_patch)
+
+       this%swmp80_ref2m_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SWMP80_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m Swamp Cooler Temp 80% Eff', &
+               ptr_patch=this%swmp80_ref2m_u_patch, set_nourb=spval)
+
+       this%swmp80_ref2m_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SWMP80_R', units='C',  &
+                  avgflag='A', long_name='Rural 2 m Swamp Cooler Temp 80% Eff', &
+                  ptr_patch=this%swmp80_ref2m_r_patch, set_spec=spval)
+
+       this%discomf_index_ref2mS_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DISCOIS', units='C',  &
+               avgflag='A', long_name='2 m Stull Discomfort Index', &
+               ptr_patch=this%discomf_index_ref2mS_patch)
+
+       this%discomf_index_ref2mS_u_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DISCOIS_U', units='C',  &
+               avgflag='A', long_name='Urban 2 m Stull Discomfort Index', &
+               ptr_patch=this%discomf_index_ref2mS_u_patch, set_nourb=spval)
+
+       this%discomf_index_ref2mS_r_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DISCOIS_R', units='C',  &
+               avgflag='A', long_name='Rural 2 m Stull Discomfort Index', &
+               ptr_patch=this%discomf_index_ref2mS_r_patch, set_spec=spval)
+
+    end if
 
 end subroutine InitHistory
 

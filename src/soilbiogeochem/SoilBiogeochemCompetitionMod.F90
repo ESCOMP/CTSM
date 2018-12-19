@@ -25,8 +25,8 @@ module SoilBiogeochemCompetitionMod
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
   !use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use WaterStateType                  , only : waterstate_type
-  use WaterfluxType                   , only : waterflux_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
@@ -165,8 +165,8 @@ contains
   end subroutine SoilBiogeochemCompetitionInit
 
   !-----------------------------------------------------------------------
-   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstate_inst, &
-                                         waterflux_inst, temperature_inst,soilstate_inst,                          &
+   subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
+                                         waterfluxbulk_inst, temperature_inst,soilstate_inst,                          &
                                          cnveg_state_inst,cnveg_carbonstate_inst,                                  &
                                          cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
                                          soilbiogeochem_carbonflux_inst,                                           &              
@@ -179,7 +179,7 @@ contains
     use clm_varcon       , only: nitrif_n2o_loss_frac
     use CNSharedParamsMod, only: use_fun
     use CNFUNMod         , only: CNFUN
-    use subgridAveMod    , only: p2c_2d
+    use subgridAveMod    , only: p2c
     use perf_mod         , only : t_startf, t_stopf
     !
     ! !ARGUMENTS:
@@ -188,8 +188,8 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)  ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)  ! filter for soil patches
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
-    type(waterflux_type)                    , intent(in)    :: waterflux_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
+    type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
     type(cnveg_state_type)                  , intent(inout) :: cnveg_state_inst
@@ -366,12 +366,12 @@ contains
 
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
-                      waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
+            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst, &
+                      waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
                       soilbiogeochem_nitrogenstate_inst)
-            call p2c_2d(bounds, nlevdecomp, &
+            call p2c(bounds, nlevdecomp, &
                       cnveg_nitrogenflux_inst%sminn_to_plant_fun_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                       soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_vr_col(bounds%begc:bounds%endc,1:nlevdecomp), &
                       'unity')
@@ -734,19 +734,19 @@ contains
 
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
-                      waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
+            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst,&
+                      waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
                       soilbiogeochem_nitrogenstate_inst)
                       
             ! sminn_to_plant_fun is output of actual N uptake from FUN
-            call p2c_2d(bounds,nlevdecomp, &
+            call p2c(bounds,nlevdecomp, &
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')
 
-            call p2c_2d(bounds,nlevdecomp, &
+            call p2c(bounds,nlevdecomp, &
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')

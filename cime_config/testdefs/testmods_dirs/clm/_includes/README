@@ -1,0 +1,9 @@
+This directory contains testmods directories that are meant to be
+included in other testmods directories, not used directly.
+
+One reason for doing this is so that we can have testmods here that
+apply science settings without including one of the testmods that is
+typically included for setting output frequency (e.g., 'default' or
+'monthly'). Then the testmods here can be included in other testmods
+that use different output frequencies (e.g., daily vs. monthly) while
+having the same science options.

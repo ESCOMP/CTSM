@@ -1,7 +1,4 @@
 !===============================================================================
-! SVN $Id: shr_kind_mod.F90 11926 2008-09-25 21:10:40Z mvertens $
-! SVN $URL: https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_101231/shr/shr_kind_mod.F90 $
-!===============================================================================
 
 MODULE shr_kind_mod
 

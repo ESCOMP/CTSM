@@ -1,0 +1,9 @@
+!----------------------------------------------------------------------------------
+! Settings from cmip6_glaciers_virtual_antarctica
+!----------------------------------------------------------------------------------
+
+! This differs from the default in that it turns on virtual columns over Antarctica
+! This is desired so that we have the output needed to drive a later offline CISM Antarctica simulation
+! However, this increases the cost of CLM by about 10%
+glacier_region_behavior = 'single_at_atm_topo', 'virtual', 'virtual', 'virtual'
+
