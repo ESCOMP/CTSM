@@ -165,9 +165,7 @@ contains
     real(r8) :: dt        ! radiation time step (seconds)
     real(r8) :: check_cpool
     real(r8) :: cpool_delta
-!KO
     real(r8) :: kprod05   ! decay constant for 0.5-year product pool
-!KO
     !-----------------------------------------------------------------------
 
     associate(                                                               & 
@@ -484,28 +482,22 @@ contains
                ! bounds. Zeroing out these small pools and putting them into the flux to the
                ! atmosphere solved many of the crop isotope problems
 
-!KO
-               ! Save xsmrpool to loss state variable for dribbling
-               cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_patch(p)
-!KO
-
-!KO               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
+               ! Save xsmrpool, cpool, frootc to loss state variable for dribbling
+               cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + &
+                                               cs_veg%xsmrpool_patch(p) + &
+                                               cs_veg%cpool_patch(p) + &
+                                               cs_veg%frootc_patch(p)
                cs_veg%xsmrpool_patch(p)        = 0._r8
-               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
                cs_veg%cpool_patch(p)           = 0._r8
-               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
                cs_veg%frootc_patch(p)          = 0._r8
             end if
-!KO
+
             ! calculate flux of xsmrpool loss to atm
-            cf_veg%xsmrpool_loss_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
-            ! add flux to atmosphere
-            cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cf_veg%xsmrpool_loss_to_atm_patch(p)
-            ! update xsmrpool loss state variable
-            cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_loss_to_atm_patch(p) * dt
-            ! convert loss state to flux for balance check
-            cf_veg%xsmrpool_loss_store_patch(p) = cs_veg%xsmrpool_loss_patch(p)/dt
-!KO
+            cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
+
+            ! update xsmrpool loss state
+            cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_to_atm_patch(p) * dt
+
          end if
 
          
