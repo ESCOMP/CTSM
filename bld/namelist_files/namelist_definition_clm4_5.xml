@@ -1773,7 +1773,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="ssp-rcp" type="character*8" category="default_settings"
        group="default_settings"  
-       valid_values="hist,SSP1-2.6,SSP3-7.0,SSP4-3.4,SSP4-6.0,SSP5-8.5">
+       valid_values="hist,SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5">
 Shared Socioeconomic Pathway (SSP) and Representative Concentration Pathway (RCP) combination for future scenarios 
 The form is SSPn-m.m Where n is the SSP number and m.m is RCP radiative forcing at peak or 2100 in W/m^2
 n is just the whole number of the specific SSP scenario. The lower numbers have higher mitigation
