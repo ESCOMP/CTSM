@@ -15,7 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
   use clm_varctl      , only : use_cndv, use_crop
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_all_pfts, collapse_crop_var
+  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_nat_pfts, collapse_crop_var
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
   use pio
@@ -871,23 +871,20 @@ contains
     ! The call collapse_crop_types also appears in subroutine dyncrop_interp
     call collapse_crop_types(wt_cft(begg:endg,:), fert_cft(begg:endg,:), cft_size, begg, endg, verbose=.true.)
 
-    ! Call collapse_all_pfts: enhance ctsm performance with fewer active patches
-    ! Collapsing to the top N dominant soil patches (n_dom_pfts set in
-    ! namelist) among all present pfts, cfts, & bare ground.
-    ! - Bare ground could be up to 1 patch before collapsing.
-    ! - Pfts could be up to 14 before collapsing.
-    ! - Cfts could be up to 2 or 78 with use_crop = .F. or .T., respectively.
-    ! The calls to collapse_all_pfts and collapse_crop_var also appear in
-    ! subroutine dyncrop_interp
-    call collapse_all_pfts(wt_lunit(begg:endg,:), &
-                           wt_nat_patch(begg:endg,:), natpft_size, &
-                           wt_cft(begg:endg,:), cft_size, &
-                           begg, endg, n_dom_pfts)
-    ! Now collapse crop variables as needed:
-    ! 1. fert_cft TODO Calling collapse_crop_var may be redundant because it
-    ! simply sets the crop variable to 0 where is_pft_known_to_model = .false.
+    ! Collapse crop variables as needed
+    ! The call to collapse_crop_var also appears in subroutine dyncrop_interp
+    ! - fert_cft TODO Is this call redundant because it simply sets the crop
+    !                 variable to 0 where is_pft_known_to_model = .false.?
     call collapse_crop_var(fert_cft(begg:endg,:), cft_size, begg, endg)
 
+    ! Call collapse_nat_pfts: enhance ctsm performance with fewer active pfts
+    ! Collapsing to the top N dominant pfts (n_dom_pfts set in namelist).
+    ! - Bare ground could be up to 1 patch before collapsing.
+    ! - Pfts could be up to 14 before collapsing if create_crop_landunit = .T.
+    ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
+    ! The call to collapse_nat_pfts also appears in subroutine dynpft_interp
+    call collapse_nat_pfts(wt_nat_patch(begg:endg,:), natpft_size, &
+                           begg, endg, n_dom_pfts)
   end subroutine surfrd_veg_all
 
   !-----------------------------------------------------------------------

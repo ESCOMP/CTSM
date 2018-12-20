@@ -26,9 +26,9 @@ module dynpftFileMod
   save
   public :: dynpft_init     ! initialize information read from pftdyn dataset
   public :: dynpft_interp   ! interpolate pftdyn information to current time step
-  public :: dynpft_check_consistency   ! check consistency with surface dataset
   !
   ! !PRIVATE MEMBER FUNCTIONS:
+  private :: dynpft_check_consistency   ! check consistency with surface dataset
   private :: dynpft_read_consistency_nl ! read namelist associated with consistency checks
   !
   ! ! PRIVATE TYPES
@@ -77,10 +77,9 @@ contains
     ! updates.
     dynpft_file = dyn_file_type(dynpft_filename, YEAR_POSITION_START_OF_TIMESTEP)
 
-! slevis MOVED REST OF THIS SUBROUTINE TO dyncrop_init TO BE RENAMED dyn_pft_and_cft_init
-!   ! Consistency checks
-!   call check_dim(dynpft_file, 'natpft', natpft_size)
-!   call dynpft_check_consistency(bounds)
+    ! Consistency checks
+    call check_dim(dynpft_file, 'natpft', natpft_size)
+    call dynpft_check_consistency(bounds)
 
     ! read data PCT_NAT_PFT corresponding to correct year
     !
@@ -90,11 +89,11 @@ contains
     ! following constructor to construct a variable of dyn_var_time_interp_type. That's
     ! all you need to do.
 
-!   wtpatch_shape = [(bounds%endg-bounds%begg+1), natpft_size]
-!   wtpatch = dyn_var_time_uninterp_type( &
-!        dyn_file=dynpft_file, varname=varname, &
-!        dim1name=grlnd, conversion_factor=100._r8, &
-!        do_check_sums_equal_1=.true., data_shape=wtpatch_shape)
+    wtpatch_shape = [(bounds%endg-bounds%begg+1), natpft_size]
+    wtpatch = dyn_var_time_uninterp_type( &
+         dyn_file=dynpft_file, varname=varname, &
+         dim1name=grlnd, conversion_factor=100._r8, &
+         do_check_sums_equal_1=.true., data_shape=wtpatch_shape)
 
   end subroutine dynpft_init
 
