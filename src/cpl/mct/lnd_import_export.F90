@@ -271,8 +271,8 @@ contains
     !DEBUG
     if (masterproc) then
        do g = bounds%begg,bounds%endg
-          write(iulog,100) get_nstep(), g, atm2lnd_inst%volr_grc(g)
-          write(iulog,101) get_nstep(), g, atm2lnd_inst%volrmch_grc(g)
+          write(iulog,100) get_nstep(), g, wateratm2lndbulk_inst%volr_grc(g)
+          write(iulog,101) get_nstep(), g, wateratm2lndbulk_inst%volrmch_grc(g)
        end do
 100    format('(lnd_import_export) volr:',i5,2x,i5,2x,d21.14,2x)
 101    format('(lnd_import_export) volrmch:',i5,2x,i5,2x,d21.14,2x)
