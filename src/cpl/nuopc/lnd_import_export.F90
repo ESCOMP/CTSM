@@ -168,7 +168,7 @@ contains
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_flxdst4'  )
    !call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_methane'  )
 
-    ! co2 fields from land 
+    ! co2 fields from land
     if (flds_co2b .or. flds_co2c) then
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_fco2_lnd' )
     end if
@@ -361,7 +361,8 @@ contains
 
   !===============================================================================
 
-  subroutine import_fields( gcomp, bounds, glc_present, atm2lnd_inst, glc2lnd_inst, rc)
+  subroutine import_fields( gcomp, bounds, glc_present, atm2lnd_inst, glc2lnd_inst, &
+       wateratm2lndbulk_inst, rc)
 
     !---------------------------------------------------------------------------
     ! Convert the input data from the mediator to the land model
@@ -370,13 +371,14 @@ contains
     use clm_varctl      , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
-
+    use Wateratm2lndBulkType , only: wateratm2lndbulk_type
     ! input/output variabes
     type(ESMF_GridComp)                :: gcomp
     type(bounds_type)  , intent(in)    :: bounds       ! bounds
     logical            , intent(in)    :: glc_present  ! .true. => running with a non-stub GLC model
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst ! clm internal input data type
     type(glc2lnd_type) , intent(inout) :: glc2lnd_inst ! clm internal input data type
+    type(Wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst
     integer            , intent(out)   :: rc
 
     ! local variables
@@ -473,7 +475,7 @@ contains
     call state_getimport(importState, 'Sa_ptem', bounds, output=atm2lnd_inst%forc_th_not_downscaled_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Sa_shum', bounds, output=atm2lnd_inst%forc_q_not_downscaled_grc, rc=rc)
+    call state_getimport(importState, 'Sa_shum', bounds, output=wateratm2lndbulk_inst%forc_q_not_downscaled_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'Sa_pbot', bounds, output=atm2lnd_inst%forc_pbot_not_downscaled_grc, rc=rc)
@@ -631,22 +633,24 @@ contains
     ! so water sent from rof to land is negative,
     ! change the sign to indicate addition of water to system.
 
-    call state_getimport(importState, 'Flrr_flood', bounds, output=atm2lnd_inst%forc_flood_grc, rc=rc )
+    call state_getimport(importState, 'Flrr_flood', bounds, output=wateratm2lndbulk_inst%forc_flood_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
-       atm2lnd_inst%forc_flood_grc(:) = -atm2lnd_inst%forc_flood_grc(:)
+       wateratm2lndbulk_inst%forc_flood_grc(:) = -wateratm2lndbulk_inst%forc_flood_grc(:)
     end do
 
-    call state_getimport(importState, 'Flrr_volr', bounds, output=atm2lnd_inst%volr_grc, rc=rc )
+    call state_getimport(importState, 'Flrr_volr', bounds, output=wateratm2lndbulk_inst%volr_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
-       atm2lnd_inst%volr_grc(g) = atm2lnd_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
+       wateratm2lndbulk_inst%volr_grc(g) = wateratm2lndbulk_inst%volr_grc(g) * &
+            (ldomain%area(g) * 1.e6_r8)
     end do
 
-    call state_getimport(importState, 'Flrr_volrmch', bounds, output=atm2lnd_inst%volrmch_grc, rc=rc )
+    call state_getimport(importState, 'Flrr_volrmch', bounds, output=wateratm2lndbulk_inst%volrmch_grc, rc=rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
-       atm2lnd_inst%volrmch_grc(g) = atm2lnd_inst%volrmch_grc(g) * (ldomain%area(g) * 1.e6_r8)
+       wateratm2lndbulk_inst%volrmch_grc(g) = wateratm2lndbulk_inst%volrmch_grc(g) * &
+            (ldomain%area(g) * 1.e6_r8)
     end do
 
     !--------------------------
@@ -685,7 +689,7 @@ contains
 
     do g = begg, endg
        forc_t    = atm2lnd_inst%forc_t_not_downscaled_grc(g)
-       forc_q    = atm2lnd_inst%forc_q_not_downscaled_grc(g)
+       forc_q    = wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
 
        atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
@@ -704,8 +708,8 @@ contains
        atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
                                         atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
 
-       atm2lnd_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
-       atm2lnd_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
+       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
+       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
 
        if (forc_t > SHR_CONST_TKFRZ) then
           e = esatw(tdc(forc_t))
@@ -719,11 +723,11 @@ contains
           if ((forc_rainc(g)+forc_rainl(g)) > 0._r8) then
              forc_q = 0.95_r8*qsat
             !forc_q = qsat
-             atm2lnd_inst%forc_q_not_downscaled_grc(g) = forc_q
+             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
           endif
        endif
 
-       atm2lnd_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
+       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
     end do
 
     !--------------------------
@@ -744,7 +748,7 @@ contains
                ' ERROR: One of the solar fields (indirect/diffuse, vis or near-IR)'// &
                ' from the atmosphere model is negative or zero' )
        end if
-       if ( atm2lnd_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
+       if ( wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
           call shr_sys_abort( subname//&
                ' ERROR: Bottom layer specific humidty sent from the atmosphere model is less than zero' )
        end if
@@ -758,7 +762,9 @@ contains
 
   !===============================================================================
 
-  subroutine export_fields( gcomp, bounds, lnd2atm_inst, lnd2glc_inst, rc)
+  subroutine export_fields( gcomp, bounds, waterlnd2atmbulk_inst, lnd2atm_inst, &
+       lnd2glc_inst, rc)
+    use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
 
     !-------------------------------
     ! Pack the export state
@@ -767,6 +773,7 @@ contains
     ! input/output variables
     type(ESMF_GridComp)               :: gcomp
     type(bounds_type) , intent(in)    :: bounds       ! bounds
+    type(waterlnd2atmbulk_type), intent(inout) :: waterlnd2atmbulk_inst
     type(lnd2atm_type), intent(inout) :: lnd2atm_inst ! land to atmosphere exchange data type
     type(lnd2glc_type), intent(inout) :: lnd2glc_inst ! land to atmosphere exchange data type
     integer           , intent(out)   :: rc
@@ -776,7 +783,7 @@ contains
     character(len=128)        :: fldname
     character(len=2)          :: nec_str
     integer                   :: i, g, num
-    real(r8)                  :: array(bounds%begg:bounds%endg) 
+    real(r8)                  :: array(bounds%begg:bounds%endg)
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
     !---------------------------------------------------------------------------
 
@@ -794,7 +801,8 @@ contains
     call state_setexport(exportState, 'Sl_t', bounds, input=lnd2atm_inst%t_rad_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_snowh', bounds, input=lnd2atm_inst%h2osno_grc, rc=rc)
+    call state_setexport(exportState, 'Sl_snowh', bounds, &
+         input=waterlnd2atmbulk_inst%h2osno_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_avsdr', bounds, input=lnd2atm_inst%albd_grc(bounds%begg:,1), rc=rc)
@@ -812,7 +820,8 @@ contains
     call state_setexport(exportState, 'Sl_tref', bounds, input=lnd2atm_inst%t_ref2m_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_qref', bounds, input=lnd2atm_inst%q_ref2m_grc, rc=rc)
+    call state_setexport(exportState, 'Sl_qref', bounds, &
+         input=waterlnd2atmbulk_inst%q_ref2m_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_u10', bounds, input=lnd2atm_inst%u_ref10m_grc, rc=rc)
@@ -833,7 +842,8 @@ contains
     call state_setexport(exportState, 'Fall_lwup', bounds, input=lnd2atm_inst%eflx_lwrad_out_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Fall_evap', bounds, input=lnd2atm_inst%qflx_evap_tot_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Fall_evap', bounds, &
+         input=waterlnd2atmbulk_inst%qflx_evap_tot_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Fall_swnet', bounds, input=lnd2atm_inst%fsa_grc, rc=rc)
@@ -860,12 +870,13 @@ contains
     call state_setexport(exportState, 'Sl_fv', bounds, input=lnd2atm_inst%fv_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_soilw', bounds, input=lnd2atm_inst%h2osoi_vol_grc(:,1), rc=rc)
+    call state_setexport(exportState, 'Sl_soilw', bounds, &
+         input=waterlnd2atmbulk_inst%h2osoi_vol_grc(:,1), rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! co2 from land
     if (flds_co2b .or. flds_co2c) then
-       call state_setexport(exportState, 'Fall_fco2_lnd', bounds, lnd2atm_inst%net_carbon_exchange_grc, minus=.true., rc=rc)   
+       call state_setexport(exportState, 'Fall_fco2_lnd', bounds, lnd2atm_inst%net_carbon_exchange_grc, minus=.true., rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
@@ -897,29 +908,34 @@ contains
     ! i.e. water sent from land to rof is positive
 
     ! surface runoff is the sum of qflx_over, qflx_h2osfc_surf
-    do g = bounds%begg,bounds%endg
-       array(g) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
-    end do
-    call state_setexport(exportState, 'Flrl_rofsur', bounds, input=array, rc=rc)
+!    do g = bounds%begg,bounds%endg
+!       array(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g) + waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
+!    end do
+    call state_setexport(exportState, 'Flrl_rofsur', bounds, &
+         input=waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
     do g = bounds%begg,bounds%endg
-       array(g) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
+       array(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
+            waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
     end do
     call state_setexport(exportState, 'Flrl_rofsub', bounds, input=array, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! qgwl sent individually to coupler
-    call state_setexport(exportState, 'Flrl_rofgwl', bounds, input=lnd2atm_inst%qflx_rofliq_qgwl_grc, rc=rc)
+    call state_setexport(exportState, 'Flrl_rofgwl', bounds, &
+         input=waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ice  sent individually to coupler
-    call state_setexport(exportState, 'Flrl_rofi', bounds, input=lnd2atm_inst%qflx_rofice_grc, rc=rc)
+    call state_setexport(exportState, 'Flrl_rofi', bounds, &
+         input=waterlnd2atmbulk_inst%qflx_rofice_grc, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! irrigation flux to be removed from main channel storage (negative)
-    call state_setexport(exportState, 'Flrl_irrig', bounds, input=lnd2atm_inst%qirrig_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Flrl_irrig', bounds, &
+         input=waterlnd2atmbulk_inst%qirrig_grc, minus=.true., rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! glc fields
@@ -1126,7 +1142,7 @@ contains
     use shr_const_mod, only : fillvalue=>SHR_CONST_SPVAL
 
     ! ----------------------------------------------
-    ! Map input array to export state field 
+    ! Map input array to export state field
     ! ----------------------------------------------
 
     ! input/output variables

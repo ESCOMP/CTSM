@@ -46,10 +46,6 @@ module lnd_comp_nuopc
   use clm_time_manager      , only : get_nstep, get_step_size
   use clm_time_manager      , only : get_curr_date, get_curr_calday
   use clm_initializeMod     , only : initialize1, initialize2
-  use clm_initializeMod     , only : atm2lnd_inst
-  use clm_initializeMod     , only : glc2lnd_inst
-  use clm_initializeMod     , only : lnd2atm_inst
-  use clm_initializeMod     , only : lnd2glc_inst
   use clm_driver            , only : clm_drv
   use perf_mod              , only : t_startf, t_stopf, t_barrierf
 
@@ -240,7 +236,7 @@ contains
   !===============================================================================
 
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
-
+    use clm_instMod, only : lnd2atm_inst, lnd2glc_inst, water_inst
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState
@@ -539,7 +535,8 @@ contains
     ! Create land export state
     !--------------------------------
 
-    call export_fields(gcomp, bounds, lnd2atm_inst, lnd2glc_inst, rc)
+   call export_fields(gcomp, bounds, water_inst%waterlnd2atmbulk_inst, &
+        lnd2atm_inst, lnd2glc_inst, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Get calendar day of nextsw calculation
@@ -604,7 +601,7 @@ contains
   !===============================================================================
 
   subroutine ModelAdvance(gcomp, rc)
-
+    use clm_instMod, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
     !------------------------
     ! Run CTSM
     !------------------------
@@ -728,7 +725,8 @@ contains
     call t_startf ('lc_lnd_import')
 
     call get_proc_bounds(bounds)
-    call import_fields( gcomp, bounds, glc_present, atm2lnd_inst, glc2lnd_inst, rc )
+    call import_fields( gcomp, bounds, glc_present, atm2lnd_inst, glc2lnd_inst, &
+         water_inst%wateratm2lndbulk_inst, rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call t_stopf ('lc_lnd_import')
@@ -828,7 +826,8 @@ contains
 
        call t_startf ('lc_lnd_export')
 
-       call export_fields(gcomp, bounds, lnd2atm_inst, lnd2glc_inst, rc)
+       call export_fields(gcomp, bounds, water_inst%waterlnd2atmbulk_inst, &
+            lnd2atm_inst, lnd2glc_inst, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call t_stopf ('lc_lnd_export')
