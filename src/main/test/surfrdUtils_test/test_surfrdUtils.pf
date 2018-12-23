@@ -13,15 +13,383 @@ module test_surfrdUtils
 
 contains
   
+  subroutine setup_test_collapse_crop_types(cftsize)
+     ! called during setup of all subroutines test_collapse_crop_types_*
+     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use clm_varpar, only : maxveg, cft_lb, cft_ub, natpft_size, natpft_lb, natpft_ub
+
+     implicit none
+     integer, intent(in) :: cftsize
+     integer :: m
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     nc3crop     = 15
+     nc3irrig    = nc3crop + 1
+     do m = 1, nc3irrig
+        pftcon%mergetoclmpft(m) = m
+     end do
+     if (cftsize == 0) then  ! crops lumped together with unmanaged pfts
+        maxveg = nc3irrig  ! # of patches without bare ground
+        natpft_size = maxveg + 1  ! includes bare ground
+     else
+        natpft_size = nc3crop  ! includes bare ground
+        maxveg = natpft_size + cftsize - 1  ! # of patches without bare ground
+     end if
+     natpft_lb = 0
+     natpft_ub = natpft_lb + natpft_size - 1
+     cft_lb = natpft_ub + 1
+     cft_ub = cft_lb + cftsize - 1
+
+  end subroutine setup_test_collapse_crop_types
+
+  @Test
+  subroutine test_collapse_crop_types_none()
+     ! This test sets cftsize = 0, ie crops are lumped together with unmanaged
+     ! pfts. This means that the test returns from having collapsed no crops.
+     use pftconMod, only : pftcon
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 0
+     real(r8) :: wt_cft(begg:endg,1)  ! need second dimension > 0 to call the...
+     real(r8) :: fert_cft(begg:endg,1)  ! ...subroutine successfully
+     real(r8) :: wt_cft_expected(begg:endg,1)
+     real(r8) :: fert_cft_expected(begg:endg,1)
+
+     ! Input values
+     wt_cft(begg:,1) = 0.0_r8
+     fert_cft(begg:,1) = 0.0_r8
+     ! Output values expected
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1)
+     fert_cft_expected(begg:,1) = fert_cft(begg:,1)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_crop_types(cftsize)
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true.)
+
+     ! Now check that are correct
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_none
+
+  @Test
+  subroutine test_collapse_crop_types_16_to_15()
+     ! This test collapses the nc3irrig generic crop into the nc3crop
+     ! because irrigate = .false. and use_crop = .false.
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter as long as they come back the same in this test
+
+     ! Output values expected
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1) + wt_cft(begg:,2)
+     wt_cft_expected(begg:,2) = 0.0_r8
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,:) = fert_cft(begg:,:)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_crop_types(cftsize)
+     irrigate = .false.  ! named the test 16_to_15 because we collapse the...
+     use_crop = .false.  ! ...irrigated with the unirrigated
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     ! INTENTIONAL? As written, subr. collapse_crop_types does NOT take
+     ! -----------  the avg fert_cft of the irrigated and unirrigated when
+     !              irrigate = .false.. Assuming intentional for now.
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_16_to_15
+
+  @Test
+  subroutine test_collapse_crop_types_16_to_16()
+     ! This test calls collapse_crop_types but ends up with the same generic
+     ! crops as it started with becase irrigate = .true. and use_crop = .false.
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter as long as they come back the same in this test
+
+     ! Output values expected
+     wt_cft_expected(begg:,:) = wt_cft(begg:,:)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,:) = fert_cft(begg:,:)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_crop_types(cftsize)
+     irrigate = .true.
+     use_crop = .false.
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_16_to_16
+
+  @Test
+  subroutine test_collapse_crop_types_18_to_16()
+     ! This test starts with two non-generic and two generic crops in the data
+     ! but ends up with only two generic crops because use_crop = .false. and
+     ! irrigate = .true.
+     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 4
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     ! Collapsing to nc3crop & nc3irrig so only entries 1 & 2 matter
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1) + wt_cft(begg:,3)
+     wt_cft_expected(begg:,2) = wt_cft(begg:,2) + wt_cft(begg:,4)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = (fert_cft(begg:,1) * wt_cft(begg:,1) +  &
+                                   fert_cft(begg:,3) * wt_cft(begg:,3)) / &
+                                  (wt_cft(begg:,1) + wt_cft(begg:,3))
+     fert_cft_expected(begg:,2) = (fert_cft(begg:,2) * wt_cft(begg:,2) +  &
+                                   fert_cft(begg:,4) * wt_cft(begg:,4)) / &
+                                  (wt_cft(begg:,2) + wt_cft(begg:,4))
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_crop_types(cftsize)
+     irrigate = .true.
+     use_crop = .false.
+     pftcon%mergetoclmpft(17) = nc3crop
+     pftcon%mergetoclmpft(18) = nc3irrig
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:2), wt_cft_expected(begg:,:2))
+     @assertEqual(fert_cft(begg:,:2), fert_cft_expected(begg:,:2))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_18_to_16
+
+  @Test
+  subroutine test_collapse_crop_types_18_to_15()
+     ! This test starts with two non-generic and two generic crops in the data
+     ! and ends up with only one generic crop because use_crop = .false. and
+     ! irrigate = .false.
+     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 4
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     ! Collapsing to nc3crop so only entries 1 & 2 matter
+     wt_cft_expected(begg:,1) = sum(wt_cft(begg:,:), dim=2) 
+     wt_cft_expected(begg:,2) = 0.0_r8
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     ! Collapsing to nc3crop so only entry 1 matters
+     fert_cft_expected(begg:,1) = (fert_cft(begg:,1) *                   &
+                                   (wt_cft(begg:,1) + wt_cft(begg:,2)) + &
+                                   fert_cft(begg:,3) *                   &
+                                   (wt_cft(begg:,3) + wt_cft(begg:,4))) / &
+                                  wt_cft_expected(begg:,1)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_crop_types(cftsize)
+     irrigate = .false.
+     use_crop = .false.
+     pftcon%mergetoclmpft(17) = nc3crop
+     pftcon%mergetoclmpft(18) = nc3irrig
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:2), wt_cft_expected(begg:,:2))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_18_to_15
+
+  @Test
+  subroutine test_collapse_crop_types_18_to_18()
+     ! This test starts with 2 non-generic and 2 generic crops in the data
+     ! and ends up with the same because use_crop = .true. and irrigate = .true.
+     ! and mergetoclmpft does not lead to collapsing pfts
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 4
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     wt_cft_expected(begg:,:) = wt_cft(begg:,:)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,:) = fert_cft(begg:,:)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_crop_types(cftsize)
+     irrigate = .true.
+     use_crop = .true.
+     pftcon%mergetoclmpft(17) = 17
+     pftcon%mergetoclmpft(18) = 18
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_18_to_18
+
+  @Test
+  subroutine test_collapse_crop_types_20_to_18()
+     ! This test starts with 4 non-generic and 2 generic crops in the data
+     ! and ends up with 2 of each because use_crop = .true. & irrigate = .true.
+     ! and mergetoclmpft does lead to some collapsing pfts
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 6
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 5._r8, 5._r8, 10._r8, 10._r8, 20._r8, 20._r8, 30._r8, 30._r8, 15._r8, 15._r8, 20._r8, 20._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     wt_cft_expected(begg:,1:2) = wt_cft(begg:,1:2)
+     wt_cft_expected(begg:,3:4) = 0.0_r8
+     wt_cft_expected(begg:,5:6) = wt_cft(begg:,3:4) + wt_cft(begg:,5:6)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1:4) = fert_cft(begg:,1:4)
+     fert_cft_expected(begg:,5) = (fert_cft(begg:,3) * wt_cft(begg:,3) + &
+                                   fert_cft(begg:,5) * wt_cft(begg:,5)) / &
+                                  wt_cft_expected(begg:,5)
+     fert_cft_expected(begg:,6) = (fert_cft(begg:,4) * wt_cft(begg:,4) + &
+                                   fert_cft(begg:,6) * wt_cft(begg:,6)) / &
+                                  wt_cft_expected(begg:,6)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_crop_types(cftsize)
+     irrigate = .true.
+     use_crop = .true.
+     pftcon%mergetoclmpft(17) = 19
+     pftcon%mergetoclmpft(18) = 20
+     pftcon%mergetoclmpft(19) = 19
+     pftcon%mergetoclmpft(20) = 20
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_20_to_18
+
   @Test
   subroutine test_convert_cft_to_pft_with_zerocft()
      use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
      use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
      use pftconMod       , only : nbrdlf_evr_shrub, nc4_grass, noveg
      use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size, numveg 
+     use clm_varpar      , only : natpft_size, cft_size
      implicit none
-     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8), allocatable ::  wtpft(:,:)
 
@@ -77,10 +445,10 @@ contains
      use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
      use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
      use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size, numveg
+     use clm_varpar      , only : natpft_size, cft_size
 
      implicit none
-     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16
      real(r8) :: wt_cft(begg:endg,cftsize)
 
      ! Set relevant pftcon values to defaults; these should be overridden by individual

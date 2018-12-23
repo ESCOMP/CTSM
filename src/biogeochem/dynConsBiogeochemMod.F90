@@ -58,7 +58,7 @@ contains
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_PDB
     use landunit_varcon    , only : istsoil, istcrop
-    use clm_varpar         , only : numveg, nlevdecomp
+    use clm_varpar         , only : nlevdecomp
     use clm_varcon         , only : c13ratio, c14ratio, c3_r2, c4_r2
     use clm_time_manager   , only : get_step_size
     use dynPriorWeightsMod , only : prior_weights_type

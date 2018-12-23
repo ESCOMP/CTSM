@@ -33,6 +33,8 @@ module WaterBalanceType
      real(r8), pointer :: ice1_grc               (:)   ! grc initial gridcell total h2o ice content
      real(r8), pointer :: ice2_grc               (:)   ! grc post land cover change total ice content
 
+     real(r8), pointer :: snow_sources_col         (:)   ! col snow sources (mm H2O/s)
+     real(r8), pointer :: snow_sinks_col           (:)   ! col snow sinks (mm H2O/s)
 
      ! Balance Checks
 
@@ -105,6 +107,14 @@ contains
     call AllocateVar1d(var = this%ice2_grc, name = 'ice2_grc', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+
+    call AllocateVar1d(var = this%snow_sources_col, name = 'snow_sources_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%snow_sinks_col, name = 'snow_sinks_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
     call AllocateVar1d(var = this%begwb_col, name = 'begwb_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -148,6 +158,28 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
+
+    ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at any
+    ! given time step but only if there is at least one snow layer (for all landunits 
+    ! except lakes).  Also note that monthly average files of snow_sources and snow_sinks
+    ! sinks must be weighted by number of days in the month to diagnose, for example, an 
+    ! annual value of the change in h2osno. 
+
+    this%snow_sources_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_SOURCES'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow sources (liquid water)'), &
+         ptr_col=this%snow_sources_col, c2l_scale_type='urbanf')
+
+    this%snow_sinks_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_SINKS'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow sinks (liquid water)'), &
+         ptr_col=this%snow_sinks_col, c2l_scale_type='urbanf')
 
     this%liq1_grc(begg:endg) = spval
     call hist_addfld1d ( &

@@ -292,7 +292,7 @@ contains
     ! assigns them to the three litter pools
     !
     ! !USES:
-    use clm_varpar , only : maxpatch_pft, nlevdecomp, nlevdecomp_full
+    use clm_varpar , only : maxsoil_patches, nlevdecomp, nlevdecomp_full
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -381,7 +381,7 @@ contains
          )
 
       do j = 1,nlevdecomp
-         do pi = 1,maxpatch_pft
+         do pi = 1,maxsoil_patches
             do fc = 1,num_soilc
                c = filter_soilc(fc)
 

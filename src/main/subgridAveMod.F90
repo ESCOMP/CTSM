@@ -22,6 +22,7 @@ module subgridAveMod
   ! !PUBLIC TYPES:
   implicit none
   save
+  private    ! By default make everything private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: p2c   ! Perform an average patches to columns

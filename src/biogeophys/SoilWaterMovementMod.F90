@@ -10,7 +10,6 @@ module SoilWaterMovementMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod         , only : shr_sys_flush
-  use clm_instMod    , only : clm_fates
  
   !
   implicit none

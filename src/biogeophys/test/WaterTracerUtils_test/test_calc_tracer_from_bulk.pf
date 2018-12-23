@@ -1,0 +1,174 @@
+module test_calc_tracer_from_bulk
+
+  ! Tests of WaterTracerUtils: CalcTracerFromBulk
+
+  use pfunit_mod
+  use WaterTracerUtils
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestFilterBuilderMod, only : filter_from_range
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCalc
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: doCall3pt
+  end type TestCalc
+
+  ! Most / all of the tests in this module are 3-point tests, where point 2 is the point
+  ! of interest. Points 1 and 3 are there to make sure that whatever happens to point 2
+  ! doesn't affect other points (e.g., to catch mistakes like whole-array
+  ! assignment). These are the inputs and expected outputs for those other points.
+  real(r8), parameter :: bulk_val_other = 10._r8
+  real(r8), parameter :: bulk_source_other = 1000._r8
+  real(r8), parameter :: tracer_source_other = 500._r8
+  real(r8), parameter :: tracer_val_other = 5._r8
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestCalc), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestCalc), intent(inout) :: this
+  end subroutine tearDown
+
+  subroutine doCall3pt(this, bulk_source, bulk_val, tracer_source, tracer_vals, &
+       num_pts, filter_pts)
+    ! Wraps a call to CalcTracerFromBulk with 3 points. Point 2 is the point of interest,
+    ! and its inputs and outputs are given by the arguments to this routine. Points 1 and
+    ! 3 have hard-coded inputs. Tests should do assertions on all 3 points, to ensure
+    ! that (for example) point 1 isn't accidentally overwritten when setting point 2.
+    class(TestCalc), intent(inout) :: this
+    real(r8), intent(in)  :: bulk_source   ! bulk source value in point 2
+    real(r8), intent(in)  :: bulk_val      ! bulk value in point 2
+    real(r8), intent(in)  :: tracer_source ! tracer source value in point 2
+    real(r8), intent(out) :: tracer_vals(17:) ! tracer values in all 3 points
+
+    ! If provided, num_pts and filter_pts give the filter to run over. If not provided,
+    ! this routine will build a filter that runs over all 3 points.
+    integer, intent(in), optional :: num_pts
+    integer, intent(in), optional :: filter_pts(:)
+
+    integer :: l_num_pts
+    integer, allocatable :: l_filter_pts(:)
+
+    ! Use an arbitrary lower bound that isn't 1, in order to make sure the routine
+    ! properly handles non-1 lower bounds. Note that this needs to agree with the lower
+    ! bound of tracer_vals.
+    real(r8) :: bulk_sources(17:19)
+    real(r8) :: bulk_vals(17:19)
+    real(r8) :: tracer_sources(17:19)
+
+    @assertEqual(3, size(tracer_vals))
+    if (present(num_pts) .and. present(filter_pts)) then
+       l_num_pts = num_pts
+       l_filter_pts = filter_pts
+    else
+       @assertFalse(present(num_pts), message = "Must provide both num_pts and filter_pts or neither")
+       @assertFalse(present(filter_pts), message = "Must provide both num_pts and filter_pts or neither")
+       call filter_from_range(1, 3, l_num_pts, l_filter_pts)
+    end if
+
+    bulk_sources(:) = [bulk_source_other, bulk_source, bulk_source_other]
+    bulk_vals(:) = [bulk_val_other, bulk_val, bulk_val_other]
+    tracer_sources(:) = [tracer_source_other, tracer_source, tracer_source_other]
+    call CalcTracerFromBulk( &
+         lb = 1, &
+         num_pts = l_num_pts, &
+         filter_pts = l_filter_pts, &
+         bulk_source = bulk_sources, &
+         bulk_val = bulk_vals, &
+         tracer_source = tracer_sources, &
+         tracer_val = tracer_vals)
+
+  end subroutine doCall3pt
+
+  @Test
+  subroutine basic(this)
+    class(TestCalc), intent(inout) :: this
+    real(r8) :: tracer_vals(3)
+
+    call this%doCall3pt( &
+         bulk_source = 300._r8, &
+         bulk_val = 30._r8, &
+         tracer_source = 60._r8, &
+         tracer_vals = tracer_vals)
+
+    @assertEqual([tracer_val_other, 6._r8, tracer_val_other], tracer_vals)
+  end subroutine basic
+
+  @Test
+  subroutine outsideFilter_valsUnchanged(this)
+    class(TestCalc), intent(inout) :: this
+    real(r8) :: tracer_vals(3)
+    integer :: num_pts
+    integer, allocatable :: filter_pts(:)
+
+    tracer_vals(:) = [-1._r8, -2._r8, -3._r8]
+    call filter_from_range(1, 1, num_pts, filter_pts)
+
+    call this%doCall3pt( &
+         bulk_source = 300._r8, &
+         bulk_val = 30._r8, &
+         tracer_source = 60._r8, &
+         tracer_vals = tracer_vals, &
+         num_pts = num_pts, &
+         filter_pts = filter_pts)
+
+    @assertEqual([tracer_val_other, -2._r8, -3._r8], tracer_vals)
+  end subroutine outsideFilter_valsUnchanged
+
+  @Test
+  subroutine bulkSource0_tracerSource0_bulkVal0_yieldsTracerVal0(this)
+    class(TestCalc), intent(inout) :: this
+    real(r8) :: tracer_vals(3)
+
+    call this%doCall3pt( &
+         bulk_source = 0._r8, &
+         bulk_val = 0._r8, &
+         tracer_source = 0._r8, &
+         tracer_vals = tracer_vals)
+
+    @assertEqual([tracer_val_other, 0._r8, tracer_val_other], tracer_vals)
+  end subroutine bulkSource0_tracerSource0_bulkVal0_yieldsTracerVal0
+
+  @Test
+  subroutine bulkSource0_tracerSource0_bulkValNon0_aborts(this)
+    class(TestCalc), intent(inout) :: this
+    real(r8) :: tracer_vals(3)
+    character(len=:), allocatable :: expected_msg
+
+    call this%doCall3pt( &
+         bulk_source = 0._r8, &
+         bulk_val = 1._r8, &
+         tracer_source = 0._r8, &
+         tracer_vals = tracer_vals)
+
+    expected_msg = endrun_msg('CalcTracerFromBulk: Non-zero bulk val despite zero bulk source')
+    @assertExceptionRaised(expected_msg)
+  end subroutine bulkSource0_tracerSource0_bulkValNon0_aborts
+
+  @Test
+  subroutine bulkSource0_tracerSourceNon0_bulkVal0_aborts(this)
+    class(TestCalc), intent(inout) :: this
+    real(r8) :: tracer_vals(3)
+    character(len=:), allocatable :: expected_msg
+
+    call this%doCall3pt( &
+         bulk_source = 0._r8, &
+         bulk_val = 0._r8, &
+         tracer_source = 1._r8, &
+         tracer_vals = tracer_vals)
+
+    expected_msg = endrun_msg('CalcTracerFromBulk: Non-zero tracer source despite zero bulk source')
+    @assertExceptionRaised(expected_msg)
+  end subroutine bulkSource0_tracerSourceNon0_bulkVal0_aborts
+
+end module test_calc_tracer_from_bulk

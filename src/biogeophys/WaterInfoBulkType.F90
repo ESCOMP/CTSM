@@ -20,6 +20,7 @@ module WaterInfoBulkType
    contains
      procedure, public :: fname  ! Get a history/restart field name
      procedure, public :: lname  ! Get a history/restart long name
+     procedure, public :: is_communicated_with_coupler
   end type water_info_bulk_type
 
   interface water_info_bulk_type
@@ -82,5 +83,13 @@ contains
     lname = trim(basename)
 
   end function lname
+
+  !-----------------------------------------------------------------------
+  pure function is_communicated_with_coupler(this) result(coupled)
+    logical :: coupled
+    class(water_info_bulk_type), intent(in) :: this
+
+    coupled = .true.
+  end function is_communicated_with_coupler
 
 end module WaterInfoBulkType
