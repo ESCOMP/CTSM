@@ -244,14 +244,14 @@ contains
     !------------------------------------------------------------------------
 
 
-    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('qflx_floodg'), xtype=ncd_double, &
-         dim1name='gridcell', &
-         long_name=this%info%lname('flood water flux'), units='mm/s', &
-         interpinic_flag='skip', readvar=readvar, data=this%forc_flood_grc)
-    if (flag == 'read' .and. .not. readvar) then
-       ! initial run, readvar=readvar, not restart: initialize flood to zero
-       this%forc_flood_grc = 0._r8
-    endif
+!   call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('qflx_floodg'), xtype=ncd_double, &
+!        dim1name='gridcell', &
+!        long_name=this%info%lname('flood water flux'), units='mm/s', &
+!        interpinic_flag='skip', readvar=readvar, data=this%forc_flood_grc)
+!   if (flag == 'read' .and. .not. readvar) then
+!      ! initial run, readvar=readvar, not restart: initialize flood to zero
+!      this%forc_flood_grc = 0._r8
+!   endif
 
   end subroutine Restart
 

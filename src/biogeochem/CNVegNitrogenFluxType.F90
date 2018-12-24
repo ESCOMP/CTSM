@@ -1402,11 +1402,6 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%avail_retransn_patch) 
 
-    call restartvar(ncid=ncid, flag=flag, varname='plant_nalloc', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch) 
-
      if ( use_fun ) then
 !       set_missing_vals_to_constant for BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
 !       special land units previously set to spval, not 0
