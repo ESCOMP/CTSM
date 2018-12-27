@@ -174,6 +174,7 @@ module IrrigationMod
      procedure, private :: InitCold => IrrigationInitCold
      procedure, private :: SetBulkWithdrawals      ! set irrigation withdrawals for bulk water
      procedure, private :: SetOneTracerWithdrawals ! set irrigation withdrawals for one water tracer
+     procedure, private :: SetTotalGWUnconIrrig    ! set total irrigation withdrawal flux from the unconfined aquifer, for either bulk or one water tracer
      procedure, private :: CalcIrrigNstepsPerDay   ! given dtime, calculate irrig_nsteps_per_day
      procedure, private :: SetIrrigMethod          ! set irrig_method_patch based on surface dataset
      procedure, private :: PointNeedsCheckForIrrig ! whether a given point needs to be checked for irrigation now
@@ -939,26 +940,10 @@ contains
     end do
 
     if (this%params%use_groundwater_irrigation) then
-
        do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-          associate( &
-               waterflux_inst => water_inst%bulk_and_tracers(i)%waterflux_inst &
-               )
-          do fc = 1, num_soilc
-             c = filter_soilc(fc)
-             waterflux_inst%qflx_gw_uncon_irrig_col(c) = 0._r8
-          end do
-          do j = 1, nlevsoi
-             do fc = 1, num_soilc
-                c = filter_soilc(fc)
-                waterflux_inst%qflx_gw_uncon_irrig_col(c) = &
-                     waterflux_inst%qflx_gw_uncon_irrig_col(c) + &
-                     waterflux_inst%qflx_gw_uncon_irrig_lyr_col(c,j)
-             end do
-          end do
-          end associate
+          call this%SetTotalGWUnconIrrig(num_soilc, filter_soilc, &
+               water_inst%bulk_and_tracers(i)%waterflux_inst)
        end do
-
     end if
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
@@ -1216,6 +1201,41 @@ contains
 
   end subroutine SetOneTracerWithdrawals
 
+  !-----------------------------------------------------------------------
+  subroutine SetTotalGWUnconIrrig(this, num_soilc, filter_soilc, &
+       waterflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set total irrigation withdrawal flux from the unconfined aquifer, for either bulk
+    ! or one water tracer
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type)    , intent(inout) :: this
+    integer                   , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                   , intent(in)    :: filter_soilc(:) ! column filter for soil
+    class(waterflux_type)     , intent(inout) :: waterflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c, fc  ! column indices
+    integer :: j      ! level index
+
+    character(len=*), parameter :: subname = 'SetTotalGWUnconIrrig'
+    !-----------------------------------------------------------------------
+
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       waterflux_inst%qflx_gw_uncon_irrig_col(c) = 0._r8
+    end do
+    do j = 1, nlevsoi
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
+          waterflux_inst%qflx_gw_uncon_irrig_col(c) = &
+               waterflux_inst%qflx_gw_uncon_irrig_col(c) + &
+               waterflux_inst%qflx_gw_uncon_irrig_lyr_col(c,j)
+       end do
+    end do
+
+  end subroutine SetTotalGWUnconIrrig
 
   !-----------------------------------------------------------------------
   subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
