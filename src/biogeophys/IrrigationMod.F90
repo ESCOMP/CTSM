@@ -175,6 +175,7 @@ module IrrigationMod
      procedure, private :: SetBulkWithdrawals      ! set irrigation withdrawals for bulk water
      procedure, private :: SetOneTracerWithdrawals ! set irrigation withdrawals for one water tracer
      procedure, private :: SetTotalGWUnconIrrig    ! set total irrigation withdrawal flux from the unconfined aquifer, for either bulk or one water tracer
+     procedure, private :: SetApplicationFluxes    ! set irrigation application fluxes for either bulk water or a single tracer
      procedure, private :: CalcIrrigNstepsPerDay   ! given dtime, calculate irrig_nsteps_per_day
      procedure, private :: SetIrrigMethod          ! set irrig_method_patch based on surface dataset
      procedure, private :: PointNeedsCheckForIrrig ! whether a given point needs to be checked for irrigation now
@@ -901,10 +902,7 @@ contains
     real(r8) :: qflx_sfc_irrig_bulk_patch(bounds%begp:bounds%endp)      ! patch surface irrigation flux for bulk water (mm H2O/s)
     real(r8) :: qflx_gw_demand_bulk_patch(bounds%begp:bounds%endp) ! patch amount of irrigation groundwater demand for bulk water (mm H2O/s)
     real(r8) :: qflx_gw_demand_bulk_col(bounds%begc:bounds%endc) ! col amount of irrigation groundwater demand for bulk water (mm H2O/s)
-    real(r8) :: qflx_gw_irrig_withdrawn_col(bounds%begc:bounds%endc) ! col total amount of irrigation withdrawn from groundwater (mm H2O/s)
-    real(r8) :: qflx_sfc_irrig  ! amount of surface irrigation for a single patch (mm H2O/s)
-    real(r8) :: qflx_gw_irrig_applied  ! amount of groundwater irrigation for a single patch (mm H2O/s)
-    real(r8) :: qflx_irrig_tot ! total amount of irrigation for a single patch (mm H2O/s)
+    logical  :: is_bulk
 
     character(len=*), parameter :: subname = 'ApplyIrrigation'
 
@@ -918,11 +916,7 @@ contains
          begp => bounds%begp, &
          endp => bounds%endp, &
          begc => bounds%begc, &
-         endc => bounds%endc, &
-
-         qflx_sfc_irrig_col          => water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col          , & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
-         qflx_gw_uncon_irrig_lyr_col => water_inst%waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col , & ! Output: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
-         qflx_gw_con_irrig_col       => water_inst%waterfluxbulk_inst%qflx_gw_con_irrig_col         & ! Output: [real(r8) (:)] col confined groundwater irrigation flux (mm H2O/s)
+         endc => bounds%endc  &
          )
 
     call this%SetBulkWithdrawals(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -947,107 +941,14 @@ contains
     end if
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-       ! FIXME(wjs, 2018-12-18) Probably extract the body of this loop into its own
-       ! routine (consider extracting the entire loop, but extracting the body could make
-       ! the interface/outcome more clear)
-       associate( &
-            waterflux_inst => water_inst%bulk_and_tracers(i)%waterflux_inst &
-            )
-
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
-          ! Note that qflx_gw_uncon_irrig_col and qflx_gw_con_irrig_col will remain at
-          ! their cold start values of 0 if use_groundwater_irrigation is false, so this
-          ! sum is safe to do in all cases.
-          qflx_gw_irrig_withdrawn_col(c) = &
-               waterflux_inst%qflx_gw_uncon_irrig_col(c) + &
-               waterflux_inst%qflx_gw_con_irrig_col(c)
-       end do
-
-       do fp = 1, num_soilp
-          p = filter_soilp(fp)
-          c = patch%column(p)
-
-          if (i == water_inst%i_bulk) then
-             qflx_sfc_irrig = qflx_sfc_irrig_bulk_patch(p)
-          else
-             if (qflx_sfc_irrig_col(c) > 0._r8) then
-                ! We have col-level sfc irrig for each water tracer, but only have
-                ! patch-level for the bulk. To get the patch-level tracer flux, we need
-                ! to scale the column-level flux by the ratio of patch-to-column-level
-                ! flux for the bulk.
-                !
-                ! Note that this is similar to the scaling that we do for groundwater
-                ! irrigation below.
-                qflx_sfc_irrig = waterflux_inst%qflx_sfc_irrig_col(c) * &
-                     (qflx_sfc_irrig_bulk_patch(p) / qflx_sfc_irrig_col(c))
-             else
-                if (qflx_sfc_irrig_bulk_patch(p) > 0._r8 .or. &
-                     waterflux_inst%qflx_sfc_irrig_col(c) > 0._r8) then
-                   write(iulog,*) 'If qflx_sfc_irrig_col <= 0, ' // &
-                        'expect qflx_sfc_irrig_bulk_patch = waterflux_inst%qflx_sfc_irrig_col = 0'
-                   write(iulog,*) 'qflx_sfc_irrig_col = ', qflx_sfc_irrig_col(c)
-                   write(iulog,*) 'qflx_sfc_irrig_bulk_patch = ', qflx_sfc_irrig_bulk_patch(p)
-                   write(iulog,*) 'waterflux_inst%qflx_sfc_irrig_col = ', &
-                        waterflux_inst%qflx_sfc_irrig_col(c)
-                   call endrun(decomp_index=p, clmlevel=namep, &
-                        msg = 'If qflx_sfc_irrig_col <= 0, ' // &
-                        'expect qflx_sfc_irrig_bulk_patch = waterflux_inst%qflx_sfc_irrig_col = 0', &
-                        additional_msg = errMsg(sourcefile, __LINE__))
-                end if
-
-                qflx_sfc_irrig = 0._r8
-             end if
-          end if
-
-          if (qflx_gw_demand_bulk_col(c) > 0._r8) then
-             ! Distribute the withdrawn groundwater irrigation to each patch according to
-             ! its demand relative to the total column demand.
-             !
-             ! Note that this expression could be reformulated to:
-             !   qflx_gw_irrig_applied = qflx_gw_demand_bulk_patch(p) * &
-             !        (qflx_gw_irrig_withdrawn_col(c) / qflx_gw_demand_bulk_col(c))
-             !
-             ! It may be more intuitive that the above is correct, at least for bulk water:
-             ! this shows that we're down-weighting each patch's demand evenly, based on the
-             ! ration of withdrawn water to demand in the given column.
-             !
-             ! Note that this is similar to the scaling that we do for surface irrigation
-             ! above.
-             qflx_gw_irrig_applied = qflx_gw_irrig_withdrawn_col(c) * &
-                  (qflx_gw_demand_bulk_patch(p) / qflx_gw_demand_bulk_col(c))
-          else
-             if (qflx_gw_demand_bulk_patch(p) > 0._r8 .or. &
-                  qflx_gw_irrig_withdrawn_col(c) > 0._r8) then
-                write(iulog,*) 'If qflx_gw_demand_bulk_col <= 0, expect qflx_gw_demand_bulk_patch = qflx_gw_irrig_withdrawn_col = 0'
-                write(iulog,*) 'qflx_gw_demand_bulk_col = ', qflx_gw_demand_bulk_col(c)
-                write(iulog,*) 'qflx_gw_demand_bulk_patch = ', qflx_gw_demand_bulk_patch(p)
-                write(iulog,*) 'qflx_gw_irrig_withdrawn_col = ', qflx_gw_irrig_withdrawn_col(c)
-                call endrun(decomp_index=p, clmlevel=namep, &
-                     msg = 'If qflx_gw_demand_bulk_col <= 0, expect qflx_gw_demand_bulk_patch = qflx_gw_irrig_withdrawn_col = 0', &
-                     additional_msg = errMsg(sourcefile, __LINE__))
-             end if
-
-             qflx_gw_irrig_applied = 0._r8
-          end if
-
-          qflx_irrig_tot = qflx_sfc_irrig + qflx_gw_irrig_applied
-
-          ! Set drip/sprinkler irrigation based on irrigation method from input data
-          waterflux_inst%qflx_irrig_drip_patch(p)      = 0._r8
-          waterflux_inst%qflx_irrig_sprinkler_patch(p) = 0._r8
-
-          if(this%irrig_method_patch(p) == irrig_method_drip) then
-             waterflux_inst%qflx_irrig_drip_patch(p)      = qflx_irrig_tot
-          else if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
-             waterflux_inst%qflx_irrig_sprinkler_patch(p) = qflx_irrig_tot
-          else
-             call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
-                  errMsg(sourcefile, __LINE__)) 
-          endif
-
-       end do
-       end associate
+       is_bulk = (i == water_inst%i_bulk)
+       call this%SetApplicationFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            waterflux_inst = water_inst%bulk_and_tracers(i)%waterflux_inst, &
+            is_bulk = is_bulk, &
+            qflx_sfc_irrig_bulk_patch = qflx_sfc_irrig_bulk_patch(begp:endp), &
+            qflx_sfc_irrig_bulk_col = water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col(begc:endc), &
+            qflx_gw_demand_bulk_patch = qflx_gw_demand_bulk_patch(begp:endp), &
+            qflx_gw_demand_bulk_col = qflx_gw_demand_bulk_col(begc:endc))
     end do
 
     end associate
@@ -1160,7 +1061,7 @@ contains
     ! - waterflux_tracer_inst%qflx_gw_uncon_irrig_lyr_col
     !
     ! !ARGUMENTS:
-    class(irrigation_type)    , intent(inout) :: this
+    class(irrigation_type)    , intent(in)    :: this
     type(bounds_type)         , intent(in)    :: bounds
     integer                   , intent(in)    :: num_soilc       ! number of points in filter_soilc
     integer                   , intent(in)    :: filter_soilc(:) ! column filter for soil
@@ -1226,7 +1127,7 @@ contains
     ! - waterflux_inst%qflx_gw_uncon_irrig_col
     !
     ! !ARGUMENTS:
-    class(irrigation_type)    , intent(inout) :: this
+    class(irrigation_type)    , intent(in)    :: this
     integer                   , intent(in)    :: num_soilc       ! number of points in filter_soilc
     integer                   , intent(in)    :: filter_soilc(:) ! column filter for soil
     class(waterflux_type)     , intent(inout) :: waterflux_inst
@@ -1252,6 +1153,145 @@ contains
     end do
 
   end subroutine SetTotalGWUnconIrrig
+
+  !-----------------------------------------------------------------------
+  subroutine SetApplicationFluxes(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       waterflux_inst, is_bulk, &
+       qflx_sfc_irrig_bulk_patch, qflx_sfc_irrig_bulk_col, &
+       qflx_gw_demand_bulk_patch, qflx_gw_demand_bulk_col)
+    !
+    ! !DESCRIPTION:
+    ! Set irrigation application fluxes for either bulk water or a single tracer
+    !
+    ! Sets:
+    ! - waterflux_inst%qflx_irrig_drip_patch
+    ! - waterflux_inst%qflx_irrig_sprinkler_patch
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type) , intent(in)    :: this
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                , intent(in)    :: filter_soilc(:) ! column filter for soil
+    integer                , intent(in)    :: num_soilp       ! number of points in filter_soilp
+    integer                , intent(in)    :: filter_soilp(:) ! patch filter for soil
+    class(waterflux_type)  , intent(inout) :: waterflux_inst
+    logical                , intent(in)    :: is_bulk         ! whether this call is being made for bulk water (is_bulk true) or a tracer (is_bulk false)
+    real(r8)               , intent(in)    :: qflx_sfc_irrig_bulk_patch( bounds%begp: ) ! patch surface irrigation flux for bulk water (mm H2O/s)
+    real(r8)               , intent(in)    :: qflx_sfc_irrig_bulk_col( bounds%begc: )   ! col surface irrigation flux for bulk water (mm H2O/s)
+    real(r8)               , intent(in)    :: qflx_gw_demand_bulk_patch( bounds%begp: ) ! patch amount of irrigation groundwater demand for bulk water (mm H2O/s)
+    real(r8)               , intent(in)    :: qflx_gw_demand_bulk_col( bounds%begc: )   ! col amount of irrigation groundwater demand for bulk water (mm H2O/s)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c  ! column indices
+    integer  :: fp, p  ! patch indices
+    real(r8) :: qflx_gw_irrig_withdrawn_col(bounds%begc:bounds%endc) ! col total amount of irrigation withdrawn from groundwater (mm H2O/s)
+    real(r8) :: qflx_sfc_irrig        ! amount of surface irrigation for a single patch (mm H2O/s)
+    real(r8) :: qflx_gw_irrig_applied ! amount of groundwater irrigation for a single patch (mm H2O/s)
+    real(r8) :: qflx_irrig_tot        ! total amount of irrigation for a single patch (mm H2O/s)
+
+    character(len=*), parameter :: subname = 'SetApplicationFluxes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       ! Note that qflx_gw_uncon_irrig_col and qflx_gw_con_irrig_col will remain at
+       ! their cold start values of 0 if use_groundwater_irrigation is false, so this
+       ! sum is safe to do in all cases.
+       qflx_gw_irrig_withdrawn_col(c) = &
+            waterflux_inst%qflx_gw_uncon_irrig_col(c) + &
+            waterflux_inst%qflx_gw_con_irrig_col(c)
+    end do
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+       c = patch%column(p)
+
+       if (is_bulk) then
+          qflx_sfc_irrig = qflx_sfc_irrig_bulk_patch(p)
+       else
+          if (qflx_sfc_irrig_bulk_col(c) > 0._r8) then
+             ! We have col-level sfc irrig for each water tracer, but only have
+             ! patch-level for the bulk. To get the patch-level tracer flux, we need
+             ! to scale the column-level flux by the ratio of patch-to-column-level
+             ! flux for the bulk.
+             !
+             ! Note that this is similar to the scaling that we do for groundwater
+             ! irrigation below.
+             qflx_sfc_irrig = waterflux_inst%qflx_sfc_irrig_col(c) * &
+                  (qflx_sfc_irrig_bulk_patch(p) / qflx_sfc_irrig_bulk_col(c))
+          else
+             if (qflx_sfc_irrig_bulk_patch(p) > 0._r8 .or. &
+                  waterflux_inst%qflx_sfc_irrig_col(c) > 0._r8) then
+                write(iulog,*) 'If qflx_sfc_irrig_bulk_col <= 0, ' // &
+                     'expect qflx_sfc_irrig_bulk_patch = waterflux_inst%qflx_sfc_irrig_col = 0'
+                write(iulog,*) 'qflx_sfc_irrig_bulk_col = ', qflx_sfc_irrig_bulk_col(c)
+                write(iulog,*) 'qflx_sfc_irrig_bulk_patch = ', qflx_sfc_irrig_bulk_patch(p)
+                write(iulog,*) 'waterflux_inst%qflx_sfc_irrig_col = ', &
+                     waterflux_inst%qflx_sfc_irrig_col(c)
+                call endrun(decomp_index=p, clmlevel=namep, &
+                     msg = 'If qflx_sfc_irrig_bulk_col <= 0, ' // &
+                     'expect qflx_sfc_irrig_bulk_patch = waterflux_inst%qflx_sfc_irrig_col = 0', &
+                     additional_msg = errMsg(sourcefile, __LINE__))
+             end if
+
+             qflx_sfc_irrig = 0._r8
+          end if
+       end if
+
+       if (qflx_gw_demand_bulk_col(c) > 0._r8) then
+          ! Distribute the withdrawn groundwater irrigation to each patch according to
+          ! its demand relative to the total column demand.
+          !
+          ! Note that this expression could be reformulated to:
+          !   qflx_gw_irrig_applied = qflx_gw_demand_bulk_patch(p) * &
+          !        (qflx_gw_irrig_withdrawn_col(c) / qflx_gw_demand_bulk_col(c))
+          !
+          ! It may be more intuitive that the above is correct, at least for bulk water:
+          ! this shows that we're down-weighting each patch's demand evenly, based on the
+          ! ration of withdrawn water to demand in the given column.
+          !
+          ! Note that this is similar to the scaling that we do for surface irrigation
+          ! above.
+          qflx_gw_irrig_applied = qflx_gw_irrig_withdrawn_col(c) * &
+               (qflx_gw_demand_bulk_patch(p) / qflx_gw_demand_bulk_col(c))
+       else
+          if (qflx_gw_demand_bulk_patch(p) > 0._r8 .or. &
+               qflx_gw_irrig_withdrawn_col(c) > 0._r8) then
+             write(iulog,*) 'If qflx_gw_demand_bulk_col <= 0, expect qflx_gw_demand_bulk_patch = qflx_gw_irrig_withdrawn_col = 0'
+             write(iulog,*) 'qflx_gw_demand_bulk_col = ', qflx_gw_demand_bulk_col(c)
+             write(iulog,*) 'qflx_gw_demand_bulk_patch = ', qflx_gw_demand_bulk_patch(p)
+             write(iulog,*) 'qflx_gw_irrig_withdrawn_col = ', qflx_gw_irrig_withdrawn_col(c)
+             call endrun(decomp_index=p, clmlevel=namep, &
+                  msg = 'If qflx_gw_demand_bulk_col <= 0, expect qflx_gw_demand_bulk_patch = qflx_gw_irrig_withdrawn_col = 0', &
+                  additional_msg = errMsg(sourcefile, __LINE__))
+          end if
+
+          qflx_gw_irrig_applied = 0._r8
+       end if
+
+       qflx_irrig_tot = qflx_sfc_irrig + qflx_gw_irrig_applied
+
+       ! Set drip/sprinkler irrigation based on irrigation method from input data
+       waterflux_inst%qflx_irrig_drip_patch(p)      = 0._r8
+       waterflux_inst%qflx_irrig_sprinkler_patch(p) = 0._r8
+
+       if(this%irrig_method_patch(p) == irrig_method_drip) then
+          waterflux_inst%qflx_irrig_drip_patch(p)      = qflx_irrig_tot
+       else if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
+          waterflux_inst%qflx_irrig_sprinkler_patch(p) = qflx_irrig_tot
+       else
+          call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
+               errMsg(sourcefile, __LINE__))
+       endif
+
+    end do
+
+  end subroutine SetApplicationFluxes
 
   !-----------------------------------------------------------------------
   subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
