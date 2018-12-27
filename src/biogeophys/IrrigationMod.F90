@@ -1062,7 +1062,15 @@ contains
     ! !DESCRIPTION:
     ! Set irrigation withdrawals for bulk water
     !
-    ! Also decrements this%n_irrig_steps_left_patch if appropriate
+    ! Sets / updates the following variables:
+    ! - qflx_sfc_irrig_bulk_patch
+    ! - qflx_gw_demand_bulk_patch
+    ! - qflx_gw_demand_bulk_col
+    ! - this%qflx_irrig_demand_patch
+    ! - this%n_irrig_steps_left_patch
+    ! - waterfluxbulk_inst%qflx_sfc_irrig_col
+    ! - waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col
+    ! - waterfluxbulk_inst%qflx_gw_con_irrig_col
     !
     ! !ARGUMENTS:
     class(irrigation_type)   , intent(inout) :: this
@@ -1146,6 +1154,11 @@ contains
     ! !DESCRIPTION:
     ! Set irrigation withdrawals for one water tracer
     !
+    ! Sets the following variables:
+    ! - waterflux_tracer_inst%qflx_sfc_irrig_col
+    ! - waterflux_tracer_inst%qflx_gw_con_irrig_col
+    ! - waterflux_tracer_inst%qflx_gw_uncon_irrig_lyr_col
+    !
     ! !ARGUMENTS:
     class(irrigation_type)    , intent(inout) :: this
     type(bounds_type)         , intent(in)    :: bounds
@@ -1208,6 +1221,9 @@ contains
     ! !DESCRIPTION:
     ! Set total irrigation withdrawal flux from the unconfined aquifer, for either bulk
     ! or one water tracer
+    !
+    ! Sets the following variables:
+    ! - waterflux_inst%qflx_gw_uncon_irrig_col
     !
     ! !ARGUMENTS:
     class(irrigation_type)    , intent(inout) :: this
