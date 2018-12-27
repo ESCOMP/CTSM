@@ -1057,8 +1057,8 @@ contains
     !
     ! Sets the following variables:
     ! - waterflux_tracer_inst%qflx_sfc_irrig_col
-    ! - waterflux_tracer_inst%qflx_gw_con_irrig_col
     ! - waterflux_tracer_inst%qflx_gw_uncon_irrig_lyr_col
+    ! - waterflux_tracer_inst%qflx_gw_con_irrig_col
     !
     ! !ARGUMENTS:
     class(irrigation_type)    , intent(in)    :: this
