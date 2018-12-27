@@ -7,16 +7,16 @@ module IrrigationMod
   ! Usage:
   !
   !   - Call CalcIrrigationNeeded in order to compute whether and how much irrigation is
-  !     needed for the next call to ApplyIrrigation. This should be called once per
+  !     needed for the next call to CalcIrrigationFluxes. This should be called once per
   !     timestep.
   ! 
-  !   - Call ApplyIrrigation in order to calculate irrigation withdrawal and application
-  !     fluxes. It is acceptable for this to be called earlier in the timestep than
-  !     CalcIrrigationNeeded.
+  !   - Call CalcIrrigationFluxes in order to calculate irrigation withdrawal and
+  !     application fluxes. It is acceptable for this to be called earlier in the timestep
+  !     than CalcIrrigationNeeded.
   !
   ! Design notes:
   !
-  !   In principle, ApplyIrrigation and CalcIrrigationNeeded could be combined into a
+  !   In principle, CalcIrrigationFluxes and CalcIrrigationNeeded could be combined into a
   !   single routine. Their separation is largely for historical reasons: In the past,
   !   irrigation depended on btran, and qflx_irrig is needed earlier in the driver loop
   !   than when btran becomes available. (And qflx_irrig is also used late in the driver
@@ -27,8 +27,8 @@ module IrrigationMod
   !
   !   Now that we no longer have a dependency on btran, we could call CalcIrrigationNeeded
   !   before the first time qflx_irrig is needed. Thus, there might be some advantage to
-  !   combining ApplyIrrigation and CalcIrrigationNeeded - or at least calling these two
-  !   routines from the same place.  In particular: this separation of the irrigation
+  !   combining CalcIrrigationFluxes and CalcIrrigationNeeded - or at least calling these
+  !   two routines from the same place.  In particular: this separation of the irrigation
   !   calculation into two routines that are done at different times in the driver loop
   !   makes it harder and less desirable to nest the irrigation object within some other
   !   object: Doing so might make it harder to do the two separate steps at the right
@@ -80,7 +80,7 @@ module IrrigationMod
 
      ! Time of day to check whether we need irrigation, seconds (0 = midnight). 
      ! We start applying the irrigation in the time step FOLLOWING this time, 
-     ! since we won't begin irrigating until the next call to ApplyIrrigation
+     ! since we won't begin irrigating until the next call to CalcIrrigationFluxes
      integer  :: irrig_start_time
 
      ! Desired amount of time to irrigate per day (sec). Actual time may 
@@ -156,7 +156,7 @@ module IrrigationMod
      ! (without this workaround, pgi compilation fails in restFileMod)
      procedure, public :: Init => IrrigationInit
      procedure, public :: Restart
-     procedure, public :: ApplyIrrigation
+     procedure, public :: CalcIrrigationFluxes
      procedure, public :: CalcIrrigationNeeded
      procedure, public :: UseGroundwaterIrrigation ! Returns true if groundwater irrigation enabled
      procedure, public :: Clean => IrrigationClean ! deallocate memory
@@ -859,13 +859,13 @@ contains
   ! ========================================================================
   
   !-----------------------------------------------------------------------
-  subroutine ApplyIrrigation(this, bounds, num_soilc, &
+  subroutine CalcIrrigationFluxes(this, bounds, num_soilc, &
        filter_soilc, num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
        water_inst)
     !
     ! !DESCRIPTION:
-    ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
+    ! Apply the irrigation computed by CalcIrrigationNeeded in order to set various fluxes
     !
     ! Sets irrigation withdrawal and application fluxes in the waterflux components of
     ! water_inst, for both bulk and tracers:
@@ -904,7 +904,7 @@ contains
     real(r8) :: qflx_gw_demand_bulk_col(bounds%begc:bounds%endc) ! col amount of irrigation groundwater demand for bulk water (mm H2O/s)
     logical  :: is_bulk
 
-    character(len=*), parameter :: subname = 'ApplyIrrigation'
+    character(len=*), parameter :: subname = 'CalcIrrigationFluxes'
 
     !-----------------------------------------------------------------------
 
@@ -953,7 +953,7 @@ contains
 
     end associate
 
-  end subroutine ApplyIrrigation
+  end subroutine CalcIrrigationFluxes
 
   !-----------------------------------------------------------------------
   subroutine CalcBulkWithdrawals(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &

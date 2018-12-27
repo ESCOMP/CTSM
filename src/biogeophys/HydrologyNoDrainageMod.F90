@@ -71,7 +71,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Calculate irrigation flux
-    call irrigation_inst%ApplyIrrigation(bounds, num_soilc, &
+    call irrigation_inst%CalcIrrigationFluxes(bounds, num_soilc, &
          filter_soilc, num_soilp, filter_soilp, &
          soilhydrology_inst, soilstate_inst, &
          water_inst)

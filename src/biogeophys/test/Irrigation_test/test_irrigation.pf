@@ -79,8 +79,8 @@ module test_irrigation
      ! Computes irrigation deficit for every patch and level
      procedure :: computeDeficits
 
-     ! Wrapper that calls both CalcIrrigationNeeded and ApplyIrrigation
-     procedure :: calculateAndApplyIrrigation
+     ! Wrapper that calls both CalcIrrigationNeeded and CalcIrrigationFluxes
+     procedure :: calculateIrrigation
 
      ! Return total irrigation application for a given patch
      procedure :: totalIrrigationApplicationPatch
@@ -269,7 +269,7 @@ contains
     !
     ! Values are set up such that there is some irrigation deficit everywhere, and
     ! irrigation would start in the following call to CalcIrrigationNeeded (followed by
-    ! ApplyIrrigation). Values are set the same for every patch/column, and are the same
+    ! CalcIrrigationFluxes). Values are set the same for every patch/column, and are the same
     ! at every level EXCEPT for relsat_wilting_point and relsat_target, which vary
     ! linearly by level and col number.
     !
@@ -573,11 +573,11 @@ contains
   end subroutine computeDeficits
 
   !-----------------------------------------------------------------------
-  subroutine calculateAndApplyIrrigation(this)
+  subroutine calculateIrrigation(this)
     !
     ! !DESCRIPTION:
     ! Call CalculateIrrigationNeeded with the given irrigation parameters. Then call
-    ! ApplyIrrigation.
+    ! CalcIrrigationFluxes.
     !
     ! !USES:
     !
@@ -585,17 +585,17 @@ contains
     class(TestIrrigation), intent(inout) :: this
     !
     ! !LOCAL VARIABLES:
-    integer :: apply_nump
-    integer, allocatable :: apply_filterp(:)
-    integer :: apply_numc
-    integer, allocatable :: apply_filterc(:)
+    integer :: calc_fluxes_nump
+    integer, allocatable :: calc_fluxes_filterp(:)
+    integer :: calc_fluxes_numc
+    integer, allocatable :: calc_fluxes_filterc(:)
 
     ! For the sake of the tests done here, it's currently fine for soilhydrology_inst and
     ! soilstate_inst to be uninitialized
     type(soilhydrology_type) :: soilhydrology_inst
     type(soilstate_type) :: soilstate_inst
 
-    character(len=*), parameter :: subname = 'calculateAndApplyIrrigation'
+    character(len=*), parameter :: subname = 'calculateIrrigation'
     !-----------------------------------------------------------------------
 
     call this%irrigation%CalcIrrigationNeeded(&
@@ -610,31 +610,31 @@ contains
          rof_prognostic = .true.)
 
     ! The expectation is that the filter used in CalcIrrigationNeeded is a subset of the
-    ! filter used in ApplyIrrigation. In order to (a) keep the unit tests simpler, and (b)
-    ! ensure that it works for the ApplyIrrigation filter to have points not in the
-    ! CalcIrrigationNeededFilter, we send ApplyIrrigation a filter that includes all
-    ! points. (The one situation where the ApplyIrrigation filter might include points not
+    ! filter used in CalcIrrigationFluxes. In order to (a) keep the unit tests simpler, and (b)
+    ! ensure that it works for the CalcIrrigationFluxes filter to have points not in the
+    ! CalcIrrigationNeededFilter, we send CalcIrrigationFluxes a filter that includes all
+    ! points. (The one situation where the CalcIrrigationFluxes filter might include points not
     ! in the CalcIrrigationNeeded filter is if a point that was inactive at the time of
-    ! the CalcIrrigationNeeded call has become active for the ApplyIrrigation call; in
+    ! the CalcIrrigationNeeded call has become active for the CalcIrrigationFluxes call; in
     ! this case, if there were still some irrigation time steps left when it had become
-    ! inactive, then ApplyIrrigation might start re-irrigating there. But this behavior
+    ! inactive, then CalcIrrigationFluxes might start re-irrigating there. But this behavior
     ! is probably okay; in any case, it doesn't seem worth testing for.)
     call filter_from_range(start=bounds%begp, end=bounds%endp, &
-         numf=apply_nump, filter=apply_filterp)
+         numf=calc_fluxes_nump, filter=calc_fluxes_filterp)
     call filter_from_range(start=bounds%begc, end=bounds%endc, &
-         numf=apply_numc, filter=apply_filterc)
+         numf=calc_fluxes_numc, filter=calc_fluxes_filterc)
 
-    call this%irrigation%ApplyIrrigation( &
+    call this%irrigation%CalcIrrigationFluxes( &
          bounds = bounds, &
-         num_soilc = apply_numc, &
-         filter_soilc = apply_filterc, &
-         num_soilp = apply_nump, &
-         filter_soilp = apply_filterp, &
+         num_soilc = calc_fluxes_numc, &
+         filter_soilc = calc_fluxes_filterc, &
+         num_soilp = calc_fluxes_nump, &
+         filter_soilp = calc_fluxes_filterp, &
          soilhydrology_inst = soilhydrology_inst, &
          soilstate_inst = soilstate_inst, &
          water_inst = this%water_inst)
 
-  end subroutine calculateAndApplyIrrigation
+  end subroutine calculateIrrigation
 
   !-----------------------------------------------------------------------
   function totalIrrigationApplicationPatch(this, p) result(total_application)
@@ -905,7 +905,7 @@ contains
     call this%setupIrrigation()
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -927,7 +927,7 @@ contains
     call this%setupIrrigation(my_irrig_method = irrig_method_drip)
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -951,7 +951,7 @@ contains
     call this%setupIrrigation(my_irrig_method = irrig_method_sprinkler)
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -972,7 +972,7 @@ contains
     this%h2osoi_liq(:,:) = 1.e15_r8
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationZero()
@@ -997,7 +997,7 @@ contains
     this%h2osoi_liq(bounds%begc,1) = h2osoi_target_layer1 + surplus
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1020,7 +1020,7 @@ contains
     pftcon%irrigated(1:2) = [1.0, 0.0]
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationZero()
@@ -1037,7 +1037,7 @@ contains
     this%elai(bounds%begp) = 0._r8
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationZero()
@@ -1064,7 +1064,7 @@ contains
     end do
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationZero()
@@ -1081,7 +1081,7 @@ contains
     call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start)
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationZero()
@@ -1115,7 +1115,7 @@ contains
          volr_limited_irrig_rate = volr_limited_irrig_rate)
     
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     expected = total_deficit / this%irrigation_params%irrig_length
@@ -1151,7 +1151,7 @@ contains
          volr_limited_irrig_rate = expected)
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationEquals(expected)
@@ -1191,7 +1191,7 @@ contains
          volr_limited_irrig_rate = volr_limited_irrig_rate)
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     expected_total = total_deficit / this%irrigation_params%irrig_length
@@ -1242,7 +1242,7 @@ contains
     expected_gw_con = expected_gw - expected_gw_uncon
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     ! First make sure the test is set up reasonably
@@ -1270,12 +1270,12 @@ contains
     ! Call irrigation routines
     ! First call the routines to get irrigation started. Then increment time, and also
     ! adjust the soil water amount. Irrigation should continue at the original rate.
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
     call advance_timestep()
     this%h2osoi_liq = 100._r8
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationEquals(expected)
@@ -1298,13 +1298,13 @@ contains
     ! Ensure that irrigation flux is still non-zero after the expected number of time
     ! steps
     do time = 1, expected_num_time_steps
-       call this%calculateAndApplyIrrigation()
+       call this%calculateIrrigation()
        call advance_timestep()
     end do
     call this%assertTotalIrrigationGreaterThanZero()
 
     ! Ensure that irrigation flux goes to 0 in the following time step
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
     call this%assertTotalIrrigationZero()
 
   end subroutine irrigation_continues_for_correct_number_of_time_steps
@@ -1328,7 +1328,7 @@ contains
     ! Call irrigation routines for long enough that irrigation should go to 0
     expected_num_time_steps = this%irrigation_params%irrig_length / dtime
     do time = 1, expected_num_time_steps + 1
-       call this%calculateAndApplyIrrigation()
+       call this%calculateIrrigation()
        call advance_timestep()
     end do
     ! The following assertion is mainly here to make sure the test is working as intended
@@ -1337,7 +1337,7 @@ contains
     ! Now reset time, change soil moisture, and make sure that irrigation happens as expected
     call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
     this%h2osoi_liq(:,:) = 100._r8
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
     ! Make sure that the test has been set up reasonably - to give a net deficit
@@ -1360,7 +1360,7 @@ contains
     call this%setupIrrigation(nlevirrig=nlevirrig)
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1382,7 +1382,7 @@ contains
     col%nbedrock(bounds%begc) = nlevsoi - 1
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1400,7 +1400,7 @@ contains
     this%t_soisno(bounds%begc, :) = 272._r8
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%assertTotalIrrigationZero()
@@ -1419,7 +1419,7 @@ contains
     this%t_soisno(bounds%begc, 2) = 272._r8
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1457,7 +1457,7 @@ contains
     call this%setupIrrigation()
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1499,7 +1499,7 @@ contains
     pftcon%irrigated(1:3) = [0.0, 1.0, 0.0]
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1546,7 +1546,7 @@ contains
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1595,7 +1595,7 @@ contains
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1644,7 +1644,7 @@ contains
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1695,7 +1695,7 @@ contains
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1742,7 +1742,7 @@ contains
     pftcon%irrigated(1:3) = [1.0, 0.0, 1.0]
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1780,7 +1780,7 @@ contains
     call this%setupIrrigation()
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     ! Irrigation happens within filter
@@ -1829,7 +1829,7 @@ contains
     this%t_soisno(bounds%begc+1, 2) = 272._r8
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     call this%computeDeficits(deficits)
@@ -1899,7 +1899,7 @@ contains
     this%volr(begg) = gridcell_total_deficit_as_volr * volr_fraction
 
     ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
+    call this%calculateIrrigation()
 
     ! Check result
     expected1 = total_deficit1*volr_fraction / this%irrigation_params%irrig_length
