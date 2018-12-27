@@ -33,14 +33,14 @@ Module HydrologyNoDrainageMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public  :: IrrigationWithdrawals  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
+  public  :: CalcAndWithdrawIrrigationFluxes  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
   public  :: HydrologyNoDrainage    ! Calculates soil/snow hydrology without drainage
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine IrrigationWithdrawals(bounds, &
+  subroutine CalcAndWithdrawIrrigationFluxes(bounds, &
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
@@ -67,7 +67,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: i  ! tracer index
 
-    character(len=*), parameter :: subname = 'IrrigationWithdrawals'
+    character(len=*), parameter :: subname = 'CalcAndWithdrawIrrigationFluxes'
     !-----------------------------------------------------------------------
 
     ! Calculate irrigation flux
@@ -85,7 +85,7 @@ contains
        end do
     end if
 
-  end subroutine IrrigationWithdrawals
+  end subroutine CalcAndWithdrawIrrigationFluxes
 
   !-----------------------------------------------------------------------
   subroutine HydrologyNoDrainage(bounds, &

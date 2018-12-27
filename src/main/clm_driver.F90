@@ -38,7 +38,7 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes 
   use LakeFluxesMod          , only : LakeFluxes
   !
-  use HydrologyNoDrainageMod , only : IrrigationWithdrawals, HydrologyNoDrainage ! (formerly Hydrology2Mod)
+  use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
   use LakeHydrologyMod       , only : LakeHydrology
@@ -442,7 +442,7 @@ contains
 
           call t_startf('irrigationwithdraw')
 
-          call IrrigationWithdrawals( &
+          call CalcAndWithdrawIrrigationFluxes( &
                bounds = bounds_clump, &
                num_soilc = filter(nc)%num_soilc, &
                filter_soilc = filter(nc)%soilc, &
@@ -462,7 +462,7 @@ contains
           ! every time step
           if (get_nstep() == 0) then
              call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after IrrigationWithdrawals')
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalcAndWithdrawIrrigationFluxes')
              call t_stopf("tracer_consistency_check")
           end if
        end if
