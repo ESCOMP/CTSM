@@ -58,6 +58,9 @@ module IrrigationMod
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use WaterType        , only : water_type
   use WaterFluxBulkType, only : waterfluxbulk_type
+  use WaterFluxType    , only : waterflux_type
+  use WaterStateBulkType, only : waterstatebulk_type
+  use WaterStateType   , only : waterstate_type
   use WaterTracerUtils , only : CalcTracerFromBulk, CalcTracerFromBulkFixedRatio
   use GridcellType     , only : grc
   use ColumnType       , only : col                
@@ -170,6 +173,7 @@ module IrrigationMod
      procedure, private :: InitHistory => IrrigationInitHistory
      procedure, private :: InitCold => IrrigationInitCold
      procedure, private :: SetBulkWithdrawals      ! set irrigation withdrawals for bulk water
+     procedure, private :: SetOneTracerWithdrawals ! set irrigation withdrawals for one water tracer
      procedure, private :: CalcIrrigNstepsPerDay   ! given dtime, calculate irrig_nsteps_per_day
      procedure, private :: SetIrrigMethod          ! set irrig_method_patch based on surface dataset
      procedure, private :: PointNeedsCheckForIrrig ! whether a given point needs to be checked for irrigation now
@@ -927,48 +931,14 @@ contains
          qflx_gw_demand_bulk_col = qflx_gw_demand_bulk_col(begc:endc))
 
     do i = water_inst%tracers_beg, water_inst%tracers_end
-       associate( &
-            waterflux_inst => water_inst%bulk_and_tracers(i)%waterflux_inst &
-            )
-       ! BUG(wjs, 2018-12-17, ESCOMP/ctsm#512) Eventually, use actual source ratio for
-       ! qflx_sfc_irrig_col rather than assuming a fixed ratio
-       call CalcTracerFromBulkFixedRatio( &
-            bulk = qflx_sfc_irrig_col(begc:endc), &
-            ratio = waterflux_inst%info%get_ratio(), &
-            tracer = waterflux_inst%qflx_sfc_irrig_col(begc:endc))
-       end associate
+       call this%SetOneTracerWithdrawals(bounds, num_soilc, filter_soilc, &
+            waterstatebulk_inst = water_inst%waterstatebulk_inst, &
+            waterfluxbulk_inst = water_inst%waterfluxbulk_inst, &
+            waterstate_tracer_inst = water_inst%bulk_and_tracers(i)%waterstate_inst, &
+            waterflux_tracer_inst = water_inst%bulk_and_tracers(i)%waterflux_inst)
     end do
 
     if (this%params%use_groundwater_irrigation) then
-
-       ! FIXME(wjs, 2018-12-17) Maybe combine this with the qflx_sfc_irrig_col settings
-       ! (currently done above), to consolidate the places where we set tracer values?
-       do i = water_inst%tracers_beg, water_inst%tracers_end
-          associate( &
-               waterflux_inst => water_inst%bulk_and_tracers(i)%waterflux_inst, &
-               waterstatebulk_inst => water_inst%waterstatebulk_inst, &
-               waterstate_inst => water_inst%bulk_and_tracers(i)%waterstate_inst &
-               )
-          call CalcTracerFromBulk( &
-               lb = begc, &
-               num_pts = num_soilc, &
-               filter_pts = filter_soilc, &
-               bulk_source = waterstatebulk_inst%wa_col(begc:endc), &
-               bulk_val = qflx_gw_con_irrig_col(begc:endc), &
-               tracer_source = waterstate_inst%wa_col(begc:endc), &
-               tracer_val = waterflux_inst%qflx_gw_con_irrig_col(begc:endc))
-          do j = 1, nlevsoi
-             call CalcTracerFromBulk( &
-                  lb = begc, &
-                  num_pts = num_soilc, &
-                  filter_pts = filter_soilc, &
-                  bulk_source = waterstatebulk_inst%h2osoi_liq_col(begc:endc, j), &
-                  bulk_val = qflx_gw_uncon_irrig_lyr_col(begc:endc, j), &
-                  tracer_source = waterstate_inst%h2osoi_liq_col(begc:endc, j), &
-                  tracer_val = waterflux_inst%qflx_gw_uncon_irrig_lyr_col(begc:endc, j))
-          end do
-          end associate
-       end do
 
        do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
           associate( &
@@ -1182,6 +1152,69 @@ contains
     end associate
 
   end subroutine SetBulkWithdrawals
+
+  !-----------------------------------------------------------------------
+  subroutine SetOneTracerWithdrawals(this, bounds, num_soilc, filter_soilc, &
+       waterstatebulk_inst, waterfluxbulk_inst, &
+       waterstate_tracer_inst, waterflux_tracer_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set irrigation withdrawals for one water tracer
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type)    , intent(inout) :: this
+    type(bounds_type)         , intent(in)    :: bounds
+    integer                   , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                   , intent(in)    :: filter_soilc(:) ! column filter for soil
+    type(waterstatebulk_type) , intent(in)    :: waterstatebulk_inst
+    type(waterfluxbulk_type)  , intent(in)    :: waterfluxbulk_inst
+    type(waterstate_type)     , intent(in)    :: waterstate_tracer_inst
+    type(waterflux_type)      , intent(inout) :: waterflux_tracer_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: j  ! level index
+
+    character(len=*), parameter :: subname = 'SetOneTracerWithdrawals'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc &
+         )
+
+    ! BUG(wjs, 2018-12-17, ESCOMP/ctsm#512) Eventually, use actual source ratio for
+    ! qflx_sfc_irrig_col rather than assuming a fixed ratio
+    call CalcTracerFromBulkFixedRatio( &
+         bulk   = waterfluxbulk_inst%qflx_sfc_irrig_col(begc:endc), &
+         ratio  = waterflux_tracer_inst%info%get_ratio(), &
+         tracer = waterflux_tracer_inst%qflx_sfc_irrig_col(begc:endc))
+
+    if (this%params%use_groundwater_irrigation) then
+
+       call CalcTracerFromBulk( &
+            lb            = begc, &
+            num_pts       = num_soilc, &
+            filter_pts    = filter_soilc, &
+            bulk_source   = waterstatebulk_inst%wa_col(begc:endc), &
+            bulk_val      = waterfluxbulk_inst%qflx_gw_con_irrig_col(begc:endc), &
+            tracer_source = waterstate_tracer_inst%wa_col(begc:endc), &
+            tracer_val    = waterflux_tracer_inst%qflx_gw_con_irrig_col(begc:endc))
+       do j = 1, nlevsoi
+          call CalcTracerFromBulk( &
+               lb            = begc, &
+               num_pts       = num_soilc, &
+               filter_pts    = filter_soilc, &
+               bulk_source   = waterstatebulk_inst%h2osoi_liq_col(begc:endc, j), &
+               bulk_val      = waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col(begc:endc, j), &
+               tracer_source = waterstate_tracer_inst%h2osoi_liq_col(begc:endc, j), &
+               tracer_val    = waterflux_tracer_inst%qflx_gw_uncon_irrig_lyr_col(begc:endc, j))
+       end do
+
+    end if
+
+    end associate
+
+  end subroutine SetOneTracerWithdrawals
 
 
   !-----------------------------------------------------------------------
