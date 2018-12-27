@@ -884,7 +884,6 @@ contains
     !-----------------------------------------------------------------------
 
     do i = this%tracers_beg, this%tracers_end
-       !check some variable here to see if we really want to check consistency
 
        associate( &
             tracer_vars => this%bulk_and_tracers(i)%vars, &
