@@ -172,14 +172,14 @@ module IrrigationMod
      procedure, private :: InitAllocate => IrrigationInitAllocate
      procedure, private :: InitHistory => IrrigationInitHistory
      procedure, private :: InitCold => IrrigationInitCold
-     procedure, private :: SetBulkWithdrawals      ! set irrigation withdrawals for bulk water
-     procedure, private :: SetOneTracerWithdrawals ! set irrigation withdrawals for one water tracer
-     procedure, private :: SetTotalGWUnconIrrig    ! set total irrigation withdrawal flux from the unconfined aquifer, for either bulk or one water tracer
-     procedure, private :: SetApplicationFluxes    ! set irrigation application fluxes for either bulk water or a single tracer
-     procedure, private :: CalcIrrigNstepsPerDay   ! given dtime, calculate irrig_nsteps_per_day
-     procedure, private :: SetIrrigMethod          ! set irrig_method_patch based on surface dataset
-     procedure, private :: PointNeedsCheckForIrrig ! whether a given point needs to be checked for irrigation now
-     procedure, private :: CalcDeficitVolrLimited  ! calculate deficit limited by river volume for each patch
+     procedure, private :: CalcBulkWithdrawals      ! calculate irrigation withdrawals for bulk water
+     procedure, private :: CalcOneTracerWithdrawals ! calculate irrigation withdrawals for one water tracer
+     procedure, private :: CalcTotalGWUnconIrrig    ! calculate total irrigation withdrawal flux from the unconfined aquifer, for either bulk or one water tracer
+     procedure, private :: CalcApplicationFluxes    ! calculate irrigation application fluxes for either bulk water or a single tracer
+     procedure, private :: CalcIrrigNstepsPerDay    ! given dtime, calculate irrig_nsteps_per_day
+     procedure, private :: SetIrrigMethod           ! set irrig_method_patch based on surface dataset
+     procedure, private :: PointNeedsCheckForIrrig  ! whether a given point needs to be checked for irrigation now
+     procedure, private :: CalcDeficitVolrLimited   ! calculate deficit limited by river volume for each patch
   end type irrigation_type
 
   interface irrigation_params_type
@@ -919,14 +919,14 @@ contains
          endc => bounds%endc  &
          )
 
-    call this%SetBulkWithdrawals(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+    call this%CalcBulkWithdrawals(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
          soilhydrology_inst, soilstate_inst, water_inst%waterfluxbulk_inst, &
          qflx_sfc_irrig_bulk_patch = qflx_sfc_irrig_bulk_patch(begp:endp), &
          qflx_gw_demand_bulk_patch = qflx_gw_demand_bulk_patch(begp:endp), &
          qflx_gw_demand_bulk_col = qflx_gw_demand_bulk_col(begc:endc))
 
     do i = water_inst%tracers_beg, water_inst%tracers_end
-       call this%SetOneTracerWithdrawals(bounds, num_soilc, filter_soilc, &
+       call this%CalcOneTracerWithdrawals(bounds, num_soilc, filter_soilc, &
             waterstatebulk_inst = water_inst%waterstatebulk_inst, &
             waterfluxbulk_inst = water_inst%waterfluxbulk_inst, &
             waterstate_tracer_inst = water_inst%bulk_and_tracers(i)%waterstate_inst, &
@@ -935,14 +935,14 @@ contains
 
     if (this%params%use_groundwater_irrigation) then
        do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-          call this%SetTotalGWUnconIrrig(num_soilc, filter_soilc, &
+          call this%CalcTotalGWUnconIrrig(num_soilc, filter_soilc, &
                water_inst%bulk_and_tracers(i)%waterflux_inst)
        end do
     end if
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        is_bulk = (i == water_inst%i_bulk)
-       call this%SetApplicationFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call this%CalcApplicationFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
             waterflux_inst = water_inst%bulk_and_tracers(i)%waterflux_inst, &
             is_bulk = is_bulk, &
             qflx_sfc_irrig_bulk_patch = qflx_sfc_irrig_bulk_patch(begp:endp), &
@@ -956,12 +956,12 @@ contains
   end subroutine ApplyIrrigation
 
   !-----------------------------------------------------------------------
-  subroutine SetBulkWithdrawals(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine CalcBulkWithdrawals(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, &
        qflx_sfc_irrig_bulk_patch, qflx_gw_demand_bulk_patch, qflx_gw_demand_bulk_col)
     !
     ! !DESCRIPTION:
-    ! Set irrigation withdrawals for bulk water
+    ! Calculate irrigation withdrawals for bulk water
     !
     ! Sets / updates the following variables:
     ! - qflx_sfc_irrig_bulk_patch
@@ -991,7 +991,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,fp  ! patch indices
 
-    character(len=*), parameter :: subname = 'SetBulkWithdrawals'
+    character(len=*), parameter :: subname = 'CalcBulkWithdrawals'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
@@ -1045,15 +1045,15 @@ contains
 
     end associate
 
-  end subroutine SetBulkWithdrawals
+  end subroutine CalcBulkWithdrawals
 
   !-----------------------------------------------------------------------
-  subroutine SetOneTracerWithdrawals(this, bounds, num_soilc, filter_soilc, &
+  subroutine CalcOneTracerWithdrawals(this, bounds, num_soilc, filter_soilc, &
        waterstatebulk_inst, waterfluxbulk_inst, &
        waterstate_tracer_inst, waterflux_tracer_inst)
     !
     ! !DESCRIPTION:
-    ! Set irrigation withdrawals for one water tracer
+    ! Calculate irrigation withdrawals for one water tracer
     !
     ! Sets the following variables:
     ! - waterflux_tracer_inst%qflx_sfc_irrig_col
@@ -1073,7 +1073,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: j  ! level index
 
-    character(len=*), parameter :: subname = 'SetOneTracerWithdrawals'
+    character(len=*), parameter :: subname = 'CalcOneTracerWithdrawals'
     !-----------------------------------------------------------------------
 
     associate( &
@@ -1113,14 +1113,14 @@ contains
 
     end associate
 
-  end subroutine SetOneTracerWithdrawals
+  end subroutine CalcOneTracerWithdrawals
 
   !-----------------------------------------------------------------------
-  subroutine SetTotalGWUnconIrrig(this, num_soilc, filter_soilc, &
+  subroutine CalcTotalGWUnconIrrig(this, num_soilc, filter_soilc, &
        waterflux_inst)
     !
     ! !DESCRIPTION:
-    ! Set total irrigation withdrawal flux from the unconfined aquifer, for either bulk
+    ! Calculate total irrigation withdrawal flux from the unconfined aquifer, for either bulk
     ! or one water tracer
     !
     ! Sets the following variables:
@@ -1136,7 +1136,7 @@ contains
     integer :: c, fc  ! column indices
     integer :: j      ! level index
 
-    character(len=*), parameter :: subname = 'SetTotalGWUnconIrrig'
+    character(len=*), parameter :: subname = 'CalcTotalGWUnconIrrig'
     !-----------------------------------------------------------------------
 
     do fc = 1, num_soilc
@@ -1152,16 +1152,16 @@ contains
        end do
     end do
 
-  end subroutine SetTotalGWUnconIrrig
+  end subroutine CalcTotalGWUnconIrrig
 
   !-----------------------------------------------------------------------
-  subroutine SetApplicationFluxes(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine CalcApplicationFluxes(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        waterflux_inst, is_bulk, &
        qflx_sfc_irrig_bulk_patch, qflx_sfc_irrig_bulk_col, &
        qflx_gw_demand_bulk_patch, qflx_gw_demand_bulk_col)
     !
     ! !DESCRIPTION:
-    ! Set irrigation application fluxes for either bulk water or a single tracer
+    ! Calculate irrigation application fluxes for either bulk water or a single tracer
     !
     ! Sets:
     ! - waterflux_inst%qflx_irrig_drip_patch
@@ -1189,7 +1189,7 @@ contains
     real(r8) :: qflx_gw_irrig_applied ! amount of groundwater irrigation for a single patch (mm H2O/s)
     real(r8) :: qflx_irrig_tot        ! total amount of irrigation for a single patch (mm H2O/s)
 
-    character(len=*), parameter :: subname = 'SetApplicationFluxes'
+    character(len=*), parameter :: subname = 'CalcApplicationFluxes'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
@@ -1291,7 +1291,7 @@ contains
 
     end do
 
-  end subroutine SetApplicationFluxes
+  end subroutine CalcApplicationFluxes
 
   !-----------------------------------------------------------------------
   subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
