@@ -41,7 +41,6 @@ module Wateratm2lndType
    contains
 
      procedure, public  :: Init
-     procedure, public  :: Restart
      procedure, public  :: IsCommunicatedWithCoupler
      procedure, public  :: SetNondownscaledTracers
      procedure, public  :: SetDownscaledTracers
@@ -224,38 +223,6 @@ contains
   end subroutine InitCold
 
   !------------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag)
-    !
-    ! !DESCRIPTION:
-    ! Read/Write module information to/from restart file.
-    !
-    ! !USES:
-    use ncdio_pio        , only : file_desc_t, ncd_double
-    use restUtilMod
-    !
-    ! !ARGUMENTS:
-    class(wateratm2lnd_type), intent(in) :: this
-    type(bounds_type), intent(in)    :: bounds
-    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
-    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    !
-    ! !LOCAL VARIABLES:
-    logical  :: readvar
-    !------------------------------------------------------------------------
-
-
-!   call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('qflx_floodg'), xtype=ncd_double, &
-!        dim1name='gridcell', &
-!        long_name=this%info%lname('flood water flux'), units='mm/s', &
-!        interpinic_flag='skip', readvar=readvar, data=this%forc_flood_grc)
-!   if (flag == 'read' .and. .not. readvar) then
-!      ! initial run, readvar=readvar, not restart: initialize flood to zero
-!      this%forc_flood_grc = 0._r8
-!   endif
-
-  end subroutine Restart
-
-  !-----------------------------------------------------------------------
   pure function IsCommunicatedWithCoupler(this) result(coupled)
     !
     ! !DESCRIPTION:
