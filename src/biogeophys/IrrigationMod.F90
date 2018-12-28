@@ -14,7 +14,7 @@ module IrrigationMod
   !     application fluxes. It is acceptable for this to be called earlier in the timestep
   !     than CalcIrrigationNeeded.
   !
-  ! Design notes:
+  ! General design notes:
   !
   !   In principle, CalcIrrigationFluxes and CalcIrrigationNeeded could be combined into a
   !   single routine. Their separation is largely for historical reasons: In the past,
@@ -39,6 +39,35 @@ module IrrigationMod
   !   rework would change behavior slightly, because irrigation would be applied in the
   !   same time step that CalcIrrigationNeeded first determines it's needed, rather than
   !   waiting until the following time step.
+  !
+  ! Design notes regarding where we calculate supply-based irrigation limitations:
+  !
+  !   We compute supply-based irrigation limitations differently for rivers (volr) vs.
+  !   groundwater.
+  !
+  !   For volr-based limitation, we apply the limit in CalcIrrigationNeeded rather than in
+  !   CalcIrrigationFluxes. This is to avoid problems that arise due to evolving volr -
+  !   e.g., if we had calculated irrigation demand such that volr was just barely big
+  !   enough, then we apply irrigation for some time steps, then we get an updated volr
+  !   which is lower due to these irrigation withdrawals - if we applied the volr
+  !   limitation in CalcIrrigationFluxes, this would impose an unnecessary limit on the
+  !   irrigation to be applied for the rest of this day. It's hard to see a clean way
+  !   around this problem, given that volr is updated in some but not all CLM time
+  !   steps. So we impose the limit on irrigation deficit, rather than on the
+  !   time step-by-time-step flux. The downside here is that it's somewhat more likely
+  !   that irrigation would try to draw volr negative, if volr has been evolving for other
+  !   reasons.
+  !
+  !   For groundwater-based limitation, in contrast, we can rely on having an up-to-date
+  !   view of available groundwater, so the argument against having the volr limitation
+  !   in CalcIrrigationFluxes doesn't apply, and that seems like a more robust place to
+  !   do this limitation.
+  !
+  !   The key difference is that, for volr, we don't have an easy way to determine if this
+  !   is a time step when we have an updated volr value, or if we still have volr from a
+  !   few time steps ago (since ROF isn't coupled in every time step). So in that case,
+  !   having the possibility that we'd exceed available volr seems like the lesser of
+  !   evils.
   !
   ! !USES:
 #include "shr_assert.h"
