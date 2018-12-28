@@ -7,8 +7,7 @@ module WaterFluxType
   !
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8
-  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : nlevsno, nlevsoi
+  use clm_varpar     , only : nlevsno
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
@@ -378,7 +377,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -783,7 +781,7 @@ contains
     type(bounds_type) , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: p,c,l
+    integer :: c,l
     !-----------------------------------------------------------------------
 
     this%qflx_evap_grnd_patch(bounds%begp:bounds%endp)        = 0.0_r8
