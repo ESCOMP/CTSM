@@ -46,7 +46,7 @@ hist_mfilt(3) = 1
 hist_dov2xy(3) = .false.
 hist_nhtfrq(3) = 0
 hist_type1d_pertape(3) = 'LAND'
-hist_fincl3 += 'FSR', 'H2OSNO', 'Q2M', 'SNOWDP', 'TSA', 'TREFMNAV', 'TREFMXAV', 'TG', 'QRUNOFF', 'FSH', 'FIRE', 'FIRA', 'FGR', 'EFLX_LH_TOT', 'RH2M', 'TLAI', 'SOILWATER_10CM', 'TOTSOILLIQ', 'TOTSOILICE', 'U10', 'TSOI_10CM', 'QIRRIG', 'URBAN_HEAT', 'WASTEHEAT', 'TSKIN'
+hist_fincl3 += 'FSR', 'H2OSNO', 'Q2M', 'SNOWDP', 'TSA', 'TREFMNAV', 'TREFMXAV', 'TG', 'QRUNOFF', 'FSH', 'FIRE', 'FIRA', 'FGR', 'EFLX_LH_TOT', 'RH2M', 'TLAI', 'SOILWATER_10CM', 'TOTSOILLIQ', 'TOTSOILICE', 'U10', 'TSOI_10CM', 'QIRRIG_FROM_SURFACE', 'URBAN_HEAT', 'WASTEHEAT', 'TSKIN'
 
 ! h3 stream (yearly average, gridcell-level)
 ! Eyr

@@ -45,12 +45,6 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: snounload_patch        (:)   ! Canopy snow unloading (mm H2O)
      real(r8), pointer :: swe_old_col            (:,:) ! col initial snow water
 
-     real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
-                                                        ! in most cases, the vegetation scheme does not have a dynamic
-                                                        ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
-                                                        ! When FATES is coupled in with plant hydraulics turned on, this storage
-                                                        ! term is set to non-zero. (kg/m2 H2O)
-
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
@@ -71,6 +65,7 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: frac_h2osfc_nosnow_col (:)   ! col fractional area with surface water greater than zero (if no snow present)
      real(r8), pointer :: wf_col                 (:)   ! col soil water as frac. of whc for top 0.05 m (0-1) 
      real(r8), pointer :: wf2_col                (:)   ! col soil water as frac. of whc for top 0.17 m (0-1) 
+     real(r8), pointer :: available_gw_uncon_col (:)   ! col available water in the unconfined saturated zone
      real(r8), pointer :: fwet_patch             (:)   ! patch canopy fraction that is wet (0 to 1)
      real(r8), pointer :: fcansno_patch          (:)   ! patch canopy fraction that is snow covered (0 to 1)
      real(r8), pointer :: fdry_patch             (:)   ! patch canopy fraction of foliage that is green and dry [-] (new)
@@ -155,8 +150,6 @@ contains
     allocate(this%snounload_patch        (begp:endp))                     ; this%snounload_patch        (:)   = nan  
     allocate(this%swe_old_col            (begc:endc,-nlevsno+1:0))        ; this%swe_old_col            (:,:) = nan   
 
-    allocate(this%total_plant_stored_h2o_col(begc:endc))                  ; this%total_plant_stored_h2o_col(:) = nan
-
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
     allocate(this%snw_rds_top_col        (begc:endc))                     ; this%snw_rds_top_col        (:)   = nan
     allocate(this%h2osno_top_col         (begc:endc))                     ; this%h2osno_top_col         (:)   = nan
@@ -175,7 +168,8 @@ contains
     allocate(this%frac_h2osfc_col        (begc:endc))                     ; this%frac_h2osfc_col        (:)   = nan 
     allocate(this%frac_h2osfc_nosnow_col (begc:endc))                     ; this%frac_h2osfc_nosnow_col        (:)   = nan 
     allocate(this%wf_col                 (begc:endc))                     ; this%wf_col                 (:)   = nan
-    allocate(this%wf2_col                (begc:endc))                     ; 
+    allocate(this%wf2_col                (begc:endc))                     ; this%wf2_col                (:)   = nan
+    allocate(this%available_gw_uncon_col (begc:endc))                     ; this%available_gw_uncon_col (:)   = nan
     allocate(this%fwet_patch             (begp:endp))                     ; this%fwet_patch             (:)   = nan
     allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
@@ -200,7 +194,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -392,6 +385,14 @@ contains
             ptr_col=this%wf_col, default='inactive')
     end if
 
+    this%available_gw_uncon_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('GW_AVAILABLE'), &
+         units='kg/m2', &
+         avgflag='A', &
+         long_name=this%info%lname('available water in the unconfined saturated zone'), &
+         ptr_col=this%available_gw_uncon_col, default='inactive')
+    
     this%h2osno_top_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('H2OSNO_TOP'), &
@@ -471,7 +472,6 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno
     use clm_varcon      , only : zlnd
     !
     ! !ARGUMENTS:
@@ -481,10 +481,7 @@ contains
     class(waterstatebulk_type), intent(in)                :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
+    integer            :: c,l
     real(r8)           :: snowbd      ! temporary calculation of snow bulk density (kg/m3)
     real(r8)           :: fmelt       ! snowbd/100
     !-----------------------------------------------------------------------
@@ -500,11 +497,6 @@ contains
        this%wf_col(c) = spval
        this%wf2_col(c) = spval
     end do
-
-
-    ! Water Stored in plants is almost always a static entity, with the exception
-    ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
-    this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
 
 
     associate(snl => col%snl) 

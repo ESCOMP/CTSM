@@ -223,7 +223,7 @@ contains
     ! !USES
     use clm_instur, only : wt_lunit, wt_nat_patch
     use subgridMod, only : subgrid_get_info_natveg, natveg_patch_exists
-    use clm_varpar, only : numpft, maxpatch_pft, natpft_lb, natpft_ub
+    use clm_varpar, only : natpft_lb, natpft_ub
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -430,7 +430,7 @@ contains
     use clm_instur      , only : wt_lunit, wt_cft
     use landunit_varcon , only : istcrop, istsoil
     use subgridMod      , only : subgrid_get_info_crop, crop_patch_exists
-    use clm_varpar      , only : maxpatch_pft, cft_lb, cft_ub
+    use clm_varpar      , only : cft_lb, cft_ub
     use clm_varctl      , only : create_crop_landunit
     !
     ! !ARGUMENTS:

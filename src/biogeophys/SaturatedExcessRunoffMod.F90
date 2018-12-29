@@ -12,8 +12,10 @@ module SaturatedExcessRunoffMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, use_vichydro
+  use clm_varctl   , only : iulog, use_vichydro, crop_fsat_equals_zero
   use clm_varcon   , only : spval
+  use LandunitType , only : landunit_type
+  use landunit_varcon  , only : istcrop
   use ColumnType   , only : column_type
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType, only : soilstate_type
@@ -173,7 +175,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SaturatedExcessRunoff (this, bounds, num_hydrologyc, filter_hydrologyc, &
-       col, soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+       lun, col, soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculate surface runoff due to saturated surface
@@ -185,13 +187,14 @@ contains
     type(bounds_type)        , intent(in)    :: bounds               
     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+    type(landunit_type)      , intent(in)    :: lun
     type(column_type)        , intent(in)    :: col
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: fc, c
+    integer  :: fc, c, l
 
     character(len=*), parameter :: subname = 'SaturatedExcessRunoff'
     !-----------------------------------------------------------------------
@@ -227,6 +230,17 @@ contains
        write(iulog,*) subname//' ERROR: Unrecognized fsat_method: ', this%fsat_method
        call endrun(subname//' ERROR: Unrecognized fsat_method')
     end select
+
+    ! ------------------------------------------------------------------------
+    ! Set fsat to zero for crop columns
+    ! ------------------------------------------------------------------------
+    if (crop_fsat_equals_zero) then
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          l = col%landunit(c)
+          if(lun%itype(l) == istcrop) fsat(c) = 0._r8
+       end do
+    endif
 
     ! ------------------------------------------------------------------------
     ! Compute qflx_sat_excess_surf

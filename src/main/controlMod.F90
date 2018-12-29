@@ -202,8 +202,9 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, soil_layerstruct, subgridflag, &
-         irrigate, run_zero_weight_urban, all_active
-
+         irrigate, run_zero_weight_urban, all_active, &
+         crop_fsat_equals_zero
+    
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -247,7 +248,8 @@ contains
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     namelist /clm_inparm/ maxpatch_pft
 
     ! flag for SSRE diagnostic
@@ -606,6 +608,9 @@ contains
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! Crop saturated excess runoff
+    call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -613,7 +618,8 @@ contains
     call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! BGC
@@ -931,7 +937,6 @@ contains
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
-    write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   nsegspc              = ',nsegspc
     ! New fields
     write(iulog,*) ' perchroot (plant water stress based on unfrozen layers only) = ',perchroot
