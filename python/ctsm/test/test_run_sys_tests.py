@@ -25,6 +25,8 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE
 # to make readable unit test names
 # pylint: disable=invalid-name
 
+# Replace the slow _record_git_status with a fake that does nothing
+@mock.patch('ctsm.run_sys_tests._record_git_status', mock.MagicMock(return_value=None))
 class TestRunSysTests(unittest.TestCase):
     """Tests of run_sys_tests"""
 
