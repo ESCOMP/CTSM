@@ -4,12 +4,14 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import subprocess
 from datetime import datetime
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
+from ctsm.path_utils import path_to_ctsm_root
 
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
@@ -115,6 +117,7 @@ def run_sys_tests(machine, cime_path,
     testroot = _get_testroot(testroot_base, testid_base)
     if not skip_testroot_creation:
         _make_testroot(testroot, testid_base, dry_run)
+    _record_git_status(testroot, dry_run)
     print("Testroot: {}".format(testroot))
 
     create_test_args = _get_create_test_args(compare_name=compare_name,
@@ -339,6 +342,36 @@ def _make_testroot(testroot, testid_base, dry_run):
     if not dry_run:
         os.makedirs(testroot)
         make_link(testroot, _get_testdir_name(testid_base))
+
+def _record_git_status(testroot, dry_run):
+    """Record git status and related information to stdout and a file"""
+    output = ''
+    ctsm_root = path_to_ctsm_root()
+
+    current_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                           cwd=ctsm_root,
+                                           universal_newlines=True)
+    output += "Current hash: {}".format(current_hash)
+    git_status = subprocess.check_output(['git', '-c', 'color.ui=always',
+                                          'status', '--short', '--branch'],
+                                         cwd=ctsm_root,
+                                         universal_newlines=True)
+    output += git_status
+    manic = os.path.join('manage_externals', 'checkout_externals')
+    manage_externals_status = subprocess.check_output([manic, '--status', '--verbose'],
+                                                      cwd=ctsm_root,
+                                                      universal_newlines=True)
+    output += 72*'-' + '\n' + 'manage_externals status:' + '\n'
+    output += manage_externals_status
+    output += 72*'-' + '\n'
+
+    print(output)
+
+    if not dry_run:
+        git_status_filepath = os.path.join(testroot, 'SRCROOT_GIT_STATUS')
+        with open(git_status_filepath, 'w') as git_status_file:
+            git_status_file.write("SRCROOT: {}\n".format(ctsm_root))
+            git_status_file.write(output)
 
 def _get_create_test_args(compare_name, generate_name, baseline_root,
                           account, walltime, queue,
