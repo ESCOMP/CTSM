@@ -357,6 +357,9 @@ def _record_git_status(testroot, dry_run):
                                          cwd=ctsm_root,
                                          universal_newlines=True)
     output += git_status
+    if git_status.count('\n') == 1:
+        # Only line in git status is the branch info
+        output += "(clean sandbox)\n"
     manic = os.path.join('manage_externals', 'checkout_externals')
     manage_externals_status = subprocess.check_output([manic, '--status', '--verbose'],
                                                       cwd=ctsm_root,
