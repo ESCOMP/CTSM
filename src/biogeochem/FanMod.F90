@@ -47,7 +47,7 @@ module FanMod
   integer, parameter, public :: ind_avail = 1, ind_resist = 2, ind_unavail = 3 
   
   ! nominal depth where the soil TAN concentration vanishes:
-  real(r8), parameter, public :: soildepth_reservoir = 0.05_r8
+  real(r8), parameter, public :: soildepth_reservoir = 0.04_r8
 
   integer, parameter, public :: err_bad_theta = 1, err_negative_tan = 2, err_negative_flux = 3, &
        err_balance_tan = 4, err_balance_nitr = 5, err_nan = 6, err_bad_subst = 7
@@ -104,9 +104,12 @@ contains
     real(r8) :: diff
     
     real(r8) :: kaq_base
-    real(r8), parameter :: pw = 10.0_r8 / 3.0_r8
-    
-    kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.0_r8)
+    real(r8), parameter :: pw = 7.0_r8 / 3.0_r8
+    real(r8), parameter :: gascnst = 8.314, faraday = 96500.0_r8, lp = 73.4_r8, lm_no3 = 71.4_r8, lm_oh=197.6_r8, lm=lm_no3
+
+    kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
+    !kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.0_r8)
+
     diff = kaq_base * (theta**pw) / (thetasat**2)
 
   end function eval_diffusivity_liq_mq
@@ -119,7 +122,7 @@ contains
     real(r8) :: diff
     
     real(r8) :: soilair, dair
-    real(r8), parameter :: pw = 10.0_r8 / 3.0_r8
+    real(r8), parameter :: pw = 7.0_r8 / 3.0_r8
     real(r8), parameter :: mNH3 = 17., mair = 29, vNH3 = 14.9, vair = 20.1, press = 1.0
     
     soilair = thetasat - theta
@@ -133,36 +136,45 @@ contains
 
   end function eval_diffusivity_gas_mq
 
-  function eval_diffusivity_gas_m03(theta, thetasat, tg) result(diff)
+  function eval_diffusivity_gas_m03(theta, thetasat, tg, bsw) result(diff)
     ! Evaluate the gas phase diffusivity for NH3 in soil according to the method of
     ! Moldrup (2003).
     implicit none
-    real(r8), intent(in) :: theta, thetasat, tg
+    real(r8), intent(in) :: theta, thetasat, tg, bsw
     real(r8) :: diff
     
-    real(r8) :: soilair, dair
+    real(r8) :: soilair, dair, m03_W
     real(r8), parameter :: pw = 10.0_r8 / 3.0_r8
-    real(r8), parameter :: bsw = 5.0_r8, m03_T = 2.0, m03_W = 3.0 / bsw
+    real(r8), parameter :: m03_T = 2.0
+    real(r8), parameter :: mNH3 = 17., mair = 29, vNH3 = 14.9, vair = 20.1, press = 1.0
+
+    m03_W = 3.0 / bsw
     
     soilair = thetasat - theta
-    dair = 1.7e-5 * 1.03**(Tg-293.0_r8)
+    !dair = 1.7e-5 * 1.03**(Tg-293.0_r8)
+    dair = (0.001 * tg**1.75 * sqrt(1/mNH3 + 1/mair)) / (press * (vair**(1./3) * vNH3**(1./3))**2) * 1e-4
    
-    diff = dair * soilair**m03_T * (soilair/thetasat)**m03_W
+    diff = dair * soilair**m03_T * (soilair/thetasat)**m03_W / soilair
     
   end function eval_diffusivity_gas_m03
 
-  function eval_diffusivity_liq_m03(theta, thetasat, tg) result(diff)
+  function eval_diffusivity_liq_m03(theta, thetasat, tg, bsw) result(diff)
     ! Evaluate the aquous phase diffusivity for TAN in soil according to the method of Moldrup (2003).
     implicit none
-    real(r8), intent(in) :: theta, thetasat, tg
+    real(r8), intent(in) :: theta, thetasat, tg, bsw
     real(r8) :: diff
     
-    real(r8) :: kaq_base
-    real(r8), parameter :: pw = 10.0_r8 / 3.0_r8, bsw = 5.0_r8, m03_T = 2.0_r8, m03_W = 0.3333_r8*bsw - 1.0
+    real(r8) :: kaq_base, m03_W
+    real(r8), parameter :: pw = 10.0_r8 / 3.0_r8, m03_T = 2.0_r8
+    real(r8), parameter :: gascnst = 8.314, faraday = 96500.0_r8, lp = 73.4_r8, lm_no3 = 71.4_r8, lm_oh=197.6_r8, lm=lm_oh
     
     kaq_base = 9.8e-10 * 1.03 ** (Tg-273.0_r8)
     
-    diff = kaq_base * theta**m03_T * (theta/thetasat)**m03_W
+    !kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
+    
+    m03_W = 0.3333_r8*bsw - 1.0
+    
+    diff = kaq_base * theta**m03_T * (theta/thetasat)**m03_W / theta
 
   end function eval_diffusivity_liq_m03
   
@@ -312,15 +324,16 @@ contains
     
   end function get_henry_eff
 
-  subroutine partition_tan(tg, Hconc, theta, air, KNH3, fract_nh4)
+  subroutine partition_tan(tg, Hconc, theta, air, kads, KNH3, fract_nh4)
     implicit none
     real(r8), intent(in) :: tg ! soil temperature, K
     real(r8), intent(in) :: Hconc ! H+ concentration, mol / l
     real(r8), intent(in) :: theta ! water volume fraction
     real(r8), intent(in) :: air   ! air volume fraction
+    real(r8), intent(in) :: kads  ! adsorption coefficient, kads = NH4(ads) / NH4(aq)
 
     real(r8), optional, intent(out) :: fract_nh4 ! mass fraction of NH4
-    real(r8), intent(out) :: KNH3 ! ratio of concentrations [NH3 (gas)] / [NH3+NH4 (aq)] 
+    real(r8), intent(out) :: KNH3 ! volatility, ratio of concentrations [NH3 (gas)] / [NH3+NH4 (aq)] 
     
     real(r8) :: KNH4, HNH3, cnc_aq, fract_aq
     real(r8), parameter :: Tref = 298.15_r8
@@ -331,7 +344,7 @@ contains
     
     KNH3 = KNH4 / (HNH3*(KNH4 + Hconc))
 
-    fract_aq = theta / (air*KNH3 + theta)
+    fract_aq = theta / (air*KNH3 + theta + kads*(1.0_r8-theta-air))
     if (present(fract_nh4)) fract_nh4 = fract_aq * Hconc / (KNH4 + Hconc)
     !if (present(fract_nh3g)) fract_nh3g = air  * KNH3 / (air*KNH3 + theta)
     !if (present(fract_nh3aq)) fract_nh3aq = fract_aq * (1.0_r8 - Hconc / (KNH4 + Hconc))
@@ -398,15 +411,15 @@ contains
     
   end function eval_no3prod
 
-  real(r8) function eval_no3prod_v2(theta, Tg) result(kNO3)
+  real(r8) function eval_no3prod_v2(theta, theta_sat, Tg) result(kNO3)
     ! Evaluate nitrification rate as in the Riddick et al. (2016) paper but for NH4.
     ! Partitioning between TAN forms is not included.
-    real(r8), intent(in) :: theta ! volumetric soil water m/m
+    real(r8), intent(in) :: theta, theta_sat ! volumetric soil water m/m
     real(r8), intent(in) :: Tg    ! soil temperature, K
 
-    real(r8) :: stf, wmr, smrf, mNH4
+    real(r8) :: stf, wmr, smrf, mNH4, soil_dens
 
-    real(r8), parameter :: soil_dens = 1050.0_r8 ! Soil density, kg/m3
+    !real(r8), parameter :: soil_dens = 1400.0_r8 ! Soil density, kg/m3
     real(r8), parameter :: water_dens = 1000.0_r8
     real(r8), parameter :: rmax = 1.16e-6_r8   ! Maximum rate of nitrification, s-1
     real(r8), parameter :: tmax = 313.0       ! Maximm temperature of microbial activity, K
@@ -416,6 +429,8 @@ contains
     real(r8), parameter :: smrf_b = 2          ! Parameter in soil moisture response function
     real(r8), parameter :: Tref = 298.15_r8
     
+
+    soil_dens = 2650.0_r8 * (1.0_r8-theta_sat)
     mNH4 = 1.0_r8
 
     ! soil temperature function
@@ -434,7 +449,7 @@ contains
     
   end function eval_no3prod_v2
   
-  subroutine eval_fluxes_slurry(water, mtan, Hconc, tg, ratm, theta, thetasat, perc, runoff, cnc_nh3_air, fluxes)
+  subroutine eval_fluxes_slurry(water, mtan, Hconc, tg, ratm, theta, thetasat, perc, runoff, bsw, fluxes)
     ! Evaluate nitrogen fluxes for a partly infiltrated layer of slurry.
     ! The state of infiltration is detemined from the amounts water on surface and in soil.
     ! Positive flux means loss of TAN.
@@ -449,10 +464,10 @@ contains
     real(r8), intent(in) :: thetasat ! volumetric soil water at saturation
     real(r8), intent(in) :: perc     ! percolation water flux thourgh the bottom of volatilization layer, m/s
     real(r8), intent(in) :: runoff   ! surface runoff, m/s
-    real(r8), intent(in) :: cnc_nh3_air ! atmospheric NH3 concentration, mass units / m3
+    real(r8), intent(in) :: bsw
     !real(r8), intent(in) :: dt       ! timestep
 
-    real(r8) :: water_tot, cnc, air, depth_soilsat, diffusivity_water, diffusivity_satsoil, halfwater, insoil, r1, dz2
+    real(r8) :: water_tot, cnc, air, depth_soilsat, diffusivity_water, diffusivity_satsoil, halfwater, insoil, r1, dz2, inwater
     real(r8) :: r2, volat_rate, kno3, henry_eff, depth_lower, fract_nh4
 
     water_tot = water(1) + water(2)
@@ -469,7 +484,8 @@ contains
 
     diffusivity_water = 9.8e-10_r8 * 1.03_r8 ** (tg - 273.0_r8)
     diffusivity_satsoil = eval_diffusivity_liq_mq(thetasat, thetasat, tg) * thetasat
-
+    !diffusivity_satsoil = eval_diffusivity_liq_m03(thetasat, thetasat, tg, bsw) * thetasat
+    
     halfwater = 0.5_r8 * water_tot
 
     ! Calculate the internal resistance r1 of the slurry/soil layer by integrating the
@@ -477,26 +493,42 @@ contains
     if (water(1) < halfwater) then
        ! contribution from both pool and the saturated soil.
        insoil = (halfwater - water(1)) / thetasat
-       r1 = water(1) / diffusivity_water + insoil / diffusivity_satsoil
+       inwater = water(1)
+       !r1 = water(1) / diffusivity_water + insoil / diffusivity_satsoil
+       
     else
        ! pool only
-       r1 = halfwater / diffusivity_water
+       inwater = halfwater
+       insoil = 0.0
+       !r1 = halfwater / diffusivity_water
     end if
-    
+
+    r1 = inwater / diffusivity_water + insoil /diffusivity_satsoil
+
     depth_lower = max(soildepth_reservoir, depth_soilsat*1.5)
     ! Diffusion to deeper soil over distance dz2
-    dz2 = depth_lower - 0.5*depth_soilsat
-    r2 = 0.5 * depth_soilsat/diffusivity_satsoil + dz2 / eval_diffusivity_liq_mq(theta, thetasat, tg)
+    !dz2 = depth_lower - 0.5*depth_soilsat
+    
+    !r2 = (water(1)-inwater) / diffusivity_water + (depth_soilsat-insoil) / diffusivity_satsoil &
+    !     & + (depth_lower-depth_soilsat) / (eval_diffusivity_liq_m03(theta, thetasat, tg, bsw)*theta)
+
+    r2 = (water(1)-inwater) / diffusivity_water + (depth_soilsat-insoil) / diffusivity_satsoil &
+         & + (depth_lower-depth_soilsat) / (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta)
+    
+    
+    !dz2 = depth_lower - insoil
+    
+    !r2 = 0.5 * depth_soilsat/diffusivity_satsoil + dz2 / (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta) 
     !print *, 'r2', r2, diffusivity_satsoil, dz2, depth_soilsat
     fluxes(iflx_soild) = cnc / r2
 
     !henry_eff = get_henry_eff(tg, Hconc)
-    call partition_tan(tg, Hconc, 1.0_r8, 0.0_r8, henry_eff, fract_nh4=fract_nh4)
+    call partition_tan(tg, Hconc, 1.0_r8, 0.0_r8, 0.0_r8, henry_eff, fract_nh4=fract_nh4)
     volat_rate = 1.0_r8 / (r1 + ratm / henry_eff) ! conductance from aqueous TAN in slurry to NH3 in atmosphere
     fluxes(iflx_air) = volat_rate*cnc
     
     ! nitrification
-    kno3 = eval_no3prod(thetasat, tg, Hconc)
+    kno3 = eval_no3prod_v2(thetasat, thetasat, tg)
     fluxes(iflx_no3) = kno3 * mtan * fract_nh4
 
     !fluxes(3:) = 0
@@ -588,7 +620,7 @@ contains
   end subroutine eval_fluxes_soil
 
   subroutine eval_fluxes_soilroff(mtan, water_manure, Hconc, tg, ratm, theta, thetasat, perc, &
-       & runoff, cnc_nh3_air, soildepth, fluxes, substance, status)
+       & runoff, bsw, soildepth, fluxes, substance, status)
     !
     ! Evaluate nitrogen fluxes from a soil layer. Use for all cases except the partly
     ! infiltrated slurry (above). Fluxes can be evaluated either for urea or TAN: for
@@ -605,7 +637,7 @@ contains
     real(r8), intent(in) :: thetasat     ! volumetric soil water at saturation
     real(r8), intent(in) :: perc         ! downwards water percolation rate at the bottom of layer, m/s, > 0
     real(r8), intent(in) :: runoff       ! runoff water flux, m / s
-    real(r8), intent(in) :: cnc_nh3_air  ! NH3 concentration in air, mass units / m3
+    real(r8), intent(in) :: bsw  !
     real(r8), intent(in) :: soildepth    ! thickness of the volatlization layer
     integer, intent(in) :: substance     ! subst_tan or subst_urea.
     integer, intent(out) :: status      ! error flag
@@ -630,18 +662,18 @@ contains
     air = thetasat - theta_tot
 
     dz = 0.5*soildepth 
-    dsl = eval_diffusivity_liq_mq(theta_tot, thetasat, Tg)
-    dsg = eval_diffusivity_gas_mq(theta_tot, thetasat, Tg)
+    !dsl = eval_diffusivity_liq_mq(theta_tot, thetasat, Tg)
+    !dsg = eval_diffusivity_gas_mq(theta_tot, thetasat, Tg)
 
-    !dsl = eval_diffusivity_liq_m03(theta_tot, thetasat, Tg)
-    !dsg = eval_diffusivity_gas_m03(theta_tot, thetasat, Tg)
+    dsl = eval_diffusivity_liq_m03(theta_tot, thetasat, Tg, bsw)
+    dsg = eval_diffusivity_gas_m03(theta_tot, thetasat, Tg, bsw)
 
     rsg = dz / (dsg*air)
     rsl = dz / (dsl*theta_tot)
 
     if (substance == subst_tan) then
-       call partition_tan(tg, Hconc, theta_tot, air, volatility, fract_nh4=fract_nh4)
-       no3_rate = eval_no3prod_v2(theta_tot, tg)*fract_nh4
+       call partition_tan(tg, Hconc, theta_tot, air, 0.0_r8, volatility, fract_nh4=fract_nh4)
+       no3_rate = eval_no3prod_v2(theta_tot, thetasat, tg)!*fract_nh4
     else if (substance == subst_urea) then
        volatility = 0.0
        no3_rate = 0.0_r8
@@ -650,7 +682,7 @@ contains
        return
     end if
     
-    call get_srf_cnc(volatility, cnc, cnc_nh3_air, rsg, rsl, Ratm, runoff, theta_tot, air, cnc_srfg, cnc_srfaq)
+    call get_srf_cnc(volatility, cnc, 0.0_r8, rsg, rsl, Ratm, runoff, theta_tot, air, cnc_srfg, cnc_srfaq)
 
     fluxes(iflx_air) = cnc_srfg / ratm
     fluxes(iflx_roff) = runoff * cnc_srfaq
@@ -659,8 +691,8 @@ contains
     cnc_soilaq = cnc / (theta_tot + air*volatility)
     cnc_soilg = cnc_soilaq*volatility
 
-    fluxes(iflx_soild) = (cnc_soilaq * dsl*theta_tot) / dz2 + (cnc_soilg * dsg*air) / dz2
-
+    fluxes(iflx_soild) = (cnc_soilaq * dsl * theta_tot) / dz2 + (cnc_soilg * dsg * air) / dz2
+    fluxes(iflx_soild) = fluxes(iflx_soild) + mtan / (24*3600.0*365)
     fluxes(iflx_no3) = mtan * no3_rate
     fluxes(iflx_soilq) = cnc_soilaq * perc
 
@@ -694,6 +726,120 @@ contains
     end subroutine get_srf_cnc
 
   end subroutine eval_fluxes_soilroff
+
+  subroutine eval_fluxes_soilroff_ads(mtan, water_manure, Hconc, tg, ratm, theta, thetasat, perc, &
+       & runoff, bsw, soildepth, fluxes, substance, status)
+    !
+    ! Evaluate nitrogen fluxes from a soil layer. Use for all cases except the partly
+    ! infiltrated slurry (above). Fluxes can be evaluated either for urea or TAN: for
+    ! urea, only the aqueous phase fluxes are evaluated and nitrification is set to zero.
+    ! 
+    implicit none
+    real(r8), intent(in) :: mtan ! TAN, mass units / m2
+    real(r8), intent(in) :: water_manure ! water in the soil pool *in addition to* background soil water
+    real(r8), intent(out) :: fluxes(5)   ! nitrogen fluxes, mass units / m2 / s, see top of module
+    real(r8), intent(in) :: Hconc        ! Hydrogen ion concentration, mol/l
+    real(r8), intent(in) :: tg           ! soil temperature, K
+    real(r8), intent(in) :: ratm         ! atmospheric resistance, s/m
+    real(r8), intent(in) :: theta        ! volumetric soil water in "clean" soil, m/m
+    real(r8), intent(in) :: thetasat     ! volumetric soil water at saturation
+    real(r8), intent(in) :: perc         ! downwards water percolation rate at the bottom of layer, m/s, > 0
+    real(r8), intent(in) :: runoff       ! runoff water flux, m / s
+    real(r8), intent(in) :: bsw  !
+    real(r8), intent(in) :: soildepth    ! thickness of the volatlization layer
+    integer, intent(in) :: substance     ! subst_tan or subst_urea.
+    integer, intent(out) :: status      ! error flag
+    
+    real(r8) :: water_tot, cnc, air, henry_eff, dsl, dsg, dstot, dz2, no3_rate, volat_rate, theta_tot, beta
+    real(r8) :: cnc_srfg, cnc_srfaq, cnc_soilaq, cnc_soilg, dz, rsl, rsg
+    real(r8) :: fract_gas, fract_nh3aq, fract_nh4, fract_aq, volatility
+
+    real(r8) :: kads
+
+    water_tot = water_manure + theta*soildepth
+    if (water_tot < 1e-9) then
+       fluxes = 0.0
+       return
+    end if
+    
+    theta_tot = water_tot / soildepth
+    if (theta_tot > thetasat) then
+       status = err_bad_theta
+       return
+    end if
+
+    cnc = mtan / soildepth
+    air = thetasat - theta_tot
+
+    dz = 0.5*soildepth 
+    dsl = eval_diffusivity_liq_mq(theta_tot, thetasat, Tg)
+    dsg = eval_diffusivity_gas_mq(theta_tot, thetasat, Tg)
+
+    !dsl = eval_diffusivity_liq_m03(theta_tot, thetasat, Tg, bsw)
+    !dsg = eval_diffusivity_gas_m03(theta_tot, thetasat, Tg, bsw)
+
+    rsg = dz / (dsg*air)
+    rsl = dz / (dsl*theta_tot)
+
+    if (substance == subst_tan) then
+       kads = 0.0_r8
+       call partition_tan(tg, Hconc, theta_tot, air, kads, volatility, fract_nh4=fract_nh4)
+       no3_rate = eval_no3prod_v2(theta_tot, thetasat, tg)
+    else if (substance == subst_urea) then
+       volatility = 0.0
+       no3_rate = 0.0_r8
+       kads = 0.0
+    else
+       status = err_bad_subst
+       return
+    end if
+    
+    call get_srf_cnc(volatility, cnc, 0.0_r8, rsg, rsl, Ratm, runoff, theta_tot, air, cnc_srfg, cnc_srfaq)
+
+    fluxes(iflx_air) = cnc_srfg / ratm
+    fluxes(iflx_roff) = runoff * cnc_srfaq
+
+    dz2 = soildepth_reservoir - 0.5 * soildepth
+    cnc_soilaq = cnc / (theta_tot + air*volatility + (1-theta_tot-air)*kads)
+    cnc_soilg = cnc_soilaq*volatility
+
+    fluxes(iflx_soild) = (cnc_soilaq * dsl*theta_tot) / dz2 + (cnc_soilg * dsg*air) / dz2
+    fluxes(iflx_soild) = fluxes(iflx_soild) + mtan / (24*3600.0*365)
+    fluxes(iflx_no3) = mtan * no3_rate
+    fluxes(iflx_soilq) = cnc_soilaq * perc
+
+    status = 0
+    !fluxes(4:) = 0
+    
+  contains
+    
+    subroutine get_srf_cnc(knh3, xs, xag, Rsg, Rsl, Rag, qr, theta, air, cnc_gas, cnc_aq)
+      real(r8), intent(in) :: knh3 ! volatility
+      real(r8), intent(in) :: xag  ! cnc_atm_gas
+      real(r8), intent(in) :: qr   ! runoff m/s
+      real(r8), intent(in) :: Rag  ! Ratm
+      real(r8), intent(in) :: xs   ! mass / m3 soil
+      real(r8), intent(in) :: Rsg, Rsl, theta, air
+
+      real(r8), intent(out) :: cnc_gas, cnc_aq
+
+      real(r8) :: x0, x1, x2, x3, x4, x5, x6
+
+      x0 = air*knh3
+      x1 = air*kads
+      x2 = kads*theta
+      x3 = Rag + Rsg
+      x4 = Rsl*knh3*x3
+      x5 = Rag*Rsg*(Rsl*qr + 1)
+      x6 = (Rag*xs*(Rsg + Rsl*knh3) + Rsg*Rsl*xag*(kads + theta + x0 - x1 - x2)) &
+           /(Rsl*air*knh3**2*x3 + kads*x4 + kads*x5 + theta*x4 + theta*x5 + x0*x5 - x1*x4 - x1*x5 - x2*x4 - x2*x5)
+      cnc_gas = knh3*x6
+      cnc_aq = x6
+
+    end subroutine get_srf_cnc
+
+  end subroutine eval_fluxes_soilroff_ads
+
 
 
   subroutine eval_fluxes_soil_3p(mtan, water_manure, Hconc, tg, ratm, theta, thetasat, perc, &
@@ -1021,7 +1167,7 @@ contains
     
   end subroutine update_3pool
 
-  subroutine update_4pool(tg, ratm, theta, thetasat, precip, evap, qbot, watertend, runoff, tandep, tanprod, cnc_nh3_air, &
+  subroutine update_4pool(tg, ratm, theta, thetasat, precip, evap, qbot, watertend, runoff, tandep, tanprod, bsw, &
        depth_slurry, poolranges, tanpools, Hconc, fluxes, garbage, dt, status)
     !
     ! Experimental, as above but with an additional long-lived TAN pool.
@@ -1040,7 +1186,7 @@ contains
     real(r8), intent(in) :: tanprod   ! TAN produced in the column, added to aged TAN pool
     !real(r8), intent(in) :: infiltr_slurry ! Slurry infiltration rate, m/s
     real(r8), intent(in) :: depth_slurry ! Initial slurry depth, m
-    real(r8), intent(in) :: cnc_nh3_air ! NH3 concentration in air, gN/m3
+    real(r8), intent(in) :: bsw
     real(r8), intent(in) :: poolranges(4)  ! age ranges of TAN pools S0, S1, S2, sec. Slurry infiltration time is inferred from S0. 
     real(r8), intent(inout) :: tanpools(4) ! TAN pools gN/m2
     real(r8), intent(out) :: fluxes(5,4) ! TAN fluxes, gN/m2/s (type of flux, pool)
@@ -1071,14 +1217,14 @@ contains
     infiltrated = depth_slurry * infiltr_slurry / (infiltr_slurry + evap_slurry)
     ! Slurry water (in addition to soil water, theta) on surface and in soil. Represents
     ! mean over pool S0.
-    water_slurry = (/0.5*depth_slurry, 0.5*infiltrated/) 
+    water_slurry = (/0.5*depth_slurry, 0.5*infiltrated/)
     ! The excess water assumed to have percolated down from the volat. layer.
     percolated = max(infiltrated - dz_layer*(thetasat-theta), 0.0)
     ! Percolation rate out of volat layer, average over the pool S0.
     perc_slurry_mean = percolated / poolranges(1)
 
     call eval_fluxes_slurry(water_slurry, tanpools(1), Hconc(1), tg, ratm, theta, thetasat, perc_slurry_mean, &
-         runoff, cnc_nh3_air, fluxes(:,1))
+         runoff, bsw, fluxes(:,1))
 
     if (any(isnan(fluxes))) then
        status = err_nan * 10
@@ -1115,14 +1261,11 @@ contains
        !call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
        !     & ratm, theta, thetasat, percolation, runoff, cnc_nh3_air, &
        !     & dz_layer, fluxes(:,indpl), subst_tan, status)
-       call eval_fluxes_soilroff(tanpools(indpl), water_soil, Hconc(indpl), tg, &
-            & ratm, theta, thetasat, percolation, runoff, cnc_nh3_air, &
+       call eval_fluxes_soilroff_ads(tanpools(indpl), water_soil, Hconc(indpl), tg, &
+            & ratm, theta, thetasat, percolation, runoff, bsw, &
             & dz_layer, fluxes(:,indpl), subst_tan, status)
+
        if (status /= 0) return
-       !print *, fluxes(4,indpl), percolation, waterloss
-       !fluxes(:,indpl) = 0
-       !fluxes(5:,indpl) = 0
-       !tanpools(indpl) = tanpools(indpl) - sum(fluxes(:,indpl)) * dt
        age_prev = age_prev + poolranges(indpl)
     end do
     
@@ -1137,6 +1280,7 @@ contains
 
     if (any(isnan(fluxes))) then
        status = err_nan * 100
+       return
     end if
 
     if (abs(sum(tanpools - tanpools_old) - (-sum(fluxes) + tandep + tanprod)*dt + garbage) > max(sum(tanpools_old)*1e-2, 1e-4)) then
@@ -1152,7 +1296,7 @@ contains
   end subroutine update_4pool
   
   subroutine update_npool(tg, ratm, theta, thetasat, precip, evap, qbot, watertend, runoff, tandep, tanprod, &
-       water_init, cnc_nh3_air, poolranges, Hconc, dz_layer, tanpools, fluxes, garbage, dt, status, numpools)
+       water_init, bsw, poolranges, Hconc, dz_layer, tanpools, fluxes, garbage, dt, status, numpools)
     !
     ! Evaluate fluxes and update TAN pools for a model with arbitrary number of pools
     ! divided by age and pH.
@@ -1170,7 +1314,7 @@ contains
     real(r8), intent(in) :: tandep    ! TAN input flux, gN/m2/s
     real(r8), intent(in) :: tanprod(numpools)   ! flux of TAN produced (from urea/organic n) in the column
     real(r8), intent(in) :: water_init ! Initial water volume in the affected patch, m
-    real(r8), intent(in) :: cnc_nh3_air ! NH3 concentration in air, gN/m3
+    real(r8), intent(in) :: bsw
     real(r8), intent(in) :: poolranges(numpools)  ! age ranges of TAN pools (npools)
     real(r8), intent(in) :: Hconc(numpools)       ! H+ concentration, mol/l (npools)
     real(r8), intent(in) :: dz_layer ! thickness of the volatilization layer, m
@@ -1205,6 +1349,7 @@ contains
     tandep_remaining = tandep - direct_runoff - direct_percolation
     water_into_layer = water_init * (1.0_r8 - fraction_reservoir - fraction_runoff)
     if (tandep_remaining < -1e-15) then
+       print *, tandep, direct_runoff, direct_percolation
        status = err_negative_tan + 10
        return
     end if
@@ -1252,8 +1397,8 @@ contains
        water_soil = water_into_layer * waterfunction(age_prev + 0.5*poolranges(indpl))
        !call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
        !call eval_fluxes_soil_3p(tanpools(indpl), water_soil, Hconc(indpl), tg, &
-       call eval_fluxes_soilroff(tanpools(indpl), water_soil, Hconc(indpl), tg, &
-            & ratm, theta, thetasat, percolation, runoff, cnc_nh3_air, &
+       call eval_fluxes_soilroff_ads(tanpools(indpl), water_soil, Hconc(indpl), tg, &
+            & ratm, theta, thetasat, percolation, runoff, bsw, &
             & dz_layer, fluxes(:,indpl), subst_tan, status)
        if (status /= 0) then
           return
@@ -1357,14 +1502,27 @@ contains
     
   end function get_evap_pool
 
-  function waterfunction(pool_age) result(water)
+  function waterfunction_exp(pool_age) result(water)
     implicit none
     real(r8), intent(in) :: pool_age ! sec
     real(r8) :: water
 
     water = exp(-pool_age / water_relax_t)
-  end function waterfunction
+  end function waterfunction_exp
 
+  function waterfunction(pool_age) result(water)
+    implicit none
+    real(r8), intent(in) :: pool_age ! sec
+    real(r8) :: water
+
+    if (pool_age > water_relax_t) then
+       water = 0.0_r8
+    else
+       water = 1.0_r8 - pool_age / water_relax_t
+    end if
+    
+  end function waterfunction
+  
   function eval_perc(waterloss, evap, precip, watertend, dt) result(rate)
     !
     ! Evaluate the downwards water flux at the layer bottom given the infiltration and
@@ -1498,7 +1656,7 @@ contains
     
   end subroutine eval_fluxes_storage
 
-  subroutine update_org_n(flux_input, tg, pools, dt, tanprod, soilflux)
+  subroutine update_org_n(flux_input, tg, soilpsi, pools, dt, tanprod, soilflux)
     !
     ! Evaluate the decomposition/mineralization N fluxes from the available, resistant and
     ! unavailable N fractions, and update the organic N pools. In addition, evaluate the
@@ -1507,21 +1665,31 @@ contains
     real(r8), intent(in) :: flux_input(3) ! organic N entering the pools. gN/m2/s. For
                                           ! indices see at top of the module.
     real(r8), intent(in) :: tg          ! ground temperature, K
+    real(r8), intent(in) :: soilpsi     ! soil water potential (MPa)
     real(r8), intent(inout) :: pools(3) ! organic N pools
     real(r8), intent(in) :: dt       ! timestep, sec
     real(r8), intent(out) :: tanprod(3)      ! Flux of TAN formed, both pools
     real(r8), intent(out) :: soilflux  ! Flux of organic nitrogen to soil
 
-    real(r8) :: rate_res, rate_avail, TR
+    real(r8) :: rate_res, rate_avail, TR, rmoist, psi
     real(r8), parameter :: ka1 = 8.94e-7_r8, ka2 = 6.38e-8 ! 1/s
     real(r8), parameter :: tr1 = 0.0106, tr2 = 0.12979 
     real(r8), parameter :: org_to_soil_time = 365*24*3600.0_r8
-
+    real(r8), parameter :: minpsi = -2.5_r8, maxpsi=-0.002_r8
     real(r8) :: soilfluxes(3)
     
     TR = tr1 * exp(tr2 * (tg-273.15_r8))
-    tanprod(ind_avail) = ka1 * TR * pools(ind_avail)
-    tanprod(ind_resist) = ka2 * TR * pools(ind_resist)
+    
+    psi = min(soilpsi, maxpsi)
+    ! decomp only if soilpsi is higher than minpsi
+    if (psi > minpsi) then
+       rmoist = log(minpsi/psi) / log(minpsi/maxpsi)
+    else
+       rmoist = 0.0
+    end if
+     
+    tanprod(ind_avail) = ka1 * TR * pools(ind_avail)*rmoist
+    tanprod(ind_resist) = ka2 * TR * pools(ind_resist)*rmoist
     tanprod(ind_unavail) = 0.0
     soilfluxes = pools * 1.0_r8 / org_to_soil_time
 
@@ -1531,7 +1699,7 @@ contains
   end subroutine update_org_n
 
   subroutine update_urea(tg, theta, thetasat, precip, evap, watertend, runoff, &
-       ndep, pools, fluxes, garbage, ranges, dt, status, numpools)
+       ndep, bsw, pools, fluxes, garbage, ranges, dt, status, numpools)
     !
     ! Evaluate fluxes and update the urea pools. The procedure is similar to updating the
     ! soil TAN pools, but NO3 and volatilization fluxes do not occur.
@@ -1545,6 +1713,7 @@ contains
     real(r8), intent(in) :: watertend ! time derivative of theta*dz
     real(r8), intent(in) :: runoff    ! surface runoff flux, m/s
     real(r8), intent(in) :: ndep
+    real(r8), intent(in) :: bsw
     real(r8), intent(inout) :: pools(numpools)
     real(r8), intent(out) :: fluxes(6, numpools) ! one extra for the to_tan flux
     real(r8), intent(in) :: ranges(numpools)
@@ -1570,7 +1739,7 @@ contains
        ! in the following, atmospheric concentration should be 0 not missing!
        call eval_fluxes_soilroff(pools(indpl), 0.0_r8, missing, tg, &
        !call eval_fluxes_soil(pools(indpl), 0.0_r8, missing, tg, &
-            & missing, theta, thetasat, percolation, runoff, 0.0_r8, &
+            & missing, theta, thetasat, percolation, runoff, bsw, &
             & dz_layer, fluxes(1:5,indpl), subst_urea, status)
        if (status /= 0) then
           return

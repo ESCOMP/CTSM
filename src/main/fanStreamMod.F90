@@ -36,7 +36,7 @@ module FanStreamMod
 !KO  public :: clm_domain_mct ! Sets up MCT domain for this resolution
 
   ! ! PRIVATE TYPES
-  type(shr_strdata_type)  :: sdat_past, sdat_mix, sdat_urea, sdat_nitr, sdat_soilph         ! input data streams
+  type(shr_strdata_type)  :: sdat_grz, sdat_sgrz, sdat_ngrz, sdat_urea, sdat_nitr, sdat_soilph         ! input data streams
   integer :: stream_year_first_ndep2      ! first year in stream to use
   integer :: stream_year_last_ndep2       ! last year in stream to use
   integer :: model_year_align_ndep2       ! align stream_year_firstndep2 with 
@@ -124,7 +124,7 @@ contains
 
    call clm_domain_mct (bounds, dom_clm)
 
-   call shr_strdata_create(sdat_past,name="clmndep2past",    &
+   call shr_strdata_create(sdat_grz,name="clmndep2grz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
@@ -143,8 +143,8 @@ contains
         domMaskName='mask',                         &
         filePath='',                                &
         filename=(/trim(stream_fldFileName_ndep2)/),&
-        fldListFile='Nmanure_pastures',             &
-        fldListModel='Nmanure_pastures',            &
+        fldListFile='Nmanure_grz',             &
+        fldListModel='Nmanure_grz',            &
         fillalgo='none',                            &
         mapalgo=ndep2mapalgo,                       &
         calendar=get_calendar(),                    &
@@ -154,7 +154,7 @@ contains
       call shr_strdata_print(sdat_past,'CLMNDEP2 data')
    endif
 
-   call shr_strdata_create(sdat_mix,name="clmndep2mixed",    &
+   call shr_strdata_create(sdat_mix,name="clmndep2sgrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
@@ -173,8 +173,38 @@ contains
         domMaskName='mask',                         &
         filePath='',                                &
         filename=(/trim(stream_fldFileName_ndep2)/),&
-        fldListFile='Nmanure_mixed',                &
-        fldListModel='Nmanure_mixed',               &
+        fldListFile='Nmanure_sgrz',                &
+        fldListModel='Nmanure_sgrz',               &
+        fillalgo='none',                            &
+        mapalgo=ndep2mapalgo,                       &
+        calendar=get_calendar(),                    &
+	taxmode='extend'                            )
+
+   if (masterproc) then
+      call shr_strdata_print(sdat_mix,'CLMNDEP2 data')
+   endif
+
+   call shr_strdata_create(sdat_mix,name="clmndep2ngrz",    &
+        pio_subsystem=pio_subsystem,                & 
+        pio_iotype=shr_pio_getiotype(inst_name),    &
+        mpicom=mpicom, compid=comp_id,              &
+        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
+        nxg=ldomain%ni, nyg=ldomain%nj,             &
+        yearFirst=stream_year_first_ndep2,          &
+        yearLast=stream_year_last_ndep2,            &
+        yearAlign=model_year_align_ndep2,           &
+        offset=0,                                   &
+        domFilePath='',                             &
+        domFileName=trim(stream_fldFileName_ndep2), &
+        domTvarName='time',                         &
+        domXvarName='x' ,                           &
+        domYvarName='y' ,                           &  
+        domAreaName='area',                         &
+        domMaskName='mask',                         &
+        filePath='',                                &
+        filename=(/trim(stream_fldFileName_ndep2)/),&
+        fldListFile='Nmanure_ngrz',                &
+        fldListModel='Nmanure_ngrz',               &
         fillalgo='none',                            &
         mapalgo=ndep2mapalgo,                       &
         calendar=get_calendar(),                    &
@@ -299,22 +329,30 @@ contains
    mcdate = year*10000 + mon*100 + day
    dayspyr = get_days_per_year( )
 
-   call shr_strdata_advance(sdat_past, mcdate, sec, mpicom, 'clmndep2pasture')
+   call shr_strdata_advance(sdat_grz, mcdate, sec, mpicom, 'clmndep2grz')
 
    ig = 0
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      atm2lnd_inst%forc_ndep3_grc(g) = sdat_past%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      atm2lnd_inst%forc_ndep_grz_grc(g) = sdat_grz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
 
-   call shr_strdata_advance(sdat_mix, mcdate, sec, mpicom, 'clmndep2mixed')
+   call shr_strdata_advance(sdat_sgrz, mcdate, sec, mpicom, 'clmndep2sgrz')
 
    ig = 0
    do g = bounds%begg,bounds%endg
       ig = ig+1
-      atm2lnd_inst%forc_ndep2_grc(g) = sdat_mix%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+      atm2lnd_inst%forc_ndep_sgrz_grc(g) = sdat_sgrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
 
+   call shr_strdata_advance(sdat_ngrz, mcdate, sec, mpicom, 'clmndep2ngrz')
+
+   ig = 0
+   do g = bounds%begg,bounds%endg
+      ig = ig+1
+      atm2lnd_inst%forc_ndep_ngrz_grc(g) = sdat_ngrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
+   end do
+   
    call shr_strdata_advance(sdat_urea, mcdate, sec, mpicom, 'clmndep2urea')
 
    ig = 0

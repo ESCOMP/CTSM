@@ -89,9 +89,12 @@ module atm2lndType
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
      real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
-!JV
-     real(r8), pointer :: forc_ndep2_grc                (:)   => null() ! FAN nitrogen deposition (manure) rate (gN/m2/s)
-     real(r8), pointer :: forc_ndep3_grc                (:)   => null() ! FAN nitrogen deposition (fertilizer) rate (gN/m2/s)
+     !JV
+     ! FAN manure N streams: all-grazing, seasonal-grazing, no-grazing
+     real(r8), pointer :: forc_ndep_grz_grc             (:)   => null() ! FAN nitrogen deposition rate (gN/m2/s)
+     real(r8), pointer :: forc_ndep_sgrz_grc            (:)   => null() ! FAN nitrogen deposition rate (gN/m2/s)
+     real(r8), pointer :: forc_ndep_ngrz_grc            (:)   => null() ! FAN nitrogen deposition rate (gN/m2/s)
+     
      real(r8), pointer :: forc_ndep_urea_grc            (:)   => null() ! FAN nitrogen deposition, urea fertilizer fraction
      real(r8), pointer :: forc_ndep_nitr_grc            (:)   => null() ! FAN nitrogen deposition, nitrate fertilizer fraction
      real(r8), pointer :: forc_soilph_grc          (:)   => null() ! FAN soil pH
@@ -521,10 +524,11 @@ contains
     allocate(this%forc_ndep_grc                 (begg:endg))        ; this%forc_ndep_grc                 (:)   = ival
 !KO
     if ( use_fan ) then
-       allocate(this%forc_ndep2_grc             (begg:endg))        ; this%forc_ndep2_grc                (:)   = ival
-       allocate(this%forc_ndep3_grc             (begg:endg))        ; this%forc_ndep3_grc                (:)   = ival
-       allocate(this%forc_ndep_urea_grc         (begg:endg))        ; this%forc_ndep3_grc                (:)   = ival
-       allocate(this%forc_ndep_nitr_grc         (begg:endg))        ; this%forc_ndep3_grc                (:)   = ival
+       allocate(this%forc_ndep_grz_grc          (begg:endg))        ; this%forc_ndep_grz_grc             (:)   = ival
+       allocate(this%forc_ndep_sgrz_grc         (begg:endg))        ; this%forc_ndep_sgrz_grc            (:)   = ival
+       allocate(this%forc_ndep_ngrz_grc         (begg:endg))        ; this%forc_ndep_ngrz_grc            (:)   = ival
+       allocate(this%forc_ndep_urea_grc         (begg:endg))        ; this%forc_ndep_urea_grc            (:)   = ival
+       allocate(this%forc_ndep_nitr_grc         (begg:endg))        ; this%forc_ndep_nitr_grc            (:)   = ival
        allocate(this%forc_soilph_grc            (begg:endg))        ; this%forc_soilph_grc               (:)   = ival
     end if
 !KO
@@ -1263,8 +1267,9 @@ contains
     deallocate(this%forc_ndep_grc)
     !KO
     if (use_fan) then
-       deallocate(this%forc_ndep2_grc)
-       deallocate(this%forc_ndep3_grc)
+       deallocate(this%forc_ndep_grz_grc)
+       deallocate(this%forc_ndep_sgrz_grc)
+       deallocate(this%forc_ndep_ngrz_grc)
        deallocate(this%forc_ndep_nitr_grc)
        deallocate(this%forc_ndep_urea_grc)
        deallocate(this%forc_soilph_grc)
