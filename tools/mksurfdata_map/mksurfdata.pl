@@ -267,10 +267,10 @@ sub write_transient_timeseries_file {
       $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
       print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
       for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='$yr',ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
+        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='$yr',ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $vegtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
-        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='$yr',ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
+        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='$yr',ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $hrvtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $hrvtypyr, $yr;
         if ( $yr % 100 == 0 ) {
@@ -526,12 +526,12 @@ EOF
      }
    }
    #
-   # Set ssp-rcp to use
+   # Set ssp_rcp to use
    #
    my @rcpaths = split( ",", $opts{'ssp_rcp'} );
-   # Check that ssp-rcp is valid
+   # Check that ssp_rcp is valid
    foreach my $ssp_rcp ( @rcpaths  ) {
-      if ( ! $definition->is_valid_value( "ssp-rcp", $ssp_rcp ) ) {
+      if ( ! $definition->is_valid_value( "ssp_rcp", $ssp_rcp ) ) {
           print "** Invalid ssp_rcp: $ssp_rcp\n";
           usage();
        }
@@ -781,7 +781,7 @@ EOF
                  $sim_yr_surfdat);
 
             print "CSMDATA is $CSMDATA \n";
-            print "resolution: $res ssp-rcp=$ssp_rcp sim_year = $sim_year\n";
+            print "resolution: $res ssp_rcp=$ssp_rcp sim_year = $sim_year\n";
             print "namelist: $namelist_fname\n";
             
             write_namelist_file(
