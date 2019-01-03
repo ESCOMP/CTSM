@@ -143,18 +143,18 @@ contains
         domMaskName='mask',                         &
         filePath='',                                &
         filename=(/trim(stream_fldFileName_ndep2)/),&
-        fldListFile='Nmanure_grz',             &
-        fldListModel='Nmanure_grz',            &
+        fldListFile='manure_grz',                   &
+        fldListModel='manure_grz',                  &
         fillalgo='none',                            &
         mapalgo=ndep2mapalgo,                       &
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_past,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_grz,'CLMNDEP2 data')
    endif
 
-   call shr_strdata_create(sdat_mix,name="clmndep2sgrz",    &
+   call shr_strdata_create(sdat_sgrz,name="clmndep2sgrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
@@ -173,18 +173,18 @@ contains
         domMaskName='mask',                         &
         filePath='',                                &
         filename=(/trim(stream_fldFileName_ndep2)/),&
-        fldListFile='Nmanure_sgrz',                &
-        fldListModel='Nmanure_sgrz',               &
+        fldListFile='manure_sgrz',                 &
+        fldListModel='manure_sgrz',                &
         fillalgo='none',                            &
         mapalgo=ndep2mapalgo,                       &
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_mix,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_sgrz,'CLMNDEP2 data')
    endif
 
-   call shr_strdata_create(sdat_mix,name="clmndep2ngrz",    &
+   call shr_strdata_create(sdat_ngrz,name="clmndep2ngrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
@@ -203,15 +203,15 @@ contains
         domMaskName='mask',                         &
         filePath='',                                &
         filename=(/trim(stream_fldFileName_ndep2)/),&
-        fldListFile='Nmanure_ngrz',                &
-        fldListModel='Nmanure_ngrz',               &
+        fldListFile='manure_ngrz',                  &
+        fldListModel='manure_ngrz',                 &
         fillalgo='none',                            &
         mapalgo=ndep2mapalgo,                       &
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_mix,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_ngrz,'CLMNDEP2 data')
    endif
 
    call shr_strdata_create(sdat_urea,name="clmndep2urea",    &
@@ -297,7 +297,7 @@ contains
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_mix,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_soilph,'CLMNDEP2 data')
    endif
 
    
