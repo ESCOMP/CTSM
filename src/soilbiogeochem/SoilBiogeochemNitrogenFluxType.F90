@@ -30,45 +30,45 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: fert_to_sminn_col                         (:)     ! col fertilizer N to soil mineral N (gN/m2/s)
      real(r8), pointer :: soyfixn_to_sminn_col                      (:)     ! col soybean fixation to soil mineral N (gN/m2/s)
 !KO
-     ! FAN fluxes
-     real(r8), pointer :: rain_24hr_col                             (:)
-     real(r8), pointer :: nhxdep_to_sminn_col                       (:)     ! col atmospheric NHx deposition to soil mineral N (gN/m2/s)
-     real(r8), pointer :: noydep_to_sminn_col                       (:)     ! col atmospheric NOy deposition to soil mineral N (gN/m2/s)
-     real(r8), pointer :: ndep_manure_col                           (:)     ! col manure N deposition to soil mineral N (gN/m2/s)
-     real(r8), pointer :: ndep_fert_col                             (:)     ! col fertilizer N deposition to soil mineral N (gN/m2/s)
-     real(r8), pointer :: N_Run_Off_col                             (:)     ! col nitrogen washed from manure by rain(gN/m2/s)
-     real(r8), pointer :: N_Run_Off_fert_col                        (:)     ! col nitrogen washed from fertilizer by rain(gN/m2/s)
-     real(r8), pointer :: u10_avg_col                               (:)     ! col windspeed at 10m(m/s)
-     real(r8), pointer :: rh_gamma_col                              (:)     !KO
-     real(r8), pointer :: rain_col                                  (:)     ! col rain amount(mm)
-     real(r8), pointer :: gamma_nh3_col                             (:)     !KO
-     real(r8), pointer :: gamma_nh3_fert_col                        (:)     !KO
-     real(r8), pointer :: nh3_manure_col                            (:)     ! col atmospheric N emission of NH3 from manure (gN/m2/s)
-!     real(r8), pointer :: nh3_fert_col                              (:)     ! col atmospheric N emission of NH3 from fertilizer (gN/m2/s)
-     real(r8), pointer :: lat_fert_col                              (:)     ! col latitude at which fertilization occurs (degN)
-     real(r8), pointer :: nmanure_to_sminn_col                      (:)     ! col deposition of N from manure to soil mineral N (gN/m2/s)
-     real(r8), pointer :: nfert_to_sminn_col                        (:)     ! col deposition of N from fertilizer to soil mineral N (gN/m2/s)
-     real(r8), pointer :: manure_f_n2o_nit_col                      (:)     ! col N2O emission from nitrification of manure (gN/m2/s)
-     real(r8), pointer :: manure_f_n2_denit_col                     (:)     ! col N2 emission from denitrification of manure (gN/m2/s)
-     real(r8), pointer :: manure_f_nox_nit_col                      (:)     ! col NOx emission from nitrification of manure (gN/m2/s)
-     real(r8), pointer :: fert_f_n2o_nit_col                        (:)     ! col N2O emission from nitrification of fertilizer (gN/m2/s)
-     real(r8), pointer :: fert_f_n2_denit_col                       (:)     ! col N2 emission from denitrification of fertilizer (gN/m2/s)
-     real(r8), pointer :: fert_f_nox_nit_col                        (:)     ! col NOx emission from nitrification of fertilizer (gN/m2/s)
-     real(r8), pointer :: Nd_col                                    (:)     ! col total N emission from denitrification of manure (gN/m2/s)
-     real(r8), pointer :: no3_manure_to_soil_col                    (:)     ! col flow of NO3 from manure pool to soil (gN/m2/s)
-     real(r8), pointer :: TAN_manure_to_soil_col                    (:)     ! col flow of NH4 in manure TAN pool to soil (gN/m2/s)
-     real(r8), pointer :: no3_fert_to_soil_col                      (:)     ! col flow of NO3 from fertilizer pool to soil (gN/m2/s)
-     real(r8), pointer :: TAN_fert_to_soil_col                      (:)     ! col flow of NH4 in fertilizer TAN pool to soil (gN/m2/s)
-     real(r8), pointer :: f_nox_col                                 (:)     ! col flux of NOx [gN/m^2/s]
-     real(r8), pointer :: f_nox_denit_vr_col                        (:,:)   ! col flux of NOx from denitrification [gN/m^3/s]
-     real(r8), pointer :: f_nox_denit_col                           (:)     ! col flux of NOx from denitrification [gN/m^2/s]
-     real(r8), pointer :: f_nox_nit_vr_col                          (:,:)   ! col flux of NOx from nitrification [gN/m^3/s]
-     real(r8), pointer :: f_nox_nit_col                             (:)     ! col flux of NOx from nitrification [gN/m^2/s]
-     real(r8), pointer :: Dfc_col                                   (:,:)   !KO
-     real(r8), pointer :: poro_fc_col                               (:,:)   !KO
-     real(r8), pointer :: poroair_col                               (:,:)   !KO
-     real(r8), pointer :: wfpsfc_col                                (:,:)   !KO
-!KO
+!!$     ! FAN fluxes
+!!$     real(r8), pointer :: rain_24hr_col                             (:)
+!!$     real(r8), pointer :: nhxdep_to_sminn_col                       (:)     ! col atmospheric NHx deposition to soil mineral N (gN/m2/s)
+!!$     real(r8), pointer :: noydep_to_sminn_col                       (:)     ! col atmospheric NOy deposition to soil mineral N (gN/m2/s)
+!!$     real(r8), pointer :: ndep_manure_col                           (:)     ! col manure N deposition to soil mineral N (gN/m2/s)
+!!$     real(r8), pointer :: ndep_fert_col                             (:)     ! col fertilizer N deposition to soil mineral N (gN/m2/s)
+!!$     real(r8), pointer :: N_Run_Off_col                             (:)     ! col nitrogen washed from manure by rain(gN/m2/s)
+!!$     real(r8), pointer :: N_Run_Off_fert_col                        (:)     ! col nitrogen washed from fertilizer by rain(gN/m2/s)
+!!$     real(r8), pointer :: u10_avg_col                               (:)     ! col windspeed at 10m(m/s)
+!!$     real(r8), pointer :: rh_gamma_col                              (:)     !KO
+!!$     real(r8), pointer :: rain_col                                  (:)     ! col rain amount(mm)
+!!$     real(r8), pointer :: gamma_nh3_col                             (:)     !KO
+!!$     real(r8), pointer :: gamma_nh3_fert_col                        (:)     !KO
+!!$     real(r8), pointer :: nh3_manure_col                            (:)     ! col atmospheric N emission of NH3 from manure (gN/m2/s)
+!!$!     real(r8), pointer :: nh3_fert_col                              (:)     ! col atmospheric N emission of NH3 from fertilizer (gN/m2/s)
+!!$     real(r8), pointer :: lat_fert_col                              (:)     ! col latitude at which fertilization occurs (degN)
+!!$     real(r8), pointer :: nmanure_to_sminn_col                      (:)     ! col deposition of N from manure to soil mineral N (gN/m2/s)
+!!$     real(r8), pointer :: nfert_to_sminn_col                        (:)     ! col deposition of N from fertilizer to soil mineral N (gN/m2/s)
+!!$     real(r8), pointer :: manure_f_n2o_nit_col                      (:)     ! col N2O emission from nitrification of manure (gN/m2/s)
+!!$     real(r8), pointer :: manure_f_n2_denit_col                     (:)     ! col N2 emission from denitrification of manure (gN/m2/s)
+!!$     real(r8), pointer :: manure_f_nox_nit_col                      (:)     ! col NOx emission from nitrification of manure (gN/m2/s)
+!!$     real(r8), pointer :: fert_f_n2o_nit_col                        (:)     ! col N2O emission from nitrification of fertilizer (gN/m2/s)
+!!$     real(r8), pointer :: fert_f_n2_denit_col                       (:)     ! col N2 emission from denitrification of fertilizer (gN/m2/s)
+!!$     real(r8), pointer :: fert_f_nox_nit_col                        (:)     ! col NOx emission from nitrification of fertilizer (gN/m2/s)
+!!$     real(r8), pointer :: Nd_col                                    (:)     ! col total N emission from denitrification of manure (gN/m2/s)
+!!$     real(r8), pointer :: no3_manure_to_soil_col                    (:)     ! col flow of NO3 from manure pool to soil (gN/m2/s)
+!!$     real(r8), pointer :: TAN_manure_to_soil_col                    (:)     ! col flow of NH4 in manure TAN pool to soil (gN/m2/s)
+!!$     real(r8), pointer :: no3_fert_to_soil_col                      (:)     ! col flow of NO3 from fertilizer pool to soil (gN/m2/s)
+!!$     real(r8), pointer :: TAN_fert_to_soil_col                      (:)     ! col flow of NH4 in fertilizer TAN pool to soil (gN/m2/s)
+!!$     real(r8), pointer :: f_nox_col                                 (:)     ! col flux of NOx [gN/m^2/s]
+!!$     real(r8), pointer :: f_nox_denit_vr_col                        (:,:)   ! col flux of NOx from denitrification [gN/m^3/s]
+!!$     real(r8), pointer :: f_nox_denit_col                           (:)     ! col flux of NOx from denitrification [gN/m^2/s]
+!!$     real(r8), pointer :: f_nox_nit_vr_col                          (:,:)   ! col flux of NOx from nitrification [gN/m^3/s]
+!!$     real(r8), pointer :: f_nox_nit_col                             (:)     ! col flux of NOx from nitrification [gN/m^2/s]
+!!$     real(r8), pointer :: Dfc_col                                   (:,:)   !KO
+!!$     real(r8), pointer :: poro_fc_col                               (:,:)   !KO
+!!$     real(r8), pointer :: poroair_col                               (:,:)   !KO
+!!$     real(r8), pointer :: wfpsfc_col                                (:,:)   !KO
+!!$!KO
 
      !JV FAN fluxes
 
@@ -250,45 +250,45 @@ contains
     allocate(this%fert_to_sminn_col                 (begc:endc))                   ; this%fert_to_sminn_col          (:)   = nan
     allocate(this%soyfixn_to_sminn_col              (begc:endc))                   ; this%soyfixn_to_sminn_col       (:)   = nan
 !KO
-    if ( use_fan ) then
-       allocate(this%rain_24hr_col                  (begc:endc))                   ; this%rain_24hr_col              (:)   = nan
-       allocate(this%nhxdep_to_sminn_col            (begc:endc))                   ; this%nhxdep_to_sminn_col        (:)   = nan
-       allocate(this%noydep_to_sminn_col            (begc:endc))                   ; this%noydep_to_sminn_col        (:)   = nan
-       allocate(this%ndep_manure_col                (begc:endc))                   ; this%ndep_manure_col            (:)   = nan
-       allocate(this%ndep_fert_col                  (begc:endc))                   ; this%ndep_fert_col              (:)   = nan
-       allocate(this%N_Run_Off_col                  (begc:endc))                   ; this%N_Run_Off_col              (:)   = nan
-       allocate(this%N_Run_Off_fert_col             (begc:endc))                   ; this%N_Run_Off_fert_col         (:)   = nan
-       allocate(this%u10_avg_col                    (begc:endc))                   ; this%u10_avg_col                (:)   = nan
-       allocate(this%rh_gamma_col                   (begc:endc))                   ; this%rh_gamma_col               (:)   = nan
-       allocate(this%rain_col                       (begc:endc))                   ; this%rain_col                   (:)   = nan
-       allocate(this%gamma_nh3_col                  (begc:endc))                   ; this%gamma_nh3_col              (:)   = nan
-       allocate(this%gamma_nh3_fert_col             (begc:endc))                   ; this%gamma_nh3_fert_col         (:)   = nan
-       allocate(this%nh3_manure_col                 (begc:endc))                   ; this%nh3_manure_col             (:)   = nan
-!       allocate(this%nh3_fert_col                   (begc:endc))                   ; this%nh3_fert_col               (:)   = nan
-       allocate(this%lat_fert_col                   (begc:endc))                   ; this%lat_fert_col               (:)   = nan
-       allocate(this%nmanure_to_sminn_col           (begc:endc))                   ; this%nmanure_to_sminn_col       (:)   = nan
-       allocate(this%nfert_to_sminn_col             (begc:endc))                   ; this%nfert_to_sminn_col         (:)   = nan
-       allocate(this%manure_f_n2o_nit_col           (begc:endc))                   ; this%manure_f_n2o_nit_col       (:)   = nan
-       allocate(this%manure_f_n2_denit_col          (begc:endc))                   ; this%manure_f_n2_denit_col      (:)   = nan
-       allocate(this%manure_f_nox_nit_col           (begc:endc))                   ; this%manure_f_nox_nit_col       (:)   = nan
-       allocate(this%fert_f_n2o_nit_col             (begc:endc))                   ; this%fert_f_n2o_nit_col         (:)   = nan
-       allocate(this%fert_f_n2_denit_col            (begc:endc))                   ; this%fert_f_n2_denit_col        (:)   = nan
-       allocate(this%fert_f_nox_nit_col             (begc:endc))                   ; this%fert_f_nox_nit_col         (:)   = nan
-       allocate(this%Nd_col                         (begc:endc))                   ; this%Nd_col                     (:)   = nan
-       allocate(this%no3_manure_to_soil_col         (begc:endc))                   ; this%no3_manure_to_soil_col     (:)   = nan
-       allocate(this%TAN_manure_to_soil_col         (begc:endc))                   ; this%TAN_manure_to_soil_col     (:)   = nan
-       allocate(this%no3_fert_to_soil_col           (begc:endc))                   ; this%no3_fert_to_soil_col       (:)   = nan
-       allocate(this%TAN_fert_to_soil_col           (begc:endc))                   ; this%TAN_fert_to_soil_col       (:)   = nan
-       allocate(this%f_nox_col                      (begc:endc))                   ; this%f_nox_col                  (:)   = nan
-       allocate(this%f_nox_denit_vr_col             (begc:endc,1:nlevdecomp_full)) ; this%f_nox_denit_vr_col         (:,:) = nan
-       allocate(this%f_nox_denit_col                (begc:endc))                   ; this%f_nox_denit_col            (:)   = nan
-       allocate(this%f_nox_nit_vr_col               (begc:endc,1:nlevdecomp_full)) ; this%f_nox_nit_vr_col           (:,:) = nan
-       allocate(this%f_nox_nit_col                  (begc:endc))                   ; this%f_nox_nit_col              (:)   = nan
-       allocate(this%Dfc_col                        (begc:endc,1:nlevdecomp_full)) ; this%Dfc_col                    (:,:) = spval
-       allocate(this%poro_fc_col                    (begc:endc,1:nlevdecomp_full)) ; this%poro_fc_col                (:,:) = spval
-       allocate(this%poroair_col                    (begc:endc,1:nlevdecomp_full)) ; this%poroair_col                (:,:) = spval
-       allocate(this%wfpsfc_col                     (begc:endc,1:nlevdecomp_full)) ; this%wfpsfc_col                 (:,:) = spval
-    end if
+!!$    if ( use_fan ) then
+!!$       allocate(this%rain_24hr_col                  (begc:endc))                   ; this%rain_24hr_col              (:)   = nan
+!!$       allocate(this%nhxdep_to_sminn_col            (begc:endc))                   ; this%nhxdep_to_sminn_col        (:)   = nan
+!!$       allocate(this%noydep_to_sminn_col            (begc:endc))                   ; this%noydep_to_sminn_col        (:)   = nan
+!!$       allocate(this%ndep_manure_col                (begc:endc))                   ; this%ndep_manure_col            (:)   = nan
+!!$       allocate(this%ndep_fert_col                  (begc:endc))                   ; this%ndep_fert_col              (:)   = nan
+!!$       allocate(this%N_Run_Off_col                  (begc:endc))                   ; this%N_Run_Off_col              (:)   = nan
+!!$       allocate(this%N_Run_Off_fert_col             (begc:endc))                   ; this%N_Run_Off_fert_col         (:)   = nan
+!!$       allocate(this%u10_avg_col                    (begc:endc))                   ; this%u10_avg_col                (:)   = nan
+!!$       allocate(this%rh_gamma_col                   (begc:endc))                   ; this%rh_gamma_col               (:)   = nan
+!!$       allocate(this%rain_col                       (begc:endc))                   ; this%rain_col                   (:)   = nan
+!!$       allocate(this%gamma_nh3_col                  (begc:endc))                   ; this%gamma_nh3_col              (:)   = nan
+!!$       allocate(this%gamma_nh3_fert_col             (begc:endc))                   ; this%gamma_nh3_fert_col         (:)   = nan
+!!$       allocate(this%nh3_manure_col                 (begc:endc))                   ; this%nh3_manure_col             (:)   = nan
+!!$!       allocate(this%nh3_fert_col                   (begc:endc))                   ; this%nh3_fert_col               (:)   = nan
+!!$       allocate(this%lat_fert_col                   (begc:endc))                   ; this%lat_fert_col               (:)   = nan
+!!$       allocate(this%nmanure_to_sminn_col           (begc:endc))                   ; this%nmanure_to_sminn_col       (:)   = nan
+!!$       allocate(this%nfert_to_sminn_col             (begc:endc))                   ; this%nfert_to_sminn_col         (:)   = nan
+!!$       allocate(this%manure_f_n2o_nit_col           (begc:endc))                   ; this%manure_f_n2o_nit_col       (:)   = nan
+!!$       allocate(this%manure_f_n2_denit_col          (begc:endc))                   ; this%manure_f_n2_denit_col      (:)   = nan
+!!$       allocate(this%manure_f_nox_nit_col           (begc:endc))                   ; this%manure_f_nox_nit_col       (:)   = nan
+!!$       allocate(this%fert_f_n2o_nit_col             (begc:endc))                   ; this%fert_f_n2o_nit_col         (:)   = nan
+!!$       allocate(this%fert_f_n2_denit_col            (begc:endc))                   ; this%fert_f_n2_denit_col        (:)   = nan
+!!$       allocate(this%fert_f_nox_nit_col             (begc:endc))                   ; this%fert_f_nox_nit_col         (:)   = nan
+!!$       allocate(this%Nd_col                         (begc:endc))                   ; this%Nd_col                     (:)   = nan
+!!$       allocate(this%no3_manure_to_soil_col         (begc:endc))                   ; this%no3_manure_to_soil_col     (:)   = nan
+!!$       allocate(this%TAN_manure_to_soil_col         (begc:endc))                   ; this%TAN_manure_to_soil_col     (:)   = nan
+!!$       allocate(this%no3_fert_to_soil_col           (begc:endc))                   ; this%no3_fert_to_soil_col       (:)   = nan
+!!$       allocate(this%TAN_fert_to_soil_col           (begc:endc))                   ; this%TAN_fert_to_soil_col       (:)   = nan
+!!$       allocate(this%f_nox_col                      (begc:endc))                   ; this%f_nox_col                  (:)   = nan
+!!$       allocate(this%f_nox_denit_vr_col             (begc:endc,1:nlevdecomp_full)) ; this%f_nox_denit_vr_col         (:,:) = nan
+!!$       allocate(this%f_nox_denit_col                (begc:endc))                   ; this%f_nox_denit_col            (:)   = nan
+!!$       allocate(this%f_nox_nit_vr_col               (begc:endc,1:nlevdecomp_full)) ; this%f_nox_nit_vr_col           (:,:) = nan
+!!$       allocate(this%f_nox_nit_col                  (begc:endc))                   ; this%f_nox_nit_col              (:)   = nan
+!!$       allocate(this%Dfc_col                        (begc:endc,1:nlevdecomp_full)) ; this%Dfc_col                    (:,:) = spval
+!!$       allocate(this%poro_fc_col                    (begc:endc,1:nlevdecomp_full)) ; this%poro_fc_col                (:,:) = spval
+!!$       allocate(this%poroair_col                    (begc:endc,1:nlevdecomp_full)) ; this%poroair_col                (:,:) = spval
+!!$       allocate(this%wfpsfc_col                     (begc:endc,1:nlevdecomp_full)) ; this%wfpsfc_col                 (:,:) = spval
+!!$    end if
 !KO
     
     !JV
@@ -454,120 +454,120 @@ contains
          avgflag='A', long_name='atmospheric N deposition to soil mineral N', &
          ptr_col=this%ndep_to_sminn_col)
 !KO
-    if ( use_fan ) then
+!!$  if ( use_fan ) then
 
-    this%nhxdep_to_sminn_col(begc:endc) = spval
-    call hist_addfld1d (fname='NHxDEP_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='atmospheric NHx deposition to soil mineral N', &
-         ptr_col=this%nhxdep_to_sminn_col)
-
-    this%noydep_to_sminn_col(begc:endc) = spval
-    call hist_addfld1d (fname='NOyDEP_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='atmospheric NOy deposition to soil mineral N', &
-         ptr_col=this%noydep_to_sminn_col)
-
-    this%ndep_manure_col(begc:endc) = spval
-    call hist_addfld1d (fname='NDEP_MANURE', units='gN/m^2/s', &
-         avgflag='A', long_name='N deposition from manure', &
-         ptr_col=this%ndep_manure_col)
-
-    this%N_Run_Off_col(begc:endc) = spval
-    call hist_addfld1d (fname='N_RUN_OFF', units='gN/m^2/s', &
-         avgflag='A', long_name='N run off from manure by rain', &
-         ptr_col=this%N_Run_Off_col)
-
-    this%nmanure_to_sminn_col(begc:endc) = spval
-    call hist_addfld1d (fname='NMANURE_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='Deposition of N from manure to soil mineral', &
-         ptr_col=this%nmanure_to_sminn_col)
-
-    this%ndep_fert_col(begc:endc) = spval
-    call hist_addfld1d (fname='NDEP_FERT', units='gN/m^2/s', &
-         avgflag='A', long_name='N deposition from fertilizer', &
-         ptr_col=this%ndep_fert_col)
-
-    this%N_Run_Off_fert_col(begc:endc) = spval
-    call hist_addfld1d (fname='N_RUN_OFF_FERT', units='gN/m^2/s', &
-         avgflag='A', long_name='N run off from fertilizer by rain', &
-         ptr_col=this%N_Run_Off_fert_col)
-
-    this%nfert_to_sminn_col(begc:endc) = spval
-    call hist_addfld1d (fname='NFERT_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='Deposition of N from fertilizer to soil mineral', &
-         ptr_col=this%nfert_to_sminn_col)
-
-    this%nh3_manure_col(begc:endc) = spval
-    call hist_addfld1d (fname='NH3_MANURE', units='gN/m^2/s', &
-         avgflag='A', long_name='NH3 emission from manure', &
-         ptr_col=this%nh3_manure_col)
-        
-    this%gamma_nh3_fert_col(begc:endc) = spval
-    call hist_addfld1d (fname='GAMMA_NH3_FERT', units='none', &
-         avgflag='A', long_name='Gamma Fn NH3 emission for fertilizer', &
-         ptr_col=this%gamma_nh3_fert_col)
-
-    !this%nh3_fert_col(begc:endc) = spval
-    !call hist_addfld1d (fname='NH3_FERT', units='gN/m^2/s', &
-    !     avgflag='A', long_name='NH3 emission from fertilizer', &
-    !     ptr_col=this%nh3_fert_col)
-
-    this%manure_f_n2o_nit_col(begc:endc) = spval
-    call hist_addfld1d (fname='F_N2O_NIT_MANURE', units='gN/m^2/s', &
-         avgflag='A', long_name='N2O emission from nitrification of manure', &
-         ptr_col=this%manure_f_n2o_nit_col)
-        
-    this%manure_f_n2_denit_col(begc:endc) = spval
-    call hist_addfld1d (fname='F_N2_DENIT_MANURE', units='gN/m^2/s', &
-         avgflag='A', long_name='N2 emission from denitrification of manure', &
-         ptr_col=this%manure_f_n2_denit_col)
-
-    this%manure_f_nox_nit_col(begc:endc) = spval
-    call hist_addfld1d (fname='F_NOx_NIT_MANURE', units='gN/m^2/s', &
-         avgflag='A', long_name='NOx emission from nitrification of manure', &
-         ptr_col=this%manure_f_nox_nit_col)
-
-    this%fert_f_n2o_nit_col(begc:endc) = spval
-    call hist_addfld1d (fname='F_N2O_NIT_FERTILIZER', units='gN/m^2/s', &
-         avgflag='A', long_name='N2O emission from nitrification of fertilizer', &
-         ptr_col=this%fert_f_n2o_nit_col)
-        
-    this%fert_f_n2_denit_col(begc:endc) = spval
-    call hist_addfld1d (fname='F_N2_DENIT_FERTILIZER', units='gN/m^2/s', &
-         avgflag='A', long_name='N2 emission from denitrification of fertilizer', &
-         ptr_col=this%fert_f_n2_denit_col)
-
-    this%fert_f_nox_nit_col(begc:endc) = spval
-    call hist_addfld1d (fname='F_NOx_NIT_FERTILIZER', units='gN/m^2/s', &
-         avgflag='A', long_name='NOx emission from nitrification of fertilzer', &
-         ptr_col=this%fert_f_nox_nit_col)
-
-    this%Nd_col(begc:endc) = spval
-    call hist_addfld1d (fname='ND', units='gN/m^2/s', &
-         avgflag='A', long_name='Total N emission from denitrification of manure', &
-         ptr_col=this%Nd_col)
-
-    this%no3_manure_to_soil_col(begc:endc) = spval
-    call hist_addfld1d (fname='NO3_MANURE_TO_SOIL', units='gN/m^2/s', &
-         avgflag='A', long_name='Flow of NO3 from manure to soil at rate of 1 % per day', &
-         ptr_col=this%no3_manure_to_soil_col)
-        
-    this%TAN_manure_to_soil_col(begc:endc) = spval
-    call hist_addfld1d (fname='TAN_MANURE_TO_SOIL', units='gN/m^2/s', &
-         avgflag='A', long_name='Flow of NH4 from manure to soil at rate of 1 % per day', &
-         ptr_col=this%TAN_manure_to_soil_col)
-
-    this%no3_fert_to_soil_col(begc:endc) = spval
-    call hist_addfld1d (fname='NO3_FERT_TO_SOIL', units='gN/m^2/s', &
-         avgflag='A', long_name='Flow of NO3 from fertilizer to soil at rate of 1 % per day', &
-         ptr_col=this%no3_fert_to_soil_col)
-        
-    this%TAN_fert_to_soil_col(begc:endc) = spval
-    call hist_addfld1d (fname='TAN_FERT_TO_SOIL', units='gN/m^2/s', &
-         avgflag='A', long_name='Flow of NH4 from fertilizer to soil at rate of 1 % per day', &
-         ptr_col=this%TAN_fert_to_soil_col)
-
-
- end if
+!!$    this%nhxdep_to_sminn_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NHxDEP_TO_SMINN', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='atmospheric NHx deposition to soil mineral N', &
+!!$         ptr_col=this%nhxdep_to_sminn_col)
+!!$
+!!$    this%noydep_to_sminn_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NOyDEP_TO_SMINN', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='atmospheric NOy deposition to soil mineral N', &
+!!$         ptr_col=this%noydep_to_sminn_col)
+!!$
+!!$    this%ndep_manure_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NDEP_MANURE', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N deposition from manure', &
+!!$         ptr_col=this%ndep_manure_col)
+!!$
+!!$    this%N_Run_Off_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='N_RUN_OFF', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N run off from manure by rain', &
+!!$         ptr_col=this%N_Run_Off_col)
+!!$
+!!$    this%nmanure_to_sminn_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NMANURE_TO_SMINN', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='Deposition of N from manure to soil mineral', &
+!!$         ptr_col=this%nmanure_to_sminn_col)
+!!$
+!!$    this%ndep_fert_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NDEP_FERT', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N deposition from fertilizer', &
+!!$         ptr_col=this%ndep_fert_col)
+!!$
+!!$    this%N_Run_Off_fert_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='N_RUN_OFF_FERT', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N run off from fertilizer by rain', &
+!!$         ptr_col=this%N_Run_Off_fert_col)
+!!$
+!!$    this%nfert_to_sminn_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NFERT_TO_SMINN', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='Deposition of N from fertilizer to soil mineral', &
+!!$         ptr_col=this%nfert_to_sminn_col)
+!!$
+!!$    this%nh3_manure_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NH3_MANURE', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='NH3 emission from manure', &
+!!$         ptr_col=this%nh3_manure_col)
+!!$        
+!!$    this%gamma_nh3_fert_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='GAMMA_NH3_FERT', units='none', &
+!!$         avgflag='A', long_name='Gamma Fn NH3 emission for fertilizer', &
+!!$         ptr_col=this%gamma_nh3_fert_col)
+!!$
+!!$    !this%nh3_fert_col(begc:endc) = spval
+!!$    !call hist_addfld1d (fname='NH3_FERT', units='gN/m^2/s', &
+!!$    !     avgflag='A', long_name='NH3 emission from fertilizer', &
+!!$    !     ptr_col=this%nh3_fert_col)
+!!$
+!!$    this%manure_f_n2o_nit_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='F_N2O_NIT_MANURE', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N2O emission from nitrification of manure', &
+!!$         ptr_col=this%manure_f_n2o_nit_col)
+!!$        
+!!$    this%manure_f_n2_denit_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='F_N2_DENIT_MANURE', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N2 emission from denitrification of manure', &
+!!$         ptr_col=this%manure_f_n2_denit_col)
+!!$
+!!$    this%manure_f_nox_nit_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='F_NOx_NIT_MANURE', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='NOx emission from nitrification of manure', &
+!!$         ptr_col=this%manure_f_nox_nit_col)
+!!$
+!!$    this%fert_f_n2o_nit_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='F_N2O_NIT_FERTILIZER', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N2O emission from nitrification of fertilizer', &
+!!$         ptr_col=this%fert_f_n2o_nit_col)
+!!$        
+!!$    this%fert_f_n2_denit_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='F_N2_DENIT_FERTILIZER', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='N2 emission from denitrification of fertilizer', &
+!!$         ptr_col=this%fert_f_n2_denit_col)
+!!$
+!!$    this%fert_f_nox_nit_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='F_NOx_NIT_FERTILIZER', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='NOx emission from nitrification of fertilzer', &
+!!$         ptr_col=this%fert_f_nox_nit_col)
+!!$
+!!$    this%Nd_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='ND', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='Total N emission from denitrification of manure', &
+!!$         ptr_col=this%Nd_col)
+!!$
+!!$    this%no3_manure_to_soil_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NO3_MANURE_TO_SOIL', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='Flow of NO3 from manure to soil at rate of 1 % per day', &
+!!$         ptr_col=this%no3_manure_to_soil_col)
+!!$        
+!!$    this%TAN_manure_to_soil_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='TAN_MANURE_TO_SOIL', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='Flow of NH4 from manure to soil at rate of 1 % per day', &
+!!$         ptr_col=this%TAN_manure_to_soil_col)
+!!$
+!!$    this%no3_fert_to_soil_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='NO3_FERT_TO_SOIL', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='Flow of NO3 from fertilizer to soil at rate of 1 % per day', &
+!!$         ptr_col=this%no3_fert_to_soil_col)
+!!$        
+!!$    this%TAN_fert_to_soil_col(begc:endc) = spval
+!!$    call hist_addfld1d (fname='TAN_FERT_TO_SOIL', units='gN/m^2/s', &
+!!$         avgflag='A', long_name='Flow of NH4 from fertilizer to soil at rate of 1 % per day', &
+!!$         ptr_col=this%TAN_fert_to_soil_col)
+!!$
+!!$
+!!$ end if
  !KO
  !JV
       if (use_fan) then
@@ -1376,21 +1376,21 @@ contains
     end do
 
 !KO
-    if ( use_fan ) then
-       do j = 1, nlevdecomp_full
-          do fi = 1,num_column
-             i = filter_column(fi)
-             if ( use_nitrif_denitrif ) then
-                this%f_nox_denit_vr_col(i,j) = value_column
-                this%f_nox_nit_vr_col(i,j)   = value_column
-                this%Dfc_col(i,j)            = value_column
-                this%poro_fc_col(i,j)        = value_column
-                this%poroair_col(i,j)        = value_column
-                this%wfpsfc_col(i,j)         = value_column
-             end if
-          end do
-       end do
-    end if
+!!$    if ( use_fan ) then
+!!$       do j = 1, nlevdecomp_full
+!!$          do fi = 1,num_column
+!!$             i = filter_column(fi)
+!!$             if ( use_nitrif_denitrif ) then
+!!$                this%f_nox_denit_vr_col(i,j) = value_column
+!!$                this%f_nox_nit_vr_col(i,j)   = value_column
+!!$                this%Dfc_col(i,j)            = value_column
+!!$                this%poro_fc_col(i,j)        = value_column
+!!$                this%poroair_col(i,j)        = value_column
+!!$                this%wfpsfc_col(i,j)         = value_column
+!!$             end if
+!!$          end do
+!!$       end do
+!!$    end if
 !KO
 
     do fi = 1,num_column
@@ -1431,39 +1431,39 @@ contains
     if ( use_fan ) then
        do fi = 1,num_column
           i = filter_column(fi)
-!KO       this%rain_24hr_col(i)             = value_column
-          this%nhxdep_to_sminn_col(i)    = value_column
-          this%noydep_to_sminn_col(i)    = value_column
-          this%ndep_manure_col(i)        = value_column
-          this%ndep_fert_col(i)          = value_column
-          this%N_Run_Off_col(i)          = value_column
-          this%N_Run_Off_fert_col(i)     = value_column
-!KO          this%u10_avg_col(i)            = value_column
-!KO          this%rh_gamma_col(i)           = value_column
-!KO          this%rain_col(i)               = value_column
-!KO          this%gamma_nh3_col(i)          = value_column
-          this%gamma_nh3_fert_col(i)     = value_column
-          this%nh3_manure_col(i)         = value_column
-          this%nh3_fert_col(i)           = value_column
-          this%lat_fert_col(i)           = value_column
-          this%nmanure_to_sminn_col(i)   = value_column
-          this%nfert_to_sminn_col(i)     = value_column
-          this%manure_f_n2o_nit_col(i)   = value_column
-          this%manure_f_n2_denit_col(i)  = value_column
-          this%manure_f_nox_nit_col(i)   = value_column
-          this%fert_f_n2o_nit_col(i)     = value_column
-          this%fert_f_n2_denit_col(i)    = value_column
-          this%fert_f_nox_nit_col(i)     = value_column
-          this%Nd_col(i)                 = value_column
-          this%no3_manure_to_soil_col(i) = value_column
-          this%TAN_manure_to_soil_col(i) = value_column
-          this%no3_fert_to_soil_col(i)   = value_column
-          this%TAN_fert_to_soil_col(i)   = value_column
-          if ( use_nitrif_denitrif ) then
-             this%f_nox_col(i)              = value_column
-             this%f_nox_denit_col(i)        = value_column
-             this%f_nox_nit_col(i)          = value_column
-          end if
+!!$!KO       this%rain_24hr_col(i)             = value_column
+!!$          this%nhxdep_to_sminn_col(i)    = value_column
+!!$          this%noydep_to_sminn_col(i)    = value_column
+!!$          this%ndep_manure_col(i)        = value_column
+!!$          this%ndep_fert_col(i)          = value_column
+!!$          this%N_Run_Off_col(i)          = value_column
+!!$          this%N_Run_Off_fert_col(i)     = value_column
+!!$!KO          this%u10_avg_col(i)            = value_column
+!!$!KO          this%rh_gamma_col(i)           = value_column
+!!$!KO          this%rain_col(i)               = value_column
+!!$!KO          this%gamma_nh3_col(i)          = value_column
+!!$          this%gamma_nh3_fert_col(i)     = value_column
+!!$          this%nh3_manure_col(i)         = value_column
+!!$          this%nh3_fert_col(i)           = value_column
+!!$          this%lat_fert_col(i)           = value_column
+!!$          this%nmanure_to_sminn_col(i)   = value_column
+!!$          this%nfert_to_sminn_col(i)     = value_column
+!!$          this%manure_f_n2o_nit_col(i)   = value_column
+!!$          this%manure_f_n2_denit_col(i)  = value_column
+!!$          this%manure_f_nox_nit_col(i)   = value_column
+!!$          this%fert_f_n2o_nit_col(i)     = value_column
+!!$          this%fert_f_n2_denit_col(i)    = value_column
+!!$          this%fert_f_nox_nit_col(i)     = value_column
+!!$          this%Nd_col(i)                 = value_column
+!!$          this%no3_manure_to_soil_col(i) = value_column
+!!$          this%TAN_manure_to_soil_col(i) = value_column
+!!$          this%no3_fert_to_soil_col(i)   = value_column
+!!$          this%TAN_fert_to_soil_col(i)   = value_column
+!!$          if ( use_nitrif_denitrif ) then
+!!$             this%f_nox_col(i)              = value_column
+!!$             this%f_nox_denit_col(i)        = value_column
+!!$             this%f_nox_nit_col(i)          = value_column
+!!$          end if
 
           this%man_tan_appl_col(i)       = value_column
           this%man_n_appl_col(i)         = value_column
@@ -1654,15 +1654,15 @@ contains
                   this%pot_f_denit_vr_col(c,j) * dzsoi_decomp(j)
 
 !KO
-             if ( use_fan ) then
-                this%f_nox_nit_col(c) = &
-                     this%f_nox_nit_col(c) + &
-                     this%f_nox_nit_vr_col(c,j) * dzsoi_decomp(j)
-
-                this%f_nox_denit_col(c) = &
-                     this%f_nox_denit_col(c) + &
-                     this%f_nox_denit_vr_col(c,j) * dzsoi_decomp(j)
-             end if
+!!$             if ( use_fan ) then
+!!$                this%f_nox_nit_col(c) = &
+!!$                     this%f_nox_nit_col(c) + &
+!!$                     this%f_nox_nit_vr_col(c,j) * dzsoi_decomp(j)
+!!$
+!!$                this%f_nox_denit_col(c) = &
+!!$                     this%f_nox_denit_col(c) + &
+!!$                     this%f_nox_denit_vr_col(c,j) * dzsoi_decomp(j)
+!!$             end if
 !KO
 
              this%f_n2o_nit_col(c) = &
