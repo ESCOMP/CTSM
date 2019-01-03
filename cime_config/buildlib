@@ -33,14 +33,6 @@ def _main_func():
         gmake = case.get_value("GMAKE")
         mach = case.get_value("MACH")
 
-        clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
-        if "clm4_5" in clm_config_opts:
-            clm_phys = "clm4_5"
-        elif "clm5_0" in clm_config_opts:
-            clm_phys = "clm5_0"
-        else:
-            expect(False, "CLM_CONFIG_OPTS must support either clm4_5 or clm5_0 physics")
-
         #-------------------------------------------------------
         # create Filepath file
         #-------------------------------------------------------
@@ -69,7 +61,6 @@ def _main_func():
         # create the library in libroot
         #-------------------------------------------------------
 
-        clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
         complib = os.path.join(libroot,"libclm.a")
         makefile = os.path.join(casetools, "Makefile")
         macfile  = os.path.join(caseroot, "Macros.%s" % mach)
