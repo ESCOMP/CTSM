@@ -40,7 +40,6 @@ CMakeFiles/
 
 # cime_config
 buildnmlc
-buildcppc
 
 # configure / build files
 /bld/**/CESM_cppdefs
