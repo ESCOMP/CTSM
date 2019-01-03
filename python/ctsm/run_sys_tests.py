@@ -54,7 +54,9 @@ def main(cime_path):
     logger.debug("Machine info: %s", machine)
 
     run_sys_tests(machine=machine, cime_path=cime_path,
-                  skip_testroot_creation=args.skip_testroot_creation, dry_run=args.dry_run,
+                  skip_testroot_creation=args.skip_testroot_creation,
+                  skip_git_status=args.skip_git_status,
+                  dry_run=args.dry_run,
                   suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
                   suite_compilers=args.suite_compiler,
                   testid_base=args.testid_base, testroot_base=args.testroot_base,
@@ -64,7 +66,9 @@ def main(cime_path):
                   extra_create_test_args=args.extra_create_test_args)
 
 def run_sys_tests(machine, cime_path,
-                  skip_testroot_creation=False, dry_run=False,
+                  skip_testroot_creation=False,
+                  skip_git_status=False,
+                  dry_run=False,
                   suite_name=None, testfile=None, testlist=None,
                   suite_compilers=None,
                   testid_base=None, testroot_base=None,
@@ -81,6 +85,7 @@ def run_sys_tests(machine, cime_path,
     cime_path (str): path to root of cime
     skip_testroot_creation (bool): if True, assume the testroot directory has already been
         created, so don't try to recreate it or re-make the link to it
+    skip_git_status (bool): if True, skip printing git and manage_externals status
     dry_run (bool): if True, print commands to be run but don't run them
     suite_name (str): name of test suite/category to run
     testfile (str): path to file containing list of tests to run
@@ -117,7 +122,8 @@ def run_sys_tests(machine, cime_path,
     testroot = _get_testroot(testroot_base, testid_base)
     if not skip_testroot_creation:
         _make_testroot(testroot, testid_base, dry_run)
-    _record_git_status(testroot, dry_run)
+    if not skip_git_status:
+        _record_git_status(testroot, dry_run)
     print("Testroot: {}".format(testroot))
 
     create_test_args = _get_create_test_args(compare_name=compare_name,
@@ -288,6 +294,13 @@ or tests listed individually on the command line (via the -t/--testname argument
     parser.add_argument('--skip-testroot-creation', action='store_true',
                         help='Do not create the directory that will hold the tests.\n'
                         'This should be used if the desired testroot directory already exists.')
+
+    parser.add_argument('--skip-git-status', action='store_true',
+                        help='Skip printing git and manage_externals status,\n'
+                        'both to screen and to the SRCROOT_GIT_STATUS file in TESTROOT.\n'
+                        'This printing can often be helpful, but this option can be used to\n'
+                        'avoid extraneous output, to reduce the time needed to run this script,\n'
+                        'or if git or manage_externals are currently broken in your sandbox.\n')
 
     parser.add_argument('--dry-run', action='store_true',
                         help='Print what would happen, but do not run any commands.\n'
