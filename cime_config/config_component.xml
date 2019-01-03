@@ -14,7 +14,6 @@
 
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
-    <desc lnd="CLM40[%SP][%CN][%CNDV][%CN-CROP][%CNDV-CROP]"                                                                         >clm4.0:</desc>
     <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
     <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK]">clm5.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
@@ -58,12 +57,8 @@
     <desc>Tuning parameters and initial conditions should be optimized for what CLM model version and what meteorlogical forcing combination?
     </desc>
     <default_value>UNSET</default_value>
-    <valid_values>clm4_0_CRUv7,clm4_0_GSWP3v1,clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
+    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
     <values>
-      <value compset=             "CLM40" >clm4_0_CRUv7</value>
-      <value compset="DATM%CRU_CLM40"     >clm4_0_CRUv7</value>
-      <value compset="DATM%CRUv7.+_CLM40" >clm4_0_CRUv7</value>
-      <value compset="DATM%GSWP3.+_CLM40" >clm4_0_GSWP3v1</value>
       <value compset=             "CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSWP3v1</value>
@@ -79,10 +74,6 @@
     <type>char</type>
     <default_value></default_value>
     <values modifier='additive'>
-      <value compset="_CLM40"           >-phys clm4_0</value>
-      <value compset="_CLM40%[^_]*CN"   >-bgc cn</value>
-      <value compset="_CLM40%[^_]*CNDV" >-bgc cndv</value>
-      <value compset="_CLM40%[^_]*CROP" >-crop on</value>
       <value compset="_CLM45"           >-phys clm4_5</value>
       <value compset="_CLM50"           >-phys clm5_0</value>
     </values>
