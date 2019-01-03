@@ -184,7 +184,7 @@ contains
     
     real(r8), parameter :: dz_layer_fert = 0.02_r8, dz_layer_grz = 0.02_r8
     !real(r8), parameter :: fract_resist=0._r8, fract_unavail=0._r8, fract_avail=0._r8, fract_tan=1.0_r8
-    
+    real(r8), parameter :: fert_incorp_reduct = 0.3_r8
     real(r8), parameter :: slurry_infiltr_time = 12*3600.0_r8, water_init_fert = 1e-6
     real(r8), parameter :: &
          poolranges_grz(3) = (/24*3600.0_r8, 10*24*3600.0_r8, 360*24*3600.0_r8/), &
@@ -194,7 +194,7 @@ contains
          Hconc_fert(3) = (/10**(-7.0_r8), 10**(-8.5_r8), 10**(-8.0_r8)/)
 
     real(r8) :: Hconc_grz(3), Hconc_slr(4), pH_soil, pH_crop
-    
+    real(r8) :: fert_inc_tan, fert_inc_no3
     !logical, parameter :: do_balance_checks = .false.
     logical :: do_balance_checks
     real(r8) :: tg, garbage, theta, thetasat, infiltr_m_s, evap_m_s, runoff_m_s, org_n_tot, &
@@ -533,17 +533,28 @@ contains
        ! Fertilizer
        !
 
-       fert_total = nf%fert_n_appl_col(c)
+       ! Fraction available for volatilization 
+       fert_total = nf%fert_n_appl_col(c) * (1.0_r8 - fert_incorp_reduct)
+       
        fract_urea = atm2lnd_inst%forc_ndep_urea_grc(g)
        fract_no3 = atm2lnd_inst%forc_ndep_nitr_grc(g)
 
+       ! Fractions made unavailable by mechanical incorporation, will be added to the
+       ! to-soil flux (tan) or no3 production (no3) below.
+       fert_inc_tan = nf%fert_n_appl_col(c) * fert_incorp_reduct * (1.0 - fract_no3)
+       fert_inc_no3 = nf%fert_n_appl_col(c) * fert_incorp_reduct * fract_no3
+       
        if (fract_urea < 0 .or. fract_no3 < 0 .or. fract_urea + fract_no3 > 1) then
           call endrun('bad fertilizer fractions')
        end if
        
        fert_urea = fert_total * fract_urea
-       fert_no3 = fert_total * fract_no3
+       
+       ! Include the incorporated NO3 fertilizer to the no3 flux
+       fert_no3 = fert_total * fract_no3 + fert_inc_no3
+       
        fert_generic = fert_total - fert_urea - fert_no3
+       
        nf%otherfert_n_appl_col(c) = fert_no3 + fert_generic
        
        ! Urea decomposition 
@@ -613,7 +624,7 @@ contains
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
        nf%fert_runoff_col(c) = fluxes_tmp(iflx_roff)
        nf%fert_no3_prod_col(c) = fluxes_tmp(iflx_no3) + fert_no3
-       nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + garbage_total/dt 
+       nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + garbage_total/dt + fert_inc_tan
 
        ! Total flux
        ! 
