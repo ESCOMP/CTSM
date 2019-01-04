@@ -438,11 +438,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "-irrig with -crop"         =>{ options=>"-irrig .true. -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0 -bgc cn -crop on",
-                                  },
      # This one should fail now, because we don't have non irrigated non-crop datasets
      "-irrigate=F without -crop" =>{ options=>"-bgc cn -no-crop -envxml_dir .",
                                     namelst=>"irrigate=.false.",
@@ -569,11 +564,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "vichydro without clm4_5"   =>{ options=>"-vichydro -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
-                                   },
      "use_vic=F with -vic op"    =>{ options=>"-vichydro -envxml_dir .",
                                      namelst=>"use_vichydro=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -664,21 +654,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "bgc without clm4_5"        =>{ options=>"-bgc sp -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
-                                   },
-     "spinup_state without clm4_5" =>{ options=>"-clm_accelerated_spinup on -envxml_dir .",
-                                     namelst=>"spinup_state=1",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
-                                   },
-     "40bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm4_5_CRUNCEP -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
-                                   },
      "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3  -envxml_dir .",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -689,11 +664,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "DV without clm4_5"         =>{ options=>"-dynamic_vegetation -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
-                                   },
      "bgc_spinup without cn"     =>{ options=>"-clm_accelerated_spinup on -bgc sp -envxml_dir .",
                                      namelst=>"spinup_state=1",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -703,11 +673,6 @@ my %failtest = (
                                      namelst=>"spinup_state=1",,
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
-                                   },
-     "DV without clm4_5"         =>{ options=>"-dynamic_vegetation -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
                                    },
      "bgc_spinup without cn"     =>{ options=>"-clm_accelerated_spinup on -bgc sp -envxml_dir .",
                                      namelst=>"spinup_state=1",
@@ -759,11 +724,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "clm40andUpdateGlc"         =>{ options=>"-envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"TRUE",
-                                     conopts=>"-phys clm4_0",
-                                   },
      "useFATESContradict"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -793,11 +753,6 @@ my %failtest = (
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
-                                   },
-     "useFATESclm40"             =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
                                    },
      "usespitfireButNOTFATES"    =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"use_fates_spitfire=.true.",
@@ -833,11 +788,6 @@ my %failtest = (
                                      namelst=>"use_hydrstress=.true., use_dynroot=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
-                                   },
-     "fireemiswith40"            =>{ options=>"-envxml_dir . -fire_emis",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm4_0",
                                    },
      "specWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
                                      namelst=>"fire_emis_specifier='bc_a1 = BC'",
@@ -1144,30 +1094,6 @@ foreach my $usecase ( @usecases ) {
 }
 
 print "\n==================================================\n";
-print "Test single-point regional cases \n";
-print "==================================================\n";
-
-# Run over single-point regional cases
-foreach my $res ( @regional ) {
-   $mode = "-sitespf_pt $res -phys clm4_0";
-   system( "../configure -s $mode" );
-   &make_env_run();
-   eval{ system( "$bldnml -envxml_dir . > $tempfile 2>&1 " ); };
-   is( $@, '', "$res" );
-   $cfiles->checkfilesexist( "$res", $mode );
-   $cfiles->shownmldiff( "default", "standard" );
-   if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$res", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$res", $mode );
-      $cfiles->comparefiles( "$res", $mode, $opts{'compare'} );
-   }
-   if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$res", $mode );
-   }
-   &cleanup();
-}
-
-print "\n==================================================\n";
 print "Test crop resolutions \n";
 print "==================================================\n";
 
@@ -1380,18 +1306,13 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
 my $res = "0.9x1.25";
 my $mask = "gx1v6";
 my $simyr = "1850";
-foreach my $phys ( "clm4_0", "clm4_5", 'clm5_0' ) {
+foreach my $phys ( "clm4_5", 'clm5_0' ) {
   my $mode = "-phys $phys";
   system( "../configure -s $mode" );
   foreach my $forc ( "CRUv7", "GSWP3v1", "cam6.0" ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
-        my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode";
-        if ( $phys eq "clm4_0" ) { 
-           $clmoptions .= " -glc_nec 0"; 
-        } else {
-           $clmoptions .= " -bgc $bgc"; 
-        }
+        my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";
         &make_env_run( );
         eval{ system( "$bldnml $clmoptions > $tempfile 2>&1 " ); };
         is( $@, '', "$clmoptions" );
