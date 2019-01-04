@@ -534,28 +534,29 @@ contains
        !
 
        ! Fraction available for volatilization 
-       fert_total = nf%fert_n_appl_col(c) * (1.0_r8 - fert_incorp_reduct)
+       fert_total = nf%fert_n_appl_col(c)
        
        fract_urea = atm2lnd_inst%forc_ndep_urea_grc(g)
        fract_no3 = atm2lnd_inst%forc_ndep_nitr_grc(g)
 
        ! Fractions made unavailable by mechanical incorporation, will be added to the
        ! to-soil flux (tan) or no3 production (no3) below.
-       fert_inc_tan = nf%fert_n_appl_col(c) * fert_incorp_reduct * (1.0 - fract_no3)
-       fert_inc_no3 = nf%fert_n_appl_col(c) * fert_incorp_reduct * fract_no3
+       fert_inc_tan = fert_total * fert_incorp_reduct * (1.0 - fract_no3)
+       fert_inc_no3 = fert_total * fert_incorp_reduct * fract_no3
        
        if (fract_urea < 0 .or. fract_no3 < 0 .or. fract_urea + fract_no3 > 1) then
           call endrun('bad fertilizer fractions')
        end if
        
-       fert_urea = fert_total * fract_urea
+       fert_urea = fert_total * fract_urea * (1.0_r8 - fert_incorp_reduct)
        
        ! Include the incorporated NO3 fertilizer to the no3 flux
-       fert_no3 = fert_total * fract_no3 + fert_inc_no3
+       fert_no3 = fert_total * fract_no3
        
-       fert_generic = fert_total - fert_urea - fert_no3
+       !fert_generic = (fert_total - fert_urea - fert_no3) * (1.0_r8 - fert_incorp_reduct)
+       fert_generic = fert_total * (1.0_r8 - fract_urea - fract_no3) * (1.0_r8 - fert_incorp_reduct)
        
-       nf%otherfert_n_appl_col(c) = fert_no3 + fert_generic
+       nf%otherfert_n_appl_col(c) = fert_total * (1.0_r8 - fract_urea) !fert_no3 + fert_generic
        
        ! Urea decomposition 
        ! 
