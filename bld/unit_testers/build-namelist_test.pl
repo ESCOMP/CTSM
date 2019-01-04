@@ -6,6 +6,7 @@
 
 #########################
 
+use lib '.';
 use Test::More;
 use xFail::expectedFail;
 use IO::File;
