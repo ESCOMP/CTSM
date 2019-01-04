@@ -112,7 +112,8 @@ contains
     ! Base rate by Nernst-Haskell equation, see Poling et al., 2000. The Properties of
     ! Gases and Liquids.
     kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
-    
+
+    ! Van Der Molen 1990 fit of the base rate.
     !kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.0_r8)
 
     diff = kaq_base * (theta**pw) / (thetasat**2)
@@ -134,13 +135,13 @@ contains
     
     soilair = thetasat - theta
 
-    ! 
+    ! Van Der Molen 1990 fit of the base rate.
     !dair = 1.7e-5_r8 * 1.03_r8**(Tg-293.0_r8)
 
     !dair = 18e-6_r8
     !dair = 1.4e-5
     
-    ! Base rate by the Fuller et al. 1966 method.
+    ! Base rate from the Fuller et al. 1966 method.
     dair = (0.001 * tg**1.75 * sqrt(1/mNH3 + 1/mair)) / (press * (vair**(1./3) * vNH3**(1./3))**2) * 1e-4
     diff = dair * (soilair**pw) / (thetasat**2)
 
