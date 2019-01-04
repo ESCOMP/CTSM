@@ -277,7 +277,7 @@ contains
     !real(r8), intent(in) :: dt       ! timestep
 
     real(r8) :: water_tot, cnc, air, depth_soilsat, diffusivity_water, diffusivity_satsoil, halfwater, insoil, r1, dz2, inwater
-    real(r8) :: r2, volat_rate, kno3, henry_eff, depth_lower, fract_nh4
+    real(r8) :: r2, volat_rate, kno3, knh3, depth_lower, fract_nh4, r2a, r2b, g3
 
     water_tot = water(1) + water(2)
 
@@ -314,20 +314,23 @@ contains
 
     depth_lower = max(soildepth_reservoir, depth_soilsat*1.5)
 
-    r2 = (water(1)-inwater) / diffusivity_water + (depth_soilsat-insoil) / diffusivity_satsoil &
-         & + (depth_lower-depth_soilsat) / (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta)
-    
-    
-    !dz2 = depth_lower - insoil
-    
-    !r2 = 0.5 * depth_soilsat/diffusivity_satsoil + dz2 / (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta) 
-    !print *, 'r2', r2, diffusivity_satsoil, dz2, depth_soilsat
+    call partition_tan(tg, Hconc, 1.0_r8, 0.0_r8, 0.0_r8, knh3, fract_nh4=fract_nh4)
+    volat_rate = 1.0_r8 / (r1 + ratm / knh3) ! conductance from aqueous TAN in slurry to NH3 in atmosphere
+    fluxes(iflx_air) = volat_rate*cnc
+        
+    ! lower soil resistance consists of liquid diffusion slurry, in saturated layer, and
+    ! parallel liquid/gas diffusion below the saturated layer. 
+    r2a = (water(1)-inwater) / diffusivity_water
+    r2b = (depth_soilsat-insoil) / diffusivity_satsoil
+    dz2 = depth_lower-depth_soilsat
+    ! conductance = inverse resistance
+    g3 = (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta &
+         + knh3*eval_diffusivity_gas_mq(theta, thetasat, tg)*(thetasat-theta)) &
+         / dz2
+    r2 = r2a + r2b + 1.0/g3
+
     fluxes(iflx_soild) = cnc / r2
 
-    !henry_eff = get_henry_eff(tg, Hconc)
-    call partition_tan(tg, Hconc, 1.0_r8, 0.0_r8, 0.0_r8, henry_eff, fract_nh4=fract_nh4)
-    volat_rate = 1.0_r8 / (r1 + ratm / henry_eff) ! conductance from aqueous TAN in slurry to NH3 in atmosphere
-    fluxes(iflx_air) = volat_rate*cnc
     
     ! nitrification
     kno3 = eval_no3prod_v2(thetasat, thetasat, tg)
@@ -1081,9 +1084,8 @@ contains
     age_prev = 0 
     do indpl = 1, numpools
        percolation = eval_perc(0.0_r8, evap, precip, watertend, ranges(indpl))
-       ! in the following, atmospheric concentration should be 0 not missing!
-       call eval_fluxes_soilroff(pools(indpl), 0.0_r8, missing, tg, &
-       !call eval_fluxes_soil(pools(indpl), 0.0_r8, missing, tg, &
+       ! Hconc and Ratm are missing since they do not affect urea.
+       call eval_fluxes_soilroff_ads(pools(indpl), 0.0_r8, missing, tg, &
             & missing, theta, thetasat, percolation, runoff, bsw, &
             & dz_layer, fluxes(1:5,indpl), subst_urea, status)
        if (status /= 0) then
