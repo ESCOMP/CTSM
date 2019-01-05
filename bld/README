@@ -13,10 +13,7 @@ configure ---------------- Configure script -- sets up the CPP Macro's needed to
                            defined to build CLM (only actively used for clm4_0)
   ----- configure --help - Configure help mode -- sends information on all configure options
 config_files/clm_phys_vers.pm ------------- Perl module to handle different CLM versions
-config_files/config_defaults.xml ---------- XML file of defaults for CLM
-config_files/config_defaults_*.xml -------- XML file of defaults for CLM for a specific site
-config_files/config_definition_clm4_0.xml - XML file definining all CLM4.0 configuration items
-config_files/config_definition_clm4_5.xml - XML file definining all CLM5.5/CLM5.0 configuration items
+config_files/config_definition_ctsm.xml --- XML file defining all CTSM configuration items
 
 --------- Scripts to build the namelists
 --------- (These scripts are also used by the cesm/cime scripts)

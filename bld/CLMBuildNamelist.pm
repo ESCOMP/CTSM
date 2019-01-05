@@ -420,7 +420,7 @@ sub read_configure_definition {
   if ( -f $opts->{'config'} ) {
     $configfile = $opts->{'config'};
   } else {
-    $configfile = "$cfgdir/config_files/config_definition.xml";
+    $configfile = "$cfgdir/config_files/config_definition_ctsm.xml";
   }
 
   # Check that configuration cache file exists.
