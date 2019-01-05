@@ -594,7 +594,7 @@ EOF
       } else {
 	  $queryopts = "-res $res -csmdata $CSMDATA -silent -justvalue";
       }
-      $queryfilopts = "$queryopts -onlyfiles -phys clm4_5 ";
+      $queryfilopts = "$queryopts -onlyfiles ";
       my $mkcrop = $mkcrop_off;
       my $setnumpft = "";
       $mkcrop    = $mkcrop_on;

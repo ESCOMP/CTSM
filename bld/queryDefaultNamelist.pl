@@ -77,7 +77,6 @@ OPTIONS
      -onlyfiles                           Only output filenames.
      -options "item=value,item2=value2"   Set options to query for when matching.
                                           (comma delimited, with equality to set value).
-     -phys "CLM-version" [or -p]          CLM version to use (clm4_0 or clm4_5)
      -res  "resolution"                   Resolution to use for files. Use "-res list" to
                                           list all valid resolutions. Use "-res any" to
                                           use any valid resolution.
@@ -111,7 +110,6 @@ EOF
 
   my %opts = (
                namelist   => $namelist,
-               model      => "clm4_5",
                var        => undef,
                hgrid      => undef,
                config     => undef,
@@ -132,7 +130,6 @@ EOF
         "f|file=s"     => \$opts{'file'},
         "n|namelist=s" => \$opts{'namelist'},
         "v|var=s"      => \$opts{'var'},
-        "p|phys=s"     => \$opts{'model'},
         "r|res=s"      => \$opts{'hgrid'},
         "config=s"     => \$opts{'config'},
         "cesm"         => \$opts{'cesm'},
@@ -181,7 +178,6 @@ EOF
   # List of input options
   my %inputopts;
   # This namelist files under the cime directories are in version 2 format and can't be read by perl code EBK 11/15/2016
-  my $model                  = $opts{'model'};
   my @nl_definition_files    = ("$cfgdir/namelist_files/namelist_definition_drv.xml",
                                 "$cfgdir/namelist_files/namelist_definition_ctsm.xml"
                                );

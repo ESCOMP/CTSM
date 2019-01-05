@@ -153,7 +153,6 @@ sub GetListofNeededFiles {
                list       => $list,
                usrdat     => undef,
                help       => undef,
-               phys       => "clm4_5",
              );
 
   my $cmdline = "@ARGV";
@@ -263,7 +262,6 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            #
            # Loop over all possible BGC settings
            #
-	   my $phys = $opts{'phys'};
            foreach my $bgc ( @bgcsettings ) {
               $settings{'bgc'} = $bgc;
               my @crop_vals;
