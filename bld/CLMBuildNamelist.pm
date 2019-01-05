@@ -437,14 +437,13 @@ sub read_configure_definition {
 #-----------------------------------------------------------------------------------------------
 
 sub read_namelist_definition {
-  my ($cfgdir, $opts, $nl_flags, $physv) = @_;
+  my ($cfgdir, $opts, $nl_flags) = @_;
 
   # The namelist definition file contains entries for all namelist
   # variables that can be output by build-namelist.
-  my $phys = $physv->as_filename( );
   my @nl_definition_files = ( "$cfgdir/namelist_files/namelist_definition_drv.xml",
                               "$cfgdir/namelist_files/namelist_definition_drv_flds.xml",
-                              "$cfgdir/namelist_files/namelist_definition_$phys.xml" );
+                              "$cfgdir/namelist_files/namelist_definition_ctsm.xml" );
   foreach my $nl_defin_file  ( @nl_definition_files ) {
     (-f "$nl_defin_file")  or  $log->fatal_error("Cannot find namelist definition file \"$nl_defin_file\"");
 
@@ -4204,7 +4203,7 @@ sub main {
   my $cfg = read_configure_definition($cfgdir, \%opts);
 
   my $physv      = config_files::clm_phys_vers->new( $cfg->get('phys') );
-  my $definition = read_namelist_definition($cfgdir, \%opts, \%nl_flags, $physv);
+  my $definition = read_namelist_definition($cfgdir, \%opts, \%nl_flags);
   my $defaults   = read_namelist_defaults($cfgdir, \%opts, \%nl_flags, $cfg, $physv);
 
   # List valid values if asked for

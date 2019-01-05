@@ -183,7 +183,7 @@ EOF
   # This namelist files under the cime directories are in version 2 format and can't be read by perl code EBK 11/15/2016
   my $model                  = $opts{'model'};
   my @nl_definition_files    = ("$cfgdir/namelist_files/namelist_definition_drv.xml",
-                                "$cfgdir/namelist_files/namelist_definition_$model.xml"
+                                "$cfgdir/namelist_files/namelist_definition_ctsm.xml"
                                );
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition_$model.xml";
   $inputopts{nldef_files}    = \@nl_definition_files;

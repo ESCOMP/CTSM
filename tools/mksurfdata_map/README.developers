@@ -72,7 +72,7 @@ in a separate section of this document.
       for dynlanduse = false and/or true, as appropriate
     - add a deallocation statement for each new output variable
 
-- Add your new file in $CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml;
+- Add your new file in $CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml;
   e.g. (replace xxx with your new field):
 
     <entry id="mksrf_fxxx" type="char*256" category="mksurfdata"
@@ -81,7 +81,7 @@ in a separate section of this document.
     </entry>
 
 - Add your new mksrf_fxxx variable to the list of valid_values for
-  mksrf_filename in $CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml
+  mksrf_filename in $CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml
 
 - Add defaults in $CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5_tools.xml;
   note that the "type" attribute is a short code that can be used in
@@ -135,7 +135,7 @@ laid out here.
       grid file is in SCRIP format and you can ignore this.
 
 - If necessary, add new grid and/or landmask to lists of valid values for
-  hgrid, res and lmask in $CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml
+  hgrid, res and lmask in $CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml
     - Note that a new resolution currently needs to be added to both the hgrid
       and res lists of valid values, although in the future this
       should probably be changed so that these raw data grids just

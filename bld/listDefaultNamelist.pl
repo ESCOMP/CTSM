@@ -189,7 +189,7 @@ sub GetListofNeededFiles {
   }
   my %inputopts;
   my @nl_definition_files    = (
-                                 "$cfgdir/namelist_files/namelist_definition_$opts{'phys'}.xml"
+                                 "$cfgdir/namelist_files/namelist_definition_ctsm.xml"
                                );
   $inputopts{'nldef_files'}    = \@nl_definition_files;
   $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition_$opts{'phys'}.xml";
