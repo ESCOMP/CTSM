@@ -495,12 +495,11 @@ sub read_envxml_case_files {
 #-----------------------------------------------------------------------------------------------
 
 sub read_namelist_defaults {
-  my ($cfgdir, $opts, $nl_flags, $cfg, $physv) = @_;
+  my ($cfgdir, $opts, $nl_flags, $cfg) = @_;
 
-  my $phys = $physv->as_filename( );
   # The namelist defaults file contains default values for all required namelist variables.
   my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
-                            "$cfgdir/namelist_files/namelist_defaults_$phys.xml",
+                            "$cfgdir/namelist_files/namelist_defaults_ctsm.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                             "$cfgdir/namelist_files/namelist_defaults_fire_emis.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
@@ -4204,7 +4203,7 @@ sub main {
 
   my $physv      = config_files::clm_phys_vers->new( $cfg->get('phys') );
   my $definition = read_namelist_definition($cfgdir, \%opts, \%nl_flags);
-  my $defaults   = read_namelist_defaults($cfgdir, \%opts, \%nl_flags, $cfg, $physv);
+  my $defaults   = read_namelist_defaults($cfgdir, \%opts, \%nl_flags, $cfg);
 
   # List valid values if asked for
   list_options(\%opts, $definition, $defaults);

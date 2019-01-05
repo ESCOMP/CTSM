@@ -209,7 +209,7 @@ sub GetListofNeededFiles {
   }
 
   # Input options
-  push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_$opts{'phys'}.xml";
+  push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_ctsm.xml";
   if ( defined($opts{'usrdat'}) ) {
       push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
   }

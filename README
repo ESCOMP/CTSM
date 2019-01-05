@@ -68,8 +68,8 @@ doc/ChangeSum ---------------- Summary documentation of different CLM versions
 
 Documentation of Namelist Items: (view the following in a web browser)
 
-bld/namelist_files/namelist_definition.xml --- Definition of all namelist items
-bld/namelist_files/namelist_defaults_clm4_5.xml - Default values for CLM4.5/CLM5.0
+bld/namelist_files/namelist_definition_ctsm.xml --- Definition of all namelist items
+bld/namelist_files/namelist_defaults_ctsm.xml ----- Default values
 
 =============================================================================================
 Important files in main directories (under $CTSMROOT):
