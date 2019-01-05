@@ -8,7 +8,6 @@ my $pkg_nm = 'config_files::clm_phys_vers';
 #
 # my $phys = config_files::clm_phys_vers->new("clm4_0");
 # print $phys->as_string();
-# print $phys->as_filename();
 #
 # DESCRIPTION
 #
@@ -75,16 +74,6 @@ sub as_string {
   return( $phys );
 }
 
-#-------------------------------------------------------------------------------
-
-sub as_filename {
-# Return the physics version string with clm4_5 and clm5_0 pointing to the same name
-  my $self = shift;
-
-  my $phys = "clm4_5";
-  return( $phys );
-}
-
 #-----------------------------------------------------------------------------------------------
 # Unit testing of above
 #-----------------------------------------------------------------------------------------------
@@ -103,7 +92,7 @@ if ( ! defined(caller) && $#ARGV == -1 ) {
       foreach my $vers ( @vers_list ) {
          my $phys = config_files::clm_phys_vers->new($vers);
          isa_ok($phys, "config_files::clm_phys_vers", "created clm_phys_vers object");
-         print "$vers: string: ".$phys->as_string()." file: ".$phys->as_filename()."\n";
+         print "$vers: string: ".$phys->as_string()."\n";
       }
    }
 }
