@@ -84,6 +84,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
 
+     logical, private  :: harvest_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -128,6 +129,8 @@ contains
     !-----------------------------------------------------------------------
 
     this%species = species_from_string(carbon_type)
+
+    this%harvest_xsmrpool_2atm = harvest_xsmrpool_2atm
 
     call this%InitAllocate ( bounds)
     call this%InitReadNML  ( NLFilename )

@@ -369,6 +369,7 @@ module CNVegCarbonFluxType
      ! that are dribbled throughout the year
      type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
      type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
+     logical, private  :: harvest_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -398,6 +399,7 @@ contains
     character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
     logical          , intent(in) :: harvest_xsmrpool_2atm
 
+    this%harvest_xsmrpool_2atm = harvest_xsmrpool_2atm
     call this%InitAllocate ( bounds, carbon_type)
     call this%InitHistory ( bounds, carbon_type )
     call this%InitCold (bounds )
@@ -463,7 +465,7 @@ contains
     allocate(this%hrv_deadcrootc_xfer_to_litter_patch       (begp:endp)) ; this%hrv_deadcrootc_xfer_to_litter_patch       (:) = nan
     allocate(this%hrv_gresp_storage_to_litter_patch         (begp:endp)) ; this%hrv_gresp_storage_to_litter_patch         (:) = nan
     allocate(this%hrv_gresp_xfer_to_litter_patch            (begp:endp)) ; this%hrv_gresp_xfer_to_litter_patch            (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = nan
+    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = 0.0d00
     allocate(this%m_leafc_to_fire_patch                     (begp:endp)) ; this%m_leafc_to_fire_patch                     (:) = nan
     allocate(this%m_leafc_storage_to_fire_patch             (begp:endp)) ; this%m_leafc_storage_to_fire_patch             (:) = nan
     allocate(this%m_leafc_xfer_to_fire_patch                (begp:endp)) ; this%m_leafc_xfer_to_fire_patch                (:) = nan
@@ -603,9 +605,9 @@ contains
     allocate(this%cpool_grain_gr_patch                      (begp:endp)) ; this%cpool_grain_gr_patch                      (:) = nan
     allocate(this%cpool_grain_storage_gr_patch              (begp:endp)) ; this%cpool_grain_storage_gr_patch              (:) = nan
     allocate(this%transfer_grain_gr_patch                   (begp:endp)) ; this%transfer_grain_gr_patch                   (:) = nan
-    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = nan
-    allocate(this%xsmrpool_to_atm_col                       (begc:endc)) ; this%xsmrpool_to_atm_col                       (:) = nan
-    allocate(this%xsmrpool_to_atm_grc                       (begg:endg)) ; this%xsmrpool_to_atm_grc                       (:) = nan 
+    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = 0.0d00
+    allocate(this%xsmrpool_to_atm_col                       (begc:endc)) ; this%xsmrpool_to_atm_col                       (:) = 0.0d00
+    allocate(this%xsmrpool_to_atm_grc                       (begg:endg)) ; this%xsmrpool_to_atm_grc                       (:) = 0.0d00
     allocate(this%grainc_storage_to_xfer_patch              (begp:endp)) ; this%grainc_storage_to_xfer_patch              (:) = nan
     allocate(this%frootc_alloc_patch                        (begp:endp)) ; this%frootc_alloc_patch                        (:) = nan
     allocate(this%frootc_loss_patch                         (begp:endp)) ; this%frootc_loss_patch                         (:) = nan
@@ -701,7 +703,7 @@ contains
     allocate(this%fire_closs_p2c_col      (begc:endc)) ; this%fire_closs_p2c_col      (:) = nan
     allocate(this%fire_closs_col          (begc:endc)) ; this%fire_closs_col          (:) = nan
     allocate(this%wood_harvestc_col       (begc:endc)) ; this%wood_harvestc_col       (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = nan 
+    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = 0.0d00
     allocate(this%tempsum_npp_patch       (begp:endp)) ; this%tempsum_npp_patch       (:) = nan
     allocate(this%annsum_npp_patch        (begp:endp)) ; this%annsum_npp_patch        (:) = nan
     allocate(this%tempsum_litfall_patch   (begp:endp)) ; this%tempsum_litfall_patch   (:) = nan
@@ -4126,6 +4128,8 @@ contains
           this%ar_patch(p) =           &
                this%mr_patch(p)      + &
                this%gr_patch(p)
+          if ( .not. this%harvest_xsmrpool_2atm ) this%ar_patch(p) = this%ar_patch(p) + &
+                                             this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
        else         
              this%ar_patch(p) =           &
                   this%mr_patch(p)      + &
@@ -4408,7 +4412,7 @@ contains
          this%hrv_xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
          this%hrv_xsmrpool_to_atm_col(bounds%begc:bounds%endc))
 
-    if (use_crop) then
+    if (use_crop .and. this%harvest_xsmrpool_2atm) then
        call p2c(bounds, num_soilc, filter_soilc, &
             this%xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
             this%xsmrpool_to_atm_col(bounds%begc:bounds%endc))
@@ -4563,8 +4567,8 @@ contains
        ! net biome production of carbon, positive for sink
        this%nbp_grc(g) = &
             -this%nee_grc(g)        - &
-            this%landuseflux_grc(g) - &
-            this%xsmrpool_to_atm_grc(g)
+            this%landuseflux_grc(g)
+       if ( this%harvest_xsmrpool_2atm ) this%nbp_grc(g) = this%nbp_grc(g) - this%xsmrpool_to_atm_grc(g)
     end do
 
     ! coarse woody debris C loss

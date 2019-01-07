@@ -484,20 +484,28 @@ contains
                ! atmosphere solved many of the crop isotope problems
 
                ! Save xsmrpool, cpool, frootc to loss state variable for dribbling
-               cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + &
-                                               cs_veg%xsmrpool_patch(p) + &
-                                               cs_veg%cpool_patch(p) + &
-                                               cs_veg%frootc_patch(p)
+               if ( .not. harvest_xsmrpool_2atm ) then
+                  cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
+                  cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
+                  cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
+               else
+                  cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + &
+                                                  cs_veg%xsmrpool_patch(p) + &
+                                                  cs_veg%cpool_patch(p) + &
+                                                  cs_veg%frootc_patch(p)
+               end if
                cs_veg%xsmrpool_patch(p)        = 0._r8
                cs_veg%cpool_patch(p)           = 0._r8
                cs_veg%frootc_patch(p)          = 0._r8
             end if
 
-            ! calculate flux of xsmrpool loss to atm
-            cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
+            if ( harvest_xsmrpool_2atm ) then
+               ! calculate flux of xsmrpool loss to atm
+               cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
 
-            ! update xsmrpool loss state
-            cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_to_atm_patch(p) * dt
+               ! update xsmrpool loss state
+               cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_to_atm_patch(p) * dt
+            end if
 
          end if
 
