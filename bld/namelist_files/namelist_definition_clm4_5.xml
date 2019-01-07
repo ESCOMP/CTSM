@@ -1969,9 +1969,9 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 Flag to reseed any dead plants on startup from reading the initial conditions file
 </entry>
 
-<entry id="harvest_xsmrpool_2atm" type="logical" category="clm_physics"
+<entry id="dribble_crophrv_xsmrpool_2atm" type="logical" category="clm_physics"
        group="cn_general" valid_values="" >
-Harvest the XSMR pool in CN to the atmosphere slowly at an exponential rate
+Harvest the XSMR pool at crop harvest time to the atmosphere slowly at an exponential rate
 </entry>
 
 <!-- C isotope flags    -->

@@ -84,7 +84,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
 
-     logical, private  :: harvest_xsmrpool_2atm
+     logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -117,20 +117,20 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
-                  harvest_xsmrpool_2atm, c12_cnveg_carbonstate_inst)
+                  dribble_crophrv_xsmrpool_2atm, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
     real(r8)                     , intent(in)           :: ratio
     character(len=*)             , intent(in)           :: carbon_type                ! Carbon isotope type C12, C13 or C1
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
-    logical                      , intent(in)           :: harvest_xsmrpool_2atm
+    logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
     !-----------------------------------------------------------------------
 
     this%species = species_from_string(carbon_type)
 
-    this%harvest_xsmrpool_2atm = harvest_xsmrpool_2atm
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
     call this%InitAllocate ( bounds)
     call this%InitReadNML  ( NLFilename )

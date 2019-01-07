@@ -369,7 +369,7 @@ module CNVegCarbonFluxType
      ! that are dribbled throughout the year
      type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
      type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
-     logical, private  :: harvest_xsmrpool_2atm
+     logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -392,14 +392,14 @@ module CNVegCarbonFluxType
 contains
    
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, carbon_type, harvest_xsmrpool_2atm)
+  subroutine Init(this, bounds, carbon_type, dribble_crophrv_xsmrpool_2atm)
 
     class(cnveg_carbonflux_type) :: this
     type(bounds_type), intent(in) :: bounds  
     character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
-    logical          , intent(in) :: harvest_xsmrpool_2atm
+    logical          , intent(in) :: dribble_crophrv_xsmrpool_2atm
 
-    this%harvest_xsmrpool_2atm = harvest_xsmrpool_2atm
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
     call this%InitAllocate ( bounds, carbon_type)
     call this%InitHistory ( bounds, carbon_type )
     call this%InitCold (bounds )
@@ -4128,7 +4128,7 @@ contains
           this%ar_patch(p) =           &
                this%mr_patch(p)      + &
                this%gr_patch(p)
-          if ( .not. this%harvest_xsmrpool_2atm ) this%ar_patch(p) = this%ar_patch(p) + &
+          if ( .not. this%dribble_crophrv_xsmrpool_2atm ) this%ar_patch(p) = this%ar_patch(p) + &
                                              this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
        else         
              this%ar_patch(p) =           &
@@ -4412,7 +4412,7 @@ contains
          this%hrv_xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
          this%hrv_xsmrpool_to_atm_col(bounds%begc:bounds%endc))
 
-    if (use_crop .and. this%harvest_xsmrpool_2atm) then
+    if (use_crop .and. this%dribble_crophrv_xsmrpool_2atm) then
        call p2c(bounds, num_soilc, filter_soilc, &
             this%xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
             this%xsmrpool_to_atm_col(bounds%begc:bounds%endc))
@@ -4568,7 +4568,7 @@ contains
        this%nbp_grc(g) = &
             -this%nee_grc(g)        - &
             this%landuseflux_grc(g)
-       if ( this%harvest_xsmrpool_2atm ) this%nbp_grc(g) = this%nbp_grc(g) - this%xsmrpool_to_atm_grc(g)
+       if ( this%dribble_crophrv_xsmrpool_2atm ) this%nbp_grc(g) = this%nbp_grc(g) - this%xsmrpool_to_atm_grc(g)
     end do
 
     ! coarse woody debris C loss

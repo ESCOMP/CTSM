@@ -142,7 +142,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
        crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-       soilbiogeochem_carbonflux_inst, harvest_xsmrpool_2atm)
+       soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
@@ -158,7 +158,7 @@ contains
     type(cnveg_carbonflux_type)          , intent(inout) :: cnveg_carbonflux_inst ! See note below for xsmrpool_to_atm_patch
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
-    logical                              , intent(in)    :: harvest_xsmrpool_2atm
+    logical                              , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l ! indices
@@ -484,7 +484,7 @@ contains
                ! atmosphere solved many of the crop isotope problems
 
                ! Save xsmrpool, cpool, frootc to loss state variable for dribbling
-               if ( .not. harvest_xsmrpool_2atm ) then
+               if ( .not. dribble_crophrv_xsmrpool_2atm ) then
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
@@ -499,7 +499,7 @@ contains
                cs_veg%frootc_patch(p)          = 0._r8
             end if
 
-            if ( harvest_xsmrpool_2atm ) then
+            if ( dribble_crophrv_xsmrpool_2atm ) then
                ! calculate flux of xsmrpool loss to atm
                cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
 
