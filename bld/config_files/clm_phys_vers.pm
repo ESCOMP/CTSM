@@ -6,7 +6,7 @@ my $pkg_nm = 'config_files::clm_phys_vers';
 #
 # require config_files::clm_phys_vers;
 #
-# my $phys = config_files::clm_phys_vers->new("clm4_0");
+# my $phys = config_files::clm_phys_vers->new("clm5_0");
 # print $phys->as_string();
 #
 # DESCRIPTION

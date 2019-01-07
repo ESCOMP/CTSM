@@ -19,8 +19,7 @@ determine default values for namelists.
 <clm_start_type phys="clm4_5" use_cndv=".true." >arb_ic</clm_start_type>
 <clm_start_type phys="clm5_0" use_fates=".true.">arb_ic</clm_start_type>
 <clm_start_type phys="clm4_5" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm4_0"                   >arb_ic</clm_start_type>
-<clm_start_type bgc_spinup="on"                 >cold</clm_start_type> <!-- CLM 4.5 -->
+<clm_start_type bgc_spinup="on"                 >cold</clm_start_type>
 
 <!-- Default location of {csmdata} -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
@@ -53,9 +52,6 @@ determine default values for namelists.
 
 <!-- Default representative concentration pathway for future scenarios -->
 <rcp>-999.9</rcp>
-
-<!-- Default irrigation -->
-<irrig>.false.</irrig>
 
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>

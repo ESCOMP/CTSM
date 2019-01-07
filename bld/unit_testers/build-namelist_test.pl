@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 907;
+my $ntests = 906;
 if ( defined($opts{'compare'}) ) {
    $ntests += 579;
 }
@@ -287,10 +287,10 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 
 print "\n===============================================================================\n";
-print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
+print "Test irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
 print "=================================================================================\n";
 
-# irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
+# irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
 foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
@@ -443,11 +443,6 @@ my %failtest = (
                                    },
      "mapvary var w/o varymap"   =>{ options=>"-crop -bgc bgc -envxml_dir . -crop",
                                      namelst=>"baset_mapping='constant', baset_latvary_slope=1.0, baset_latvary_intercept=10.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "-irrig with clm5_0"        =>{ options=>"-bgc bgc -crop -irrig .true. -envxml_dir .",
-                                     namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -1002,7 +997,7 @@ foreach my $res ( @resolutions ) {
              $res eq "0.33x0.33"   ||
              $res eq "1km-merge-10min" ) {
       next;
-   # Resolutions supported in clm40 but NOT clm45/clm50
+   # Resolutions that were supported in clm40 but NOT clm45/clm50
    } elsif ( $res eq "ne240np4"    ||
              $res eq "ne60np4"     ||
              $res eq "ne4np4"      ||

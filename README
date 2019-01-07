@@ -140,8 +140,6 @@ src/utils --------- Utility codes
 src/unit_test_shr - Unit test shared modules for unit testing
 src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 
-src_clm40 --------- CLM4.0 source code directory
-
 =============================================================================================
     QUICKSTART: using the CPL7 scripts
 =============================================================================================

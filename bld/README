@@ -9,9 +9,6 @@ Important files/directories:
 --------- Configure and build scripts
 --------- (These scripts are also used by the cesm/cime scripts)
 
-configure ---------------- Configure script -- sets up the CPP Macro's needed to be
-                           defined to build CLM (only actively used for clm4_0)
-  ----- configure --help - Configure help mode -- sends information on all configure options
 config_files/clm_phys_vers.pm ------------- Perl module to handle different CLM versions
 config_files/config_definition_ctsm.xml --- XML file defining all CTSM configuration items
 
@@ -39,7 +36,7 @@ queryDefaultXML.pm ------ Subroutines needed by queryDefaultNamelist.pl script
 
 --------- Test scripts directory
 unit_testers --- Directory of scripts to test scipts in this directory
-                 (most notably build-namelist and possibly configure)
+                 (most notably build-namelist)
 
 ---------- XML Files describing namelists in namelist_files
 namelist_files/namelist_defaults_ctsm.xml --------- List of default values for the ctsm namelist

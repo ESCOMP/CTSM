@@ -104,9 +104,6 @@ OPTIONS
                               , also by default turn on Accelerated Decomposition mode which
                               is controlled by the namelist variable spinup_state.
 
-                              BGC Spinup for CLM4.5/5.0 Only (for CLM4.0 BGC spinup is controlled from configure)
-
-
                               Turn on given spinup mode for BGC setting of CN
                                   on : Turn on Accelerated Decomposition   (spinup_state = 1 or 2)
                                   off : run in normal mode                 (spinup_state = 0)
@@ -598,7 +595,7 @@ sub process_namelist_user_input {
   process_namelist_commandline_infile($opts, $definition, $nl, $envxml_ref);
 
   # Apply the commandline options and make sure the user didn't change it above
-  process_namelist_commandline_options($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
+  process_namelist_commandline_options($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   # The last two process command line arguments for usr_name and use_case
   # They require that process_namelist_commandline_options was called before this
@@ -618,20 +615,17 @@ sub process_namelist_commandline_options {
   # First get the command-line specified overall values or their defaults
   # Obtain default values for the following build-namelist input arguments
   # : res, mask, rcp, sim_year, sim_year_range, and clm_accelerated_spinup.
-  #
-  # NOTE: cfg only needs to be passed to functions that work with
-  # clm4_0 compile time functionality!
 
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   setup_cmdl_chk_res($opts, $defaults);
   setup_cmdl_resolution($opts, $nl_flags, $definition, $defaults);
   setup_cmdl_mask($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_cmdl_bgc($opts, $nl_flags, $definition, $defaults, $nl, $cfg);
-  setup_cmdl_fire_light_res($opts, $nl_flags, $definition, $defaults, $nl, $cfg);
+  setup_cmdl_bgc($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_cmdl_fire_light_res($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_spinup($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_cmdl_crop($opts, $nl_flags, $definition, $defaults, $nl, $cfg);
-  setup_cmdl_maxpft($opts, $nl_flags, $definition, $defaults, $nl, $cfg);
+  setup_cmdl_crop($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_cmdl_maxpft($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_glc_nec($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_rcp($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_simulation_year($opts, $nl_flags, $definition, $defaults, $nl);
@@ -778,7 +772,7 @@ sub setup_cmdl_fates_mode {
 sub setup_cmdl_bgc {
   # BGC - alias for group of biogeochemistry related use_XXX namelists
 
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $val;
   my $var = "bgc";
@@ -875,7 +869,7 @@ sub setup_cmdl_bgc {
 sub setup_cmdl_fire_light_res {
   # light_res - alias for lightning resolution
 
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $var = "light_res";
   my $val = $opts->{$var};
@@ -930,7 +924,7 @@ sub setup_cmdl_fire_light_res {
 #-------------------------------------------------------------------------------
 
 sub setup_cmdl_crop {
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   $nl_flags->{'use_crop'} = ".false.";
   my $val;
@@ -967,7 +961,7 @@ sub setup_cmdl_crop {
 #-------------------------------------------------------------------------------
 
 sub setup_cmdl_maxpft {
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $val;
   my $var = "maxpft";
@@ -1126,7 +1120,7 @@ sub setup_cmdl_spinup {
 #-------------------------------------------------------------------------------
 
 sub setup_cmdl_simulation_year {
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $val;
   my $var = "sim_year";
@@ -1449,7 +1443,7 @@ sub process_namelist_commandline_clm_start_type {
 sub process_namelist_inline_logic {
   # Use the namelist default object to add default values for required
   # namelist variables that have not been previously set.
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $envxml_ref, $physv) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv) = @_;
 
 
   ##############################
@@ -4222,7 +4216,7 @@ sub main {
   # Process the user inputs
   process_namelist_user_input(\%opts, \%nl_flags, $definition, $defaults, $nl, $cfg, \%env_xml, $physv );
   # Get any other defaults needed from the namelist defaults file
-  process_namelist_inline_logic(\%opts, \%nl_flags, $definition, $defaults, $nl, $cfg, \%env_xml, $physv);
+  process_namelist_inline_logic(\%opts, \%nl_flags, $definition, $defaults, $nl, \%env_xml, $physv);
 
   # Validate that the entire resultant namelist is valid
   $definition->validate($nl);
