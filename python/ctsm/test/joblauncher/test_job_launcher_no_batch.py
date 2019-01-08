@@ -39,6 +39,7 @@ class TestJobLauncherNoBatch(unittest.TestCase):
         job_launcher.run_command(command=['echo', 'hello', 'world'],
                                  stdout_path=stdout,
                                  stderr_path=os.path.join(self._testdir, 'stderr'))
+        job_launcher.wait_for_last_process_to_complete()
         self.assertTrue(os.path.isfile(stdout))
         self.assertFileContentsEqual('hello world\n', stdout)
 
@@ -49,4 +50,10 @@ class TestJobLauncherNoBatch(unittest.TestCase):
                                  stdout_path=os.path.join(self._testdir, 'stdout'),
                                  stderr_path=os.path.join(self._testdir, 'stderr'),
                                  dry_run=True)
+        # There shouldn't be a "last process", but in case there is, wait for it to
+        # complete so we can be confident that the test isn't passing simply because the
+        # process hasn't completed yet. (This relies on there being logic in
+        # wait_for_last_process_to_complete so that it succeeds even if there is no "last
+        # process".)
+        job_launcher.wait_for_last_process_to_complete()
         self.assertEqual(os.listdir(self._testdir), [])
