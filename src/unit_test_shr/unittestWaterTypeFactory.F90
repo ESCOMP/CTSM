@@ -70,11 +70,18 @@ contains
     class(unittest_water_type_factory_type), intent(inout) :: this
 
     ! For now, set all snl and dz values to the single input
-    integer, intent(in) :: snl
-    real(r8), intent(in) :: dz
+    ! If either of these are absent, then we assume that the relevant col values have
+    ! already been set, and we do nothing here. (e.g., if dz is absent, we assume that
+    ! col%dz has already been set, and don't do anything with col%dz here.)
+    integer, intent(in), optional :: snl
+    real(r8), intent(in), optional :: dz
 
-    col%snl(:) = snl
-    col%dz(:,:) = dz
+    if (present(snl)) then
+       col%snl(:) = snl
+    end if
+    if (present(dz)) then
+       col%dz(:,:) = dz
+    end if
   end subroutine setup_after_subgrid
 
   subroutine create_water_type(this, water_inst, &
