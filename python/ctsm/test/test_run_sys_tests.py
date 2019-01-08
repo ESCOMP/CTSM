@@ -25,6 +25,8 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE
 # to make readable unit test names
 # pylint: disable=invalid-name
 
+# Replace the slow _record_git_status with a fake that does nothing
+@mock.patch('ctsm.run_sys_tests._record_git_status', mock.MagicMock(return_value=None))
 class TestRunSysTests(unittest.TestCase):
     """Tests of run_sys_tests"""
 
@@ -116,7 +118,7 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r'--test-id +{}\s'.format(self._expected_testid()))
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
         six.assertRegex(self, command, r'--test-root +{}\s'.format(expected_testroot_path))
-        six.assertRegex(self, command, r'test1 +test2 *$')
+        six.assertRegex(self, command, r'test1 +test2(\s|$)')
         assertNotRegex(self, command, r'--compare\s')
         assertNotRegex(self, command, r'--generate\s')
 

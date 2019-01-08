@@ -1,4 +1,200 @@
 ===============================================================
+Tag name:  ctsm1.0.dev022
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Jan  8 11:01:38 MST 2019
+One-line Summary: Set tracer version of irrigation fluxes
+
+Purpose of changes
+------------------
+
+Set tracer version of irrigation fluxes.
+
+This required a substantial rewrite of ApplyIrrigation (now renamed to
+CalcIrrigationFluxes). The problem was that the code was written to
+compute the total irrigation withdrawal from groundwater, then use this
+to compute the application fluxes (drip/sprinkler), then later divide
+this total withdrawal by layer. But for tracer fluxes to be computed
+correctly, we needed to reorder this, so that the per-layer withdrawals
+are determined before determining the application fluxes. This is
+because the application flux needs to know the tracer concentrations of
+the source, which requires knowing which layers the source is drawing
+from. This was made more challenging because of the mix of patch-level
+and column-level variables at play: irrigation demand is patch-level,
+groundwater availability and extraction is column-level, but application
+is back to patch-level.
+
+In a somewhat-related change, I also reworked the passing of information
+between soil hydrology (groundwater availability) and irrigation:
+Previously, there was some near-duplicate code in
+CalcAvailableUnconfinedAquifer (which was called prior to
+ApplyIrrigation) and WithdrawGroundwaterIrrigation (which was called
+after ApplyIrrigation). I have reworked the code to remove this
+duplication, calling the new CalcIrrigWithdrawals in the midst of
+CalcIrrigationFluxes. In doing so, I reconciled an accidental
+discrepancy between the two original routines (see
+https://github.com/escomp/ctsm/issues/595).
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#521 (Set tracer versions of fluxes set by
+  ApplyIrrigation)
+- Resolves ESCOMP/ctsm#593 (Generalize groundwater irrigation availability to
+  handle multiple patches per column)
+- Resolves ESCOMP/ctsm#595 (Inconsistency between CalcAvailableUnconfinedAquifer
+  and WithdrawGroundwaterIrrigation)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by:
+
+- Sean Swenson reviewed the initial parts of the rework of
+  ApplyIrrigation and the passing of information between soil hydrology
+  and irrigation
+
+CTSM testing:
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, expected baseline failures as noted below
+
+  Additional manual testing:
+
+  - Out of the box, the one-timestep tracer consistency test
+    (SMS_D_Ln1.f10_f10_musgs.I2000Clm50BgcCropGs.hobart_nag.clm-tracer_consistency)
+    passed when the new check was inserted after the irrigation call,
+    even without the changes in this tag. Presumably this is because no
+    irrigation was being done in the first time step of this test. To
+    confirm that the changes here were both necessary and effective, I
+    hacked the code to force irrigation of all types (surface and
+    groundwater) on the first time step (see
+    https://github.com/billsacks/ctsm/commit/d28a03145). I confirmed
+    that this test, with those code hacks, failed before the changes in
+    this tag, and passed with these changes in place.
+
+  - I used a multi-step process to confirm that these changes are only
+    roundoff-level different for groundwater irrigation (because
+    feedbacks in the system result in
+    SMS_D_Ld5.f10_f10_musgs.I2000Clm50BgcCrop.hobart_nag.clm-irrig_alternate
+    looking greater-than-roundoff-level different from the baseline):
+
+    (1) Confirmed that e507fe603 is only roundoff-level different from
+        baseline using cprnc output from this test.
+
+    (2) Confirmed that a4a1a626c is only roundoff-level different from
+        e507fe603. This was the tricky part. I did this by introducing
+        some temporary code that (a) computed some fluxes in both the
+        old and new ways, (b) compared the old and new methods for each
+        point and time step, confirming that they were no more than
+        roundoff-level different, then (c) set the fluxes to the old
+        method. I confirmed that this was bit-for-bit with e507fe603,
+        and the checks for greater-than-roundoff-level differences
+        between the old and new methods were never triggered. (See
+        https://github.com/billsacks/ctsm/commit/7d23e9e and the earlier
+        commits on that branch.)
+
+    (3) Confirmed that remaining changes an the branch are bit-for-bit
+        with a4a1a626c.
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev021
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+
+      - Small answer changes when groundwater irrigation is enabled. In
+        principle, could change answers by greater than roundoff due to
+        fix of #595, but I didn't see any answer changes in my 7-month
+        test due to that change. Other than that, just roundoff-level
+        changes.
+
+      - Answer changes when tracers are enabled.
+
+      - Roundoff-level changes in the diagnostic field,
+        QIRRIG_FROM_SURFACE, for many tests
+
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      See notes under "what code configurations" for details.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/600
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev021
 Originator(s):  mvr (Mathew Rothstein,UCAR/CSEG,303-497-1304)
 Date: Wed Dec 26 16:29:06 MST 2018

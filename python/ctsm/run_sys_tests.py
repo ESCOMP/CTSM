@@ -4,12 +4,14 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import subprocess
 from datetime import datetime
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
+from ctsm.path_utils import path_to_ctsm_root
 
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
@@ -52,7 +54,9 @@ def main(cime_path):
     logger.debug("Machine info: %s", machine)
 
     run_sys_tests(machine=machine, cime_path=cime_path,
-                  skip_testroot_creation=args.skip_testroot_creation, dry_run=args.dry_run,
+                  skip_testroot_creation=args.skip_testroot_creation,
+                  skip_git_status=args.skip_git_status,
+                  dry_run=args.dry_run,
                   suite_name=args.suite_name, testfile=args.testfile, testlist=args.testname,
                   suite_compilers=args.suite_compiler,
                   testid_base=args.testid_base, testroot_base=args.testroot_base,
@@ -62,7 +66,9 @@ def main(cime_path):
                   extra_create_test_args=args.extra_create_test_args)
 
 def run_sys_tests(machine, cime_path,
-                  skip_testroot_creation=False, dry_run=False,
+                  skip_testroot_creation=False,
+                  skip_git_status=False,
+                  dry_run=False,
                   suite_name=None, testfile=None, testlist=None,
                   suite_compilers=None,
                   testid_base=None, testroot_base=None,
@@ -79,6 +85,7 @@ def run_sys_tests(machine, cime_path,
     cime_path (str): path to root of cime
     skip_testroot_creation (bool): if True, assume the testroot directory has already been
         created, so don't try to recreate it or re-make the link to it
+    skip_git_status (bool): if True, skip printing git and manage_externals status
     dry_run (bool): if True, print commands to be run but don't run them
     suite_name (str): name of test suite/category to run
     testfile (str): path to file containing list of tests to run
@@ -115,6 +122,8 @@ def run_sys_tests(machine, cime_path,
     testroot = _get_testroot(testroot_base, testid_base)
     if not skip_testroot_creation:
         _make_testroot(testroot, testid_base, dry_run)
+    if not skip_git_status:
+        _record_git_status(testroot, dry_run)
     print("Testroot: {}".format(testroot))
 
     create_test_args = _get_create_test_args(compare_name=compare_name,
@@ -286,6 +295,13 @@ or tests listed individually on the command line (via the -t/--testname argument
                         help='Do not create the directory that will hold the tests.\n'
                         'This should be used if the desired testroot directory already exists.')
 
+    parser.add_argument('--skip-git-status', action='store_true',
+                        help='Skip printing git and manage_externals status,\n'
+                        'both to screen and to the SRCROOT_GIT_STATUS file in TESTROOT.\n'
+                        'This printing can often be helpful, but this option can be used to\n'
+                        'avoid extraneous output, to reduce the time needed to run this script,\n'
+                        'or if git or manage_externals are currently broken in your sandbox.\n')
+
     parser.add_argument('--dry-run', action='store_true',
                         help='Print what would happen, but do not run any commands.\n'
                         '(Generally should be run with --verbose.)\n')
@@ -339,6 +355,39 @@ def _make_testroot(testroot, testid_base, dry_run):
     if not dry_run:
         os.makedirs(testroot)
         make_link(testroot, _get_testdir_name(testid_base))
+
+def _record_git_status(testroot, dry_run):
+    """Record git status and related information to stdout and a file"""
+    output = ''
+    ctsm_root = path_to_ctsm_root()
+
+    current_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                           cwd=ctsm_root,
+                                           universal_newlines=True)
+    output += "Current hash: {}".format(current_hash)
+    git_status = subprocess.check_output(['git', '-c', 'color.ui=always',
+                                          'status', '--short', '--branch'],
+                                         cwd=ctsm_root,
+                                         universal_newlines=True)
+    output += git_status
+    if git_status.count('\n') == 1:
+        # Only line in git status is the branch info
+        output += "(clean sandbox)\n"
+    manic = os.path.join('manage_externals', 'checkout_externals')
+    manage_externals_status = subprocess.check_output([manic, '--status', '--verbose'],
+                                                      cwd=ctsm_root,
+                                                      universal_newlines=True)
+    output += 72*'-' + '\n' + 'manage_externals status:' + '\n'
+    output += manage_externals_status
+    output += 72*'-' + '\n'
+
+    print(output)
+
+    if not dry_run:
+        git_status_filepath = os.path.join(testroot, 'SRCROOT_GIT_STATUS')
+        with open(git_status_filepath, 'w') as git_status_file:
+            git_status_file.write("SRCROOT: {}\n".format(ctsm_root))
+            git_status_file.write(output)
 
 def _get_create_test_args(compare_name, generate_name, baseline_root,
                           account, walltime, queue,
