@@ -465,7 +465,7 @@ contains
     allocate(this%hrv_deadcrootc_xfer_to_litter_patch       (begp:endp)) ; this%hrv_deadcrootc_xfer_to_litter_patch       (:) = nan
     allocate(this%hrv_gresp_storage_to_litter_patch         (begp:endp)) ; this%hrv_gresp_storage_to_litter_patch         (:) = nan
     allocate(this%hrv_gresp_xfer_to_litter_patch            (begp:endp)) ; this%hrv_gresp_xfer_to_litter_patch            (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = 0.0d00
+    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = 0.0_r8
     allocate(this%m_leafc_to_fire_patch                     (begp:endp)) ; this%m_leafc_to_fire_patch                     (:) = nan
     allocate(this%m_leafc_storage_to_fire_patch             (begp:endp)) ; this%m_leafc_storage_to_fire_patch             (:) = nan
     allocate(this%m_leafc_xfer_to_fire_patch                (begp:endp)) ; this%m_leafc_xfer_to_fire_patch                (:) = nan
@@ -605,9 +605,9 @@ contains
     allocate(this%cpool_grain_gr_patch                      (begp:endp)) ; this%cpool_grain_gr_patch                      (:) = nan
     allocate(this%cpool_grain_storage_gr_patch              (begp:endp)) ; this%cpool_grain_storage_gr_patch              (:) = nan
     allocate(this%transfer_grain_gr_patch                   (begp:endp)) ; this%transfer_grain_gr_patch                   (:) = nan
-    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = 0.0d00
-    allocate(this%xsmrpool_to_atm_col                       (begc:endc)) ; this%xsmrpool_to_atm_col                       (:) = 0.0d00
-    allocate(this%xsmrpool_to_atm_grc                       (begg:endg)) ; this%xsmrpool_to_atm_grc                       (:) = 0.0d00
+    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = 0.0_r8
+    allocate(this%xsmrpool_to_atm_col                       (begc:endc)) ; this%xsmrpool_to_atm_col                       (:) = 0.0_r8
+    allocate(this%xsmrpool_to_atm_grc                       (begg:endg)) ; this%xsmrpool_to_atm_grc                       (:) = 0.0_r8
     allocate(this%grainc_storage_to_xfer_patch              (begp:endp)) ; this%grainc_storage_to_xfer_patch              (:) = nan
     allocate(this%frootc_alloc_patch                        (begp:endp)) ; this%frootc_alloc_patch                        (:) = nan
     allocate(this%frootc_loss_patch                         (begp:endp)) ; this%frootc_loss_patch                         (:) = nan
@@ -703,7 +703,7 @@ contains
     allocate(this%fire_closs_p2c_col      (begc:endc)) ; this%fire_closs_p2c_col      (:) = nan
     allocate(this%fire_closs_col          (begc:endc)) ; this%fire_closs_col          (:) = nan
     allocate(this%wood_harvestc_col       (begc:endc)) ; this%wood_harvestc_col       (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = 0.0d00
+    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = 0.0_r8
     allocate(this%tempsum_npp_patch       (begp:endp)) ; this%tempsum_npp_patch       (:) = nan
     allocate(this%annsum_npp_patch        (begp:endp)) ; this%annsum_npp_patch        (:) = nan
     allocate(this%tempsum_litfall_patch   (begp:endp)) ; this%tempsum_litfall_patch   (:) = nan
