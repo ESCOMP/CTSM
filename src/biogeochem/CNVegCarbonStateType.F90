@@ -322,7 +322,7 @@ contains
           this%xsmrpool_loss_patch(begp:endp) = spval
           call hist_addfld1d (fname='XSMRPOOL_LOSS', units='gC/m^2', &
                avgflag='A', long_name='temporary photosynthate C pool loss', &
-               ptr_patch=this%xsmrpool_loss_patch)
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -1230,6 +1230,9 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag == 'read' .and. (.not. readvar) ) then
+           this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &

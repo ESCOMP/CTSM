@@ -166,7 +166,7 @@ contains
     real(r8) :: dt        ! radiation time step (seconds)
     real(r8) :: check_cpool
     real(r8) :: cpool_delta
-    real(r8) :: kprod05   ! decay constant for 0.5-year product pool
+    real(r8), parameter :: kprod05 = 1.44e-7  ! decay constant for 0.5-year product pool (1/s) (lose ~90% over a half year)
     !-----------------------------------------------------------------------
 
     associate(                                                               & 
@@ -245,10 +245,6 @@ contains
             end do
          end if
       end do
-
-    ! the following (1/s) rate constant results in ~90% loss of initial state over 0.5 years,
-    ! using a discrete-time fractional decay algorithm.
-    kprod05 = 1.44e-7
 
     if (.not. use_fates) then    
       do fp = 1,num_soilp
@@ -483,11 +479,12 @@ contains
                ! bounds. Zeroing out these small pools and putting them into the flux to the
                ! atmosphere solved many of the crop isotope problems
 
-               ! Save xsmrpool, cpool, frootc to loss state variable for dribbling
+               ! Instantly release XSMRPOOL to atmosphere
                if ( .not. dribble_crophrv_xsmrpool_2atm ) then
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
+               ! Save xsmrpool, cpool, frootc to loss state variable for dribbling
                else
                   cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + &
                                                   cs_veg%xsmrpool_patch(p) + &
@@ -499,6 +496,7 @@ contains
                cs_veg%frootc_patch(p)          = 0._r8
             end if
 
+            ! Slowly release xsmrpool to atmosphere
             if ( dribble_crophrv_xsmrpool_2atm ) then
                ! calculate flux of xsmrpool loss to atm
                cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
