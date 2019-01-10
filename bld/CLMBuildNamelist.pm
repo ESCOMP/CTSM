@@ -1705,6 +1705,10 @@ sub process_namelist_inline_logic {
   ################################################
   setup_logic_century_soilbgcdecompcascade($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  #############################
+  # namelist group: cngeneral #
+  #############################
+  setup_logic_cngeneral($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   ####################################
   # namelist group: cnvegcarbonstate #
   ####################################
@@ -3593,6 +3597,31 @@ sub setup_logic_cnvegcarbonstate {
     if ( ! defined($mmnuptake) ) { $mmnuptake = ".false."; }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_vegC', 
                 'use_cn' => $nl->get_value('use_cn'), 'mm_nuptake_opt' => $mmnuptake );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cngeneral {
+  # Must be set after setup_logic_co2_type
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
+    if ( &value_is_true($nl->get_value('use_crop')) ) {
+       #add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dribble_crophrv_xsmrpool_2atm', 
+                   #'co2_type' => $nl->get_value('co2_type') );
+    } else {
+      if ( defined($nl->get_value('dribble_crophrv_xsmrpool_2atm')) ) {
+        $log->fatal_error("When CROP is NOT on dribble_crophrv_xsmrpool_2atm can NOT be set\n" );
+      }
+    }
+  } else {
+    if ( defined($nl->get_value('reseed_dead_plants')) ||
+         defined($nl->get_value('dribble_crophrv_xsmrpool_2atm'))   ) {
+             $log->fatal_error("When CN is not on none of the following can be set: ,\n" .
+                  "dribble_crophrv_xsmrpool_2atm nor reseed_dead_plantsr\n" .
+                  "(eg. don't use these options with SP mode).");
+    }
   }
 }
 
