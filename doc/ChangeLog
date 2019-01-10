@@ -89,6 +89,16 @@ CTSM testing:
     cheyenne ---- pass
     hobart ------ pass
 
+  Notes on testing:
+
+  - Most testing done on b5380c7e8. Since then, updated to a version of
+    cime that fixes cime's configure tool (but this isn't invoked in
+    system tests, so I didn't rerun the system tests) and pointed cime
+    to a tag rather than a hash.
+
+  - For tools tests: In baseline, cherry-picked commit 148bc2158 into
+    cime
+
 CTSM tag used for the baseline comparisons: ctsm1.0.dev022
 
 
