@@ -9,7 +9,7 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod	     , only : noveg, npcropmin, pftcon
+  use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
   use decompMod      , only : bounds_type
@@ -1077,6 +1077,7 @@ contains
     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     integer            :: restart_file_spinup_state
     integer            :: total_num_reseed_patch      ! Total number of patches to reseed across all processors
+    real(r8), parameter:: totvegcthresh = 1.0_r8      ! Total vegetation carbon threshold to reseed dead vegetation
 
     !------------------------------------------------------------------------
 
@@ -1338,12 +1339,12 @@ contains
 
        if (  flag == 'read' .and. (enter_spinup .or. (reseed_dead_plants .and. .not. is_restart())) .and. .not. use_cndv) then
              if ( masterproc ) write(iulog, *) 'Reseeding dead plants for CNVegCarbonState'
-             ! If a pft is dead (indicated by totvegc = 0) then we reseed that
+             ! If a pft is dead or near-dead (indicated by totvegc <= totvegcthresh) then we reseed that
              ! pft according to the cold start protocol in the InitCold subroutine.
              ! Thus, the variable totvegc is required to be read before here
              ! so that if it is zero for a given pft, the pft can be reseeded.
              do i = bounds%begp,bounds%endp
-                if (this%totvegc_patch(i) .le. 0.0_r8) then
+                if (this%totvegc_patch(i) .le. totvegcthresh) then
                    !-----------------------------------------------
                    ! initialize patch-level carbon state variables
                    !-----------------------------------------------
@@ -1351,7 +1352,7 @@ contains
                    this%leafcmax_patch(i) = 0._r8
 
                    l = patch%landunit(i)
-                   if (lun%itype(l) == istsoil )then
+                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig)then
                       if ( present(num_reseed_patch) ) then
                          num_reseed_patch = num_reseed_patch + 1
                          filter_reseed_patch(num_reseed_patch) = i
