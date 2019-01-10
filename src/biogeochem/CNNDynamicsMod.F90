@@ -178,14 +178,13 @@ contains
     real(r8), parameter :: water_init_grz = 0.006_r8, cnc_nh3_air = 0.0_r8, depth_slurry = 0.005_r8
     !real(r8), parameter :: fract_resist=0.225_r8, fract_unavail=0.025_r8, fract_avail=0.25_r8, fract_tan=0.6_r8
 
-    real(r8), parameter :: fract_tan=0.5_r8 ! of all N
+    real(r8), parameter :: fract_tan=0.6_r8 ! of all N
     real(r8), parameter :: fract_resist=0.45_r8, fract_unavail=0.05_r8, fract_avail=0.5_r8 ! of organic N
-
     
     real(r8), parameter :: dz_layer_fert = 0.02_r8, dz_layer_grz = 0.02_r8
     !real(r8), parameter :: fract_resist=0._r8, fract_unavail=0._r8, fract_avail=0._r8, fract_tan=1.0_r8
-    real(r8), parameter :: fert_incorp_reduct = 0.3_r8
-    real(r8), parameter :: slurry_infiltr_time = 12*3600.0_r8, water_init_fert = 1e-6
+    real(r8), parameter :: fert_incorp_reduct = 0.25_r8
+    real(r8), parameter :: slurry_infiltr_time = 6*3600.0_r8, water_init_fert = 1e-6
     real(r8), parameter :: &
          poolranges_grz(3) = (/24*3600.0_r8, 10*24*3600.0_r8, 360*24*3600.0_r8/), &
          poolranges_fert(3) = (/2.36*24*3600.0_r8, 24*3600.0_r8, 360*24*3600.0_r8/), &
