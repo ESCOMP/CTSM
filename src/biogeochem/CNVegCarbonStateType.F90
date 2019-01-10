@@ -2769,18 +2769,15 @@ contains
             var = this%grainc_xfer_patch(begp:endp), &
             flux_out_grc_area = conv_cflux(begp:endp))
 
-!KO WHY ARE THERE TWO use_crop's HERE?
-       if (use_crop) then
-          ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
-          ! of the atmosphere.
-          call update_patch_state( &
-               var = this%cropseedc_deficit_patch(begp:endp), &
-               flux_out_grc_area = conv_cflux(begp:endp))
+       ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
+       ! of the atmosphere.
+       call update_patch_state( &
+            var = this%cropseedc_deficit_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
 
-          call update_patch_state( &
-               var = this%xsmrpool_loss_patch(begp:endp), &
-               flux_out_grc_area = conv_cflux(begp:endp))
-       end if
+       call update_patch_state( &
+            var = this%xsmrpool_loss_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
     end if
 
   contains
