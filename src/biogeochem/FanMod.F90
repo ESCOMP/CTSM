@@ -259,7 +259,7 @@ contains
     
   end function eval_no3prod_v2
   
-  subroutine eval_fluxes_slurry(water, mtan, Hconc, tg, ratm, theta, thetasat, perc, runoff, bsw, fluxes)
+  subroutine eval_fluxes_slurry(water, mtan, Hconc, tg, ratm, theta, thetasat, perc, runoff, bsw, kads, fluxes)
     ! Evaluate nitrogen fluxes for a partly infiltrated layer of slurry.
     ! The state of infiltration is detemined from the amounts water on surface and in soil.
     ! Positive flux means loss of TAN.
@@ -275,10 +275,12 @@ contains
     real(r8), intent(in) :: perc     ! percolation water flux thourgh the bottom of volatilization layer, m/s
     real(r8), intent(in) :: runoff   ! surface runoff, m/s
     real(r8), intent(in) :: bsw
+    real(r8), intent(in) :: kads     ! dimensionless distribution coefficient, kads = [TAN (s)] / [TAN (aq)]
     !real(r8), intent(in) :: dt       ! timestep
 
     real(r8) :: water_tot, cnc, air, depth_soilsat, diffusivity_water, diffusivity_satsoil, halfwater, insoil, r1, dz2, inwater
-    real(r8) :: r2, volat_rate, kno3, knh3, depth_lower, fract_nh4, r2a, r2b, g3
+    real(r8) :: r2, volat_rate, kno3, knh3, depth_lower, fract_nh4, r2a, r2b, g3, gdown, rsld, rkl, rkg
+
 
     water_tot = water(1) + water(2)
 
@@ -316,7 +318,10 @@ contains
     depth_lower = max(soildepth_reservoir, depth_soilsat*1.5)
 
     call partition_tan(tg, Hconc, 1.0_r8, 0.0_r8, 0.0_r8, knh3, fract_nh4=fract_nh4)
-    volat_rate = 1.0_r8 / (r1 + ratm / knh3) ! conductance from aqueous TAN in slurry to NH3 in atmosphere
+    volat_rate = &
+         knh3/(-ratm*kads*theta + ratm*kads + ratm*thetasat - r1*kads*knh3*theta + r1*kads*knh3 + r1*knh3*thetasat)
+    
+    !volat_rate = 1.0_r8 / (r1 + ratm / knh3) ! conductance from aqueous TAN in slurry to NH3 in atmosphere
     fluxes(iflx_air) = volat_rate*cnc
         
     ! lower soil resistance consists of liquid diffusion slurry, in saturated layer, and
@@ -324,14 +329,20 @@ contains
     r2a = (water(1)-inwater) / diffusivity_water
     r2b = (depth_soilsat-insoil) / diffusivity_satsoil
     dz2 = depth_lower-depth_soilsat
+
+    Rkl = dz2 / (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta)
+    Rkg = dz2 / (eval_diffusivity_gas_mq(theta, thetasat, tg)*(thetasat-theta))
+    Rsld = r2a + r2b
+
+    gdown = -(Rkg + Rkl*knh3)/((Rkg*(Rkl + Rsld) + Rkl*Rsld*knh3)*(kads*(theta - 1) - thetasat))
+
     ! conductance = inverse resistance
-    g3 = (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta &
-         + knh3*eval_diffusivity_gas_mq(theta, thetasat, tg)*(thetasat-theta)) &
-         / dz2
-    r2 = r2a + r2b + 1.0/g3
+    !g3 = (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta &
+    !     + knh3*eval_diffusivity_gas_mq(theta, thetasat, tg)*(thetasat-theta)) &
+    !     / dz2
+    !r2 = r2a + r2b + 1.0/g3
 
-    fluxes(iflx_soild) = cnc / r2
-
+    fluxes(iflx_soild) = cnc * gdown
     
     ! nitrification
     kno3 = eval_no3prod_v2(thetasat, thetasat, tg)
@@ -342,7 +353,7 @@ contains
   end subroutine eval_fluxes_slurry
 
   subroutine eval_fluxes_soilroff_ads(mtan, water_manure, Hconc, tg, ratm, theta, thetasat, perc, &
-       & runoff, bsw, soildepth, fluxes, substance, status)
+       & runoff, bsw, kads_nh4, soildepth, fluxes, substance, status)
     !
     ! Evaluate nitrogen fluxes from a soil layer. Use for all cases except the partly
     ! infiltrated slurry (above). Fluxes can be evaluated either for urea or TAN: for
@@ -360,6 +371,7 @@ contains
     real(r8), intent(in) :: perc         ! downwards water percolation rate at the bottom of layer, m/s, > 0
     real(r8), intent(in) :: runoff       ! runoff water flux, m / s
     real(r8), intent(in) :: bsw          ! b in the soilwater retention curve; needed if the Moldrup 2003 diffusivities are used.
+    real(r8), intent(in) :: kads_nh4     ! distribution coefficient kads = [TAN (s)] / [TAN (aq)]. Unit m3(water) / m3(soil).
     real(r8), intent(in) :: soildepth    ! thickness of the volatlization layer
     integer, intent(in) :: substance     ! subst_tan or subst_urea.
     integer, intent(out) :: status       ! error flag
@@ -393,7 +405,7 @@ contains
     rsl = dz / (dsl*theta_tot)
 
     if (substance == subst_tan) then
-       kads = 0.0_r8 ! adsorption currently off.
+       kads = kads_nh4 
        call partition_tan(tg, Hconc, theta_tot, air, kads, volatility, fract_nh4=fract_nh4)
        no3_rate = eval_no3prod_v2(theta_tot, thetasat, tg)
     else if (substance == subst_urea) then
@@ -560,6 +572,8 @@ contains
     integer :: indpl
     
     real(r8), parameter :: dz_layer = 0.02 ! thickness of the volatilization layer, m
+    real(r8), parameter :: kads = 0.0_r8   ! distriution coefficient kads = [TAN (s)] / [TAN (aq)], dimensionless
+
     ! H+ concentration in each pool 
     !real(r8), parameter :: Hconc(4) = (/10.0_r8**(-8.0_r8), 10.0_r8**(-8.0_r8), 10.0_r8**(-8.0_r8), 10.0_r8**(-7_r8)/)
 
@@ -584,7 +598,7 @@ contains
     perc_slurry_mean = percolated / poolranges(1)
 
     call eval_fluxes_slurry(water_slurry, tanpools(1), Hconc(1), tg, ratm, theta, thetasat, perc_slurry_mean, &
-         runoff, bsw, fluxes(:,1))
+         runoff, bsw, kads, fluxes(:,1))
 
     if (any(isnan(fluxes))) then
        status = err_nan * 10
@@ -615,7 +629,7 @@ contains
        ! water content at the mean age of the pool
        water_soil = water_in_layer * waterfunction(age_prev + 0.5*poolranges(indpl))
        call eval_fluxes_soilroff_ads(tanpools(indpl), water_soil, Hconc(indpl), tg, &
-            & ratm, theta, thetasat, percolation, runoff, bsw, &
+            & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
             & dz_layer, fluxes(:,indpl), subst_tan, status)
 
        if (status /= 0) return
@@ -681,6 +695,7 @@ contains
     integer :: indpl
     
     real(r8), parameter :: water_relax_t = 24*3600.0_r8
+    real(r8), parameter :: kads = 0.0_r8
     logical :: fixed
 
     tanpools_old = tanpools
@@ -745,7 +760,7 @@ contains
        ! water content at the middle of the age range
        water_soil = water_into_layer * waterfunction(age_prev + 0.5*poolranges(indpl))
        call eval_fluxes_soilroff_ads(tanpools(indpl), water_soil, Hconc(indpl), tg, &
-            & ratm, theta, thetasat, percolation, runoff, bsw, &
+            & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
             & dz_layer, fluxes(:,indpl), subst_tan, status)
        if (status /= 0) then
           return
@@ -1087,7 +1102,7 @@ contains
        percolation = eval_perc(0.0_r8, evap, precip, watertend, ranges(indpl))
        ! Hconc and Ratm are missing since they do not affect urea.
        call eval_fluxes_soilroff_ads(pools(indpl), 0.0_r8, missing, tg, &
-            & missing, theta, thetasat, percolation, runoff, bsw, &
+            & missing, theta, thetasat, percolation, runoff, bsw, 0.0_r8, &
             & dz_layer, fluxes(1:5,indpl), subst_urea, status)
        if (status /= 0) then
           return
