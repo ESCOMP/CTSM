@@ -3608,8 +3608,9 @@ sub setup_logic_cngeneral {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
     if ( &value_is_true($nl->get_value('use_crop')) ) {
-       #add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dribble_crophrv_xsmrpool_2atm', 
-                   #'co2_type' => $nl->get_value('co2_type') );
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dribble_crophrv_xsmrpool_2atm', 
+                   'co2_type' => remove_leading_and_trailing_quotes($nl->get_value('co2_type')), 
+                   'use_crop' => $nl->get_value('use_crop')  );
     } else {
       if ( defined($nl->get_value('dribble_crophrv_xsmrpool_2atm')) ) {
         $log->fatal_error("When CROP is NOT on dribble_crophrv_xsmrpool_2atm can NOT be set\n" );
