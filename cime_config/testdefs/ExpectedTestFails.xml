@@ -2,9 +2,42 @@
 
 <expectedFails version="1.0">
 
+  <!-- Notes about the format of this file:
+
+       The required elements for a given failure are just:
+
+         <test name="...">
+           <phase name="...">
+             <status>...</status>
+           </phase>
+         </test>
+
+       There can be multiple phase blocks in a given test block.
+
+       In addition, a number of optional elements are allowed, which
+       currently are just for human consumption (not parsed by any
+       scripts):
+
+       - A test block can contain a "category" element, which gives the
+       test category in which this test can be found. (If this test
+       appears in more than one category, this can be specified with a
+       comma-delimited list, e.g.,
+       <category>aux_clm,prealpha</category>.)
+
+       - A phase block can contain an "issue" element, which gives the
+       issue number associated with this failure. (#123 refers to issue
+       #123 in the ESCOMP/ctsm repository. Issues in other repositories
+       should be specified as ORG/repo#123 - e.g., ESMCI/cime#123.)
+
+       - A phase block can contain a "comment" element, which gives any
+       sort of comment you desire.
+  -->
+
+
   <!-- aux_clm test suite failures -->
 
   <test name="ERP_D_Ld10_P36x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_decStart">
+    <category>aux_clm</category>
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#404</issue>
@@ -17,6 +50,7 @@
   </test>
 
   <test name="ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-monthly">
+    <category>aux_clm</category>
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#158</issue>
@@ -24,6 +58,7 @@
   </test>
 
   <test name="SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop">
+    <category>aux_clm</category>
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#442</issue>
@@ -31,6 +66,7 @@
   </test>
 
   <test name="SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop">
+    <category>aux_clm</category>
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#442</issue>
@@ -38,6 +74,7 @@
   </test>
 
   <test name="ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline">
+    <category>aux_clm</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#550</issue>
@@ -45,6 +82,7 @@
   </test>
 
   <test name="PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel">
+    <category>aux_clm</category>
     <phase name="GENERATE">
       <status>FAIL</status>
       <issue>ESMCI/cime#2917</issue>
@@ -58,6 +96,7 @@
   <!-- fates test suite failures -->
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-Fates">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -65,6 +104,7 @@
   </test>
 
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-FatesAllVars">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -72,6 +112,7 @@
   </test>
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-FatesLogging">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -79,6 +120,7 @@
   </test>
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-Fates">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -86,6 +128,7 @@
   </test>
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-FatesNoFire">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -93,6 +136,7 @@
   </test>
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-FatesPPhys">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -100,6 +144,7 @@
   </test>
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-FatesST3">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -107,6 +152,7 @@
   </test>
 
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm45Fates.cheyenne_intel.clm-FatesAllVars">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
@@ -114,6 +160,7 @@
   </test>
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.cheyenne_gnu.clm-Fates">
+    <category>fates</category>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>NGEET/fates#315</issue>
