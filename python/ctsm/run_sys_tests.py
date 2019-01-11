@@ -361,7 +361,7 @@ def _record_git_status(testroot, dry_run):
     output = ''
     ctsm_root = path_to_ctsm_root()
 
-    current_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+    current_hash = subprocess.check_output(['git', 'show', '--no-patch', '--oneline', 'HEAD'],
                                            cwd=ctsm_root,
                                            universal_newlines=True)
     output += "Current hash: {}".format(current_hash)

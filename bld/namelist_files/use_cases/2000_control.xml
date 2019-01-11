@@ -12,12 +12,6 @@
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
 <irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
 
-<stream_year_first_ndep phys="clm4_0" bgc="cn"   >2000</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm4_0" bgc="cn"   >2000</stream_year_last_ndep>
-
-<stream_year_first_ndep phys="clm4_0" bgc="cndv" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm4_0" bgc="cndv" >2000</stream_year_last_ndep>
-
 <stream_year_first_ndep phys="clm4_5" use_cn=".true." >2000</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm4_5" use_cn=".true." >2000</stream_year_last_ndep>
 

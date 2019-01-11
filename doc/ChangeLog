@@ -1,4 +1,131 @@
 ===============================================================
+Tag name:  ctsm1.0.dev023
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Jan 10 13:00:42 MST 2019
+One-line Summary: Remove CLM4.0
+
+Purpose of changes
+------------------
+
+Remove CLM4.0. This consists of removing code and other files that are
+specific to CLM4.0, and doing some resulting cleanup of code that was
+shared between CLM4.0 and later versions (primarily in build-namelist).
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves #455 (Remove CLM4.0)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Can no longer run CLM4.0 cases
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- CLM4.0 compsets no longer supported
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Removed CLM4.0 tests
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+  build-namelist tests:
+
+    cheyenne - pass
+
+  tools-tests (test/tools):
+
+    cheyenne - pass
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - ok
+
+       Total number of tests             = 52
+       Number of tests that PASS         = 51
+       Number of tests that Fail         = 1
+       Number of compare tests that PASS = 37
+       Number of compare tests that Fail = 4
+       Number of tests without compare   = 11
+
+       The one failing test is:
+       FAIL fail-no_towerdata.-d+/glade/p/cesmdata/cseg/inputdata++-s+RF-Bra+--debug+--pftgrid+--soilgrid.
+
+       These same failures occurred in ctsm1.0.dev022 (including the
+       compare tests that Fail). Erik Kluzek says these failures are
+       okay.
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+  Notes on testing:
+
+  - Most testing done on b5380c7e8. Since then, updated to a version of
+    cime that fixes cime's configure tool (but this isn't invoked in
+    system tests, so I didn't rerun the system tests) and pointed cime
+    to a tag rather than a hash.
+
+  - For tools tests: In baseline, cherry-picked commit 148bc2158 into
+    cime
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev022
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: points to branch tag off of cime5.7.5
+  (ctsm/ctsm1.0/cime5.7.5/n01), with changes for:
+  (1) Removal of support for CLM4.0 (equivalent to the changes in
+      https://github.com/ESMCI/cime/pull/2968)
+
+  (2) Fix for cime configure (cherry-picked 148bc2158)
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/609 (Remove CLM4.0)
+- https://github.com/ESCOMP/ctsm/pull/601 (Print git status and related
+  info when running run_sys_tests)
+
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev022
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Jan  8 11:01:38 MST 2019

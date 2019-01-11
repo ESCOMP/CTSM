@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev023    sacks 01/10/2019 Remove CLM4.0
   ctsm1.0.dev022    sacks 01/08/2019 Set tracer version of irrigation fluxes
   ctsm1.0.dev021      mvr 12/26/2018 Added tracer ratio capability and included it in consistency checks
   ctsm1.0.dev020    sacks 12/03/2018 New options for irrigation and crop fsat
