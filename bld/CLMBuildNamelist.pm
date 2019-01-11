@@ -3506,29 +3506,33 @@ sub setup_logic_lai_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl_flags->{'use_lai_streams'}) ) {
+
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
+
+    if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
       $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
     }
     if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
 
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
-                  'hgrid'=>$nl_flags->{'res'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai',
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      # Set align year, if first and last years are different
-      if ( $nl->get_value('stream_year_first_lai') !=
-           $nl->get_value('stream_year_last_lai') ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                       'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
-                       'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
+                     'hgrid'=>$nl_flags->{'res'} );
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai',
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         # Set align year, if first and last years are different
+         if ( $nl->get_value('stream_year_first_lai') !=
+              $nl->get_value('stream_year_last_lai') ) {
+              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                          'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
+                          'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         }
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
+                     'hgrid'=>"360x720cru" );
       }
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
-                  'hgrid'=>"360x720cru" );
     } else {
       # If bgc is CN/CNDV then make sure none of the LAI settings are set
       if ( defined($nl->get_value('stream_year_first_lai')) ||
