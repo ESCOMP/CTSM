@@ -10,4 +10,4 @@
  hist_type1d_pertape = ' ',' ',' '
 
  use_init_interp = .true.
- finidat = '/glade/p_old/image/RDA_strawman/CESM_ensembles/CLM/CLM5BGC-Crop/ctsm_2001-01-01-00000/clm5_f09_spinup80.clm2_0002.r.2001-01-01-00000.nc'
+ finidat = '/glade/p/cisl/dares/RDA_strawman/CESM_ensembles/CLM/CLM5BGC-Crop/ctsm_2001-01-01-00000/clm5_f09_spinup80.clm2_0002.r.2001-01-01-00000.nc'
