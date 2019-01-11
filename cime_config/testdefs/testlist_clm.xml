@@ -1473,14 +1473,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="f09_g17" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="ERS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1490,12 +1482,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="f09_g17" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
+  <test name="ERS_Ld3" grid="f09_g17" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Want one fates test on a large grid: Since FATES has cohorts, it has potential to be a massive memory consumer and netcdf array size maker, so the large grid test will help smoke out these types of issues (and it's a restart test to cover possible memory/netcdf size issues with the restart file).</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
