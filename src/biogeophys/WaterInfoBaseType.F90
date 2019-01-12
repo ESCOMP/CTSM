@@ -27,6 +27,7 @@ module WaterInfoBaseType
      procedure(lname_interface), public, deferred :: lname
 
      procedure(is_communicated_with_coupler_interface), public, deferred :: is_communicated_with_coupler
+     procedure(is_included_in_consistency_check_interface), public, deferred :: is_included_in_consistency_check
 
      procedure :: get_ratio
      procedure :: set_metadata
@@ -64,6 +65,12 @@ module WaterInfoBaseType
        logical :: coupled
        class(water_info_base_type), intent(in) :: this
      end function is_communicated_with_coupler_interface
+
+     pure function is_included_in_consistency_check_interface(this) result(included)
+        import :: water_info_base_type
+        logical :: included
+        class(water_info_base_type) , intent(in)  :: this
+     end function is_included_in_consistency_check_interface
 
   end interface
 

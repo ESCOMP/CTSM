@@ -9,7 +9,7 @@ module TotalWaterAndHeatMod
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use decompMod          , only : bounds_type
-  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus, aquifer_water_baseline
+  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
   use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
   use ColumnType         , only : col
   use LandunitType       , only : lun
@@ -216,6 +216,7 @@ contains
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          total_plant_stored_h2o => waterdiagnostic_inst%total_plant_stored_h2o_col, & ! Input:  [real(r8) (:,:) ] plant internal stored water (mm H2O)
+         aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
          wa           =>    waterstate_inst%wa_col        & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
          )
 
@@ -454,6 +455,7 @@ contains
          h2ocan_patch => waterstatebulk_inst%h2ocan_patch, & ! canopy water (mm H2O)
          snocan_patch => waterstatebulk_inst%snocan_patch, & ! canopy snow water (mm H2O)
          total_plant_stored_h2o_col => waterdiagnosticbulk_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
+         aquifer_water_baseline => waterstatebulk_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
          wa           => waterstatebulk_inst%wa_col & ! water in the unconfined aquifer (mm)
          )
 

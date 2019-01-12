@@ -11,7 +11,6 @@ module Wateratm2lndType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : iulog
   use clm_varcon     , only : spval
   use ColumnType     , only : col
   use WaterInfoBaseType, only : water_info_base_type

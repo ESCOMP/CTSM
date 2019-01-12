@@ -65,7 +65,6 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: frac_h2osfc_nosnow_col (:)   ! col fractional area with surface water greater than zero (if no snow present)
      real(r8), pointer :: wf_col                 (:)   ! col soil water as frac. of whc for top 0.05 m (0-1) 
      real(r8), pointer :: wf2_col                (:)   ! col soil water as frac. of whc for top 0.17 m (0-1) 
-     real(r8), pointer :: available_gw_uncon_col (:)   ! col available water in the unconfined saturated zone
      real(r8), pointer :: fwet_patch             (:)   ! patch canopy fraction that is wet (0 to 1)
      real(r8), pointer :: fcansno_patch          (:)   ! patch canopy fraction that is snow covered (0 to 1)
      real(r8), pointer :: fdry_patch             (:)   ! patch canopy fraction of foliage that is green and dry [-] (new)
@@ -169,7 +168,6 @@ contains
     allocate(this%frac_h2osfc_nosnow_col (begc:endc))                     ; this%frac_h2osfc_nosnow_col        (:)   = nan 
     allocate(this%wf_col                 (begc:endc))                     ; this%wf_col                 (:)   = nan
     allocate(this%wf2_col                (begc:endc))                     ; this%wf2_col                (:)   = nan
-    allocate(this%available_gw_uncon_col (begc:endc))                     ; this%available_gw_uncon_col (:)   = nan
     allocate(this%fwet_patch             (begp:endp))                     ; this%fwet_patch             (:)   = nan
     allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
@@ -194,7 +192,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -386,14 +383,6 @@ contains
             ptr_col=this%wf_col, default='inactive')
     end if
 
-    this%available_gw_uncon_col(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('GW_AVAILABLE'), &
-         units='kg/m2', &
-         avgflag='A', &
-         long_name=this%info%lname('available water in the unconfined saturated zone'), &
-         ptr_col=this%available_gw_uncon_col, default='inactive')
-    
     this%h2osno_top_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('H2OSNO_TOP'), &
@@ -473,7 +462,6 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno
     use clm_varcon      , only : zlnd
     !
     ! !ARGUMENTS:
@@ -483,10 +471,7 @@ contains
     class(waterstatebulk_type), intent(in)                :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
+    integer            :: c,l
     real(r8)           :: snowbd      ! temporary calculation of snow bulk density (kg/m3)
     real(r8)           :: fmelt       ! snowbd/100
     !-----------------------------------------------------------------------

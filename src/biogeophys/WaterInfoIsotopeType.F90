@@ -38,7 +38,8 @@ module WaterInfoIsotopeType
 
 contains
 
-  function constructor(tracer_name, ratio, communicated_with_coupler) result(this)
+  function constructor(tracer_name, ratio, included_in_consistency_check, &
+                       communicated_with_coupler) result(this)
     ! Create a water_info_isotope_type object
     !
     ! Eventually, this will either (a) accept various arguments specifying information
@@ -47,11 +48,13 @@ contains
     type(water_info_isotope_type) :: this  ! function result
     character(len=*), intent(in)  :: tracer_name
     real(r8), intent(in)          :: ratio
+    logical,  intent(in)          :: included_in_consistency_check
     logical , intent(in)          :: communicated_with_coupler  ! see documentation in WaterInfoTracerType.F90
 
     this%water_info_tracer_type = water_info_tracer_type( &
          tracer_name = tracer_name, &
          ratio = ratio, &
+         included_in_consistency_check = included_in_consistency_check, &
          communicated_with_coupler = communicated_with_coupler)
   end function constructor
 

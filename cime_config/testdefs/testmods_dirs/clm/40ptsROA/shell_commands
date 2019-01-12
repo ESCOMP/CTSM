@@ -1,2 +1,0 @@
-./xmlchange PTS_LAT=30,PTS_LON=315
-./xmlchange --force CLM_FORCE_COLDSTART=on
