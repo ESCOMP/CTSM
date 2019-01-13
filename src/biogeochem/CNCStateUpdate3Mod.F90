@@ -81,15 +81,15 @@ contains
 !               if(j .eq. 1)print*,'after fire_mortality',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit), cf_veg%m_c_to_litr_met_fire_col(c,j)* dt 
             else
             ! patch-level wood to column-level CWD (uncombusted wood)
-               cf_soil%matrix_input_col(c,j,i_cwd) = cf_soil%matrix_input_col(c,j,i_cwd) + &
+               cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) + &
                  cf_veg%fire_mortality_c_to_cwdc_col(c,j) * dt
 
             ! patch-level wood to column-level litter (uncombusted wood)
-               cf_soil%matrix_input_col(c,j,i_met_lit) = cf_soil%matrix_input_col(c,j,i_met_lit) + &
+               cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) + &
                  cf_veg%m_c_to_litr_met_fire_col(c,j)* dt
-               cf_soil%matrix_input_col(c,j,i_cel_lit) = cf_soil%matrix_input_col(c,j,i_cel_lit) + &
+               cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) + &
                  cf_veg%m_c_to_litr_cel_fire_col(c,j)* dt
-               cf_soil%matrix_input_col(c,j,i_lig_lit) = cf_soil%matrix_input_col(c,j,i_lig_lit) + &
+               cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) = cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) + &
                  cf_veg%m_c_to_litr_lig_fire_col(c,j)* dt
             end if
          end do
@@ -121,8 +121,10 @@ contains
           ! displayed pools
             cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
                  cf_veg%m_leafc_to_fire_patch(p) * dt
+            if(p .eq. 49261)print*,'leafc_to_fire1',cf_veg%m_leafc_to_fire_patch(p),cs_veg%leafc_patch(p)
             cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
                 cf_veg%m_leafc_to_litter_fire_patch(p) * dt
+            if(p .eq. 49261)print*,'leafc_to_fire2',cf_veg%m_leafc_to_litter_fire_patch(p),cs_veg%leafc_patch(p)
             cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) -                         &
                 cf_veg%m_frootc_to_fire_patch(p) * dt
             cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) -                         &

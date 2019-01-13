@@ -10,7 +10,7 @@ module CNBalanceCheckMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use decompMod                       , only : bounds_type
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif
+  use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_matrixcn, use_soil_matrixcn
   use clm_time_manager                , only : get_step_size
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
@@ -186,35 +186,53 @@ contains
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
-         if (abs(col_errcb(c)) > 1000000) then   !1e-7_r8
-            err_found = .true.
-            err_index = c
+         if(use_matrixcn .or. use_soil_matrixcn)then
+            if (abs(col_errcb(c)) > 1.e-2_r8) then
+               err_found = .true.
+               err_index = c
+            end if
+            if (abs(col_errcb(c)) > 1.e-3_r8) then
+               write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
+            end if
+         else
+            if (abs(col_errcb(c)) > 1.e-7_r8) then 
+               err_found = .true.
+               err_index = c
+            end if
+             if (abs(col_errcb(c)) > 1.e-8_r8) then
+               write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
+            end if
          end if
-          if (abs(col_errcb(c)) > 1e-8_r8) then
-  !          write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
-         end if
-
-
-
+!         print*,'column cbalance error    = ', col_errcb(c), c
+!         print*,'delta store              = ',col_endcb(c)-col_begcb(c)
+!         print*,'--- Inputs ---'
+!         print*,'gpp                      = ',gpp(c)*dt
+!         print*,'--- Outputs ---'
+!         print*,'er                       = ',er(c)*dt
+!         print*,'col_fire_closs           = ',col_fire_closs(c)*dt
+!         print*,'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
+!         print*,'wood_harvestc            = ',wood_harvestc(c)*dt
+!         print*,'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
+!         print*,'-1*som_c_leached         = ',som_c_leached(c)*dt
       end do ! end of columns loop
 
       if (err_found) then
          c = err_index
-!         write(iulog,*)'column cbalance error    = ', col_errcb(c), c
-!         write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-!         write(iulog,*)'begcb                    = ',col_begcb(c)
-!         write(iulog,*)'endcb                    = ',col_endcb(c)
-!         write(iulog,*)'delta store              = ',col_endcb(c)-col_begcb(c)
-!         write(iulog,*)'--- Inputs ---'
-!         write(iulog,*)'gpp                      = ',gpp(c)*dt
-!         write(iulog,*)'--- Outputs ---'
-!         write(iulog,*)'er                       = ',er(c)*dt
-!         write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
-!         write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
-!         write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
-!         write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
-!         write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-!         call endrun(msg=errMsg(sourcefile, __LINE__))   !zgdu
+         write(iulog,*)'column cbalance error    = ', col_errcb(c), c
+         write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begcb                    = ',col_begcb(c)
+         write(iulog,*)'endcb                    = ',col_endcb(c)
+         write(iulog,*)'delta store              = ',col_endcb(c)-col_begcb(c)
+         write(iulog,*)'--- Inputs ---'
+         write(iulog,*)'gpp                      = ',gpp(c)*dt
+         write(iulog,*)'--- Outputs ---'
+         write(iulog,*)'er                       = ',er(c)*dt
+         write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
+         write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
+         write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
+         write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
+         write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
+         call endrun(msg=errMsg(sourcefile, __LINE__))   !zgdu
       end if
 
     end associate
@@ -320,41 +338,45 @@ contains
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
 
-         if (abs(col_errnb(c)) > 1000) then   !1e-3_r8
-            err_found = .true.
-            err_index = c
-         end if
          
-         if (abs(col_errnb(c)) > 1e-7_r8) then
-            write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
-            write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-            if (use_nitrif_denitrif) then
-!            print*,'balance check,c',c
-!            print*,'smin_no3_leached(c)*dt',smin_no3_leached(c)
-!            print*,'smin_no3_runoff(c)*dt',smin_no3_runoff(c)
-!            print*,'f_n2o_nit(c)*dt',f_n2o_nit(c)
-               write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-            end if
-         end if
+        if(use_matrixcn .or. use_soil_matrixcn)then 
+           if (abs(col_errnb(c)) > 1.e-2_r8) then   !1e-3_r8
+              err_found = .true.
+              err_index = c
+           end if
+           if (abs(col_errnb(c)) > 1e-3_r8) then
+              write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
+              write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+           end if
+        else
+           if (abs(col_errnb(c)) > 1.e-3_r8) then   !1e-3_r8
+              err_found = .true.
+              err_index = c
+           end if
+           if (abs(col_errnb(c)) > 1e-7_r8) then
+              write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
+              write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+           end if
+        end if
 
       end do ! end of columns loop
-
+      
       if (err_found) then
          c = err_index
-!         write(iulog,*)'column nbalance error    = ',col_errnb(c), c
-!         write(iulog,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-!         write(iulog,*)'begnb                    = ',col_begnb(c)
-!         write(iulog,*)'endnb                    = ',col_endnb(c)
-!         write(iulog,*)'delta store              = ',col_endnb(c)-col_begnb(c)
-!         write(iulog,*)'input mass               = ',col_ninputs(c)*dt
-!         write(iulog,*)'output mass              = ',col_noutputs(c)*dt
-!         write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
-!         write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-!         write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-        
+         write(iulog,*)'column nbalance error    = ',col_errnb(c), c
+         write(iulog,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begnb                    = ',col_begnb(c)
+         write(iulog,*)'endnb                    = ',col_endnb(c)
+         write(iulog,*)'delta store              = ',col_endnb(c)-col_begnb(c)
+         write(iulog,*)'input mass               = ',col_ninputs(c)*dt
+         write(iulog,*)'output mass              = ',col_noutputs(c)*dt
+         write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
+         write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+         write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+      
          
          
-!         call endrun(msg=errMsg(sourcefile, __LINE__))  !zgdu
+         call endrun(msg=errMsg(sourcefile, __LINE__))  !zgdu
       end if
 
     end associate

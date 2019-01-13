@@ -216,10 +216,12 @@ contains
                                 pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
 
       ! leaf transfer C and N
+      !print*,'bfeore TruncateCandNStates',cs%leafc_xfer_patch(5)
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_xfer_patch(bounds%begp:bounds%endp), &
                                 ns%leafn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 c13=c13cs%leafc_xfer_patch, c14=c14cs%leafc_xfer_patch, &
                                 pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
+      !print*,'after TruncateCandNStates',cs%leafc_xfer_patch(5)
 
       ! froot C and N
       ! EBK KO DML: For some reason frootc/frootn can go negative and allowing
@@ -465,19 +467,19 @@ contains
        p = filter_soilp(fp)
 
        if ( .not. lcroponly .or. (patch%itype(p) >= nc3crop) ) then
-!          if(p .ge. 5228 .and. p .le. 5228)then
+!          if(p .eq. 5)then
 !             print*,'.not. lcroponly .or. (patch%itype(p) >= nc3crop)'
 !             print*,'lallowneg',lallowneg
-!             print*,'cnegcrit',cnegcrit
-!             print*,'nnegcrit',nnegcrit
+!             print*,'cnegcrit',cnegcrit,ccrit
+!             print*,'nnegcrit',nnegcrit,ncrit
 !             print*,'carbon_patch(p)',p,carbon_patch(p)
 !             print*,'nitrogen_patch(p)',nitrogen_patch(p)
 !          end if
-!          print*,'bounds%begp,endp',bounds%begp,bounds%endp
           if ( .not. lallowneg .and. ((carbon_patch(p) < cnegcrit) .or. (nitrogen_patch(p) < nnegcrit)) ) then
+!             print*,'bounds%begp,endp',bounds%begp,bounds%endp,p
              write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
-!             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))  !zgdu
+             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))  !zgdu
           else if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8

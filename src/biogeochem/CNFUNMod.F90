@@ -877,9 +877,6 @@ module CNFUNMod
            sminn_nh4_layer_step(p,j,istp)  =   sminn_nh4_layer(c,j) * permyc(p,istp)
            sminn_no3_conc_step(p,j,istp)   =   sminn_no3_conc(c,j)  * permyc(p,istp)
            sminn_nh4_conc_step(p,j,istp)   =   sminn_nh4_conc(c,j)  * permyc(p,istp)
-!           if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-!              print*,'sminn_nh4_layer_step',p,istp,j,sminn_nh4_layer_step(p,j,istp),sminn_nh4_layer(c,j),permyc(p,istp),smin_nh4_to_plant_vr(c,j),h2osoi_liq(c,j)
-!           end if
         end do
      end do
   end do
@@ -1094,9 +1091,6 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
                ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,crootfr(p,j),smallValue)
                costNit(j,icostActiveNH4)  = fun_cost_active(sminn_nh4_layer_step(p,j,istp) &
                ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,crootfr(p,j),smallValue)
-!               if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-!                  print*,'costNit(j,icostActiveNH4)',p,j,costNit(j,icostActiveNH4),sminn_nh4_layer_step(p,j,istp),big_cost,kc_active(p,istp),kn_active(p,istp),rootc_dens_step,crootfr(p,j),smallValue
-!               end if
             end do
             cost_active_no3(p,1:nlevdecomp)  = costNit(:,icostActiveNO3) 
             cost_active_nh4(p,1:nlevdecomp)  = costNit(:,icostActiveNH4)
@@ -1526,7 +1520,6 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       npp_Nuptake(p)            = soilc_change(p)
       ! how much carbon goes to growth of tissues?  
       npp_growth(p)             = (Nuptake(p)- free_retransn_to_npool(p))*plantCN(p)+(excess_carbon_acc/dt) !does not include gresp, since this is calculated from growth
-
 
      
       !-----------------------Diagnostic Fluxes------------------------------!

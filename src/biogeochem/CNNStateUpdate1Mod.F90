@@ -279,7 +279,8 @@ contains
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          + nf_veg%retransn_to_npool_patch(p)*dt
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          + nf_veg%free_retransn_to_npool_patch(p)*dt
             if(ns_veg%retransn_patch(p) .ne. 0)then
-               nf_veg%matrix_nphtransfer_patch(p,ioutn,iretransn) = nf_veg%matrix_nphtransfer_patch(p,ioutn,iretransn) + nf_veg%free_retransn_to_npool_patch(p) / ns_veg%retransn_patch(p)
+!               if(p .eq. 5)print*,'nphtransfer_retransn_out',nf_veg%iretransn_to_iout_ph,nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph),nf_veg%free_retransn_to_npool_patch(p),ns_veg%retransn_patch(p)
+               nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) = nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) + nf_veg%free_retransn_to_npool_patch(p) / ns_veg%retransn_patch(p)
             end if
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          - nf_veg%npool_to_leafn_patch(p)*dt
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          - nf_veg%npool_to_leafn_storage_patch(p)*dt

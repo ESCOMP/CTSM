@@ -82,14 +82,14 @@ contains
 !               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
 !                  print*,'before gap mortality N input to soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%gap_mortality_n_to_litr_met_n_col(c,j)
 !               end if
-               nf_soil%matrix_input_col(c,j,i_met_lit) = &
-                 nf_soil%matrix_input_col(c,j,i_met_lit) + nf_veg%gap_mortality_n_to_litr_met_n_col(c,j) * dt
-               nf_soil%matrix_input_col(c,j,i_cel_lit) = &
-                 nf_soil%matrix_input_col(c,j,i_cel_lit) + nf_veg%gap_mortality_n_to_litr_cel_n_col(c,j) * dt
-               nf_soil%matrix_input_col(c,j,i_lig_lit) = &
-                 nf_soil%matrix_input_col(c,j,i_lig_lit) + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,j) * dt
-               nf_soil%matrix_input_col(c,j,i_cwd)     = &
-                 nf_soil%matrix_input_col(c,j,i_cwd)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_met_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_cel_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
             end if !soil_matrix
          end do
       end do
@@ -204,14 +204,14 @@ contains
 !               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
 !                  print*,'before harvest N input soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%harvest_n_to_litr_met_n_col(c,j)
 !               end if
-               nf_soil%matrix_input_col(c,j,i_met_lit) = &
-                 nf_soil%matrix_input_col(c,j,i_met_lit) + nf_veg%harvest_n_to_litr_met_n_col(c,j) * dt
-               nf_soil%matrix_input_col(c,j,i_cel_lit) = &
-                 nf_soil%matrix_input_col(c,j,i_cel_lit) + nf_veg%harvest_n_to_litr_cel_n_col(c,j) * dt
-               nf_soil%matrix_input_col(c,j,i_lig_lit) = &
-                 nf_soil%matrix_input_col(c,j,i_lig_lit) + nf_veg%harvest_n_to_litr_lig_n_col(c,j) * dt
-               nf_soil%matrix_input_col(c,j,i_cwd)     = &
-                 nf_soil%matrix_input_col(c,j,i_cwd)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_met_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_cel_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_lig_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
             end if   
          end do
       end do

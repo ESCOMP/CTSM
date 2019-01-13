@@ -17,7 +17,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use spmdMod                            , only : masterproc
   use abortutils                         , only : endrun
   use CNSharedParamsMod                  , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, InitSoilTransfer
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilStateType                      , only : soilstate_type
@@ -584,50 +584,95 @@ contains
       cascade_receiver_pool(i_s1s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
 
-      i_s1s3 = 5
-      decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
-      cascade_donor_pool(i_s1s3) = i_soil1
-      cascade_receiver_pool(i_s1s3) = i_soil3
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
-
-      i_s2s1 = 6
-      decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
-      cascade_donor_pool(i_s2s1) = i_soil2
-      cascade_receiver_pool(i_s2s1) = i_soil1
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
-
-      i_s2s3 = 7 
-      decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
-      cascade_donor_pool(i_s2s3) = i_soil2
-      cascade_receiver_pool(i_s2s3) = i_soil3
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
-
-      i_s3s1 = 8
-      decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
-      cascade_donor_pool(i_s3s1) = i_soil3
-      cascade_receiver_pool(i_s3s1) = i_soil1
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
-
-      if (.not. use_fates) then
-         i_cwdl2 = 9
+      if (use_soil_matrixcn)then !use fates will automatically turn off use_soil_matrixcn
+         i_cwdl2 = 5
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_litr2
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
          
-         i_cwdl3 = 10
+         i_cwdl3 = 6
          decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
          cascade_donor_pool(i_cwdl3) = i_cwd
          cascade_receiver_pool(i_cwdl3) = i_litr3
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
-      end if
+     
+         i_s1s3 = 7
+         decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+         cascade_donor_pool(i_s1s3) = i_soil1
+         cascade_receiver_pool(i_s1s3) = i_soil3
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
 
+         i_s2s1 = 8
+         decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
+         cascade_donor_pool(i_s2s1) = i_soil2
+         cascade_receiver_pool(i_s2s1) = i_soil1
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
+
+         i_s2s3 = 9 
+         decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
+         cascade_donor_pool(i_s2s3) = i_soil2
+         cascade_receiver_pool(i_s2s3) = i_soil3
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
+
+         i_s3s1 = 10
+         decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
+         cascade_donor_pool(i_s3s1) = i_soil3
+         cascade_receiver_pool(i_s3s1) = i_soil1
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
+      else   
+         i_s1s3 = 5
+         decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+         cascade_donor_pool(i_s1s3) = i_soil1
+         cascade_receiver_pool(i_s1s3) = i_soil3
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+
+         i_s2s1 = 6
+         decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
+         cascade_donor_pool(i_s2s1) = i_soil2
+         cascade_receiver_pool(i_s2s1) = i_soil1
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
+
+         i_s2s3 = 7 
+         decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
+         cascade_donor_pool(i_s2s3) = i_soil2
+         cascade_receiver_pool(i_s2s3) = i_soil3
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
+
+         i_s3s1 = 8
+         decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
+         cascade_donor_pool(i_s3s1) = i_soil3
+         cascade_receiver_pool(i_s3s1) = i_soil1
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
+
+         if (.not. use_fates) then
+            i_cwdl2 = 9
+            decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
+            rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
+            cascade_donor_pool(i_cwdl2) = i_cwd
+            cascade_receiver_pool(i_cwdl2) = i_litr2
+            pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
+         
+            i_cwdl3 = 10
+            decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
+            rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
+            cascade_donor_pool(i_cwdl3) = i_cwd
+            cascade_receiver_pool(i_cwdl3) = i_litr3
+            pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
+         end if
+      end if
+ 
+      if(use_soil_matrixcn) call InitSoilTransfer()
 
       deallocate(rf_s1s2)
       deallocate(rf_s1s3)
@@ -647,7 +692,7 @@ contains
     !  written by C. Koven based on original CLM4 decomposition cascade
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
+    use clm_time_manager , only : get_days_per_year, get_step_size
     use shr_const_mod    , only : SHR_CONST_PI
     use clm_varcon       , only : secspday
     !
@@ -684,7 +729,7 @@ contains
     real(r8):: Q10                          ! temperature dependence
     real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
-    integer :: c, fc, j, k, l
+    integer :: c, fc, j, k, l, dt
     real(r8):: catanf                       ! hyperbolic temperature function from CENTURY
     real(r8):: catanf_30                    ! reference rate at 30C
     real(r8):: t1                           ! temperature argument
@@ -721,8 +766,9 @@ contains
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
-         spinup_factor  => decomp_cascade_con%spinup_factor            , & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
-         matrix_decomp_k  => soilbiogeochem_carbonflux_inst%matrix_decomp_k_col & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
+         Ksoil          => soilbiogeochem_carbonflux_inst%Ksoil        , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
+         spinup_factor  => decomp_cascade_con%spinup_factor            & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
+!         matrix_decomp_k  => soilbiogeochem_carbonflux_inst%matrix_decomp_k_col & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
          )
 
       mino2lim = CNParamsShareInst%mino2lim
@@ -733,6 +779,7 @@ contains
       endif
 
       days_per_year = get_days_per_year()
+      dt = real( get_step_size(), r8 )
 
       ! the belowground parameters from century
       tau_l1 = 1./18.5
@@ -1080,12 +1127,12 @@ contains
                                        * spinup_geogterm_s3(c)
  ! If use soil_matrix              
                if(use_soil_matrixcn)then
-                  matrix_decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-                  matrix_decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-                  matrix_decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) 
-                  matrix_decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) 
-                  matrix_decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) 
-                  matrix_decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+                  Ksoil%DM(c,j+nlevdecomp*(i_litr1-1)) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
+                  Ksoil%DM(c,j+nlevdecomp*(i_litr2-1)) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
+                  Ksoil%DM(c,j+nlevdecomp*(i_litr3-1)) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
+                  Ksoil%DM(c,j+nlevdecomp*(i_soil1-1)) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
+                  Ksoil%DM(c,j+nlevdecomp*(i_soil2-1)) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
+                  Ksoil%DM(c,j+nlevdecomp*(i_soil3-1)) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
                end if
             end do
          end do
@@ -1101,12 +1148,12 @@ contains
                decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
  !if use soil_matrix              
                if(use_soil_matrixcn)then
-                  matrix_decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-                  matrix_decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-                  matrix_decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-                  matrix_decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-                  matrix_decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-                  matrix_decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+                  Ksoil%DM(c,j+nlevdecomp*(i_litr1-1)) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+                  Ksoil%DM(c,j+nlevdecomp*(i_litr2-1)) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+                  Ksoil%DM(c,j+nlevdecomp*(i_litr3-1)) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+                  Ksoil%DM(c,j+nlevdecomp*(i_soil1-1)) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+                  Ksoil%DM(c,j+nlevdecomp*(i_soil2-1)) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+                  Ksoil%DM(c,j+nlevdecomp*(i_soil3-1)) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
                end if
             end do
          end do
@@ -1122,10 +1169,9 @@ contains
                        o_scalar(c,j) * spinup_geogterm_cwd(c)
 ! if use soil_matrix                  
                   if(use_soil_matrixcn)then
-                     matrix_decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
-                            o_scalar(c,j)
+                     Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
+                            o_scalar(c,j) * dt
 !                     write(420,"(A,2I,10E17.9)"),'decomp',c,j,t_scalar(c,j),w_scalar(c,j),o_scalar(c,j),depth_scalar(c,j),k_l1,k_l2_l3,k_s1,k_s2,k_s3,k_frag
-!                     if(j .eq. 13)print*,'matrix_decomp_k(c,j,i_soil3)',c,j,t_scalar(c,j),w_scalar(c,j),o_scalar(c,j),depth_scalar(c,j),k_s3
                   end if
                end do
             end do
@@ -1137,7 +1183,7 @@ contains
                        o_scalar(c,j) * spinup_geogterm_cwd(c)
   ! if use soil_matrix                
                   if(use_soil_matrixcn)then
-                      matrix_decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * &
+                      Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * &
                              o_scalar(c,j)
                   end if
                end do

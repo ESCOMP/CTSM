@@ -274,7 +274,24 @@ contains
          matrix_Ninput                => cnveg_nitrogenflux_inst%matrix_Ninput_patch               , & ! N input of matrix
          matrix_nphtransfer           => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch    , & ! Input: N:N ratio for vegetation parts
          matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! C allocation of matrix
-         matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch                 & ! N allocation of matrix
+         matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch               , & ! N allocation of matrix
+         iretransn_to_ileaf           => cnveg_nitrogenflux_inst%iretransn_to_ileaf_ph             , &
+         iretransn_to_ileafst         => cnveg_nitrogenflux_inst%iretransn_to_ileafst_ph             , &
+         iretransn_to_ifroot          => cnveg_nitrogenflux_inst%iretransn_to_ifroot_ph             , &
+         iretransn_to_ifrootst        => cnveg_nitrogenflux_inst%iretransn_to_ifrootst_ph             , &
+         iretransn_to_ilivestem       => cnveg_nitrogenflux_inst%iretransn_to_ilivestem_ph             , &
+         iretransn_to_ilivestemst     => cnveg_nitrogenflux_inst%iretransn_to_ilivestemst_ph             , &
+         iretransn_to_ideadstem       => cnveg_nitrogenflux_inst%iretransn_to_ideadstem_ph             , &
+         iretransn_to_ideadstemst     => cnveg_nitrogenflux_inst%iretransn_to_ideadstemst_ph             , &
+         iretransn_to_ilivecroot      => cnveg_nitrogenflux_inst%iretransn_to_ilivecroot_ph             , &
+         iretransn_to_ilivecrootst    => cnveg_nitrogenflux_inst%iretransn_to_ilivecrootst_ph             , &
+         iretransn_to_ideadcroot      => cnveg_nitrogenflux_inst%iretransn_to_ideadcroot_ph             , &
+         iretransn_to_ideadcrootst    => cnveg_nitrogenflux_inst%iretransn_to_ideadcrootst_ph             , &
+         iretransn_to_igrain          => cnveg_nitrogenflux_inst%iretransn_to_igrain_ph             , &
+         iretransn_to_igrainst        => cnveg_nitrogenflux_inst%iretransn_to_igrainst_ph             , &
+         ileaf_to_iretransn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph                 , &
+         ifroot_to_iretransn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph                 , &
+         ilivestem_to_iretransn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph                &
          )
 
       ! patch loop to distribute the available N between the competing patches 
@@ -530,34 +547,34 @@ contains
          if(use_matrixcn)then
             matrix_Cinput(p) = plant_calloc(p)
             if(retransn(p) .ne. 0)then
-               matrix_nphtransfer(p,ileaf        ,iretransn)      = matrix_nphtransfer(p,ileaf        ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ileaf)           = matrix_nphtransfer(p,iretransn_to_ileaf) &
                                                                   + matrix_nalloc(p,ileaf    )     * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ileaf_st     ,iretransn)      = matrix_nphtransfer(p,ileaf_st     ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ileafst)         = matrix_nphtransfer(p,iretransn_to_ileafst) &
                                                                   + matrix_nalloc(p,ileaf_st )     * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ifroot       ,iretransn)      = matrix_nphtransfer(p,ifroot       ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ifroot)          = matrix_nphtransfer(p,iretransn_to_ifroot) &
                                                                   + matrix_nalloc(p,ifroot   )     * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ifroot_st    ,iretransn)      = matrix_nphtransfer(p,ifroot_st    ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ifrootst)        = matrix_nphtransfer(p,iretransn_to_ifrootst) &
                                                                   + matrix_nalloc(p,ifroot_st)     * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ilivestem    ,iretransn)      = matrix_nphtransfer(p,ilivestem    ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ilivestem)       = matrix_nphtransfer(p,iretransn_to_ilivestem) &
                                                                   + matrix_nalloc(p,ilivestem    ) * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ilivestem_st ,iretransn)      = matrix_nphtransfer(p,ilivestem_st ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ilivestemst)     = matrix_nphtransfer(p,iretransn_to_ilivestemst) &
                                                                   + matrix_nalloc(p,ilivestem_st ) * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ideadstem    ,iretransn)      = matrix_nphtransfer(p,ideadstem    ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ideadstem)       = matrix_nphtransfer(p,iretransn_to_ideadstem) &
                                                                   + matrix_nalloc(p,ideadstem    ) * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ideadstem_st ,iretransn)      = matrix_nphtransfer(p,ideadstem_st ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ideadstemst)     = matrix_nphtransfer(p,iretransn_to_ideadstemst) &
                                                                   + matrix_nalloc(p,ideadstem_st ) * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ilivecroot   ,iretransn)      = matrix_nphtransfer(p,ilivecroot   ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ilivecroot)      = matrix_nphtransfer(p,iretransn_to_ilivecroot) &
                                                                   + matrix_nalloc(p,ilivecroot   ) * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ilivecroot_st,iretransn)      = matrix_nphtransfer(p,ilivecroot_st,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ilivecrootst)    = matrix_nphtransfer(p,iretransn_to_ilivecrootst) &
                                                                   + matrix_nalloc(p,ilivecroot_st) * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ideadcroot   ,iretransn)      = matrix_nphtransfer(p,ideadcroot   ,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ideadcroot)      = matrix_nphtransfer(p,iretransn_to_ideadcrootst) &
                                                                   + matrix_nalloc(p,ideadcroot   ) * retransn_to_npool(p) / retransn(p)
-               matrix_nphtransfer(p,ideadcroot_st,iretransn)      = matrix_nphtransfer(p,ideadcroot_st,iretransn) &
+               matrix_nphtransfer(p,iretransn_to_ideadcrootst)    = matrix_nphtransfer(p,iretransn_to_ideadcrootst) &
                                                                   + matrix_nalloc(p,ideadcroot_st) * retransn_to_npool(p) / retransn(p)
                if(ivt(p) >= npcropmin)then 
-                  matrix_nphtransfer(p,igrain    ,iretransn)      = matrix_nphtransfer(p,igrain       ,iretransn) &
+                  matrix_nphtransfer(p,iretransn_to_igrain)       = matrix_nphtransfer(p,iretransn_to_igrain) &
                                                                   + matrix_nalloc(p,igrain       ) * retransn_to_npool(p) / retransn(p)
-                  matrix_nphtransfer(p,igrain_st ,iretransn)      = matrix_nphtransfer(p,igrain_st    ,iretransn) &
+                  matrix_nphtransfer(p,iretransn_to_igrainst)     = matrix_nphtransfer(p,iretransn_to_igrainst) &
                                                                   + matrix_nalloc(p,igrain_st    ) * retransn_to_npool(p) / retransn(p)
                end if
             end if
@@ -791,7 +808,10 @@ contains
          sminn_to_npool        => cnveg_nitrogenflux_inst%sminn_to_npool_patch      , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
          leafn_to_retransn     => cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:)   ]                                          
          frootn_to_retransn    => cnveg_nitrogenflux_inst%frootn_to_retransn_patch  , & ! Output: [real(r8) (:)   ]                                          
-         livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch & ! Output: [real(r8) (:)   ]                                          
+         livestemn_to_retransn => cnveg_nitrogenflux_inst%livestemn_to_retransn_patch, & ! Output: [real(r8) (:)   ]                                          
+         ileaf_to_iretransn    => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph                 , &
+         ifroot_to_iretransn   => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph                 , &
+         ilivestem_to_iretransn=> cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph                &
          )
 
       ! set time steps
@@ -1023,13 +1043,13 @@ contains
                        grain_flag(p) = 1._r8
                         if(use_matrixcn)then
                            if(leafn(p) .ne. 0._r8)then
-                               matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p)) / leafn(p)
+                               matrix_nphtransfer(p,ileaf_to_iretransn)  = (leafn_to_retransn(p)) / leafn(p)
                            end if
                            if(frootn(p) .ne. 0._r8)then
-                               matrix_nphtransfer(p,iretransn,ifroot) = (frootn_to_retransn(p))/ frootn(p)
+                               matrix_nphtransfer(p,ifroot_to_iretransn) = (frootn_to_retransn(p))/ frootn(p)
                            end if
                            if(livestemn(p) .ne. 0._r8)then
-                               matrix_nphtransfer(p,iretransn,ilivestem) = (livestemn_to_retransn(p))/ livestemn(p)
+                               matrix_nphtransfer(p,ilivestem_to_iretransn) = (livestemn_to_retransn(p))/ livestemn(p)
                            end if
                         end if
                      end if

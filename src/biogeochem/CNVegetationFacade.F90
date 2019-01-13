@@ -785,6 +785,8 @@ contains
   subroutine EcosystemDynamicsPreDrainage(this, bounds, &
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
+       num_actfirec, filter_actfirec, &
+       num_actfirep, filter_actfirep, &
        num_pcropp, filter_pcropp, &
        doalb, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
@@ -812,6 +814,10 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(out)   :: num_actfirec      ! number of soil columns on fire in filter
+    integer                                 , intent(out)   :: filter_actfirec(:)! filter for soil columns on fire
+    integer                                 , intent(out)   :: num_actfirep      ! number of soil patches on fire in filter
+    integer                                 , intent(out)   :: filter_actfirep(:)! filter for soil patches on fire
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
@@ -844,12 +850,13 @@ contains
 
     character(len=*), parameter :: subname = 'EcosystemDynamicsPreDrainage'
     !-----------------------------------------------------------------------
-
     call crop_inst%CropIncrementYear(num_pcropp, filter_pcropp)
 
     call CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
+         num_actfirep, filter_actfirep, &
+         num_actfirec, filter_actfirec, &
          num_pcropp, filter_pcropp, doalb,              &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
@@ -881,8 +888,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine EcosystemDynamicsPostDrainage(this, bounds, num_allc, filter_allc, &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, doalb, crop_inst, &
-       soilstate_inst, soilbiogeochem_state_inst, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,&
+       doalb, crop_inst, soilstate_inst, soilbiogeochem_state_inst, &
        waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, frictionvel_inst, canopystate_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
@@ -905,6 +912,10 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_actfirec         ! number of soil columns on fire in filter
+    integer                                 , intent(in)    :: filter_actfirec(:)   ! filter for soil columns on fire
+    integer                                 , intent(in)    :: num_actfirep         ! number of soil patches on fire in filter
+    integer                                 , intent(in)    :: filter_actfirep(:)   ! filter for soil patches on fire
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(crop_type)                         , intent(in)    :: crop_inst
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
@@ -939,6 +950,8 @@ contains
     call CNDriverLeaching(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
+         num_actfirep, filter_actfirep(1:num_actfirep), &
+         num_actfirec, filter_actfirec(1:num_actfirec), &
          waterstatebulk_inst, waterfluxbulk_inst, soilstate_inst, this%cnveg_state_inst, &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
@@ -978,6 +991,7 @@ contains
          c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
 
+
     call  CNDriverSummarizeFluxes(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
@@ -993,12 +1007,12 @@ contains
 
     ! On the radiation time step, use C state variables to calculate
     ! vegetation structure (LAI, SAI, height)
-
     if (doalb) then   
        call CNVegStructUpdate(num_soilp, filter_soilp, &
             waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
             crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
     end if
+
 
   end subroutine EcosystemDynamicsPostDrainage
 

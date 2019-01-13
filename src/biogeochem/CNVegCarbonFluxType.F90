@@ -10,10 +10,18 @@ module CNVegCarbonFluxType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools,nvegcpool
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp
+  use clm_varpar                         , only : ndecomp_cascade_transitions,ndecomp_pools,nvegcpool,&
+                                                  ncphtrans,ncgmtrans,ncfitrans,ncphouttrans,&
+                                                  ncgmouttrans,ncfiouttrans
+  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd,nlevdecomp
+  use clm_varpar                         , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                                  ilivestem,ilivestem_st,ilivestem_xf,&
+                                                  ideadstem,ideadstem_st,ideadstem_xf,&
+                                                  ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                                  ideadcroot,ideadcroot_st,ideadcroot_xf,&
+                                                  igrain,igrain_st,igrain_xf,ioutc
   use clm_varcon                         , only : spval, dzsoi_decomp
-  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop, use_matrixcn
+  use clm_varctl                         , only : use_cndv, use_c13, use_c14, use_nitrif_denitrif, use_crop, use_matrixcn, use_soil_matrixcn
   use clm_varctl                         , only : use_grainproduct
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
@@ -24,6 +32,7 @@ module CNVegCarbonFluxType
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
   use abortutils                         , only : endrun
+  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -366,24 +375,135 @@ module CNVegCarbonFluxType
      real(r8), pointer :: matrix_C14input_patch        (:)      ! U-matrix for carbon input
      real(r8), pointer :: matrix_alloc_patch          (:,:)     ! B-matrix for carbon
  
-     real(r8), pointer :: matrix_phtransfer_patch     (:,:,:)   ! A-matrix_phenologh
-     real(r8), pointer :: matrix_phturnover_patch     (:,:,:)   ! C-matrix_phenologh
+!     real(r8), pointer :: matrix_phtransfer_patch     (:,:,:)   ! A-matrix_phenology
+!     real(r8), pointer :: matrix_phturnover_patch     (:,:,:)   ! C-matrix_phenology
+     real(r8), pointer :: matrix_phtransfer_patch              (:,:)   ! A-matrix_phenology
+     real(r8), pointer :: matrix_phturnover_patch              (:,:)   ! C-matrix_phenology
+     integer,  pointer :: matrix_phtransfer_doner_patch        (:)   ! A-matrix_phenology
+     integer,  pointer :: matrix_phtransfer_receiver_patch     (:)   ! A-matrix_phenology
+     integer,  pointer :: actpatch_fire                        (:)   ! A-matrix_phenology
+     integer           :: num_actpatch_fire                           ! A-matrix_phenology
   
-     real(r8), pointer :: matrix_gmtransfer_patch     (:,:,:)   ! A-matrix_gap mortality
-     real(r8), pointer :: matrix_gmturnover_patch     (:,:,:)   ! C-matrix_gap mortality
+!     real(r8), pointer :: matrix_gmtransfer_patch     (:,:,:)   ! A-matrix_gap mortality
+!     real(r8), pointer :: matrix_gmturnover_patch     (:,:,:)   ! C-matrix_gap mortality
+     real(r8), pointer :: matrix_gmtransfer_patch     (:,:)   ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_gmturnover_patch     (:,:)   ! C-matrix_gap mortality
+     integer,  pointer :: matrix_gmtransfer_doner_patch        (:)   ! A-matrix_gap mortality
+     integer,  pointer :: matrix_gmtransfer_receiver_patch     (:)   ! A-matrix_gap mortality
   
-     real(r8), pointer :: matrix_fitransfer_patch     (:,:,:)   ! A-matrix_fire
-     real(r8), pointer :: matrix_fiturnover_patch     (:,:,:)   ! C-matrix_fire	 
+!     real(r8), pointer :: matrix_fitransfer_patch     (:,:,:)   ! A-matrix_fire
+!     real(r8), pointer :: matrix_fiturnover_patch     (:,:,:)   ! C-matrix_fire	 
+     real(r8), pointer :: matrix_fitransfer_patch     (:,:)   ! A-matrix_fire
+     real(r8), pointer :: matrix_fiturnover_patch     (:,:)   ! C-matrix_fire	 
+     integer,  pointer :: matrix_fitransfer_doner_patch        (:)   ! A-matrix_fire
+     integer,  pointer :: matrix_fitransfer_receiver_patch     (:)   ! A-matrix_fire
  
 !     real(r8), pointer :: soilc_change_col                          (:)     ! Total used C from soil          (gC/m2/s)
+!   matrix variables 
+     integer ileafst_to_ileafxf_ph
+     integer ileafxf_to_ileaf_ph  
+     integer ifrootst_to_ifrootxf_ph
+     integer ifrootxf_to_ifroot_ph  
+     integer ilivestemst_to_ilivestemxf_ph
+     integer ilivestemxf_to_ilivestem_ph  
+     integer ideadstemst_to_ideadstemxf_ph
+     integer ideadstemxf_to_ideadstem_ph  
+     integer ilivecrootst_to_ilivecrootxf_ph
+     integer ilivecrootxf_to_ilivecroot_ph  
+     integer ideadcrootst_to_ideadcrootxf_ph
+     integer ideadcrootxf_to_ideadcroot_ph  
+     integer ilivestem_to_ideadstem_ph  
+     integer ilivecroot_to_ideadcroot_ph  
+     integer ileaf_to_iout_ph  
+     integer ifroot_to_iout_ph  
+     integer ilivestem_to_iout_ph  
+     integer igrain_to_iout_ph  
+     integer ileaf_to_iout_gm
+     integer ileafst_to_iout_gm
+     integer ileafxf_to_iout_gm
+     integer ifroot_to_iout_gm
+     integer ifrootst_to_iout_gm
+     integer ifrootxf_to_iout_gm
+     integer ilivestem_to_iout_gm
+     integer ilivestemst_to_iout_gm
+     integer ilivestemxf_to_iout_gm
+     integer ideadstem_to_iout_gm
+     integer ideadstemst_to_iout_gm
+     integer ideadstemxf_to_iout_gm
+     integer ilivecroot_to_iout_gm
+     integer ilivecrootst_to_iout_gm
+     integer ilivecrootxf_to_iout_gm
+     integer ideadcroot_to_iout_gm
+     integer ideadcrootst_to_iout_gm
+     integer ideadcrootxf_to_iout_gm
+     integer ileaf_to_iout_fi
+     integer ileafst_to_iout_fi
+     integer ileafxf_to_iout_fi
+     integer ifroot_to_iout_fi
+     integer ifrootst_to_iout_fi
+     integer ifrootxf_to_iout_fi
+     integer ilivestem_to_iout_fi
+     integer ilivestemst_to_iout_fi
+     integer ilivestemxf_to_iout_fi
+     integer ideadstem_to_iout_fi
+     integer ideadstemst_to_iout_fi
+     integer ideadstemxf_to_iout_fi
+     integer ilivecroot_to_iout_fi
+     integer ilivecrootst_to_iout_fi
+     integer ilivecrootxf_to_iout_fi
+     integer ideadcroot_to_iout_fi
+     integer ideadcrootst_to_iout_fi
+     integer ideadcrootxf_to_iout_fi
+     integer ilivestem_to_ideadstem_fi
+     integer ilivecroot_to_ideadcroot_fi
+
+     integer,pointer :: list_phc_phgmc     (:)
+     integer,pointer :: list_gmc_phgmc     (:)
+     integer,pointer :: list_phc_phgmfic   (:)
+     integer,pointer :: list_gmc_phgmfic   (:)
+     integer,pointer :: list_fic_phgmfic   (:)
+     integer,pointer :: list_aphc(:)
+     integer,pointer :: list_agmc(:)
+     integer,pointer :: list_afic(:)
+
+!     type(sparse_matrix_type) :: Aphvegc
+!     type(sparse_matrix_type) :: Agmvegc
+!     type(sparse_matrix_type) :: Afivegc
+     type(sparse_matrix_type) :: AKphvegc
+     type(sparse_matrix_type) :: AKgmvegc
+     type(sparse_matrix_type) :: AKfivegc
+!     type(sparse_matrix_type) :: AKtmp1vegc
+     type(sparse_matrix_type) :: AKallvegc
+     integer                  :: NE_AKallvegc
+     integer,pointer,dimension(:)  :: RI_AKallvegc
+     integer,pointer,dimension(:)  :: CI_AKallvegc
+     integer                  :: NE_AKphgmc
+     integer,pointer,dimension(:)  :: RI_AKphgmc
+     integer,pointer,dimension(:)  :: CI_AKphgmc
+     integer,pointer,dimension(:)  :: RI_phc
+     integer,pointer,dimension(:)  :: CI_phc
+     integer,pointer,dimension(:)  :: RI_gmc
+     integer,pointer,dimension(:)  :: CI_gmc
+     integer,pointer,dimension(:)  :: RI_fic
+     integer,pointer,dimension(:)  :: CI_fic
+     type(diag_matrix_type)   :: Kvegc
+     type(vector_type)        :: Xvegc
+!     type(vector_type)        :: Xfirelossvegc
+!     type(vector_type)        :: Xnewvegc
+     type(vector_type)        :: Xveg13c
+!     type(vector_type)        :: Xnewveg13c
+     type(vector_type)        :: Xveg14c
+!     type(vector_type)        :: Xnewveg14c
 
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
      type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
      type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
+
    contains
 
      procedure , public  :: Init   
+     procedure , private :: InitTransfer
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory
      procedure , private :: InitCold
@@ -410,11 +530,248 @@ contains
     character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
 
     call this%InitAllocate ( bounds, carbon_type)
+    if(use_matrixcn)then
+       call this%InitTransfer ()
+    end if
     call this%InitHistory ( bounds, carbon_type )
     call this%InitCold (bounds )
 
   end subroutine Init
 
+  subroutine InitTransfer (this)
+    !
+    ! !AGRUMENTS:
+    class (cnveg_carbonflux_type) :: this
+    
+    this%ileafst_to_ileafxf_ph = 1
+    this%matrix_phtransfer_doner_patch(this%ileafst_to_ileafxf_ph) = ileaf_st
+    this%matrix_phtransfer_receiver_patch(this%ileafst_to_ileafxf_ph) = ileaf_xf
+
+    this%ileafxf_to_ileaf_ph   = 2
+    this%matrix_phtransfer_doner_patch(this%ileafxf_to_ileaf_ph) = ileaf_xf
+    this%matrix_phtransfer_receiver_patch(this%ileafxf_to_ileaf_ph) = ileaf
+
+    this%ifrootst_to_ifrootxf_ph = 3
+    this%matrix_phtransfer_doner_patch(this%ifrootst_to_ifrootxf_ph) = ifroot_st
+    this%matrix_phtransfer_receiver_patch(this%ifrootst_to_ifrootxf_ph) = ifroot_xf
+
+    this%ifrootxf_to_ifroot_ph   = 4
+    this%matrix_phtransfer_doner_patch(this%ifrootxf_to_ifroot_ph) = ifroot_xf
+    this%matrix_phtransfer_receiver_patch(this%ifrootxf_to_ifroot_ph) = ifroot
+
+    this%ilivestem_to_ideadstem_ph = 5
+    this%matrix_phtransfer_doner_patch(this%ilivestem_to_ideadstem_ph) = ilivestem
+    this%matrix_phtransfer_receiver_patch(this%ilivestem_to_ideadstem_ph) = ideadstem
+    
+    this%ilivestemst_to_ilivestemxf_ph = 6
+    this%matrix_phtransfer_doner_patch(this%ilivestemst_to_ilivestemxf_ph) = ilivestem_st
+    this%matrix_phtransfer_receiver_patch(this%ilivestemst_to_ilivestemxf_ph) = ilivestem_xf
+
+    this%ilivestemxf_to_ilivestem_ph   = 7
+    this%matrix_phtransfer_doner_patch(this%ilivestemxf_to_ilivestem_ph) = ilivestem_xf
+    this%matrix_phtransfer_receiver_patch(this%ilivestemxf_to_ilivestem_ph) = ilivestem
+
+    this%ideadstemst_to_ideadstemxf_ph = 8
+    this%matrix_phtransfer_doner_patch(this%ideadstemst_to_ideadstemxf_ph) = ideadstem_st
+    this%matrix_phtransfer_receiver_patch(this%ideadstemst_to_ideadstemxf_ph) = ideadstem_xf
+
+    this%ideadstemxf_to_ideadstem_ph   = 9
+    this%matrix_phtransfer_doner_patch(this%ideadstemxf_to_ideadstem_ph) = ideadstem_xf
+    this%matrix_phtransfer_receiver_patch(this%ideadstemxf_to_ideadstem_ph) = ideadstem
+
+    this%ilivecroot_to_ideadcroot_ph = 10
+    this%matrix_phtransfer_doner_patch(this%ilivecroot_to_ideadcroot_ph) = ilivecroot
+    this%matrix_phtransfer_receiver_patch(this%ilivecroot_to_ideadcroot_ph) = ideadcroot
+    
+    this%ilivecrootst_to_ilivecrootxf_ph = 11
+    this%matrix_phtransfer_doner_patch(this%ilivecrootst_to_ilivecrootxf_ph) = ilivecroot_st
+    this%matrix_phtransfer_receiver_patch(this%ilivecrootst_to_ilivecrootxf_ph) = ilivecroot_xf
+
+    this%ilivecrootxf_to_ilivecroot_ph   = 12
+    this%matrix_phtransfer_doner_patch(this%ilivecrootxf_to_ilivecroot_ph) = ilivecroot_xf
+    this%matrix_phtransfer_receiver_patch(this%ilivecrootxf_to_ilivecroot_ph) = ilivecroot
+
+    this%ideadcrootst_to_ideadcrootxf_ph = 13
+    this%matrix_phtransfer_doner_patch(this%ideadcrootst_to_ideadcrootxf_ph) = ideadcroot_st
+    this%matrix_phtransfer_receiver_patch(this%ideadcrootst_to_ideadcrootxf_ph) = ideadcroot_xf
+
+    this%ideadcrootxf_to_ideadcroot_ph   = 14
+    this%matrix_phtransfer_doner_patch(this%ideadcrootxf_to_ideadcroot_ph) = ideadcroot_xf
+    this%matrix_phtransfer_receiver_patch(this%ideadcrootxf_to_ideadcroot_ph) = ideadcroot
+
+    this%ileaf_to_iout_ph = 15
+    this%matrix_phtransfer_doner_patch(this%ileaf_to_iout_ph)    = ileaf
+    this%matrix_phtransfer_receiver_patch(this%ileaf_to_iout_ph) = ioutc
+    
+    this%ifroot_to_iout_ph = 16
+    this%matrix_phtransfer_doner_patch(this%ifroot_to_iout_ph)    = ifroot
+    this%matrix_phtransfer_receiver_patch(this%ifroot_to_iout_ph) = ioutc
+    
+    this%ilivestem_to_iout_ph = 17
+    this%matrix_phtransfer_doner_patch(this%ilivestem_to_iout_ph)    = ilivestem
+    this%matrix_phtransfer_receiver_patch(this%ilivestem_to_iout_ph) = ioutc
+
+    if(use_crop)then
+       this%igrain_to_iout_ph = 18
+       this%matrix_phtransfer_doner_patch(this%igrain_to_iout_ph)    = igrain
+       this%matrix_phtransfer_receiver_patch(this%igrain_to_iout_ph) = ioutc
+    end if
+
+    this%ileaf_to_iout_gm = 1
+    this%matrix_gmtransfer_doner_patch(this%ileaf_to_iout_gm) = ileaf 
+    this%matrix_gmtransfer_receiver_patch(this%ileaf_to_iout_gm) = ioutc
+    
+    this%ileafst_to_iout_gm = 2
+    this%matrix_gmtransfer_doner_patch(this%ileafst_to_iout_gm) = ileaf_st
+    this%matrix_gmtransfer_receiver_patch(this%ileafst_to_iout_gm) = ioutc
+    
+    this%ileafxf_to_iout_gm = 3
+    this%matrix_gmtransfer_doner_patch(this%ileafxf_to_iout_gm) = ileaf_xf
+    this%matrix_gmtransfer_receiver_patch(this%ileafxf_to_iout_gm) = ioutc
+    
+    this%ifroot_to_iout_gm = 4
+    this%matrix_gmtransfer_doner_patch(this%ifroot_to_iout_gm) = ifroot 
+    this%matrix_gmtransfer_receiver_patch(this%ifroot_to_iout_gm) = ioutc
+    
+    this%ifrootst_to_iout_gm = 5
+    this%matrix_gmtransfer_doner_patch(this%ifrootst_to_iout_gm) = ifroot_st
+    this%matrix_gmtransfer_receiver_patch(this%ifrootst_to_iout_gm) = ioutc
+    
+    this%ifrootxf_to_iout_gm = 6
+    this%matrix_gmtransfer_doner_patch(this%ifrootxf_to_iout_gm) = ifroot_xf
+    this%matrix_gmtransfer_receiver_patch(this%ifrootxf_to_iout_gm) = ioutc
+    
+    this%ilivestem_to_iout_gm = 7
+    this%matrix_gmtransfer_doner_patch(this%ilivestem_to_iout_gm) = ilivestem 
+    this%matrix_gmtransfer_receiver_patch(this%ilivestem_to_iout_gm) = ioutc
+    
+    this%ilivestemst_to_iout_gm = 8
+    this%matrix_gmtransfer_doner_patch(this%ilivestemst_to_iout_gm) = ilivestem_st
+    this%matrix_gmtransfer_receiver_patch(this%ilivestemst_to_iout_gm) = ioutc
+    
+    this%ilivestemxf_to_iout_gm = 9
+    this%matrix_gmtransfer_doner_patch(this%ilivestemxf_to_iout_gm) = ilivestem_xf
+    this%matrix_gmtransfer_receiver_patch(this%ilivestemxf_to_iout_gm) = ioutc
+    
+    this%ideadstem_to_iout_gm = 10
+    this%matrix_gmtransfer_doner_patch(this%ideadstem_to_iout_gm) = ideadstem 
+    this%matrix_gmtransfer_receiver_patch(this%ideadstem_to_iout_gm) = ioutc
+    
+    this%ideadstemst_to_iout_gm = 11
+    this%matrix_gmtransfer_doner_patch(this%ideadstemst_to_iout_gm) = ideadstem_st
+    this%matrix_gmtransfer_receiver_patch(this%ideadstemst_to_iout_gm) = ioutc
+    
+    this%ideadstemxf_to_iout_gm = 12
+    this%matrix_gmtransfer_doner_patch(this%ideadstemxf_to_iout_gm) = ideadstem_xf
+    this%matrix_gmtransfer_receiver_patch(this%ideadstemxf_to_iout_gm) = ioutc
+    
+    this%ilivecroot_to_iout_gm = 13
+    this%matrix_gmtransfer_doner_patch(this%ilivecroot_to_iout_gm) = ilivecroot 
+    this%matrix_gmtransfer_receiver_patch(this%ilivecroot_to_iout_gm) = ioutc
+    
+    this%ilivecrootst_to_iout_gm = 14
+    this%matrix_gmtransfer_doner_patch(this%ilivecrootst_to_iout_gm) = ilivecroot_st
+    this%matrix_gmtransfer_receiver_patch(this%ilivecrootst_to_iout_gm) = ioutc
+    
+    this%ilivecrootxf_to_iout_gm = 15
+    this%matrix_gmtransfer_doner_patch(this%ilivecrootxf_to_iout_gm) = ilivecroot_xf
+    this%matrix_gmtransfer_receiver_patch(this%ilivecrootxf_to_iout_gm) = ioutc
+    
+    this%ideadcroot_to_iout_gm = 16
+    this%matrix_gmtransfer_doner_patch(this%ideadcroot_to_iout_gm) = ideadcroot 
+    this%matrix_gmtransfer_receiver_patch(this%ideadcroot_to_iout_gm) = ioutc
+    
+    this%ideadcrootst_to_iout_gm = 17
+    this%matrix_gmtransfer_doner_patch(this%ideadcrootst_to_iout_gm) = ideadcroot_st
+    this%matrix_gmtransfer_receiver_patch(this%ideadcrootst_to_iout_gm) = ioutc
+    
+    this%ideadcrootxf_to_iout_gm = 18
+    this%matrix_gmtransfer_doner_patch(this%ideadcrootxf_to_iout_gm) = ideadcroot_xf
+    this%matrix_gmtransfer_receiver_patch(this%ideadcrootxf_to_iout_gm) = ioutc
+    
+    this%ilivestem_to_ideadstem_fi = 1
+    this%matrix_fitransfer_doner_patch(this%ilivestem_to_ideadstem_fi) = ilivestem 
+    this%matrix_fitransfer_receiver_patch(this%ilivestem_to_ideadstem_fi) = ideadstem
+    
+    this%ilivecroot_to_ideadcroot_fi = 2
+    this%matrix_fitransfer_doner_patch(this%ilivecroot_to_ideadcroot_fi) = ilivecroot 
+    this%matrix_fitransfer_receiver_patch(this%ilivecroot_to_ideadcroot_fi) = ideadcroot
+
+    this%ileaf_to_iout_fi = 3
+    this%matrix_fitransfer_doner_patch(this%ileaf_to_iout_fi) = ileaf 
+    this%matrix_fitransfer_receiver_patch(this%ileaf_to_iout_fi) = ioutc
+    
+    this%ileafst_to_iout_fi = 4
+    this%matrix_fitransfer_doner_patch(this%ileafst_to_iout_fi) = ileaf_st
+    this%matrix_fitransfer_receiver_patch(this%ileafst_to_iout_fi) = ioutc
+    
+    this%ileafxf_to_iout_fi = 5
+    this%matrix_fitransfer_doner_patch(this%ileafxf_to_iout_fi) = ileaf_xf
+    this%matrix_fitransfer_receiver_patch(this%ileafxf_to_iout_fi) = ioutc
+    
+    this%ifroot_to_iout_fi = 6
+    this%matrix_fitransfer_doner_patch(this%ifroot_to_iout_fi) = ifroot 
+    this%matrix_fitransfer_receiver_patch(this%ifroot_to_iout_fi) = ioutc
+    
+    this%ifrootst_to_iout_fi = 7
+    this%matrix_fitransfer_doner_patch(this%ifrootst_to_iout_fi) = ifroot_st
+    this%matrix_fitransfer_receiver_patch(this%ifrootst_to_iout_fi) = ioutc
+    
+    this%ifrootxf_to_iout_fi = 8
+    this%matrix_fitransfer_doner_patch(this%ifrootxf_to_iout_fi) = ifroot_xf
+    this%matrix_fitransfer_receiver_patch(this%ifrootxf_to_iout_fi) = ioutc
+    
+    this%ilivestem_to_iout_fi = 9
+    this%matrix_fitransfer_doner_patch(this%ilivestem_to_iout_fi) = ilivestem 
+    this%matrix_fitransfer_receiver_patch(this%ilivestem_to_iout_fi) = ioutc
+    
+    this%ilivestemst_to_iout_fi = 10
+    this%matrix_fitransfer_doner_patch(this%ilivestemst_to_iout_fi) = ilivestem_st
+    this%matrix_fitransfer_receiver_patch(this%ilivestemst_to_iout_fi) = ioutc
+    
+    this%ilivestemxf_to_iout_fi = 11
+    this%matrix_fitransfer_doner_patch(this%ilivestemxf_to_iout_fi) = ilivestem_xf
+    this%matrix_fitransfer_receiver_patch(this%ilivestemxf_to_iout_fi) = ioutc
+    
+    this%ideadstem_to_iout_fi = 12
+    this%matrix_fitransfer_doner_patch(this%ideadstem_to_iout_fi) = ideadstem 
+    this%matrix_fitransfer_receiver_patch(this%ideadstem_to_iout_fi) = ioutc
+    
+    this%ideadstemst_to_iout_fi = 13
+    this%matrix_fitransfer_doner_patch(this%ideadstemst_to_iout_fi) = ideadstem_st
+    this%matrix_fitransfer_receiver_patch(this%ideadstemst_to_iout_fi) = ioutc
+    
+    this%ideadstemxf_to_iout_fi = 14
+    this%matrix_fitransfer_doner_patch(this%ideadstemxf_to_iout_fi) = ideadstem_xf
+    this%matrix_fitransfer_receiver_patch(this%ideadstemxf_to_iout_fi) = ioutc
+    
+    this%ilivecroot_to_iout_fi = 15
+    this%matrix_fitransfer_doner_patch(this%ilivecroot_to_iout_fi) = ilivecroot 
+    this%matrix_fitransfer_receiver_patch(this%ilivecroot_to_iout_fi) = ioutc
+    
+    this%ilivecrootst_to_iout_fi = 16
+    this%matrix_fitransfer_doner_patch(this%ilivecrootst_to_iout_fi) = ilivecroot_st
+    this%matrix_fitransfer_receiver_patch(this%ilivecrootst_to_iout_fi) = ioutc
+    
+    this%ilivecrootxf_to_iout_fi = 17
+    this%matrix_fitransfer_doner_patch(this%ilivecrootxf_to_iout_fi) = ilivecroot_xf
+    this%matrix_fitransfer_receiver_patch(this%ilivecrootxf_to_iout_fi) = ioutc
+    
+    this%ideadcroot_to_iout_fi = 18
+    this%matrix_fitransfer_doner_patch(this%ideadcroot_to_iout_fi) = ideadcroot 
+    this%matrix_fitransfer_receiver_patch(this%ideadcroot_to_iout_fi) = ioutc
+    
+    this%ideadcrootst_to_iout_fi = 19
+    this%matrix_fitransfer_doner_patch(this%ideadcrootst_to_iout_fi) = ideadcroot_st
+    this%matrix_fitransfer_receiver_patch(this%ideadcrootst_to_iout_fi) = ioutc
+    
+    this%ideadcrootxf_to_iout_fi = 20
+    this%matrix_fitransfer_doner_patch(this%ideadcrootxf_to_iout_fi) = ideadcroot_xf
+    this%matrix_fitransfer_receiver_patch(this%ideadcrootxf_to_iout_fi) = ioutc
+    
+  end subroutine InitTransfer 
+
+    
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds, carbon_type)
     !
@@ -745,18 +1102,69 @@ contains
     !print*,'nvegcpool',nvegcpool
     if(use_matrixcn)then
        allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
-       allocate(this%matrix_C13input_patch         (begp:endp))                         ; this%matrix_C13input_patch      (:) = nan    !for isotop
-       allocate(this%matrix_C14input_patch         (begp:endp))                         ; this%matrix_C14input_patch      (:) = nan
-       allocate(this%matrix_alloc_patch          (begp:endp,1:nvegcpool))              ; this%matrix_alloc_patch       (:,:) = nan
+       allocate(this%matrix_C13input_patch       (begp:endp))                         ; this%matrix_C13input_patch      (:) = nan    !for isotop
+       allocate(this%matrix_C14input_patch       (begp:endp))                         ; this%matrix_C14input_patch      (:) = nan
+       allocate(this%matrix_alloc_patch          (begp:endp,1:nvegcpool))             ; this%matrix_alloc_patch       (:,:) = nan
 
-       allocate(this%matrix_phtransfer_patch     (begp:endp,1:nvegcpool+1,1:nvegcpool)) ; this%matrix_phtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_phturnover_patch     (begp:endp,1:nvegcpool,1:nvegcpool))   ; this%matrix_phturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_phtransfer_patch     (begp:endp,1:ncphtrans))   ; this%matrix_phtransfer_patch  (:,:) = nan
+       allocate(this%matrix_phturnover_patch     (begp:endp,1:nvegcpool))   ; this%matrix_phturnover_patch  (:,:) = nan
+       allocate(this%matrix_phtransfer_doner_patch (1:ncphtrans))           ; this%matrix_phtransfer_doner_patch(:) = -9999
+       allocate(this%matrix_phtransfer_receiver_patch (1:ncphtrans))        ; this%matrix_phtransfer_receiver_patch(:) = -9999
 
-       allocate(this%matrix_gmtransfer_patch     (begp:endp,1:nvegcpool+1,1:nvegcpool)) ; this%matrix_gmtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_gmturnover_patch     (begp:endp,1:nvegcpool,1:nvegcpool))   ; this%matrix_gmturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_gmtransfer_patch     (begp:endp,1:ncgmtrans))   ; this%matrix_gmtransfer_patch  (:,:) = nan
+       allocate(this%matrix_gmturnover_patch     (begp:endp,1:nvegcpool))   ; this%matrix_gmturnover_patch  (:,:) = nan
+       allocate(this%matrix_gmtransfer_doner_patch (1:ncgmtrans))           ; this%matrix_gmtransfer_doner_patch(:) = -9999
+       allocate(this%matrix_gmtransfer_receiver_patch (1:ncgmtrans))        ; this%matrix_gmtransfer_receiver_patch(:) = -9999
 
-       allocate(this%matrix_fitransfer_patch     (begp:endp,1:nvegcpool+1,1:nvegcpool)) ; this%matrix_fitransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_fiturnover_patch     (begp:endp,1:nvegcpool,1:nvegcpool))   ; this%matrix_fiturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_fitransfer_patch     (begp:endp,1:ncfitrans))   ; this%matrix_fitransfer_patch  (:,:) = nan
+       allocate(this%matrix_fiturnover_patch     (begp:endp,1:nvegcpool))   ; this%matrix_fiturnover_patch  (:,:) = nan
+       allocate(this%matrix_fitransfer_doner_patch (1:ncfitrans))           ; this%matrix_fitransfer_doner_patch(:) = -9999
+       allocate(this%matrix_fitransfer_receiver_patch (1:ncfitrans))        ; this%matrix_fitransfer_receiver_patch(:) = -9999
+  
+!       print*,'ncphtrans,nvegcpool',ncphtrans,nvegcpool,ncfitrans
+       allocate(this%list_phc_phgmc (1:ncphtrans+nvegcpool))    ; this%list_phc_phgmc(:) = -9999
+       allocate(this%list_gmc_phgmc (1:nvegcpool))              ; this%list_gmc_phgmc(:) = -9999
+       allocate(this%list_phc_phgmfic (1:ncphtrans+nvegcpool)); this%list_phc_phgmfic(:) = -9999
+       allocate(this%list_gmc_phgmfic (1:nvegcpool))          ; this%list_gmc_phgmfic(:) = -9999
+       allocate(this%list_fic_phgmfic (1:ncfitrans+nvegcpool)); this%list_fic_phgmfic(:) = -9999
+
+!       print*,'ncphtrans-ncphouttrans',ncphtrans-ncphouttrans,ncgmtrans-ncgmouttrans,ncfitrans-ncfiouttrans,begp,endp,nvegcpool,ncphtrans-ncphouttrans+ncfitrans-ncfiouttrans+nvegcpool
+       allocate(this%list_aphc(1:ncphtrans-ncphouttrans)); this%list_aphc = -9999
+       allocate(this%list_agmc(1:ncgmtrans-ncgmouttrans)); this%list_agmc = -9999
+       allocate(this%list_afic(1:ncfitrans-ncfiouttrans)); this%list_afic = -9999
+
+!       call this%Aphvegc%InitSM (nvegcpool,begp,endp,ncphtrans-ncphouttrans+nvegcpool)
+!       call this%Agmvegc%InitSM (nvegcpool,begp,endp,ncgmtrans-ncgmouttrans+nvegcpool)
+!       call this%Afivegc%InitSM (nvegcpool,begp,endp,ncfitrans-ncfiouttrans+nvegcpool)
+       call this%AKphvegc%InitSM(nvegcpool,begp,endp,ncphtrans-ncphouttrans+nvegcpool)
+       call this%AKgmvegc%InitSM(nvegcpool,begp,endp,ncgmtrans-ncgmouttrans+nvegcpool)
+       call this%AKfivegc%InitSM(nvegcpool,begp,endp,ncfitrans-ncfiouttrans+nvegcpool)
+!       call this%AKtmp1vegc%InitSM(nvegcpool,begp,endp,ncphtrans-ncphouttrans+nvegcpool)
+       call this%AKallvegc%InitSM(nvegcpool,begp,endp,ncphtrans-ncphouttrans+ncfitrans-ncfiouttrans+nvegcpool)
+       this%NE_AKallvegc = ncphtrans-ncphouttrans+ncfitrans-ncfiouttrans+nvegcpool
+       allocate(this%RI_AKallvegc(1:this%NE_AKallvegc));this%RI_AKallvegc(:) = -9999
+       allocate(this%CI_AKallvegc(1:this%NE_AKallvegc));this%CI_AKallvegc(:) = -9999
+       this%NE_AKphgmc = ncphtrans-ncphouttrans+nvegcpool
+       allocate(this%RI_AKphgmc(1:this%NE_AKphgmc));this%RI_AKphgmc(:) = -9999
+       allocate(this%CI_AKphgmc(1:this%NE_AKphgmc));this%CI_AKphgmc(:) = -9999
+       allocate(this%RI_phc(1:ncphtrans-ncphouttrans+nvegcpool));this%RI_phc(:) = -9999
+       allocate(this%CI_phc(1:ncphtrans-ncphouttrans+nvegcpool));this%CI_phc(:) = -9999
+       allocate(this%RI_gmc(1:ncgmtrans-ncgmouttrans+nvegcpool));this%RI_gmc(:) = -9999
+       allocate(this%CI_gmc(1:ncgmtrans-ncgmouttrans+nvegcpool));this%CI_gmc(:) = -9999
+       allocate(this%RI_fic(1:ncfitrans-ncfiouttrans+nvegcpool));this%RI_fic(:) = -9999
+       allocate(this%CI_fic(1:ncfitrans-ncfiouttrans+nvegcpool));this%CI_fic(:) = -9999
+       call this%Kvegc%InitDM(nvegcpool,begp,endp)
+       call this%Xvegc%InitV(nvegcpool,begp,endp)
+!       call this%Xfirelossvegc%InitV(nvegcpool,begp,endp)
+!       call this%Xnewvegc%InitV(nvegcpool,begp,endp)
+       if(use_c13)then
+          call this%Xveg13c%InitV(nvegcpool,begp,endp)
+!          call this%Xnewveg13c%InitV(nvegcpool,begp,endp)
+       end if
+       if(use_c14)then
+          call this%Xveg14c%InitV(nvegcpool,begp,endp)
+!          call this%Xnewveg14c%InitV(nvegcpool,begp,endp)
+       end if
     end if
 
 
@@ -3855,27 +4263,54 @@ contains
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
 !   Matrix
+
        if(use_matrixcn)then
           this%matrix_Cinput_patch(i)                       = value_patch
           this%matrix_C13input_patch(i)                       = value_patch
           this%matrix_C14input_patch(i)                       = value_patch
-          do k = 1, nvegcpool         
-             this%matrix_alloc_patch(i,k)              = value_patch
-             do j = 1, nvegcpool+1
-                if(j .le. nvegcpool)then
-                   this%matrix_phturnover_patch (i,j,k) = value_patch
-                   this%matrix_gmturnover_patch (i,j,k) = value_patch
-                   this%matrix_fiturnover_patch (i,j,k) = value_patch
-                end if
-                   this%matrix_phtransfer_patch (i,j,k) = value_patch
-                   this%matrix_gmtransfer_patch (i,j,k) = value_patch
-                   this%matrix_fitransfer_patch (i,j,k) = value_patch
-               
-             end do
-
-          end do   
        end if
     end do
+
+    
+    if(use_matrixcn)then
+       do j = 1, nvegcpool         
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_alloc_patch(i,j)       = value_patch
+             this%matrix_phturnover_patch (i,j) = value_patch
+             this%matrix_gmturnover_patch (i,j) = value_patch
+             this%matrix_fiturnover_patch (i,j) = value_patch
+          end do
+       end do
+
+       do j = 1, ncphtrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_phtransfer_patch (i,j) = value_patch
+          end do
+       end do
+
+       do j = 1, ncgmtrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_gmtransfer_patch (i,j) = value_patch
+          end do
+       end do
+
+       do j = 1, ncfitrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_fitransfer_patch (i,j) = value_patch
+          end do
+       end do   
+!       this%matrix_alloc_patch = value_patch
+!       this%matrix_phturnover_patch = value_patch
+!       this%matrix_gmturnover_patch = value_patch
+!       this%matrix_fiturnover_patch = value_patch
+!       this%matrix_phtransfer_patch = value_patch
+!       this%matrix_gmtransfer_patch = value_patch
+!       this%matrix_fitransfer_patch = value_patch
+    end if
 
     if ( use_crop )then
        do fi = 1,num_patch
@@ -4182,6 +4617,7 @@ contains
                this%mr_patch(p)      + &
                this%gr_patch(p)      + &
                this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
+!       if(bounds%begc .le. 34208 .and. bounds%endc .ge. 34208)print*,'ar_patch',p,this%mr_patch(p),this%gr_patch(p),this%xsmrpool_to_atm_patch(p),this%soilc_change_patch(p)
        else         
              this%ar_patch(p) =           &
                   this%mr_patch(p)      + &
@@ -4430,6 +4866,13 @@ contains
             this%hrv_deadcrootc_storage_to_litter_patch(p) + &
             this%hrv_deadcrootc_xfer_to_litter_patch(p)   
 
+!       print*,'fire closs in summary',p,this%fire_closs_patch(p) - this%m_gresp_storage_to_fire_patch(p) - this%m_gresp_xfer_to_fire_patch(p) &
+!           + this%m_leafc_to_litter_fire_patch(p) + this%m_leafc_storage_to_litter_fire_patch(p) + this%m_leafc_xfer_to_litter_fire_patch(p) &
+!           + this%m_frootc_to_litter_fire_patch(p) + this%m_frootc_storage_to_litter_fire_patch(p) + this%m_frootc_xfer_to_litter_fire_patch(p) &
+!           + this%m_livestemc_to_litter_fire_patch(p) + this%m_livestemc_storage_to_litter_fire_patch(p) + this%m_livestemc_xfer_to_litter_fire_patch(p) &
+!           + this%m_deadstemc_to_litter_fire_patch(p) + this%m_deadstemc_storage_to_litter_fire_patch(p) + this%m_deadstemc_xfer_to_litter_fire_patch(p) &
+!           + this%m_livecrootc_to_litter_fire_patch(p) + this%m_livecrootc_storage_to_litter_fire_patch(p) + this%m_livecrootc_xfer_to_litter_fire_patch(p) &
+!           + this%m_deadcrootc_to_litter_fire_patch(p) + this%m_deadcrootc_storage_to_litter_fire_patch(p) + this%m_deadcrootc_xfer_to_litter_fire_patch(p) 
        ! (Slash Harvest Flux) - Additional Wood Harvest Veg C Losses
        this%slash_harvestc_patch(p) = &
             this%hrv_leafc_to_litter_patch(p)              + &
@@ -4506,16 +4949,18 @@ contains
 
 
     ! vertically integrate column-level carbon fire losses
-    do l = 1, ndecomp_pools
-       do j = 1,nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
-             this%m_decomp_cpools_to_fire_col(c,l) = &
-                  this%m_decomp_cpools_to_fire_col(c,l) + &
-                  this%m_decomp_cpools_to_fire_vr_col(c,j,l)*dzsoi_decomp(j)
+    if(.not. use_soil_matrixcn)then
+       do l = 1, ndecomp_pools
+          do j = 1,nlevdecomp
+             do fc = 1,num_soilc
+                c = filter_soilc(fc)
+                this%m_decomp_cpools_to_fire_col(c,l) = &
+                     this%m_decomp_cpools_to_fire_col(c,l) + &
+                     this%m_decomp_cpools_to_fire_vr_col(c,j,l)*dzsoi_decomp(j)
+             end do
           end do
        end do
-    end do
+    end if
 
     do fc = 1,num_soilc
        c = filter_soilc(fc)
@@ -4536,10 +4981,12 @@ contains
        ! carbon losses to fire, including patch losses
        this%fire_closs_col(c) = this%fire_closs_p2c_col(c) 
        do l = 1, ndecomp_pools
+          !print*,'fire_closs from soil',c,l,this%m_decomp_cpools_to_fire_col(c,l),this%fire_closs_col(c)
           this%fire_closs_col(c) = &
                this%fire_closs_col(c) + &
                this%m_decomp_cpools_to_fire_col(c,l)
        end do
+!       print*,'fire_closs from soil',c,this%fire_closs_p2c_col(c),this%fire_closs_col(c) - this%fire_closs_p2c_col(c),this%fire_closs_col(c)
 
        ! total soil respiration, heterotrophic + root respiration (SR)
        this%sr_col(c) = &
@@ -4550,6 +4997,8 @@ contains
        this%er_col(c) = &
             this%ar_col(c) + &
             soilbiogeochem_hr_col(c)
+!       if(c .eq. 34208)print*,'er_col',soilbiogeochem_hr_col(c),this%ar_col(c) 
+!       print*,'er_col',c,this%er_col(c)*1800,soilbiogeochem_hr_col(c)*1800,this%ar_col(c)*1800
        
        ! coarse woody debris heterotrophic respiration
        this%cwdc_hr_col(c) = 0._r8

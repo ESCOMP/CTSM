@@ -3,8 +3,8 @@ module SoilBiogeochemNitrogenFluxType
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
+  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, ndecomp_cascade_outtransitions
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, ndecomp_pools_vr
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop, use_soil_matrixcn
@@ -13,6 +13,7 @@ module SoilBiogeochemNitrogenFluxType
   use abortutils                         , only : endrun
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
+  use SPMMod                             , only : sparse_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -132,7 +133,22 @@ module SoilBiogeochemNitrogenFluxType
 !     real(r8), pointer :: matrix_a_tri_col                               (:,:,:)   ! subdiagonal coefficients
 !     real(r8), pointer :: matrix_b_tri_col                               (:,:,:)   ! diagonal coefficients 
 !     real(r8), pointer :: matrix_c_tri_col                               (:,:,:)   ! superdiagonal coefficients
-     real(r8), pointer :: matrix_input_col                          (:,:,:)   ! source coefficients
+!     real(r8), pointer :: matrix_input_col                          (:,:,:)   ! source coefficients
+
+!     type(sparse_matrix_type) :: Asoiln
+     type(sparse_matrix_type) :: AKsoiln
+     type(sparse_matrix_type)     :: AKallsoiln
+     integer                      :: NE_AKallsoiln
+     integer,pointer,dimension(:) :: RI_AKallsoiln
+     integer,pointer,dimension(:) :: CI_AKallsoiln
+     integer,pointer,dimension(:) :: RI_na
+     integer,pointer,dimension(:) :: CI_na
+!     type(sparse_matrix_type) :: AKXninc
+     
+!     type(vector_type)        :: matrix_Ninter
+!     type(vector_type)        :: matrix_Ninter_next
+     type(vector_type)        :: matrix_Ninput
+     
    contains
 
      procedure , public  :: Init   
@@ -174,7 +190,7 @@ contains
     type(bounds_type) , intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
-    integer           :: begc,endc
+    integer           :: begc,endc,Ntrans,Ntrans_diag
 !   integer           :: begp,endp
     !------------------------------------------------------------------------
 
@@ -286,7 +302,22 @@ contains
 !    allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
     if(use_soil_matrixcn)then
        !print*,'allocating matrix Ninput'
-       allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+!       allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
+
+       Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
+!       call this%Asoiln%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
+       call this%AKsoiln%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
+       call this%AKallsoiln%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp)
+        this%NE_AKallsoiln = Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp
+        allocate(this%RI_AKallsoiln(1:this%NE_AKallsoiln)); this%RI_AKallsoiln(1:this%NE_AKallsoiln)=-9999
+        allocate(this%CI_AKallsoiln(1:this%NE_AKallsoiln)); this%CI_AKallsoiln(1:this%NE_AKallsoiln)=-9999
+        Ntrans_diag = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp+ndecomp_pools_vr
+        allocate(this%RI_na(1:Ntrans_diag)); this%RI_na(1:Ntrans_diag) = -9999
+        allocate(this%CI_na(1:Ntrans_diag)); this%CI_na(1:Ntrans_diag) = -9999
+!       call this%AKXninc%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp)
+!       call this%matrix_Ninter%InitV        (ndecomp_pools*nlevdecomp,begc,endc)
+!       call this%matrix_Ninter_next%InitV   (ndecomp_pools*nlevdecomp,begc,endc)
+       call this%matrix_Ninput%InitV (ndecomp_pools*nlevdecomp,begc,endc)
     end if
   end subroutine InitAllocate
 
@@ -1075,17 +1106,18 @@ contains
    
 !    print*,'set value matrix Ninput' 
     if(use_soil_matrixcn)then
-       do k = 1, ndecomp_pools
-          do j = 1, nlevdecomp
-             do fi = 1,num_column
-                i = filter_column(fi)
+!       do k = 1, ndecomp_pools
+!          do j = 1, nlevdecomp
+!             do fi = 1,num_column
+!                i = filter_column(fi)
 !             this%matrix_a_tri_col(:,j,k) = value_column
 !             this%matrix_b_tri_col(:,j,k) = value_column
 !             this%matrix_c_tri_col(:,j,k) = value_column
-                this%matrix_input_col(i,j,k) = value_column
-             end do
-          end do
-       end do
+!                this%matrix_input_col(i,j,k) = value_column
+!             end do
+!          end do
+!       end do
+       call this%matrix_Ninput%SetValueV_scaler(num_column,filter_column,value_column)
     end if
 !    print*,'finish setting value to matrix Ninput' 
 

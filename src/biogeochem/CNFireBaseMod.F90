@@ -298,8 +298,8 @@ contains
   end subroutine CNFireArea
 
   !-----------------------------------------------------------------------
-  subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-      dgvs_inst, soilbiogeochem_carbonflux_inst, cnveg_state_inst,        &
+  subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec, &
+      num_actfirep, filter_actfirep, dgvs_inst, soilbiogeochem_carbonflux_inst, cnveg_state_inst,        &
       cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
       leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
       totsomc_col, decomp_cpools_vr_col, decomp_npools_vr_col, somc_fire_col)
@@ -322,11 +322,11 @@ contains
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover
    use clm_varpar           , only: nlevdecomp_full, ndecomp_pools, nlevdecomp
-   use clm_varpar            , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
-                                       ilivestem,ilivestem_st,ilivestem_xf,&
-                                       ideadstem,ideadstem_st,ideadstem_xf,&
-                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
-                                       ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
+   use clm_varpar           , only: ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                    ilivestem,ilivestem_st,ilivestem_xf,&
+                                    ideadstem,ideadstem_st,ideadstem_xf,&
+                                    ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                    ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
    !
    ! !ARGUMENTS:
    class(cnfire_base_type)                        :: this
@@ -335,9 +335,13 @@ contains
    integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
    integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
+   integer                        , intent(out)   :: num_actfirep    ! number of active patches on fire in filter
+   integer                        , intent(out)   :: filter_actfirep(:) ! filter for soil patches
+   integer                        , intent(out)   :: num_actfirec    ! number of active columns on fire in filter
+   integer                        , intent(out)   :: filter_actfirec(:) ! filter for soil columns
    type(dgvs_type)                , intent(inout) :: dgvs_inst
    type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
-   type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
+   type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
    type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
    type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
@@ -566,7 +570,48 @@ contains
          m_n_to_litr_cel_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_cel_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          matrix_fitransfer                   => cnveg_carbonflux_inst%matrix_fitransfer_patch                     ,   &		 
-         matrix_nfitransfer                   => cnveg_nitrogenflux_inst%matrix_nfitransfer_patch                         &		 
+         matrix_nfitransfer                  => cnveg_nitrogenflux_inst%matrix_nfitransfer_patch                  ,      &		 
+         ileaf_to_iout_fic                   => cnveg_carbonflux_inst%ileaf_to_iout_fi ,   &
+         ileafst_to_iout_fic                 => cnveg_carbonflux_inst%ileafst_to_iout_fi,   &
+         ileafxf_to_iout_fic                 => cnveg_carbonflux_inst%ileafxf_to_iout_fi,   &
+         ifroot_to_iout_fic                  => cnveg_carbonflux_inst%ifroot_to_iout_fi,   &
+         ifrootst_to_iout_fic                => cnveg_carbonflux_inst%ifrootst_to_iout_fi,   &
+         ifrootxf_to_iout_fic                => cnveg_carbonflux_inst%ifrootxf_to_iout_fi,   &
+         ilivestem_to_iout_fic               => cnveg_carbonflux_inst%ilivestem_to_iout_fi,   &
+         ilivestemst_to_iout_fic             => cnveg_carbonflux_inst%ilivestemst_to_iout_fi,   &
+         ilivestemxf_to_iout_fic             => cnveg_carbonflux_inst%ilivestemxf_to_iout_fi,   &
+         ideadstem_to_iout_fic               => cnveg_carbonflux_inst%ideadstem_to_iout_fi,   &
+         ideadstemst_to_iout_fic             => cnveg_carbonflux_inst%ideadstemst_to_iout_fi,   &
+         ideadstemxf_to_iout_fic             => cnveg_carbonflux_inst%ideadstemxf_to_iout_fi,   &
+         ilivecroot_to_iout_fic              => cnveg_carbonflux_inst%ilivecroot_to_iout_fi,   &
+         ilivecrootst_to_iout_fic            => cnveg_carbonflux_inst%ilivecrootst_to_iout_fi,   &
+         ilivecrootxf_to_iout_fic            => cnveg_carbonflux_inst%ilivecrootxf_to_iout_fi,   &
+         ideadcroot_to_iout_fic              => cnveg_carbonflux_inst%ideadcroot_to_iout_fi,   &
+         ideadcrootst_to_iout_fic            => cnveg_carbonflux_inst%ideadcrootst_to_iout_fi,   &
+         ideadcrootxf_to_iout_fic            => cnveg_carbonflux_inst%ideadcrootxf_to_iout_fi,   &
+         ilivestem_to_ideadstem_fic          => cnveg_carbonflux_inst%ilivestem_to_ideadstem_fi,   &
+         ilivecroot_to_ideadcroot_fic        => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_fi,   &
+         ileaf_to_iout_fin                   => cnveg_nitrogenflux_inst%ileaf_to_iout_fi,   &
+         ileafst_to_iout_fin                 => cnveg_nitrogenflux_inst%ileafst_to_iout_fi,   &
+         ileafxf_to_iout_fin                 => cnveg_nitrogenflux_inst%ileafxf_to_iout_fi,   &
+         ifroot_to_iout_fin                  => cnveg_nitrogenflux_inst%ifroot_to_iout_fi,   &
+         ifrootst_to_iout_fin                => cnveg_nitrogenflux_inst%ifrootst_to_iout_fi,   &
+         ifrootxf_to_iout_fin                => cnveg_nitrogenflux_inst%ifrootxf_to_iout_fi,   &
+         ilivestem_to_iout_fin               => cnveg_nitrogenflux_inst%ilivestem_to_iout_fi,   &
+         ilivestemst_to_iout_fin             => cnveg_nitrogenflux_inst%ilivestemst_to_iout_fi,   &
+         ilivestemxf_to_iout_fin             => cnveg_nitrogenflux_inst%ilivestemxf_to_iout_fi,   &
+         ideadstem_to_iout_fin               => cnveg_nitrogenflux_inst%ideadstem_to_iout_fi,   &
+         ideadstemst_to_iout_fin             => cnveg_nitrogenflux_inst%ideadstemst_to_iout_fi,   &
+         ideadstemxf_to_iout_fin             => cnveg_nitrogenflux_inst%ideadstemxf_to_iout_fi,   &
+         ilivecroot_to_iout_fin              => cnveg_nitrogenflux_inst%ilivecroot_to_iout_fi,   &
+         ilivecrootst_to_iout_fin            => cnveg_nitrogenflux_inst%ilivecrootst_to_iout_fi,   &
+         ilivecrootxf_to_iout_fin            => cnveg_nitrogenflux_inst%ilivecrootxf_to_iout_fi,   &
+         ideadcroot_to_iout_fin              => cnveg_nitrogenflux_inst%ideadcroot_to_iout_fi,   &
+         ideadcrootst_to_iout_fin            => cnveg_nitrogenflux_inst%ideadcrootst_to_iout_fi,   &
+         ideadcrootxf_to_iout_fin            => cnveg_nitrogenflux_inst%ideadcrootxf_to_iout_fi,   &
+         ilivestem_to_ideadstem_fin          => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_fi,   &
+         ilivecroot_to_ideadcroot_fin        => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_fi,   &
+         iretransn_to_iout_fin               => cnveg_nitrogenflux_inst%iretransn_to_iout_fi   &
          )
 
      transient_landcover = run_has_transient_landcover()
@@ -579,6 +624,7 @@ contains
      !
      ! patch loop
      !
+     num_actfirep = 0
      do fp = 1,num_soilp
         p = filter_soilp(fp)
         c = patch%column(p)
@@ -608,9 +654,15 @@ contains
            m = 10._r8
         end if
 
+        
+        if(f .ne. 0)then
+           num_actfirep = num_actfirep + 1
+           filter_actfirep(num_actfirep) = p
+        end if
 !        if(p .eq. 5228)print*,'after fire m_leaf_stor',leafc_storage(p),f,cc_other(patch%itype(p)),fm_other(patch%itype(p))
 !        if(p .eq. 5228)print*,'after fire m_deadcroot',deadcrootc(p),m,fm_droot(patch%itype(p))
 !        if( .not. use_matrixcn)then
+        !print*,'m_leafc',p,leafc(p),leafc_storage(p),leafc_xfer(p),frootc(p),frootc_storage(p),frootc_xfer(p),livestemc(p),livestemc_storage(p),livestemc_xfer(p),deadstemc(p),deadstemc_storage(p),deadstemc_xfer(p),livecrootc(p),livecrootc_storage(p),livecrootc_xfer(p),deadcrootc(p),deadcrootc_storage(p),deadcrootc_xfer(p),f,f * cc_dstem(patch%itype(p)) * m, f * cc_leaf(patch%itype(p)),f * cc_other(patch%itype(p)), f * cc_lstem(patch%itype(p))
         m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
         m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
         m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * f * cc_other(patch%itype(p))
@@ -655,45 +707,44 @@ contains
         m_retransn_to_fire(p)            =  retransn(p)           * f * cc_other(patch%itype(p))
 !        else
         if(use_matrixcn)then
-           matrix_fitransfer(p,ioutc,ileaf)         = matrix_fitransfer(p,ioutc,ileaf)         + f * cc_leaf(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ileaf_st)      = matrix_fitransfer(p,ioutc,ileaf_st)      + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ileaf_xf)      = matrix_fitransfer(p,ioutc,ileaf_xf)      + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivestem)     = matrix_fitransfer(p,ioutc,ilivestem)     + f * cc_lstem(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivestem_st)  = matrix_fitransfer(p,ioutc,ilivestem_st)  + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivestem_xf)  = matrix_fitransfer(p,ioutc,ilivestem_xf)  + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ideadstem)     = matrix_fitransfer(p,ioutc,ideadstem)     + f * cc_dstem(patch%itype(p))*m
-           matrix_fitransfer(p,ioutc,ideadstem_st)  = matrix_fitransfer(p,ioutc,ideadstem_st)  + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ideadstem_xf)  = matrix_fitransfer(p,ioutc,ideadstem_xf)  + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ifroot)        = matrix_fitransfer(p,ioutc,ifroot)        + f * 0._r8
-           matrix_fitransfer(p,ioutc,ifroot_st)     = matrix_fitransfer(p,ioutc,ifroot_st)     + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ifroot_xf)     = matrix_fitransfer(p,ioutc,ifroot_xf)     + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivecroot)    = matrix_fitransfer(p,ioutc,ilivecroot)    + f * 0._r8
-           matrix_fitransfer(p,ioutc,ilivecroot_st) = matrix_fitransfer(p,ioutc,ilivecroot_st) + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivecroot_xf) = matrix_fitransfer(p,ioutc,ilivecroot_xf) + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ideadcroot)    = matrix_fitransfer(p,ioutc,ideadcroot)    + f * 0._r8
-           matrix_fitransfer(p,ioutc,ideadcroot_st) = matrix_fitransfer(p,ioutc,ideadcroot_st) + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ideadcroot_xf) = matrix_fitransfer(p,ioutc,ideadstem_xf)  + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ileaf_to_iout_fic)         = matrix_fitransfer(p,ileaf_to_iout_fic)         + f * cc_leaf(patch%itype(p))
+           matrix_fitransfer(p,ileafst_to_iout_fic)      = matrix_fitransfer(p,ileafst_to_iout_fic)      + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ileafxf_to_iout_fic)      = matrix_fitransfer(p,ileafxf_to_iout_fic)      + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ilivestem_to_iout_fic)     = matrix_fitransfer(p,ilivestem_to_iout_fic)     + f * cc_lstem(patch%itype(p))
+           matrix_fitransfer(p,ilivestemst_to_iout_fic)  = matrix_fitransfer(p,ilivestemst_to_iout_fic)  + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ilivestemxf_to_iout_fic)  = matrix_fitransfer(p,ilivestemxf_to_iout_fic)  + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ideadstem_to_iout_fic)     = matrix_fitransfer(p,ideadstem_to_iout_fic)     + f * cc_dstem(patch%itype(p))*m
+           matrix_fitransfer(p,ideadstemst_to_iout_fic)  = matrix_fitransfer(p,ideadstemst_to_iout_fic)  + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ideadstemxf_to_iout_fic)  = matrix_fitransfer(p,ideadstemxf_to_iout_fic)  + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ifroot_to_iout_fic)        = matrix_fitransfer(p,ifroot_to_iout_fic)        + f * 0._r8
+           matrix_fitransfer(p,ifrootst_to_iout_fic)     = matrix_fitransfer(p,ifrootst_to_iout_fic)     + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ifrootxf_to_iout_fic)     = matrix_fitransfer(p,ifrootxf_to_iout_fic)     + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ilivecroot_to_iout_fic)    = matrix_fitransfer(p,ilivecroot_to_iout_fic)    + f * 0._r8
+           matrix_fitransfer(p,ilivecrootst_to_iout_fic) = matrix_fitransfer(p,ilivecrootst_to_iout_fic) + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ilivecrootxf_to_iout_fic) = matrix_fitransfer(p,ilivecrootxf_to_iout_fic) + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ideadcroot_to_iout_fic)    = matrix_fitransfer(p,ideadcroot_to_iout_fic)    + f * 0._r8
+           matrix_fitransfer(p,ideadcrootst_to_iout_fic) = matrix_fitransfer(p,ideadcrootst_to_iout_fic) + f * cc_other(patch%itype(p))
+           matrix_fitransfer(p,ideadcrootxf_to_iout_fic) = matrix_fitransfer(p,ideadcrootxf_to_iout_fic)  + f * cc_other(patch%itype(p))
 
-
-           matrix_nfitransfer(p,ioutn,ileaf)         = matrix_nfitransfer(p,ioutn,ileaf)         + f * cc_leaf(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ileaf_st)      = matrix_nfitransfer(p,ioutn,ileaf_st)      + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ileaf_xf)      = matrix_nfitransfer(p,ioutn,ileaf_xf)      + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivestem)     = matrix_nfitransfer(p,ioutn,ilivestem)     + f * cc_lstem(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivestem_st)  = matrix_nfitransfer(p,ioutn,ilivestem_st)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivestem_xf)  = matrix_nfitransfer(p,ioutn,ilivestem_xf)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ideadstem)     = matrix_nfitransfer(p,ioutn,ideadstem)     + f * cc_dstem(patch%itype(p))*m
-           matrix_nfitransfer(p,ioutn,ideadstem_st)  = matrix_nfitransfer(p,ioutn,ideadstem_st)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ideadstem_xf)  = matrix_nfitransfer(p,ioutn,ideadstem_xf)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ifroot)        = matrix_nfitransfer(p,ioutn,ifroot)        + f * 0._r8
-           matrix_nfitransfer(p,ioutn,ifroot_st)     = matrix_nfitransfer(p,ioutn,ifroot_st)     + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ifroot_xf)     = matrix_nfitransfer(p,ioutn,ifroot_xf)     + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivecroot)    = matrix_nfitransfer(p,ioutn,ilivecroot)    + f * 0._r8
-           matrix_nfitransfer(p,ioutn,ilivecroot_st) = matrix_nfitransfer(p,ioutn,ilivecroot_st) + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivecroot_xf) = matrix_nfitransfer(p,ioutn,ilivecroot_xf) + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ideadcroot)    = matrix_nfitransfer(p,ioutn,ideadcroot)    + f * 0._r8
-           matrix_nfitransfer(p,ioutn,ideadcroot_st) = matrix_nfitransfer(p,ioutn,ideadcroot_st) + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ideadcroot_xf) = matrix_nfitransfer(p,ioutn,ideadstem_xf)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,iretransn)    = matrix_nfitransfer(p,ioutn,iretransn)     + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ileaf_to_iout_fin)         = matrix_nfitransfer(p,ileaf_to_iout_fin)         + f * cc_leaf(patch%itype(p))
+           matrix_nfitransfer(p,ileafst_to_iout_fin)      = matrix_nfitransfer(p,ileafst_to_iout_fin)      + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ileafxf_to_iout_fin)      = matrix_nfitransfer(p,ileafxf_to_iout_fin)      + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ilivestem_to_iout_fin)     = matrix_nfitransfer(p,ilivestem_to_iout_fin)     + f * cc_lstem(patch%itype(p))
+           matrix_nfitransfer(p,ilivestemst_to_iout_fin)  = matrix_nfitransfer(p,ilivestemst_to_iout_fin)  + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ilivestemxf_to_iout_fin)  = matrix_nfitransfer(p,ilivestemxf_to_iout_fin)  + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ideadstem_to_iout_fin)     = matrix_nfitransfer(p,ideadstem_to_iout_fin)     + f * cc_dstem(patch%itype(p))*m
+           matrix_nfitransfer(p,ideadstemst_to_iout_fin)  = matrix_nfitransfer(p,ideadstemst_to_iout_fin)  + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ideadstemxf_to_iout_fin)  = matrix_nfitransfer(p,ideadstemxf_to_iout_fin)  + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ifroot_to_iout_fin)        = matrix_nfitransfer(p,ifroot_to_iout_fin)        + f * 0._r8
+           matrix_nfitransfer(p,ifrootst_to_iout_fin)     = matrix_nfitransfer(p,ifrootst_to_iout_fin)     + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ifrootxf_to_iout_fin)     = matrix_nfitransfer(p,ifrootxf_to_iout_fin)     + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ilivecroot_to_iout_fin)    = matrix_nfitransfer(p,ilivecroot_to_iout_fin)    + f * 0._r8
+           matrix_nfitransfer(p,ilivecrootst_to_iout_fin) = matrix_nfitransfer(p,ilivecrootst_to_iout_fin) + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ilivecrootxf_to_iout_fin) = matrix_nfitransfer(p,ilivecrootxf_to_iout_fin) + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ideadcroot_to_iout_fin)    = matrix_nfitransfer(p,ideadcroot_to_iout_fin)    + f * 0._r8
+           matrix_nfitransfer(p,ideadcrootst_to_iout_fin) = matrix_nfitransfer(p,ideadcrootst_to_iout_fin) + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,ideadcrootxf_to_iout_fin) = matrix_nfitransfer(p,ideadcrootxf_to_iout_fin)  + f * cc_other(patch%itype(p))
+           matrix_nfitransfer(p,iretransn_to_iout_fin)    = matrix_nfitransfer(p,iretransn_to_iout_fin)     + f * cc_other(patch%itype(p))
         end if
         ! mortality due to fire
         ! carbon pools
@@ -841,88 +892,88 @@ contains
 
 !        else
         if(use_matrixcn)then
-           matrix_fitransfer(p,ioutc,ileaf)           = matrix_fitransfer(p,ioutc,ileaf) &
+           matrix_fitransfer(p,ileaf_to_iout_fic)           = matrix_fitransfer(p,ileaf_to_iout_fic) &
              + f * (1._r8 - cc_leaf(patch%itype(p))) * fm_leaf(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ileaf_st)        = matrix_fitransfer(p,ioutc,ileaf_st) &
+           matrix_fitransfer(p,ileafst_to_iout_fic)        = matrix_fitransfer(p,ileafst_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ileaf_xf)        = matrix_fitransfer(p,ioutc,ileaf_xf) &
+           matrix_fitransfer(p,ileafxf_to_iout_fic)        = matrix_fitransfer(p,ileafxf_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivestem)       = matrix_fitransfer(p,ioutc,ilivestem) &
+           matrix_fitransfer(p,ilivestem_to_iout_fic)       = matrix_fitransfer(p,ilivestem_to_iout_fic) &
              + f * (1._r8 - cc_lstem(patch%itype(p))) * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivestem_st)    = matrix_fitransfer(p,ioutc,ilivestem_st) &
+           matrix_fitransfer(p,ilivestemst_to_iout_fic)    = matrix_fitransfer(p,ilivestemst_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivestem_xf)    = matrix_fitransfer(p,ioutc,ilivestem_xf) &
+           matrix_fitransfer(p,ilivestemxf_to_iout_fic)    = matrix_fitransfer(p,ilivestemxf_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ideadstem,ilivestem) = matrix_fitransfer(p,ideadstem,ilivestem) &
+           matrix_fitransfer(p,ilivestem_to_ideadstem_fic) = matrix_fitransfer(p,ilivestem_to_ideadstem_fic) &
              + f * (1._r8 - cc_lstem(patch%itype(p))) * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_fitransfer(p,ioutc,ideadstem)       = matrix_fitransfer(p,ioutc,ideadstem) &
+           matrix_fitransfer(p,ideadstem_to_iout_fic)       = matrix_fitransfer(p,ideadstem_to_iout_fic) &
              + f * m*(1._r8 - cc_dstem(patch%itype(p))) * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ideadstem_st)    = matrix_fitransfer(p,ioutc,ideadstem_st) &
+           matrix_fitransfer(p,ideadstemst_to_iout_fic)    = matrix_fitransfer(p,ideadstemst_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ideadstem_xf)    = matrix_fitransfer(p,ioutc,ideadstem_xf) &
+           matrix_fitransfer(p,ideadstemxf_to_iout_fic)    = matrix_fitransfer(p,ideadstemxf_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ifroot)          = matrix_fitransfer(p,ioutc,ifroot) &
+           matrix_fitransfer(p,ifroot_to_iout_fic)          = matrix_fitransfer(p,ifroot_to_iout_fic) &
              + f * fm_root(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ifroot_st)       = matrix_fitransfer(p,ioutc,ifroot_st) &
+           matrix_fitransfer(p,ifrootst_to_iout_fic)       = matrix_fitransfer(p,ifrootst_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ifroot_xf)       = matrix_fitransfer(p,ioutc,ifroot_xf) &
+           matrix_fitransfer(p,ifrootxf_to_iout_fic)       = matrix_fitransfer(p,ifrootxf_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivecroot)      = matrix_fitransfer(p,ioutc,ilivecroot) &
+           matrix_fitransfer(p,ilivecroot_to_iout_fic)      = matrix_fitransfer(p,ilivecroot_to_iout_fic) &
              + f * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ilivecroot_st)      = matrix_fitransfer(p,ioutc,ilivecroot_st) &
+           matrix_fitransfer(p,ilivecrootst_to_iout_fic)      = matrix_fitransfer(p,ilivecrootst_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
-           matrix_fitransfer(p,ioutc,ilivecroot_xf)      = matrix_fitransfer(p,ioutc,ilivecroot_xf) &
+           matrix_fitransfer(p,ilivecrootxf_to_iout_fic)      = matrix_fitransfer(p,ilivecrootxf_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
-           matrix_fitransfer(p,ideadcroot,ilivecroot)   = matrix_fitransfer(p,ideadcroot,ilivecroot) &
+           matrix_fitransfer(p,ilivecroot_to_ideadcroot_fic)   = matrix_fitransfer(p,ilivecroot_to_ideadcroot_fic) &
              + f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_fitransfer(p,ioutc,ideadcroot)         = matrix_fitransfer(p,ioutc,ideadcroot) &
+           matrix_fitransfer(p,ideadcroot_to_iout_fic)         = matrix_fitransfer(p,ideadcroot_to_iout_fic) &
              + f * m * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ioutc,ideadcroot_st)      = matrix_fitransfer(p,ioutc,ideadcroot_st) &
+           matrix_fitransfer(p,ideadcrootst_to_iout_fic)      = matrix_fitransfer(p,ideadcrootst_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
-           matrix_fitransfer(p,ioutc,ideadcroot_xf)      = matrix_fitransfer(p,ioutc,ideadcroot_xf) &
+           matrix_fitransfer(p,ideadcrootxf_to_iout_fic)      = matrix_fitransfer(p,ideadcrootxf_to_iout_fic) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
 
-           matrix_nfitransfer(p,ioutn,ileaf)           = matrix_nfitransfer(p,ioutn,ileaf) &
+           matrix_nfitransfer(p,ileaf_to_iout_fin)           = matrix_nfitransfer(p,ileaf_to_iout_fin) &
              + f * (1._r8 - cc_leaf(patch%itype(p))) * fm_leaf(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ileaf_st)        = matrix_nfitransfer(p,ioutn,ileaf_st) &
+           matrix_nfitransfer(p,ileafst_to_iout_fin)        = matrix_nfitransfer(p,ileafst_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ileaf_xf)        = matrix_nfitransfer(p,ioutn,ileaf_xf) &
+           matrix_nfitransfer(p,ileafxf_to_iout_fin)        = matrix_nfitransfer(p,ileafxf_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivestem)       = matrix_nfitransfer(p,ioutn,ilivestem) &
+           matrix_nfitransfer(p,ilivestem_to_iout_fin)       = matrix_nfitransfer(p,ilivestem_to_iout_fin) &
              + f * (1._r8 - cc_lstem(patch%itype(p))) * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivestem_st)    = matrix_nfitransfer(p,ioutn,ilivestem_st) &
+           matrix_nfitransfer(p,ilivestemst_to_iout_fin)    = matrix_nfitransfer(p,ilivestemst_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivestem_xf)    = matrix_nfitransfer(p,ioutn,ilivestem_xf) &
+           matrix_nfitransfer(p,ilivestemxf_to_iout_fin)    = matrix_nfitransfer(p,ilivestemxf_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ideadstem,ilivestem) = matrix_nfitransfer(p,ideadstem,ilivestem) &
+           matrix_nfitransfer(p,ilivestem_to_ideadstem_fin) = matrix_nfitransfer(p,ilivestem_to_ideadstem_fin) &
              + f * (1._r8 - cc_lstem(patch%itype(p))) * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_nfitransfer(p,ioutn,ideadstem)       = matrix_nfitransfer(p,ioutn,ideadstem) &
+           matrix_nfitransfer(p,ideadstem_to_iout_fin)       = matrix_nfitransfer(p,ideadstem_to_iout_fin) &
              + f * m*(1._r8 - cc_dstem(patch%itype(p))) * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ideadstem_st)    = matrix_nfitransfer(p,ioutn,ideadstem_st) &
+           matrix_nfitransfer(p,ideadstemst_to_iout_fin)    = matrix_nfitransfer(p,ideadstemst_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivestem_xf)    = matrix_nfitransfer(p,ioutn,ideadstem_xf) &
+           matrix_nfitransfer(p,ideadstemxf_to_iout_fin)    = matrix_nfitransfer(p,ideadstemxf_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ifroot)          = matrix_nfitransfer(p,ioutn,ifroot) &
+           matrix_nfitransfer(p,ifroot_to_iout_fin)          = matrix_nfitransfer(p,ifroot_to_iout_fin) &
              + f * fm_root(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ifroot_st)       = matrix_nfitransfer(p,ioutn,ifroot_st) &
+           matrix_nfitransfer(p,ifrootst_to_iout_fin)       = matrix_nfitransfer(p,ifrootst_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ifroot_xf)       = matrix_nfitransfer(p,ioutn,ifroot_xf) &
+           matrix_nfitransfer(p,ifrootxf_to_iout_fin)       = matrix_nfitransfer(p,ifrootxf_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivecroot)      = matrix_nfitransfer(p,ioutn,ilivecroot) &
+           matrix_nfitransfer(p,ilivecroot_to_iout_fin)      = matrix_nfitransfer(p,ilivecroot_to_iout_fin) &
              + f * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ilivecroot_st)      = matrix_nfitransfer(p,ioutn,ilivecroot_st) &
+           matrix_nfitransfer(p,ilivecrootst_to_iout_fin)      = matrix_nfitransfer(p,ilivecrootst_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
-           matrix_nfitransfer(p,ioutn,ilivecroot_xf)      = matrix_nfitransfer(p,ioutn,ilivecroot_xf) &
+           matrix_nfitransfer(p,ilivecrootxf_to_iout_fin)      = matrix_nfitransfer(p,ilivecrootxf_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
-           matrix_nfitransfer(p,ideadcroot,ilivecroot)   = matrix_nfitransfer(p,ideadcroot,ilivecroot) &
+           matrix_nfitransfer(p,ilivecroot_to_ideadcroot_fin)   = matrix_nfitransfer(p,ilivecroot_to_ideadcroot_fin) &
              + f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_nfitransfer(p,ioutn,ideadcroot)         = matrix_nfitransfer(p,ioutn,ideadcroot) &
+           matrix_nfitransfer(p,ideadcroot_to_iout_fin)         = matrix_nfitransfer(p,ideadcroot_to_iout_fin) &
              + f * m * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ioutn,ideadcroot_st)      = matrix_nfitransfer(p,ioutn,ideadcroot_st) &
+           matrix_nfitransfer(p,ideadcrootst_to_iout_fin)      = matrix_nfitransfer(p,ideadcrootst_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 
-           matrix_nfitransfer(p,ioutn,ideadcroot_xf)      = matrix_nfitransfer(p,ioutn,ideadcroot_xf) &
+           matrix_nfitransfer(p,ideadcrootxf_to_iout_fin)      = matrix_nfitransfer(p,ideadcrootxf_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
-           matrix_nfitransfer(p,ioutn,iretransn)          = matrix_nfitransfer(p,ioutn,iretransn) &
+           matrix_nfitransfer(p,iretransn_to_iout_fin)          = matrix_nfitransfer(p,iretransn_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
            !CiPEHR
 !           if(p .eq. 12 .or. p .eq. 13)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
@@ -1032,10 +1083,16 @@ contains
      ! vertically-resolved decomposing C/N fire loss   
      ! column loop
      !
+     num_actfirec = 0
      do fc = 1,num_soilc
         c = filter_soilc(fc)
 
         f = farea_burned(c) 
+
+        if(f .ne. 0 .or. f .ne. baf_crop(c))then
+           num_actfirec = num_actfirec + 1
+           filter_actfirec(num_actfirec) = c
+        end if
 
         do j = 1, nlevdecomp
            ! carbon fluxes
@@ -1045,8 +1102,8 @@ contains
                     m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * &
                       cmb_cmplt_fact(lit_fp)
                  else ! matrix is the same for C and N; so we only update once.
-                    matrix_decomp_fire_k(c,j,l) = matrix_decomp_fire_k(c,j,l) &
-                     + f * cmb_cmplt_fact(lit_fp)
+                    matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
+                     - f * cmb_cmplt_fact(lit_fp) * dt
                  end if
               end if
               if ( is_cwd(l) ) then
@@ -1054,8 +1111,8 @@ contains
                     m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
                       (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
                  else
-                    matrix_decomp_fire_k(c,j,l) = matrix_decomp_fire_k(c,j,l) &
-                     + (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
+                    matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
+                     - (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp) * dt
                  end if
               end if
            end do

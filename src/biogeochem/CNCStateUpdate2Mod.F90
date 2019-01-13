@@ -73,6 +73,7 @@ contains
             if (.not. use_soil_matrixcn)then
                cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
+!                if(c .eq. 34208 .and. j .eq. 1)print*,'gap input to imet',cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt, cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
                cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + cf_veg%gap_mortality_c_to_litr_cel_c_col(c,j) * dt
                cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = &
@@ -82,14 +83,14 @@ contains
 !               if(j .eq. 1)print*,'after gapmortality',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
             else
 !               if(j .eq. 1)print*,'before gapmortality,matrix',c,cf_soil%matrix_input_col(c,j,i_met_lit),cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_met_lit) = &    
-                 cf_soil%matrix_input_col(c,j,i_met_lit) + cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_cel_lit) = &
-                 cf_soil%matrix_input_col(c,j,i_cel_lit) + cf_veg%gap_mortality_c_to_litr_cel_c_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_lig_lit) = &
-                 cf_soil%matrix_input_col(c,j,i_lig_lit) + cf_veg%gap_mortality_c_to_litr_lig_c_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_cwd) =     &
-                 cf_soil%matrix_input_col(c,j,i_cwd)     + cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) = &    
+                 cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) + cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+                 cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) + cf_veg%gap_mortality_c_to_litr_cel_c_col(c,j) * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+                 cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) + cf_veg%gap_mortality_c_to_litr_lig_c_col(c,j) * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) =     &
+                 cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp)     + cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
 !               if(j .eq. 1)print*,'after gapmortality,matrix',c,cf_soil%matrix_input_col(c,j,i_met_lit)
             end if !soil_matrix
          end do
@@ -103,6 +104,7 @@ contains
          ! displayed pools
          cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p)                           &
               - cf_veg%m_leafc_to_litter_patch(p) * dt
+         if(p .eq. 49261)print*,'leafc_to_litter_gap',cf_veg%m_leafc_to_litter_patch(p),cs_veg%leafc_patch(p)
          cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p)                         &
               - cf_veg%m_frootc_to_litter_patch(p) * dt
          cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p)                   &
@@ -212,14 +214,14 @@ contains
 !               if(j .eq. 1)print*,'after harvest',c,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
             else
 !               if(j .eq. 1)print*,'before harvest,matrix',c,cf_soil%matrix_input_col(c,j,i_cwd),cf_veg%harvest_c_to_cwdc_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_met_lit) = &
-                 cf_soil%matrix_input_col(c,j,i_met_lit) + cf_veg%harvest_c_to_litr_met_c_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_cel_lit) = &
-                 cf_soil%matrix_input_col(c,j,i_cel_lit) + cf_veg%harvest_c_to_litr_cel_c_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_lig_lit) = &
-                 cf_soil%matrix_input_col(c,j,i_lig_lit) + cf_veg%harvest_c_to_litr_lig_c_col(c,j) * dt
-               cf_soil%matrix_input_col(c,j,i_cwd) = &
-                 cf_soil%matrix_input_col(c,j,i_cwd) + cf_veg%harvest_c_to_cwdc_col(c,j)  * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
+                 cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) + cf_veg%harvest_c_to_litr_met_c_col(c,j) * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+                 cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) + cf_veg%harvest_c_to_litr_cel_c_col(c,j) * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+                 cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) + cf_veg%harvest_c_to_litr_lig_c_col(c,j) * dt
+               cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) = &
+                 cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) + cf_veg%harvest_c_to_cwdc_col(c,j) * dt
 !               if(j .eq. 1)print*,'after harvest',c,cf_soil%matrix_input_col(c,j,i_cwd)
             end if
 
@@ -237,6 +239,7 @@ contains
          if(.not. use_matrixcn)then
             cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p)                           &
               - cf_veg%hrv_leafc_to_litter_patch(p) * dt
+            if(p .eq. 49261)print*,'leafc_to_litter_hrv',cf_veg%hrv_leafc_to_litter_patch(p),cs_veg%leafc_patch(p)
             cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p)                         &
               - cf_veg%hrv_frootc_to_litter_patch(p) * dt
             cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p)                   &
