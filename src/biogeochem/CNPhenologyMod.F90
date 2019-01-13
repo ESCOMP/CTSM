@@ -602,7 +602,46 @@ contains
          bgtr       => cnveg_state_inst%bgtr_patch  , & ! Output: [real(r8) (:) ]  background transfer growth rate (1/s)             
          lgsf       => cnveg_state_inst%lgsf_patch  , & ! Output: [real(r8) (:) ]  long growing season factor [0-1]
          matrix_nphtransfer => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch , &!
-         matrix_phtransfer => cnveg_carbonflux_inst%matrix_phtransfer_patch  & 
+         matrix_phtransfer => cnveg_carbonflux_inst%matrix_phtransfer_patch,  & 
+         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,  &
+         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,  &
+         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph,  &
+         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph,  &
+         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph,  &
+         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph,   &
+         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph,   &
+         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph,   &
+         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph,   &
+         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph,   &
+         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph,   &
+         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph,   &
+         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph,   &
+         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph,   &
+         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph,   &
+         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph,   &
+         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph,   &
+         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph,   &
+         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph,   &
+         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph,   &
+         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph,   &
+         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph,   &
+         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph,   &
+         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph,   &
+         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph,   &
+         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph,   &
+         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph,   &
+         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph,   &
+         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph,   &
+         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph,   &
+         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph,   &
+         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph,   &
+         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph,   &
+         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph,   &
+         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph,   &
+         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph,   &
+         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph,   &
+         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph,   &
+         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph   &
          )
 
       dayspyr   = get_days_per_year()
@@ -627,13 +666,13 @@ contains
 !         if(p .eq. 2)print*,'evergreen'
 
          if (use_matrixcn) then    
-            matrix_phtransfer(p,ileaf_xf,ileaf_st)   =  matrix_phtransfer(p,ileaf_xf,ileaf_st) + tranr/dt
-            matrix_phtransfer(p,ifroot_xf,ifroot_st) =  matrix_phtransfer(p,ifroot_xf,ifroot_st) + tranr/dt 
+            matrix_phtransfer(p,ileafst_to_ileafxf_phc)   =  matrix_phtransfer(p,ileafst_to_ileafxf_phc) + tranr/dt
+            matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) =  matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + tranr/dt 
             if (woody(ivt(p)) == 1.0_r8) then   
-               matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + tranr/dt
-               matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + tranr/dt
-               matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + tranr/dt
-               matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + tranr/dt
+               matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc)   = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + tranr/dt
+               matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc)   = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + tranr/dt
+               matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + tranr/dt
+               matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + tranr/dt
 !               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt
             end if
          end if !use_matrixcn
@@ -649,13 +688,13 @@ contains
             end if   
 !          end if !end of use_matrixcn
          if (use_matrixcn) then    
-            matrix_nphtransfer(p,ileaf_xf,ileaf_st)   =  matrix_nphtransfer(p,ileaf_xf,ileaf_st) + tranr/dt
-            matrix_nphtransfer(p,ifroot_xf,ifroot_st) =  matrix_nphtransfer(p,ifroot_xf,ifroot_st) + tranr/dt 
+            matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   =  matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + tranr/dt
+            matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) =  matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + tranr/dt 
             if (woody(ivt(p)) == 1.0_r8) then   
-               matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + tranr/dt
-               matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + tranr/dt
-               matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + tranr/dt
-               matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + tranr/dt
+               matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + tranr/dt
+               matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + tranr/dt
+               matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + tranr/dt
+               matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + tranr/dt
 !               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt
             end if
           end if   
@@ -674,21 +713,21 @@ contains
 
         if (use_matrixcn) then
 
-           matrix_phtransfer(p,ileaf,ileaf_xf)   = matrix_phtransfer(p,ileaf,ileaf_xf) + t1
-           matrix_phtransfer(p,ifroot,ifroot_xf) = matrix_phtransfer(p,ifroot,ifroot_xf) + t1
+           matrix_phtransfer(p,ileafxf_to_ileaf_phc)   = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + t1
+           matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + t1
    
-           matrix_nphtransfer(p,ileaf,ileaf_xf)   = matrix_nphtransfer(p,ileaf,ileaf_xf) + t1
-           matrix_nphtransfer(p,ifroot,ifroot_xf) = matrix_nphtransfer(p,ifroot,ifroot_xf) + t1  
+           matrix_nphtransfer(p,ileafxf_to_ileaf_phn)   = matrix_nphtransfer(p,ileafxf_to_ileaf_phn) + t1
+           matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) = matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) + t1  
            if (woody(ivt(p)) == 1.0_r8) then 
-              matrix_phtransfer(p,ilivestem,ilivestem_xf)   = matrix_phtransfer(p,ilivestem,ilivestem_xf) + t1
-              matrix_phtransfer(p,ideadstem,ideadstem_xf)   = matrix_phtransfer(p,ideadstem,ideadstem_xf) + t1
-              matrix_phtransfer(p,ilivecroot,ilivecroot_xf) = matrix_phtransfer(p,ilivecroot,ilivecroot_xf) + t1
-              matrix_phtransfer(p,ideadcroot,ideadcroot_xf) = matrix_phtransfer(p,ideadcroot,ideadcroot_xf) + t1
+              matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc)   = matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) + t1
+              matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc)   = matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) + t1
+              matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) = matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) + t1
+              matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) = matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) + t1
 
-              matrix_nphtransfer(p,ilivestem,ilivestem_xf)   = matrix_nphtransfer(p,ilivestem,ilivestem_xf) + t1
-              matrix_nphtransfer(p,ideadstem,ideadstem_xf)   = matrix_nphtransfer(p,ideadstem,ideadstem_xf) + t1
-              matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) = matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) + t1
-              matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) = matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) + t1
+              matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)   = matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) + t1
+              matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn)   = matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) + t1
+              matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
+              matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
            end if
         end if 
 !         else
@@ -835,7 +874,46 @@ contains
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]   
          matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & !
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  & 
+         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & 
+         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph, &
+         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph, &
+         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph, &
+         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph, &
+         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph, &
+         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph, &
+         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph, &
+         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph, &
+         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph, &
+         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph, &
+         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph, &
+         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph, &
+         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph, &
+         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph, &
+         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph, &
+         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph, &
+         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph, &
+         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph, &
+         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph, &
+         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph, &
+         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph, &
+         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph, &
+         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph, &
+         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph, &
+         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph, &
+         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph, &
+         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph, &
+         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph, &
+         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph, &
+         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph, &
+         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph, &
+         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph, &
+         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph, &
+         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph, &
+         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph, &
+         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph, &
+         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph, &
+         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph, &
+         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph &
          )
 
       ! start patch loop
@@ -979,21 +1057,21 @@ contains
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
                  if(use_matrixcn)then                                 !o
-                    matrix_phtransfer(p,ileaf_xf,ileaf_st)   = matrix_phtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
-                    matrix_phtransfer(p,ifroot_xf,ifroot_st) = matrix_phtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt
+                    matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
+                    matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
 
-                    matrix_nphtransfer(p,ileaf_xf,ileaf_st)   = matrix_nphtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
-                    matrix_nphtransfer(p,ifroot_xf,ifroot_st) = matrix_nphtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt
+                    matrix_nphtransfer(p,ileafst_to_ileafxf_phc)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
+                    matrix_nphtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
                     if (woody(ivt(p)) == 1.0_r8) then                               !p
-                         matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
-                         matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
-                         matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
-                         matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt
+                         matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
+                         matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
+                         matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
+                         matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt
 !                         gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                         matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
-                         matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
-                         matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
-                         matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt
+                         matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
+                         matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
+                         matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
+                         matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
                     end if
                   end if 
 !                  else
@@ -1185,7 +1263,46 @@ contains
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)		 ] 
          matrix_nphtransfer                  => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch                 , & !
-         matrix_phtransfer                   => cnveg_carbonflux_inst%matrix_phtransfer_patch                  & !
+         matrix_phtransfer                   => cnveg_carbonflux_inst%matrix_phtransfer_patch                  , & !
+         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,     &
+         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,      &
+         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph,      &
+         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph,      &
+         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph,      &
+         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph,      &
+         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph,      &
+         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph,      &
+         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph,      &
+         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph,      &
+         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph,      &
+         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph,      &
+         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph,      &
+         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph,      &
+         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph,      &
+         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph,      &
+         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph,      &
+         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph,      &
+         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph,      &
+         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph,      &
+         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph,      &
+         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph,      &
+         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph,      &
+         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph,      &
+         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph,      &
+         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph,      &
+         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph,      &
+         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph,      &
+         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph,      &
+         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph,      &
+         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph,      &
+         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph,      &
+         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph,      &
+         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph,      &
+         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph,      &
+         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph,      &
+         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph,      &
+         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph,      &
+         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph &
          )
 
        !set time steps
@@ -1355,21 +1472,21 @@ contains
                   ! set carbon fluxes for shifting storage pools to transfer pools
 
                   if (use_matrixcn) then 
-                     matrix_phtransfer(p,ileaf_xf,ileaf_st)   = matrix_phtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
-                     matrix_phtransfer(p,ifroot_xf,ifroot_st) = matrix_phtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt  
-                     matrix_nphtransfer(p,ileaf_xf,ileaf_st)   = matrix_nphtransfer(p,ileaf_xf,ileaf_st) + fstor2tran/dt
-                     matrix_nphtransfer(p,ifroot_xf,ifroot_st) = matrix_nphtransfer(p,ifroot_xf,ifroot_st) + fstor2tran/dt
+                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
+                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt  
+                     matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
+                     matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
                      if (woody(ivt(p)) == 1.0_r8) then
 !                         gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                        matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
-                        matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
-                        matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
-                        matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt 
+                        matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
+                        matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
+                        matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
+                        matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt 
 !N
-                        matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + fstor2tran/dt
-                        matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + fstor2tran/dt
-                        matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + fstor2tran/dt
-                        matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + fstor2tran/dt 
+                        matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
+                        matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
+                        matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
+                        matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt 
                      end if
                   end if
 !                 else
@@ -1497,19 +1614,19 @@ contains
                frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
                if (use_matrixcn) then
                   if(leafc_storage(p) .gt. 0)then
-                     matrix_phtransfer(p,ileaf_xf,ileaf_st)   = matrix_phtransfer(p,ileaf_xf,ileaf_st) &
+                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) &
                                                             + leafc_storage_to_xfer(p) / leafc_storage(p) 
                   end if
                   if(frootc_storage(p) .gt. 0)then
-                     matrix_phtransfer(p,ifroot_xf,ifroot_st) = matrix_phtransfer(p,ifroot_xf,ifroot_st) &
+                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) &
                                                             + frootc_storage_to_xfer(p) / frootc_storage(p)
                   end if
                 if (woody(ivt(p)) == 1.0_r8) then
 !                    gresp_storage_to_xfer(p)      = gresp_storage(p) * bgtr(p)
-                    matrix_phtransfer(p,ilivestem_xf,ilivestem_st) = matrix_phtransfer(p,ilivestem_xf,ilivestem_st) + bgtr(p) 
-                    matrix_phtransfer(p,ideadstem_xf,ideadstem_st) = matrix_phtransfer(p,ideadstem_xf,ideadstem_st) + bgtr(p) 
-                    matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_phtransfer(p,ilivecroot_xf,ilivecroot_st) + bgtr(p) 
-                    matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_phtransfer(p,ideadcroot_xf,ideadcroot_st) + bgtr(p)
+                    matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + bgtr(p) 
+                    matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + bgtr(p) 
+                    matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + bgtr(p) 
+                    matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + bgtr(p)
                  end if
               end if
 !            else
@@ -1525,15 +1642,15 @@ contains
                leafn_storage_to_xfer(p)  = leafn_storage(p) * bgtr(p)
                frootn_storage_to_xfer(p) = frootn_storage(p) * bgtr(p)
                if (use_matrixcn) then 
-                  matrix_nphtransfer(p,ileaf_xf,ileaf_st)   = matrix_nphtransfer(p,ileaf_xf,ileaf_st) &
+                  matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) &
                                                             + bgtr(p)
-                  matrix_nphtransfer(p,ifroot_xf,ifroot_st) = matrix_nphtransfer(p,ifroot_xf,ifroot_st) &
+                  matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) &
                                                             + bgtr(p)
                   if (woody(ivt(p)) == 1.0_r8) then
-                     matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) = matrix_nphtransfer(p,ilivestem_xf,ilivestem_st) + bgtr(p) 
-                     matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) = matrix_nphtransfer(p,ideadstem_xf,ideadstem_st) + bgtr(p) 
-                     matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) = matrix_nphtransfer(p,ilivecroot_xf,ilivecroot_st) + bgtr(p) 
-                     matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) = matrix_nphtransfer(p,ideadcroot_xf,ideadcroot_st) + bgtr(p)
+                     matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + bgtr(p) 
+                     matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + bgtr(p) 
+                     matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + bgtr(p) 
+                     matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + bgtr(p)
                   end if
                end if 
 
@@ -2438,7 +2555,46 @@ contains
          livecrootn_xfer_to_livecrootn       =>    cnveg_nitrogenflux_inst%livecrootn_xfer_to_livecrootn_patch , & ! Output:  [real(r8) (:) ]                                                    
          deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch , & ! Output:  [real(r8) (:) ]
          matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & !	 
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  &
+         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch,  &
+         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,              &
+         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,                         &
+         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph,                             &
+         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph,                             &
+         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph,                             &
+         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph,                             &
+         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph,                             &
+         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph,                             &
+         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph,                             &
+         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph,                             &
+         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph,                             &
+         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph,                             &
+         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph,                             &
+         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph,                             &
+         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph,                             &
+         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph,                             &
+         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph,                             &
+         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph,                             &
+         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph,                             &
+         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph,                             &
+         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph,                             &
+         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph,                             &
+         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph,                             &
+         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph,                             &
+         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph,                             &
+         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph,                             &
+         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph,                             &
+         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph,                             &
+         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph,                             &
+         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph,                             &
+         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph,                             &
+         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph,                             &
+         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph,                             &
+         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph,                             &
+         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph,                             &
+         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph,                             &
+         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph,                             &
+         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph,                             &
+         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph  &
          )
 
       ! patch loop
@@ -2458,24 +2614,24 @@ contains
                t1 = 2.0_r8 / (onset_counter(p))
             end if
             if (use_matrixcn)then
-               matrix_phtransfer(p,ileaf,ileaf_xf)   = matrix_phtransfer(p,ileaf,ileaf_xf) + t1
-               matrix_phtransfer(p,ifroot,ifroot_xf) = matrix_phtransfer(p,ifroot,ifroot_xf) + t1
-               matrix_nphtransfer(p,ileaf,ileaf_xf)   = matrix_nphtransfer(p,ileaf,ileaf_xf) + t1
-               matrix_nphtransfer(p,ifroot,ifroot_xf) = matrix_nphtransfer(p,ifroot,ifroot_xf) + t1
-              if (woody(ivt(p)) == 1.0_r8) then
+               matrix_phtransfer(p,ileafxf_to_ileaf_phc)   = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + t1
+               matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + t1
+               matrix_nphtransfer(p,ileafxf_to_ileaf_phn)   = matrix_nphtransfer(p,ileafxf_to_ileaf_phn) + t1
+               matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) = matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) + t1
+               if (woody(ivt(p)) == 1.0_r8) then
 
-               matrix_phtransfer(p,ilivestem,ilivestem_xf)   = matrix_phtransfer(p,ilivestem,ilivestem_xf) + t1
-               matrix_phtransfer(p,ideadstem,ideadstem_xf)   = matrix_phtransfer(p,ideadstem,ideadstem_xf) + t1
-               matrix_phtransfer(p,ilivecroot,ilivecroot_xf) = matrix_phtransfer(p,ilivecroot,ilivecroot_xf) + t1
-               matrix_phtransfer(p,ideadcroot,ideadcroot_xf) = matrix_phtransfer(p,ideadcroot,ideadcroot_xf) + t1
+                  matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc)   = matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) + t1
+                  matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc)   = matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) + t1
+                  matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) = matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) + t1
+                  matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) = matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) + t1
 
-               matrix_nphtransfer(p,ilivestem,ilivestem_xf)   = matrix_nphtransfer(p,ilivestem,ilivestem_xf) + t1
-               matrix_nphtransfer(p,ideadstem,ideadstem_xf)   = matrix_nphtransfer(p,ideadstem,ideadstem_xf) + t1
-               matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) = matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) + t1
-               matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) = matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) + t1
-              end if
+                  matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)   = matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) + t1
+                  matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn)   = matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) + t1
+                  matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
+                  matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
+               end if
             end if
-!         if (p .eq.7)print *, '66666',  matrix_phtransfer(p,ilivestem,ilivestem_xf),matrix_nphtransfer(p,ilivestem,ilivestem_xf)
+!         if (p .eq.7)print *, '66666',  matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc),matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)
 !           else
             leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
             frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
@@ -2502,24 +2658,24 @@ contains
          if (bgtr(p) > 0._r8) then
 !            if(p .eq. 2)print*,'onset background'
             if(use_matrixcn)then
-               matrix_phtransfer(p,ileaf,ileaf_xf) = matrix_phtransfer(p,ileaf,ileaf_xf) + 1.0_r8 / dt
-               matrix_phtransfer(p,ifroot,ifroot_xf) = matrix_phtransfer(p,ifroot,ifroot_xf) + 1.0_r8 / dt
-               matrix_nphtransfer(p,ileaf,ileaf_xf) = matrix_nphtransfer(p,ileaf,ileaf_xf) + 1.0_r8 / dt
-               matrix_nphtransfer(p,ifroot,ifroot_xf) = matrix_nphtransfer(p,ifroot,ifroot_xf) + 1.0_r8 / dt
+               matrix_phtransfer(p,ileafxf_to_ileaf_phc) = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + 1.0_r8 / dt
+               matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + 1.0_r8 / dt
+               matrix_nphtransfer(p,ileafxf_to_ileaf_phn) = matrix_nphtransfer(p,ileafxf_to_ileaf_phn) + 1.0_r8 / dt
+               matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) = matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) + 1.0_r8 / dt
                if (woody(ivt(p)) == 1.0_r8) then
    
-                  matrix_phtransfer(p,ilivestem,ilivestem_xf)   = matrix_phtransfer(p,ilivestem,ilivestem_xf) + 1.0_r8 / dt
-                  matrix_phtransfer(p,ideadstem,ideadstem_xf)   = matrix_phtransfer(p,ideadstem,ideadstem_xf) + 1.0_r8 / dt
-                  matrix_phtransfer(p,ilivecroot,ilivecroot_xf) = matrix_phtransfer(p,ilivecroot,ilivecroot_xf) + 1.0_r8 / dt
-                  matrix_phtransfer(p,ideadcroot,ideadcroot_xf) = matrix_phtransfer(p,ideadcroot,ideadcroot_xf) + 1.0_r8 / dt
+                  matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc)   = matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) + 1.0_r8 / dt
+                  matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc)   = matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) + 1.0_r8 / dt
+                  matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) = matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) + 1.0_r8 / dt
+                  matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) = matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) + 1.0_r8 / dt
    
-                  matrix_nphtransfer(p,ilivestem,ilivestem_xf)   = matrix_nphtransfer(p,ilivestem,ilivestem_xf) + 1.0_r8 / dt
-                  matrix_nphtransfer(p,ideadstem,ideadstem_xf)   = matrix_nphtransfer(p,ideadstem,ideadstem_xf) + 1.0_r8 / dt
-                  matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) = matrix_nphtransfer(p,ilivecroot,ilivecroot_xf) + 1.0_r8 / dt
-                  matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) = matrix_nphtransfer(p,ideadcroot,ideadcroot_xf) + 1.0_r8 / dt
+                  matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)   = matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) + 1.0_r8 / dt
+                  matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn)   = matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) + 1.0_r8 / dt
+                  matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + 1.0_r8 / dt
+                  matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + 1.0_r8 / dt
                end if
             end if
-!         if (p .eq.7)print *, '77777', matrix_phtransfer(p,ilivestem,ilivestem_xf), matrix_nphtransfer(p,ilivestem,ilivestem_xf)
+!         if (p .eq.7)print *, '77777', matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc), matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)
 !          else
             leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
             frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
@@ -2622,7 +2778,46 @@ contains
          leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch              , & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
          matrix_nphtransfer    =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch    , & ! Input: N:N ratio for vegetation parts
 !         matrix_n2phtransfer   =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch   , & !
-         matrix_phtransfer     =>    cnveg_carbonflux_inst%matrix_phtransfer_patch       &
+         matrix_phtransfer     =>    cnveg_carbonflux_inst%matrix_phtransfer_patch,      &
+         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,              &
+         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,              &
+         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph,              &
+         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph,              &
+         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph,              &
+         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph,              &
+         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph,              &
+         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph,              &
+         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph,              &
+         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph,              &
+         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph,              &
+         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph,              &
+         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph,              &
+         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph,              &
+         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph,              &
+         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph,              &
+         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph,              &
+         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph,              &
+         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph,              &
+         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph,              &
+         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph,              &
+         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph,              &
+         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph,              &
+         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph,              &
+         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph,              &
+         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph,              &
+         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph,              &
+         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph,              &
+         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph,              &
+         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph,              &
+         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph,              &
+         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph,              &
+         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph,              &
+         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph,              &
+         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph,              &
+         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph,              &
+         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph,              &
+         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph,              &
+         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph              &
          )
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
@@ -2640,10 +2835,10 @@ contains
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                if (use_matrixcn) then
                   if(leafc(p) .gt. 0)then
-                     matrix_phtransfer(p,ioutc,ileaf)  = leafc_to_litter(p) / leafc(p)
+                     matrix_phtransfer(p,ileaf_to_iout_phc)  = leafc_to_litter(p) / leafc(p)
                   end if
                   if(frootc(p) .gt. 0)then
-                     matrix_phtransfer(p,ioutc,ifroot) = frootc_to_litter(p) / frootc(p)
+                     matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                   end if
                end if ! use_matrixcn
                ! this assumes that offset_counter == dt for crops
@@ -2662,13 +2857,13 @@ contains
                   livestemc_to_litter(p) = t1 * livestemc(p)  + cpool_to_livestemc(p)
                   if(use_matrixcn)then
                      if(grainc(p) .gt. 0)then
-                        matrix_phtransfer(p,ioutc,igrain)  = (grainc_to_seed(p) + grainc_to_food(p)) / grainc(p)
+                        matrix_phtransfer(p,igrain_to_iout_phc)  = (grainc_to_seed(p) + grainc_to_food(p)) / grainc(p)
                      end if
                      if(grainn(p) .gt. 0)then
-                        matrix_nphtransfer(p,ioutn,igrain) = (grainn_to_seed(p) + grainn_to_food(p)) / grainn(p)
+                        matrix_nphtransfer(p,igrain_to_iout_phn) = (grainn_to_seed(p) + grainn_to_food(p)) / grainn(p)
                      end if
                      if(livestemc(p) .gt. 0)then
-                        matrix_phtransfer(p,ioutc,ilivestem) = livestemc_to_litter(p) / livestemc(p)
+                        matrix_phtransfer(p,ilivestem_to_iout_phc) = livestemc_to_litter(p) / livestemc(p)
                      end if
                   end if
                end if
@@ -2678,10 +2873,10 @@ contains
                frootc_to_litter(p) = prev_frootc_to_litter(p) + t1*(frootc(p) - prev_frootc_to_litter(p)*offset_counter(p))
                if (use_matrixcn) then
                   if(leafc(p) .gt. 0)then
-                     matrix_phtransfer(p,ioutc,ileaf)  = leafc_to_litter(p) / leafc(p)
+                     matrix_phtransfer(p,ileaf_to_iout_phc)  = leafc_to_litter(p) / leafc(p)
                   end if
                   if(frootc(p) .gt. 0)then
-                     matrix_phtransfer(p,ioutc,ifroot) = frootc_to_litter(p) / frootc(p)
+                     matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                   end if
                end if !use_matrixcn
             end if
@@ -2691,7 +2886,7 @@ contains
                   leafc_to_litter(p) = leafc(p)/dt + cpool_to_leafc(p)
                   if (use_matrixcn) then
                      if(leafc(p) .gt. 0)then
-                        matrix_phtransfer(p,ioutc,ileaf) = leafc_to_litter(p) / leafc(p)
+                        matrix_phtransfer(p,ileaf_to_iout_phc) = leafc_to_litter(p) / leafc(p)
                      end if
                   end if 
                endif
@@ -2699,7 +2894,7 @@ contains
                   frootc_to_litter(p) = frootc(p)/dt + cpool_to_frootc(p)
                   if (use_matrixcn) then
                      if(frootc(p) .gt. 0)then
-                        matrix_phtransfer(p,ioutc,ifroot) = frootc_to_litter(p) / frootc(p)
+                        matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                      end if
                   end if
                end if
@@ -2721,8 +2916,8 @@ contains
                leafn_to_litter(p)          =  max(leafn_to_litter(p),0._r8)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                      matrix_nphtransfer(p,ioutn,ileaf)       = (leafn_to_litter(p)) / leafn(p)
-                      matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p)) / leafn(p)
+                      matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p)) / leafn(p)
+                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p)) / leafn(p)
                   end if
                end if 
                
@@ -2744,8 +2939,8 @@ contains
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                      matrix_nphtransfer(p,ioutn,ileaf)       = (leafn_to_litter(p))/ leafn(p)
-                      matrix_nphtransfer(p,iretransn,ileaf)   = (leafn_to_retransn(p))/ leafn(p)
+                      matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p))/ leafn(p)
+                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)   = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
             end if    
@@ -2754,7 +2949,7 @@ contains
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
             if (use_matrixcn) then   
                if(frootn(p) .gt. 0)then
-                  matrix_nphtransfer(p,ioutn,ifroot)  = frootn_to_litter(p) / frootn(p)
+                  matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
                end if
             end if
             
@@ -2769,8 +2964,8 @@ contains
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                      matrix_nphtransfer(p,ioutn,ileaf)  = (leafn_to_litter(p))/ leafn(p)
-                      matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
+                      matrix_nphtransfer(p,ileaf_to_iout_phn)  = (leafn_to_litter(p))/ leafn(p)
+                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
                if (frootc(p) == 0.0_r8) then    
@@ -2780,7 +2975,7 @@ contains
                end if   
                if (use_matrixcn) then   
                   if(frootn(p) .gt. 0)then
-                     matrix_nphtransfer(p,ioutn,ifroot)  = frootn_to_litter(p) / frootn(p)
+                     matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
                   end if
                end if
             end if  
@@ -2789,7 +2984,7 @@ contains
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
                   frootn_to_litter(p) = frootn(p)/dt
                   if (use_matrixcn) then   
-                     matrix_nphtransfer(p,ioutn,ifroot) = 1.0_r8 / dt
+                     matrix_nphtransfer(p,ifroot_to_iout_phn) = 1.0_r8 / dt
                   end if
                end if    
             end if
@@ -2800,7 +2995,7 @@ contains
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
                livestemn_to_litter(p) = livestemn(p) / dt
                if(use_matrixcn)then
-                  matrix_nphtransfer(p,ioutn,ilivestem) = 1.0_r8 / dt
+                  matrix_nphtransfer(p,ilivestem_to_iout_phn) = 1.0_r8 / dt
                end if
             end if
 
@@ -2871,7 +3066,46 @@ contains
          paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch   , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)
          matrix_nphtransfer      =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch , & !	
 !         matrix_n2phtransfer      =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch , & !		 
-         matrix_phtransfer       =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  &	 
+         matrix_phtransfer       =>    cnveg_carbonflux_inst%matrix_phtransfer_patch,  &	 
+         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,               &
+         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,               &
+         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph,               &
+         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph,               &
+         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph,               &
+         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph,               &
+         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph,               &
+         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph,               &
+         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph,               &
+         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph,               &
+         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph,               &
+         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph,               &
+         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph,               &
+         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph,               &
+         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph,               &
+         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph,               &
+         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph,               &
+         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph,               &
+         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph,               &
+         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph,               &
+         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph,               &
+         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph,               &
+         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph,               &
+         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph,               &
+         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph,               &
+         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph,               &
+         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph,               &
+         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph,               &
+         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph,               &
+         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph,               &
+         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph,               &
+         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph,               &
+         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph,               &
+         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph,               &
+         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph,               &
+         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph,               &
+         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph,               &
+         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph,               &
+         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph               &
          )
 
       ! patch loop
@@ -2884,8 +3118,8 @@ contains
             leafc_to_litter(p)  = bglfr(p) * leafc(p)
             frootc_to_litter(p) = bglfr(p) * frootc(p)
             if (use_matrixcn) then
-               matrix_phtransfer(p,ioutc,ileaf)  = bglfr(p)
-               matrix_phtransfer(p,ioutc,ifroot) = bglfr(p)
+               matrix_phtransfer(p,ileaf_to_iout_phc)  = bglfr(p)
+               matrix_phtransfer(p,ifroot_to_iout_phc) = bglfr(p)
             end if
             if ( use_fun ) then
                leafc_to_litter_fun(p)     = leafc_to_litter(p)
@@ -2903,8 +3137,8 @@ contains
                leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)  
                if(use_matrixcn)then
                   if(leafn(p) .ne. 0._r8)then
-                     matrix_nphtransfer(p,ioutn,ileaf)      = (leafn_to_litter(p))/ leafn(p)
-                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
+                     matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
+                     matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
 
@@ -2927,8 +3161,8 @@ contains
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .ne. 0)then
-                     matrix_nphtransfer(p,ioutn,ileaf)      = (leafn_to_litter(p)) / leafn(p)
-                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
+                     matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p)) / leafn(p)
+                     matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
             end if    
@@ -2947,8 +3181,8 @@ contains
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                     matrix_nphtransfer(p,ioutn,ileaf)      = (leafn_to_litter(p))/ leafn(p)
-                     matrix_nphtransfer(p,iretransn,ileaf)  = (leafn_to_retransn(p))/ leafn(p)
+                     matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
+                     matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
                end if
                if (frootc(p) == 0.0_r8) then    
@@ -2966,13 +3200,13 @@ contains
 
             if (use_matrixcn) then   
                if(frootn(p) .ne. 0)then
-                  matrix_nphtransfer(p,ioutn,ifroot) = frootn_to_litter(p) / frootn(p)
+                  matrix_nphtransfer(p,ifroot_to_iout_phn) = frootn_to_litter(p) / frootn(p)
                end if
             end if
          end if
 
       end do
-!matrix for leafn_to_restransn will be added in allocation subroutine
+!matrix for leafn_to_retransn will be added in allocation subroutine
     end associate 
    
   end subroutine CNBackgroundLitterfall
@@ -3024,7 +3258,46 @@ contains
          livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch   , & ! Output: [real(r8) (:) ] 
          matrix_nphtransfer        =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch        , & !
 !         matrix_n2phtransfer       =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch   , & !
-         matrix_phtransfer        =>    cnveg_carbonflux_inst%matrix_phtransfer_patch  & 
+         matrix_phtransfer        =>    cnveg_carbonflux_inst%matrix_phtransfer_patch,  & 
+         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,         &
+         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,         &
+         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph,         &
+         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph,         &
+         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph,         &
+         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph,         &
+         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph,         &
+         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph,         &
+         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph,         &
+         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph,         &
+         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph,         &
+         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph,         &
+         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph,         &
+         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph,         &
+         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph,         &
+         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph,         &
+         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph,         &
+         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph,         &
+         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph,         &
+         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph,         &
+         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph,         &
+         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph,         &
+         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph,         &
+         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph,         &
+         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph,         &
+         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph,         &
+         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph,         &
+         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph,         &
+         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph,         &
+         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph,         &
+         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph,         &
+         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph,         &
+         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph,         &
+         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph,         &
+         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph,         &
+         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph,         &
+         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph,         &
+         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph,         &
+         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph         &
          )
 
 
@@ -3043,8 +3316,8 @@ contains
             livestemc_to_deadstemc(p) = ctovr
             livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))  
             if(use_matrixcn)then
-               matrix_phtransfer(p,ideadstem,ilivestem)  = lwtop
-               matrix_nphtransfer(p,ideadstem,ilivestem) = lwtop / deadwdcn(ivt(p))
+               matrix_phtransfer(p,ilivestem_to_ideadstem_phc)  = lwtop
+               matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = lwtop / deadwdcn(ivt(p))
             end if
         
             if (CNratio_floating .eqv. .true.) then    
@@ -3057,7 +3330,7 @@ contains
                if (use_matrixcn)then 
                   if (livestemn(p) .gt. 0.0_r8) then
 !                    matrix_nphtransfer(p,ideadstem,ilivestem) = matrix_nphtransfer(p,ideadstem,ilivestem) + lwtop!ntovr/livestemn(p)
-                     matrix_nphtransfer(p,ideadstem,ilivestem) = livestemn_to_deadstemn(p) / livestemn(p)
+                     matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = livestemn_to_deadstemn(p) / livestemn(p)
                   end if
                end if
             end if    
@@ -3066,7 +3339,7 @@ contains
             !matrix for livestemn_to_retransn will be added in allocation subroutine
 !            if (use_matrixcn)then !move to the end
 !               if(livestemn(p) .gt. 0.0_r8) then
-!                  matrix_nphtransfer(p,iretransn,ilivestem) = livestemn_to_retransn(p) / livestemn(p)
+!                  livestem_to_ideadstem_phnmatrix_nphtransfer(p,ilivestem_to_iretransn_phn) = livestemn_to_retransn(p) / livestemn(p)
 !               end if
 !            end if
 
@@ -3079,8 +3352,8 @@ contains
             livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
 !            if(p .eq. 8)print*,'livecrootc_to_deadcrootc',livecrootc_to_deadcrootc(p),livecrootc(p),lwtop
             if(use_matrixcn)then
-               matrix_phtransfer(p,ideadcroot,ilivecroot)  = lwtop
-               matrix_nphtransfer(p,ideadcroot,ilivecroot) = lwtop / deadwdcn(ivt(p))
+               matrix_phtransfer(p,ilivecroot_to_ideadcroot_phc)  = lwtop
+               matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = lwtop / deadwdcn(ivt(p))
             end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
@@ -3093,8 +3366,8 @@ contains
                livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
                if (use_matrixcn)then 
                   if (livecrootn(p) .ne.0.0_r8 )then
-!                     matrix_nphtransfer(p,ideadcroot,ilivecroot) = matrix_nphtransfer(p,ideadcroot,ilivecroot) + lwtop!ntovr/livecrootn(p)
-                     matrix_nphtransfer(p,ideadcroot,ilivecroot) = livecrootn_to_deadcrootn(p) / livecrootn(p)
+!                     matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) + lwtop!ntovr/livecrootn(p)
+                     matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = livecrootn_to_deadcrootn(p) / livecrootn(p)
                   end if
                end if
             end if    
@@ -3107,10 +3380,10 @@ contains
             endif
             if(use_matrixcn)then
                if(livecrootn(p) .gt. 0.0_r8) then
-                  matrix_nphtransfer(p,iretransn,ilivecroot) = livecrootn_to_retransn(p) / livecrootn(p)
+                  matrix_nphtransfer(p,ilivecroot_to_iretransn_phn) = livecrootn_to_retransn(p) / livecrootn(p)
                end if
                if(livestemn(p) .gt. 0.0_r8) then
-                  matrix_nphtransfer(p,iretransn,ilivestem)  = livestemn_to_retransn(p) / livestemn(p)
+                  matrix_nphtransfer(p,ilivestem_to_iretransn_phn)  = livestemn_to_retransn(p) / livestemn(p)
                end if
             end if
                
@@ -3335,7 +3608,7 @@ contains
     end associate 
 
   end subroutine CNLitterToColumn
-!  subroutine vegc_phtransfer(ito,ifrom,default_transfer,matrix_transfer,vegcpool,tran_rate,p)
+!  subroutine vegc_phtransfer(p,ito,ifrom,default_transfer,matrix_transfer,vegcpool,tran_rate)
   
     ! !ARGUMENTS:
 !    integer :: ifrom

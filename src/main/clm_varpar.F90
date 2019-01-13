@@ -90,6 +90,21 @@ module clm_varpar
   integer, parameter :: igrain        = 19
   integer, parameter :: igrain_st     = 20
   integer, parameter :: igrain_xf     = 21
+
+  integer            :: ncphtrans               !maximum number of vegetation C transfers through phenology
+  integer            :: ncphouttrans            !maximum number of vegetation C transfers out of vegetation through phenology
+  integer            :: ncgmtrans               !maximum number of vegetation C transfers through gap mortality
+  integer            :: ncgmouttrans            !maximum number of vegetation C transfers out of vegetation through gap mortality
+  integer            :: ncfitrans               !maximum number of vegetation C transfers through fire
+  integer            :: ncfiouttrans            !maximum number of vegetation C transfers out of vegetation trhough fire
+  integer            :: nnphtrans               !maximum number of vegetation N transfers through phenology
+  integer            :: nnphouttrans            !maximum number of vegetation N transfers out of vegetation through phenology
+  integer            :: nngmtrans               !maximum number of vegetation N transfers through gap mortality
+  integer            :: nngmouttrans            !maximum number of vegetation N transfers out of vegetation through gap mortality
+  integer            :: nnfitrans               !maximum number of vegetation N transfers through fire
+  integer            :: nnfiouttrans            !maximum number of vegetation N transfers out of vegetation trhough fire
+
+  
   integer            :: iretransn     
      
   integer            :: ioutc 
@@ -97,6 +112,7 @@ module clm_varpar
 
   integer :: ndecomp_pools
   integer :: ndecomp_cascade_transitions
+  integer :: ndecomp_cascade_outtransitions
 ! for soil matrix 
  integer :: ndecomp_pools_vr   !total number of pools ndecomp_pools*vertical levels
 
@@ -237,18 +253,36 @@ contains
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
+          ndecomp_cascade_outtransitions = 0
        else
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9
+          ndecomp_cascade_outtransitions = 1
        end if
     endif
     ndecomp_pools_vr = ndecomp_pools * nlevdecomp
     
     if (use_crop)then
        nvegcpool = nvegpool_natveg + nvegpool_crop
+       ncphtrans = 18
+       nnphtrans = 37
+       ncphouttrans = 4
+       nnphouttrans = 5
     else
        nvegcpool = nvegpool_natveg
+       ncphtrans = 17
+       nnphtrans = 34
+       ncphouttrans = 3
+       nnphouttrans = 4
     end if
+    ncgmtrans = 18   
+    ncgmouttrans = 18   
+    ncfitrans = 20 
+    ncfiouttrans = 18   
+    nngmtrans = 19   
+    nngmouttrans = 19   
+    nnfitrans = 21 
+    nnfiouttrans = 19 
     nvegnpool = nvegcpool + 1
     iretransn = nvegnpool
     ioutc = nvegcpool + 1

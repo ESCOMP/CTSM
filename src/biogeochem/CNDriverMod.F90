@@ -39,6 +39,7 @@ module CNDriverMod
   use ch4Mod                          , only : ch4_type
   use EnergyFluxType                  , only : energyflux_type
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
+  use ColumnType                      , only : col
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -79,7 +80,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec,    &
+       num_actfirep, filter_actfirep, num_pcropp, filter_pcropp, doalb, &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
        c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,                              &
@@ -142,6 +144,10 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(out)   :: num_actfirep         ! number of soil patches on fire in filter
+    integer                                 , intent(out)   :: filter_actfirep(:)   ! filter for soil patches on fire
+    integer                                 , intent(out)   :: num_actfirec         ! number of soil columns on fire in filter
+    integer                                 , intent(out)   :: filter_actfirec(:)   ! filter for soil columns on fire
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
@@ -225,6 +231,7 @@ contains
 
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without this, the filter is full of garbage
     ! in some situations
+    call t_startf('CNZero-soilbgc-cflux')
     dummy_to_make_pgi_happy = ubound(filter_soilc, 1)
     call soilbiogeochem_carbonflux_inst%SetValues( &
          num_soilc, filter_soilc, 0._r8)
@@ -236,7 +243,9 @@ contains
        call c14_soilbiogeochem_carbonflux_inst%SetValues( &
             num_soilc, filter_soilc, 0._r8)
     end if
+    call t_stopf('CNZero-soilbgc-cflux')
 
+    call t_startf('CNZero-vegbgc-cflux')
     call cnveg_carbonflux_inst%SetValues( nvegcpool,&
          num_soilp, filter_soilp, 0._r8, &
          num_soilc, filter_soilc, 0._r8)
@@ -250,14 +259,20 @@ contains
             num_soilp, filter_soilp, 0._r8, &
             num_soilc, filter_soilc, 0._r8)
     end if
+    call t_stopf('CNZero-vegbgc-cflux')
 
+    call t_startf('CNZero-vegbgc-nflux')
     call cnveg_nitrogenflux_inst%SetValues(nvegnpool, &
          num_soilp, filter_soilp, 0._r8, &
          num_soilc, filter_soilc, 0._r8)
 
+    call t_stopf('CNZero-vegbgc-nflux')
+
+    call t_startf('CNZero-soilbgc-nflux')
     call soilbiogeochem_nitrogenflux_inst%SetValues( &
          num_soilc, filter_soilc, 0._r8)
 
+    call t_stopf('CNZero-soilbgc-nflux')
     call t_stopf('CNZero')
 
     ! --------------------------------------------------
@@ -348,10 +363,8 @@ contains
     ! do_nutrient_competition should be modified, but that modification should not significantly change 
     ! the current interface.
 !     if(begp .le. 8428 .and. endp .ge. 8428)then
-!        print*,'before CNPhenology',cnveg_carbonstate_inst%deadcrootc_patch(8428)
 !     end if
      !RF: moved ths call to before nutrient_demand, so that croplive didn't change half way through crop N cycle. 
-!     print*,'deadcrootn before phenology',cnveg_nitrogenstate_inst%deadcrootn_patch
      if ( use_fun ) then
        call t_startf('CNPhenology_phase1')
        call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
@@ -517,7 +530,6 @@ contains
     end if
 
     call t_stopf('CNUpdate0')
-!    if(bounds%begp .le. 5228 .and. bounds%endp .ge. 5228)print*,'after CStateupdate0',cnveg_carbonstate_inst%grainc_patch(5228),cnveg_carbonstate_inst%grainc_storage_patch(5228),cnveg_carbonstate_inst%grainc_xfer_patch(5228)
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
@@ -554,14 +566,10 @@ contains
     end if
 
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
-!     if(begp .le. 8428 .and. endp .ge. 8428)then
-!        print*,'before udate1,deadcrootc',c13_cnveg_carbonstate_inst%deadcrootc_patch(:)
-!     end if
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst)
     if ( use_c13 ) then
-!       print*,'use_c13'
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
             c13_soilbiogeochem_carbonflux_inst)
@@ -579,7 +587,6 @@ contains
 
     call t_stopf('CNUpdate1')
 
-!    if(bounds%begp .le. 5228 .and. bounds%endp .ge. 5228)print*,'after CStateupdate1',cnveg_carbonstate_inst%grainc_patch(5228),cnveg_carbonstate_inst%grainc_storage_patch(5228),cnveg_carbonstate_inst%grainc_xfer_patch(5228)
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
@@ -607,8 +614,6 @@ contains
          c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
 
-!    if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil after SoilBiogeochemLittVertTransp',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!    if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil after SoilBiogeochemLittVertTransp',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
     call t_stopf('SoilBiogeochemLittVertTransp')
 
     !--------------------------------------------
@@ -625,8 +630,6 @@ contains
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full), & 
          croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full), &
          stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full))   
-!    if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil after CNGapMortality',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!    if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil after CNGapMortality',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
 
     call t_stopf('CNGapMortality')
 
@@ -651,9 +654,6 @@ contains
             iso_cnveg_carbonstate_inst=c14_cnveg_carbonstate_inst,                    &
             isotope='c14')
     end if
-!     if(begp .le. 8428 .and. endp .ge. 8428)then
-!        print*,'before udate2',cnveg_carbonstate_inst%deadcrootc_patch(8428)
-!     end if
 
     ! Update all the prognostic carbon state variables affected by gap-phase mortality fluxes
     call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -700,9 +700,6 @@ contains
             c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
             isotope='c14')
     end if
-!     if(begp .le. 8428 .and. endp .ge. 8428)then
-!        print*,'before udate2h',cnveg_carbonstate_inst%deadcrootc_patch(8428)
-!     end if
 
     call CStateUpdate2h( num_soilc, filter_soilc,  num_soilp, filter_soilp, &
          cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
@@ -723,7 +720,6 @@ contains
          soilbiogeochem_nitrogenflux_inst)
     call t_stopf('CNUpdate2')
 
-!    if(bounds%begp .le. 5228 .and. bounds%endp .ge. 5228)print*,'after CStateupdate2',cnveg_carbonstate_inst%grainc_patch(5228),cnveg_carbonstate_inst%grainc_storage_patch(5228),cnveg_carbonstate_inst%grainc_xfer_patch(5228)
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
@@ -735,8 +731,6 @@ contains
     ! Calculate loss fluxes from wood products pools
     ! and update product pool state variables
     !--------------------------------------------
-!    if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil after NStateUpdate2h',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!    if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil after NStateUpdate2h',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
     call t_startf('CNWoodProducts')
     call c_products_inst%UpdateProducts(bounds, &
          num_soilp, filter_soilp, &
@@ -775,8 +769,6 @@ contains
     ! Calculate fire area and fluxes
     !--------------------------------------------
 
-!    if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil before fire',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!    if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil before fire',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
     call t_startf('CNFire')
     call cnfire_method%CNFireArea(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
          atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
@@ -785,11 +777,8 @@ contains
          decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
          t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
 
-!    if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil before fire',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!    if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil before fire',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
-
-    call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                      &
-         dgvs_inst, soilbiogeochem_carbonflux_inst, cnveg_state_inst,                                                                                              &
+    call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec,       &
+         num_actfirep, filter_actfirep, dgvs_inst, soilbiogeochem_carbonflux_inst, cnveg_state_inst,                               &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
@@ -801,8 +790,6 @@ contains
          somc_fire_col=soilbiogeochem_carbonflux_inst%somc_fire_col(begc:endc))
     call t_stopf('CNFire')
 
-!if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil after fire',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil after fire',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
 
     !--------------------------------------------
     ! Update3
@@ -825,14 +812,10 @@ contains
             c14_soilbiogeochem_carbonstate_inst, &
             isotope='c14')
     end if
-!     if(begp .le. 8428 .and. endp .ge. 8428)then
-!        print*,'before udate3',cnveg_carbonstate_inst%deadcrootc_patch(8428)
-!     end if
 
     call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst,bounds%begp)
-
     if ( use_c13 ) then
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
@@ -849,7 +832,6 @@ contains
     end if
     call t_stopf('CNUpdate3')
 
-!    if(bounds%begp .le. 5228 .and. bounds%endp .ge. 5228)print*,'after CStateupdate3',cnveg_carbonstate_inst%grainc_patch(5228),cnveg_carbonstate_inst%grainc_storage_patch(5228),cnveg_carbonstate_inst%grainc_xfer_patch(5228)
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
@@ -857,14 +839,9 @@ contains
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
     end if
-!     if(begp .le. 8428 .and. endp .ge. 8428)then
-!        print*,'before CNVEGmatrix',cnveg_carbonstate_inst%deadcrootc_patch(8428)
-!     end if
 
 !!!!!!!soil matrix!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil end of NoLeaching',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil end of NoLeaching',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
 
     end associate
 
@@ -872,7 +849,7 @@ contains
   
   !-----------------------------------------------------------------------
   subroutine CNDriverLeaching(bounds, &
-       num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,&
        waterstatebulk_inst, waterfluxbulk_inst, soilstate_inst, cnveg_state_inst, &
        cnveg_carbonflux_inst,cnveg_carbonstate_inst,soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
@@ -899,6 +876,10 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_actfirec         ! number of soil columns on fire in filter
+    integer                                 , intent(in)    :: filter_actfirec(1:num_actfirec)   ! filter for soil columns on fire
+    integer                                 , intent(in)    :: num_actfirep         ! number of soil patches on fire in filter
+    integer                                 , intent(in)    :: filter_actfirep(1:num_actfirep)   ! filter for soil patches on fire
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterfluxbulk_type)                    , intent(inout)    :: waterfluxbulk_inst
     type(cnveg_state_type)                  , intent(inout) :: cnveg_state_inst
@@ -940,32 +921,29 @@ contains
 
     call t_stopf('NUpdate3')
 
-!    if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil after NSupdate3',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!    if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil after NSupdate3',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
     if(use_matrixcn)then
        call t_startf('CNVMatrix')
-       call CNVegMatrix(bounds,num_soilp,filter_soilp, cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
+       call CNVegMatrix(bounds,num_soilp,filter_soilp,num_actfirep,filter_actfirep(1:num_actfirec),cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
                          cnveg_carbonflux_inst,  cnveg_nitrogenflux_inst,cnveg_state_inst,soilbiogeochem_nitrogenflux_inst,&
                          c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst,c13_cnveg_carbonflux_inst,&
                          c14_cnveg_carbonflux_inst)
        call t_stopf('CNVMatrix')
     end if
 
-!    if(bounds%begc .le. 340 .and. bounds%endc .ge. 340)print*,'matrix Ninput to soil after CNVegMatrix',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!    if(bounds%begc .le. 743 .and. bounds%endc .ge. 743)print*,'matrix Ninput to soil after CNVegMatrix',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
     if(use_soil_matrixcn)then
        call t_startf('CNSoilMatrix')
-       call CNSoilMatrix(bounds,num_soilc, filter_soilc, &
+!       print*,'before CNSoilMatrix'!,soilbiogeochem_nitrogenstate_inst%tran_nacc(1,120,120)
+       call CNSoilMatrix(bounds,num_soilc, filter_soilc, num_actfirec, filter_actfirec(1:num_actfirec), &
        cnveg_carbonflux_inst,soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
        cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst, &
        soilbiogeochem_nitrogenstate_inst,c13_soilbiogeochem_carbonstate_inst,&
        c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonstate_inst,&
        c14_soilbiogeochem_carbonflux_inst)  
+!       print*,'after CNSoilMatrix'
     call t_stopf('CNSoilMatrix')
     end if
     
-
   end subroutine CNDriverLeaching
 
   !-----------------------------------------------------------------------

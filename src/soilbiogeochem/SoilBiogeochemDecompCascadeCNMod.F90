@@ -11,12 +11,12 @@ module SoilBiogeochemDecompCascadeCNMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
+  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates, use_soil_matrixcn
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
   use CNSharedParamsMod                  , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, InitSoilTransfer
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilStateType                      , only : soilstate_type
@@ -489,49 +489,95 @@ contains
       cascade_receiver_pool(i_l3s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s3) = 1.0_r8
 
-      i_s1s2 = 4
-      decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2
-      cascade_donor_pool(i_s1s2) = i_soil1
-      cascade_receiver_pool(i_s1s2) = i_soil2
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = 1.0_r8
-
-      i_s2s3 = 5
-      decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
-      cascade_donor_pool(i_s2s3) = i_soil2
-      cascade_receiver_pool(i_s2s3) = i_soil3
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 1.0_r8
-
-      i_s3s4 = 6 
-      decomp_cascade_con%cascade_step_name(i_s3s4) = 'S3S4'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = rf_s3s4
-      cascade_donor_pool(i_s3s4) = i_soil3
-      cascade_receiver_pool(i_s3s4) = i_soil4
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = 1.0_r8
-
-      i_s4atm = 7
-      decomp_cascade_con%cascade_step_name(i_s4atm) = 'S4'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.
-      cascade_donor_pool(i_s4atm) = i_soil4
-      cascade_receiver_pool(i_s4atm) = i_atm
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.0_r8
-
-      if (.not. use_fates) then
-         i_cwdl2 = 8
+      if (use_soil_matrixcn)then !use fates will automatically turn off use_soil_matrixcn
+         i_cwdl2 = 4
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 0._r8
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_litr2
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
          
-         i_cwdl3 = 9
+         i_cwdl3 = 5
          decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = 0._r8
          cascade_donor_pool(i_cwdl3) = i_cwd
          cascade_receiver_pool(i_cwdl3) = i_litr3
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
+
+         i_s1s2 = 6
+         decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2
+         cascade_donor_pool(i_s1s2) = i_soil1
+         cascade_receiver_pool(i_s1s2) = i_soil2
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = 1.0_r8
+
+         i_s2s3 = 7
+         decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
+         cascade_donor_pool(i_s2s3) = i_soil2
+         cascade_receiver_pool(i_s2s3) = i_soil3
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 1.0_r8
+
+         i_s3s4 = 8 
+         decomp_cascade_con%cascade_step_name(i_s3s4) = 'S3S4'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = rf_s3s4
+         cascade_donor_pool(i_s3s4) = i_soil3
+         cascade_receiver_pool(i_s3s4) = i_soil4
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = 1.0_r8
+
+         i_s4atm = 9
+         decomp_cascade_con%cascade_step_name(i_s4atm) = 'S4'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.
+         cascade_donor_pool(i_s4atm) = i_soil4
+         cascade_receiver_pool(i_s4atm) = i_atm
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.0_r8
+      else
+         i_s1s2 = 4
+         decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2
+         cascade_donor_pool(i_s1s2) = i_soil1
+         cascade_receiver_pool(i_s1s2) = i_soil2
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = 1.0_r8
+
+         i_s2s3 = 5
+         decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
+         cascade_donor_pool(i_s2s3) = i_soil2
+         cascade_receiver_pool(i_s2s3) = i_soil3
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 1.0_r8
+
+         i_s3s4 = 6 
+         decomp_cascade_con%cascade_step_name(i_s3s4) = 'S3S4'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = rf_s3s4
+         cascade_donor_pool(i_s3s4) = i_soil3
+         cascade_receiver_pool(i_s3s4) = i_soil4
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = 1.0_r8
+
+         i_s4atm = 7
+         decomp_cascade_con%cascade_step_name(i_s4atm) = 'S4'
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.
+         cascade_donor_pool(i_s4atm) = i_soil4
+         cascade_receiver_pool(i_s4atm) = i_atm
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.0_r8
+
+         if (.not. use_fates) then
+            i_cwdl2 = 8
+            decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
+            rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 0._r8
+            cascade_donor_pool(i_cwdl2) = i_cwd
+            cascade_receiver_pool(i_cwdl2) = i_litr2
+            pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
+         
+            i_cwdl3 = 9
+            decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
+            rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = 0._r8
+            cascade_donor_pool(i_cwdl3) = i_cwd
+            cascade_receiver_pool(i_cwdl3) = i_litr3
+            pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
+         end if
       end if
+
+      if(use_soil_matrixcn)call InitSoilTransfer()
 
     end associate
 

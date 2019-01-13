@@ -148,7 +148,7 @@ contains
     real(r8) :: a_p_0
     real(r8) :: deficit
     integer  :: ntype
-    integer  :: i_type,s,fc,c,j,l                                                  ! indices
+    integer  :: i_type,s,fc,c,j,l,i                                                ! indices
     integer  :: jtop(bounds%begc:bounds%endc)                                      ! top level at each column
     real(r8) :: dtime                                                              ! land model time step (sec)
     integer  :: zerolev_diffus
@@ -157,7 +157,7 @@ contains
     real(r8), pointer :: conc_ptr(:,:,:)                                           ! pointer, concentration state variable being transported
     real(r8), pointer :: source(:,:,:)                                             ! pointer, source term
     real(r8), pointer :: trcr_tendency_ptr(:,:,:)                                  ! poiner, store the vertical tendency (gain/loss due to vertical transport)
-    real(r8), pointer :: matrix_input(:,:,:)                                  ! poiner, store the vertical tendency (gain/loss due to vertical transport)
+    real(r8), pointer :: matrix_input(:,:)                                  ! poiner, store the vertical tendency (gain/loss due to vertical transport)
     !-----------------------------------------------------------------------
 
     ! Set statement functions
@@ -172,9 +172,10 @@ contains
 
          som_adv_coef     => soilbiogeochem_state_inst%som_adv_coef_col ,  & ! Output: [real(r8) (:,:) ]  SOM advective flux (m/s)                               
          som_diffus_coef  => soilbiogeochem_state_inst%som_diffus_coef_col, & ! Output: [real(r8) (:,:) ]  SOM diffusivity due to bio/cryo-turbation (m2/s)  
-         matrix_a_tri     => soilbiogeochem_carbonflux_inst%matrix_a_tri_col, & ! Output: "A"-for matrix 
-         matrix_b_tri     => soilbiogeochem_carbonflux_inst%matrix_b_tri_col, & ! Output: "B"-for matrix
-         matrix_c_tri     => soilbiogeochem_carbonflux_inst%matrix_c_tri_col  & ! Output: "C"-for matrix
+         tri_ma_vr        => soilbiogeochem_carbonflux_inst%tri_ma_vr &
+!        matrix_a_tri     => soilbiogeochem_carbonflux_inst%matrix_a_tri_col, & ! Output: "A"-for matrix 
+!        matrix_b_tri     => soilbiogeochem_carbonflux_inst%matrix_b_tri_col, & ! Output: "B"-for matrix
+!        matrix_c_tri     => soilbiogeochem_carbonflux_inst%matrix_c_tri_col  & ! Output: "C"-for matrix
          )
 
       !Set parameters of vertical mixing of SOM
@@ -257,13 +258,13 @@ contains
             conc_ptr          => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col
             source            => soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col
             trcr_tendency_ptr => soilbiogeochem_carbonflux_inst%decomp_cpools_transport_tendency_col
-            matrix_input      => soilbiogeochem_carbonflux_inst%matrix_input_col
+            matrix_input      => soilbiogeochem_carbonflux_inst%matrix_Cinput%V
          case (2)  ! N
             if (use_cn ) then
                conc_ptr          => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col
                source            => soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col
                trcr_tendency_ptr => soilbiogeochem_nitrogenflux_inst%decomp_npools_transport_tendency_col
-               matrix_input      => soilbiogeochem_nitrogenflux_inst%matrix_input_col
+               matrix_input      => soilbiogeochem_nitrogenflux_inst%matrix_Ninput%V
             endif
          case (3)
             if ( use_c13 ) then
@@ -418,9 +419,13 @@ contains
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr(c,j)
  !if use soil_matrix                          
                            if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then !vertical matrix are the same for all pools
-                              matrix_a_tri(c,j) = a_tri(c,j) 
-                              matrix_c_tri(c,j) = c_tri(c,j)
-                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
+!                              matrix_a_tri(c,j) = a_tri(c,j) 
+!                              matrix_c_tri(c,j) = c_tri(c,j)
+!                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
+                              do i = 1,ndecomp_pools-1 !excluding cwd
+                                 tri_ma_vr(c,1+(i-1)*(nlevdecomp*3-2)) = (b_tri(c,j) - a_p_0) / dzsoi_decomp(j) * (-dtime)
+                                 tri_ma_vr(c,3+(i-1)*(nlevdecomp*3-2)) = c_tri(c,j) / dzsoi_decomp(j) * (-dtime)
+                              end do
                            end if
                         elseif (j < nlevdecomp+1) then
                            a_tri(c,j) = -(d_m1_zm1(c,j) * aaa(pe_m1(c,j)) + max( f_m1(c,j), 0._r8)) ! Eqn 5.47 Patankar
@@ -429,9 +434,16 @@ contains
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
    !if use soil_matrix     
                            if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then                   
-                              matrix_a_tri(c,j) = a_tri(c,j) ! Eqn 5.47 Patankar
-                              matrix_c_tri(c,j) = c_tri(c,j)
-                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
+!                              matrix_a_tri(c,j) = a_tri(c,j) ! Eqn 5.47 Patankar
+!                              matrix_c_tri(c,j) = c_tri(c,j)
+!                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
+                              do i = 1,ndecomp_pools-1
+                                 tri_ma_vr(c,j*3-4+(i-1)*(nlevdecomp*3-2)) = a_tri(c,j) / dzsoi_decomp(j) * (-dtime)
+                                 if(j .ne. nlevdecomp)then
+                                    tri_ma_vr(c,j*3  +(i-1)*(nlevdecomp*3-2)) = c_tri(c,j) / dzsoi_decomp(j) * (-dtime)
+                                 end if
+                                 tri_ma_vr(c,j*3-2+(i-1)*(nlevdecomp*3-2)) = (b_tri(c,j) - a_p_0) / dzsoi_decomp(j) * (-dtime)
+                              end do
                            end if
                         else ! j==nlevdecomp+1; 0 concentration gradient at bottom
                            a_tri(c,j) = -1._r8
@@ -485,7 +497,7 @@ contains
 !                           if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
 !                              print*,'matrix_input in Vertical transfer',i_type,c,j,s,matrix_input(c,1,1),source(c,1,1)
 !                           end if
-                           matrix_input(c,j,s) = matrix_input(c,j,s) + source(c,j,s)
+                           matrix_input(c,j+(s-1)*nlevdecomp) = matrix_input(c,j+(s-1)*nlevdecomp) + source(c,j,s)
                         end do
                      end do
                   end if  !soil_matrix
@@ -497,7 +509,7 @@ contains
                         if(.not. use_soil_matrixcn)then
                            conc_trcr(c,j) = conc_ptr(c,j,s) + source(c,j,s)
                         else
-                           matrix_input(c,j,s) = matrix_input(c,j,s) + source(c,j,s)
+                           matrix_input(c,j+(s-1)*nlevdecomp) = matrix_input(c,j+(s-1)*nlevdecomp) + source(c,j,s)
                         end if
                         if (j > col%nbedrock(c) .and. source(c,j,s) > 0._r8) then 
                            write(iulog,*) 'source >0',c,j,s,source(c,j,s)

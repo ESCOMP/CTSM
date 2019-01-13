@@ -160,7 +160,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Determine processor bounds and clumps for this processor
-
+!    print*,'begin of clmdriver'
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
@@ -399,8 +399,7 @@ contains
 
     ! Get time as of beginning of time step
     call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
-   !print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
-    !print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
+!    print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
 
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
@@ -408,6 +407,7 @@ contains
 
        call t_startf('drvinit')
 
+!       if(bounds_clump%begc .le. 114236 .and. bounds_clump%endc .ge. 114236)print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
        call UpdateDaylength(bounds_clump, declin=declin, obliquity=obliqr)
 
        ! Initialze variables needed for new driver time step 
@@ -845,6 +845,8 @@ contains
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
+                  filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
+                  filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
                   filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,              &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
@@ -906,6 +908,8 @@ contains
                filter(nc)%num_allc, filter(nc)%allc, &
                filter(nc)%num_soilc, filter(nc)%soilc, &
                filter(nc)%num_soilp, filter(nc)%soilp, &
+               filter(nc)%num_actfirec, filter(nc)%actfirec,                 &
+               filter(nc)%num_actfirep, filter(nc)%actfirep,                 &
                doalb, crop_inst, &
                soilstate_inst, soilbiogeochem_state_inst, &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
@@ -915,9 +919,8 @@ contains
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
           call t_stopf('EcosysDynPostDrainage')     
-
        end if
-
+   
        if ( use_fates  .and. is_beg_curr_day() ) then ! run fates at the start of each day
           
           if ( masterproc ) then
@@ -968,7 +971,6 @@ contains
        ! ============================================================================
        ! Check the energy and water balance and also carbon and nitrogen balance
        ! ============================================================================
-
        call t_startf('balchk')
        call BalanceCheck(bounds_clump, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
@@ -980,7 +982,6 @@ contains
        ! ============================================================================
        ! Check the carbon and nitrogen balance
        ! ============================================================================
-!       print*,'before bgc balance check'
        if (use_cn) then
           call t_startf('cnbalchk')
           call bgc_vegetation_inst%BalanceCheck( &
@@ -988,7 +989,6 @@ contains
                soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
           call t_stopf('cnbalchk')
        end if
-!       print*,'after bgc balance check'
 
        ! Calculation of methane fluxes
 
@@ -1073,7 +1073,7 @@ contains
           end if
 
        end if
-
+       !print*,'end loop'
     end do
     !$OMP END PARALLEL DO
 

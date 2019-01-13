@@ -70,7 +70,7 @@ contains
             c = filter_soilc(fc)
 
 !            if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!               print*,'begin of NSupdate matrix inupt',c,j,nf_soil%matrix_input_col(c,j,i_met_lit)
+!               print*,'begin of NSupdate matrix inupt',c,j,nf_soil%matrix_Cinput%V(c,j,i_met_lit)
 !            end if
             if (.not. use_nitrif_denitrif) then
                ! mineral N loss due to leaching
@@ -97,18 +97,18 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + &
                  nf_veg%m_n_to_litr_lig_fire_col(c,j)* dt
             else
-               nf_soil%matrix_input_col(c,j,i_cwd) = nf_soil%matrix_input_col(c,j,i_cwd) + &
+               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + &
                  nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
 
             ! patch-level wood to column-level litter (uncombusted wood)
 !               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                  print*,'before fire update matrix inupt',c,j,nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%m_n_to_litr_met_fire_col(c,j)
+!                  print*,'before fire update matrix inupt',c,j,nf_soil%matrix_Ninput%V(c,j,i_met_lit),nf_veg%m_n_to_litr_met_fire_col(c,j)
 !               end if
-               nf_soil%matrix_input_col(c,j,i_met_lit) = nf_soil%matrix_input_col(c,j,i_met_lit) + &
+               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + &
                  nf_veg%m_n_to_litr_met_fire_col(c,j)* dt
-               nf_soil%matrix_input_col(c,j,i_cel_lit) = nf_soil%matrix_input_col(c,j,i_cel_lit) + &
+               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + &
                  nf_veg%m_n_to_litr_cel_fire_col(c,j)* dt
-               nf_soil%matrix_input_col(c,j,i_lig_lit) = nf_soil%matrix_input_col(c,j,i_lig_lit) + &
+               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + &
                  nf_veg%m_n_to_litr_lig_fire_col(c,j)* dt
             end if ! soil_matrix
          end do ! end of column loop

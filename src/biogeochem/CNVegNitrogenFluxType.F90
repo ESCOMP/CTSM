@@ -4,7 +4,15 @@ module CNVegNitrogenFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp,nvegnpool
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp,nvegnpool,&
+                                                  nnphtrans,nngmtrans,nnfitrans,nnphouttrans,&
+                                                  nngmouttrans,nnfiouttrans
+  use clm_varpar                         , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                                  ilivestem,ilivestem_st,ilivestem_xf,&
+                                                  ideadstem,ideadstem_st,ideadstem_xf,&
+                                                  ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                                  ideadcroot,ideadcroot_st,ideadcroot_xf,&
+                                                  igrain,igrain_st,igrain_xf,iretransn,ioutn
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop, use_matrixcn
   use CNSharedParamsMod                  , only : use_fun
@@ -14,6 +22,7 @@ module CNVegNitrogenFluxType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
+  use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -245,15 +254,131 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: matrix_nalloc_patch       (:,:)    ! B-matrix for nitrogen allocation
      real(r8), pointer :: matrix_Ninput_patch       (:)      ! N input
 	 
-     real(r8), pointer :: matrix_nphtransfer_patch     (:,:,:)   ! A-matrix_phenologh
-     real(r8), pointer :: matrix_nphturnover_patch     (:,:,:)   ! C-matrix_phenologh
+     real(r8), pointer :: matrix_nphtransfer_patch     (:,:)   ! A-matrix_phenologh
+     real(r8), pointer :: matrix_nphturnover_patch     (:,:)   ! C-matrix_phenologh
+     integer,  pointer :: matrix_nphtransfer_doner_patch        (:)   ! A-matrix_phenology
+     integer,  pointer :: matrix_nphtransfer_receiver_patch     (:)   ! A-matrix_phenology
+ 
+     real(r8), pointer :: matrix_ngmtransfer_patch     (:,:)   ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_ngmturnover_patch     (:,:)   ! C-matrix_gap mortality
+     integer,  pointer :: matrix_ngmtransfer_doner_patch        (:)   ! A-matrix_gap mortality
+     integer,  pointer :: matrix_ngmtransfer_receiver_patch     (:)   ! A-matrix_gap mortality
   
-     real(r8), pointer :: matrix_ngmtransfer_patch     (:,:,:)   ! A-matrix_gap mortality
-     real(r8), pointer :: matrix_ngmturnover_patch     (:,:,:)   ! C-matrix_gap mortality
-  
-     real(r8), pointer :: matrix_nfitransfer_patch     (:,:,:)   ! matrix_phenologh for N transfer
+     real(r8), pointer :: matrix_nfitransfer_patch     (:,:)   ! matrix_phenologh for N transfer
+     real(r8), pointer :: matrix_nfiturnover_patch     (:,:)   ! C-matrix_fire	 
+     integer,  pointer :: matrix_nfitransfer_doner_patch        (:)   ! A-matrix_fire
+     integer,  pointer :: matrix_nfitransfer_receiver_patch     (:)   ! A-matrix_fire
 
-     real(r8), pointer :: matrix_nfiturnover_patch     (:,:,:)   ! C-matrix_fire	 
+     integer ileafst_to_ileafxf_ph
+     integer ileafxf_to_ileaf_ph  
+     integer ifrootst_to_ifrootxf_ph
+     integer ifrootxf_to_ifroot_ph  
+     integer ilivestemst_to_ilivestemxf_ph
+     integer ilivestemxf_to_ilivestem_ph  
+     integer ideadstemst_to_ideadstemxf_ph
+     integer ideadstemxf_to_ideadstem_ph  
+     integer ilivecrootst_to_ilivecrootxf_ph
+     integer ilivecrootxf_to_ilivecroot_ph  
+     integer ideadcrootst_to_ideadcrootxf_ph
+     integer ideadcrootxf_to_ideadcroot_ph  
+     integer ilivestem_to_ideadstem_ph  
+     integer ilivecroot_to_ideadcroot_ph  
+     integer ileaf_to_iout_ph  
+     integer ifroot_to_iout_ph  
+     integer ilivestem_to_iout_ph  
+     integer ileaf_to_iretransn_ph
+     integer ifroot_to_iretransn_ph
+     integer ilivestem_to_iretransn_ph
+     integer ilivecroot_to_iretransn_ph
+     integer igrain_to_iout_ph  
+     integer iretransn_to_iout_ph
+     integer ileaf_to_iout_gm
+     integer ileafst_to_iout_gm
+     integer ileafxf_to_iout_gm
+     integer ifroot_to_iout_gm
+     integer ifrootst_to_iout_gm
+     integer ifrootxf_to_iout_gm
+     integer ilivestem_to_iout_gm
+     integer ilivestemst_to_iout_gm
+     integer ilivestemxf_to_iout_gm
+     integer ideadstem_to_iout_gm
+     integer ideadstemst_to_iout_gm
+     integer ideadstemxf_to_iout_gm
+     integer ilivecroot_to_iout_gm
+     integer ilivecrootst_to_iout_gm
+     integer ilivecrootxf_to_iout_gm
+     integer ideadcroot_to_iout_gm
+     integer ideadcrootst_to_iout_gm
+     integer ideadcrootxf_to_iout_gm
+     integer iretransn_to_iout_gm
+     integer iretransn_to_ileaf_ph
+     integer iretransn_to_ileafst_ph
+     integer iretransn_to_ifroot_ph
+     integer iretransn_to_ifrootst_ph
+     integer iretransn_to_ilivestem_ph
+     integer iretransn_to_ilivestemst_ph
+     integer iretransn_to_ideadstem_ph
+     integer iretransn_to_ideadstemst_ph
+     integer iretransn_to_ilivecroot_ph
+     integer iretransn_to_ilivecrootst_ph
+     integer iretransn_to_ideadcroot_ph
+     integer iretransn_to_ideadcrootst_ph
+     integer iretransn_to_igrain_ph
+     integer iretransn_to_igrainst_ph
+     integer ileaf_to_iout_fi
+     integer ileafst_to_iout_fi
+     integer ileafxf_to_iout_fi
+     integer ifroot_to_iout_fi
+     integer ifrootst_to_iout_fi
+     integer ifrootxf_to_iout_fi
+     integer ilivestem_to_iout_fi
+     integer ilivestemst_to_iout_fi
+     integer ilivestemxf_to_iout_fi
+     integer ideadstem_to_iout_fi
+     integer ideadstemst_to_iout_fi
+     integer ideadstemxf_to_iout_fi
+     integer ilivecroot_to_iout_fi
+     integer ilivecrootst_to_iout_fi
+     integer ilivecrootxf_to_iout_fi
+     integer ideadcroot_to_iout_fi
+     integer ideadcrootst_to_iout_fi
+     integer ideadcrootxf_to_iout_fi
+     integer ilivestem_to_ideadstem_fi
+     integer ilivecroot_to_ideadcroot_fi
+     integer iretransn_to_iout_fi
+
+     integer,pointer :: list_phn_phgmn     (:)
+     integer,pointer :: list_gmn_phgmn     (:)
+     integer,pointer :: list_phn_phgmfin   (:)
+     integer,pointer :: list_gmn_phgmfin   (:)
+     integer,pointer :: list_fin_phgmfin   (:)
+     integer,pointer :: list_aphn(:)
+     integer,pointer :: list_agmn(:)
+     integer,pointer :: list_afin(:)
+
+!     type(sparse_matrix_type) :: Aphvegn
+!     type(sparse_matrix_type) :: Agmvegn
+!     type(sparse_matrix_type) :: Afivegn
+     type(sparse_matrix_type) :: AKphvegn
+     type(sparse_matrix_type) :: AKgmvegn
+     type(sparse_matrix_type) :: AKfivegn
+!     type(sparse_matrix_type) :: AKtmp1vegn
+     type(sparse_matrix_type) :: AKallvegn
+     integer                  :: NE_AKallvegn
+     integer,pointer,dimension(:)  :: RI_AKallvegn
+     integer,pointer,dimension(:)  :: CI_AKallvegn
+     integer                  :: NE_AKphgmn
+     integer,pointer,dimension(:)  :: RI_AKphgmn
+     integer,pointer,dimension(:)  :: CI_AKphgmn
+     integer,pointer,dimension(:)  :: RI_phn
+     integer,pointer,dimension(:)  :: CI_phn
+     integer,pointer,dimension(:)  :: RI_gmn
+     integer,pointer,dimension(:)  :: CI_gmn
+     integer,pointer,dimension(:)  :: RI_fin
+     integer,pointer,dimension(:)  :: CI_fin
+     type(diag_matrix_type)   :: Kvegn
+     type(vector_type)        :: Xvegn
+!     type(vector_type)        :: Xnewvegn
 
    contains
 
@@ -263,6 +388,7 @@ module CNVegNitrogenFluxType
      procedure , public  :: ZeroDWT
      procedure , public  :: Summary => Summary_nitrogenflux
      procedure , private :: InitAllocate 
+     procedure , private :: InitTransfer 
      procedure , private :: InitHistory
      procedure , private :: InitCold
 
@@ -278,10 +404,346 @@ contains
     type(bounds_type), intent(in) :: bounds  
 
     call this%InitAllocate (bounds)
+    if(use_matrixcn)then
+       call this%InitTransfer ()
+    end if
     call this%InitHistory (bounds)
     call this%InitCold (bounds)
 
   end subroutine Init
+
+  subroutine InitTransfer (this)
+    !
+    ! !AGRUMENTS:
+    class (cnveg_nitrogenflux_type) :: this
+    
+    this%ileaf_to_iretransn_ph = 1
+    this%matrix_nphtransfer_doner_patch(this%ileaf_to_iretransn_ph)    = ileaf
+    this%matrix_nphtransfer_receiver_patch(this%ileaf_to_iretransn_ph) = iretransn
+    
+    this%ileafst_to_ileafxf_ph = 2
+    this%matrix_nphtransfer_doner_patch(this%ileafst_to_ileafxf_ph) = ileaf_st
+    this%matrix_nphtransfer_receiver_patch(this%ileafst_to_ileafxf_ph) = ileaf_xf
+
+    this%ileafxf_to_ileaf_ph   = 3
+    this%matrix_nphtransfer_doner_patch(this%ileafxf_to_ileaf_ph) = ileaf_xf
+    this%matrix_nphtransfer_receiver_patch(this%ileafxf_to_ileaf_ph) = ileaf
+
+    this%ifroot_to_iretransn_ph = 4
+    this%matrix_nphtransfer_doner_patch(this%ifroot_to_iretransn_ph)    = ifroot
+    this%matrix_nphtransfer_receiver_patch(this%ifroot_to_iretransn_ph) = iretransn
+    
+    this%ifrootst_to_ifrootxf_ph = 5
+    this%matrix_nphtransfer_doner_patch(this%ifrootst_to_ifrootxf_ph) = ifroot_st
+    this%matrix_nphtransfer_receiver_patch(this%ifrootst_to_ifrootxf_ph) = ifroot_xf
+
+    this%ifrootxf_to_ifroot_ph   = 6
+    this%matrix_nphtransfer_doner_patch(this%ifrootxf_to_ifroot_ph) = ifroot_xf
+    this%matrix_nphtransfer_receiver_patch(this%ifrootxf_to_ifroot_ph) = ifroot
+
+    this%ilivestem_to_ideadstem_ph = 7
+    this%matrix_nphtransfer_doner_patch(this%ilivestem_to_ideadstem_ph) = ilivestem
+    this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_ideadstem_ph) = ideadstem
+    
+    this%ilivestem_to_iretransn_ph = 8
+    this%matrix_nphtransfer_doner_patch(this%ilivestem_to_iretransn_ph)    = ilivestem
+    this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_iretransn_ph) = iretransn
+    
+    this%ilivestemst_to_ilivestemxf_ph = 9
+    this%matrix_nphtransfer_doner_patch(this%ilivestemst_to_ilivestemxf_ph) = ilivestem_st
+    this%matrix_nphtransfer_receiver_patch(this%ilivestemst_to_ilivestemxf_ph) = ilivestem_xf
+
+    this%ilivestemxf_to_ilivestem_ph   = 10
+    this%matrix_nphtransfer_doner_patch(this%ilivestemxf_to_ilivestem_ph) = ilivestem_xf
+    this%matrix_nphtransfer_receiver_patch(this%ilivestemxf_to_ilivestem_ph) = ilivestem
+
+    this%ideadstemst_to_ideadstemxf_ph = 11
+    this%matrix_nphtransfer_doner_patch(this%ideadstemst_to_ideadstemxf_ph) = ideadstem_st
+    this%matrix_nphtransfer_receiver_patch(this%ideadstemst_to_ideadstemxf_ph) = ideadstem_xf
+
+    this%ideadstemxf_to_ideadstem_ph   = 12
+    this%matrix_nphtransfer_doner_patch(this%ideadstemxf_to_ideadstem_ph) = ideadstem_xf
+    this%matrix_nphtransfer_receiver_patch(this%ideadstemxf_to_ideadstem_ph) = ideadstem
+
+    this%ilivecroot_to_ideadcroot_ph = 13
+    this%matrix_nphtransfer_doner_patch(this%ilivecroot_to_ideadcroot_ph) = ilivecroot
+    this%matrix_nphtransfer_receiver_patch(this%ilivecroot_to_ideadcroot_ph) = ideadcroot
+    
+    this%ilivecroot_to_iretransn_ph = 14
+    this%matrix_nphtransfer_doner_patch(this%ilivecroot_to_iretransn_ph)    = ilivecroot
+    this%matrix_nphtransfer_receiver_patch(this%ilivecroot_to_iretransn_ph) = iretransn
+    
+    this%ilivecrootst_to_ilivecrootxf_ph = 15
+    this%matrix_nphtransfer_doner_patch(this%ilivecrootst_to_ilivecrootxf_ph) = ilivecroot_st
+    this%matrix_nphtransfer_receiver_patch(this%ilivecrootst_to_ilivecrootxf_ph) = ilivecroot_xf
+
+    this%ilivecrootxf_to_ilivecroot_ph   = 16
+    this%matrix_nphtransfer_doner_patch(this%ilivecrootxf_to_ilivecroot_ph) = ilivecroot_xf
+    this%matrix_nphtransfer_receiver_patch(this%ilivecrootxf_to_ilivecroot_ph) = ilivecroot
+
+    this%ideadcrootst_to_ideadcrootxf_ph = 17
+    this%matrix_nphtransfer_doner_patch(this%ideadcrootst_to_ideadcrootxf_ph) = ideadcroot_st
+    this%matrix_nphtransfer_receiver_patch(this%ideadcrootst_to_ideadcrootxf_ph) = ideadcroot_xf
+
+    this%ideadcrootxf_to_ideadcroot_ph   = 18
+    this%matrix_nphtransfer_doner_patch(this%ideadcrootxf_to_ideadcroot_ph) = ideadcroot_xf
+    this%matrix_nphtransfer_receiver_patch(this%ideadcrootxf_to_ideadcroot_ph) = ideadcroot
+
+    this%iretransn_to_ileaf_ph = 19
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ileaf_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ileaf_ph) = ileaf
+    
+    this%iretransn_to_ileafst_ph = 20
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ileafst_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ileafst_ph) = ileaf_st
+    
+    this%iretransn_to_ifroot_ph = 21
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ifroot_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ifroot_ph) = ifroot
+    
+    this%iretransn_to_ifrootst_ph = 22
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ifrootst_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ifrootst_ph) = ifroot_st
+    
+    this%iretransn_to_ilivestem_ph = 23
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivestem_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivestem_ph) = ilivestem
+    
+    this%iretransn_to_ilivestemst_ph = 24
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivestemst_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivestemst_ph) = ilivestem_st
+    
+    this%iretransn_to_ideadstem_ph = 25
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadstem_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadstem_ph) = ideadstem
+    
+    this%iretransn_to_ideadstemst_ph = 26
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadstemst_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadstemst_ph) = ideadstem_st
+    
+    this%iretransn_to_ilivecroot_ph = 27
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivecroot_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivecroot_ph) = ilivecroot
+    
+    this%iretransn_to_ilivecrootst_ph = 28
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ilivecrootst_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ilivecrootst_ph) = ilivecroot_st
+    
+    this%iretransn_to_ideadcroot_ph = 29
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadcroot_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadcroot_ph) = ideadcroot
+    
+    this%iretransn_to_ideadcrootst_ph = 30
+    this%matrix_nphtransfer_doner_patch(this%iretransn_to_ideadcrootst_ph)    = iretransn
+    this%matrix_nphtransfer_receiver_patch(this%iretransn_to_ideadcrootst_ph) = ideadcroot_st
+    
+    if(.not. use_crop)then
+       this%ileaf_to_iout_ph = 31
+       this%matrix_nphtransfer_doner_patch(this%ileaf_to_iout_ph)    = ileaf
+       this%matrix_nphtransfer_receiver_patch(this%ileaf_to_iout_ph) = ioutn
+    
+       this%ifroot_to_iout_ph = 32
+       this%matrix_nphtransfer_doner_patch(this%ifroot_to_iout_ph)    = ifroot
+       this%matrix_nphtransfer_receiver_patch(this%ifroot_to_iout_ph) = ioutn
+    
+       this%ilivestem_to_iout_ph = 33
+       this%matrix_nphtransfer_doner_patch(this%ilivestem_to_iout_ph)    = ilivestem
+       this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_iout_ph) = ioutn
+    
+       this%iretransn_to_iout_ph = 34
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_iout_ph)    = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_iout_ph) = ioutn
+    else
+       this%iretransn_to_igrain_ph = 31
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_igrain_ph)    = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_igrain_ph) = igrain
+
+       this%iretransn_to_igrainst_ph = 32
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_igrainst_ph)    = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_igrainst_ph) = igrain_st
+
+       this%ileaf_to_iout_ph = 33
+       this%matrix_nphtransfer_doner_patch(this%ileaf_to_iout_ph)    = ileaf
+       this%matrix_nphtransfer_receiver_patch(this%ileaf_to_iout_ph) = ioutn
+       
+       this%ifroot_to_iout_ph = 34
+       this%matrix_nphtransfer_doner_patch(this%ifroot_to_iout_ph)    = ifroot
+       this%matrix_nphtransfer_receiver_patch(this%ifroot_to_iout_ph) = ioutn
+    
+       this%ilivestem_to_iout_ph = 35
+       this%matrix_nphtransfer_doner_patch(this%ilivestem_to_iout_ph)    = ilivestem
+       this%matrix_nphtransfer_receiver_patch(this%ilivestem_to_iout_ph) = ioutn
+
+       this%igrain_to_iout_ph = 36
+       this%matrix_nphtransfer_doner_patch(this%igrain_to_iout_ph)    = igrain
+       this%matrix_nphtransfer_receiver_patch(this%igrain_to_iout_ph) = ioutn
+    
+       this%iretransn_to_iout_ph = 37
+       this%matrix_nphtransfer_doner_patch(this%iretransn_to_iout_ph)    = iretransn
+       this%matrix_nphtransfer_receiver_patch(this%iretransn_to_iout_ph) = ioutn
+    end if
+
+    this%ileaf_to_iout_gm = 1
+    this%matrix_ngmtransfer_doner_patch(this%ileaf_to_iout_gm) = ileaf 
+    this%matrix_ngmtransfer_receiver_patch(this%ileaf_to_iout_gm) = ioutn
+    
+    this%ileafst_to_iout_gm = 2
+    this%matrix_ngmtransfer_doner_patch(this%ileafst_to_iout_gm) = ileaf_st
+    this%matrix_ngmtransfer_receiver_patch(this%ileafst_to_iout_gm) = ioutn
+    
+    this%ileafxf_to_iout_gm = 3
+    this%matrix_ngmtransfer_doner_patch(this%ileafxf_to_iout_gm) = ileaf_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ileafxf_to_iout_gm) = ioutn
+    
+    this%ifroot_to_iout_gm = 4
+    this%matrix_ngmtransfer_doner_patch(this%ifroot_to_iout_gm) = ifroot 
+    this%matrix_ngmtransfer_receiver_patch(this%ifroot_to_iout_gm) = ioutn
+    
+    this%ifrootst_to_iout_gm = 5
+    this%matrix_ngmtransfer_doner_patch(this%ifrootst_to_iout_gm) = ifroot_st
+    this%matrix_ngmtransfer_receiver_patch(this%ifrootst_to_iout_gm) = ioutn
+    
+    this%ifrootxf_to_iout_gm = 6
+    this%matrix_ngmtransfer_doner_patch(this%ifrootxf_to_iout_gm) = ifroot_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ifrootxf_to_iout_gm) = ioutn
+    
+    this%ilivestem_to_iout_gm = 7
+    this%matrix_ngmtransfer_doner_patch(this%ilivestem_to_iout_gm) = ilivestem 
+    this%matrix_ngmtransfer_receiver_patch(this%ilivestem_to_iout_gm) = ioutn
+    
+    this%ilivestemst_to_iout_gm = 8
+    this%matrix_ngmtransfer_doner_patch(this%ilivestemst_to_iout_gm) = ilivestem_st
+    this%matrix_ngmtransfer_receiver_patch(this%ilivestemst_to_iout_gm) = ioutn
+    
+    this%ilivestemxf_to_iout_gm = 9
+    this%matrix_ngmtransfer_doner_patch(this%ilivestemxf_to_iout_gm) = ilivestem_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ilivestemxf_to_iout_gm) = ioutn
+    
+    this%ideadstem_to_iout_gm = 10
+    this%matrix_ngmtransfer_doner_patch(this%ideadstem_to_iout_gm) = ideadstem 
+    this%matrix_ngmtransfer_receiver_patch(this%ideadstem_to_iout_gm) = ioutn
+    
+    this%ideadstemst_to_iout_gm = 11
+    this%matrix_ngmtransfer_doner_patch(this%ideadstemst_to_iout_gm) = ideadstem_st
+    this%matrix_ngmtransfer_receiver_patch(this%ideadstemst_to_iout_gm) = ioutn
+    
+    this%ideadstemxf_to_iout_gm = 12
+    this%matrix_ngmtransfer_doner_patch(this%ideadstemxf_to_iout_gm) = ideadstem_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ideadstemxf_to_iout_gm) = ioutn
+    
+    this%ilivecroot_to_iout_gm = 13
+    this%matrix_ngmtransfer_doner_patch(this%ilivecroot_to_iout_gm) = ilivecroot 
+    this%matrix_ngmtransfer_receiver_patch(this%ilivecroot_to_iout_gm) = ioutn
+    
+    this%ilivecrootst_to_iout_gm = 14
+    this%matrix_ngmtransfer_doner_patch(this%ilivecrootst_to_iout_gm) = ilivecroot_st
+    this%matrix_ngmtransfer_receiver_patch(this%ilivecrootst_to_iout_gm) = ioutn
+    
+    this%ilivecrootxf_to_iout_gm = 15
+    this%matrix_ngmtransfer_doner_patch(this%ilivecrootxf_to_iout_gm) = ilivecroot_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ilivecrootxf_to_iout_gm) = ioutn
+    
+    this%ideadcroot_to_iout_gm = 16
+    this%matrix_ngmtransfer_doner_patch(this%ideadcroot_to_iout_gm) = ideadcroot 
+    this%matrix_ngmtransfer_receiver_patch(this%ideadcroot_to_iout_gm) = ioutn
+    
+    this%ideadcrootst_to_iout_gm = 17
+    this%matrix_ngmtransfer_doner_patch(this%ideadcrootst_to_iout_gm) = ideadcroot_st
+    this%matrix_ngmtransfer_receiver_patch(this%ideadcrootst_to_iout_gm) = ioutn
+    
+    this%ideadcrootxf_to_iout_gm = 18
+    this%matrix_ngmtransfer_doner_patch(this%ideadcrootxf_to_iout_gm) = ideadcroot_xf
+    this%matrix_ngmtransfer_receiver_patch(this%ideadcrootxf_to_iout_gm) = ioutn
+    
+    this%iretransn_to_iout_gm = 19
+    this%matrix_ngmtransfer_doner_patch(this%iretransn_to_iout_gm) = iretransn
+    this%matrix_ngmtransfer_receiver_patch(this%iretransn_to_iout_gm) = ioutn
+    
+    this%ilivestem_to_ideadstem_fi = 1
+    this%matrix_nfitransfer_doner_patch(this%ilivestem_to_ideadstem_fi) = ilivestem 
+    this%matrix_nfitransfer_receiver_patch(this%ilivestem_to_ideadstem_fi) = ideadstem
+    
+    this%ilivecroot_to_ideadcroot_fi = 2
+    this%matrix_nfitransfer_doner_patch(this%ilivecroot_to_ideadcroot_fi) = ilivecroot 
+    this%matrix_nfitransfer_receiver_patch(this%ilivecroot_to_ideadcroot_fi) = ideadcroot
+
+    this%ileaf_to_iout_fi = 3
+    this%matrix_nfitransfer_doner_patch(this%ileaf_to_iout_fi) = ileaf 
+    this%matrix_nfitransfer_receiver_patch(this%ileaf_to_iout_fi) = ioutn
+    
+    this%ileafst_to_iout_fi = 4
+    this%matrix_nfitransfer_doner_patch(this%ileafst_to_iout_fi) = ileaf_st
+    this%matrix_nfitransfer_receiver_patch(this%ileafst_to_iout_fi) = ioutn
+    
+    this%ileafxf_to_iout_fi = 5
+    this%matrix_nfitransfer_doner_patch(this%ileafxf_to_iout_fi) = ileaf_xf
+    this%matrix_nfitransfer_receiver_patch(this%ileafxf_to_iout_fi) = ioutn
+    
+    this%ifroot_to_iout_fi = 6
+    this%matrix_nfitransfer_doner_patch(this%ifroot_to_iout_fi) = ifroot 
+    this%matrix_nfitransfer_receiver_patch(this%ifroot_to_iout_fi) = ioutn
+    
+    this%ifrootst_to_iout_fi = 7
+    this%matrix_nfitransfer_doner_patch(this%ifrootst_to_iout_fi) = ifroot_st
+    this%matrix_nfitransfer_receiver_patch(this%ifrootst_to_iout_fi) = ioutn
+    
+    this%ifrootxf_to_iout_fi = 8
+    this%matrix_nfitransfer_doner_patch(this%ifrootxf_to_iout_fi) = ifroot_xf
+    this%matrix_nfitransfer_receiver_patch(this%ifrootxf_to_iout_fi) = ioutn
+    
+    this%ilivestem_to_iout_fi = 9
+    this%matrix_nfitransfer_doner_patch(this%ilivestem_to_iout_fi) = ilivestem 
+    this%matrix_nfitransfer_receiver_patch(this%ilivestem_to_iout_fi) = ioutn
+    
+    this%ilivestemst_to_iout_fi = 10
+    this%matrix_nfitransfer_doner_patch(this%ilivestemst_to_iout_fi) = ilivestem_st
+    this%matrix_nfitransfer_receiver_patch(this%ilivestemst_to_iout_fi) = ioutn
+    
+    this%ilivestemxf_to_iout_fi = 11
+    this%matrix_nfitransfer_doner_patch(this%ilivestemxf_to_iout_fi) = ilivestem_xf
+    this%matrix_nfitransfer_receiver_patch(this%ilivestemxf_to_iout_fi) = ioutn
+    
+    this%ideadstem_to_iout_fi = 12
+    this%matrix_nfitransfer_doner_patch(this%ideadstem_to_iout_fi) = ideadstem 
+    this%matrix_nfitransfer_receiver_patch(this%ideadstem_to_iout_fi) = ioutn
+    
+    this%ideadstemst_to_iout_fi = 13
+    this%matrix_nfitransfer_doner_patch(this%ideadstemst_to_iout_fi) = ideadstem_st
+    this%matrix_nfitransfer_receiver_patch(this%ideadstemst_to_iout_fi) = ioutn
+    
+    this%ideadstemxf_to_iout_fi = 14
+    this%matrix_nfitransfer_doner_patch(this%ideadstemxf_to_iout_fi) = ideadstem_xf
+    this%matrix_nfitransfer_receiver_patch(this%ideadstemxf_to_iout_fi) = ioutn
+    
+    this%ilivecroot_to_iout_fi = 15
+    this%matrix_nfitransfer_doner_patch(this%ilivecroot_to_iout_fi) = ilivecroot 
+    this%matrix_nfitransfer_receiver_patch(this%ilivecroot_to_iout_fi) = ioutn
+    
+    this%ilivecrootst_to_iout_fi = 16
+    this%matrix_nfitransfer_doner_patch(this%ilivecrootst_to_iout_fi) = ilivecroot_st
+    this%matrix_nfitransfer_receiver_patch(this%ilivecrootst_to_iout_fi) = ioutn
+    
+    this%ilivecrootxf_to_iout_fi = 17
+    this%matrix_nfitransfer_doner_patch(this%ilivecrootxf_to_iout_fi) = ilivecroot_xf
+    this%matrix_nfitransfer_receiver_patch(this%ilivecrootxf_to_iout_fi) = ioutn
+    
+    this%ideadcroot_to_iout_fi = 18
+    this%matrix_nfitransfer_doner_patch(this%ideadcroot_to_iout_fi) = ideadcroot 
+    this%matrix_nfitransfer_receiver_patch(this%ideadcroot_to_iout_fi) = ioutn
+    
+    this%ideadcrootst_to_iout_fi = 19
+    this%matrix_nfitransfer_doner_patch(this%ideadcrootst_to_iout_fi) = ideadcroot_st
+    this%matrix_nfitransfer_receiver_patch(this%ideadcrootst_to_iout_fi) = ioutn
+    
+    this%ideadcrootxf_to_iout_fi = 20
+    this%matrix_nfitransfer_doner_patch(this%ideadcrootxf_to_iout_fi) = ideadcroot_xf
+    this%matrix_nfitransfer_receiver_patch(this%ideadcrootxf_to_iout_fi) = ioutn
+    
+    this%iretransn_to_iout_fi = 21
+    this%matrix_nfitransfer_doner_patch(this%iretransn_to_iout_fi) = iretransn
+    this%matrix_nfitransfer_receiver_patch(this%iretransn_to_iout_fi) = ioutn
+    
+  end subroutine InitTransfer 
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
@@ -536,14 +998,54 @@ contains
        allocate(this%matrix_Ninput_patch          (begp:endp)) ;              this%matrix_Ninput_patch      (:) = nan
        allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegnpool)) ;   this%matrix_nalloc_patch      (:,:) = nan
 
-       allocate(this%matrix_nphtransfer_patch     (begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_nphtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_nphturnover_patch     (begp:endp,1:nvegnpool  ,1:nvegnpool))   ; this%matrix_nphturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_nphtransfer_patch     (begp:endp,1:nnphtrans)) ; this%matrix_nphtransfer_patch  (:,:) = nan
+       allocate(this%matrix_nphturnover_patch     (begp:endp,1:nvegnpool))   ; this%matrix_nphturnover_patch  (:,:) = nan
+       allocate(this%matrix_nphtransfer_doner_patch (1:nnphtrans))            ; this%matrix_nphtransfer_doner_patch(:) = -9999
+       allocate(this%matrix_nphtransfer_receiver_patch (1:nnphtrans))         ; this%matrix_nphtransfer_receiver_patch(:) = -9999
 
-       allocate(this%matrix_ngmtransfer_patch     (begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_ngmtransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_ngmturnover_patch     (begp:endp,1:nvegnpool  ,1:nvegnpool))   ; this%matrix_ngmturnover_patch  (:,:,:) = nan
+       allocate(this%matrix_ngmtransfer_patch     (begp:endp,1:nngmtrans)) ; this%matrix_ngmtransfer_patch  (:,:) = nan
+       allocate(this%matrix_ngmturnover_patch     (begp:endp,1:nvegnpool))   ; this%matrix_ngmturnover_patch  (:,:) = nan
+       allocate(this%matrix_ngmtransfer_doner_patch (1:nngmtrans))            ; this%matrix_ngmtransfer_doner_patch(:) = -9999
+       allocate(this%matrix_ngmtransfer_receiver_patch (1:nngmtrans))         ; this%matrix_ngmtransfer_receiver_patch(:) = -9999
 
-       allocate(this%matrix_nfitransfer_patch     (begp:endp,1:nvegnpool+1,1:nvegnpool)) ; this%matrix_nfitransfer_patch  (:,:,:) = nan
-       allocate(this%matrix_nfiturnover_patch     (begp:endp,1:nvegnpool  ,1:nvegnpool))   ; this%matrix_nfiturnover_patch  (:,:,:) = nan	
+       allocate(this%matrix_nfitransfer_patch     (begp:endp,1:nnfitrans)) ; this%matrix_nfitransfer_patch  (:,:) = nan
+       allocate(this%matrix_nfiturnover_patch     (begp:endp,1:nvegnpool))   ; this%matrix_nfiturnover_patch  (:,:) = nan
+       allocate(this%matrix_nfitransfer_doner_patch (1:nnfitrans))            ; this%matrix_nfitransfer_doner_patch(:) = -9999
+       allocate(this%matrix_nfitransfer_receiver_patch (1:nnfitrans))         ; this%matrix_nfitransfer_receiver_patch(:) = -9999
+
+       allocate(this%list_phn_phgmn (1:nnphtrans+nvegnpool))    ; this%list_phn_phgmn = -9999
+       allocate(this%list_gmn_phgmn (1:nvegnpool))              ; this%list_gmn_phgmn = -9999
+       allocate(this%list_phn_phgmfin (1:nnphtrans+nvegnpool)); this%list_phn_phgmfin = -9999
+       allocate(this%list_gmn_phgmfin (1:nvegnpool))          ; this%list_gmn_phgmfin = -9999
+       allocate(this%list_fin_phgmfin (1:nnfitrans+nvegnpool)); this%list_fin_phgmfin = -9999
+
+       allocate(this%list_aphn(1:nnphtrans-nnphouttrans)); this%list_aphn = -9999
+       allocate(this%list_agmn(1:nngmtrans-nngmouttrans)); this%list_agmn = -9999
+       allocate(this%list_afin(1:nnfitrans-nnfiouttrans)); this%list_afin = -9999
+
+!       call this%Aphvegn%InitSM (nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
+!       call this%Agmvegn%InitSM (nvegnpool,begp,endp,nngmtrans-nngmouttrans+nvegnpool)
+!       call this%Afivegn%InitSM (nvegnpool,begp,endp,nnfitrans-nnfiouttrans+nvegnpool)
+       call this%AKphvegn%InitSM(nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
+       call this%AKgmvegn%InitSM(nvegnpool,begp,endp,nngmtrans-nngmouttrans+nvegnpool)
+       call this%AKfivegn%InitSM(nvegnpool,begp,endp,nnfitrans-nnfiouttrans+nvegnpool)
+!       call this%AKtmp1vegn%InitSM(nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
+       call this%AKallvegn%InitSM(nvegnpool,begp,endp,nnphtrans-nnphouttrans+nnfitrans-nnfiouttrans+nvegnpool)
+       this%NE_AKallvegn = nnphtrans-nnphouttrans+nnfitrans-nnfiouttrans+nvegnpool
+       allocate(this%RI_AKallvegn(1:this%NE_AKallvegn));this%RI_AKallvegn(:) = -9999
+       allocate(this%CI_AKallvegn(1:this%NE_AKallvegn));this%CI_AKallvegn(:) = -9999
+       this%NE_AKphgmn = nnphtrans-nnphouttrans+nnfitrans-nnfiouttrans+nvegnpool
+       allocate(this%RI_AKphgmn(1:this%NE_AKphgmn));this%RI_AKphgmn(:) = -9999
+       allocate(this%CI_AKphgmn(1:this%NE_AKphgmn));this%CI_AKphgmn(:) = -9999
+       allocate(this%RI_phn(1:nnphtrans-nnphouttrans+nvegnpool));this%RI_phn(:) = -9999
+       allocate(this%CI_phn(1:nnphtrans-nnphouttrans+nvegnpool));this%CI_phn(:) = -9999
+       allocate(this%RI_gmn(1:nngmtrans-nngmouttrans+nvegnpool));this%RI_gmn(:) = -9999
+       allocate(this%CI_gmn(1:nngmtrans-nngmouttrans+nvegnpool));this%CI_gmn(:) = -9999
+       allocate(this%RI_fin(1:nnfitrans-nnfiouttrans+nvegnpool));this%RI_fin(:) = -9999
+       allocate(this%CI_fin(1:nnfitrans-nnfiouttrans+nvegnpool));this%CI_fin(:) = -9999
+       call this%Kvegn%InitDM(nvegnpool,begp,endp)
+       call this%Xvegn%InitV(nvegnpool,begp,endp)
+!       call this%Xnewvegn%InitV(nvegnpool,begp,endp)
      end if
 
   end subroutine InitAllocate
@@ -1788,24 +2290,46 @@ contains
     end do
 ! Matrix
     if(use_matrixcn)then
-       do k=1,nvegnpool 
+       do j = 1, nvegnpool
           do fi = 1,num_patch
              i = filter_patch(fi)
-             this%matrix_nalloc_patch(i,k)              = value_patch
-             do j = 1, nvegnpool+1
-                if(j .le. nvegnpool)then
-                   this%matrix_nphturnover_patch (i,j,k) = value_patch
-                   this%matrix_ngmturnover_patch (i,j,k) = value_patch
-                   this%matrix_nfiturnover_patch (i,j,k) = value_patch
-                end if
-                   this%matrix_nphtransfer_patch (i,j,k) = value_patch
-                   this%matrix_ngmtransfer_patch (i,j,k) = value_patch
-                   this%matrix_nfitransfer_patch (i,j,k) = value_patch
-               
-             end do
+             this%matrix_nalloc_patch(i,j)       = value_patch
+             this%matrix_nphturnover_patch (i,j) = value_patch
+             this%matrix_ngmturnover_patch (i,j) = value_patch
+             this%matrix_nfiturnover_patch (i,j) = value_patch
           end do
        end do
+
+       do j = 1, nnphtrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_nphtransfer_patch (i,j) = value_patch
+          end do
+       end do
+
+       do j = 1, nngmtrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_ngmtransfer_patch (i,j) = value_patch
+          end do
+       end do
+
+       do j = 1, nnfitrans
+          do fi = 1,num_patch
+             i = filter_patch(fi)
+             this%matrix_nfitransfer_patch (i,j) = value_patch
+          end do
+       end do
+
+!       this%matrix_nalloc_patch      = value_patch
+!       this%matrix_nphturnover_patch = value_patch
+!       this%matrix_ngmturnover_patch = value_patch
+!       this%matrix_nfiturnover_patch = value_patch
+!       this%matrix_nphtransfer_patch = value_patch
+!       this%matrix_ngmtransfer_patch = value_patch
+!       this%matrix_nfitransfer_patch = value_patch
     end if
+!    print*,'zero nalloc',this%matrix_nalloc_patch(:,5)
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
           do fi = 1,num_column
@@ -1814,6 +2338,7 @@ contains
           end do
        end do
     end do
+
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
