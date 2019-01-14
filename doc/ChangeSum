@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.15    sacks 12/06/2018 Option for rain-to-snow to immediately run off in some regions
 release-clm5.0.14     erik 11/29/2018 Update cime and fix surface dataset for f05 1850 non-crop case
 release-clm5.0.13     erik 11/14/2018 Update externals with new CO2/presearo/rtm/mosart, add science_support, change testing
 release-clm5.0.12     erik 11/03/2018 New IC files for clm45/clm50 coupled cases, add 2010 compset
