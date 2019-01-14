@@ -1,4 +1,93 @@
 ===============================================================
+Tag name:  ctsm1.0.dev024
+Originator(s):  slevis (Samuel Levis,SLevis Consulting, LLC, 303-665-1310)
+Date:  Mon Jan 14 11:07:04 MST 2019
+One-line Summary: Remove unnecessary restart variables
+
+Purpose of changes
+------------------
+
+Remove unnecessary restart variables to conserve on computing resources
+and disk space
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 285
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes:
+
+Notes of particular relevance for developers:
+Code reviewed by Bill Sacks.
+Standard testing (cheyenne and hobart) OK
+Unit testing PASS
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+Code reviewed by: Bill Sacks
+
+CTSM testing:
+Regular testing (cheyenne and hobart) OK
+Unit testing PASS
+
+CTSM tag used for the baseline comparisons: 
+ctsm1.0.dev023
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO (bfb)
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/598
+
+Variables removed from restart:
+plant_nalloc
+pot_f_nit_vr*
+f_nit_vr*
+root_depth
+qflx_floodg
+snounload
+qflx_snofrz_lyr
+sminn_to_plant_fun_patch
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev023
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Jan 10 13:00:42 MST 2019
