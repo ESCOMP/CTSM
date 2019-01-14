@@ -128,6 +128,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : UpdateH2OVeg
+   use FatesPlantHydraulicsMod, only : RestartHydrStates
 
    implicit none
    
@@ -224,7 +225,7 @@ contains
       ! ---------------------------------------------------------------------------------
      
       use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : numpft_ed => numpft
+      use FatesInterfaceMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -263,7 +264,7 @@ contains
 
       
       ! Parameter Routines
-      call param_derived%Init( numpft_ed )
+      call param_derived%Init( numpft_fates )
       
 
       verbose_output = .false.
@@ -471,7 +472,7 @@ contains
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
-            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in)
+            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in,numpft_fates)
          end if
 
          if( this%fates(nc)%nsites == 0 ) then
@@ -907,7 +908,7 @@ contains
    ! ====================================================================================
 
    subroutine restart( this, bounds_proc, ncid, flag, waterstate_inst, &
-                             canopystate_inst, frictionvel_inst )
+                             canopystate_inst, frictionvel_inst, soilstate_inst)
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -942,6 +943,7 @@ contains
       type(waterstate_type)          , intent(inout) :: waterstate_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
       type(frictionvel_type)         , intent(inout) :: frictionvel_inst
+      type(soilstate_type)           , intent(inout) :: soilstate_inst
       
       ! Locals
       type(bounds_type) :: bounds_clump
@@ -953,6 +955,7 @@ contains
       integer                 :: s   ! Fates site index
       integer                 :: g   ! grid-cell index
       integer                 :: dk_index
+      integer                 :: nlevsoil
       character(len=fates_long_string_length) :: ioname
       integer                 :: nvar
       integer                 :: ivar
@@ -1138,6 +1141,24 @@ contains
                         this%fates(nc)%bc_in(s) )
                end do
 
+               ! ------------------------------------------------------------------------
+               ! Re-populate all the hydraulics variables that are dependent
+               ! on the key hydro state variables and plant carbon/geometry
+               ! ------------------------------------------------------------------------
+               if (use_fates_planthydro) then
+
+                  do s = 1,this%fates(nc)%nsites
+                     c = this%f2hmap(nc)%fcolumn(s)
+                     nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+                     this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil) = &
+                          soilstate_inst%hksat_col(c,1:nlevsoil)
+                  end do
+
+                  call RestartHydrStates(this%fates(nc)%sites,  &
+                                         this%fates(nc)%nsites, &
+                                         this%fates(nc)%bc_in,  &
+                                         this%fates(nc)%bc_out)
+               end if
 
                ! ------------------------------------------------------------------------
                ! Update diagnostics of FATES ecosystem structure used in HLM.
@@ -1148,12 +1169,11 @@ contains
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
                ! ------------------------------------------------------------------------
-               call this%fates_restart%update_3dpatch_radiation(nc, &
-                                                                this%fates(nc)%nsites, &
+               call this%fates_restart%update_3dpatch_radiation(this%fates(nc)%nsites, &
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
                     
-               
+              
 
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
@@ -1217,6 +1237,7 @@ contains
            ! Called prior to init_patches(). Site level rhizosphere shells must
            ! be set prior to cohort initialization.
            ! ----------------------------------------------------------------------------
+
            if (use_fates_planthydro) then
 
               do s = 1,this%fates(nc)%nsites
@@ -1248,10 +1269,10 @@ contains
                     eff_porosity = max(0.01_r8,soilstate_inst%watsat_col(c,j)-vol_ice)
                     this%fates(nc)%bc_in(s)%eff_porosity_sl(j) = eff_porosity
                  end do
-
+                 
               end do
 
-              if (use_fates_planthydro) call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
+              call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
 
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
@@ -2423,7 +2444,7 @@ contains
    use FatesInterfaceMod, only : nlevheight
    use EDtypesMod, only : nfsc, ncwd
    use EDtypesMod, only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : numpft_ed => numpft
+   use FatesInterfaceMod, only : numpft_fates => numpft
    use clm_varpar, only : nlevgrnd
 
    implicit none
@@ -2444,13 +2465,13 @@ contains
    fates%ground_end = nlevgrnd
    
    fates%sizepft_class_begin = 1
-   fates%sizepft_class_end = nlevsclass * numpft_ed
+   fates%sizepft_class_end = nlevsclass * numpft_fates
    
    fates%size_class_begin = 1
    fates%size_class_end = nlevsclass
 
    fates%pft_class_begin = 1
-   fates%pft_class_end = numpft_ed
+   fates%pft_class_end = numpft_fates
 
    fates%age_class_begin = 1
    fates%age_class_end = nlevage
@@ -2462,10 +2483,10 @@ contains
    fates%sizeage_class_end   = nlevsclass * nlevage
 
    fates%agepft_class_begin = 1
-   fates%agepft_class_end   = nlevage * numpft_ed
+   fates%agepft_class_end   = nlevage * numpft_fates
    
    fates%sizeagepft_class_begin = 1
-   fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_ed
+   fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_fates
    
    fates%fuel_begin = 1
    fates%fuel_end = nfsc
@@ -2480,7 +2501,7 @@ contains
    fates%cnlf_end = nlevleaf * nclmax
    
    fates%cnlfpft_begin = 1
-   fates%cnlfpft_end = nlevleaf * nclmax * numpft_ed
+   fates%cnlfpft_end = nlevleaf * nclmax * numpft_fates
    
  end subroutine hlm_bounds_to_fates_bounds
 
