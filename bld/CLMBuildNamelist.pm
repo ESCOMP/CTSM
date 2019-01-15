@@ -75,7 +75,7 @@ REQUIRED OPTIONS
                               "-res list" to list valid resolutions.
                               (default: 0.9x1.25)
      -sim_year "year"         Year to simulate for input datasets
-                              (i.e. 1850, 2000, 2010, 1850-2000, 1850-2100)
+                              (i.e. PtVg, 1850, 2000, 2010, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
                               (default 2000)
 OPTIONS
@@ -1219,19 +1219,19 @@ sub setup_cmdl_simulation_year {
   }
 
   $nl_flags->{'sim_year_range'} = $defaults->get_value("sim_year_range");
-  $nl_flags->{'sim_year'}       = $val;
+  $nl_flags->{'sim_year'}       = &remove_leading_and_trailing_quotes($val);
   if ( $val =~ /([0-9]+)-([0-9]+)/ ) {
     $nl_flags->{'sim_year'}       = $1;
     $nl_flags->{'sim_year_range'} = $val;
   }
   $val = $nl_flags->{'sim_year'};
   my $group = $definition->get_group_name($var);
-  $nl->set_variable_value($group, $var, $val );
+  $nl->set_variable_value($group, $var, "'$val'" );
   if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
     my @valid_values   = $definition->get_valid_values( $var );
     $log->fatal_error("$var of $val is NOT valid. Valid values are: @valid_values");
   }
-  $nl->set_variable_value($group, $var, $val );
+  $nl->set_variable_value($group, $var, "'$val'" );
   $log->verbose_message("CLM sim_year is $nl_flags->{'sim_year'}");
 
   $var = "sim_year_range";
