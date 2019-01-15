@@ -1,4 +1,103 @@
 ===============================================================
+Tag name:  release-clm5.0.16
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Jan 15 15:13:43 MST 2019
+One-line Summary: PtVg and ssp_rcp future scenario options and Antarctica wetlands fix to mksurfdata, and option to dribble crop harvest XSMRPOOL flux to atmosphere
+
+Purpose of this version:
+------------------------
+
+no-anthro changes on release branch. Update of mksurfdata for Antarctic. Also start adding in newly created SSP-RCP datasets that are easy to add in.
+Also add in new option for dribble_crophrv_xsmrpool_2atm.
+
+CTSM Master Tag This Corresponds To: N/A
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #553 #533 #589 #547 #545
+  #553 -- More robust mksurfdata_map logic for determining where to put wetlands
+  #533 -- Add -no-anthro option to mksurfdata_map
+  #589 -- Existence of content in the lai_streams namelist makes it confusing to users
+  #547 -- Add conus_30_x8 grid as valid option for CTSM and mksurfdata_map
+  #545 -- Antarctica ice shelves are being treated as wetlands rather than glaciers
+
+Science changes since: release-clm5.0.15
+  mksurfdata now properly makes Antarctica teated as glacier rather than wetland
+  Add in option to create all of the SSP-RCP future scenarios in mksurfdata_map
+  Add dribble_crophrv_xsmrpool_2atm, to do slow release of crop harvested XSMRPOOL to atmosphere
+    (only active by default when co2_type="prognostic")
+
+Software changes since: release-clm5.0.15
+  Add no-anthro option for mksurfdata_map
+
+Changes to User Interface since: release-clm5.0.15
+  New namelist option: dribble_crophrv_xsmrpool_2atm
+  Add SSP-RCP future scenarios can be done in mksurfdata_map
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart ---
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.15
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_06
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: N/A
+
+Pull Requests that document the changes (include PR ids):  #567 #561 #564 #616 #610
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #616 -- No anthro options to tools, and all future scenarios in place, plus a few small issue fixes
+   #610 -- Add option to dribble XSMRPOOL at crop harvest to atmosphere over a half year
+   #567 -- ignore patterns for vim
+   #564 -- Update mksurfdata_map to include glaciers outside of pft landmask
+   #561 -- Add list of checks for new surface datasets
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.15
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Dec  6 10:14:30 MST 2018
