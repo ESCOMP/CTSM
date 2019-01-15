@@ -58,6 +58,8 @@ MKSURFDATA = $(BATCHJOBS) $(PWD)/mksurfdata.pl
 # ne30np4 is standard resolution for SE dycore in CAM, T31 is for paleo, 360x720cru is for same resolution as forcing data
 STANDARD_RES = 360x720cru,48x96,0.9x1.25,1.9x2.5,10x15,4x5,ne30np4
 
+FUTURE_RES = 0.9x1.25,1.9x2.5,10x15
+
 # ne120np4 is for high resolution SE dycore, ne16 is for testing SE dycore
 # T42 is for SCAM
 # f05 is needed for running full chemistry model
@@ -71,6 +73,7 @@ STANDARD = \
 	global-historical-ne120np4 \
 	global-transient-f05 \
 	global-transient \
+	global-future \
 	global-transient-ne120np4
 
 TROPICS = \
@@ -95,6 +98,7 @@ CROP = \
 	crop-global-historical-ne120np4 \
 	crop-global-transient-f05 \
 	crop-global-transient \
+	crop-global-future \
 	crop-global-transient-ne120np4
 
 all : standard tropics crop urban landuse-timeseries
@@ -142,6 +146,13 @@ global-transient-ne120np4 : FORCE
 
 global-transient-f05 : FORCE
 	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2000 -res 0.47x0.63 $(BACKGROUND)
+
+#
+# global with future scenarios
+#
+global-future : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5 -res $(FUTURE_RES) $(BACKGROUND)
 
 #
 # tropics
@@ -222,6 +233,15 @@ crop-global-transient-ne120np4 : FORCE
 
 crop-global-transient-f05 : FORCE
 	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res 0.47x0.63 $(BACKGROUND)
+
+#
+# Crop with future scenarios
+#
+crop-global-future : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5 -res $(FUTURE_RES) $(BACKGROUND)
+
+
 #
 # urban
 #
