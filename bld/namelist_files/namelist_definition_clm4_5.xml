@@ -1788,7 +1788,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 -999.9 means do NOT use a future scenario, just use historical data.
 </entry> 
 
-<entry id="ssp-rcp" type="character*8" category="default_settings"
+<entry id="ssp_rcp" type="character*8" category="default_settings"
        group="default_settings"  
        valid_values="hist,SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5">
 Shared Socioeconomic Pathway (SSP) and Representative Concentration Pathway (RCP) combination for future scenarios 
@@ -1968,6 +1968,11 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 <entry id="reseed_dead_plants" type="logical" category="clm_physics"
        group="cn_general" valid_values="" >
 Flag to reseed any dead plants on startup from reading the initial conditions file
+</entry>
+
+<entry id="dribble_crophrv_xsmrpool_2atm" type="logical" category="clm_physics"
+       group="cn_general" valid_values="" >
+Harvest the XSMR pool at crop harvest time to the atmosphere slowly at an exponential rate
 </entry>
 
 <!-- C isotope flags    -->

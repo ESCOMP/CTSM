@@ -58,6 +58,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: gresp_xfer_patch         (:) ! (gC/m2) growth respiration transfer
      real(r8), pointer :: cpool_patch              (:) ! (gC/m2) temporary photosynthate C pool
      real(r8), pointer :: xsmrpool_patch           (:) ! (gC/m2) abstract C pool to meet excess MR demand
+     real(r8), pointer :: xsmrpool_loss_patch      (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
      real(r8), pointer :: ctrunc_patch             (:) ! (gC/m2) patch-level sink for C truncation
      real(r8), pointer :: woodc_patch              (:) ! (gC/m2) wood C
      real(r8), pointer :: leafcmax_patch           (:) ! (gC/m2) ann max leaf C
@@ -83,6 +84,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
 
+     logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -115,17 +117,20 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
-                  c12_cnveg_carbonstate_inst)
+                  dribble_crophrv_xsmrpool_2atm, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
     real(r8)                     , intent(in)           :: ratio
     character(len=*)             , intent(in)           :: carbon_type                ! Carbon isotope type C12, C13 or C1
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
+    logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
     !-----------------------------------------------------------------------
 
     this%species = species_from_string(carbon_type)
+
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
     call this%InitAllocate ( bounds)
     call this%InitReadNML  ( NLFilename )
@@ -239,6 +244,7 @@ contains
     allocate(this%gresp_xfer_patch         (begp:endp)) ; this%gresp_xfer_patch         (:) = nan
     allocate(this%cpool_patch              (begp:endp)) ; this%cpool_patch              (:) = nan
     allocate(this%xsmrpool_patch           (begp:endp)) ; this%xsmrpool_patch           (:) = nan
+    allocate(this%xsmrpool_loss_patch      (begp:endp)) ; this%xsmrpool_loss_patch      (:) = nan
     allocate(this%ctrunc_patch             (begp:endp)) ; this%ctrunc_patch             (:) = nan
     allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
     allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
@@ -312,6 +318,11 @@ contains
           call hist_addfld1d (fname='CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch)
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='XSMRPOOL_LOSS', units='gC/m^2', &
+               avgflag='A', long_name='temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -656,6 +667,11 @@ contains
           call hist_addfld1d (fname='C13_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C13 C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_XSMRPOOL_LOSS', units='gC13/m^2', &
+               avgflag='A', long_name='C13 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
 
@@ -831,6 +847,11 @@ contains
           call hist_addfld1d (fname='C14_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C14 C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_XSMRPOOL_LOSS', units='gC14/m^2', &
+               avgflag='A', long_name='C14 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
 
@@ -974,6 +995,7 @@ contains
              this%grainc_storage_patch(p) = 0._r8 
              this%grainc_xfer_patch(p)    = 0._r8 
              this%cropseedc_deficit_patch(p)  = 0._r8
+             this%xsmrpool_loss_patch(p)  = 0._r8 
           end if
 
        endif
@@ -1205,6 +1227,13 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag == 'read' .and. (.not. readvar) ) then
+           this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -1421,6 +1450,7 @@ contains
                          this%grainc_storage_patch(i) = 0._r8 
                          this%grainc_xfer_patch(i)    = 0._r8 
                          this%cropseedc_deficit_patch(i)  = 0._r8
+                         this%xsmrpool_loss_patch(i)  = 0._r8 
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -1810,6 +1840,21 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_13', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss with atmospheric c13 value'
+          do i = bounds%begp,bounds%endp
+             if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c3_r2
+             else
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c4_r2
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -2100,6 +2145,18 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_14', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss_patch with atmospheric c14 value'
+          do i = bounds%begp,bounds%endp
+             if (this%xsmrpool_loss_patch(i) /= spval .and. .not. isnan(this%xsmrpool_loss_patch(i)) ) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c14ratio
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -2330,6 +2387,7 @@ contains
           this%grainc_storage_patch(i)  = value_patch
           this%grainc_xfer_patch(i)     = value_patch
           this%cropseedc_deficit_patch(i)  = value_patch
+          this%xsmrpool_loss_patch(i)   = value_patch
        end if
     end do
 
@@ -2463,7 +2521,8 @@ contains
             this%ctrunc_patch(p)
 
        if (use_crop) then 
-          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p)
+          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p) + &
+               this%xsmrpool_loss_patch(p)
        end if
 
        ! (WOODC) - wood C
@@ -2710,13 +2769,15 @@ contains
             var = this%grainc_xfer_patch(begp:endp), &
             flux_out_grc_area = conv_cflux(begp:endp))
 
-       if (use_crop) then
-          ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
-          ! of the atmosphere.
-          call update_patch_state( &
-               var = this%cropseedc_deficit_patch(begp:endp), &
-               flux_out_grc_area = conv_cflux(begp:endp))
-       end if
+       ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
+       ! of the atmosphere.
+       call update_patch_state( &
+            var = this%cropseedc_deficit_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%xsmrpool_loss_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
     end if
 
   contains

@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 947;
+my $ntests = 950;
 if ( defined($opts{'compare'}) ) {
    $ntests += 600;
 }
@@ -386,6 +386,21 @@ my %failtest = (
                                      namelst=>"use_crop=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
+                                   },
+     "reseed without CN"         =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"reseed_dead_plants=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "dribble_crphrv w/o CN"     =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "dribble_crphrv w/o crop"   =>{ options=>" -envxml_dir . -bgc cn -no-crop",
+                                     namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "CNDV with flanduse_timeseries"         =>{ options=>" -envxml_dir .",
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",

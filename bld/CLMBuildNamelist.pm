@@ -1705,6 +1705,10 @@ sub process_namelist_inline_logic {
   ################################################
   setup_logic_century_soilbgcdecompcascade($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  #############################
+  # namelist group: cngeneral #
+  #############################
+  setup_logic_cngeneral($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   ####################################
   # namelist group: cnvegcarbonstate #
   ####################################
@@ -3502,29 +3506,33 @@ sub setup_logic_lai_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl_flags->{'use_lai_streams'}) ) {
+
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
+
+    if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
       $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
     }
     if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
 
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
-                  'hgrid'=>$nl_flags->{'res'} );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai',
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      # Set align year, if first and last years are different
-      if ( $nl->get_value('stream_year_first_lai') !=
-           $nl->get_value('stream_year_last_lai') ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                       'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
-                       'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
+                     'hgrid'=>$nl_flags->{'res'} );
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai',
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         # Set align year, if first and last years are different
+         if ( $nl->get_value('stream_year_first_lai') !=
+              $nl->get_value('stream_year_last_lai') ) {
+              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                          'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
+                          'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         }
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
+                     'hgrid'=>"360x720cru" );
       }
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
-                  'hgrid'=>"360x720cru" );
     } else {
       # If bgc is CN/CNDV then make sure none of the LAI settings are set
       if ( defined($nl->get_value('stream_year_first_lai')) ||
@@ -3593,6 +3601,32 @@ sub setup_logic_cnvegcarbonstate {
     if ( ! defined($mmnuptake) ) { $mmnuptake = ".false."; }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_vegC', 
                 'use_cn' => $nl->get_value('use_cn'), 'mm_nuptake_opt' => $mmnuptake );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cngeneral {
+  # Must be set after setup_logic_co2_type
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
+    if ( &value_is_true($nl->get_value('use_crop')) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dribble_crophrv_xsmrpool_2atm', 
+                   'co2_type' => remove_leading_and_trailing_quotes($nl->get_value('co2_type')), 
+                   'use_crop' => $nl->get_value('use_crop')  );
+    } else {
+      if ( defined($nl->get_value('dribble_crophrv_xsmrpool_2atm')) ) {
+        $log->fatal_error("When CROP is NOT on dribble_crophrv_xsmrpool_2atm can NOT be set\n" );
+      }
+    }
+  } else {
+    if ( defined($nl->get_value('reseed_dead_plants')) ||
+         defined($nl->get_value('dribble_crophrv_xsmrpool_2atm'))   ) {
+             $log->fatal_error("When CN is not on none of the following can be set: ,\n" .
+                  "dribble_crophrv_xsmrpool_2atm nor reseed_dead_plantsr\n" .
+                  "(eg. don't use these options with SP mode).");
+    }
   }
 }
 
