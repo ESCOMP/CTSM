@@ -46,6 +46,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="ne16np4"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne16np4_nomask_c110512.nc</scripgriddata>
 <scripgriddata hgrid="ne4np4"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne4np4_nomask_c110808.nc</scripgriddata>
 
+<!-- Refined mesh grids -->
+<scripgriddata hgrid="conus_30_x8" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_conus_30_x8_nomask_c170111.nc</scripgriddata>
+
 <!-- Regular lat/lon grids -->
 <scripgriddata hgrid="0.125x0.125" lmask="nomask"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125x0.125_nomask_c140702.nc</scripgriddata>
