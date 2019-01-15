@@ -125,7 +125,7 @@ my $testType="namelistTest";
 #
 my $ntests = 947;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 597;
+   $ntests += 600;
 }
 plan( tests=>$ntests );
 
