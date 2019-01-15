@@ -10,7 +10,7 @@ module SoilHydrologyMod
   use abortutils        , only : endrun
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
-  use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
+  use clm_varcon        , only : e_ice, denh2o, denice, rpi
   use clm_varcon        , only : pondmx_urban
   use clm_varpar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
@@ -22,9 +22,11 @@ module SoilHydrologyMod
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
-  use WaterFluxBulkType     , only : waterfluxbulk_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use WaterFluxType     , only : waterflux_type
+  use WaterFluxBulkType , only : waterfluxbulk_type
+  use WaterStateType    , only : waterstate_type
+  use WaterStateBulkType, only : waterstatebulk_type
+  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use TemperatureType   , only : temperature_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
@@ -50,7 +52,7 @@ module SoilHydrologyMod
   public :: ThetaBasedWaterTable ! Calculate water table from soil moisture state
   public :: LateralFlowPowerLaw  ! Calculate lateral flow based on power law drainage function
   public :: RenewCondensation    ! Misc. corrections
-  public :: CalcAvailableUnconfinedAquifer  ! Calculate water in unconfined aquifer available for groundwater irrigation use
+  public :: CalcIrrigWithdrawals ! Calculate irrigation withdrawals from groundwater by layer
   public :: WithdrawGroundwaterIrrigation   ! Remove groundwater irrigation from unconfined and confined aquifers
   
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -1126,6 +1128,7 @@ contains
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Input:  [real(r8) (:)   ] perched water table depth (m)                     
+          aquifer_water_baseline => waterstatebulk_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) (mm)
           wa                 =>    waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)              
           ice                =>    soilhydrology_inst%ice_col            , & ! Input:  [real(r8) (:,:) ] soil layer moisture (mm)                         
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
@@ -2492,109 +2495,45 @@ contains
    end subroutine RenewCondensation
 !#8
    !-----------------------------------------------------------------------
-   subroutine CalcAvailableUnconfinedAquifer(bounds, num_hydrologyc, filter_hydrologyc, &
-        soilhydrology_inst, soilstate_inst, waterdiagnosticbulk_inst) 
-     !
-     ! !DESCRIPTION:
-     ! Calculate water in unconfined aquifer (i.e. soil column) that
-     ! is available for groundwater withdrawal.
-     !
-     ! !USES:
-     !
-     ! !ARGUMENTS:
-     type(bounds_type)        , intent(in)         :: bounds  
-     integer                  , intent(in)         :: num_hydrologyc       ! number of column soil points in column filter
-     integer                  , intent(in)         :: filter_hydrologyc(:) ! column filter for soil points
-     type(soilhydrology_type) , intent(in)         :: soilhydrology_inst
-     type(soilstate_type)     , intent(in)         :: soilstate_inst
-     type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
-     !
-     ! !LOCAL VARIABLES:
-     integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
-     integer  :: c,j,fc                                ! indices
-     real(r8) :: s_y
-     real(r8) :: available_water_layer
-     
-     !-----------------------------------------------------------------------
-
-     associate(                                                            & 
-          nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
-          z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
-          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)           
-          bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
-          sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
-          watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
-          zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ]  water table depth (m)
-          available_gw_uncon =>    waterdiagnosticbulk_inst%available_gw_uncon_col  & ! Output: [real(r8) (:)   ]  available water in the unconfined saturated zone (kg/m2)
-          )
-
-       ! calculate amount of water in saturated zone that
-       ! is available for groundwater irrigation
-
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          available_gw_uncon(c) = 0._r8
-
-          jwt(c) = nlevsoi
-          ! allow jwt to equal zero when zwt is in top layer
-          do j = 1,nlevsoi
-             if(zwt(c) <= zi(c,j)) then
-                jwt(c) = j-1
-                exit
-             end if
-          enddo
-          do j = jwt(c)+1, nbedrock(c)
-             s_y = watsat(c,j) &
-                  * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-             s_y=max(s_y,0.02_r8)
-             
-             if (j==jwt(c)+1) then
-                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))
-             else
-                available_water_layer=max(0._r8,(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
-             endif
-
-             available_gw_uncon(c) = available_gw_uncon(c) &
-                  + available_water_layer
-          enddo
-       enddo
-
-     end associate
-
-   end subroutine CalcAvailableUnconfinedAquifer
-!#9
-   !-----------------------------------------------------------------------
-   subroutine WithdrawGroundwaterIrrigation(bounds, &
-        num_hydrologyc, filter_hydrologyc, &
+   subroutine CalcIrrigWithdrawals(bounds, &
+        num_soilc, filter_soilc, &
         soilhydrology_inst, soilstate_inst, &
-        waterstatebulk_inst, waterfluxbulk_inst)
+        qflx_gw_demand, &
+        qflx_gw_uncon_irrig_lyr, &
+        qflx_gw_con_irrig)
      !
      ! !DESCRIPTION:
-     ! Remove groundwater irrigation from unconfined and confined aquifers
-     ! This routine is called when use_groundwater_irrigation = .true.
-     ! It is not compatible with use_aquifer_layer
+     ! Calculate irrigation withdrawals from groundwater, given groundwater irrigation demand
      !
-     ! !USES:
-
+     ! This routine is called when use_groundwater_irrigation = .true.
+     !
+     ! It is not compatible with use_aquifer_layer
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds               
-     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
-     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+     integer                  , intent(in)    :: num_soilc       ! number of column soil points in column filter
+     integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil points
      type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
-     type(waterfluxbulk_type) , intent(in)    :: waterfluxbulk_inst
-     type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+
+     real(r8) , intent(in)    :: qflx_gw_demand( bounds%begc: )              ! groundwater irrigation demand (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_gw_uncon_irrig_lyr( bounds%begc:, 1: ) ! unconfined aquifer groundwater irrigation withdrawal flux, separated by layer (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_gw_con_irrig( bounds%begc: )           ! total confined aquifer groundwater irrigation withdrawal flux (mm H2O/s)
      !
      ! !LOCAL VARIABLES:
-     character(len=32) :: subname = 'WithdrawGroundwaterIrrigation'  ! subroutine name
+     character(len=32) :: subname = 'CalcIrrigWithdrawals'  ! subroutine name
      integer  :: c,j,fc                                  ! indices
      real(r8) :: dtime                                   ! land model time step (sec)
      integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
      real(r8) :: s_y
-     real(r8) :: irrig_total
-     real(r8) :: irrig_layer
+     real(r8) :: irrig_demand_remaining  ! mm H2O
+     real(r8) :: available_water_layer   ! mm H2O
+     real(r8) :: irrig_layer             ! mm H2O
      !-----------------------------------------------------------------------
+
+     SHR_ASSERT_ALL((ubound(qflx_gw_demand) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(qflx_gw_uncon_irrig_lyr) == [bounds%endc, nlevsoi]), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(qflx_gw_con_irrig) == [bounds%endc]), errMsg(sourcefile, __LINE__))
 
      associate(                                                            & 
           nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
@@ -2605,29 +2544,28 @@ contains
           hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity at saturation (mm H2O /s)
           sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
-          zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
-
-          qflx_gw_uncon_irrig =>   waterfluxbulk_inst%qflx_gw_uncon_irrig_col, & ! Input:  [real(r8) (:) unconfined groundwater irrigation flux (mm H2O /s)
-          qflx_gw_con_irrig  => waterfluxbulk_inst%qflx_gw_con_irrig_col     , & ! confined groundwater irrigation flux (mm H2O /s)   
-          wa                 =>    waterstatebulk_inst%wa_col                , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
-          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
-          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
+          zwt                =>    soilhydrology_inst%zwt_col              & ! Input:  [real(r8) (:)   ] water table depth (m)                             
           )
-
-       ! Get time step
 
        dtime = get_step_size()
 
-       !-- Remove groundwater from unconfined aquifer  -----------
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
+       do j = 1, nlevsoi
+          do fc = 1, num_soilc
+             c = filter_soilc(fc)
+             qflx_gw_uncon_irrig_lyr(c,j) = 0._r8
+          end do
+       end do
 
-          irrig_total = qflx_gw_uncon_irrig(c)*dtime
+       !-- Remove groundwater from unconfined aquifer  -----------
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
+
+          irrig_demand_remaining = qflx_gw_demand(c)*dtime
           
           ! should never be negative... but include for completeness
-          if(irrig_total < 0.) then
+          if(irrig_demand_remaining < 0.) then
              
-             call endrun(msg="negative groundwater irrigation!"//errmsg(sourcefile, __LINE__))
+             call endrun(msg="negative groundwater irrigation demand! "//errmsg(sourcefile, __LINE__))
              
           else 
              jwt(c) = nlevsoi
@@ -2643,32 +2581,88 @@ contains
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
                 s_y=max(s_y,0.02_r8)
-                irrig_layer=min(irrig_total,(s_y*(zi(c,j) - zwt(c))*1.e3))
-                irrig_layer=max(irrig_layer,0._r8)
-                h2osoi_liq(c,j) = h2osoi_liq(c,j) - irrig_layer
-                   
-                irrig_total = irrig_total - irrig_layer
 
-                if (irrig_total <= 0.) then 
+                if (j==jwt(c)+1) then
+                   available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))
+                else
+                   available_water_layer=max(0._r8,(s_y*(zi(c,j) - zi(c,j-1))*1.e3))
+                endif
+
+                irrig_layer = min(irrig_demand_remaining, available_water_layer)
+                qflx_gw_uncon_irrig_lyr(c,j) = irrig_layer / dtime
+
+                irrig_demand_remaining = irrig_demand_remaining - irrig_layer
+
+                if (irrig_demand_remaining <= 0.) then 
                    exit
                 endif
-             enddo
-          endif
+             end do
+
+             if (irrig_demand_remaining > 0._r8) then
+                ! NOTE(wjs, 2018-12-15) Eventually we could limit irrigation from the
+                ! confined aquifer based on water availability there.
+                qflx_gw_con_irrig(c) = irrig_demand_remaining / dtime
+             else
+                qflx_gw_con_irrig(c) = 0._r8
+             end if
+          end if
        end do
 
-       ! zwt is not being updated, as it will be updated
-       ! after HydrologyNoDrainage
+     end associate
+
+   end subroutine CalcIrrigWithdrawals
+!#9
+   !-----------------------------------------------------------------------
+   subroutine WithdrawGroundwaterIrrigation(bounds, &
+        num_soilc, filter_soilc, &
+        waterflux_inst, waterstate_inst)
+     !
+     ! !DESCRIPTION:
+     ! Remove groundwater irrigation from unconfined and confined aquifers
+     ! This routine is called when use_groundwater_irrigation = .true.
+     ! It is not compatible with use_aquifer_layer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)      , intent(in)    :: bounds               
+     integer                , intent(in)    :: num_soilc       ! number of column soil points in column filter
+     integer                , intent(in)    :: filter_soilc(:) ! column filter for soil points
+     class(waterflux_type)  , intent(in)    :: waterflux_inst
+     class(waterstate_type) , intent(inout) :: waterstate_inst
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: fc, c, j
+     real(r8) :: dtime        ! land model time step (sec)
+
+     character(len=*), parameter :: subname = 'WithdrawGroundwaterIrrigation'
+     !-----------------------------------------------------------------------
+
+     associate( &
+          qflx_gw_uncon_irrig_lyr => waterflux_inst%qflx_gw_uncon_irrig_lyr_col, & ! Input: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
+          qflx_gw_con_irrig  => waterflux_inst%qflx_gw_con_irrig_col     , & ! Input: [real(r8) (:,:) ] confined groundwater irrigation flux (mm H2O /s)
+
+          wa                 =>    waterstate_inst%wa_col                , & ! Output: [real(r8) (:)   ] water in the unconfined aquifer (mm)
+          h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+          )
+
+     dtime = get_step_size()
+
+     do j = 1, nlevsoi
+        do fc = 1, num_soilc
+           c = filter_soilc(fc)
+           h2osoi_liq(c,j) = h2osoi_liq(c,j) - qflx_gw_uncon_irrig_lyr(c,j) * dtime
+        end do
+     end do
+
+     ! zwt is not being updated, as it will be updated after HydrologyNoDrainage
        
-       !-- Remove groundwater from confined aquifer  -----------
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          wa(c) = wa(c) - qflx_gw_con_irrig(c) * dtime
-       enddo
+     do fc = 1, num_soilc
+        c = filter_soilc(fc)
+        wa(c) = wa(c) - qflx_gw_con_irrig(c) * dtime
+     end do
 
      end associate
 
    end subroutine WithdrawGroundwaterIrrigation
-
 
 !#0
 end module SoilHydrologyMod

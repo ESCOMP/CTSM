@@ -503,6 +503,9 @@ contains
     if (this%params%enable_isotopes) then
        num_tracers = num_tracers + 2
     end if
+    if (this%params%enable_consistency_checks) then
+       num_tracers = num_tracers + 3
+    end if
 
     this%bulk_and_tracers_beg = 0
     this%tracers_beg = 1
@@ -519,6 +522,7 @@ contains
        allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
             tracer_name = 'H2OTR', &
             ratio = 1._r8, &
+            included_in_consistency_check = .true., &
             communicated_with_coupler = .false.))
        this%bulk_and_tracers(tracer_num)%is_isotope = .true.
        this%bulk_tracer_index = tracer_num
@@ -528,6 +532,7 @@ contains
        allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
             tracer_name = 'HDO', &
             ratio = 0.9_r8, &
+            included_in_consistency_check = .false., &
             communicated_with_coupler = .false.))
        this%bulk_and_tracers(tracer_num)%is_isotope = .true.
        tracer_num = tracer_num + 1
@@ -535,10 +540,37 @@ contains
        allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
             tracer_name = 'H218O', &
             ratio = 0.5_r8, &
+            included_in_consistency_check = .false., &
             communicated_with_coupler = .false.))
        this%bulk_and_tracers(tracer_num)%is_isotope = .true.
        tracer_num = tracer_num + 1
     end if
+    if (this%params%enable_consistency_checks) then
+       allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
+            tracer_name = 'TESTMED', &
+            ratio = 0.1_r8, &
+            included_in_consistency_check = .true., &
+            communicated_with_coupler = .false.))
+       this%bulk_and_tracers(tracer_num)%is_isotope = .true.
+       tracer_num = tracer_num + 1
+
+       allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
+            tracer_name = 'TESTSMALL', &
+            ratio = 1.0e-10_r8, &
+            included_in_consistency_check = .true., &
+            communicated_with_coupler = .false.))
+       this%bulk_and_tracers(tracer_num)%is_isotope = .true.
+       tracer_num = tracer_num + 1
+
+       allocate(this%bulk_and_tracers(tracer_num)%info, source = water_info_isotope_type( &
+            tracer_name = 'TESTBIG', &
+            ratio = 10._r8, &
+            included_in_consistency_check = .true., &
+            communicated_with_coupler = .false.))
+       this%bulk_and_tracers(tracer_num)%is_isotope = .true.
+       tracer_num = tracer_num + 1
+    end if
+
 
     if (tracer_num - 1 /= num_tracers) then
        write(iulog,*) subname//' ERROR: tracer_num discrepancy'
@@ -851,40 +883,40 @@ contains
     character(len=*), parameter :: subname = 'TracerConsistencyCheck'
     !-----------------------------------------------------------------------
 
-    !for now, simply checking bulk vs the bulk tracer, but may eventually 
-    !want to loop over all tracers in some situations
-    i = this%GetBulkTracerIndex()
-    if (i < 0) then
-       write(iulog,*) subname, ' Error: requesting tracer consistency check with bulk tracer not enabled'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    do i = this%tracers_beg, this%tracers_end
 
-    associate( &
-         tracer_vars => this%bulk_and_tracers(i)%vars, &
-         bulk_vars => this%bulk_and_tracers(this%i_bulk)%vars &
-         )
+       associate( &
+            tracer_vars => this%bulk_and_tracers(i)%vars, &
+            tracer_info => this%bulk_and_tracers(i)%info, &
+            bulk_vars => this%bulk_and_tracers(this%i_bulk)%vars &
+            )
 
-    num_vars = tracer_vars%get_num_vars()
-    SHR_ASSERT(num_vars == bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
 
-    do var_num = 1, num_vars
-       name = tracer_vars%get_description(var_num)
-       SHR_ASSERT(name == bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
+       if (tracer_info%is_included_in_consistency_check()) then
+          num_vars = tracer_vars%get_num_vars()
+          SHR_ASSERT(num_vars == bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
 
-       call tracer_vars%get_bounds(var_num, bounds, begi, endi)
+          do var_num = 1, num_vars
+             name = tracer_vars%get_description(var_num)
+             SHR_ASSERT(name == bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
 
-       call bulk_vars%get_data(var_num, bulk)
-       call tracer_vars%get_data(var_num, tracer)
+             call tracer_vars%get_bounds(var_num, bounds, begi, endi)
 
-       call CompareBulkToTracer(begi, endi, &
-            bulk   = bulk(begi:endi), &
-            tracer = tracer(begi:endi), &
-            caller_location = caller_location, &
-            name = name)
+             call bulk_vars%get_data(var_num, bulk)
+             call tracer_vars%get_data(var_num, tracer)
 
-    end do
+             call CompareBulkToTracer(begi, endi, &
+                  bulk   = bulk(begi:endi), &
+                  tracer = tracer(begi:endi), &
+                  ratio = tracer_info%get_ratio(), &
+                  caller_location = caller_location, &
+                  name = name)
 
-    end associate
+          end do
+       end if
+       end associate
+
+     end do
 
   end subroutine TracerConsistencyCheck
 
