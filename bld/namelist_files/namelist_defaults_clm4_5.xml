@@ -27,6 +27,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2010"      >388.8</co2_ppmv>
 <co2_ppmv sim_year="1850"      >284.7</co2_ppmv>
+<co2_ppmv sim_year="PtVg"      >284.7</co2_ppmv>
 
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
@@ -827,6 +828,10 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 
 <fsurdat hgrid="conus_30_x8"    sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_conus_30_x8_78pfts_CMIP6_simyr1850_c181003.nc</fsurdat>
+
+<!-- Potential vegetation land use dataset, crop is off, and zeroed, all areas are natural vegetation without human disturbance -->
+<fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
+>lnd/clm2/surfdata_map/surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
