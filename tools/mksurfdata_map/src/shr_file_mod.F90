@@ -1,7 +1,3 @@
-!===============================================================================
-! SVN $Id: shr_file_mod.F90 22436 2010-04-18 05:32:48Z tcraig $
-! SVN $URL: https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_110213/shr/shr_file_mod.F90 $
-!===============================================================================
 !BOP ===========================================================================
 !
 ! !MODULE: shr_file_mod.F90 --- Module to handle various file utilily functions.

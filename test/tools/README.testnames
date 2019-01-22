@@ -1,13 +1,3 @@
-Test names for the test_system script are given by the test type, resolution, compset, and then machine/compiler
-
-so
-
-   test_type.resolution.compset.machine_compiler
-
-example:
-
-   ERS_D_PT.T31_g37.I_2000_VOC_SNCRFRC_CN.yellowstone_intel
-
 Tests for test_driver are for the CLM tools only.
 
 Test naming conventions for the test_driver.sh script:
@@ -52,14 +42,20 @@ m is the resolution
 c -- US-UMB with cycling on forcing and transient use-case
 g -- US-UMB with global forcing and grid PFT and soil
 y -- 1.9x2.5 with transient 1850-2100 for rcp=2.6 and glacier-MEC on
+T -- 1x1_numaIA
 Z -- 10x15 with crop on
 @ -- ne120np4
 # -- ne30np4
 
 i is the specific test (usually this implies...)
 
+1 -- Serial  script
+2 -- Serial
 3 -- OpenMP only
-4 -- serial
-7 -- OpenMP only second test (without DEBUG compiler mode on)
+4 -- serial, DEBUG
+7 -- OpenMP only second test, DEBUG
+8 -- OpenMP only third test, DEBUG
+9 -- Serial Script
+0 -- Serial Script
 
 

@@ -18,22 +18,37 @@ CIME Issues fixed (include issue #): [If none, remove this line]
 
 Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
 
+Known bugs found since the previous tag (include github issue ID): [If none, remove this line]
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
 
 Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
 
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 
 Changes made to namelist defaults (e.g., changed parameter values):
 
 Changes to the datasets (e.g., parameter, surface or initial files):
 
-Substantial timing or memory changes:
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
@@ -41,16 +56,15 @@ Changes to tests or testing:
 
 Code reviewed by:
 
-Did you follow the steps in .CLMTrunkChecklist:
 
-CLM testing:
+CTSM testing:
 
-[... Remove before making trunk_tag.  Available test levels:
+[... Remove before making master tag.  Available test levels:
 
     a) regular (must be run before handing off a tag to SEs and must be run
      before committing a tag)
     b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CLM source is modified)
+    c) tools (only if tools are modified and no CTSM source is modified)
     d) short (for use during development and in rare cases where only a small
           change with known behavior is added ... eg. a minor bug fix)
     e) doc (no source testing required)
@@ -63,27 +77,20 @@ CLM testing:
 
     cheyenne - 
 
-  unit-tests (components/clm/src):
+  tools-tests (test/tools):
 
     cheyenne - 
 
-  tools-tests (components/clm/test/tools):
-
-    cheyenne - 
-
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+  PTCLM testing (tools/shared/PTCLM/test):
 
      cheyenne - 
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
-    hobart_nag -------- 
-    hobart_pgi -------- 
-    hobart_intel ------ 
+    cheyenne ---- 
+    hobart ------ 
 
-CLM tag used for the baseline comparisons: 
+CTSM tag used for the baseline comparisons: 
 
 
 Answer changes

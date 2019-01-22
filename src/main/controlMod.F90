@@ -15,15 +15,18 @@ module controlMod
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
   use abortutils                       , only: endrun
-  use spmdMod                          , only: masterproc
+  use spmdMod                          , only: masterproc, mpicom
+  use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
-  use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fexcl1, hist_fexcl2, hist_fexcl3
-  use histFileMod                      , only: hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fincl7, hist_fincl8
+  use histFileMod                      , only: hist_fincl9, hist_fincl10
+  use histFileMod                      , only: hist_fexcl1, hist_fexcl2, hist_fexcl3,  hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use histFileMod                      , only: hist_fexcl7, hist_fexcl8, hist_fexcl9, hist_fexcl10
   use initInterpMod                    , only: initInterp_readnl
   use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact
   use CanopyfluxesMod                  , only: perchroot, perchroot_alt
@@ -157,8 +160,12 @@ contains
          hist_nhtfrq,  hist_ndens, hist_mfilt, &
          hist_fincl1,  hist_fincl2, hist_fincl3, &
          hist_fincl4,  hist_fincl5, hist_fincl6, &
+         hist_fincl7,  hist_fincl8,              &
+         hist_fincl9,  hist_fincl10,             &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
-         hist_fexcl4,  hist_fexcl5, hist_fexcl6
+         hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
+         hist_fexcl7,  hist_fexcl8,              &
+         hist_fexcl9,  hist_fexcl10
     namelist /clm_inparm/ hist_wrtch4diag
 
     ! BGC info
@@ -195,8 +202,9 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, soil_layerstruct, subgridflag, &
-         irrigate, all_active
-
+         irrigate, run_zero_weight_urban, all_active, &
+         crop_fsat_equals_zero
+    
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -207,7 +215,7 @@ contains
 
     namelist /clm_inparm/ no_frozen_nitrif_denitrif
 
-    namelist /clm_inparm/ use_c13, use_c14
+    namelist /clm_inparm/ use_c13, use_c14, for_testing_allow_interp_non_ciso_to_ciso
 
 
     ! FATES Flags
@@ -244,8 +252,12 @@ contains
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     namelist /clm_inparm/ maxpatch_pft
+
+    ! flag for SSRE diagnostic
+    namelist /clm_inparm/ use_SSRE
 
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
@@ -262,6 +274,7 @@ contains
        write(iulog,*) 'Attempting to initialize run control settings .....'
     endif
 
+    finidat_interp_dest = 'finidat_interp_dest'//trim(inst_suffix)//'.nc'
     runtyp(:)               = 'missing'
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
@@ -325,9 +338,7 @@ contains
        ! History and restart files
 
        do i = 1, max_tapes
-          if (hist_nhtfrq(i) == 0) then
-             hist_mfilt(i) = 1
-          else if (hist_nhtfrq(i) < 0) then
+          if (hist_nhtfrq(i) < 0) then
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
@@ -441,7 +452,10 @@ contains
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
 
-    call initInterp_readnl( NLFilename )
+    call mpi_bcast (use_init_interp, 1, MPI_LOGICAL, 0, mpicom, ierr)
+    if (use_init_interp) then
+       call initInterp_readnl( NLFilename )
+    end if
 
     !I call init_hydrology to set up default hydrology sub-module methods.
     !For future version, I suggest to  put the following two calls inside their
@@ -551,9 +565,6 @@ contains
     ! it to all processors, or collects data from
     ! all processors and writes it to disk.
     !
-    ! !USES:
-    use spmdMod,    only : mpicom, MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
-    !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
@@ -585,6 +596,7 @@ contains
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_noio, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_SSRE, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! initial file variables
     call mpi_bcast (nrevsn, len(nrevsn), MPI_CHARACTER, 0, mpicom, ier)
@@ -600,13 +612,18 @@ contains
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! Crop saturated excess runoff
+    call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Other subgrid logic
+    call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! BGC
@@ -621,6 +638,7 @@ contains
     ! isotopes
     call mpi_bcast (use_c13, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_c14, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -737,12 +755,20 @@ contains
     call mpi_bcast (hist_fexcl4, max_namlen*size(hist_fexcl4), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl5, max_namlen*size(hist_fexcl5), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl6, max_namlen*size(hist_fexcl6), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl7, max_namlen*size(hist_fexcl7), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl8, max_namlen*size(hist_fexcl8), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl9, max_namlen*size(hist_fexcl9), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fexcl10,max_namlen*size(hist_fexcl10),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl1, (max_namlen+2)*size(hist_fincl1), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl2, (max_namlen+2)*size(hist_fincl2), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl3, (max_namlen+2)*size(hist_fincl3), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl4, (max_namlen+2)*size(hist_fincl4), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl5, (max_namlen+2)*size(hist_fincl5), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl6, (max_namlen+2)*size(hist_fincl6), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl7, (max_namlen+2)*size(hist_fincl7), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl8, (max_namlen+2)*size(hist_fincl8), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl9, (max_namlen+2)*size(hist_fincl9), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_fincl10,(max_namlen+2)*size(hist_fincl10),MPI_CHARACTER, 0, mpicom, ier)
 
     ! restart file variables
 
@@ -792,7 +818,7 @@ contains
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity
     write(iulog,*) '    use_noio = ', use_noio
-
+    write(iulog,*) '    use_SSRE = ', use_SSRE
     write(iulog,*) 'input data files:'
     write(iulog,*) '   PFT physiology and parameters file = ',trim(paramfile)
     if (fsurdat == ' ') then
@@ -853,6 +879,7 @@ contains
        write(iulog, *) '  use_c14                                                : ', use_c14
        write(iulog, *) '  use_c14_bombspike                                      : ', use_c14_bombspike
        write(iulog, *) '  atm_c14_filename                                       : ', atm_c14_filename
+       write(iulog, *) '  for_testing_allow_interp_non_ciso_to_ciso              : ', for_testing_allow_interp_non_ciso_to_ciso
     end if
 
     if (fsnowoptics == ' ') then
@@ -921,7 +948,6 @@ contains
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
-    write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   nsegspc              = ',nsegspc
     ! New fields
     write(iulog,*) ' perchroot (plant water stress based on unfrozen layers only) = ',perchroot

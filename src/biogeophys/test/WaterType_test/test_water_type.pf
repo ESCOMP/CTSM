@@ -1,0 +1,214 @@
+module test_water_type
+
+  ! Tests of WaterType
+
+  use pfunit_mod
+  use WaterType
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use unittestUtils, only : endrun_msg
+  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestWaterType
+     type(water_type) :: water_inst
+     type(unittest_water_type_factory_type) :: factory
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: init_water_inst_1pt
+  end type TestWaterType
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestWaterType), intent(inout) :: this
+
+    call this%factory%init()
+    call this%factory%setup_before_subgrid( &
+         my_nlevsoi = 3, &
+         nlevgrnd_additional = 1, &
+         my_nlevsno = 3)
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestWaterType), intent(inout) :: this
+
+    call this%factory%teardown(this%water_inst)
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  subroutine init_water_inst_1pt(this)
+    ! Initializes the subgrid structure for a single point, and initializes
+    ! this%water_inst
+    class(TestWaterType), intent(inout) :: this
+
+    call setup_single_veg_patch(pft_type=1)
+    call this%factory%setup_after_subgrid(snl = 0, dz = 1._r8)
+    call this%factory%create_water_type(this%water_inst, &
+         enable_consistency_checks = .true., &
+         enable_isotopes = .false.)
+
+  end subroutine init_water_inst_1pt
+
+  ! ------------------------------------------------------------------------
+  ! Tests of TracerConsistencyCheck and other code that sets things up for this check
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine tracerConsistencyCheck_passes(this)
+    class(TestWaterType), intent(inout) :: this
+
+    call this%init_water_inst_1pt()
+
+    @assertTrue(this%water_inst%DoConsistencyCheck())
+
+    ! The test is just about making sure that this line doesn't raise an exception:
+    call this%water_inst%TracerConsistencyCheck(bounds, &
+         caller_location = 'test')
+
+  end subroutine tracerConsistencyCheck_passes
+
+  @Test
+  subroutine tracerConsistencyCheck_changed1dBulkButNotFirstTracer_fails(this)
+    ! If we change a 1d bulk variable, but don't change the first tracer variable, the
+    ! tracer consistency check should fail
+    class(TestWaterType), intent(inout) :: this
+    real(r8) :: ratio
+    integer :: i
+    character(len=:), allocatable :: expected_msg
+
+    call this%init_water_inst_1pt()
+
+    this%water_inst%waterstatebulk_inst%h2osfc_col(bounds%begc) = &
+         this%water_inst%waterstatebulk_inst%h2osfc_col(bounds%begc) + 1._r8
+    ! Change all tracers except for first; we should have one failure
+    do i = this%water_inst%tracers_beg+1, this%water_inst%tracers_end
+       associate(waterstate_inst => this%water_inst%bulk_and_tracers(i)%waterstate_inst)
+       ratio = waterstate_inst%info%get_ratio()
+       ! We add 1 to the bulk (above), so need to add ratio to the tracer to keep them
+       ! consistent
+       waterstate_inst%h2osfc_col(bounds%begc) = waterstate_inst%h2osfc_col(bounds%begc) + ratio
+       end associate
+    end do
+
+    @assertTrue(this%water_inst%DoConsistencyCheck())
+
+    call this%water_inst%TracerConsistencyCheck(bounds, &
+         caller_location = 'test')
+
+    expected_msg = endrun_msg( &
+         'CompareBulkToTracer: tracer does not agree with bulk water')
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine tracerConsistencyCheck_changed1dBulkButNotFirstTracer_fails
+
+  @Test
+  subroutine tracerConsistencyCheck_changed1dBulkButNotLastTracer_fails(this)
+    ! If we change a 1d bulk variable, but don't change the last tracer variable, the
+    ! tracer consistency check should fail
+    class(TestWaterType), intent(inout) :: this
+    real(r8) :: ratio
+    integer :: i
+    character(len=:), allocatable :: expected_msg
+
+    call this%init_water_inst_1pt()
+
+    this%water_inst%waterstatebulk_inst%h2osfc_col(bounds%begc) = &
+         this%water_inst%waterstatebulk_inst%h2osfc_col(bounds%begc) + 1._r8
+    ! Change all tracers except for last; we should have one failure
+    do i = this%water_inst%tracers_beg, this%water_inst%tracers_end-1
+       associate(waterstate_inst => this%water_inst%bulk_and_tracers(i)%waterstate_inst)
+       ratio = waterstate_inst%info%get_ratio()
+       ! We add 1 to the bulk (above), so need to add ratio to the tracer to keep them
+       ! consistent
+       waterstate_inst%h2osfc_col(bounds%begc) = waterstate_inst%h2osfc_col(bounds%begc) + ratio
+       end associate
+    end do
+
+    @assertTrue(this%water_inst%DoConsistencyCheck())
+
+    call this%water_inst%TracerConsistencyCheck(bounds, &
+         caller_location = 'test')
+
+    expected_msg = endrun_msg( &
+         'CompareBulkToTracer: tracer does not agree with bulk water')
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine tracerConsistencyCheck_changed1dBulkButNotLastTracer_fails
+
+  @Test
+  subroutine tracerConsistencyCheck_changed1dTracer_fails(this)
+    ! If we change a 1d tracer variable, but don't change the corresponding bulk
+    ! variable, the tracer consistency check should fail
+    class(TestWaterType), intent(inout) :: this
+    integer :: bulk_tracer
+    character(len=:), allocatable :: expected_msg
+
+    call this%init_water_inst_1pt()
+    bulk_tracer = this%water_inst%GetBulkTracerIndex()
+    @assertGreaterThan(bulk_tracer, 0)
+
+    this%water_inst%bulk_and_tracers(bulk_tracer)%waterstate_inst%h2osfc_col(bounds%begc) = &
+         this%water_inst%bulk_and_tracers(bulk_tracer)%waterstate_inst%h2osfc_col(bounds%begc) + 1._r8
+
+    @assertTrue(this%water_inst%DoConsistencyCheck())
+
+    call this%water_inst%TracerConsistencyCheck(bounds, &
+         caller_location = 'test')
+
+    expected_msg = endrun_msg( &
+         'CompareBulkToTracer: tracer does not agree with bulk water')
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine tracerConsistencyCheck_changed1dTracer_fails
+
+  @Test
+  subroutine tracerConsistencyCheck_changed2d_fails(this)
+    ! If we change a 2d variable inconsistently between bult and tracer, the tracer
+    ! consistency check should fail. This confirms that the multi-layer variables have
+    ! each of their layers added
+    class(TestWaterType), intent(inout) :: this
+    integer :: lev
+    integer :: bulk_tracer
+    real(r8) :: ratio
+    integer :: i
+    character(len=:), allocatable :: expected_msg
+
+    call this%init_water_inst_1pt()
+    bulk_tracer = this%water_inst%GetBulkTracerIndex()
+    @assertGreaterThan(bulk_tracer, 0)
+
+    lev = lbound(this%water_inst%waterstatebulk_inst%h2osoi_liq_col, 2) + 1
+    ! We set both the bulk and tracer values explicitly, because we can't rely on these
+    ! being set to reasonable values in all layers in initialization
+    this%water_inst%waterstatebulk_inst%h2osoi_liq_col(bounds%begc, lev) = 1._r8
+    do i = this%water_inst%tracers_beg, this%water_inst%tracers_end
+       associate(waterstate_inst => this%water_inst%bulk_and_tracers(i)%waterstate_inst)
+       ratio = waterstate_inst%info%get_ratio()
+       if (i == this%water_inst%tracers_beg) then
+          ! First tracer has incorrect value: note use of 2 rather than 1 here
+          waterstate_inst%h2osoi_liq_col(bounds%begc, lev) = 2._r8 * ratio
+       else
+          waterstate_inst%h2osoi_liq_col(bounds%begc, lev) = 1._r8 * ratio
+       end if
+       end associate
+    end do
+
+    @assertTrue(this%water_inst%DoConsistencyCheck())
+
+    call this%water_inst%TracerConsistencyCheck(bounds, &
+         caller_location = 'test')
+
+    expected_msg = endrun_msg( &
+         'CompareBulkToTracer: tracer does not agree with bulk water')
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine tracerConsistencyCheck_changed2d_fails
+
+end module test_water_type

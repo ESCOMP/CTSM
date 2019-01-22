@@ -15,8 +15,10 @@ module LakeFluxesMod
   use LakeStateType        , only : lakestate_type
   use SolarAbsorbedType    , only : solarabs_type
   use TemperatureType      , only : temperature_type
-  use WaterfluxType        , only : waterflux_type
-  use WaterstateType       , only : waterstate_type
+  use WaterFluxBulkType        , only : waterfluxbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
+  use WaterStateBulkType       , only : waterstatebulk_type
+  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use HumanIndexMod        , only : humanindex_type
   use GridcellType         , only : grc                
   use ColumnType           , only : col                
@@ -36,7 +38,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine LakeFluxes(bounds, num_lakec, filter_lakec, num_lakep, filter_lakep, &
        atm2lnd_inst, solarabs_inst, frictionvel_inst, temperature_inst, &
-       energyflux_inst, waterstate_inst, waterflux_inst, lakestate_inst, &
+       energyflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       waterfluxbulk_inst, wateratm2lndbulk_inst, lakestate_inst, &
        humanindex_inst) 
     !
     ! !DESCRIPTION:
@@ -55,7 +58,8 @@ contains
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
     use QSatMod             , only : QSat
     use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
-    use HumanIndexMod       , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+    use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
+                                     Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                      SwampCoolEff, KtoC, VaporPres
     !
@@ -69,8 +73,10 @@ contains
     type(solarabs_type)    , intent(inout) :: solarabs_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(lakestate_type)   , intent(inout) :: lakestate_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
@@ -161,11 +167,11 @@ contains
          forc_t           =>    atm2lnd_inst%forc_t_downscaled_col     , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)                  
          forc_pbot        =>    atm2lnd_inst%forc_pbot_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                         
          forc_th          =>    atm2lnd_inst%forc_th_downscaled_col    , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)        
-         forc_q           =>    atm2lnd_inst%forc_q_downscaled_col     , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
+         forc_q           =>    wateratm2lndbulk_inst%forc_q_downscaled_col     , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
          forc_rho         =>    atm2lnd_inst%forc_rho_downscaled_col   , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                 
          forc_lwrad       =>    atm2lnd_inst%forc_lwrad_downscaled_col , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)   
-         forc_snow        =>    atm2lnd_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                                  
-         forc_rain        =>    atm2lnd_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                                  
+         forc_snow        =>    wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                                  
+         forc_rain        =>    wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                                  
          forc_u           =>    atm2lnd_inst%forc_u_grc                , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)    
          forc_v           =>    atm2lnd_inst%forc_v_grc                , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)   
          
@@ -180,8 +186,9 @@ contains
          savedtke1        =>    lakestate_inst%savedtke1_col           , & ! Input:  [real(r8) (:)   ]  top level eddy conductivity from previous timestep (W/mK)
          lakefetch        =>    lakestate_inst%lakefetch_col           , & ! Input:  [real(r8) (:)   ]  lake fetch from surface data (m)                  
          
-         h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col         , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col         , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         t_skin_patch     =>    temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
 
          t_lake           =>    temperature_inst%t_lake_col            , & ! Input:  [real(r8) (:,:) ]  lake temperature (Kelvin)                       
          t_soisno         =>    temperature_inst%t_soisno_col          , & ! Input:  [real(r8) (:,:) ]  soil (or snow) temperature (Kelvin)             
@@ -193,8 +200,8 @@ contains
          zetamax          =>    frictionvel_parms_inst%zetamaxstable   , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1             =>    frictionvel_inst%ram1_patch            , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
 
-         q_ref2m          =>    waterstate_inst%q_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
-         rh_ref2m         =>    waterstate_inst%rh_ref2m_patch         , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
+         q_ref2m          =>    waterdiagnosticbulk_inst%q_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
+         rh_ref2m         =>    waterdiagnosticbulk_inst%rh_ref2m_patch         , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
 
          tc_ref2m         =>    humanindex_inst%tc_ref2m_patch         , & ! Output: [real(r8) (:)]  2 m height surface air temperature (C)
          vap_ref2m        =>    humanindex_inst%vap_ref2m_patch        , & ! Output: [real(r8) (:)]  2 m height vapor pressure (Pa)
@@ -213,9 +220,9 @@ contains
          swmp65_ref2m    =>    humanindex_inst%swmp65_ref2m_patch      , & ! Output: [real(r8) (:)]  2 m Swamp Cooler temperature 65% effi (C)
          swmp80_ref2m    =>    humanindex_inst%swmp80_ref2m_patch      , & ! Output: [real(r8) (:)]  2 m Swamp Cooler temperature 80% effi (C)
 
-         qflx_evap_soi    =>    waterflux_inst%qflx_evap_soi_patch     , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
-         qflx_evap_tot    =>    waterflux_inst%qflx_evap_tot_patch     , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
-         qflx_prec_grnd   =>    waterflux_inst%qflx_prec_grnd_patch    , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
+         qflx_evap_soi    =>    waterfluxbulk_inst%qflx_evap_soi_patch     , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
+         qflx_evap_tot    =>    waterfluxbulk_inst%qflx_evap_tot_patch     , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
+         qflx_prec_grnd   =>    waterfluxbulk_inst%qflx_prec_grnd_patch    , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
 
          t_veg            =>    temperature_inst%t_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin)                   
          t_ref2m          =>    temperature_inst%t_ref2m_patch         , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)       
@@ -607,20 +614,22 @@ contains
 
          ! Human Heat Stress
   
-         if ( calc_human_stress_indices )then
+         if ( all_human_stress_indices .or. fast_human_stress_indices )then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
-            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), &
-                          q_ref2m(p), teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
             call Wet_BulbS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p))
             call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
             call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
-            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
-            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            if ( all_human_stress_indices ) then
+               call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), &
+                             q_ref2m(p), teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+               call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+               call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+               call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            end if
          end if
 
 
@@ -657,7 +666,7 @@ contains
          t_veg(p) = forc_t(c)
          eflx_lwrad_net(p)  = eflx_lwrad_out(p) - forc_lwrad(c)
          qflx_prec_grnd(p) = forc_rain(c) + forc_snow(c)
-
+         t_skin_patch(p) = t_veg(p)         
       end do
 
     end associate

@@ -13,97 +13,98 @@ module pftconMod
   !
   ! !PUBLIC TYPES:
   implicit none
+  private
   !
   ! Vegetation type constants
   !
-  integer :: noveg                  ! value for not vegetated 
-  integer :: ndllf_evr_tmp_tree     ! value for Needleleaf evergreen temperate tree
-  integer :: ndllf_evr_brl_tree     ! value for Needleleaf evergreen boreal tree
-  integer :: ndllf_dcd_brl_tree     ! value for Needleleaf deciduous boreal tree
-  integer :: nbrdlf_evr_trp_tree    ! value for Broadleaf evergreen tropical tree
-  integer :: nbrdlf_evr_tmp_tree    ! value for Broadleaf evergreen temperate tree
-  integer :: nbrdlf_dcd_trp_tree    ! value for Broadleaf deciduous tropical tree
-  integer :: nbrdlf_dcd_tmp_tree    ! value for Broadleaf deciduous temperate tree
-  integer :: nbrdlf_dcd_brl_tree    ! value for Broadleaf deciduous boreal tree
-  integer :: ntree                  ! value for last type of tree
-  integer :: nbrdlf_evr_shrub       ! value for Broadleaf evergreen shrub
-  integer :: nbrdlf_dcd_tmp_shrub   ! value for Broadleaf deciduous temperate shrub
-  integer :: nbrdlf_dcd_brl_shrub   ! value for Broadleaf deciduous boreal shrub
-  integer :: nc3_arctic_grass       ! value for C3 arctic grass
-  integer :: nc3_nonarctic_grass    ! value for C3 non-arctic grass
-  integer :: nc4_grass              ! value for C4 grass
-  integer :: npcropmin              ! value for first crop
-  integer :: ntmp_corn              ! value for temperate corn, rain fed (rf)
-  integer :: nirrig_tmp_corn        ! value for temperate corn, irrigated (ir)
-  integer :: nswheat                ! value for spring temperate cereal (rf)
-  integer :: nirrig_swheat          ! value for spring temperate cereal (ir)
-  integer :: nwwheat                ! value for winter temperate cereal (rf)
-  integer :: nirrig_wwheat          ! value for winter temperate cereal (ir)
-  integer :: ntmp_soybean           ! value for temperate soybean (rf)
-  integer :: nirrig_tmp_soybean     ! value for temperate soybean (ir)
-  integer :: nbarley                ! value for spring barley (rf)
-  integer :: nirrig_barley          ! value for spring barley (ir)
-  integer :: nwbarley               ! value for winter barley (rf)
-  integer :: nirrig_wbarley         ! value for winter barley (ir)
-  integer :: nrye                   ! value for spring rye (rf)
-  integer :: nirrig_rye             ! value for spring rye (ir)
-  integer :: nwrye                  ! value for winter rye (rf)
-  integer :: nirrig_wrye            ! value for winter rye (ir)
-  integer :: ncassava               ! ...and so on
-  integer :: nirrig_cassava
-  integer :: ncitrus
-  integer :: nirrig_citrus
-  integer :: ncocoa
-  integer :: nirrig_cocoa
-  integer :: ncoffee
-  integer :: nirrig_coffee
-  integer :: ncotton
-  integer :: nirrig_cotton
-  integer :: ndatepalm
-  integer :: nirrig_datepalm
-  integer :: nfoddergrass
-  integer :: nirrig_foddergrass
-  integer :: ngrapes
-  integer :: nirrig_grapes
-  integer :: ngroundnuts
-  integer :: nirrig_groundnuts
-  integer :: nmillet
-  integer :: nirrig_millet
-  integer :: noilpalm
-  integer :: nirrig_oilpalm
-  integer :: npotatoes
-  integer :: nirrig_potatoes
-  integer :: npulses
-  integer :: nirrig_pulses
-  integer :: nrapeseed
-  integer :: nirrig_rapeseed
-  integer :: nrice
-  integer :: nirrig_rice
-  integer :: nsorghum
-  integer :: nirrig_sorghum
-  integer :: nsugarbeet
-  integer :: nirrig_sugarbeet
-  integer :: nsugarcane
-  integer :: nirrig_sugarcane
-  integer :: nsunflower
-  integer :: nirrig_sunflower
-  integer :: nmiscanthus
-  integer :: nirrig_miscanthus
-  integer :: nswitchgrass
-  integer :: nirrig_switchgrass
-  integer :: ntrp_corn              !value for tropical corn (rf)
-  integer :: nirrig_trp_corn        !value for tropical corn (ir)
-  integer :: ntrp_soybean           !value for tropical soybean (rf)
-  integer :: nirrig_trp_soybean     !value for tropical soybean (ir)
-  integer :: npcropmax              ! value for last prognostic crop in list
-  integer :: nc3crop                ! value for generic crop (rf)
-  integer :: nc3irrig               ! value for irrigated generic crop (ir)
+  integer, public :: noveg                  ! value for not vegetated 
+  integer, public :: ndllf_evr_tmp_tree     ! value for Needleleaf evergreen temperate tree
+  integer, public :: ndllf_evr_brl_tree     ! value for Needleleaf evergreen boreal tree
+  integer, public :: ndllf_dcd_brl_tree     ! value for Needleleaf deciduous boreal tree
+  integer, public :: nbrdlf_evr_trp_tree    ! value for Broadleaf evergreen tropical tree
+  integer, public :: nbrdlf_evr_tmp_tree    ! value for Broadleaf evergreen temperate tree
+  integer, public :: nbrdlf_dcd_trp_tree    ! value for Broadleaf deciduous tropical tree
+  integer, public :: nbrdlf_dcd_tmp_tree    ! value for Broadleaf deciduous temperate tree
+  integer, public :: nbrdlf_dcd_brl_tree    ! value for Broadleaf deciduous boreal tree
+  integer, public :: ntree                  ! value for last type of tree
+  integer, public :: nbrdlf_evr_shrub       ! value for Broadleaf evergreen shrub
+  integer, public :: nbrdlf_dcd_tmp_shrub   ! value for Broadleaf deciduous temperate shrub
+  integer, public :: nbrdlf_dcd_brl_shrub   ! value for Broadleaf deciduous boreal shrub
+  integer, public :: nc3_arctic_grass       ! value for C3 arctic grass
+  integer, public :: nc3_nonarctic_grass    ! value for C3 non-arctic grass
+  integer, public :: nc4_grass              ! value for C4 grass
+  integer, public :: npcropmin              ! value for first crop
+  integer, public :: ntmp_corn              ! value for temperate corn, rain fed (rf)
+  integer, public :: nirrig_tmp_corn        ! value for temperate corn, irrigated (ir)
+  integer, public :: nswheat                ! value for spring temperate cereal (rf)
+  integer, public :: nirrig_swheat          ! value for spring temperate cereal (ir)
+  integer, public :: nwwheat                ! value for winter temperate cereal (rf)
+  integer, public :: nirrig_wwheat          ! value for winter temperate cereal (ir)
+  integer, public :: ntmp_soybean           ! value for temperate soybean (rf)
+  integer, public :: nirrig_tmp_soybean     ! value for temperate soybean (ir)
+  integer, public :: nbarley                ! value for spring barley (rf)
+  integer, public :: nirrig_barley          ! value for spring barley (ir)
+  integer, public :: nwbarley               ! value for winter barley (rf)
+  integer, public :: nirrig_wbarley         ! value for winter barley (ir)
+  integer, public :: nrye                   ! value for spring rye (rf)
+  integer, public :: nirrig_rye             ! value for spring rye (ir)
+  integer, public :: nwrye                  ! value for winter rye (rf)
+  integer, public :: nirrig_wrye            ! value for winter rye (ir)
+  integer, public :: ncassava               ! ...and so on
+  integer, public :: nirrig_cassava
+  integer, public :: ncitrus
+  integer, public :: nirrig_citrus
+  integer, public :: ncocoa
+  integer, public :: nirrig_cocoa
+  integer, public :: ncoffee
+  integer, public :: nirrig_coffee
+  integer, public :: ncotton
+  integer, public :: nirrig_cotton
+  integer, public :: ndatepalm
+  integer, public :: nirrig_datepalm
+  integer, public :: nfoddergrass
+  integer, public :: nirrig_foddergrass
+  integer, public :: ngrapes
+  integer, public :: nirrig_grapes
+  integer, public :: ngroundnuts
+  integer, public :: nirrig_groundnuts
+  integer, public :: nmillet
+  integer, public :: nirrig_millet
+  integer, public :: noilpalm
+  integer, public :: nirrig_oilpalm
+  integer, public :: npotatoes
+  integer, public :: nirrig_potatoes
+  integer, public :: npulses
+  integer, public :: nirrig_pulses
+  integer, public :: nrapeseed
+  integer, public :: nirrig_rapeseed
+  integer, public :: nrice
+  integer, public :: nirrig_rice
+  integer, public :: nsorghum
+  integer, public :: nirrig_sorghum
+  integer, public :: nsugarbeet
+  integer, public :: nirrig_sugarbeet
+  integer, public :: nsugarcane
+  integer, public :: nirrig_sugarcane
+  integer, public :: nsunflower
+  integer, public :: nirrig_sunflower
+  integer, public :: nmiscanthus
+  integer, public :: nirrig_miscanthus
+  integer, public :: nswitchgrass
+  integer, public :: nirrig_switchgrass
+  integer, public :: ntrp_corn              !value for tropical corn (rf)
+  integer, public :: nirrig_trp_corn        !value for tropical corn (ir)
+  integer, public :: ntrp_soybean           !value for tropical soybean (rf)
+  integer, public :: nirrig_trp_soybean     !value for tropical soybean (ir)
+  integer, public :: npcropmax              ! value for last prognostic crop in list
+  integer, public :: nc3crop                ! value for generic crop (rf)
+  integer, public :: nc3irrig               ! value for irrigated generic crop (ir)
 
   ! Number of crop functional types actually used in the model. This includes each CFT for
   ! which is_pft_known_to_model is true. Note that this includes irrigated crops even if
   ! irrigation is turned off in this run: it just excludes crop types that aren't handled
   ! at all, as given by the mergetoclmpft list.
-  integer :: num_cfts_known_to_model
+  integer, public :: num_cfts_known_to_model
 
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
@@ -274,19 +275,19 @@ module pftconMod
 
   type(pftcon_type), public :: pftcon ! pft type constants structure
 
-  integer, parameter :: pftname_len = 40         ! max length of pftname       
-  character(len=pftname_len) :: pftname(0:mxpft) ! PFT description
+  integer, public, parameter :: pftname_len = 40         ! max length of pftname       
+  character(len=pftname_len), public :: pftname(0:mxpft) ! PFT description
 
-  real(r8), parameter :: reinickerp = 1.6_r8     ! parameter in allometric equation
-  real(r8), parameter :: dwood  = 2.5e5_r8       ! cn wood density (gC/m3); lpj:2.0e5
-  real(r8), parameter :: allom1 = 100.0_r8       ! parameters in
-  real(r8), parameter :: allom2 =  40.0_r8       ! ...allometric
-  real(r8), parameter :: allom3 =   0.5_r8       ! ...equations
-  real(r8), parameter :: allom1s = 250.0_r8      ! modified for shrubs by
-  real(r8), parameter :: allom2s =   8.0_r8      ! X.D.Z
+  real(r8), public, parameter :: reinickerp = 1.6_r8     ! parameter in allometric equation
+  real(r8), public, parameter :: dwood  = 2.5e5_r8       ! cn wood density (gC/m3); lpj:2.0e5
+  real(r8), public, parameter :: allom1 = 100.0_r8       ! parameters in
+  real(r8), public, parameter :: allom2 =  40.0_r8       ! ...allometric
+  real(r8), public, parameter :: allom3 =   0.5_r8       ! ...equations
+  real(r8), public, parameter :: allom1s = 250.0_r8      ! modified for shrubs by
+  real(r8), public, parameter :: allom2s =   8.0_r8      ! X.D.Z
 ! root radius, density from Bonan, GMD, 2014
-  real(r8), parameter :: root_density = 0.31e06_r8 !(g biomass / m3 root)
-  real(r8), parameter :: root_radius = 0.29e-03_r8 !(m)
+  real(r8), public, parameter :: root_density = 0.31e06_r8 !(g biomass / m3 root)
+  real(r8), public, parameter :: root_radius = 0.29e-03_r8 !(m)
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -966,7 +967,7 @@ contains
     !
     ! Constants
     !
-    !MV (10-08-14) TODO is this right - used to be numpft - is it okay to set it to mxpft?
+    !MV (10-08-14) TODO is this right - used to be maxveg - is it okay to set it to mxpft?
     do m = 0,mxpft 
        this%dwood(m) = dwood
        this%root_radius(m)  = root_radius
@@ -1106,6 +1107,16 @@ contains
 
     if (use_cndv) then
        this%fcur(:) = this%fcurdv(:)
+    end if
+    ! When crop is not on, merge prognostic crop types into either the rainfed
+    ! or irrigated C3 generic crop types
+    if ( .not. use_crop )then
+       do i = npcropmin, ntrp_soybean, 2
+         this%mergetoclmpft(i) = nc3crop
+       end do
+       do i = nirrig_tmp_corn, npcropmax, 2
+         this%mergetoclmpft(i) = nc3irrig
+       end do
     end if
     !
     ! Do some error checking, but not if fates is on.

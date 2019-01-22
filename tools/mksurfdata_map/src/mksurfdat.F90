@@ -15,7 +15,7 @@ program mksurfdat
     use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4
     use fileutils          , only : opnfil, getavu
     use mklaiMod           , only : mklai
-    use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array
+    use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
     use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
     use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
     use mksoilMod          , only : soil_sand, soil_clay, mksoiltex, mksoilInit, &
@@ -90,9 +90,11 @@ program mksurfdat
     real(r8), allocatable  :: pctlnd_pft(:)      ! PFT data: % of gridcell for PFTs
     real(r8), allocatable  :: pctlnd_pft_dyn(:)  ! PFT data: % of gridcell for dyn landuse PFTs
     integer , allocatable  :: pftdata_mask(:)    ! mask indicating real or fake land type
-    type(pct_pft_type), allocatable :: pctnatpft(:) ! % of grid cell that is nat veg, and breakdown into PFTs
-    type(pct_pft_type), allocatable :: pctcft(:)    ! % of grid cell that is crop, and breakdown into CFTs
-    type(pct_pft_type), allocatable :: pctcft_saved(:) ! version of pctcft saved from the initial call to mkpft
+    type(pct_pft_type), allocatable :: pctnatpft(:)     ! % of grid cell that is nat veg, and breakdown into PFTs
+    type(pct_pft_type), allocatable :: pctnatpft_max(:) ! % of grid cell maximum PFTs of the time series
+    type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
+    type(pct_pft_type), allocatable :: pctcft_max(:)    ! % of grid cell maximum CFTs of the time series
+    type(pct_pft_type), allocatable :: pctcft_saved(:)  ! version of pctcft saved from the initial call to mkpft
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
@@ -136,6 +138,8 @@ program mksurfdat
     real(r8), allocatable  :: f0(:)              ! max fractional inundated area (unitless)
     real(r8), allocatable  :: p3(:)              ! coefficient for qflx_surf_lag for finundated (s/mm)
     real(r8), allocatable  :: zwt0(:)            ! decay factor for finundated (m)
+
+    real(r8) :: std_elev = -999.99_r8            ! Standard deviation of elevation (m) to use for entire grid
 
     integer, allocatable :: harvind1D(:)         ! Indices of 1D harvest fields
     integer, allocatable :: harvind2D(:)         ! Indices of 2D harvest fields
@@ -205,12 +209,14 @@ program mksurfdat
          map_ftopostats,           &
          map_fvic,                 &
          map_fch4,                 &
+         gitdescribe,              &
          outnc_large_files,        &
          outnc_double,             &
          outnc_dims,               &
          fsurdat,                  &
          fdyndat,                  &   
          fsurlog,                  &
+         std_elev,                 &
          urban_skip_abort_on_invalid_data_check
 
 !-----------------------------------------------------------------------
@@ -277,6 +283,7 @@ program mksurfdat
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
     !    nglcec ------------ If you want to change the number of Glacier elevation classes
+    !    gitdescribe ------- Description of this version from git
     ! ======================================
     ! Optional settings to change values for entire area
     ! ======================================
@@ -414,7 +421,9 @@ program mksurfdat
                pctlnd_pft(ns_o)                   , & 
                pftdata_mask(ns_o)                 , & 
                pctnatpft(ns_o)                    , &
+               pctnatpft_max(ns_o)                , &
                pctcft(ns_o)                       , &
+               pctcft_max(ns_o)                   , &
                pctcft_saved(ns_o)                 , &
                pctgla(ns_o)                       , & 
                pctlak(ns_o)                       , & 
@@ -649,7 +658,7 @@ program mksurfdat
     
     ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
     call mktopostats (ldomain, mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
-         ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope)
+         ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
 
     ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
     call mkVICparams (ldomain, mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
@@ -1095,6 +1104,9 @@ program mksurfdat
 
        nfdyn = getavu(); call opnfil (mksrf_fdynuse, nfdyn, 'f')
 
+       pctnatpft_max = pctnatpft
+       pctcft_max = pctcft
+
        ntim = 0
        do 
           ! Read input pft data
@@ -1156,6 +1168,9 @@ program mksurfdat
           call change_landuse(ldomain, dynpft=.true.)
 
           call normalizencheck_landuse(ldomain)
+	  
+          call update_max_array(pctnatpft_max,pctnatpft)
+          call update_max_array(pctcft_max,pctcft)
 
           ! Output time-varying data for current year
 
@@ -1197,6 +1212,17 @@ program mksurfdat
 	  call check_ret(nf_sync(ncid), subname)
 
        end do   ! end of read loop
+
+       call check_ret(nf_inq_varid(ncid, 'PCT_NAT_PFT_MAX', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctnatpft_max)), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'PCT_CROP_MAX', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctcft_max)), subname)
+
+       if (num_cft > 0) then
+          call check_ret(nf_inq_varid(ncid, 'PCT_CFT_MAX', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctcft_max)), subname)
+       end if
 
        call check_ret(nf_close(ncid), subname)
 

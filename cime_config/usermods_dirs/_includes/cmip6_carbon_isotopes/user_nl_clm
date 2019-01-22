@@ -1,0 +1,12 @@
+!----------------------------------------------------------------------------------
+! Settings from cmip6_carbon_isotopes
+!----------------------------------------------------------------------------------
+
+use_c13 = .true.
+use_c14 = .true.
+use_c13_timeseries = .true.
+use_c14_bombspike = .true.
+
+! h3 stream (yearly average, gridcell-level)
+hist_fincl4 += 'C14_SOIL1C_vr', 'C14_SOIL2C_vr', 'C14_SOIL3C_vr'
+

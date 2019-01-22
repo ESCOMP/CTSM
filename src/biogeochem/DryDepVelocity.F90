@@ -70,7 +70,9 @@ Module DryDepVelocity
   use CanopyStateType      , only : canopystate_type
   use FrictionVelocityMod  , only : frictionvel_type
   use PhotosynthesisMod    , only : photosyns_type
-  use WaterstateType       , only : waterstate_type
+  use WaterStateBulkType       , only : waterstatebulk_type
+  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
   use GridcellType         , only : grc                
   use LandunitType         , only : lun                
   use PatchType            , only : patch                
@@ -179,7 +181,8 @@ CONTAINS
 
   !----------------------------------------------------------------------- 
   subroutine depvel_compute( bounds, &
-       atm2lnd_inst, canopystate_inst, waterstate_inst, frictionvel_inst, &
+       atm2lnd_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       wateratm2lndbulk_inst, frictionvel_inst, &
        photosyns_inst, drydepvel_inst)
     !
     ! !DESCRIPTION:
@@ -206,7 +209,9 @@ CONTAINS
     type(bounds_type)      , intent(in)    :: bounds  
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)  , intent(in)    :: wateratm2lndbulk_inst
     type(frictionvel_type) , intent(in)    :: frictionvel_inst
     type(photosyns_type)   , intent(in)    :: photosyns_inst
     type(drydepvel_type)   , intent(inout) :: drydepvel_inst
@@ -280,12 +285,12 @@ CONTAINS
          forc_solai =>    atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)             
          forc_solad =>    atm2lnd_inst%forc_solad_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)             
          forc_t     =>    atm2lnd_inst%forc_t_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric temperature (Kelvin)                   
-         forc_q     =>    atm2lnd_inst%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric specific humidity (kg/kg)              
+         forc_q     =>    wateratm2lndbulk_inst%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric specific humidity (kg/kg)              
          forc_psrf  =>    atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ] downscaled surface pressure (Pa)                              
-         forc_rain  =>    atm2lnd_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ] downscaled rain rate [mm/s]                                   
+         forc_rain  =>    wateratm2lndbulk_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ] downscaled rain rate [mm/s]                                   
 
-         h2osoi_vol =>    waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ] volumetric soil water (0<=h2osoi_vol<=watsat)   
-         snow_depth =>    waterstate_inst%snow_depth_col        , & ! Input:  [real(r8) (:)   ] snow height (m)                                   
+         h2osoi_vol =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ] volumetric soil water (0<=h2osoi_vol<=watsat)   
+         snow_depth =>    waterdiagnosticbulk_inst%snow_depth_col        , & ! Input:  [real(r8) (:)   ] snow height (m)                                   
 
          ram1       =>    frictionvel_inst%ram1_patch           , & ! Input:  [real(r8) (:)   ] aerodynamical resistance                           
          rb1        =>    frictionvel_inst%rb1_patch            , & ! Input:  [real(r8) (:)   ] leaf boundary layer resistance [s/m]               

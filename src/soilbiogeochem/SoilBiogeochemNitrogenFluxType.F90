@@ -200,7 +200,6 @@ module SoilBiogeochemNitrogenFluxType
    contains
 
      procedure , public  :: Init   
-     procedure , public  :: Restart
      procedure , public  :: SetValues
      procedure , public  :: Summary
      procedure , private :: InitAllocate 
@@ -432,7 +431,7 @@ contains
     integer        :: begc, endc
     character(24)  :: fieldname
     character(100) :: longname
-    character(8)   :: vr_suffix
+    character(8)   :: vr_suffix,default
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -453,124 +452,8 @@ contains
     call hist_addfld1d (fname='NDEP_TO_SMINN', units='gN/m^2/s', &
          avgflag='A', long_name='atmospheric N deposition to soil mineral N', &
          ptr_col=this%ndep_to_sminn_col)
-!KO
-!!$  if ( use_fan ) then
 
-!!$    this%nhxdep_to_sminn_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NHxDEP_TO_SMINN', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='atmospheric NHx deposition to soil mineral N', &
-!!$         ptr_col=this%nhxdep_to_sminn_col)
-!!$
-!!$    this%noydep_to_sminn_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NOyDEP_TO_SMINN', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='atmospheric NOy deposition to soil mineral N', &
-!!$         ptr_col=this%noydep_to_sminn_col)
-!!$
-!!$    this%ndep_manure_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NDEP_MANURE', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N deposition from manure', &
-!!$         ptr_col=this%ndep_manure_col)
-!!$
-!!$    this%N_Run_Off_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='N_RUN_OFF', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N run off from manure by rain', &
-!!$         ptr_col=this%N_Run_Off_col)
-!!$
-!!$    this%nmanure_to_sminn_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NMANURE_TO_SMINN', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='Deposition of N from manure to soil mineral', &
-!!$         ptr_col=this%nmanure_to_sminn_col)
-!!$
-!!$    this%ndep_fert_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NDEP_FERT', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N deposition from fertilizer', &
-!!$         ptr_col=this%ndep_fert_col)
-!!$
-!!$    this%N_Run_Off_fert_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='N_RUN_OFF_FERT', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N run off from fertilizer by rain', &
-!!$         ptr_col=this%N_Run_Off_fert_col)
-!!$
-!!$    this%nfert_to_sminn_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NFERT_TO_SMINN', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='Deposition of N from fertilizer to soil mineral', &
-!!$         ptr_col=this%nfert_to_sminn_col)
-!!$
-!!$    this%nh3_manure_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NH3_MANURE', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='NH3 emission from manure', &
-!!$         ptr_col=this%nh3_manure_col)
-!!$        
-!!$    this%gamma_nh3_fert_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='GAMMA_NH3_FERT', units='none', &
-!!$         avgflag='A', long_name='Gamma Fn NH3 emission for fertilizer', &
-!!$         ptr_col=this%gamma_nh3_fert_col)
-!!$
-!!$    !this%nh3_fert_col(begc:endc) = spval
-!!$    !call hist_addfld1d (fname='NH3_FERT', units='gN/m^2/s', &
-!!$    !     avgflag='A', long_name='NH3 emission from fertilizer', &
-!!$    !     ptr_col=this%nh3_fert_col)
-!!$
-!!$    this%manure_f_n2o_nit_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='F_N2O_NIT_MANURE', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N2O emission from nitrification of manure', &
-!!$         ptr_col=this%manure_f_n2o_nit_col)
-!!$        
-!!$    this%manure_f_n2_denit_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='F_N2_DENIT_MANURE', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N2 emission from denitrification of manure', &
-!!$         ptr_col=this%manure_f_n2_denit_col)
-!!$
-!!$    this%manure_f_nox_nit_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='F_NOx_NIT_MANURE', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='NOx emission from nitrification of manure', &
-!!$         ptr_col=this%manure_f_nox_nit_col)
-!!$
-!!$    this%fert_f_n2o_nit_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='F_N2O_NIT_FERTILIZER', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N2O emission from nitrification of fertilizer', &
-!!$         ptr_col=this%fert_f_n2o_nit_col)
-!!$        
-!!$    this%fert_f_n2_denit_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='F_N2_DENIT_FERTILIZER', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='N2 emission from denitrification of fertilizer', &
-!!$         ptr_col=this%fert_f_n2_denit_col)
-!!$
-!!$    this%fert_f_nox_nit_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='F_NOx_NIT_FERTILIZER', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='NOx emission from nitrification of fertilzer', &
-!!$         ptr_col=this%fert_f_nox_nit_col)
-!!$
-!!$    this%Nd_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='ND', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='Total N emission from denitrification of manure', &
-!!$         ptr_col=this%Nd_col)
-!!$
-!!$    this%no3_manure_to_soil_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NO3_MANURE_TO_SOIL', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='Flow of NO3 from manure to soil at rate of 1 % per day', &
-!!$         ptr_col=this%no3_manure_to_soil_col)
-!!$        
-!!$    this%TAN_manure_to_soil_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='TAN_MANURE_TO_SOIL', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='Flow of NH4 from manure to soil at rate of 1 % per day', &
-!!$         ptr_col=this%TAN_manure_to_soil_col)
-!!$
-!!$    this%no3_fert_to_soil_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='NO3_FERT_TO_SOIL', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='Flow of NO3 from fertilizer to soil at rate of 1 % per day', &
-!!$         ptr_col=this%no3_fert_to_soil_col)
-!!$        
-!!$    this%TAN_fert_to_soil_col(begc:endc) = spval
-!!$    call hist_addfld1d (fname='TAN_FERT_TO_SOIL', units='gN/m^2/s', &
-!!$         avgflag='A', long_name='Flow of NH4 from fertilizer to soil at rate of 1 % per day', &
-!!$         ptr_col=this%TAN_fert_to_soil_col)
-!!$
-!!$
-!!$ end if
- !KO
- !JV
-      if (use_fan) then
+    if (use_fan) then
         this%man_tan_appl_col(begc:endc) = spval
         call hist_addfld1d( fname='MAN_TAN_APP', units='gN/m^2/s', &
              avgflag='A', long_name='Manure TAN applied on soil', &
@@ -679,16 +562,24 @@ contains
              avgflag='A', long_name='NH4 in surface runoff, fertilizer', &
              ptr_col=this%fert_runoff_col)
      end if
-    
+
+    if (use_fun) then
+       default = 'inactive'
+    else
+       default = 'active'
+    end if
+
     this%nfix_to_sminn_col(begc:endc) = spval
     call hist_addfld1d (fname='NFIX_TO_SMINN', units='gN/m^2/s', &
          avgflag='A', long_name='symbiotic/asymbiotic N fixation to soil mineral N', &
-         ptr_col=this%nfix_to_sminn_col)
+         ptr_col=this%nfix_to_sminn_col, default=default)
 
-    this%ffix_to_sminn_col(begc:endc) = spval
-    call hist_addfld1d (fname='FFIX_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='free living  N fixation to soil mineral N', &
-         ptr_col=this%ffix_to_sminn_col)
+    if ( use_fun )then
+       this%ffix_to_sminn_col(begc:endc) = spval
+       call hist_addfld1d (fname='FFIX_TO_SMINN', units='gN/m^2/s', &
+            avgflag='A', long_name='free living  N fixation to soil mineral N', &
+            ptr_col=this%ffix_to_sminn_col, default='active')
+    end if
 
     do l = 1, ndecomp_cascade_transitions
        ! vertically integrated fluxes
@@ -1236,72 +1127,6 @@ contains
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
   end subroutine InitCold
-
-  !-----------------------------------------------------------------------
-  subroutine Restart (this,  bounds, ncid, flag )
-    !
-    ! !DESCRIPTION: 
-    ! Read/write CN restart data for carbon state
-    !
-    ! !USES:
-    use restUtilMod
-    use ncdio_pio
-    !
-    ! !ARGUMENTS:
-    class(soilbiogeochem_nitrogenflux_type) :: this
-    type(bounds_type) , intent(in)    :: bounds 
-    type(file_desc_t) , intent(inout) :: ncid   ! netcdf id
-    character(len=*)  , intent(in)    :: flag   !'read' or 'write'
-    !
-    ! !LOCAL VARIABLES:
-    integer :: j,c ! indices
-    logical :: readvar      ! determine if variable is on initial file
-    real(r8), pointer :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
-    real(r8), pointer :: ptr1d(:)   ! temp. pointers for slicing larger arrays
-    !------------------------------------------------------------------------
-
-    if (use_nitrif_denitrif) then
-       ! pot_f_nit_vr
-       if (use_vertsoilc) then
-          ptr2d => this%pot_f_nit_vr_col(:,:)
-          call restartvar(ncid=ncid, flag=flag, varname='pot_f_nit_vr_vr', xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='potential soil nitrification flux', units='gN/m3/s', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)
-       else
-          ptr1d => this%pot_f_nit_vr_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname='pot_f_nit_vr', xtype=ncd_double, &
-               dim1name='column', &
-               long_name='soil nitrification flux', units='gN/m3/s', &
-               interpinic_flag='interp', readvar=readvar, data=ptr1d)
-       end if
-       if (flag=='read' .and. .not. readvar) then
-          call endrun(msg= 'ERROR:: pot_f_nit_vr'//' is required on an initialization dataset' )
-       end if
-    end if
-
-    if (use_nitrif_denitrif) then
-       ! f_nit_vr
-       if (use_vertsoilc) then
-          ptr2d => this%f_nit_vr_col(:,:)
-          call restartvar(ncid=ncid, flag=flag, varname='f_nit_vr_vr', xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='soil nitrification flux', units='gN/m3/s', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-       else
-          ptr1d => this%f_nit_vr_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname='f_nit_vr', xtype=ncd_double, &
-               dim1name='column', &
-               long_name='soil nitrification flux', units='gN/m3/s', &
-               interpinic_flag='interp', readvar=readvar, data=ptr1d)
-       end if
-       if (flag=='read' .and. .not. readvar) then
-          call endrun(msg='ERROR:: f_nit_vr'//' is required on an initialization dataset'//&
-               errMsg(sourcefile, __LINE__))
-       end if
-    end if
-
-  end subroutine Restart
 
   !-----------------------------------------------------------------------
   subroutine SetValues ( this, &

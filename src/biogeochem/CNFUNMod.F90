@@ -36,8 +36,8 @@ module CNFUNMod
   use SoilBiogeochemNitrogenStateType  , only : soilbiogeochem_nitrogenstate_type
 
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use WaterStateType                  , only : waterstate_type
-  use WaterfluxType                   , only : waterflux_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
+  use WaterFluxBulkType                   , only : waterfluxbulk_type
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : canopystate_type
@@ -200,8 +200,8 @@ module CNFUNMod
   !--------------------------------------------------------------------
   !---
   subroutine CNFUN(bounds,num_soilc, filter_soilc,num_soilp&
-       &,filter_soilp,waterstate_inst                 ,&
-       & waterflux_inst,temperature_inst,soilstate_inst&
+       &,filter_soilp,waterstatebulk_inst, &
+       & waterfluxbulk_inst,temperature_inst,soilstate_inst&
        &,cnveg_state_inst,cnveg_carbonstate_inst,&
        & cnveg_carbonflux_inst,cnveg_nitrogenstate_inst&
        &,cnveg_nitrogenflux_inst                ,&
@@ -224,8 +224,8 @@ module CNFUNMod
    integer                                 , intent(in)    :: filter_soilc(:)       ! filter for soil columns
    integer                                 , intent(in)    :: num_soilp             ! number of soil patches in filter
    integer                                 , intent(in)    :: filter_soilp(:)       ! filter for soil patches
-   type(waterstate_type)                   , intent(in)    :: waterstate_inst
-   type(waterflux_type)                    , intent(in)    :: waterflux_inst
+   type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
+   type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
    type(temperature_type)                  , intent(in)    :: temperature_inst
    type(soilstate_type)                    , intent(in)    :: soilstate_inst
    type(cnveg_state_type)                  , intent(inout) :: cnveg_state_inst
@@ -706,9 +706,9 @@ module CNFUNMod
          !  NO3              
          soilc_change           => cnveg_carbonflux_inst%soilc_change_patch               , & ! Output:  [real(r8)
          !  (:) ]  Used C from the soil (gC/m2/s)
-         h2osoi_liq             => waterstate_inst%h2osoi_liq_col                                , & ! Input:   [real(r8) (:,:)]
+         h2osoi_liq             => waterstatebulk_inst%h2osoi_liq_col                                , & ! Input:   [real(r8) (:,:)]
          !   liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
-         qflx_tran_veg          => waterflux_inst%qflx_tran_veg_patch                            , & ! Input:   [real(r8) (:)  ]
+         qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch                            , & ! Input:   [real(r8) (:)  ]
          !   vegetation transpiration (mm H2O/s) (+ = to atm)
          t_soisno               => temperature_inst%t_soisno_col                                 , & ! Input:   [real(r8) (:,:)]
          !   soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
@@ -1236,7 +1236,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                      frac_ideal_C_use = max(0.0_r8,1.0_r8 - (total_N_resistance-fun_cn_flex_a(ivt(p)))/fun_cn_flex_b(ivt(p)) )
                      ! then, if the plant is very much in need of N, the C used for uptake is increased accordingly.                  
                      if(delta_CN .gt.0.and. frac_ideal_C_use.lt.1.0)then           
-                       frac_ideal_C_use = frac_ideal_C_use + (1.0_r8-frac_ideal_C_use)*min(1.0_r8, delta_CN/fun_cn_flex_c(ivt(p)));                       
+                       frac_ideal_C_use = frac_ideal_C_use + (1.0_r8-frac_ideal_C_use)*min(1.0_r8, delta_CN/fun_cn_flex_c(ivt(p)))
                      end if    
                      ! If we have too much N (e.g. from free N retranslocation) then make frac_ideal_c_use even lower.    
                      ! For a CN delta of fun_cn_flex_c, then we reduce C expendiure to the minimum of 0.5. 

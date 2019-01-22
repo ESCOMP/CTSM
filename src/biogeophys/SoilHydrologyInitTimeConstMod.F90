@@ -9,6 +9,7 @@ module SoilHydrologyInitTimeConstMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use SoilHydrologyType , only : soilhydrology_type
+  use WaterStateBulkType, only : waterstatebulk_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   !
@@ -30,12 +31,14 @@ module SoilHydrologyInitTimeConstMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine SoilHydrologyInitTimeConst(bounds, soilhydrology_inst) 
+  subroutine SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, waterstatebulk_inst, &
+       use_aquifer_layer) 
     !
     ! !USES:
     use shr_const_mod   , only : shr_const_pi
     use shr_spfn_mod    , only : shr_spfn_erf
     use abortutils      , only : endrun
+    use spmdMod         , only : masterproc
     use clm_varctl      , only : fsurdat, paramfile, iulog, use_vichydro, soil_layerstruct
     use clm_varpar      , only : nlevsoifl, toplev_equalspace 
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb, nlayer, nlayert 
@@ -50,6 +53,8 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                                    
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
+    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
+    logical                  , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer            :: p,c,j,l,g,lev,nlevs 
@@ -81,7 +86,6 @@ contains
     ! Initialize frost table
     ! -----------------------------------------------------------------
 
-    soilhydrology_inst%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline
     soilhydrology_inst%zwt_col(bounds%begc:bounds%endc) = 0._r8
 
     do c = bounds%begc,bounds%endc
@@ -89,22 +93,44 @@ contains
        if (.not. lun%lakpoi(l)) then  !not lake
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_road_perv) then
-                ! Note that the following hard-coded constants (on the next two lines)
-                ! seem implicitly related to aquifer_water_baseline
-                soilhydrology_inst%wa_col(c)  = 4800._r8
-                soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+                if (use_aquifer_layer) then
+                   ! NOTE(wjs, 2018-11-27) There is no fundamental reason why zwt should
+                   ! be initialized differently based on use_aquifer_layer, but we (Bill
+                   ! Sacks and Sean Swenson) are changing the cold start initialization of
+                   ! wa_col when use_aquifer_layer is .false., and so need to come up with
+                   ! a different cold start initialization of zwt in that case, but we
+                   ! don't want to risk messing up the use_aquifer_layer = .true.  case,
+                   ! so we're keeping that as it was before.
+
+                   ! Note that the following hard-coded constants (on the next line)
+                   ! seem implicitly related to the initial value of wa_col
+                   soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - waterstatebulk_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+                else
+                   soilhydrology_inst%zwt_col(c) = col%zi(c,col%nbedrock(c))
+                end if
              else
-                soilhydrology_inst%wa_col(c)  = spval
                 soilhydrology_inst%zwt_col(c) = spval
              end if
              ! initialize frost_table, zwt_perched
              soilhydrology_inst%zwt_perched_col(c) = spval
              soilhydrology_inst%frost_table_col(c) = spval
           else
-             ! Note that the following hard-coded constants (on the next two lines) seem
-             ! implicitly related to aquifer_water_baseline
-             soilhydrology_inst%wa_col(c)  = 4000._r8
-             soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+             if (use_aquifer_layer) then
+                ! NOTE(wjs, 2018-11-27) There is no fundamental reason why zwt should
+                ! be initialized differently based on use_aquifer_layer, but we (Bill
+                ! Sacks and Sean Swenson) are changing the cold start initialization of
+                ! wa_col when use_aquifer_layer is .false., and so need to come up with
+                ! a different cold start initialization of zwt in that case, but we
+                ! don't want to risk messing up the use_aquifer_layer = .true.  case,
+                ! so we're keeping that as it was before.
+
+                ! Note that the following hard-coded constants (on the next line) seem
+                ! implicitly related to the initial value of wa_col
+                soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - waterstatebulk_inst%wa_col(c)/0.2_r8 /1000._r8
+             else
+                soilhydrology_inst%zwt_col(c) = col%zi(c,col%nbedrock(c))
+             end if
+
              ! initialize frost_table, zwt_perched to bottom of soil column
              soilhydrology_inst%zwt_perched_col(c) = col%zi(c,nlevsoi)
              soilhydrology_inst%frost_table_col(c) = col%zi(c,nlevsoi)
@@ -169,8 +195,6 @@ contains
        end do
 
        do c = bounds%begc, bounds%endc
-          soilhydrology_inst%max_infil_col(c) = spval
-          soilhydrology_inst%i_0_col(c)       = spval
           do lev = 1, nlayer
              soilhydrology_inst%ice_col(c,lev)       = spval
              soilhydrology_inst%moist_col(c,lev)     = spval
@@ -232,6 +256,9 @@ contains
        enddo
        zisoifl(nlevsoifl) = zsoifl(nlevsoifl) + 0.5_r8*dzsoifl(nlevsoifl)
 
+       if ( masterproc )then
+          if ( soil_layerstruct /= '10SL_3.5m' ) write(iulog,*) 'Setting clay, sand, organic, in Soil Hydrology for VIC'
+       end if
        do c = bounds%begc, bounds%endc
           g = col%gridcell(c)
           l = col%landunit(c)
@@ -244,7 +271,6 @@ contains
              else
                 do lev = 1,nlevgrnd
                    if ( soil_layerstruct /= '10SL_3.5m' )then
-                      write(iulog,*) 'Setting clay, sand, organic, in Soil Hydrology for VIC'
                       if (lev .eq. 1) then
                          clay    = clay3d(g,1)
                          sand    = sand3d(g,1)

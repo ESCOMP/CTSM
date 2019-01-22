@@ -44,19 +44,20 @@ module clm_instMod
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
+  use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
-  use SoilHydrologyType               , only : soilhydrology_type  
+  use SoilHydrologyType               , only : soilhydrology_type
+  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use SoilStateType                   , only : soilstate_type
   use SolarAbsorbedType               , only : solarabs_type
   use SurfaceRadiationMod             , only : surfrad_type
   use SurfaceAlbedoType               , only : surfalb_type
   use TemperatureType                 , only : temperature_type
-  use WaterFluxType                   , only : waterflux_type
-  use WaterStateType                  , only : waterstate_type
+  use WaterType                       , only : water_type
   use UrbanParamsType                 , only : urbanparams_type
   use UrbanTimeVarType                , only : urbantv_type
   use HumanIndexMod                   , only : humanindex_type
@@ -81,71 +82,73 @@ module clm_instMod
   use SurfaceAlbedoMod                , only : SurfaceAlbedoInitTimeConst 
   use LakeCon                         , only : LakeConInit 
   use SoilBiogeochemPrecisionControlMod, only: SoilBiogeochemPrecisionControlInit
+  use SoilWaterMovementMod            , only : use_aquifer_layer
   !
   implicit none
-  public   ! By default everything is public 
+  private  ! By default everything is private
   !
   !-----------------------------------------
   ! Instances of component types
   !-----------------------------------------
 
   ! Physics types 
-  type(aerosol_type)                      :: aerosol_inst
-  type(canopystate_type)                  :: canopystate_inst
-  type(energyflux_type)                   :: energyflux_inst
-  type(frictionvel_type)                  :: frictionvel_inst
-  type(glacier_smb_type)                  :: glacier_smb_inst
-  type(irrigation_type)                   :: irrigation_inst
-  type(lakestate_type)                    :: lakestate_inst
-  class(ozone_base_type), allocatable     :: ozone_inst
-  type(photosyns_type)                    :: photosyns_inst
-  type(soilstate_type)                    :: soilstate_inst
-  type(soilhydrology_type)                :: soilhydrology_inst
-  type(solarabs_type)                     :: solarabs_inst
-  type(surfalb_type)                      :: surfalb_inst
-  type(surfrad_type)                      :: surfrad_inst
-  type(temperature_type)                  :: temperature_inst
-  type(urbanparams_type)                  :: urbanparams_inst
-  type(urbantv_type)                      :: urbantv_inst
-  type(humanindex_type)                   :: humanindex_inst
-  type(waterflux_type)                    :: waterflux_inst
-  type(waterstate_type)                   :: waterstate_inst
-  type(atm2lnd_type)                      :: atm2lnd_inst
-  type(glc2lnd_type)                      :: glc2lnd_inst
-  type(lnd2atm_type)                      :: lnd2atm_inst
-  type(lnd2glc_type)                      :: lnd2glc_inst
-  type(glc_behavior_type), target         :: glc_behavior
-  type(topo_type)                         :: topo_inst
-  class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
+  type(aerosol_type), public              :: aerosol_inst
+  type(canopystate_type), public          :: canopystate_inst
+  type(energyflux_type), public           :: energyflux_inst
+  type(frictionvel_type), public          :: frictionvel_inst
+  type(glacier_smb_type), public          :: glacier_smb_inst
+  type(infiltration_excess_runoff_type), public :: infiltration_excess_runoff_inst
+  type(irrigation_type), public           :: irrigation_inst
+  type(lakestate_type), public            :: lakestate_inst
+  class(ozone_base_type), public, allocatable :: ozone_inst
+  type(photosyns_type), public            :: photosyns_inst
+  type(soilstate_type), public            :: soilstate_inst
+  type(soilhydrology_type), public        :: soilhydrology_inst
+  type(saturated_excess_runoff_type), public :: saturated_excess_runoff_inst
+  type(solarabs_type), public             :: solarabs_inst
+  type(surfalb_type), public              :: surfalb_inst
+  type(surfrad_type), public              :: surfrad_inst
+  type(temperature_type), public          :: temperature_inst
+  type(urbanparams_type), public          :: urbanparams_inst
+  type(urbantv_type), public              :: urbantv_inst
+  type(humanindex_type), public           :: humanindex_inst
+  type(water_type), public                :: water_inst
+  type(atm2lnd_type), public              :: atm2lnd_inst
+  type(glc2lnd_type), public              :: glc2lnd_inst
+  type(lnd2atm_type), public              :: lnd2atm_inst
+  type(lnd2glc_type), public              :: lnd2glc_inst
+  type(glc_behavior_type), target, public :: glc_behavior
+  type(topo_type), public                 :: topo_inst
+  class(soil_water_retention_curve_type), public, allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
   ! Eventually bgc_vegetation_inst will be an allocatable instance of an abstract
   ! interface
-  type(cn_vegetation_type)                :: bgc_vegetation_inst
+  type(cn_vegetation_type), public                :: bgc_vegetation_inst
 
-  class(nutrient_competition_method_type), allocatable :: nutrient_competition_method
+  class(nutrient_competition_method_type), public, allocatable :: nutrient_competition_method
 
   ! Soil biogeochem types 
-  type(soilbiogeochem_state_type)         :: soilbiogeochem_state_inst
-  type(soilbiogeochem_carbonstate_type)   :: soilbiogeochem_carbonstate_inst
-  type(soilbiogeochem_carbonstate_type)   :: c13_soilbiogeochem_carbonstate_inst
-  type(soilbiogeochem_carbonstate_type)   :: c14_soilbiogeochem_carbonstate_inst
-  type(soilbiogeochem_carbonflux_type)    :: soilbiogeochem_carbonflux_inst
-  type(soilbiogeochem_carbonflux_type)    :: c13_soilbiogeochem_carbonflux_inst
-  type(soilbiogeochem_carbonflux_type)    :: c14_soilbiogeochem_carbonflux_inst
-  type(soilbiogeochem_nitrogenstate_type) :: soilbiogeochem_nitrogenstate_inst
-  type(soilbiogeochem_nitrogenflux_type)  :: soilbiogeochem_nitrogenflux_inst
+  type(soilbiogeochem_state_type)        , public :: soilbiogeochem_state_inst
+  type(soilbiogeochem_carbonstate_type)  , public :: soilbiogeochem_carbonstate_inst
+  type(soilbiogeochem_carbonstate_type)  , public :: c13_soilbiogeochem_carbonstate_inst
+  type(soilbiogeochem_carbonstate_type)  , public :: c14_soilbiogeochem_carbonstate_inst
+  type(soilbiogeochem_carbonflux_type)   , public :: soilbiogeochem_carbonflux_inst
+  type(soilbiogeochem_carbonflux_type)   , public :: c13_soilbiogeochem_carbonflux_inst
+  type(soilbiogeochem_carbonflux_type)   , public :: c14_soilbiogeochem_carbonflux_inst
+  type(soilbiogeochem_nitrogenstate_type), public :: soilbiogeochem_nitrogenstate_inst
+  type(soilbiogeochem_nitrogenflux_type) , public :: soilbiogeochem_nitrogenflux_inst
 
   ! General biogeochem types
-  type(ch4_type)                          :: ch4_inst
-  type(crop_type)                         :: crop_inst
-  type(dust_type)                         :: dust_inst
-  type(vocemis_type)                      :: vocemis_inst
-  type(fireemis_type)                     :: fireemis_inst
-  type(drydepvel_type)                    :: drydepvel_inst
+  type(ch4_type)      , public            :: ch4_inst
+  type(crop_type)     , public            :: crop_inst
+  type(dust_type)     , public            :: dust_inst
+  type(vocemis_type)  , public            :: vocemis_inst
+  type(fireemis_type) , public            :: fireemis_inst
+  type(drydepvel_type), public            :: drydepvel_inst
 
   ! FATES
-  type(hlm_fates_interface_type)          :: clm_fates
+  type(hlm_fates_interface_type), public  :: clm_fates
 
   !
   public :: clm_instInit       ! Initialize
@@ -174,7 +177,7 @@ contains
   subroutine clm_instInit(bounds)
     !
     ! !USES: 
-    use clm_varpar                         , only : nlevsno, numpft
+    use clm_varpar                         , only : nlevsno
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
@@ -186,6 +189,7 @@ contains
     use accumulMod                         , only : print_accum_fields 
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
+    use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -273,13 +277,12 @@ contains
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties
 
-    call waterstate_inst%Init(bounds,         &
-         h2osno_col(begc:endc),                    &
-         snow_depth_col(begc:endc),                &
-         soilstate_inst%watsat_col(begc:endc, 1:), &
-         temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:) )
-
-    call waterflux_inst%Init(bounds)
+    call water_inst%Init(bounds, NLFilename, &
+         h2osno_col = h2osno_col(begc:endc), &
+         snow_depth_col = snow_depth_col(begc:endc), &
+         watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
+         t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:), &
+         use_aquifer_layer = use_aquifer_layer())
 
     call glacier_smb_inst%Init(bounds)
 
@@ -302,7 +305,11 @@ contains
     call photosyns_inst%Init(bounds)
 
     call soilhydrology_inst%Init(bounds, nlfilename)
-    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst) ! sets time constant properties
+    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, water_inst%waterstatebulk_inst, &
+         use_aquifer_layer = use_aquifer_layer())
+
+    call saturated_excess_runoff_inst%Init(bounds)
+    call infiltration_excess_runoff_inst%Init(bounds)
 
     call solarabs_inst%Init(bounds)
 
@@ -320,7 +327,8 @@ contains
     allocate(soil_water_retention_curve, &
          source=create_soil_water_retention_curve())
 
-    call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve)
+    call irrigation_inst%init(bounds, nlfilename, soilstate_inst, soil_water_retention_curve, &
+         use_aquifer_layer = use_aquifer_layer())
 
     call topo_inst%Init(bounds)
 
@@ -391,7 +399,7 @@ contains
     end if ! end of if use_cn 
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
-    call bgc_vegetation_inst%Init(bounds, nlfilename)
+    call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps() )
 
     if (use_cn .or. use_fates) then
        call crop_inst%Init(bounds)
@@ -420,7 +428,7 @@ contains
 
     call temperature_inst%InitAccBuffer(bounds)
     
-    call waterflux_inst%InitAccBuffer(bounds)
+    call water_inst%InitAccBuffer(bounds)
 
     call energyflux_inst%InitAccBuffer(bounds)
 
@@ -486,16 +494,14 @@ contains
 
     call soilstate_inst%restart (bounds, ncid, flag=flag)
 
-    call waterflux_inst%restart (bounds, ncid, flag=flag)
-
-    call waterstate_inst%restart (bounds, ncid, flag=flag, &
-         watsat_col=soilstate_inst%watsat_col(bounds%begc:bounds%endc,:)) 
+    call water_inst%restart(bounds, ncid, flag=flag, &
+         watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
 
     call aerosol_inst%restart (bounds, ncid,  flag=flag, &
-         h2osoi_ice_col=waterstate_inst%h2osoi_ice_col(bounds%begc:bounds%endc,:), &
-         h2osoi_liq_col=waterstate_inst%h2osoi_liq_col(bounds%begc:bounds%endc,:))
+         h2osoi_ice_col=water_inst%waterstatebulk_inst%h2osoi_ice_col(bounds%begc:bounds%endc,:), &
+         h2osoi_liq_col=water_inst%waterstatebulk_inst%h2osoi_liq_col(bounds%begc:bounds%endc,:))
 
     call surfalb_inst%restart (bounds, ncid, flag=flag, &
          tlai_patch=canopystate_inst%tlai_patch(bounds%begp:bounds%endp), &
@@ -514,7 +520,6 @@ contains
 
        call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag, &
             totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
-       call soilbiogeochem_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
 
        call crop_inst%restart(bounds, ncid, flag=flag)
     end if
@@ -541,7 +546,7 @@ contains
     if (use_fates) then
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
-            waterstate_inst=waterstate_inst, &
+            waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
             canopystate_inst=canopystate_inst, &
             frictionvel_inst=frictionvel_inst)
 

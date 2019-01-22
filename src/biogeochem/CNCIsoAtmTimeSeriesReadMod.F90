@@ -57,7 +57,7 @@ contains
     real(r8), intent(out) :: rc14_atm(nsectors_c14)  ! Ratio of C14 to C12
     !
     ! !LOCAL VARIABLES:
-    integer  :: yr, mon, day, tod, offset    ! year, month, day, time-of-day, offset in secons
+    integer  :: yr, mon, day, tod            ! year, month, day, time-of-day
     real(r8) :: dateyear                     ! Date converted to year
     real(r8) :: delc14o2_atm(nsectors_c14)   ! C14 delta units
     integer  :: fp, p, nt                    ! Indices
@@ -68,7 +68,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! get current date
-    call get_curr_date(yr, mon, day, tod, offset)
+    call get_curr_date(yr, mon, day, tod)
     dateyear = real(yr) + get_curr_yearfrac()
 
     ! find points in atm timeseries to interpolate between
@@ -122,12 +122,12 @@ contains
     character(len=*), parameter :: vname = 'Delta14co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
+    call getfil(atm_c14_filename, locfn, 0)
+
     if ( masterproc ) then
        write(iulog, *) 'C14_init_BombSpike: preparing to open file:'
        write(iulog, *) trim(locfn)
     endif
-
-    call getfil(atm_c14_filename, locfn, 0)
 
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
@@ -179,7 +179,7 @@ contains
     real(r8), intent(out) :: rc13_atm    ! Ratio of C13 to C12
     !
     ! !LOCAL VARIABLES:
-    integer  :: yr, mon, day, tod, offset  ! year, month, day, time-of-day, and offset in seconds
+    integer  :: yr, mon, day, tod          ! year, month, day, time-of-day
     real(r8) :: dateyear                   ! date translated to year
     real(r8) :: delc13o2_atm               ! Delta C13
     integer  :: fp, p, nt                  ! Indices
@@ -189,7 +189,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! get current date
-    call get_curr_date(yr, mon, day, tod, offset)
+    call get_curr_date(yr, mon, day, tod)
     dateyear = real(yr) + get_curr_yearfrac()
 
     ! find points in atm timeseries to interpolate between
@@ -241,12 +241,12 @@ contains
     character(len=*), parameter :: vname = 'delta13co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
+    call getfil(atm_c13_filename, locfn, 0)
+
     if ( masterproc ) then
        write(iulog, *) 'C13_init_TimeSeries: preparing to open file:'
        write(iulog, *) trim(locfn)
     endif
-
-    call getfil(atm_c13_filename, locfn, 0)
 
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
