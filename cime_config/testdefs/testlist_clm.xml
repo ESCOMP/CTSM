@@ -776,7 +776,7 @@
       <option name="comment"  >test transient PFTs (via HIST) with a December start, reading 78-pft data and running with 16 pfts</option>
     </options>
   </test>
-  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCropGs" testmods="clm/collapse_nat_pfts_decStart_f10">
+  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCropGs" testmods="clm/collapse_nat_pfts_decStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
