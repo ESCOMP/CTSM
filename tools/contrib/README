@@ -23,9 +23,9 @@ singlept.py
         extracting data from global datasets
 	v1 - Sean Swenson 8/2015
 
-SpinupStability_v6.ncl
+SpinupStability.ncl
         This script assesses the equilibrium state of a spinup run
-        v6, works on either monthly or annual mean history files - Keith Oleson 7/2016
+        works on either monthly or annual mean history files - Keith Oleson 7/2016
 
 
 
