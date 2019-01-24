@@ -27,5 +27,10 @@ SpinupStability.ncl
         This script assesses the equilibrium state of a spinup run
         works on either monthly or annual mean history files - Keith Oleson 7/2016
 
+run_clmtowers.v1.csh
+        This script will run any number of flux tower sites.
+        It's based on having created surface datasets with PTCLM.
+        v1 - Keith Oleson, 8/2015
+
 
 
