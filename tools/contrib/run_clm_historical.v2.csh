@@ -33,20 +33,26 @@
 #
 # - Written by Andrew Slater - Late July, 2015; aslater@kryos.colorado.edu
 # - Modified by Dave Lawrence, August, 2015
+# - Updated with better check that run has also been archived to short term - Dave Lawrence
+#      October, 2015
+#
+#  Execute with following command:
+#
+#  ./run_clm_historical.v2.csh ! > & run_historical.out & 
 #########################################################################################
 
 # --- CASENAME is your case name
-set CASENAME = 'clm45bgc_2deg45r118_hist_test'
+set CASENAME = 'cesm130_clm45_firemodule_20tr_01'
 
 # --- Set the user namelist file. i.e. add the snow alterations for my run. Others may have 
 #      diferent needs
-set UNLCLM = 'script_user_nl_clm'
-cat original_user_nl_clm > $UNLCLM
+#set UNLCLM = 'script_user_nl_clm'
+#cat original_user_nl_clm > $UNLCLM
 
 # Examples of how to modify user_nl_clm using this script.  Uncomment and edit as desired.
 #echo "hist_empty_htapes = .true." >> $UNLCLM
 #echo "hist_fincl1 = 'TSA'" >> $UNLCLM
-cat $UNLCLM > user_nl_clm
+#cat $UNLCLM > user_nl_clm
 
 
 # --- Check that you end up using the correct env_run.xml file
@@ -70,8 +76,8 @@ endif
 ./xmlchange RESUBMIT=0
 
 # --- If you have not already built the code, then do so now
-./$CASENAME.clean_build
-./$CASENAME.build
+#./$CASENAME.clean_build
+#./$CASENAME.build
 
 # --- Now submit the job and let it run
 ./$CASENAME.submit
@@ -100,16 +106,26 @@ endif
 set WDIR = '/glade/scratch/'$USER'/'$CASENAME'/run/'
 set DDIR = $WDIR'restart_dump/'
 set DONE_RUNA = 0
-set DONE_FILE = $WDIR$CASENAME'.clm2.r.1901-01-01-00000.nc'
+set DONE_ARCHIVE = 0
+set RESTART_FILE = $WDIR$CASENAME'.clm2.r.1901-01-01-00000.nc'
 
-# --- Check if the first set of simulations have been done (every ten minutes)
+# --- Check if the first set of simulations have completed and the data archived (every ten minutes)
 while ($DONE_RUNA == 0)
-  if (-e $DONE_FILE) then
+  if (-e $RESTART_FILE) then
     set DONE_RUNA = 1
     echo '1850-1900 run is complete'
-    sleep 300
+    while ($DONE_ARCHIVE == 0) 
+       set nh0 = `ls -l $WDIR/*clm2.h0.* | egrep -c '^-'`
+       echo $nh0
+       if ($nh0 == 1) then
+          set DONE_ARCHIVE = 1 
+          echo 'Files have been archived'
+       else 
+          sleep 300
+          date
+       endif
   else
-    sleep 600
+    sleep 300
     date
   endif
 end
@@ -138,7 +154,7 @@ endif
 #     We want to do a 110 year simulation, but in two 55 year chunks, thus
 #     we have to resubmit the job once.
 ./xmlchange STOP_OPTION=nyears
-./xmlchange STOP_N=55
+./xmlchange STOP_N=52
 ./xmlchange DATM_CLMNCEP_YR_ALIGN=1901
 ./xmlchange DATM_CLMNCEP_YR_START=1901
 ./xmlchange DATM_CLMNCEP_YR_END=2010
