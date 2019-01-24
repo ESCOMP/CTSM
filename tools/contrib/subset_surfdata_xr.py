@@ -1,399 +1,141 @@
 #! /usr/bin/env python
 import sys
+import os
+from getpass import getuser
 import string
 import subprocess
 import numpy as np
-from scipy.io import netcdf
-import netCDF4 as netcdf4
+import xarray as xr
 
-'''
-# load proper modules first, i.e.
- module load python/2.7.7
- module load all-python-libs
-'''
+def mprint(mstr):
+    vnum=sys.version_info[0]
+    if vnum == 3:
+        print(mstr)
+    if vnum == 2:
+        print mstr
+        
+myname=getuser()
+pwd=os.getcwd()
+mprint(myname)
+mprint(pwd)
+
 #creates regional surface dataset and domain file
 
-dir_input='/glade/p/cesm/cseg/inputdata/lnd/clm2/'
-# must change this to a directory to which you have permissions
-dir_output='/glade/scratch/'
+#--  Specify input and output directories
+dir_output='/glade/scratch/'+myname+'/regional/'
 
-#--  create regional CLM domain file
-create_domain   = 0
-#--  create ergional CLM surface data file
-create_surfdata = 1
-#--  create river direction file
-create_rdirc = 1
+#--  Create regional CLM domain file
+create_domain   = True
+#--  Create CLM surface data file
+create_surfdata = True
+#--  Create CLM surface data file
+create_landuse  = False
 
 tagnum=1
 if tagnum == 1:
-    tag='NE.US'
-    rnum=2
-    resnum=2
+    tag='S.America'
+
+    ln1=275.
+    ln2=330.
+    lt1=-40.
+    lt2=15.
+
 if tagnum == 2:
     tag='Western.US'
-    rnum=2
-    resnum=2
-if tagnum == 3:
-    tag='S.America'
-    rnum=2
-    resnum=1
-if tagnum == 4:
-    tag='California'
-    rnum=2
-    resnum=2
 
-if resnum == 1:
-    fdomain = '/glade/p/cesmdata/cseg/inputdata/share/domains/domain.lnd.fv0.9x1.25_gx1v6.090309.nc'
+    ln1=284.
+    ln2=296.
+    lt1=44.
+    lt2=53.
 
-    fsurf = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr2000_c141219.nc'
+#--  Set time stamp
+command='date "+%y%m%d"'
+x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
+x=x2.communicate()
+timetag = x[0].strip()
 
-    rdirc='/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rtmdata/rdirc_0.5x0.5_simyr2000_slpmxvl_c120717.nc'
+#--  Specify land domain file  ---------------------------------
+fdomain  = '/glade/p/cesmdata/cseg/inputdata/share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc'
+#fdomain2 = dir_output + 'domain.lnd.fv0.9x1.25_gx1v6.'+tag+'.090309.nc'
+fdomain2 = dir_output + 'domain.lnd.fv1.9x2.5_gx1v7.'+tag+'_170518.nc'
 
-    fdomain2=dir_output+'domain.lnd.fv0.9x1.25_gx1v6.'+tag+'.nc'
+#--  Specify surface data file  --------------------------------
+fsurf    = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc'
+#fsurf2   = dir_output + 'surfdata_0.9x1.25_16pfts_CMIP6_simyr2000_'+tag+'.c170706.nc'
+fsurf2   = dir_output + 'surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_'+tag+'_c170824.nc'
 
-    fsurf2=dir_output+'surfdata_0.9x1.25_16pfts_simyr2000_UHDMedian_'+tag+'.nc'
-    rdirc2=dir_output+'rdirc_0.5x0.5_simyr2000_slpmxvl_'+tag+'.nc'
+#--  Specify landuse file  -------------------------------------
+fluse    = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc'
+fluse2   = dir_output + 'landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_'+tag+'.c170824.nc'
 
-if resnum == 2:
-    fdomain = '/glade/p/cesmdata/cseg/inputdata/share/domains/domain.clm/domain.lnd.0.125x0.125_tx0.1v2.140704.nc'
-    fsurf = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_0.125x0.125_simyr2000_c150114.nc'
-    rdirc='/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rtmdata/rdirc_0.1x0.1_simyr2000_c110712.nc'
+#--  Create CTSM domain file
+if create_domain:
+    f1  = xr.open_dataset(fdomain)
+    # create 1d coordinate variables to enable sel() method
+    lon0=np.asarray(f1['xc'][0,:])
+    lat0=np.asarray(f1['yc'][:,0])
+    lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
+    lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
+    # assign() not working on cheyenne
+    #f2=f1.assign({'lon':lon,'lat':lat})
+    f2=f1.assign()
+    f2['lon'] = lon
+    f2['lat'] = lat
+    f2.reset_coords(['xc','yc'],inplace=True)
 
-    fdomain2=dir_output+'domain.lnd.0.125x0.125_tx0.1v2.'+tag+'.nc'
-    fsurf2=dir_output+'surfdata_0.125x0.125_simyr2000.'+tag+'.nc'
-    rdirc2=dir_output+'rdirc_0.1x0.1_'+tag+'.nc'
-
-
-
-#--  read in coordinates from original domain file
-f1 =  netcdf4.Dataset(fdomain, 'r', format='NETCDF4')
-xc  = f1.variables['xc']
-yc  = f1.variables['yc']
-mask  = np.copy(f1.variables['mask'])
-
-#--  convert coordinates to 1d
-lon=np.asarray(xc[0,:])
-lat=np.asarray(yc[:,0])
-im=lon.size
-jm=lat.size
-
-if rnum == 2:
-    if tagnum == 1: # NE.US
-        ln1=284.
-        ln2=296.
-        lt1=44.
-        lt2=53.
-    if tagnum == 2: # W.US
-        ln1=235.
-        ln2=270.
-        lt1=27.
-        lt2=50.
-
-    if tagnum == 3: # S.America
-        ln1=275.
-        ln2=330.
-        lt1=-40.
-        lt2=15.
-    if tagnum == 4: # California
-        ln1=235
-        ln2=246.5
-        lt1=31.5
-        lt2=45.
-
-    #--  create regional mask/area arrays
-    #mask=np.zeros((jm,im))
-    #where returns a tuple, extract list w/ '[0]'
+    # subset longitude and latitude arrays
     xind=np.where((lon >= ln1) & (lon <= ln2))[0]
     yind=np.where((lat >= lt1) & (lat <= lt2))[0]
-    im_new=xind.size
-    jm_new=yind.size
+    f3=f2.isel(nj=yind,ni=xind)
 
-    mask=mask[yind,:]; mask=mask[:,xind]
+    wfile=fdomain2
+    # mode 'w' overwrites file
+    f3.to_netcdf(path=wfile, mode='w')
+    mprint('created file '+fdomain2)
+    f1.close(); f2.close(); f3.close()
 
-    lonc=np.copy(xc) ; latc=np.copy(yc)
-    lonc=lonc[yind,:]; lonc=lonc[:,xind]
-    latc=latc[yind,:]; latc=latc[:,xind]
+#--  Create CTSM surface data file
+if create_surfdata:
+    f1  = xr.open_dataset(fsurf)
+    # create 1d variables
+    lon0=np.asarray(f1['LONGXY'][0,:])
+    lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
+    lat0=np.asarray(f1['LATIXY'][:,0])
+    lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
+    #f2=f1.assign({'lon':lon,'lat':lat})
+    f2=f1.assign()
+    f2['lon'] = lon
+    f2['lat'] = lat
+    # subset longitude and latitude arrays
+    xind=np.where((lon >= ln1) & (lon <= ln2))[0]
+    yind=np.where((lat >= lt1) & (lat <= lt2))[0]
+    f3=f2.isel(lsmlat=yind,lsmlon=xind)
 
-    #print lonc
+    # mode 'w' overwrites file
+    f3.to_netcdf(path=fsurf2, mode='w')
+    mprint('created file '+fsurf2)
+    f1.close(); f2.close(); f3.close()
 
-dlon = np.abs(lon[0] - lon[1])
-dlat = np.abs(lat[0] - lat[1])
+#--  Create CTSM transient landuse data file
+if create_landuse:
+    f1  = xr.open_dataset(fluse)
+    # create 1d variables
+    lon0=np.asarray(f1['LONGXY'][0,:])
+    lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
+    lat0=np.asarray(f1['LATIXY'][:,0])
+    lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
+    #f2=f1.assign({'lon':lon,'lat':lat})
+    f2=f1.assign()
+    f2['lon'] = lon
+    f2['lat'] = lat
+    # subset longitude and latitude arrays
+    xind=np.where((lon >= ln1) & (lon <= ln2))[0]
+    yind=np.where((lat >= lt1) & (lat <= lt2))[0]
+    f3=f2.isel(lsmlat=yind,lsmlon=xind)
+    # mode 'w' overwrites file
+    f3.to_netcdf(path=fluse2, mode='w')
+    mprint('created file '+fluse2)
+    f1.close(); f2.close(); f3.close()
 
-#--  create domain file
-##1
-if create_domain == 1:
-    frac  = np.copy(f1.variables['frac'])
-    area  = np.copy(f1.variables['area'])
-
-    frac=frac[yind,:]; frac=frac[:,xind]
-    area=area[yind,:]; area=area[:,xind]
 
 
-    nv = 4
-#--  Create vertex matrices  ----------------------------
-    lonv=np.empty((jm_new,im_new,nv), dtype='float64')
-    latv=np.empty((jm_new,im_new,nv), dtype='float64')
-#--  order is SW, SE, NE, NW
-    lonv[:,:,0] = lonc - 0.5*dlon
-    latv[:,:,0] = latc - 0.5*dlat
-    lonv[:,:,1] = lonc + 0.5*dlon
-    latv[:,:,1] = latc - 0.5*dlat
-    lonv[:,:,2] = lonc + 0.5*dlon
-    latv[:,:,2] = latc + 0.5*dlat
-    lonv[:,:,3] = lonc - 0.5*dlon
-    latv[:,:,3] = latc + 0.5*dlat
-
-    #--  Check whether file exists  ---------------------------------
-    command=['ls',fdomain2]
-    file_exists=subprocess.call(command,stderr=subprocess.PIPE)
-    
-    w = netcdf4.Dataset(fdomain2, 'w', format='NETCDF4')
-    
-    if file_exists > 0:
-        print 'creating new file: ', fdomain2
-    else:
-        print 'overwriting file: ', fdomain2
-    command='date "+%y%m%d"'
-    x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
-    x=x2.communicate()
-    timetag = x[0].strip()
-    w.creation_date = timetag 
-    w.source_file = fdomain
-    w.title = 'CESM domain data'
-    w.createDimension('nv',int(nv))
-    w.createDimension('ni',int(im_new))
-    w.createDimension('nj',int(jm_new))
-    
-    wyc   = w.createVariable('yc','f8',('nj','ni'))
-    wxc   = w.createVariable('xc','f8',('nj','ni'))
-    wyv   = w.createVariable('yv','f8',('nj','ni','nv'))
-    wxv   = w.createVariable('xv','f8',('nj','ni','nv'))
-    wmask = w.createVariable('mask','i4',('nj','ni'))
-    warea = w.createVariable('area','f8',('nj','ni'))
-    wfrac = w.createVariable('frac','f8',('nj','ni'))
-    
-    wyc.units  = 'degrees north'
-    wxc.units  = 'degrees east'
-    wyv.units  = 'degrees north'
-    wxv.units  = 'degrees east'
-    wmask.units  = 'unitless'
-    warea.units  = 'radians squared'
-    wfrac.units  = 'unitless'
-    
-    wyc.long_name  = 'latitude of grid cell center'
-    wxc.long_name  = 'longitude of grid cell center'
-    wyv.long_name  = 'latitude of grid cell vertices'
-    wxv.long_name  = 'longitude of grid cell vertices'
-    wmask.long_name  = 'land domain mask'
-    warea.long_name  = 'area of grid cell in radians squared'
-    wfrac.long_name  = 'fraction of grid cell that is active'
-
-    # write to file  --------------------------------------------
-    wyc[:,:] = latc
-    wxc[:,:] = lonc
-    wyv[:,:,:] = latv
-    wxv[:,:,:] = lonv
-    wmask[:,:] = mask
-    warea[:,:] = area
-    wfrac[:,:] = frac
-            
-    w.close()
-
-#--  create surface data file  --------------------------------------
-##2
-if create_surfdata == 1:
-    f2 =  netcdf4.Dataset(fsurf, 'r', format='NETCDF4')
-    global_attributes  = f2.ncattrs()
-    variables = f2.variables
-    dimensions = f2.dimensions
-
-    #--  Check whether file exists  ---------------------------------
-    command=['ls',fsurf2]
-    file_exists=subprocess.call(command,stderr=subprocess.PIPE)
-    if file_exists > 0:
-        print 'creating new file: ', fsurf2
-    else:
-        print 'overwriting file: ', fsurf2
-
-    #--  Open output file
-    w = netcdf4.Dataset(fsurf2, 'w', format='NETCDF4')
-
-    #--  Set global attributes
-    for ga in global_attributes:
-        setattr(w,ga,f2.getncattr(ga))
-    #--  Set dimensions of output file
-    for dim in dimensions.keys():
-        print dim
-        if dim == 'lsmlon':
-            w.createDimension(dim,int(im_new))
-        elif dim == 'lsmlat':
-            w.createDimension(dim,int(jm_new))
-        else:
-            w.createDimension(dim,len(dimensions[dim]))
-
-    for var in variables.keys():
-        y=f2.variables[var].dimensions
-        x2 = [x.encode('ascii') for x in y]
-        vtype = f2.variables[var].datatype
-        print var, vtype, x2
-        wvar = w.createVariable(var, vtype, x2)
-
-        if len(x2) > 0:
-            fvar=np.copy(f2.variables[var])
-
-        #--  Subset input variables
-        for n in range(len(x2)):
-            fdim = x2[n]
-            if fdim == 'lsmlon':
-                if n == 0:
-                    fvar = fvar[xind,]
-                if n == 1:
-                    fvar = fvar[:,xind,]
-                if n == 2:
-                    fvar = fvar[:,:,xind,]
-                if n == 3:
-                    fvar = fvar[:,:,:,xind,]
-            if fdim == 'lsmlat':
-                if n == 0:
-                    fvar = fvar[yind,]
-                if n == 1:
-                    fvar = fvar[:,yind,]
-                if n == 2:
-                    fvar = fvar[:,:,yind,]
-                if n == 3:
-                    fvar = fvar[:,:,:,yind,]
-
-        #--  Set attribute values
-        att=f2.variables[var].ncattrs()
-        print att, '\n'
-        km=len(att)
-        for attname in att:
-            print 'name: ',attname,' value: ',f2.variables[var].getncattr(attname)
-            w.variables[var].setncattr(attname,f2.variables[var].getncattr(attname))
-
-        #--  Write variable data to output file
-        if len(x2) == 0:
-            wvar[:] = np.copy(f2.variables[var][:])
-        if len(wvar.shape) == 1:
-            wvar[:] = fvar
-        if len(wvar.shape) == 2:
-            wvar[:,:] = fvar
-        if len(wvar.shape) == 3:
-            wvar[:,:,:] = fvar
-        if len(wvar.shape) == 4:
-            wvar[:,:,:,:] = fvar
-
-   #--  Close output file
-    w.close
-
-#--  create river direction file
-##3
-if create_rdirc == 1:
-    f2 =  netcdf4.Dataset(rdirc, 'r', format='NETCDF4')
-    global_attributes  = f2.ncattrs()
-    variables = f2.variables
-    dimensions = f2.dimensions
-
-    #--  create regional indices
-    xc2  = np.copy(f2.variables['xc'])
-    yc2  = np.copy(f2.variables['yc'])
-    #--  convert coordinates to 1d
-    rlon=np.asarray(xc2[0,:])
-    rlon[rlon < 0] += 360.0
-    rlat=np.asarray(yc2[:,0])
-    rim=rlon.size
-    rjm=rlat.size
-    #where returns a tuple, extract list w/ '[0]'
-    xind2=np.where((rlon >= ln1) & (rlon <= ln2))[0]
-    yind2=np.where((rlat >= lt1) & (rlat <= lt2))[0]
-    ni_new=xind2.size
-    nj_new=yind2.size
-
-    #--  Check whether file exists  ---------------------------------
-    command=['ls',rdirc2]
-    file_exists=subprocess.call(command,stderr=subprocess.PIPE)
-    if file_exists > 0:
-        print 'creating new file: ', rdirc2
-    else:
-        print 'overwriting file: ', rdirc2
-
-    #--  Open output file
-    w = netcdf4.Dataset(rdirc2, 'w', format='NETCDF4')
-
-    #--  Set global attributes
-    for ga in global_attributes:
-        setattr(w,ga,f2.getncattr(ga))
-    #--  Set dimensions of output file
-    for dim in dimensions.keys():
-        print dim
-        if dim == 'ni':
-            w.createDimension(dim,int(ni_new))
-        elif dim == 'nj':
-            w.createDimension(dim,int(nj_new))
-        else:
-            w.createDimension(dim,len(dimensions[dim]))
-
-    for var in variables.keys():
-        y=f2.variables[var].dimensions
-        x2 = [x.encode('ascii') for x in y]
-        vtype = f2.variables[var].datatype
-        print var, vtype, x2
-        wvar = w.createVariable(var, vtype, x2)
-
-        if len(x2) > 1:
-            fvar=np.copy(f2.variables[var])
-
-        #--  Subset input variables
-        for n in range(len(x2)):
-            fdim = x2[n]
-            if fdim == 'ni':
-                if n == 0:
-                    fvar = fvar[xind2,]
-                if n == 1:
-                    fvar = fvar[:,xind2,]
-                if n == 2:
-                    fvar = fvar[:,:,xind2,]
-                if n == 3:
-                    fvar = fvar[:,:,:,xind2,]
-            if fdim == 'nj':
-                if n == 0:
-                    fvar = fvar[yind2,]
-                if n == 1:
-                    fvar = fvar[:,yind2,]
-                if n == 2:
-                    fvar = fvar[:,:,yind2,]
-                if n == 3:
-                    fvar = fvar[:,:,:,yind2,]
-
-        #--  Set attribute values
-        att=f2.variables[var].ncattrs()
-        print att, '\n'
-        km=len(att)
-        for attname in att:
-            print 'name: ',attname,' value: ',f2.variables[var].getncattr(attname)
-            w.variables[var].setncattr(attname,f2.variables[var].getncattr(attname))
-
-        #--  Set edges to zero
-        if var == 'RTM_FLOW_DIRECTION':
-            rjm2=fvar.shape[0]
-            rim2=fvar.shape[1]
-            fvar[:,0]    = 0
-            fvar[:,rim2-1] = 0
-            fvar[0,:]    = 0
-            fvar[rjm2-1.:] = 0
-
-        #--  Write variable data to output file
-        if len(wvar.shape) == 1:
-            wvar[:] = f2.variables[var][:]
-        if len(wvar.shape) == 2:
-            wvar[:,:] = fvar
-        if len(wvar.shape) == 3:
-            wvar[:,:,:] = fvar
-        if len(wvar.shape) == 4:
-            wvar[:,:,:,:] = fvar
-
-   #--  Close output file
-    w.close
-
-#--  Close output file
-f1.close
