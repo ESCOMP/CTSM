@@ -35,14 +35,11 @@
 # - Modified by Dave Lawrence, August, 2015
 # - Updated with better check that run has also been archived to short term - Dave Lawrence
 #      October, 2015
-#
-#  Execute with following command:
-#
-#  ./run_clm_historical.v2.csh ! > & run_historical.out & 
+# - ./run_clm_historical.v3.csh ! > & run_historical.out &
 #########################################################################################
 
 # --- CASENAME is your case name
-set CASENAME = 'cesm130_clm45_firemodule_20tr_01'
+set CASENAME = 'clm5_respn05r162_2degGSWP3_hist_allN_v01'
 
 # --- Set the user namelist file. i.e. add the snow alterations for my run. Others may have 
 #      diferent needs
@@ -76,11 +73,11 @@ endif
 ./xmlchange RESUBMIT=0
 
 # --- If you have not already built the code, then do so now
-#./$CASENAME.clean_build
-#./$CASENAME.build
+#./case.clean_build
+#./case.build
 
 # --- Now submit the job and let it run
-./$CASENAME.submit
+./case.submit
 
 
 #########################################################################################
@@ -154,12 +151,12 @@ endif
 #     We want to do a 110 year simulation, but in two 55 year chunks, thus
 #     we have to resubmit the job once.
 ./xmlchange STOP_OPTION=nyears
-./xmlchange STOP_N=52
+./xmlchange STOP_N=55
 ./xmlchange DATM_CLMNCEP_YR_ALIGN=1901
 ./xmlchange DATM_CLMNCEP_YR_START=1901
 ./xmlchange DATM_CLMNCEP_YR_END=2010
 ./xmlchange CONTINUE_RUN=TRUE
 ./xmlchange RESUBMIT=1
 
-./$CASENAME.submit
+./case.submit
 
