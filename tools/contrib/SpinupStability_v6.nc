@@ -29,93 +29,14 @@ begin
 ;  annual_hist flag to "False" if your case has monthly mean history files.
 ; The script ; assumes that your history files are in /glade/scratch/$username/archive/$caseid/lnd/hist
 ;=======================================================================;
-; caseid = "clm458r177_wwparam_1850spin"
+
+  caseid = "clm5r221_2deg_calpv9_savetandg_1850ADspin"
+  username = "oleson"
+  annual_hist = "False"
+
+; caseid = "clm5r221_2deg_calpv9_savetandg_c3c4_1850ADspin"
 ; username = "oleson"
 ; annual_hist = "False"
-
-; caseid = "respn14r172_wwparam_1850spinACC"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "respn14r172_1850spin"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm458r177_modRESORB1_wwparam_1850spin"
-; username = "wwieder"
-; annual_hist = "False"
-
-; caseid = "respmods_n19_clm4_5_8_r174_4x5_bareground_ADspin_3"
-; username = "rfisher"
-; annual_hist = "True"
-
-; caseid = "respn19r174_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "respmods_r78397_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "respmods_5_4x5_bareground_PADspin_4"
-; username = "rfisher"
-; annual_hist = "False"
-
-; caseid = "respmods_r78397crop_1850spin"
-; username = "rfisher"
-; annual_hist = "False"
-
-; caseid = "respmods_r78397crop_1850postADspin"
-; username = "rfisher"
-; annual_hist = "False"
-
-; caseid = "respn24r174crop_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "respn24r174crop_1850PostADspin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "respn24r174crop_1850PostADspin2"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "b.e15.B1850.f09_g16.pi_control.all.72_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "b.e15.B1850.f09_g16.pi_control.all.72_1850spinn24"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "respn27r174crop_2deg_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "respn27r174Con_2deg_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "respn27r174BenPRootWC_2deg_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "respn27r174BenPRootWCcrop_2deg_1850spin"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "i.e15.a06.B1850.f09_g16.21ka_cpl.04"
-; username = "tomas"
-; annual_hist = "False"
-
-; caseid = "respmods_n30_clm4_5_8_r182_4x5_bareground_AD_1"
-; username = "rfisher"
-; annual_hist = "True"
-
-  caseid = "respmods_n30_clm4_5_8_r182_4x5_kattge_hydr_08072016params"
-  username = "rfisher"
-  annual_hist = "True"
 
   do_plot = "True"
 ; do_plot = "False"
@@ -123,8 +44,11 @@ begin
 
   data_dir = "/glade/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
 ; data_dir = "/glade/scratch/"+username+"/"+caseid+"/run/"
+; data_dir = "/glade/p/cesm/palwg_dev/pliocene/archive/F.e15.cam54_clm45_plio_fire_plio/lnd/hist/"
+; data_dir = "/glade/p/cesm/palwg_dev/pliocene/archive/BGC_final_spinup_plio/lnd/hist/"
 
   subper = 20                    ; Subsampling period in years
+; subper = 30                    ; Subsampling period in years
 ; subper = 5                     ; Subsampling period in years
 
 ; Thresholds 
@@ -195,6 +119,7 @@ begin
     tlai                    = data[:]->TLAI(year,:,:)
     gpp                     = data[:]->GPP(year,:,:)
     tws                     = data[:]->TWS(year,:,:)
+;   fert                    = data[:]->FERT(year,:,:)
   else
     totecosysc              = month_to_annual(data[:]->TOTECOSYSC,1)
     totsomc                 = month_to_annual(data[:]->TOTSOMC,1)
@@ -202,6 +127,7 @@ begin
     tlai                    = month_to_annual(data[:]->TLAI,1)
     gpp                     = month_to_annual(data[:]->GPP,1)
     tws                     = month_to_annual(data[:]->TWS,1)
+;   fert                    = month_to_annual(data[:]->FERT,1)
   end if
   lat                       = data[0]->lat
   nlat                      = dimsizes(lat)
@@ -438,6 +364,13 @@ begin
   end if
   tws_glob_equil@_FillValue = -999
   delete(indx)
+
+; FERT
+; landareaC           = conform_dims(dimsizes(fert),landarea,(/1,2/)) ; conforming dimensions of landarea to totecosysc
+; fert_area           = fert*landareaC                                ; correcting totecosysc for total land area
+; fert_pg             = fert_area*gtoPg*secinyr                       ; g to Pg and sec to yrs
+; fert_glob           = dim_sum_n(fert_pg, (/1,2/))                   ; sums over all latitudes
+; print(fert_glob)
 
 ;===============================Plotting====================================;
   if (do_plot .eq. "True") then
