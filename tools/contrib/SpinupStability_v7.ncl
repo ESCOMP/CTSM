@@ -1,5 +1,5 @@
 ; NCL script
-; SpinupStability_v6.ncl
+; SpinupStability_v7.ncl
 ; Script to examine stability of spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
 ; Keith Oleson, May 2016
@@ -20,7 +20,7 @@ begin
 ; as to whether they are spunup or not.  A summary of variables in equilibrium
 ; and/or in disequilibrium is also produced to standard out. The postscript output
 ; is $caseid_spinup.ps in the pwd.
-; The variables examined are TOTECOSYSC,TOTSOMC,TOTVEGC,TLAI,GPP,TWS.
+; The variables examined are TOTECOSYSC,TOTSOMC,TOTVEGC,TLAI,GPP,TWS,H2OSNO.
 ; The percentage of land area in TOTECOSYSC disequilibrium is also examined.
 ; Thresholds are defined below (i.e., global_thresh_*) and can be changed for individual
 ; variables.
@@ -30,26 +30,331 @@ begin
 ; The script ; assumes that your history files are in /glade/scratch/$username/archive/$caseid/lnd/hist
 ;=======================================================================;
 
-  caseid = "clm5r221_2deg_calpv9_savetandg_1850ADspin"
-  username = "oleson"
-  annual_hist = "False"
+; FINAL CLM4/4.5 SIMULATIONS
 
-; caseid = "clm5r221_2deg_calpv9_savetandg_c3c4_1850ADspin"
+; caseid = "clm40_n26r233_1deg_1850"
 ; username = "oleson"
 ; annual_hist = "False"
+
+; caseid = "clm40_n26r233_1deg_GSWP3V2_1850"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm40_r243_1deg_GSWP3V2_CMIP6_1850"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm40_r243_1deg_CRUNCEPV7_CMIP6_1850"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm45_n26r233_1deg_1850"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm45_n26r233_1deg_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm45_r243_1deg_GSWP3V2_1850"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm45_r243_1deg_GSWP3V2_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; PRELIMINARY CLM5.0 SIMULATIONS
+
+; caseid = "clm50_r243_1deg_CRUNCEPV7_1850"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r243_1deg_CRUNCEPV7_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r243_1deg_CRUNCEPV7_sc_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r243_1deg_GSWP3V2_1850"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r243_1deg_GSWP3V2_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r243_1deg_GSWP3V2_sc_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r243_1deg_GSWP3V2_stemleaf_1850"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r256_1deg_GSWP3V1_stemleaf_ncosts_psi50_BLDTT_1850"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r243_1deg_GSWP3V2_sc_emergeV2C_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; FINAL CLM5.0 SIMULATIONS
+
+; caseid = "clm50_r265_1deg_GSWP3V1_cs_1700"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r265_1deg_GSWP3V1_400i_ccrit_1700pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r265_1deg_GSWP3V1_iso_1850"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r265_1deg_GSWP3V1_iso_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r265_1deg_GSWP3V1_iso_400i_ccrit_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_r266_1deg_CRUNCEPV7_iso_1850"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r266_1deg_CRUNCEPV7_iso_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r266_1deg_CRUNCEPV7_iso_ch_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r268_1deg_WATCH_iso_1850"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r268_1deg_WATCH_iso_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+
+; caseid = "clm50_r268_1deg_WATCH_iso_ch_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+
+; MISC SIMULATIONS
+
+; caseid = "clm5_nbug_test_case"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_case"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_test_casepAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_casepAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm50_CRUNCEP_1800_postAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_case"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_casepAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_case460pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_case660pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_caselat100"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_caselat25"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_caselat100pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "clm5_nbug_control_equil_ntasks3_caselat25pAD"
+; username = "oleson"
+; annual_hist = "False"
+
+; caseid = "cesm20exp10j_1deg_CPLHST_1850AD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Global"
+; subper = 21                    ; Subsampling period in years
+
+; caseid = "cesm20exp10j_1deg_CPLHST_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Global"
+; subper = 21                    ; Subsampling period in years
+
+; caseid = "cesm20exp10j_1deg_CPLHST_nndep_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Global"
+; subper = 21                    ; Subsampling period in years
+
+; caseid = "cesm20exp10j_1deg_CPLHST_nndep_iAD_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Global"
+; subper = 21                    ; Subsampling period in years
+
+; caseid = "cesm20exp10j_1deg_CPLHST_nndep_1850AD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Global"
+; subper = 21                    ; Subsampling period in years
+
+; caseid = "cesm20exp10j_1deg_CPLHST_GSWP3init_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Global"
+; subper = 1                     ; Subsampling period in years
+
+; caseid = "cesm20exp10j_1deg_CPLHST_GSWP3init_pdco2_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Global"
+; subper = 1                     ; Subsampling period in years
+
+; caseid = "clm50d008_ArcticWF_hcru_GSWP3V1_1850AD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Arctic"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1_1850AD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Arctic"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1ss_ddp10_1850AD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Arctic"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50d008_ArcticWF_hcru_GSWP3V1ss_1850AD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Arctic"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1ss_1850AD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Arctic"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50d008_ArcticWF_hcru_GSWP3V1_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Arctic"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1_1850pAD"
+; username = "oleson"
+; annual_hist = "False"
+; cplot = "Arctic"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_cesm201R_1deg_GSWP3V1_phsoff_1850AD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_cesm201R_1deg_GSWP3V1_phsoff_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_Rclm5007_1deg_GSWP3V1_land-hist_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_Rclm5007_1deg_GSWP3V1_land-hist_f_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_Rclm5007_1deg_GSWP3V1_land-hist_1700pAD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850AD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_release-clm5.0.15_delta_CN_FUNbug_2deg_GSWP3V1_1850AD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+; caseid = "clm50_release-clm5.0.15_delta_CN_FUNbug_2deg_GSWP3V1_1850pAD"
+; username = "oleson"
+; annual_hist = "True"
+; cplot = "Global"
+; subper = 20                    ; Subsampling period in years
+
+  caseid = "i.e21.B1850.f09_g17.PMIP4-midHolo.proto008"
+  username = "tomas"
+  annual_hist = "False"
+  cplot = "Global"
+  subper = 20                    ; Subsampling period in years
 
   do_plot = "True"
 ; do_plot = "False"
 ;=======================================================================;
 
   data_dir = "/glade/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
+; data_dir = "/glade/p_old/cesm0005"+"/archive/"+caseid+"/lnd/hist/"
 ; data_dir = "/glade/scratch/"+username+"/"+caseid+"/run/"
 ; data_dir = "/glade/p/cesm/palwg_dev/pliocene/archive/F.e15.cam54_clm45_plio_fire_plio/lnd/hist/"
 ; data_dir = "/glade/p/cesm/palwg_dev/pliocene/archive/BGC_final_spinup_plio/lnd/hist/"
-
-  subper = 20                    ; Subsampling period in years
-; subper = 30                    ; Subsampling period in years
-; subper = 5                     ; Subsampling period in years
 
 ; Thresholds 
   glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta PgC / yr)
@@ -58,6 +363,7 @@ begin
   glob_thresh_tlai = 0.02        ; global threshold for TLAI equilibrium (delta m2/m2 / yr)
   glob_thresh_gpp = 0.02         ; global threshold for GPP equilibrium (delta PgC / yr)
   glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
+  glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
   glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr
   totecosysc_thresh = 1.         ; disequilibrium threshold for individual gridcells (gC/m2/yr)
 
@@ -95,7 +401,11 @@ begin
   yearpltrev                = yearplt(::-1)
   year                      = ispan(fstyr,lstyr,subper) - fstyr
   nyrs                      = dimsizes(year)
-  yearpltmid                = ispan(fstyr+subper/2,yearplt(nyrs-1),subper)
+  if (subper .eq. 1) then
+    yearpltmid                = ispan(fstyr+subper/2,yearplt(nyrs-2),subper)
+  else
+    yearpltmid                = ispan(fstyr+subper/2,yearplt(nyrs-1),subper)
+  end if
 
 ; Build an array of monthly indices
   monstr                    = new(nyrs*12,"integer")
@@ -119,6 +429,12 @@ begin
     tlai                    = data[:]->TLAI(year,:,:)
     gpp                     = data[:]->GPP(year,:,:)
     tws                     = data[:]->TWS(year,:,:)
+    if (isfilevar(data[0],"H2OSNO")) then
+      h2osno                  = data[:]->H2OSNO(year,:,:)
+    else
+      h2osno                = tws
+      h2osno                = h2osno@_FillValue
+    end if
 ;   fert                    = data[:]->FERT(year,:,:)
   else
     totecosysc              = month_to_annual(data[:]->TOTECOSYSC,1)
@@ -126,7 +442,18 @@ begin
     totvegc                 = month_to_annual(data[:]->TOTVEGC,1)
     tlai                    = month_to_annual(data[:]->TLAI,1)
     gpp                     = month_to_annual(data[:]->GPP,1)
-    tws                     = month_to_annual(data[:]->TWS,1)
+    if (isfilevar(data[0],"TWS")) then
+      tws                     = month_to_annual(data[:]->TWS,1)
+    else
+      tws                   = gpp
+      tws                   = tws@_FillValue
+    end if
+    if (isfilevar(data[0],"H2OSNO")) then
+      h2osno                  = month_to_annual(data[:]->H2OSNO,1)
+    else
+      h2osno                = tws
+      h2osno                = h2osno@_FillValue
+    end if
 ;   fert                    = month_to_annual(data[:]->FERT,1)
   end if
   lat                       = data[0]->lat
@@ -151,6 +478,8 @@ begin
   do i = 0,nyrs-2
     totecosysc_glob_del(i)  = (totecosysc_glob(i+1) - totecosysc_glob(i))/subper
   end do
+  printVarSummary(totecosysc_glob_del)
+  print(yearpltmid)
   totecosysc_glob_del!0     = "year"
   totecosysc_glob_del&year  = yearpltmid
   indx = where(abs(totecosysc_glob_del) .lt. glob_thresh_totecosysc,1,0)
@@ -336,6 +665,8 @@ begin
   delete(indx)
 
 ; TWS
+  if (isfilevar(data[0],"TWS")) then
+
   tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1,2/)))/1.e3    ; weighted global tws (meters)
   tws_glob!0         = "year"                                                
   tws_glob&year      = yearplt                                               
@@ -364,6 +695,58 @@ begin
   end if
   tws_glob_equil@_FillValue = -999
   delete(indx)
+
+  else
+    tws_glob_equil = new(1,typeof(yearplt),-999)
+    tws_glob_equil = -999
+    printVarSummary(tws_glob_equil)
+    tws_glob       = new(dimsizes(dim_sum_n(tws,(/1,2/))),typeof(tws),-999)
+    tws_glob       = -999
+    tws_glob_del   = new(nyrs-1,"float",-999.)
+    tws_glob_del   = -999.
+  end if
+
+; H2OSNO
+  if (isfilevar(data[0],"H2OSNO")) then
+
+  h2osno_glob           = dim_sum_n(h2osno*landareaL/areasum,(/1,2/))    ; weighted global h2osno (mm)
+  h2osno_glob!0         = "year"                                                
+  h2osno_glob&year      = yearplt                                               
+  h2osno_glob_del       = new(nyrs-1,"float")
+  do i = 0,nyrs-2
+    h2osno_glob_del(i) = (h2osno_glob(i+1) - h2osno_glob(i))/subper
+  end do
+  h2osno_glob_del!0     = "year"
+  h2osno_glob_del&year  = yearpltmid
+  indx = where(abs(h2osno_glob_del) .lt. glob_thresh_h2osno,1,0)
+  if (all(indx .eq. 1)) then
+    h2osno_glob_equil = yearplt(0)
+  else
+    if (.not.(all(indx .eq. 0)) .and. indx(dimsizes(indx)-1) .ne. 0) then
+      indxrev = indx(::-1)
+      do i = 0,dimsizes(indxrev)-1
+        if (indxrev(i) .eq. 0) then
+          h2osno_glob_equil = yearpltrev(i-1)
+          break 
+        end if
+      end do
+      delete(indxrev)
+    else
+      h2osno_glob_equil   = -999
+    end if
+  end if
+  h2osno_glob_equil@_FillValue = -999
+  delete(indx)
+
+  else
+    h2osno_glob_equil = -999
+    h2osno_glob_equil = new(1,typeof(yearplt),-999)
+    h2osno_glob_equil = -999
+    h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1,2/))),typeof(h2osno),-999)
+    h2osno_glob       = -999
+    h2osno_glob_del   = new(nyrs-1,"float",-999.)
+    h2osno_glob_del   = -999.
+  end if
 
 ; FERT
 ; landareaC           = conform_dims(dimsizes(fert),landarea,(/1,2/)) ; conforming dimensions of landarea to totecosysc
@@ -514,6 +897,15 @@ begin
   resc@cnLineLabelsOn        = False            ; turn off contour line labels
   resc@cnLevelSelectionMode  = "ExplicitLevels" 
   resc@mpProjection          = "robinson"       ; Robinson grid projection
+  if (cplot .eq. "Arctic") then
+    resc@mpLimitMode   = "LatLon"
+    resc@mpMinLatF     = 50.
+    resc@mpMaxLatF     = 85.
+    resc@mpMinLonF     = -180.
+    resc@mpMaxLonF     = -95.
+    resc@gsnAddCyclic  = False
+    resc@mpProjection  = "CylindricalEquidistant"
+  end if
   resc@gsnDraw               = True
   resc@gsnFrame              = False
   resc@lbAutoManage          = False
@@ -537,6 +929,27 @@ begin
   resc@gsnCenterString       = "TOTECOSYSC Disequil Yr " + yearplt(nyrs-2) + " - " + yearplt(nyrs-3)
   plot                       = gsn_csm_contour_map(wks,totecosysc_2_map,resc)
 
+  frame(wks)
+
+  delete(plot)
+  plot = new(2,"graphic")
+
+  delete(res@trYMaxF)
+  delete(res@trYMinF)
+  res@tiYAxisString          = "mm"
+  res@tiMainString           = "H2OSNO"
+  plot(0)                    = gsn_csm_xy(wks,yearplt,h2osno_glob,res)
+
+  res@tiYAxisString          = "mm"
+  res@tiMainString           = "Delta H2OSNO " + "EqYr: "+h2osno_glob_equil
+  res@trYMaxF                = 5.0
+  res@trYMinF                = -5.0
+  plot(1)                    = gsn_csm_xy(wks,yearpltmid,h2osno_glob_del,res)
+  prim20 = gsn_add_polyline(wks,plot(1),(/0.,yearpltmid(nyrs-2)/),(/0.,0./),polyres1)
+  prim21 = gsn_add_polyline(wks,plot(1),(/0.,yearpltmid(nyrs-2)/),(/-glob_thresh_h2osno,-glob_thresh_h2osno/),polyres2)
+  prim22 = gsn_add_polyline(wks,plot(1),(/0.,yearpltmid(nyrs-2)/),(/glob_thresh_h2osno,glob_thresh_h2osno/),polyres2)
+
+  gsn_panel(wks,plot,(/4,4/),resP)
   frame(wks)
 
   end if   ; end do_plot
@@ -574,10 +987,16 @@ begin
   if (.not.(ismissing(tws_glob_equil))) then
     print((/"TWS is in equilibrium. Eq. Yr. = "+tws_glob_equil/))
   else
-    print((/"WARNING: TWS is NOT in equilibrium"/))
+    print((/"WARNING: TWS is NOT in equilibrium or is missing"/))
+  end if
+  if (.not.(ismissing(h2osno_glob_equil))) then
+    print((/"H2OSNO is in equilibrium. Eq. Yr. = "+h2osno_glob_equil/))
+  else
+    print((/"WARNING: H2OSNO is NOT in equilibrium or is missing"/))
   end if
   if (.not.(ismissing(perc_landarea_glob_noequil))) then
     print((/"At least "+(100.-glob_thresh_area)+" percent of the land surface is in TOTECOSYSC equilibrium. Eq. Yr. = "+perc_landarea_glob_noequil/))
+    print((/"Percent of the land surface not in equilibrium ("+sprintf("%6.2f",perc_landarea_noequil(nyrs-2))+"% )"/))
   else
     print((/"FATAL: Not enough of the land surface is in equilibrium ("+sprintf("%6.2f",perc_landarea_noequil(nyrs-2))+"% > "+sprintf("%6.2f",glob_thresh_area)+"%)"/))
   end if
