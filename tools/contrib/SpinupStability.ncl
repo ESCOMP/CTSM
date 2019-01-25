@@ -6,7 +6,7 @@
 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "~oleson/lnd_diag/run/contributed.ncl"
+load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 
 begin
@@ -33,11 +33,11 @@ begin
 ;=======================================================================;
 
 ; GLOBAL EXAMPLE
-; caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850AD"
-; username = "oleson"
-; annual_hist = True
-; region = "Global"              ; Global, Arctic, or SPT (single point)
-; subper = 20                    ; Subsampling period in years
+  caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850AD"
+  username = "oleson"
+  annual_hist = True
+  region = "Global"              ; Global, Arctic, or SPT (single point)
+  subper = 20                    ; Subsampling period in years
 
 ; SPT (single point) EXAMPLE
 ; caseid = "clm50_release-clm5.0.15_SPT_GSWP3V1_1850spin"
