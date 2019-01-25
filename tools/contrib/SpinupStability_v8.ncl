@@ -1,8 +1,8 @@
 ; NCL script
-; SpinupStability_v7.ncl
+; SpinupStability_v8.ncl
 ; Script to examine stability of spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
-; Keith Oleson, May 2016
+; Keith Oleson, Jan 2019
 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
@@ -21,367 +21,75 @@ begin
 ; and/or in disequilibrium is also produced to standard out. The postscript output
 ; is $caseid_spinup.ps in the pwd.
 ; The variables examined are TOTECOSYSC,TOTSOMC,TOTVEGC,TLAI,GPP,TWS,H2OSNO.
-; The percentage of land area in TOTECOSYSC disequilibrium is also examined.
+; The percentage of land area in TOTECOSYSC disequilibrium is also examined (not for single point).
 ; Thresholds are defined below (i.e., global_thresh_*) and can be changed for individual
 ; variables.
 ; To run this script, just enter in your case name and username below. 
-;  AND set the annual_hist flag to "True" if your case has annual mean history files or set 
-;  annual_hist flag to "False" if your case has monthly mean history files.
-; The script ; assumes that your history files are in /glade/scratch/$username/archive/$caseid/lnd/hist
+;  AND set the annual_hist flag to True if your case has annual mean history files or set 
+;  annual_hist flag to False if your case has monthly mean history files.
+;  AND set the region (supported options: Global, Arctic, SPT).
+;  AND set the subper (subsampling period in years, number of years that atm forcing repeats).
+; The script assumes that your history files are in /glade/scratch/$username/archive/$caseid/lnd/hist
 ;=======================================================================;
 
-; FINAL CLM4/4.5 SIMULATIONS
-
-; caseid = "clm40_n26r233_1deg_1850"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm40_n26r233_1deg_GSWP3V2_1850"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm40_r243_1deg_GSWP3V2_CMIP6_1850"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm40_r243_1deg_CRUNCEPV7_CMIP6_1850"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm45_n26r233_1deg_1850"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm45_n26r233_1deg_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm45_r243_1deg_GSWP3V2_1850"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm45_r243_1deg_GSWP3V2_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; PRELIMINARY CLM5.0 SIMULATIONS
-
-; caseid = "clm50_r243_1deg_CRUNCEPV7_1850"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r243_1deg_CRUNCEPV7_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r243_1deg_CRUNCEPV7_sc_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r243_1deg_GSWP3V2_1850"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r243_1deg_GSWP3V2_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r243_1deg_GSWP3V2_sc_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r243_1deg_GSWP3V2_stemleaf_1850"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r256_1deg_GSWP3V1_stemleaf_ncosts_psi50_BLDTT_1850"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r243_1deg_GSWP3V2_sc_emergeV2C_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; FINAL CLM5.0 SIMULATIONS
-
-; caseid = "clm50_r265_1deg_GSWP3V1_cs_1700"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r265_1deg_GSWP3V1_400i_ccrit_1700pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r265_1deg_GSWP3V1_iso_1850"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r265_1deg_GSWP3V1_iso_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r265_1deg_GSWP3V1_iso_400i_ccrit_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_r266_1deg_CRUNCEPV7_iso_1850"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r266_1deg_CRUNCEPV7_iso_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r266_1deg_CRUNCEPV7_iso_ch_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r268_1deg_WATCH_iso_1850"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r268_1deg_WATCH_iso_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-
-; caseid = "clm50_r268_1deg_WATCH_iso_ch_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-
-; MISC SIMULATIONS
-
-; caseid = "clm5_nbug_test_case"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_case"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_test_casepAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_casepAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm50_CRUNCEP_1800_postAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_case"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_casepAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_case460pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_case660pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_caselat100"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_caselat25"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_caselat100pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "clm5_nbug_control_equil_ntasks3_caselat25pAD"
-; username = "oleson"
-; annual_hist = "False"
-
-; caseid = "cesm20exp10j_1deg_CPLHST_1850AD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Global"
-; subper = 21                    ; Subsampling period in years
-
-; caseid = "cesm20exp10j_1deg_CPLHST_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Global"
-; subper = 21                    ; Subsampling period in years
-
-; caseid = "cesm20exp10j_1deg_CPLHST_nndep_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Global"
-; subper = 21                    ; Subsampling period in years
-
-; caseid = "cesm20exp10j_1deg_CPLHST_nndep_iAD_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Global"
-; subper = 21                    ; Subsampling period in years
-
-; caseid = "cesm20exp10j_1deg_CPLHST_nndep_1850AD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Global"
-; subper = 21                    ; Subsampling period in years
-
-; caseid = "cesm20exp10j_1deg_CPLHST_GSWP3init_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Global"
-; subper = 1                     ; Subsampling period in years
-
-; caseid = "cesm20exp10j_1deg_CPLHST_GSWP3init_pdco2_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Global"
-; subper = 1                     ; Subsampling period in years
-
-; caseid = "clm50d008_ArcticWF_hcru_GSWP3V1_1850AD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Arctic"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1_1850AD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Arctic"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1ss_ddp10_1850AD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Arctic"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50d008_ArcticWF_hcru_GSWP3V1ss_1850AD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Arctic"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1ss_1850AD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Arctic"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50d008_ArcticWF_hcru_GSWP3V1_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Arctic"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm45d008_ArcticWF_hcru_GSWP3V1_1850pAD"
-; username = "oleson"
-; annual_hist = "False"
-; cplot = "Arctic"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50_cesm201R_1deg_GSWP3V1_phsoff_1850AD"
-; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50_cesm201R_1deg_GSWP3V1_phsoff_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50_Rclm5007_1deg_GSWP3V1_land-hist_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50_Rclm5007_1deg_GSWP3V1_land-hist_f_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50_Rclm5007_1deg_GSWP3V1_land-hist_1700pAD"
-; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
-; subper = 20                    ; Subsampling period in years
-
+; GLOBAL EXAMPLE
 ; caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850AD"
 ; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
+; annual_hist = True
+; region = "Global"              ; Global, Arctic, or SPT (single point)
 ; subper = 20                    ; Subsampling period in years
 
-; caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850pAD"
+; SPT (single point) EXAMPLE
+; caseid = "clm50_release-clm5.0.15_SPT_GSWP3V1_1850spin"
 ; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
+; annual_hist = True
+; region = "SPT"                 ; Global, Arctic, or SPT (single point)
 ; subper = 20                    ; Subsampling period in years
 
-; caseid = "clm50_release-clm5.0.15_delta_CN_FUNbug_2deg_GSWP3V1_1850AD"
-; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
-; subper = 20                    ; Subsampling period in years
-
-; caseid = "clm50_release-clm5.0.15_delta_CN_FUNbug_2deg_GSWP3V1_1850pAD"
-; username = "oleson"
-; annual_hist = "True"
-; cplot = "Global"
-; subper = 20                    ; Subsampling period in years
-
-  caseid = "i.e21.B1850.f09_g17.PMIP4-midHolo.proto008"
-  username = "tomas"
-  annual_hist = "False"
-  cplot = "Global"
-  subper = 20                    ; Subsampling period in years
-
-  do_plot = "True"
-; do_plot = "False"
+  do_plot = True
+; do_plot = False
 ;=======================================================================;
 
   data_dir = "/glade/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
-; data_dir = "/glade/p_old/cesm0005"+"/archive/"+caseid+"/lnd/hist/"
-; data_dir = "/glade/scratch/"+username+"/"+caseid+"/run/"
-; data_dir = "/glade/p/cesm/palwg_dev/pliocene/archive/F.e15.cam54_clm45_plio_fire_plio/lnd/hist/"
-; data_dir = "/glade/p/cesm/palwg_dev/pliocene/archive/BGC_final_spinup_plio/lnd/hist/"
 
 ; Thresholds 
-  glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta PgC / yr)
-  glob_thresh_totsomc = 0.02     ; global threshold for TOTSOMC equilibrium (delta PgC / yr)
-  glob_thresh_totvegc = 0.02     ; global threshold for TOTVEGC equilibrium (delta PgC / yr)
-  glob_thresh_tlai = 0.02        ; global threshold for TLAI equilibrium (delta m2/m2 / yr)
-  glob_thresh_gpp = 0.02         ; global threshold for GPP equilibrium (delta PgC / yr)
-  glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
-  glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
-  glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr
-  totecosysc_thresh = 1.         ; disequilibrium threshold for individual gridcells (gC/m2/yr)
+  if (region .eq. "SPT") then
+    glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta MgC / yr)
+    glob_thresh_totsomc = 0.02     ; global threshold for TOTSOMC equilibrium (delta MgC / yr)
+    glob_thresh_totvegc = 0.02     ; global threshold for TOTVEGC equilibrium (delta MgC / yr)
+    glob_thresh_tlai = 0.02        ; global threshold for TLAI equilibrium (delta m2/m2 / yr)
+    glob_thresh_gpp = 0.02         ; global threshold for GPP equilibrium (delta MgC / yr)
+    glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
+    glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
+    glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr (not used)
+    totecosysc_thresh = 1.         ; disequilibrium threshold for individual gridcells (gC/m2/yr) (not used)
+  else
+    glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta PgC / yr)
+    glob_thresh_totsomc = 0.02     ; global threshold for TOTSOMC equilibrium (delta PgC / yr)
+    glob_thresh_totvegc = 0.02     ; global threshold for TOTVEGC equilibrium (delta PgC / yr)
+    glob_thresh_tlai = 0.02        ; global threshold for TLAI equilibrium (delta m2/m2 / yr)
+    glob_thresh_gpp = 0.02         ; global threshold for GPP equilibrium (delta PgC / yr)
+    glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
+    glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
+    glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr
+    totecosysc_thresh = 1.         ; disequilibrium threshold for individual gridcells (gC/m2/yr)
+  end if
 
-  if (annual_hist .eq. "True") then
+  if (annual_hist) then
     fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*-*-*"+".nc")
   else
     fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 
-  if (annual_hist .eq. "True") then
+  if (annual_hist) then
     lstfile                   = addfile(fls(flsdims-1),"r")
   else
     lstfile                   = addfile(fls(flsdims-12),"r")  ;last month (DEC) of any year has mdate for next year
                                                               ;so grab JAN of last year
   end if
 
-  if (annual_hist .eq. "True") then
+  if (annual_hist) then
     lstyrdim                = dimsizes(lstfile->mcdate)
     mcdate_lst              = lstfile->mcdate(lstyrdim-1)
   else
@@ -390,7 +98,7 @@ begin
   lstyr                     = toint(mcdate_lst)/10000
 
   fstfile                   = addfile(fls(0),"r")
-  if (annual_hist .eq. "True") then
+  if (annual_hist) then
     mcdate_fst              = fstfile->mcdate(0)
   else
     mcdate_fst              = fstfile->mcdate
@@ -414,28 +122,42 @@ begin
   end do
 
 ; Add the data files together
-  if (annual_hist .eq. "True") then
+  if (annual_hist) then
     data                    = addfiles(fls, "r")
     ListSetType (data, "cat")
   else
     data                    = addfiles(fls(monstr), "r")
   end if
 
-; Convert to annual means
-  if (annual_hist .eq. "True") then
-    totecosysc              = data[:]->TOTECOSYSC(year,:,:)
-    totsomc                 = data[:]->TOTSOMC(year,:,:)
-    totvegc                 = data[:]->TOTVEGC(year,:,:)
-    tlai                    = data[:]->TLAI(year,:,:)
-    gpp                     = data[:]->GPP(year,:,:)
-    tws                     = data[:]->TWS(year,:,:)
-    if (isfilevar(data[0],"H2OSNO")) then
-      h2osno                  = data[:]->H2OSNO(year,:,:)
+; Convert to annual means if required
+  if (annual_hist) then
+    if (region .eq. "SPT") then
+      totecosysc              = data[:]->TOTECOSYSC(year,:)
+      totsomc                 = data[:]->TOTSOMC(year,:)
+      totvegc                 = data[:]->TOTVEGC(year,:)
+      tlai                    = data[:]->TLAI(year,:)
+      gpp                     = data[:]->GPP(year,:)
+      tws                     = data[:]->TWS(year,:)
+      if (isfilevar(data[0],"H2OSNO")) then
+        h2osno                  = data[:]->H2OSNO(year,:)
+      else
+        h2osno                = tws
+        h2osno                = h2osno@_FillValue
+      end if
     else
-      h2osno                = tws
-      h2osno                = h2osno@_FillValue
+      totecosysc              = data[:]->TOTECOSYSC(year,:,:)
+      totsomc                 = data[:]->TOTSOMC(year,:,:)
+      totvegc                 = data[:]->TOTVEGC(year,:,:)
+      tlai                    = data[:]->TLAI(year,:,:)
+      gpp                     = data[:]->GPP(year,:,:)
+      tws                     = data[:]->TWS(year,:,:)
+      if (isfilevar(data[0],"H2OSNO")) then
+        h2osno                  = data[:]->H2OSNO(year,:,:)
+      else
+        h2osno                = tws
+        h2osno                = h2osno@_FillValue
+      end if
     end if
-;   fert                    = data[:]->FERT(year,:,:)
   else
     totecosysc              = month_to_annual(data[:]->TOTECOSYSC,1)
     totsomc                 = month_to_annual(data[:]->TOTSOMC,1)
@@ -454,7 +176,6 @@ begin
       h2osno                = tws
       h2osno                = h2osno@_FillValue
     end if
-;   fert                    = month_to_annual(data[:]->FERT,1)
   end if
   lat                       = data[0]->lat
   nlat                      = dimsizes(lat)
@@ -464,22 +185,34 @@ begin
   area                      = data[0]->area
   aream                     = area*1.e6
   landarea                  = landfrac*aream
-  gtoPg                     = 1e-15
+  if (region .eq. "SPT") then
+    gtoXg                     = 1e-12 ;Tg
+    units                     = "Tg C"
+  else
+    gtoXg                     = 1e-15 ;Pg
+    units                     = "Pg C"
+  end if
   secinyr                   = 60.*60.*24.*365.
 
 ; TOTECOSYSC
-  landareaC                 = conform_dims(dimsizes(totecosysc),landarea,(/1,2/)) ; conforming dimensions of landarea to totecosysc
+  if (region .eq. "SPT") then
+    landareaC                 = conform_dims(dimsizes(totecosysc),landarea,(/1/))   ; conforming dimensions of landarea to totecosysc
+  else
+    landareaC                 = conform_dims(dimsizes(totecosysc),landarea,(/1,2/)) ; conforming dimensions of landarea to totecosysc
+  end if
   totecosysc_area           = totecosysc*landareaC                                ; correcting totecosysc for total land area
-  totecosysc_pg             = totecosysc_area*gtoPg                               ; g to Pg
-  totecosysc_glob           = dim_sum_n(totecosysc_pg, (/1,2/))                   ; sums over all latitudes
+  totecosysc_Xg             = totecosysc_area*gtoXg                               ; g to Xg
+  if (region .eq. "SPT") then
+    totecosysc_glob           = dim_sum_n(totecosysc_Xg, (/1/))                     ; sums over single point
+  else
+    totecosysc_glob           = dim_sum_n(totecosysc_Xg, (/1,2/))                   ; sums over all latitudes
+  end if
   totecosysc_glob!0         = "year"                                              
   totecosysc_glob&year      = yearplt                                             
   totecosysc_glob_del       = new(nyrs-1,"float")
   do i = 0,nyrs-2
     totecosysc_glob_del(i)  = (totecosysc_glob(i+1) - totecosysc_glob(i))/subper
   end do
-  printVarSummary(totecosysc_glob_del)
-  print(yearpltmid)
   totecosysc_glob_del!0     = "year"
   totecosysc_glob_del&year  = yearpltmid
   indx = where(abs(totecosysc_glob_del) .lt. glob_thresh_totecosysc,1,0)
@@ -503,6 +236,7 @@ begin
   delete(indx)
 
 ; Land area not in TOTECOSYSC equilibrium
+  if (region .ne. "SPT") then
   landarea_noequil = new((/nyrs-1,nlat,nlon/),"float")
   do i = 0,nyrs-2
     landarea_noequil(i,:,:) = where((totecosysc(i+1,:,:) - totecosysc(i,:,:))/subper .gt. totecosysc_thresh, landarea, 0.)
@@ -534,11 +268,16 @@ begin
   totecosysc_1_map&lon = lon
   totecosysc_2_map = where(landarea_noequil(nyrs-3,:,:) .ne. 0.,(totecosysc(nyrs-2,:,:)-totecosysc(nyrs-3,:,:))/subper,totecosysc@_FillValue)
   copy_VarCoords(totecosysc_1_map,totecosysc_2_map)
+  end if
 
 ; TOTSOMC
   totsomc_area           = totsomc*landareaC                                   ; correcting totsomc for total land area
-  totsomc_pg             = totsomc_area*gtoPg                                  ; g to Pg
-  totsomc_glob           = dim_sum_n(totsomc_pg, (/1,2/))                      ; sums over all latitudes
+  totsomc_Xg             = totsomc_area*gtoXg                                  ; g to Xg
+  if (region .eq. "SPT") then
+    totsomc_glob           = dim_sum_n(totsomc_Xg, (/1/))                        ; sums over single point
+  else
+    totsomc_glob           = dim_sum_n(totsomc_Xg, (/1,2/))                      ; sums over all latitudes
+  end if
   totsomc_glob!0         = "year"                                                
   totsomc_glob&year      = yearplt                                               
   totsomc_glob_del       = new(nyrs-1,"float")
@@ -569,8 +308,12 @@ begin
 
 ; TOTVEGC
   totvegc_area              = totvegc*landareaC                                   ; correcting totvegc for total land area
-  totvegc_pg                = totvegc_area*gtoPg                                  ; g to Pg
-  totvegc_glob              = dim_sum_n(totvegc_pg, (/1,2/))                      ; sums over all latitudes
+  totvegc_Xg                = totvegc_area*gtoXg                                  ; g to Xg
+  if (region .eq. "SPT") then
+    totvegc_glob              = dim_sum_n(totvegc_Xg, (/1/))                        ; sums over single point
+  else
+    totvegc_glob              = dim_sum_n(totvegc_Xg, (/1,2/))                      ; sums over all latitudes
+  end if
   totvegc_glob!0            = "year"                                                
   totvegc_glob&year         = yearplt                                               
   totvegc_glob_del          = new(nyrs-1,"float")
@@ -602,8 +345,13 @@ begin
 ; TLAI
   areasum             = sum(area*landfrac)
   areaL               = area*landfrac
-  landareaL           = conform_dims(dimsizes(tlai),areaL,(/1,2/))                ; conforming dimensions of areaL to tlai
-  tlai_glob           = dim_sum_n(tlai*landareaL/areasum,(/1,2/))                 ; weighted global tlai
+  if (region .eq. "SPT") then
+    landareaL           = conform_dims(dimsizes(tlai),areaL,(/1/))                  ; conforming dimensions of areaL to tlai
+    tlai_glob           = dim_sum_n(tlai*landareaL/areasum,(/1/))                   ; weighted tlai
+  else
+    landareaL           = conform_dims(dimsizes(tlai),areaL,(/1,2/))                ; conforming dimensions of areaL to tlai
+    tlai_glob           = dim_sum_n(tlai*landareaL/areasum,(/1,2/))                 ; weighted global tlai
+  end if
   tlai_glob!0         = "year"                                                
   tlai_glob&year      = yearplt                                               
   tlai_glob_del       = new(nyrs-1,"float")
@@ -634,8 +382,12 @@ begin
 
 ; GPP
   gpp_area              = gpp*landareaC                                   ; correcting gpp for total land area
-  gpp_pg                = gpp_area*gtoPg*secinyr                          ; g to Pg and sec to yrs
-  gpp_glob              = dim_sum_n(gpp_pg, (/1,2/))                      ; sums over all latitudes
+  gpp_Xg                = gpp_area*gtoXg*secinyr                          ; g to Xg and sec to yrs
+  if (region .eq. "SPT") then
+    gpp_glob              = dim_sum_n(gpp_Xg, (/1/))                        ; sums over single point
+  else
+    gpp_glob              = dim_sum_n(gpp_Xg, (/1,2/))                      ; sums over all latitudes
+  end if
   gpp_glob!0            = "year"                                                
   gpp_glob&year         = yearplt                                               
   gpp_glob_del       = new(nyrs-1,"float")
@@ -667,7 +419,11 @@ begin
 ; TWS
   if (isfilevar(data[0],"TWS")) then
 
-  tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1,2/)))/1.e3    ; weighted global tws (meters)
+  if (region .eq. "SPT") then
+    tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1/)))/1.e3    ; weighted tws (meters)
+  else
+    tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1,2/)))/1.e3    ; weighted global tws (meters)
+  end if
   tws_glob!0         = "year"                                                
   tws_glob&year      = yearplt                                               
   tws_glob_del       = new(nyrs-1,"float")
@@ -699,8 +455,11 @@ begin
   else
     tws_glob_equil = new(1,typeof(yearplt),-999)
     tws_glob_equil = -999
-    printVarSummary(tws_glob_equil)
-    tws_glob       = new(dimsizes(dim_sum_n(tws,(/1,2/))),typeof(tws),-999)
+    if (region .eq. "SPT") then
+      tws_glob       = new(dimsizes(dim_sum_n(tws,(/1/))),typeof(tws),-999)
+    else
+      tws_glob       = new(dimsizes(dim_sum_n(tws,(/1,2/))),typeof(tws),-999)
+    end if
     tws_glob       = -999
     tws_glob_del   = new(nyrs-1,"float",-999.)
     tws_glob_del   = -999.
@@ -709,7 +468,11 @@ begin
 ; H2OSNO
   if (isfilevar(data[0],"H2OSNO")) then
 
-  h2osno_glob           = dim_sum_n(h2osno*landareaL/areasum,(/1,2/))    ; weighted global h2osno (mm)
+  if (region .eq. "SPT") then
+    h2osno_glob           = dim_sum_n(h2osno*landareaL/areasum,(/1/))      ; weighted h2osno (mm)
+  else
+    h2osno_glob           = dim_sum_n(h2osno*landareaL/areasum,(/1,2/))    ; weighted global h2osno (mm)
+  end if
   h2osno_glob!0         = "year"                                                
   h2osno_glob&year      = yearplt                                               
   h2osno_glob_del       = new(nyrs-1,"float")
@@ -742,21 +505,18 @@ begin
     h2osno_glob_equil = -999
     h2osno_glob_equil = new(1,typeof(yearplt),-999)
     h2osno_glob_equil = -999
-    h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1,2/))),typeof(h2osno),-999)
+    if (region .eq. "SPT") then
+      h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1/))),typeof(h2osno),-999)
+    else
+      h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1,2/))),typeof(h2osno),-999)
+    end if
     h2osno_glob       = -999
     h2osno_glob_del   = new(nyrs-1,"float",-999.)
     h2osno_glob_del   = -999.
   end if
 
-; FERT
-; landareaC           = conform_dims(dimsizes(fert),landarea,(/1,2/)) ; conforming dimensions of landarea to totecosysc
-; fert_area           = fert*landareaC                                ; correcting totecosysc for total land area
-; fert_pg             = fert_area*gtoPg*secinyr                       ; g to Pg and sec to yrs
-; fert_glob           = dim_sum_n(fert_pg, (/1,2/))                   ; sums over all latitudes
-; print(fert_glob)
-
 ;===============================Plotting====================================;
-  if (do_plot .eq. "True") then
+  if (do_plot) then
 
 ; wks_type = "png"
 ; wks_type@wkWidth  = 2500
@@ -790,11 +550,11 @@ begin
   polyres2@gsLineDashPattern = 2
 
   res@tiXAxisString          = " "
-  res@tiYAxisString          = "Pg C"
+  res@tiYAxisString          = units
   res@tiMainString           = "TOTECOSYSC"
   plot(0)                    = gsn_csm_xy(wks,yearplt,totecosysc_glob,res)
 
-  res@tiYAxisString          = "Pg C"
+  res@tiYAxisString          = units
   res@tiMainString           = "Delta TOTECOSYSC " + "EqYr: "+totecosysc_glob_equil
   res@trYMaxF                = 0.2
   res@trYMinF                = -0.2
@@ -805,11 +565,11 @@ begin
 
   delete(res@trYMaxF)
   delete(res@trYMinF)
-  res@tiYAxisString          = "Pg C"
+  res@tiYAxisString          = units
   res@tiMainString           = "TOTSOMC"
   plot(2)                    = gsn_csm_xy(wks,yearplt,totsomc_glob,res)
 
-  res@tiYAxisString          = "Pg C"
+  res@tiYAxisString          = units
   res@tiMainString           = "Delta TOTSOMC " + "EqYr: "+totsomc_glob_equil
   res@trYMaxF                = 0.2
   res@trYMinF                = -0.2
@@ -820,11 +580,11 @@ begin
 
   delete(res@trYMaxF)
   delete(res@trYMinF)
-  res@tiYAxisString          = "Pg C"
+  res@tiYAxisString          = units
   res@tiMainString           = "TOTVEGC"
   plot(4)                    = gsn_csm_xy(wks,yearplt,totvegc_glob,res)
 
-  res@tiYAxisString          = "Pg C"
+  res@tiYAxisString          = units
   res@tiMainString           = "Delta TOTVEGC " + "EqYr: "+totvegc_glob_equil
   res@trYMaxF                = 0.2
   res@trYMinF                = -0.2
@@ -850,11 +610,11 @@ begin
 
   delete(res@trYMaxF)
   delete(res@trYMinF)
-  res@tiYAxisString          = "Pg C yr~S~-1~N~"
+  res@tiYAxisString          = units+" yr~S~-1~N~"
   res@tiMainString           = "GPP"
   plot(8)                    = gsn_csm_xy(wks,yearplt,gpp_glob,res)
 
-  res@tiYAxisString          = "Pg C yr~S~-1~N~"
+  res@tiYAxisString          = units+" yr~S~-1~N~"
   res@tiXAxisString          = "Spinup Year"
   res@tiMainString           = "Delta GPP " + "EqYr: "+gpp_glob_equil
   res@trYMaxF                = 0.2
@@ -879,15 +639,18 @@ begin
   prim17 = gsn_add_polyline(wks,plot(11),(/0.,yearpltmid(nyrs-2)/),(/-glob_thresh_tws,-glob_thresh_tws/),polyres2)
   prim18 = gsn_add_polyline(wks,plot(11),(/0.,yearpltmid(nyrs-2)/),(/glob_thresh_tws,glob_thresh_tws/),polyres2)
 
-  res@tiYAxisString          = "%"
-  res@tiMainString           = "% Land Area in TOTECOSYSC Disequil " + "EqYr: "+perc_landarea_glob_noequil
-  res@trYMaxF                = 80.0
-  res@trYMinF                =  0.0
-  plot(12)                   = gsn_csm_xy(wks,yearpltmid,perc_landarea_noequil,res)
-  prim19 = gsn_add_polyline(wks,plot(12),(/0.,yearpltmid(nyrs-2)/),(/glob_thresh_area,glob_thresh_area/),polyres2)
+  if (region .ne. "SPT") then
+    res@tiYAxisString          = "%"
+    res@tiMainString           = "% Land Area in TOTECOSYSC Disequil " + "EqYr: "+perc_landarea_glob_noequil
+    res@trYMaxF                = 80.0
+    res@trYMinF                =  0.0
+    plot(12)                   = gsn_csm_xy(wks,yearpltmid,perc_landarea_noequil,res)
+    prim19 = gsn_add_polyline(wks,plot(12),(/0.,yearpltmid(nyrs-2)/),(/glob_thresh_area,glob_thresh_area/),polyres2)
+  end if
 
   gsn_panel(wks,plot,(/4,4/),resP)
 
+  if (region .ne. "SPT") then
   delete(plot)
   resc                       = True             ; turn on plotting options
   resc@gsnSpreadColors       = True             ; spans all colors in colormap
@@ -897,7 +660,7 @@ begin
   resc@cnLineLabelsOn        = False            ; turn off contour line labels
   resc@cnLevelSelectionMode  = "ExplicitLevels" 
   resc@mpProjection          = "robinson"       ; Robinson grid projection
-  if (cplot .eq. "Arctic") then
+  if (region .eq. "Arctic") then
     resc@mpLimitMode   = "LatLon"
     resc@mpMinLatF     = 50.
     resc@mpMaxLatF     = 85.
@@ -929,8 +692,9 @@ begin
   resc@gsnCenterString       = "TOTECOSYSC Disequil Yr " + yearplt(nyrs-2) + " - " + yearplt(nyrs-3)
   plot                       = gsn_csm_contour_map(wks,totecosysc_2_map,resc)
 
-  frame(wks)
+  end if
 
+  frame(wks)
   delete(plot)
   plot = new(2,"graphic")
 
@@ -994,6 +758,7 @@ begin
   else
     print((/"WARNING: H2OSNO is NOT in equilibrium or is missing"/))
   end if
+  if (region .ne. "SPT") then
   if (.not.(ismissing(perc_landarea_glob_noequil))) then
     print((/"At least "+(100.-glob_thresh_area)+" percent of the land surface is in TOTECOSYSC equilibrium. Eq. Yr. = "+perc_landarea_glob_noequil/))
     print((/"Percent of the land surface not in equilibrium ("+sprintf("%6.2f",perc_landarea_noequil(nyrs-2))+"% )"/))
@@ -1011,6 +776,7 @@ begin
     print((/"FATAL: Your simulation is not in equilibrium, 8 hours have been deducted from your PTO bank, try again"/))
   end if
   print((/"======================================================================="/))
+  end if
 
   print ("=========================================")
   print ("Finish Time: "+systemfunc("date") )
