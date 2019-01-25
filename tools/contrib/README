@@ -8,17 +8,17 @@ tools.
 
 Brief description of scripts:
 
-run_clm_historical.csh 
+run_clm_historical
 	does all the setup and submission required to do a 1850-2010 CLM 
 	historical simulation in three separate submissions
         v1 - Andrew Slater+Dave Lawrence, 8/2015
 
-subset_surfdata.py 
+subset_surfdata
 	create regional domain, surface data, and rtm directional files by 
 	extracting data from global datasets 
 	v1 - Sean Swenson 8/2015
 
-singlept.py
+singlept
 	create single point domain, surface data, and datm forcing files by 
         extracting data from global datasets
 	v1 - Sean Swenson 8/2015
@@ -27,7 +27,7 @@ SpinupStability.ncl
         This script assesses the equilibrium state of a spinup run
         works on either monthly or annual mean history files - Keith Oleson 7/2016
 
-run_clmtowers.v1.csh
+run_clmtowers
         This script will run any number of flux tower sites.
         It's based on having created surface datasets with PTCLM.
         v1 - Keith Oleson, 8/2015
