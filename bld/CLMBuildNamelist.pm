@@ -206,9 +206,10 @@ OPTIONS
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
      -output_reals <file>     Output real parameters to the given output file.
-     -rcp "value"             Representative concentration pathway (rcp) to use for
+     -ssp_rcp "value"         Shared Socioeconomic Pathway (SSP) and
+                              Representative Concentration Pathway (RCP) combination to use for
                               future scenarios.
-                              "-rcp list" to list valid rcp settings.
+                              "-ssp_rcp list" to list valid ssp_rcp settings.
      -s                       Turns on silent mode - only fatal messages issued.
      -test                    Enable checking that input datasets exist on local filesystem.
      -use_case "case"         Specify a use case which will provide default values.
@@ -260,7 +261,7 @@ sub process_commandline {
                lnd_tuning_mode       => "default",
                lnd_frac              => undef,
                dir                   => "$cwd",
-               rcp                   => "default",
+               ssp_rcp               => "default",
                sim_year              => "default",
                clm_accelerated_spinup=> "default",
                chk_res               => undef,
@@ -313,7 +314,7 @@ sub process_commandline {
              "mask=s"                    => \$opts{'mask'},
              "namelist=s"                => \$opts{'namelist'},
              "res=s"                     => \$opts{'res'},
-             "rcp=s"                     => \$opts{'rcp'},
+             "ssp_rcp=s"                 => \$opts{'ssp_rcp'},
              "s|silent"                  => \$opts{'silent'},
              "sim_year=s"                => \$opts{'sim_year'},
              "output_reals=s"            => \$opts{'output_reals_filename'},
@@ -626,7 +627,7 @@ sub process_namelist_commandline_options {
   #
   # First get the command-line specified overall values or their defaults
   # Obtain default values for the following build-namelist input arguments
-  # : res, mask, rcp, sim_year, sim_year_range, and clm_accelerated_spinup.
+  # : res, mask, ssp_rcp, sim_year, sim_year_range, and clm_accelerated_spinup.
   #
   # NOTE: cfg only needs to be passed to functions that work with
   # clm4_0 compile time functionality!
@@ -643,7 +644,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_maxpft($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_glc_nec($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_irrigation($opts, $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_cmdl_rcp($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_cmdl_ssp_rcp($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_simulation_year($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_dynamic_vegetation($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_fates_mode($opts, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1114,26 +1115,26 @@ sub setup_cmdl_irrigation {
 
 #-------------------------------------------------------------------------------
 
-sub setup_cmdl_rcp {
-  # representative concentration pathway
+sub setup_cmdl_ssp_rcp {
+  # shared socioeconmic pathway and representative concentration pathway combination
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my $val;
-  my $var = "rcp";
+  my $var = "ssp_rcp";
   if ( $opts->{$var} ne "default" ) {
     $val = $opts->{$var};
   } else {
     $val = $defaults->get_value($var);
   }
-  $nl_flags->{'rcp'} = $val;
-  $opts->{'rcp'} = $nl_flags->{'rcp'};
+  $nl_flags->{'ssp_rcp'} = $val;
+  $opts->{'ssp_rcp'} = $nl_flags->{'ssp_rcp'};
   my $group = $definition->get_group_name($var);
   $nl->set_variable_value($group, $var, $val);
   if (  ! $definition->is_valid_value( $var, $val ) ) {
     my @valid_values   = $definition->get_valid_values( $var );
     $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
   }
-  $log->verbose_message("CLM future scenario representative concentration is $nl_flags->{'rcp'}");
+  $log->verbose_message("CLM future scenario SSP-RCP combination is $nl_flags->{'ssp_rcp'}");
 }
 
 #-------------------------------------------------------------------------------
@@ -1442,7 +1443,7 @@ sub process_namelist_commandline_clm_usr_name {
     my %settings;
     $settings{'mask'}           = $nl_flags->{'mask'};
     $settings{'sim_year'}       = $nl_flags->{'sim_year'};
-    $settings{'rcp'}            = $nl_flags->{'rcp'};
+    $settings{'ssp_rcp'}        = $nl_flags->{'ssp_rcp'};
     $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
     $settings{'clm_accelerated_spinup'} = $nl_flags->{'clm_accelerated_spinup'};
     $settings{'clm_usr_name'}   = $opts->{'clm_usr_name'};
@@ -1489,7 +1490,7 @@ sub process_namelist_commandline_use_case {
 
     my %settings;
     $settings{'res'}            = $nl_flags->{'res'};
-    $settings{'rcp'}            = $nl_flags->{'rcp'};
+    $settings{'ssp_rcp'}        = $nl_flags->{'ssp_rcp'};
     $settings{'mask'}           = $nl_flags->{'mask'};
     $settings{'sim_year'}       = $nl_flags->{'sim_year'};
     $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
@@ -2235,7 +2236,7 @@ sub setup_logic_demand {
   $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
   $settings{'mask'}           = $nl_flags->{'mask'};
   $settings{'crop'}           = $nl_flags->{'crop'};
-  $settings{'rcp'}            = $nl_flags->{'rcp'};
+  $settings{'ssp_rcp'}        = $nl_flags->{'ssp_rcp'};
   $settings{'glc_nec'}        = $nl_flags->{'glc_nec'};
   if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
     # necessary for demand to be set correctly (flanduse_timeseries requires
@@ -3210,7 +3211,7 @@ sub setup_logic_nitrogen_deposition {
     }
 
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                'bgc'=>$nl_flags->{'bgc_mode'}, 'rcp'=>$nl_flags->{'rcp'},
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
                 'hgrid'=>"1.9x2.5" );
 
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
@@ -4193,10 +4194,10 @@ sub check_use_case_name {
   my $diestring = "bad use_case name $use_case, follow the conventions " .
                   "in namelist_files/use_cases/README\n";
   my $desc = "[a-zA-Z0-9]*";
-  my $rcp  = "rcp[0-9\.]+";
+  my $ssp_rcp  = "SSP[0-9]-[0-9\.]+";
   if (      $use_case =~ /^[0-9]+-[0-9]+([a-zA-Z0-9_\.]*)_transient$/ ) {
     my $string = $1;
-    if (      $string =~ /^_($rcp)_*($desc)$/ ) {
+    if (      $string =~ /^_($ssp_rcp)_*($desc)$/ ) {
        # valid name
     } elsif ( $string =~ /^_*($desc)$/ ) {
        # valid name
@@ -4205,7 +4206,7 @@ sub check_use_case_name {
     }
   } elsif ( $use_case =~ /^20thC([a-zA-Z0-9_\.]*)_transient$/ ) {
     my $string = $1;
-    if (      $string =~ /^_($rcp)_*($desc)$/ ) {
+    if (      $string =~ /^_($ssp_rcp)_*($desc)$/ ) {
        # valid name
     } elsif ( $string =~ /^_*($desc)$/ ) {
        # valid name
@@ -4281,9 +4282,9 @@ sub list_options {
     my ($opts_cmdl, $definition, $defaults) = @_;
 
     # options to list values that are in the defaults files
-    my @opts_list = ( "res", "mask", "sim_year", "rcp" );
+    my @opts_list = ( "res", "mask", "sim_year", "ssp_rcp" );
     my %opts_local;
-    foreach my $var ( "res", "mask", "sim_year", "rcp" ) {
+    foreach my $var ( "res", "mask", "sim_year", "ssp_rcp" ) {
        my $val;
        if (      $opts_cmdl->{$var} eq "list" ) {
          $val = "default";

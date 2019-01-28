@@ -1781,13 +1781,6 @@ Horizontal resolutions
 Note: 0.1x0.1, 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
 
-<entry id="rcp" type="real" category="default_settings"
-       group="default_settings"  
-       valid_values="-999.9,2.6,4.5,6,8.5">
-Representative concentration pathway for future scenarios [radiative forcing at peak or 2100 in W/m^2]
--999.9 means do NOT use a future scenario, just use historical data.
-</entry> 
-
 <entry id="ssp_rcp" type="character*8" category="default_settings"
        group="default_settings"  
        valid_values="hist,SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5">
@@ -1823,7 +1816,7 @@ If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 "PtVg,1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1980,1985,1995,2000,2005,2010,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
 Year to simulate and to provide datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
-A sim_year greater than 2015 corresponds to rcp scenario data
+A sim_year greater than 2015 corresponds to ssp_rcp scenario data
 A sim_year of PtVg refers to the Potential Vegetation dataset, that doesn't include human influences
 Most years are only used for clm_tools and there aren't CLM datasets that correspond to them.
 CLM datasets exist for years: 1000 (for testing), 1850, and 2000

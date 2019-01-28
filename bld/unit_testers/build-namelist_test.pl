@@ -195,7 +195,7 @@ print "==================================================\n";
 $cfiles->copyfiles( "default", $mode );
 &cleanup();
 # Simple test -- run all the list options
-foreach my $options ( "clm_demand", "rcp",      "res", 
+foreach my $options ( "clm_demand", "ssp_rcp",      "res", 
                       "sim_year",   "use_case" ) {
    &make_env_run();
    eval{ system( "$bldnml -${options} list > $tempfile 2>&1 " ); };
@@ -218,7 +218,7 @@ print "==================================================\n";
 
 # Exercise a bunch of options
 my $options = "-co2_ppmv 250 ";
-   $options .= " -res 0.9x1.25 -rcp 2.6 -envxml_dir .";
+   $options .= " -res 0.9x1.25 -ssp_rcp SSP-2.6 -envxml_dir .";
 
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -269,12 +269,12 @@ $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 
 print "\n===============================================================================\n";
-print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
+print "Test irrig, verbose, clm_demand, ssp_rcp, test, sim_year, use_case, l_ncpl\n";
 print "=================================================================================\n";
 
-# irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
+# irrig, verbose, clm_demand, ssp_rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP2-2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
@@ -311,11 +311,11 @@ print "==============================================================\n";
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 foreach my $options ( 
-                      "-bgc bgc -use_case 1850-2100_rcp2.6_transient -namelist '&a start_ymd=20100101/'",
-                      "-bgc sp  -use_case 1850-2100_rcp4.5_transient -namelist '&a start_ymd=18501223/'",
-                      "-bgc bgc -use_case 1850-2100_rcp6_transient -namelist '&a start_ymd=20701029/'",
+                      "-bgc bgc -use_case 1850-2100_SSP1-2.6_transient -namelist '&a start_ymd=20100101/'",
+                      "-bgc sp  -use_case 1850-2100_SSP2-4.5_transient -namelist '&a start_ymd=18501223/'",
+                      "-bgc bgc -use_case 1850-2100_SSP4-6.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
-                      "-bgc cn  -use_case 1850-2100_rcp8.5_transient -namelist '&a start_ymd=19201023/'",
+                      "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                      ) {
    my $file = $startfile;
@@ -1224,10 +1224,10 @@ print "==================================================\n";
 $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
-my @use_cases = ( "1850-2100_rcp2.6_transient",
-                  "1850-2100_rcp4.5_transient",
-                  "1850-2100_rcp6_transient",
-                  "1850-2100_rcp8.5_transient",
+my @use_cases = ( "1850-2100_SSP1-2.6_transient",
+                  "1850-2100_SSP3-4.5_transient",
+                  "1850-2100_SSP4-6.0_transient",
+                  "1850-2100_SSP5-8.5_transient",
                   "1850_control",
                   "2000_control",
                   "2010_control",
@@ -1274,7 +1274,7 @@ foreach my $res ( @tran_res ) {
    }
    &cleanup();
 }
-# Transient rcp scenarios
+# Transient ssp_rcp scenarios
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );

@@ -52,7 +52,7 @@ determine default values for namelists.
 <note mode="ext_cesm"   >0</note>
 
 <!-- Default representative concentration pathway for future scenarios -->
-<rcp>-999.9</rcp>
+<ssp_rcp>hist</ssp_rcp>
 
 <!-- Default irrigation -->
 <irrig>.false.</irrig>
