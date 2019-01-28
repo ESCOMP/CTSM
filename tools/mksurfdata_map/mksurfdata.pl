@@ -511,7 +511,7 @@ EOF
    my @years   = split( ",", $opts{'years'} );
    # Check that resolutions are valid
    foreach my $sim_year ( @years ) {
-     if ("-" eq substr($sim_year, 4, 1)) {
+     if ( ("-" eq substr($sim_year, 4, 1)) || ("-" eq substr($sim_year, 3, 1)) ) {
        # range of years for transient run
        if ( ! $definition->is_valid_value( "sim_year_range", "'$sim_year'" ) ) {
          print "** Invalid simulation simulation year range: $sim_year\n";
