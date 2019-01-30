@@ -51,6 +51,11 @@ begin
 ;=======================================================================;
 
   data_dir = "/glade/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
+  if ( systemfunc("test -d "+data_dir+"; echo $?" ) .ne. 0 )then
+     print( "Input directory does not exist or not found: "+data_dir );
+     print( "Make sure username and caseid and base directory is set correctly" )
+     status_exit( -1 )
+  end if
 
 ; Thresholds 
   if (region .eq. "SPT") then
@@ -781,5 +786,6 @@ begin
   print ("=========================================")
   print ("Finish Time: "+systemfunc("date") )
   print ("=========================================")
+  print ("Successfully ran the script")
 
 end
