@@ -1,4 +1,10 @@
 #! /usr/bin/env python
+#
+# singlept
+#
+# Script to extract a single grid point from global datasets
+#
+
 #  Import libraries
 import sys
 import os
@@ -8,17 +14,37 @@ import subprocess
 import numpy as np
 import xarray as xr
 
+def error( desc ):
+     "error function"
+     mprint( "ERROR:: "+desc )
+     os.abort()
+
 def mprint(mstr):
+    "Print function whether python-2 or python-3"
+    # six.py or import __future__ print_function could be used instead...
     vnum=sys.version_info[0]
     if vnum == 3:
         print(mstr)
     if vnum == 2:
         print mstr
+
+def AddTagToFilename(filename, tag):
+    "Add a tag to a filename"
+    # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+    # Add the tag to just before that ending part
+    basename = os.path.basename(filename)
+    cend = -10
+    if ( basename[cend] == "c" ):
+       cend = cend - 1
+    if ( (basename[cend] != ".") and (basename[cend] != "_") ):
+       error( "Trouble figuring out where to add tag to filename:"+filename )
+    return( basename[:cend]+"_"+tag+basename[cend:] )
         
+mprint( "singlept script to extract out a single point from the global CTSM inputdata datasets\n" )
 myname=getuser()
 pwd=os.getcwd()
-mprint(myname)
-mprint(pwd)
+mprint("User = "+myname)
+mprint("Current directory = "+pwd+"\n")
 
 '''
 #------------------------------------------------------------------#
@@ -61,16 +87,18 @@ models SROF and SGLC)
 
 #  Set control flags
 
+#-- Setup by default to run for Harvard Forest
+
 #--  Specify point to extract
-plon = 300.0
-plat = -5.0
+plon = 287.8 
+plat = 42.5
 
 #--  Create regional CLM domain file
-create_domain   = False
+create_domain   = True
 #--  Create CLM surface data file
 create_surfdata = True
 #--  Create CLM surface data file
-create_landuse  = False
+create_landuse  = True
 #--  Create single point DATM atmospheric forcing data
 create_datm     = False
 datm_syr=1901
@@ -78,15 +106,21 @@ datm_eyr=2014
 
 #--  Modify landunit structure
 overwrite_single_pft = True
-dominant_pft         = 4 #BETr
+dominant_pft         = 7 #BETr
 zero_nonveg_pfts     = True
-uniform_snowpack     = False
-no_saturation_excess = False
+uniform_snowpack     = True
+no_saturation_excess = True
 
 #--  Specify input and output directories
 dir_output='/glade/scratch/'+myname+'/single_point/'
-dir_input_datm='/glade/p/cgd/tss/CTSM_datm_forcing_data/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/'
+if ( not os.path.isdir( dir_output ) ):
+    os.mkdir( dir_output )
+dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
+dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data'
+dir_input_datm=dir_clm_forcedata+'/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/'
 dir_output_datm=dir_output + 'datmdata/'
+if ( not os.path.isdir( dir_output_datm ) ):
+    os.mkdir( dir_output_datm )
 
 #--  Set input and output filenames
 tag=str(plon)+'_'+str(plat)
@@ -98,25 +132,24 @@ x=x2.communicate()
 timetag = x[0].strip()
 
 #--  Specify land domain file  ---------------------------------
-fdomain  = '/glade/p/cesmdata/cseg/inputdata/share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc'
-#fdomain2 = dir_output + 'domain.lnd.fv0.9x1.25_gx1v6.'+tag+'.090309.nc'
-fdomain2 = dir_output + 'domain.lnd.fv1.9x2.5_gx1v7.'+tag+'_170518.nc'
+fdomain  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
+fdomain2 = dir_output + AddTagToFilename( fdomain, tag )
 
 #--  Specify surface data file  --------------------------------
-fsurf    = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc'
-#fsurf2   = dir_output + 'surfdata_0.9x1.25_16pfts_CMIP6_simyr2000_'+tag+'.c170706.nc'
-fsurf2   = dir_output + 'surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_'+tag+'_c170824.nc'
+fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_CMIP6_simyr1850_c170706.nc'
+fsurf2   = dir_output + AddTagToFilename( fsurf, tag )
 
 #--  Specify landuse file  -------------------------------------
-fluse    = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc'
-fluse2   = dir_output + 'landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_'+tag+'.c170824.nc'
+fluse    = dir_inputdata+'lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc'
+fluse2   = dir_output + AddTagToFilename( fluse, tag )
 
 #--  Specify datm domain file  ---------------------------------
-fdatmdomain = '/glade/p/cgd/tss/CTSM_datm_forcing_data/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
-fdatmdomain2  = dir_output_datm+'domain.lnd.360x720_gswp3.0v1.'+tag+'_c170606.nc'
+fdatmdomain = dir_clm_forcedata+'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
+fdatmdomain2  = dir_output_datm+AddTagToFilename( fdatmdomain, tag )
 
 #--  Create CTSM domain file
 if create_domain:
+    mprint( "Open: "+fdomain )
     f1  = xr.open_dataset(fdomain)
     # create 1d coordinate variables to enable sel() method
     lon0=np.asarray(f1['xc'][0,:])
@@ -142,6 +175,7 @@ if create_domain:
 
 #--  Create CTSM surface data file
 if create_surfdata:
+    mprint( "Open: "+fsurf )
     f1  = xr.open_dataset(fsurf)
     # create 1d variables
     lon0=np.asarray(f1['LONGXY'][0,:])
@@ -205,6 +239,7 @@ if create_surfdata:
     '''
 #--  Create CTSM transient landuse data file
 if create_landuse:
+    mprint( "Open: "+fluse )
     f1  = xr.open_dataset(fluse)
     # create 1d variables
     lon0=np.asarray(f1['LONGXY'][0,:])
@@ -242,6 +277,7 @@ if create_landuse:
 #--  Create single point atmospheric forcing data
 if create_datm:
     #--  create datm domain file
+    mprint( "Open: "+fdatmdomain )
     f1  = xr.open_dataset(fdatmdomain)
     # create 1d coordinate variables to enable sel() method
     lon0=np.asarray(f1['xc'][0,:])
@@ -327,3 +363,4 @@ if create_datm:
       
     mprint('datm files written to: '+dir_output_datm)
 
+mprint( "\nSuccessfully ran script\n\n" )
