@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev026
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Tue Jan 29 11:49:16 MST 2019
+Date:  Wed Jan 30 15:17:06 MST 2019
 One-line Summary: Collapse unmanaged PFTs to the N most dominant
 
 Purpose of changes
@@ -74,8 +74,8 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    hobart ------ 
+    cheyenne ---- OK
+    hobart ------ OK
 
 CTSM tag used for the baseline comparisons: 
 ctsm1.0.dev025
