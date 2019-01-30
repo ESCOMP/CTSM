@@ -2,6 +2,7 @@
 import sys
 import string
 import subprocess
+from getpass import getuser
 import numpy as np
 import netCDF4 as netcdf4
 import xarray as xr
@@ -22,23 +23,21 @@ surface data file, use this script to overwrite some fields with
 site-specific data.  
 '''
 
+myname = getuser()
 #--  Create single point CLM surface data file
 create_surfdata = True
 
 #--  specify site from which to extract data  ----------
-#sitename='US-ARM'
-sitename='US-Ho1'
 sitename='US-Ha1'
 
 #--  Site level data directory  ------------------------
-site_dir='/glade/work/swensosc/ctsm_code/ctsm/tools/PTCLM/PTCLM_sitedata/'
+site_dir='../PTCLM/PTCLM_sitedata/'
 
 #--  Specify original file
-fsurf  = '/glade/scratch/swensosc/sfcdata/surfdata_0.9x1.25_16pfts_CMIP6_simyr2000_US-Ho1.c190117.nc'
-fsurf = '/glade/scratch/wwieder/single_point/surfdata_0.9x1.25_16pfts_Irrig_CMIP6_simyr1850_287.8_42.5_c230119.nc'
+fsurf = '/glade/scratch/'+myname+'/single_point/surfdata_0.9x1.25_16pfts_CMIP6_simyr1850_287.8_42.5_c170706.nc'
 
 #--  Output directory  ---------------------------------
-dir_output='/glade/scratch/swensosc/sfcdata/'
+dir_output='/glade/scratch/'+myname+'/single_point/'
 
 #-- Specify new file name  -----------------------------
 command='date "+%y%m%d"'
@@ -57,7 +56,7 @@ sitefile=site_dir+'PTCLMDATA_sitedata.txt'
 soilfile=site_dir+'PTCLMDATA_soildata.txt'
 
 #--  Raw datafiles  ------------------------
-rawdatafile = '/glade/work/swensosc/ctsm_code/ctsm/tools/mksurfdata_map/mksurfdata_map.namelist'
+rawdatafile = '../mksurfdata_map/mksurfdata_map.namelist'
 
 mstr='Checking for data for site: '+sitename
 mprint(mstr)
