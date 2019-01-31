@@ -7,7 +7,8 @@ One-line Summary: Collapse unmanaged PFTs to the N most dominant
 Purpose of changes
 ------------------
 
-To run simulations fast for applications such as NWP (Numerical Weather Prediction)
+To run simulations fast for applications such as NWP (Numerical Weather
+Prediction)
 
 
 Bugs fixed or introduced
@@ -34,7 +35,9 @@ Notes of particular relevance for users
 Caveats for users (e.g., need to interpolate initial conditions):
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-New namelist parameter n_dom_pfts with valid integer values from 0 to 14, where 0 means “do nothing” and other values determine the number of active pfts when running the model
+New namelist parameter n_dom_pfts with valid integer values from 0 to
+14, where 0 means “do nothing” and other values determine the number
+of active pfts when running the model
 
 Changes made to namelist defaults (e.g., changed parameter values):
 
@@ -49,9 +52,17 @@ NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the codin
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing:
-Updated standard testing test  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/collapse_pfts_78_to_16_decStart_f10">  to include decStart (December start). Confirmed that answers were bit-for-bit same with baseline before introducing the change.
-Added standard testing test  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCropGs" testmods="clm/collapse_nat_pfts_decStart">  to test n_dom_pfts = 2 in a transient vegetation case with December start
-Added subroutine test_collapse_nat_pfts to test_surfrdUtils.pf to include new Unit Tests
+Updated standard testing test  <test name="ERS_D_Ld10"
+grid="f10_f10_musgs" compset="IHistClm50SpG"
+testmods="clm/collapse_pfts_78_to_16_decStart_f10">  to include decStart
+(December start). Confirmed that answers were bit-for-bit same with
+baseline before introducing the change.
+Added standard testing test  <test name="ERS_D_Ld10"
+grid="f10_f10_musgs" compset="IHistClm50BgcCropGs"
+testmods="clm/collapse_nat_pfts_decStart">  to test n_dom_pfts = 2 in a
+transient vegetation case with December start.
+Added subroutine test_collapse_nat_pfts to test_surfrdUtils.pf to
+include new Unit Tests.
 
 Code reviewed by:
 Erik Kluzek
@@ -96,14 +107,14 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 Pull Requests that document the changes (include PR ids):
 https://github.com/ESCOMP/ctsm/pull/588
 
-Added new subroutines collapse_nat_pfts and collapse_crop_var and called them
-from surfrdMod.F90. The second of these subroutines is not needed when
-collapsing unmanaged PFTs; however, I created it early in the PR and decided to
-keep it for use soon with crop-related variables like irrigation water and
-fertilizer.
+Added new subroutines collapse_nat_pfts and collapse_crop_var and called
+them from surfrdMod.F90. The second of these subroutines is not needed
+when collapsing unmanaged PFTs; however, I created it early in the PR
+and decided to keep it for use soon with crop-related variables like
+irrigation water and fertilizer.
 
-Bill Sacks made changes to include subroutine find_k_max_indices for the benefit
-of this PR.
+Bill Sacks made changes to include subroutine find_k_max_indices for the
+benefit of this PR.
 
 ===============================================================
 ===============================================================
