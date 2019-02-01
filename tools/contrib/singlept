@@ -50,6 +50,10 @@ mprint("Current directory = "+pwd+"\n")
 #------------------------------------------------------------------#
 #---------------------  Instructions  -----------------------------#
 #------------------------------------------------------------------#
+load the following into your local environment
+module load python/2.7.14
+ncar_pylib
+
 After creating a case using a global compset, run preview_namelist.  
 From the resulting lnd_in file in the run directory, find the name 
 of the domain file, and the surface data file.  
@@ -83,6 +87,11 @@ setting up the case.
 The case for the single point simulation should have river routing 
 and land ice models turned off (i.e. the compset should use stub 
 models SROF and SGLC)
+
+to run the script
+./singlept
+deactivate   #  to remove NPL from environment
+
 '''
 
 #  Set control flags
@@ -116,7 +125,7 @@ dir_output='/glade/scratch/'+myname+'/single_point/'
 if ( not os.path.isdir( dir_output ) ):
     os.mkdir( dir_output )
 dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
-dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data'
+dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data/'
 dir_input_datm=dir_clm_forcedata+'/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/'
 dir_output_datm=dir_output + 'datmdata/'
 if ( not os.path.isdir( dir_output_datm ) ):
