@@ -31,7 +31,7 @@ contains
   @Test
   subroutine alreadyInOrder(this)
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(3)
 
     call find_k_max_indices( &
          data = [5._r8, 4._r8, 3._r8, 2._r8], &
@@ -45,7 +45,7 @@ contains
   @Test
   subroutine reversed(this)
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(3)
 
     call find_k_max_indices( &
          data = [2._r8, 3._r8, 4._r8, 5._r8], &
@@ -61,7 +61,7 @@ contains
     ! Make sure we have a test that covers inserting the new element at the end of the
     ! max_vals array
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(3)
 
     call find_k_max_indices( &
          data = [5._r8, 4._r8, 2._r8, 3._r8], &
@@ -77,7 +77,7 @@ contains
     ! Make sure we have a test that covers inserting the new element at the start of the
     ! max_vals array
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(3)
 
     call find_k_max_indices( &
          data = [5._r8, 4._r8, 3._r8, 6._r8], &
@@ -93,7 +93,7 @@ contains
     ! Make sure we have a test that covers inserting the new element in the middle of the
     ! max_vals array
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(3)
 
     call find_k_max_indices( &
          data = [5._r8, 3._r8, 2._r8, 4._r8], &
@@ -108,7 +108,7 @@ contains
   subroutine lbNot1(this)
     ! Test with lower bound different from 1
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(3)
 
     call find_k_max_indices( &
          data = [2._r8, 3._r8, 4._r8, 5._r8], &
@@ -122,7 +122,7 @@ contains
   @Test
   subroutine k0_raisesException(this)
     class (TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(0)
     character(len=:), allocatable :: expected_msg
 
     call find_k_max_indices( &
@@ -139,7 +139,7 @@ contains
   @Test
   subroutine kBig_raisesException(this)
     class (TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(5)
     character(len=:), allocatable :: expected_msg
 
     call find_k_max_indices( &
@@ -157,7 +157,7 @@ contains
   subroutine kEquals1(this)
     ! Test the edge case k=1
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(1)
 
     call find_k_max_indices( &
          data = [2._r8, 3._r8, 4._r8, 1._r8], &
@@ -172,7 +172,7 @@ contains
   subroutine reversed_kEqualsN(this)
     ! Test the edge case k=n
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(4)
 
     call find_k_max_indices( &
          data = [2._r8, 3._r8, 4._r8, 5._r8], &
@@ -187,7 +187,7 @@ contains
   subroutine nEquals1(this)
     ! Test the edge case n = k = 1
     class(TestFindKMax), intent(inout) :: this
-    integer, allocatable :: max_indices(:)
+    integer :: max_indices(1)
 
     call find_k_max_indices( &
          data = [2._r8], &

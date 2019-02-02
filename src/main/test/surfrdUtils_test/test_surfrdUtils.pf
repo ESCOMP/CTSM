@@ -45,41 +45,44 @@ contains
 
   @Test
   subroutine test_collapse_nat_pfts()
-     ! This test tries 3 values of n_dom_pfts:
+     ! This test tries 5 values of n_dom_pfts:
      ! 1) 0, which ends up with the same output values as were used as inputs
-     ! 2) 2, which collapses the vegetation to 2 dominant pfts
-     ! 3) natpft_size, which behaves the same as (1) whether subroutine
+     ! 2) 1, which collapses the vegetation to 1 dominant pft
+     ! 3) 2, which collapses the vegetation to 2 dominant pfts
+     ! 4) 3, which collapses the vegetation to 3 dominant pfts
+     ! 5) natpft_size, which behaves the same as (1) whether subroutine
      ! collapse_nat_pfts actively collapses the pfts to themselves or simply
      ! skips the work with an if statement (current implementation).
      !
-     ! For each value of n_dom_pfts, we test two pft configurations that
-     ! need to be collapsed. One in which the maximum weight is in pft5 and one
-     ! in which the maximum weight is in pft0.
+     ! For each value of n_dom_pfts, we test three pft configurations that
+     ! need to be collapsed.
      use pftconMod, only: pftcon
      use clm_instur, only: wt_nat_patch
      use clm_varpar, only: natpft_ub
 
      implicit none
      integer :: test  ! test number in loop of tests
-     integer, parameter :: begg = 2, endg = 3, natpft_size = 15, tests = 3
-     integer, parameter :: n_dom_pfts(tests) = (/ 0, 2, natpft_size /)
+     integer, parameter :: begg = 2, endg = 4, natpft_size = 15, tests = 5
+     integer, parameter :: n_dom_pfts(tests) = (/ 0, 1, 2, 3, natpft_size /)
      real(r8), allocatable :: wt_nat_patch_expected(:,:)
-     real(r8) :: expctd_1, expctd_2
+     real(r8), allocatable :: wt_nat_patch_in_out(:,:)  ! used in subr. call
+     real(r8) :: expctd(9)
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
      natpft_ub = natpft_size - 1
      allocate( wt_nat_patch(begg:endg,0:natpft_ub) )
      allocate( wt_nat_patch_expected(begg:endg,0:natpft_ub) )
+     allocate( wt_nat_patch_in_out(begg:endg,0:natpft_ub) )
 
      ! INPUT VALUES
      wt_nat_patch(begg:,:) = 0._r8  ! initialize
-     wt_nat_patch(begg:,0) = (/ 30._r8, 40._r8 /)  ! pft0
-     wt_nat_patch(begg:,1) = (/ 20._r8, 20._r8 /)  ! pft1
-     wt_nat_patch(begg:,2) = (/  0._r8,  0._r8 /)  ! pft2
-     wt_nat_patch(begg:,3) = (/  0._r8,  0._r8 /)  ! pft3
-     wt_nat_patch(begg:,4) = (/ 10._r8, 10._r8 /)  ! pft4
-     wt_nat_patch(begg:,5) = (/ 40._r8, 30._r8 /)  ! pft5
+     wt_nat_patch(begg:,0) = (/ 30._r8, 40._r8,  0._r8/)  ! pft0
+     wt_nat_patch(begg:,1) = (/ 15._r8, 11._r8, 15._r8/)  ! pft1
+     wt_nat_patch(begg:,2) = (/  5._r8,  5._r8,  5._r8/)  ! pft2
+     wt_nat_patch(begg:,3) = (/  0._r8,  4._r8, 35._r8/)  ! pft3
+     wt_nat_patch(begg:,4) = (/ 10._r8, 10._r8, 35._r8/)  ! pft4
+     wt_nat_patch(begg:,5) = (/ 40._r8, 30._r8, 10._r8/)  ! pft5
      wt_nat_patch(:,:) = wt_nat_patch(:,:) / 100._r8
      call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
@@ -87,32 +90,60 @@ contains
      do test = 1, tests
 
         ! OUTPUT VALUES EXPECTED
-        if (test == 1 .or. test == 3) then
+        if (test == 1 .or. test == 5) then
            wt_nat_patch_expected = wt_nat_patch
-        else if (test == 2) then
-           expctd_1 = 40._r8 / 70._r8
-           expctd_2 = 30._r8 / 70._r8
+        else if (test == 2) then  ! n_dom_pfts = 1
+           expctd(1) = 40._r8 / 40._r8
+           expctd(2) = 35._r8 / 35._r8
            wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
-           wt_nat_patch_expected(begg:,0) = (/ expctd_2, expctd_1 /)  ! pft 0
-           wt_nat_patch_expected(begg:,5) = (/ expctd_1, expctd_2 /)  ! pft 5
+           wt_nat_patch_expected(begg:,0) = (/ 0._r8, expctd(1), 0._r8 /)  ! pft 0
+           wt_nat_patch_expected(begg:,3) = (/ 0._r8, 0._r8, expctd(2) /)  ! pft 3
+           wt_nat_patch_expected(begg:,5) = (/ expctd(1), 0._r8, 0._r8 /)  ! pft 5
+        else if (test == 3) then  ! n_dom_pfts = 2
+           expctd(1) = 40._r8 / 70._r8
+           expctd(2) = 30._r8 / 70._r8
+           expctd(3) = 35._r8 / 70._r8
+           wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
+           wt_nat_patch_expected(begg:,0) = (/ expctd(2), expctd(1), 0._r8 /)  ! pft 0
+           wt_nat_patch_expected(begg:,3) = (/ 0._r8, 0._r8, expctd(3) /)  ! pft 3
+           wt_nat_patch_expected(begg:,4) = (/ 0._r8, 0._r8, expctd(3) /)  ! pft 4
+           wt_nat_patch_expected(begg:,5) = (/ expctd(1), expctd(2), 0._r8 /)  ! pft 5
+        else if (test == 4) then  ! n_dom_pfts = 3
+           expctd(1) = 40._r8 / 85._r8
+           expctd(2) = 30._r8 / 85._r8
+           expctd(3) = 15._r8 / 85._r8
+           expctd(4) = 40._r8 / 81._r8
+           expctd(5) = 30._r8 / 81._r8
+           expctd(6) = 11._r8 / 81._r8
+           expctd(7) = 35._r8 / 85._r8
+           expctd(8) = 35._r8 / 85._r8
+           expctd(9) = 15._r8 / 85._r8
+           wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
+           wt_nat_patch_expected(begg:,0) = (/ expctd(2), expctd(4), 0._r8 /)  ! pft 0
+           wt_nat_patch_expected(begg:,1) = (/ expctd(3), expctd(6), expctd(9) /)  ! pft 1
+           wt_nat_patch_expected(begg:,3) = (/ 0._r8, 0._r8, expctd(7) /)  ! pft 3
+           wt_nat_patch_expected(begg:,4) = (/ 0._r8, 0._r8, expctd(8) /)  ! pft 4
+           wt_nat_patch_expected(begg:,5) = (/ expctd(1), expctd(5), 0._r8 /)  ! pft 5
         end if
 
         call check_sums_equal_1( wt_nat_patch_expected, begg, "test_check_sums_add_to_1", &
                                  "should not trigger an error")
 
         ! Collapse pfts
-        call collapse_nat_pfts( wt_nat_patch(begg:endg,:), natpft_size, &
+        wt_nat_patch_in_out = wt_nat_patch  ! reset argument for next call
+        call collapse_nat_pfts( wt_nat_patch_in_out(begg:endg,:), natpft_size, &
                                 begg, endg, n_dom_pfts(test))
 
         ! Now check that are correct
-        call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
+        call check_sums_equal_1( wt_nat_patch_in_out, begg, "test_check_sums_add_to_1", &
                                  "should not trigger an error")
 
-        @assertEqual(wt_nat_patch(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=tol)
+        @assertEqual(wt_nat_patch_in_out(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=tol)
 
      end do  ! loop of tests
 
      deallocate( wt_nat_patch_expected )
+     deallocate( wt_nat_patch_in_out )
      deallocate( wt_nat_patch )
 
      call pftcon%clean()

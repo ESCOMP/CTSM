@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev026
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Wed Jan 30 15:17:06 MST 2019
+Date:  Fri Feb  1 18:06:55 MST 2019
 One-line Summary: Collapse unmanaged PFTs to the N most dominant
 
 Purpose of changes
@@ -66,6 +66,7 @@ include new Unit Tests.
 
 Code reviewed by:
 Erik Kluzek
+Bill Sacks
 
 CTSM testing:
 

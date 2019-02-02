@@ -11,9 +11,10 @@ module array_utils
   ! that flag led to bugs with pgi14).
   !
   ! !USES:
-
+#include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
   use abortutils  , only : endrun
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
 
   implicit none
   private
@@ -39,15 +40,13 @@ contains
     ! Returns the indices of the maximum k values in data, in sorted order (so the first
     ! index will be the largest, the second index will be the second largest, etc.)
     !
-    ! The output array (max_indices) is allocated here
-    !
-    ! This is O(n*k) (where n is the size of the input array)
+    ! The output array (max_indices) should be of size k
     !
     ! !ARGUMENTS:
-    integer  , intent(in)               :: lb ! lower bound of data array
-    real(r8) , intent(in)               :: data(lb:)
-    integer  , intent(in)               :: k  ! number of max indices to find
-    integer  , allocatable, intent(out) :: max_indices(:)
+    integer  , intent(in)  :: lb ! lower bound of data array
+    real(r8) , intent(in)  :: data(lb:)
+    integer  , intent(in)  :: k  ! number of max indices to find
+    integer  , intent(inout) :: max_indices(:)
     !
     ! !LOCAL VARIABLES:
     real(r8) :: max_vals(k)
@@ -57,11 +56,12 @@ contains
     character(len=*), parameter :: subname = 'find_k_max_indices'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT((size(max_indices) == k), errMsg(subname, __LINE__))
+
     if (k < 1 .or. k > size(data)) then
        call endrun(subname//': must have 1 <= k <= size(data)')
     end if
 
-    allocate(max_indices(k))
     max_indices(:) = lb - 1
     max_vals(:) = -huge(1._r8)
 

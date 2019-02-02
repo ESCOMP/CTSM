@@ -191,7 +191,7 @@ contains
     if (n_dom_pfts > 0 .and. n_dom_pfts < natpft_size) then
        allocate(max_indices(n_dom_pfts))
        do g = begg, endg
-          max_indices = 0._r8  ! initialize
+          max_indices = 0  ! initialize
           call find_k_max_indices(wt_nat_patch(g,:), natpft_lb, n_dom_pfts, &
                                   max_indices)
 
@@ -206,8 +206,8 @@ contains
           ! Normalize dominant pft weights to 1; if non-existent,
           ! set the pft weights and pft landunit weight to 0.
           if (wt_dom_nat_sum <= 0._r8) then
-             wt_nat_patch(g,:) = 0._r8
-             wt_nat_patch(g,noveg) = 1._r8  ! to pass error check below
+             call endrun(msg = subname//' wt_dom_nat_sum should never be <= 0'//&
+                  ' but it is here' // errMsg(sourcefile, __LINE__))
           else
              do n = 1, n_dom_pfts
                 m = max_indices(n)
@@ -218,7 +218,6 @@ contains
           do m = 0, natpft_ub
              if (.not. any(max_indices == m)) then
                 wt_nat_patch(g,m) = 0._r8
-                pftcon%is_pft_known_to_model(m) = .false.
              end if
           end do
 
