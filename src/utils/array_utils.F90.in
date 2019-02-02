@@ -42,11 +42,13 @@ contains
     !
     ! The output array (max_indices) should be of size k
     !
+    ! Speed estimate: O(n*k) (where n is the size of the input array)
+    !
     ! !ARGUMENTS:
     integer  , intent(in)  :: lb ! lower bound of data array
     real(r8) , intent(in)  :: data(lb:)
     integer  , intent(in)  :: k  ! number of max indices to find
-    integer  , intent(inout) :: max_indices(:)
+    integer  , intent(out) :: max_indices(:)
     !
     ! !LOCAL VARIABLES:
     real(r8) :: max_vals(k)
