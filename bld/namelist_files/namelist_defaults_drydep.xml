@@ -25,6 +25,5 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <megan_factors_file phys="clm5_0" >atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc</megan_factors_file>
 <megan_factors_file phys="clm4_5" >atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc</megan_factors_file>
-<megan_factors_file phys="clm4_0" >atm/cam/chem/trop_mozart/emis/megan21_emis_factors_c20120313.nc</megan_factors_file>
 
 </namelist_defaults>

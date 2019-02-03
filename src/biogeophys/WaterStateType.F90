@@ -13,7 +13,7 @@ module WaterStateType
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
-  use clm_varctl     , only : iulog, use_bedrock
+  use clm_varctl     , only : use_bedrock, iulog
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -41,6 +41,8 @@ module WaterStateType
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
      real(r8), pointer :: wa_col                 (:)     ! col water in the unconfined aquifer (mm) 
+
+     real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
    contains
 
@@ -93,7 +95,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(inout) :: this
@@ -143,11 +144,7 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : use_lch4
-    use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -157,7 +154,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -295,10 +291,9 @@ contains
     use column_varcon   , only : icol_road_perv, icol_road_imperv
     use clm_varcon      , only : denice, denh2o, bdsno 
     use clm_varcon      , only : tfrz, aquifer_water_baseline
-    use ncdio_pio       , only : file_desc_t
     !
     ! !ARGUMENTS:
-    class(waterstate_type), intent(in)    :: this
+    class(waterstate_type), intent(inout) :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
@@ -306,18 +301,19 @@ contains
     logical               , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev,nlevs 
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
+    integer            :: c,j,l,nlevs 
     integer            :: nbedrock
+    real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(watsat_col)           == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_soisno_col)         == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
 
+    ratio = this%info%get_ratio()
+
     do c = bounds%begc,bounds%endc
-       this%h2osno_col(c)             = h2osno_input_col(c) 
+       this%h2osno_col(c)             = h2osno_input_col(c) * ratio
     end do
 
 
@@ -357,7 +353,7 @@ contains
                   if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     this%h2osoi_vol_col(c,j) = 0.15_r8
+                     this%h2osoi_vol_col(c,j) = 0.15_r8 * ratio
                   endif
                end do
             else if (lun%urbpoi(l)) then
@@ -365,7 +361,7 @@ contains
                   nlevs = nlevgrnd
                   do j = 1, nlevs
                      if (j <= nlevsoi) then
-                        this%h2osoi_vol_col(c,j) = 0.3_r8
+                        this%h2osoi_vol_col(c,j) = 0.3_r8 * ratio
                      else
                         this%h2osoi_vol_col(c,j) = 0.0_r8
                      end if
@@ -387,13 +383,13 @@ contains
                   if (j > nlevsoi) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     this%h2osoi_vol_col(c,j) = 1.0_r8
+                     this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                   endif
                end do
             else if (lun%itype(l) == istice_mec) then
                nlevs = nlevgrnd 
                do j = 1, nlevs
-                  this%h2osoi_vol_col(c,j) = 1.0_r8
+                  this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                end do
             else
                write(iulog,*) 'water_state_type InitCold: unhandled landunit type ', lun%itype(l)
@@ -401,18 +397,18 @@ contains
                     additional_msg = errMsg(sourcefile, __LINE__))
             endif
             do j = 1, nlevs
-               this%h2osoi_vol_col(c,j) = min(this%h2osoi_vol_col(c,j), watsat_col(c,j))
+               this%h2osoi_vol_col(c,j) = min(this%h2osoi_vol_col(c,j), watsat_col(c,j)*ratio)
                if (t_soisno_col(c,j) <= SHR_CONST_TKFRZ) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j) ! ratio already applied
                   this%h2osoi_liq_col(c,j) = 0._r8
                else
                   this%h2osoi_ice_col(c,j) = 0._r8
-                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j) ! ratio already applied
                endif
             end do
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*250._r8
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*250._r8 * ratio
                   this%h2osoi_liq_col(c,j) = 0._r8
                end if
             end do
@@ -430,13 +426,13 @@ contains
          if (lun%lakpoi(l)) then
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*bdsno
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*bdsno * ratio
                   this%h2osoi_liq_col(c,j) = 0._r8
                end if
             end do
             do j = 1,nlevgrnd
                if (j <= nlevsoi) then ! soil
-                  this%h2osoi_vol_col(c,j) = watsat_col(c,j)
+                  this%h2osoi_vol_col(c,j) = watsat_col(c,j) * ratio
                   this%h2osoi_liq_col(c,j) = spval
                   this%h2osoi_ice_col(c,j) = spval
                else                  ! bedrock
@@ -454,18 +450,19 @@ contains
          do j = 1,nlevgrnd
             if (this%h2osoi_vol_col(c,j) /= spval) then
                if (t_soisno_col(c,j) <= tfrz) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j) ! ratio already applied
                   this%h2osoi_liq_col(c,j) = 0._r8
                else
                   this%h2osoi_ice_col(c,j) = 0._r8
-                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j) ! ratio already applied
                endif
             end if
          end do
       end do
 
 
-      this%wa_col(bounds%begc:bounds%endc) = aquifer_water_baseline
+      this%aquifer_water_baseline = aquifer_water_baseline * ratio
+      this%wa_col(bounds%begc:bounds%endc)  = this%aquifer_water_baseline
       if (use_aquifer_layer) then
          ! NOTE(wjs, 2018-11-27) There is no fundamental reason why wa_col should be
          ! initialized differently based on use_aquifer_layer, but we (Bill Sacks and Sean
@@ -480,14 +477,14 @@ contains
                   if (col%itype(c) == icol_road_perv) then
                      ! Note that the following hard-coded constant (on the next line)
                      ! seems implicitly related to aquifer_water_baseline 
-                     this%wa_col(c)  = 4800._r8
+                     this%wa_col(c)  = 4800._r8 * ratio
                   else
                      this%wa_col(c)  = spval
                   end if
                else
                   ! Note that the following hard-coded constant (on the next line) seems
                   ! implicitly related to aquifer_water_baseline
-                  this%wa_col(c)  = 4000._r8
+                  this%wa_col(c)  = 4000._r8 * ratio
                end if
             end if
          end do
@@ -505,13 +502,12 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin, spval, nameg
+    use clm_varcon       , only : denice, denh2o, pondmx, watmin
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step
     use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:

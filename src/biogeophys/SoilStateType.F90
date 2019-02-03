@@ -389,11 +389,6 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
      if( use_dynroot ) then
-         call restartvar(ncid=ncid, flag=flag, varname='root_depth', xtype=ncd_double,  &
-              dim1name='pft', &
-              long_name='root depth', units='m', &
-              interpinic_flag='interp', readvar=readvar, data=this%root_depth_patch)
- 
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &

@@ -13,7 +13,9 @@ module WaterTracerUtils
   use abortutils     , only : endrun
   use shr_infnan_mod , only : shr_infnan_isnan
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use clm_varcon     , only : spval
   use WaterTracerContainerType, only : water_tracer_container_type
+  use shr_sys_mod    , only : shr_sys_flush
 
   implicit none
   save
@@ -231,7 +233,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CompareBulkToTracer(bounds_beg, bounds_end, &
-       bulk, tracer, caller_location, name)
+       bulk, tracer, ratio, caller_location, name)
     !
     ! !DESCRIPTION:
     ! Compare the bulk and tracer quantities; abort if they differ
@@ -245,6 +247,7 @@ contains
     integer, intent(in) :: bounds_end
     real(r8), intent(in) :: bulk( bounds_beg: )
     real(r8), intent(in) :: tracer( bounds_beg: )
+    real(r8), intent(in) :: ratio 
     character(len=*), intent(in) :: caller_location  ! brief description of where this is called from (for error messages)
     character(len=*), intent(in) :: name             ! variable name (for error messages)
     !
@@ -268,6 +271,9 @@ contains
           ! neither value is nan: check error tolerance                        
           val1 = bulk(i)
           val2 = tracer(i)
+          if ( val1 /= spval) then
+             val1 = val1 * ratio
+          end if
           if (val1 == 0.0_r8 .and. val2 == 0.0_r8) then
              ! trap special case were both are zero to avoid division by zero. values equal                                                                    
           else if (abs(val1 - val2) / max(abs(val1), abs(val2)) > tolerance) then
@@ -294,6 +300,11 @@ contains
        write(iulog, '(a, i0)') 'First difference at index: ', diffloc
        write(iulog, '(a, e25.17)') 'Bulk  : ', bulk(diffloc)
        write(iulog, '(a, e25.17)') 'Tracer: ', tracer(diffloc)
+       write(iulog, '(a, e25.17)') 'ratio: ',ratio
+       if (.not. shr_infnan_isnan(bulk(diffloc))) then
+          write(iulog, '(a, e25.17)') 'Bulk*ratio: ',bulk(diffloc)*ratio
+       end if
+       call shr_sys_flush(iulog)
        call endrun(msg=subname//': tracer does not agree with bulk water')
     end if
   end subroutine CompareBulkToTracer

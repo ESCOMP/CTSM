@@ -38,7 +38,7 @@ module clm_driver
   use UrbanFluxesMod         , only : UrbanFluxes
   use LakeFluxesMod          , only : LakeFluxes
   !
-  use HydrologyNoDrainageMod , only : IrrigationWithdrawals, HydrologyNoDrainage ! (formerly Hydrology2Mod)
+  use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
   use LakeHydrologyMod       , only : LakeHydrology
@@ -442,10 +442,8 @@ contains
 
           call t_startf('irrigationwithdraw')
 
-          call IrrigationWithdrawals( &
+          call CalcAndWithdrawIrrigationFluxes( &
                bounds = bounds_clump, &
-               num_hydrologyc = filter(nc)%num_hydrologyc, &
-               filter_hydrologyc = filter(nc)%hydrologyc, &
                num_soilc = filter(nc)%num_soilc, &
                filter_soilc = filter(nc)%soilc, &
                num_soilp = filter(nc)%num_soilp, &
@@ -453,12 +451,20 @@ contains
                soilhydrology_inst = soilhydrology_inst, &
                soilstate_inst = soilstate_inst, &
                irrigation_inst = irrigation_inst, &
-               waterdiagnosticbulk_inst = water_inst%waterdiagnosticbulk_inst, &
-               waterfluxbulk_inst = water_inst%waterfluxbulk_inst, &
-               waterstatebulk_inst = water_inst%waterstatebulk_inst)
+               water_inst = water_inst)
 
           call t_stopf('irrigationwithdraw')
 
+       end if
+
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalcAndWithdrawIrrigationFluxes')
+             call t_stopf("tracer_consistency_check")
+          end if
        end if
 
        ! ============================================================================

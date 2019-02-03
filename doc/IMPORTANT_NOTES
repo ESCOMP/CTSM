@@ -1,30 +1,11 @@
 $CTSMROOT/doc/IMPORTANT_NOTES					Jun/08/2018
 								Erik Kluzek
 
-I.) For clm4_0:
-
-Configure Modes NOT scientifically validated, documented, supported or even advised to be used:
-(options to CLM_CONFIG_OPTS)
-
-   SNICAR_FRC 	(-snicar_frc)
-       This mode is tested and functional, but is NOT constantly scientifcally validated, and should be 
-       considered experimental.
-
-Namelist items that should NOT be exercised:
-
-  glc_dyntopo            Change topographic height over glacier MEC (Not functional)
-  suplnitro='ALL'        (suplnitro='ALL' with -bgc cn)
-                         The suplemental Nitrogen mode of the CN model is known 
-                         to be too productive.
-  urban_traffic:         Not currently functional
-
-II.) For clm4_5/clm5_0:
-
 Namelist items that are not regularly tested or used. Some aren't even implemented.
 
     See
 
-    ../bld/namelist_files/namelist_definition_clm4_5.xml -- for definitions
+    ../bld/namelist_files/namelist_definition_ctsm.xml -- for definitions
 
     CN_evergreen_phenology_opt
     CN_partition_opt

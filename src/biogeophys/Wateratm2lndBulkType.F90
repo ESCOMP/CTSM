@@ -42,7 +42,6 @@ module Wateratm2lndBulkType
 
      procedure, public  :: InitBulk
      procedure, public  :: InitForTesting  ! Should only be used in unit tests
-     procedure, public  :: RestartBulk
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
@@ -208,28 +207,6 @@ contains
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------
-  subroutine RestartBulk(this, bounds, ncid, flag)
-    !
-    ! !DESCRIPTION:
-    ! Read/Write module information to/from restart file.
-    !
-    ! !USES:
-    use ncdio_pio        , only : file_desc_t
-    !
-    ! !ARGUMENTS:
-    class(wateratm2lndbulk_type), intent(in) :: this
-    type(bounds_type), intent(in)    :: bounds
-    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
-    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    !
-    ! !LOCAL VARIABLES:
-    !------------------------------------------------------------------------
-
-    call this%restart (bounds, ncid, flag=flag)
-
-  end subroutine RestartBulk
-
-  !-----------------------------------------------------------------------
   subroutine InitAccBuffer (this, bounds)
     !
     ! !DESCRIPTION:
@@ -368,7 +345,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p                     ! indices
-    integer :: dtime                     ! timestep size [seconds]
     integer :: nstep                     ! timestep number
     integer :: ier                       ! error status
     integer :: begp, endp

@@ -9,10 +9,8 @@ module WaterBalanceType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : iulog
   use clm_varcon     , only : spval
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -82,7 +80,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(waterbalance_type), intent(inout) :: this
@@ -140,7 +137,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
@@ -151,8 +147,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp

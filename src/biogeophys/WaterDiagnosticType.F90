@@ -11,10 +11,9 @@ module WaterDiagnosticType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : use_vancouver, use_mexicocity, iulog
+  use clm_varctl     , only : use_vancouver, use_mexicocity
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use WaterInfoBaseType, only : water_info_base_type
@@ -90,7 +89,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(inout) :: this
@@ -143,7 +141,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
@@ -154,8 +151,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
@@ -241,49 +236,32 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use shr_const_mod   , only : shr_const_pi
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
-    use shr_spfn_mod    , only : shr_spfn_erf
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon      , only : spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc
-    use clm_varctl      , only : fsurdat, iulog
-    use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
-    use fileutils       , only : getfil
-    use ncdio_pio       , only : file_desc_t, ncd_io
+    use ncdio_pio       , only : file_desc_t
     !
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
-    logical            :: readvar 
-    type(file_desc_t)  :: ncid        
-    character(len=256) :: locfn       
+    integer            :: l
+    real(r8)           :: ratio
     !-----------------------------------------------------------------------
+
+    ratio = this%info%get_ratio()
 
     ! Water Stored in plants is almost always a static entity, with the exception
     ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
     this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
 
+
     do l = bounds%begl, bounds%endl 
        if (lun%urbpoi(l)) then
           if (use_vancouver) then
-             this%qaf_lun(l) = 0.0111_r8
+             this%qaf_lun(l) = 0.0111_r8 * ratio
           else if (use_mexicocity) then
-             this%qaf_lun(l) = 0.00248_r8
+             this%qaf_lun(l) = 0.00248_r8 * ratio
           else
-             this%qaf_lun(l) = 1.e-4_r8 ! Arbitrary set since forc_q is not yet available
+             this%qaf_lun(l) = 1.e-4_r8 * ratio ! Arbitrary set since forc_q is not yet available
           end if
        end if
     end do
@@ -297,13 +275,8 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use clm_varcon       , only : nameg
+    use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
