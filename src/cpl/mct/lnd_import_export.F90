@@ -6,9 +6,7 @@ module lnd_import_export
   use lnd2atmType  , only: lnd2atm_type
   use lnd2glcMod   , only: lnd2glc_type
   use atm2lndType  , only: atm2lnd_type
-  use glc2lndMod   , only: glc2lnd_type
-  use clm_time_manager, only : get_nstep
-  use spmdMod      , only: masterproc
+  use glc2lndMod   , only: glc2lnd_type 
   use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
   use Wateratm2lndBulkType , only: wateratm2lndbulk_type
   use clm_cpl_indices
@@ -23,12 +21,12 @@ contains
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
-    ! Convert the input data from the coupler to the land model
+    ! Convert the input data from the coupler to the land model 
     !
     ! !USES:
     use seq_flds_mod    , only: seq_flds_x2l_fields
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
-    use clm_varctl      , only: ndep_from_cpl
+    use clm_varctl      , only: ndep_from_cpl 
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use shr_string_mod  , only: shr_string_listGetName
@@ -110,7 +108,7 @@ contains
        ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
        ! change the sign to indicate addition of water to system.
 
-       wateratm2lndbulk_inst%forc_flood_grc(g)   = -x2l(index_x2l_Flrr_flood,i)
+       wateratm2lndbulk_inst%forc_flood_grc(g)   = -x2l(index_x2l_Flrr_flood,i)  
 
        wateratm2lndbulk_inst%volr_grc(g)   = x2l(index_x2l_Flrr_volr,i) * (ldomain%area(g) * 1.e6_r8)
        wateratm2lndbulk_inst%volrmch_grc(g)= x2l(index_x2l_Flrr_volrmch,i) * (ldomain%area(g) * 1.e6_r8)
@@ -176,7 +174,7 @@ contains
        forc_t = atm2lnd_inst%forc_t_not_downscaled_grc(g)
        forc_q = wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-
+       
        atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
        atm2lnd_inst%forc_hgt_t_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of temperature [m]
        atm2lnd_inst%forc_hgt_q_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of humidity [m]
@@ -248,14 +246,14 @@ contains
        if (co2_type_idx == 1) then
           co2_ppmv_val = co2_ppmv_prog
        else if (co2_type_idx == 2) then
-          co2_ppmv_val = co2_ppmv_diag
+          co2_ppmv_val = co2_ppmv_diag 
        else
           co2_ppmv_val = co2_ppmv
        end if
        if ( (co2_ppmv_val < 10.0_r8) .or. (co2_ppmv_val > 15000.0_r8) )then
           call endrun( sub//' ERROR: CO2 is outside of an expected range' )
        end if
-       atm2lnd_inst%forc_pco2_grc(g)   = co2_ppmv_val * 1.e-6_r8 * forc_pbot
+       atm2lnd_inst%forc_pco2_grc(g)   = co2_ppmv_val * 1.e-6_r8 * forc_pbot 
        if (use_c13) then
           atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
        end if
@@ -268,25 +266,13 @@ contains
 
     end do
 
-    !DEBUG
-    if (masterproc) then
-       do g = bounds%begg,bounds%endg
-          write(iulog,100) get_nstep(), g, wateratm2lndbulk_inst%volr_grc(g)
-          write(iulog,101) get_nstep(), g, wateratm2lndbulk_inst%volrmch_grc(g)
-       end do
-100    format('(lnd_import_export) volr:',i5,2x,i5,2x,d21.14,2x)
-101    format('(lnd_import_export) volrmch:',i5,2x,i5,2x,d21.14,2x)
-    end if
-    !DEBUG
-
-    ! NOTE(wjs, 2017-12-13) the x2l argument doesn't have the typical bounds
-    ! subsetting (bounds%begg:bounds%endg). This mirrors the lack of these bounds in
-    ! the call to lnd_import from lnd_run_mct. This is okay as long as this code is
-    ! outside a clump loop.
-
-    call glc2lnd_inst%set_glc2lnd_fields_mct( &
+    call glc2lnd_inst%set_glc2lnd_fields( &
          bounds = bounds, &
          glc_present = glc_present, &
+         ! NOTE(wjs, 2017-12-13) the x2l argument doesn't have the typical bounds
+         ! subsetting (bounds%begg:bounds%endg). This mirrors the lack of these bounds in
+         ! the call to lnd_import from lnd_run_mct. This is okay as long as this code is
+         ! outside a clump loop.
          x2l = x2l, &
          index_x2l_Sg_ice_covered = index_x2l_Sg_ice_covered, &
          index_x2l_Sg_topo = index_x2l_Sg_topo, &
@@ -302,13 +288,13 @@ contains
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
-    ! Convert the data to be sent from the clm model to the coupler
-    !
+    ! Convert the data to be sent from the clm model to the coupler 
+    ! 
     ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use seq_flds_mod       , only : seq_flds_l2x_fields
     use clm_varctl         , only : iulog
-    use clm_time_manager   , only : get_nstep, get_step_size
+    use clm_time_manager   , only : get_nstep, get_step_size  
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
@@ -328,7 +314,7 @@ contains
     integer  :: g,i,k ! indices
     integer  :: ier   ! error status
     integer  :: nstep ! time step index
-    integer  :: dtime ! time step
+    integer  :: dtime ! time step   
     integer  :: num   ! counter
     character(len=32) :: fname       ! name of field that is NaN
     character(len=32), parameter :: sub = 'lnd_export'
@@ -357,7 +343,7 @@ contains
        l2x(index_l2x_Fall_evap,i)   = -waterlnd2atmbulk_inst%qflx_evap_tot_grc(g)
        l2x(index_l2x_Fall_swnet,i)  =  lnd2atm_inst%fsa_grc(g)
        if (index_l2x_Fall_fco2_lnd /= 0) then
-          l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%net_carbon_exchange_grc(g)
+          l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%net_carbon_exchange_grc(g)  
        end if
 
        ! Additional fields for DUST, PROGSSLT, dry-deposition and VOC
@@ -392,11 +378,11 @@ contains
        end if
 
        if (index_l2x_Fall_methane /= 0) then
-          l2x(index_l2x_Fall_methane,i) = -lnd2atm_inst%flux_ch4_grc(g)
+          l2x(index_l2x_Fall_methane,i) = -lnd2atm_inst%flux_ch4_grc(g) 
        endif
 
-       ! sign convention is positive downward with
-       ! hierarchy of atm/glc/lnd/rof/ice/ocn.
+       ! sign convention is positive downward with 
+       ! hierarchy of atm/glc/lnd/rof/ice/ocn.  
        ! I.e. water sent from land to rof is positive
 
        l2x(index_l2x_Flrl_rofsur,i) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g)
