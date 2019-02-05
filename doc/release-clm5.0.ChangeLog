@@ -1,4 +1,113 @@
 ===============================================================
+Tag name:  release-clm5.0.17
+Originator(s): Keith Oleson, Bill Sacks
+Date: Wed Jan 23 11:03:22 MST 2019
+One-line Summary: History fields for vertically-resolved sums of soil C and N, and minor fixes
+
+Purpose of this version:
+------------------------
+
+Main change is from Keith Oleson: Add history fields for
+vertically-resolved sums of SOIL1C, SOIL2C, and SOIL3C for C12, C13,
+C14, and similarly for N. New fields are SOILC_vr, C13_SOILC_vr, and
+C14_SOILC_vr, and SOILN_vr. For runs that use the output_bgc usermods,
+including cmip6 runs, we no longer output 'SOIL1C_vr', 'SOIL1N_vr',
+'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr'; instead we output
+'SOILC_vr', 'SOILN_vr', and similarly for C isotopes.
+
+Also minor fixes:
+- Output cpl hist files in SSP test (resolves ESCOMP/ctsm#61)
+- Remove FATES-related commented-out code in OzoneMod (this has been
+  moved to https://github.com/ESCOMP/ctsm/issues/618)
+- Minor tweak to run_sys_tests
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#61
+
+Science changes since: release-clm5.0.16
+   None
+
+Software changes since: release-clm5.0.16
+   See above
+
+Changes to User Interface since: release-clm5.0.16
+   None
+
+Testing:
+--------
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+    hobart --- not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+    hobart --- not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+     hobart --- not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+  regular tests (prealpha):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+  regular tests (prebeta):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.16
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_06
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev025
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/551
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.16
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Jan 15 15:13:43 MST 2019

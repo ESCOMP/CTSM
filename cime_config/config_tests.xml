@@ -63,6 +63,9 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
     <RUN_TYPE>startup</RUN_TYPE>
     <STOP_N>4</STOP_N>
     <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
   </test>
 
 </config_test>
