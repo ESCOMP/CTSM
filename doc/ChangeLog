@@ -1,14 +1,14 @@
 ===============================================================
 Tag name:  ctsm1.0.dev026
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Fri Feb  1 18:06:55 MST 2019
+Date:  Tue Feb  5 17:08:48 MST 2019
 One-line Summary: Collapse unmanaged PFTs to the N most dominant
 
 Purpose of changes
 ------------------
 
 To run simulations fast for applications such as NWP (Numerical Weather
-Prediction)
+Prediction), allow collapsing natural PFT's to the number the user wants.
 
 
 Bugs fixed or introduced
@@ -39,19 +39,19 @@ New namelist parameter n_dom_pfts with valid integer values from 0 to
 14, where 0 means “do nothing” and other values determine the number
 of active pfts when running the model
 
-Changes made to namelist defaults (e.g., changed parameter values):
+Changes made to namelist defaults (e.g., changed parameter values): None
 
-Changes to the datasets (e.g., parameter, surface or initial files):
+Changes to the datasets (e.g., parameter, surface or initial files): None
 
-Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+Substantial timing or memory changes: None (unless new option invoked)
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
 NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing:
+Changes to tests or testing: updated tests, added new test
 Updated standard testing test  <test name="ERS_D_Ld10"
 grid="f10_f10_musgs" compset="IHistClm50SpG"
 testmods="clm/collapse_pfts_78_to_16_decStart_f10">  to include decStart
@@ -74,15 +74,7 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
-
-  tools-tests (test/tools):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test):
-
-     cheyenne - 
+    cheyenne - PASS
 
   regular tests (aux_clm):
 
@@ -95,18 +87,16 @@ ctsm1.0.dev025
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-NO
-
+Changes answers relative to baseline: No (bit-for-bit)
 
 Detailed list of changes
 ------------------------
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
 
 Pull Requests that document the changes (include PR ids):
-https://github.com/ESCOMP/ctsm/pull/588
+https://github.com/ESCOMP/ctsm/pull/588 -- NWP collapse pfts to the N most dominant
+https://github.com/ESCOMP/ctsm/pull/583 -- Add routine to find indices of max k values in data
 
 Added new subroutines collapse_nat_pfts and collapse_crop_var and called
 them from surfrdMod.F90. The second of these subroutines is not needed
@@ -115,7 +105,7 @@ and decided to keep it for use soon with crop-related variables like
 irrigation water and fertilizer.
 
 Bill Sacks made changes to include subroutine find_k_max_indices for the
-benefit of this PR.
+benefit of this PR (#583)
 
 ===============================================================
 ===============================================================
