@@ -8,7 +8,7 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_sys_mod  , only : shr_sys_getenv
     use fileutils    , only : get_filename
-    use mkvarpar     , only : nlevsoi, nlevurb, numrad
+    use mkvarpar     , only : nlevsoi, nlevurb, numrad, numstdpft
     use mkvarctl
     use mkurbanparMod, only : numurbl
     use mkglcmecMod  , only : nglcec
@@ -160,7 +160,7 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Urban_raw_data_file_name', len_trim(str), trim(str)), subname)
 
-    if (.not. dynlanduse) then
+    if (.not. dynlanduse .and. (numpft == numstdpft) ) then
        str = get_filename(mksrf_flai)
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
             'Lai_raw_data_file_name', len_trim(str), trim(str)), subname)
@@ -186,13 +186,11 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'topography_stats_raw_data_file_name', len_trim(str), trim(str)), subname)
 
-    str = get_filename(mksrf_fvic)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'vic_raw_data_file_name', len_trim(str), trim(str)), subname)
-
-    str = get_filename(mksrf_fch4)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'ch4_params_raw_data_file_name', len_trim(str), trim(str)), subname)
+    if ( outnc_vic )then
+       str = get_filename(mksrf_fvic)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'vic_raw_data_file_name', len_trim(str), trim(str)), subname)
+    end if
 
     ! Mapping file names
 
@@ -244,9 +242,11 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_harvest_file', len_trim(str), trim(str)), subname)
 
-    str = get_filename(map_flai)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'map_lai_sai_file', len_trim(str), trim(str)), subname)
+    if ( numpft == numstdpft )then
+       str = get_filename(map_flai)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'map_lai_sai_file', len_trim(str), trim(str)), subname)
+    end if
 
     str = get_filename(map_furbtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -272,13 +272,11 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_topography_stats_file', len_trim(str), trim(str)), subname)
 
-    str = get_filename(map_fvic)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'map_vic_file', len_trim(str), trim(str)), subname)
-
-    str = get_filename(map_fch4)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'map_ch4_params_file', len_trim(str), trim(str)), subname)
+    if ( outnc_vic )then
+       str = get_filename(map_fvic)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'map_vic_file', len_trim(str), trim(str)), subname)
+    end if
 
     ! ----------------------------------------------------------------------
     ! Define variables
@@ -448,29 +446,22 @@ contains
        call ncd_def_spatial_var(ncid=ncid, varname='STD_ELEV', xtype=xtype, &
             long_name='standard deviation of elevation', units='m')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='binfl', xtype=xtype, &
-            long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
+       if ( outnc_vic )then
+          call ncd_def_spatial_var(ncid=ncid, varname='binfl', xtype=xtype, &
+               long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='Ws', xtype=xtype, &
-            long_name='VIC Ws parameter for the ARNO curve', units='unitless')
+          call ncd_def_spatial_var(ncid=ncid, varname='Ws', xtype=xtype, &
+               long_name='VIC Ws parameter for the ARNO curve', units='unitless')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='Dsmax', xtype=xtype, &
-            long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
+          call ncd_def_spatial_var(ncid=ncid, varname='Dsmax', xtype=xtype, &
+               long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='Ds', xtype=xtype, &
-            long_name='VIC Ds parameter for the ARNO curve', units='unitless')
+          call ncd_def_spatial_var(ncid=ncid, varname='Ds', xtype=xtype, &
+               long_name='VIC Ds parameter for the ARNO curve', units='unitless')
 
+       end if
        call ncd_def_spatial_var(ncid=ncid, varname='LAKEDEPTH', xtype=xtype, &
             long_name='lake depth', units='m')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='F0', xtype=xtype, &
-            long_name='maximum gridcell fractional inundated area', units='unitless')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='P3', xtype=xtype, &
-            long_name='coefficient for qflx_surf_lag for finundated', units='s/mm')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='ZWT0', xtype=xtype, &
-            long_name='decay factor for finundated', units='m')
 
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_WETLAND', xtype=xtype, &
             long_name='percent wetland', units='unitless')
@@ -490,20 +481,6 @@ contains
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
             lev1name='nglcec', &
             long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
-            lev1name='nglcec', &
-            long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
-            lev1name='nglcec', &
-            long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
-            long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
-
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
-            long_name='percent ice sheet (% of landunit)', units='unitless')
 
        call ncd_def_spatial_var(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
             lev1name='nglcec', &

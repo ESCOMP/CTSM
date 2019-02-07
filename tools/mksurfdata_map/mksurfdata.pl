@@ -51,6 +51,7 @@ my $CSMDATA = "/glade/p/cesm/cseg/inputdata";
 
 my %opts = ( 
                hgrid=>"all", 
+               vic=>0,
                ssp_rcp=>"hist", 
                debug=>0,
                exedir=>undef,
@@ -143,6 +144,8 @@ OPTIONS
                                    and m.m is the radiative forcing in W/m^2 at the peak or 2100.
      
      -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
 
       NOTE: years, res, and ssp_rcp can be comma delimited lists.
 
@@ -359,6 +362,11 @@ sub write_namelist_file {
  mksrf_furban   = '$datfil->{'urb'}'
  gitdescribe    = '$gitdescribe'
 EOF
+  if ( $opts{'vic'} ) {
+    print $fh <<"EOF";
+ outnc_vic = .true.
+EOF
+  }
   if ( ! $opts{'fast_maps'} ) {
     print $fh <<"EOF";
  map_ftopostats   = '$map->{'topostats'}'
@@ -450,6 +458,7 @@ EOF
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
         "ssp_rcp=s"    => \$opts{'ssp_rcp'},
+        "vic"          => \$opts{'vic'},
         "rundir=s"     => \$opts{'rundir'},
         "soil_col=i"   => \$opts{'soil_col'},
         "soil_fmx=f"   => \$opts{'soil_fmx'},
