@@ -7,16 +7,16 @@ module IrrigationMod
   ! Usage:
   !
   !   - Call CalcIrrigationNeeded in order to compute whether and how much irrigation is
-  !     needed for the next call to ApplyIrrigation. This should be called once per
+  !     needed for the next call to CalcIrrigationFluxes. This should be called once per
   !     timestep.
   ! 
-  !   - Call ApplyIrrigation in order to calculate qflx_irrig_patch and qflx_irrig_col. It
-  !     is acceptable for this to be called earlier in the timestep than
-  !     CalcIrrigationNeeded.
+  !   - Call CalcIrrigationFluxes in order to calculate irrigation withdrawal and
+  !     application fluxes. It is acceptable for this to be called earlier in the timestep
+  !     than CalcIrrigationNeeded.
   !
-  ! Design notes:
+  ! General design notes:
   !
-  !   In principle, ApplyIrrigation and CalcIrrigationNeeded could be combined into a
+  !   In principle, CalcIrrigationFluxes and CalcIrrigationNeeded could be combined into a
   !   single routine. Their separation is largely for historical reasons: In the past,
   !   irrigation depended on btran, and qflx_irrig is needed earlier in the driver loop
   !   than when btran becomes available. (And qflx_irrig is also used late in the driver
@@ -27,8 +27,8 @@ module IrrigationMod
   !
   !   Now that we no longer have a dependency on btran, we could call CalcIrrigationNeeded
   !   before the first time qflx_irrig is needed. Thus, there might be some advantage to
-  !   combining ApplyIrrigation and CalcIrrigationNeeded - or at least calling these two
-  !   routines from the same place.  In particular: this separation of the irrigation
+  !   combining CalcIrrigationFluxes and CalcIrrigationNeeded - or at least calling these
+  !   two routines from the same place.  In particular: this separation of the irrigation
   !   calculation into two routines that are done at different times in the driver loop
   !   makes it harder and less desirable to nest the irrigation object within some other
   !   object: Doing so might make it harder to do the two separate steps at the right
@@ -40,19 +40,58 @@ module IrrigationMod
   !   same time step that CalcIrrigationNeeded first determines it's needed, rather than
   !   waiting until the following time step.
   !
+  ! Design notes regarding where we calculate supply-based irrigation limitations:
+  !
+  !   We compute supply-based irrigation limitations differently for rivers (volr) vs.
+  !   groundwater.
+  !
+  !   For volr-based limitation, we apply the limit in CalcIrrigationNeeded rather than in
+  !   CalcIrrigationFluxes. This is to avoid problems that arise due to evolving volr -
+  !   e.g., if we had calculated irrigation demand such that volr was just barely big
+  !   enough, then we apply irrigation for some time steps, then we get an updated volr
+  !   which is lower due to these irrigation withdrawals - if we applied the volr
+  !   limitation in CalcIrrigationFluxes, this would impose an unnecessary limit on the
+  !   irrigation to be applied for the rest of this day. It's hard to see a clean way
+  !   around this problem, given that volr is updated in some but not all CLM time
+  !   steps. So we impose the limit on irrigation deficit, rather than on the
+  !   time step-by-time-step flux. The downside here is that it's somewhat more likely
+  !   that irrigation would try to draw volr negative, if volr has been evolving for other
+  !   reasons.
+  !
+  !   For groundwater-based limitation, in contrast, we can rely on having an up-to-date
+  !   view of available groundwater, so the argument against having the volr limitation
+  !   in CalcIrrigationFluxes doesn't apply, and that seems like a more robust place to
+  !   do this limitation.
+  !
+  !   The key difference is that, for volr, we don't have an easy way to determine if this
+  !   is a time step when we have an updated volr value, or if we still have volr from a
+  !   few time steps ago (since ROF isn't coupled in every time step). So in that case,
+  !   having the possibility that we'd exceed available volr seems like the lesser of
+  !   evils.
+  !
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use decompMod        , only : bounds_type, get_proc_global
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
+  use clm_instur       , only : irrig_method
+  use pftconMod        , only : pftcon
   use clm_varctl       , only : iulog
-  use clm_varcon       , only : isecspday, degpsec, denh2o, spval, namec
+  use clm_varcon       , only : isecspday, denh2o, spval, ispval, namep, namec, nameg
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
+  use SoilHydrologyMod , only : CalcIrrigWithdrawals
+  use SoilHydrologyType, only : soilhydrology_type
+  use SoilStateType    , only : soilstate_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-  use WaterFluxBulkType    , only : waterfluxbulk_type
-  use GridcellType     , only : grc                
+  use WaterType        , only : water_type
+  use WaterFluxBulkType, only : waterfluxbulk_type
+  use WaterFluxType    , only : waterflux_type
+  use WaterStateBulkType, only : waterstatebulk_type
+  use WaterStateType   , only : waterstate_type
+  use WaterTracerUtils , only : CalcTracerFromBulk, CalcTracerFromBulkFixedRatio
+  use GridcellType     , only : grc
   use ColumnType       , only : col                
   use PatchType        , only : patch                
   use subgridAveMod    , only : p2c, c2g
@@ -70,7 +109,7 @@ module IrrigationMod
 
      ! Time of day to check whether we need irrigation, seconds (0 = midnight). 
      ! We start applying the irrigation in the time step FOLLOWING this time, 
-     ! since we won't begin irrigating until the next call to ApplyIrrigation
+     ! since we won't begin irrigating until the next call to CalcIrrigationFluxes
      integer  :: irrig_start_time
 
      ! Desired amount of time to irrigate per day (sec). Actual time may 
@@ -112,8 +151,16 @@ module IrrigationMod
      ! regardless of the value of this flag.
      logical :: limit_irrigation_if_rof_enabled
 
-  end type irrigation_params_type
+     ! use groundwater supply for irrigation (in addition to surface water)
+     logical :: use_groundwater_irrigation
 
+     ! Irrigation method to use if not set on the surface dataset
+     ! (This won't be needed once we can rely on irrig_method always being on the surface
+     ! dataset, but it is useful until then - particularly for testing. See also
+     ! https://github.com/ESCOMP/ctsm/issues/565.)
+     integer :: irrig_method_default
+
+  end type irrigation_params_type
 
   type, public :: irrigation_type
      private
@@ -124,9 +171,10 @@ module IrrigationMod
      integer :: irrig_nsteps_per_day ! number of time steps per day in which we irrigate
      real(r8), pointer :: relsat_wilting_point_col(:,:) ! relative saturation at which smp = wilting point [col, nlevsoi]
      real(r8), pointer :: relsat_target_col(:,:)        ! relative saturation at which smp is at the irrigation target [col, nlevsoi]
+     integer , pointer :: irrig_method_patch          (:) ! patch irrigation application method
 
      ! Private data members; time-varying:
-     real(r8), pointer :: irrig_rate_patch            (:) ! current irrigation rate [mm/s]
+     real(r8), pointer :: sfc_irrig_rate_patch        (:) ! current irrigation rate from surface water [mm/s]
      real(r8), pointer :: irrig_rate_demand_patch     (:) ! current irrigation rate, neglecting surface water source limitation [mm/s]
      integer , pointer :: n_irrig_steps_left_patch    (:) ! number of time steps for which we still need to irrigate today (if 0, ignore)
      real(r8), pointer :: qflx_irrig_demand_patch     (:) ! irrigation flux neglecting surface water source limitation [mm/s]
@@ -137,13 +185,15 @@ module IrrigationMod
      ! (without this workaround, pgi compilation fails in restFileMod)
      procedure, public :: Init => IrrigationInit
      procedure, public :: Restart
-     procedure, public :: ApplyIrrigation
+     procedure, public :: CalcIrrigationFluxes
      procedure, public :: CalcIrrigationNeeded
+     procedure, public :: UseGroundwaterIrrigation ! Returns true if groundwater irrigation enabled
      procedure, public :: Clean => IrrigationClean ! deallocate memory
 
      ! Public simply to support unit testing; should not be used from CLM code
      procedure, public :: InitForTesting ! version of Init meant for unit testing
      procedure, public :: RelsatToH2osoi ! convert from relative saturation to kg/m2 water for a single column and layer
+     procedure, public :: WrapCalcIrrigWithdrawals ! Wrap the call to CalcIrrigWithdrawals
 
      ! Private routines
      procedure, private :: ReadNamelist
@@ -151,9 +201,14 @@ module IrrigationMod
      procedure, private :: InitAllocate => IrrigationInitAllocate
      procedure, private :: InitHistory => IrrigationInitHistory
      procedure, private :: InitCold => IrrigationInitCold
-     procedure, private :: CalcIrrigNstepsPerDay   ! given dtime, calculate irrig_nsteps_per_day
-     procedure, private :: PointNeedsCheckForIrrig ! whether a given point needs to be checked for irrigation now
-     procedure, private :: CalcDeficitVolrLimited  ! calculate deficit limited by river volume for each patch
+     procedure, private :: CalcBulkWithdrawals      ! calculate irrigation withdrawals for bulk water
+     procedure, private :: CalcOneTracerWithdrawals ! calculate irrigation withdrawals for one water tracer
+     procedure, private :: CalcTotalGWUnconIrrig    ! calculate total irrigation withdrawal flux from the unconfined aquifer, for either bulk or one water tracer
+     procedure, private :: CalcApplicationFluxes    ! calculate irrigation application fluxes for either bulk water or a single tracer
+     procedure, private :: CalcIrrigNstepsPerDay    ! given dtime, calculate irrig_nsteps_per_day
+     procedure, private :: SetIrrigMethod           ! set irrig_method_patch based on surface dataset
+     procedure, private :: PointNeedsCheckForIrrig  ! whether a given point needs to be checked for irrigation now
+     procedure, private :: CalcDeficitVolrLimited   ! calculate deficit limited by river volume for each patch
   end type irrigation_type
 
   interface irrigation_params_type
@@ -172,6 +227,13 @@ module IrrigationMod
 
   ! Conversion factors
   real(r8), parameter :: m3_over_km2_to_mm = 1.e-3_r8
+     
+  ! Irrigation methods
+  integer, parameter, public  :: irrig_method_unset = 0
+  ! Drip is defined here as irrigation applied directly to soil surface
+  integer, parameter, public :: irrig_method_drip = 1
+  ! Sprinkler is applied directly to canopy
+  integer, parameter, public :: irrig_method_sprinkler = 2
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -187,7 +249,8 @@ contains
        irrig_start_time, irrig_length, &
        irrig_target_smp, &
        irrig_depth, irrig_threshold_fraction, irrig_river_volume_threshold, &
-       limit_irrigation_if_rof_enabled) &
+       limit_irrigation_if_rof_enabled, use_groundwater_irrigation, &
+       irrig_method_default) &
        result(this)
     !
     ! !DESCRIPTION:
@@ -205,6 +268,8 @@ contains
     real(r8), intent(in) :: irrig_threshold_fraction
     real(r8), intent(in) :: irrig_river_volume_threshold
     logical , intent(in) :: limit_irrigation_if_rof_enabled
+    logical , intent(in) :: use_groundwater_irrigation
+    integer , intent(in) :: irrig_method_default
     !
     ! !LOCAL VARIABLES:
     
@@ -219,6 +284,8 @@ contains
     this%irrig_threshold_fraction = irrig_threshold_fraction
     this%irrig_river_volume_threshold = irrig_river_volume_threshold
     this%limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled
+    this%use_groundwater_irrigation = use_groundwater_irrigation
+    this%irrig_method_default = irrig_method_default
 
   end function irrigation_params_constructor
 
@@ -229,7 +296,8 @@ contains
   
   !------------------------------------------------------------------------
   subroutine IrrigationInit(this, bounds, NLFilename, &
-       soilstate_inst, soil_water_retention_curve)
+       soilstate_inst, soil_water_retention_curve, &
+       use_aquifer_layer)
     use SoilStateType , only : soilstate_type
 
     class(irrigation_type) , intent(inout) :: this
@@ -237,8 +305,9 @@ contains
     character(len=*)       , intent(in)    :: NLFilename ! Namelist filename
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    logical                , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
 
-    call this%ReadNamelist(NLFilename)
+    call this%ReadNamelist(NLFilename, use_aquifer_layer)
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds, soilstate_inst, soil_water_retention_curve)
@@ -273,6 +342,7 @@ contains
     call this%InitAllocate(bounds)
     this%params = params
     this%dtime = dtime
+    call this%SetIrrigMethod(bounds)
     this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(dtime)
     this%relsat_wilting_point_col(:,:) = relsat_wilting_point(:,:)
     this%relsat_target_col(:,:) = relsat_target(:,:)
@@ -280,7 +350,7 @@ contains
   end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
-  subroutine ReadNamelist(this, NLFilename)
+  subroutine ReadNamelist(this, NLFilename, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Read the irrigation namelist
@@ -293,8 +363,9 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
     class(irrigation_type) , intent(inout) :: this
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    logical, intent(in) :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
 
@@ -307,6 +378,9 @@ contains
     real(r8) :: irrig_threshold_fraction
     real(r8) :: irrig_river_volume_threshold
     logical  :: limit_irrigation_if_rof_enabled
+    logical  :: use_groundwater_irrigation
+    character(len=64) :: irrig_method_default
+    integer  :: irrig_method_default_int
 
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -317,8 +391,9 @@ contains
 
     namelist /irrigation_inparm/ irrig_min_lai, irrig_start_time, irrig_length, &
          irrig_target_smp, irrig_depth, irrig_threshold_fraction, &
-         irrig_river_volume_threshold, limit_irrigation_if_rof_enabled
-
+         irrig_river_volume_threshold, limit_irrigation_if_rof_enabled, &
+         use_groundwater_irrigation, irrig_method_default
+    
     ! Initialize options to garbage defaults, forcing all to be specified explicitly in
     ! order to get reasonable results
     irrig_min_lai = nan
@@ -329,6 +404,8 @@ contains
     irrig_threshold_fraction = nan
     irrig_river_volume_threshold = nan
     limit_irrigation_if_rof_enabled = .false.
+    use_groundwater_irrigation = .false.
+    irrig_method_default = ' '
 
     if (masterproc) then
        unitn = getavu()
@@ -354,6 +431,10 @@ contains
     call shr_mpi_bcast(irrig_threshold_fraction, mpicom)
     call shr_mpi_bcast(irrig_river_volume_threshold, mpicom)
     call shr_mpi_bcast(limit_irrigation_if_rof_enabled, mpicom)
+    call shr_mpi_bcast(use_groundwater_irrigation, mpicom)
+    call shr_mpi_bcast(irrig_method_default, mpicom)
+
+    call translate_irrig_method_default
 
     this%params = irrigation_params_type( &
          irrig_min_lai = irrig_min_lai, &
@@ -363,7 +444,9 @@ contains
          irrig_depth = irrig_depth, &
          irrig_threshold_fraction = irrig_threshold_fraction, &
          irrig_river_volume_threshold = irrig_river_volume_threshold, &
-         limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled)
+         limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled, &
+         use_groundwater_irrigation = use_groundwater_irrigation, &
+         irrig_method_default = irrig_method_default_int)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -380,15 +463,30 @@ contains
        if (limit_irrigation_if_rof_enabled) then
           write(iulog,*) 'irrig_river_volume_threshold = ', irrig_river_volume_threshold
        end if
+       write(iulog,*) 'use_groundwater_irrigation = ', use_groundwater_irrigation
+       write(iulog,*) 'irrig_method_default = ', irrig_method_default
        write(iulog,*) ' '
 
-       call this%CheckNamelistValidity()
+       call this%CheckNamelistValidity(use_aquifer_layer)
     end if
+
+  contains
+    subroutine translate_irrig_method_default
+      select case (irrig_method_default)
+      case ('drip')
+         irrig_method_default_int = irrig_method_drip
+      case ('sprinkler')
+         irrig_method_default_int = irrig_method_sprinkler
+      case default
+         write(iulog,*) 'ERROR: unknown irrig_method_default: ', trim(irrig_method_default)
+         call endrun('Unknown irrig_method_default')
+      end select
+    end subroutine translate_irrig_method_default
 
   end subroutine ReadNamelist
 
   !-----------------------------------------------------------------------
-  subroutine CheckNamelistValidity(this)
+  subroutine CheckNamelistValidity(this, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Check for validity of input parameters.
@@ -398,10 +496,9 @@ contains
     ! Only needs to be called by the master task, since parameters are the same for all
     ! tasks.
     !
-    ! !USES:
-    !
     ! !ARGUMENTS:
     class(irrigation_type), intent(in) :: this
+    logical, intent(in) :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
 
@@ -416,6 +513,7 @@ contains
          irrig_depth => this%params%irrig_depth, &
          irrig_threshold_fraction => this%params%irrig_threshold_fraction, &
          irrig_river_volume_threshold => this%params%irrig_river_volume_threshold, &
+         use_groundwater_irrigation => this%params%use_groundwater_irrigation, &
          limit_irrigation_if_rof_enabled => this%params%limit_irrigation_if_rof_enabled)
 
     if (irrig_min_lai < 0._r8) then
@@ -471,6 +569,19 @@ contains
        end if
     end if
 
+    if (use_groundwater_irrigation .and. .not. limit_irrigation_if_rof_enabled) then
+       write(iulog,*) ' ERROR: use_groundwater_irrigation only makes sense if limit_irrigation_if_rof_enabled is set.'
+       write(iulog,*) '(If limit_irrigation_if_rof_enabled is .false., then groundwater extraction will never be invoked.)'
+       call endrun(msg=' ERROR: use_groundwater_irrigation only makes sense if limit_irrigation_if_rof_enabled is set' // &
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    if (use_aquifer_layer .and. use_groundwater_irrigation) then
+          write(iulog,*) ' ERROR: use_groundwater_irrigation and use_aquifer_layer may not be used simultaneously'
+          call endrun(msg=' ERROR: use_groundwater_irrigation and use_aquifer_layer cannot both be set to true' // &
+               errMsg(sourcefile, __LINE__))
+    end if
+
     end associate
 
   end subroutine CheckNamelistValidity
@@ -499,12 +610,13 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
 
-    allocate(this%qflx_irrig_demand_patch  (begp:endp))          ; this%qflx_irrig_demand_patch  (:)   = nan
-    allocate(this%relsat_wilting_point_col (begc:endc,nlevsoi)) ; this%relsat_wilting_point_col (:,:) = nan
-    allocate(this%relsat_target_col        (begc:endc,nlevsoi)) ; this%relsat_target_col        (:,:) = nan
-    allocate(this%irrig_rate_patch         (begp:endp))          ; this%irrig_rate_patch         (:)   = nan
-    allocate(this%irrig_rate_demand_patch  (begp:endp))          ; this%irrig_rate_demand_patch  (:)   = nan
-    allocate(this%n_irrig_steps_left_patch (begp:endp))          ; this%n_irrig_steps_left_patch (:)   = 0
+    allocate(this%qflx_irrig_demand_patch (begp:endp))              ; this%qflx_irrig_demand_patch  (:)   = nan
+    allocate(this%relsat_wilting_point_col    (begc:endc,nlevsoi))  ; this%relsat_wilting_point_col     (:,:) = nan
+    allocate(this%relsat_target_col           (begc:endc,nlevsoi))  ; this%relsat_target_col            (:,:) = nan
+    allocate(this%sfc_irrig_rate_patch        (begp:endp))          ; this%sfc_irrig_rate_patch         (:)   = nan
+    allocate(this%irrig_rate_demand_patch     (begp:endp))          ; this%irrig_rate_demand_patch      (:)   = nan
+    allocate(this%irrig_method_patch          (begp:endp))          ; this%irrig_method_patch           (:)   = ispval
+    allocate(this%n_irrig_steps_left_patch    (begp:endp))          ; this%n_irrig_steps_left_patch     (:)   = 0
 
   end subroutine IrrigationInitAllocate
 
@@ -589,9 +701,13 @@ contains
        end do
     end do
 
+    call this%SetIrrigMethod(bounds)
+       
     this%dtime = get_step_size()
     this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(this%dtime)
 
+    this%qflx_irrig_demand_patch(bounds%begp:bounds%endp) = 0._r8
+    
   end subroutine IrrigationInitCold
 
   !-----------------------------------------------------------------------
@@ -616,6 +732,44 @@ contains
 
   end function CalcIrrigNstepsPerDay
 
+  !-----------------------------------------------------------------------
+  subroutine SetIrrigMethod(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Set this%irrig_method_patch based on surface dataset
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type) , intent(inout) :: this
+    type(bounds_type)      , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p ! patch index
+    integer :: g ! gridcell index
+    integer :: m ! patch itype
+
+    character(len=*), parameter :: subname = 'SetIrrigMethod'
+    !-----------------------------------------------------------------------
+
+    do p = bounds%begp,bounds%endp
+       g = patch%gridcell(p)
+       m = patch%itype(p)
+       if (m >= lbound(irrig_method, 2) .and. m <= ubound(irrig_method, 2) &
+            .and. pftcon%irrigated(m) == 1._r8) then
+          this%irrig_method_patch(p) = irrig_method(g,m)
+          ! ensure irrig_method is valid; if not set, use drip irrigation
+          if(irrig_method(g,m) == irrig_method_unset) then
+             this%irrig_method_patch(p) = this%params%irrig_method_default
+          else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
+             write(iulog,*) subname //' invalid irrigation method specified'
+             call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
+                  errMsg(sourcefile, __LINE__))
+          end if
+       else
+          this%irrig_method_patch(p) = this%params%irrig_method_default
+       end if
+    end do
+
+  end subroutine SetIrrigMethod
 
 
   !-----------------------------------------------------------------------
@@ -684,11 +838,11 @@ contains
     if (do_io) then
        call restartvar(ncid=ncid, flag=flag, varname='irrig_rate', xtype=ncd_double,  &
             dim1name='pft', &
-            long_name='irrigation rate', units='mm/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%irrig_rate_patch)
+            long_name='surface irrigation rate', units='mm/s', &
+            interpinic_flag='interp', readvar=readvar, data=this%sfc_irrig_rate_patch)
     end if
     if (flag=='read' .and. .not. readvar) then
-       this%irrig_rate_patch = 0.0_r8
+       this%sfc_irrig_rate_patch = 0.0_r8
     end if
 
     ! BACKWARDS_COMPATIBILITY(wjs, 2016-11-23) To support older restart files without an
@@ -702,7 +856,6 @@ contains
          long_name='irrigation rate demand, neglecting surface water source limitation', &
          units='mm/s', &
          interpinic_flag='interp', readvar=readvar, data=this%irrig_rate_demand_patch)
-
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -722,8 +875,9 @@ contains
     deallocate(this%qflx_irrig_demand_patch)
     deallocate(this%relsat_wilting_point_col)
     deallocate(this%relsat_target_col)
-    deallocate(this%irrig_rate_patch)
+    deallocate(this%sfc_irrig_rate_patch)
     deallocate(this%irrig_rate_demand_patch)
+    deallocate(this%irrig_method_patch)
     deallocate(this%n_irrig_steps_left_patch)
 
   end subroutine IrrigationClean
@@ -734,65 +888,484 @@ contains
   ! ========================================================================
   
   !-----------------------------------------------------------------------
-  subroutine ApplyIrrigation(this, bounds, waterfluxbulk_inst)
+  subroutine CalcIrrigationFluxes(this, bounds, num_soilc, &
+       filter_soilc, num_soilp, filter_soilp, &
+       soilhydrology_inst, soilstate_inst, &
+       water_inst)
     !
     ! !DESCRIPTION:
-    ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
+    ! Apply the irrigation computed by CalcIrrigationNeeded in order to set various fluxes
     !
-    ! Sets waterfluxbulk_inst%qflx_irrig_patch and waterfluxbulk_inst%qflx_irrig_col.
+    ! Sets irrigation withdrawal and application fluxes in the waterflux components of
+    ! water_inst, for both bulk and tracers:
+    ! - qflx_sfc_irrig_col
+    ! - qflx_gw_uncon_irrig_lyr_col
+    ! - qflx_gw_uncon_irrig_col
+    ! - qflx_gw_con_irrig_col
+    ! - qflx_irrig_drip_patch
+    ! - qflx_irrig_sprinkler_patch
     !
     ! Should be called once, AND ONLY ONCE, per time step.
-    !
-    ! !USES:
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    ! number of points in filter_soilc
+    integer, intent(in) :: num_soilc
+    ! column filter for soil
+    integer, intent(in) :: filter_soilc(:)
+    ! number of points in filter_soilp
+    integer, intent(in) :: num_soilp
+    ! patch filter for soil
+    integer, intent(in) :: filter_soilp(:)
+    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
+    type(water_type)         , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: p  ! patch index
-    integer :: g  ! grid cell index
-    
-    character(len=*), parameter :: subname = 'ApplyIrrigation'
+    integer  :: p,fp  ! patch indices
+    integer  :: c,fc  ! column indices
+    integer  :: g     ! grid cell index
+    integer  :: j     ! level index
+    integer  :: i     ! tracer index
+    real(r8) :: qflx_sfc_irrig_bulk_patch(bounds%begp:bounds%endp)      ! patch surface irrigation flux for bulk water (mm H2O/s)
+    real(r8) :: qflx_gw_demand_bulk_patch(bounds%begp:bounds%endp) ! patch amount of irrigation groundwater demand for bulk water (mm H2O/s)
+    real(r8) :: qflx_gw_demand_bulk_col(bounds%begc:bounds%endc) ! col amount of irrigation groundwater demand for bulk water (mm H2O/s)
+    logical  :: is_bulk
+
+    character(len=*), parameter :: subname = 'CalcIrrigationFluxes'
 
     !-----------------------------------------------------------------------
 
     ! This should be called exactly once per time step, so that the counter decrease
     ! works correctly.
 
+    ! Note that these associated variables refer to the bulk instance
     associate( &
-         qflx_irrig_patch => waterfluxbulk_inst%qflx_irrig_patch , & ! Output: [real(r8) (:)] patch irrigation flux (mm H2O/s)
-         qflx_irrig_col   => waterfluxbulk_inst%qflx_irrig_col     & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
+         begp => bounds%begp, &
+         endp => bounds%endp, &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
          )
 
-    do p = bounds%begp, bounds%endp
-       g = patch%gridcell(p)
+    call this%CalcBulkWithdrawals(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+         soilhydrology_inst, soilstate_inst, water_inst%waterfluxbulk_inst, &
+         qflx_sfc_irrig_bulk_patch = qflx_sfc_irrig_bulk_patch(begp:endp), &
+         qflx_gw_demand_bulk_patch = qflx_gw_demand_bulk_patch(begp:endp), &
+         qflx_gw_demand_bulk_col = qflx_gw_demand_bulk_col(begc:endc))
 
-       if (this%n_irrig_steps_left_patch(p) > 0) then
-          qflx_irrig_patch(p)              = this%irrig_rate_patch(p)
-          this%qflx_irrig_demand_patch(p)  = this%irrig_rate_demand_patch(p)
-          this%n_irrig_steps_left_patch(p) = this%n_irrig_steps_left_patch(p) - 1
-       else
-          qflx_irrig_patch(p)             = 0._r8
-          this%qflx_irrig_demand_patch(p) = 0._r8
-       end if
-
+    do i = water_inst%tracers_beg, water_inst%tracers_end
+       call this%CalcOneTracerWithdrawals(bounds, num_soilc, filter_soilc, &
+            waterstatebulk_inst = water_inst%waterstatebulk_inst, &
+            waterfluxbulk_inst = water_inst%waterfluxbulk_inst, &
+            waterstate_tracer_inst = water_inst%bulk_and_tracers(i)%waterstate_inst, &
+            waterflux_tracer_inst = water_inst%bulk_and_tracers(i)%waterflux_inst)
     end do
 
-    call p2c (bounds = bounds, &
-         parr = qflx_irrig_patch(bounds%begp:bounds%endp), &
-         carr = qflx_irrig_col(bounds%begc:bounds%endc), &
-         p2c_scale_type = 'unity')
+    if (this%params%use_groundwater_irrigation) then
+       do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+          call this%CalcTotalGWUnconIrrig(num_soilc, filter_soilc, &
+               water_inst%bulk_and_tracers(i)%waterflux_inst)
+       end do
+    end if
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       is_bulk = (i == water_inst%i_bulk)
+       call this%CalcApplicationFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+            waterflux_inst = water_inst%bulk_and_tracers(i)%waterflux_inst, &
+            is_bulk = is_bulk, &
+            qflx_sfc_irrig_bulk_patch = qflx_sfc_irrig_bulk_patch(begp:endp), &
+            qflx_sfc_irrig_bulk_col = water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col(begc:endc), &
+            qflx_gw_demand_bulk_patch = qflx_gw_demand_bulk_patch(begp:endp), &
+            qflx_gw_demand_bulk_col = qflx_gw_demand_bulk_col(begc:endc))
+    end do
 
     end associate
 
-  end subroutine ApplyIrrigation
+  end subroutine CalcIrrigationFluxes
 
+  !-----------------------------------------------------------------------
+  subroutine CalcBulkWithdrawals(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, &
+       qflx_sfc_irrig_bulk_patch, qflx_gw_demand_bulk_patch, qflx_gw_demand_bulk_col)
+    !
+    ! !DESCRIPTION:
+    ! Calculate irrigation withdrawals for bulk water
+    !
+    ! Sets / updates the following variables:
+    ! - qflx_sfc_irrig_bulk_patch
+    ! - qflx_gw_demand_bulk_patch
+    ! - qflx_gw_demand_bulk_col
+    ! - this%qflx_irrig_demand_patch
+    ! - this%n_irrig_steps_left_patch
+    ! - waterfluxbulk_inst%qflx_sfc_irrig_col
+    ! - waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col
+    ! - waterfluxbulk_inst%qflx_gw_con_irrig_col
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type)   , intent(inout) :: this
+    type(bounds_type)        , intent(in)    :: bounds
+    integer                  , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil
+    integer                  , intent(in)    :: num_soilp       ! number of points in filter_soilp
+    integer                  , intent(in)    :: filter_soilp(:) ! patch filter for soil
+    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
+    type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
+    real(r8)                 , intent(inout) :: qflx_sfc_irrig_bulk_patch( bounds%begp: ) ! patch surface irrigation flux for bulk water (mm H2O/s)
+    real(r8)                 , intent(inout) :: qflx_gw_demand_bulk_patch( bounds%begp: ) ! patch amount of irrigation groundwater demand for bulk water (mm H2O/s)
+    real(r8)                 , intent(inout) :: qflx_gw_demand_bulk_col( bounds%begc: )   ! col amount of irrigation groundwater demand for bulk water (mm H2O/s)
+
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: p,fp  ! patch indices
+
+    character(len=*), parameter :: subname = 'CalcBulkWithdrawals'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+
+    associate( &
+         begp => bounds%begp, &
+         endp => bounds%endp, &
+         begc => bounds%begc, &
+         endc => bounds%endc, &
+
+         qflx_sfc_irrig_col          => waterfluxbulk_inst%qflx_sfc_irrig_col          , & ! Output: [real(r8) (:)] col irrigation flux (mm H2O/s)
+         qflx_gw_uncon_irrig_lyr_col => waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col , & ! Output: [real(r8) (:,:) ] unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
+         qflx_gw_con_irrig_col       => waterfluxbulk_inst%qflx_gw_con_irrig_col         & ! Output: [real(r8) (:)] col confined groundwater irrigation flux (mm H2O/s)
+         )
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+       
+       if (this%n_irrig_steps_left_patch(p) > 0) then
+          qflx_sfc_irrig_bulk_patch(p)     = this%sfc_irrig_rate_patch(p)
+          this%qflx_irrig_demand_patch(p)  = this%irrig_rate_demand_patch(p)
+          qflx_gw_demand_bulk_patch(p)     = &
+               this%qflx_irrig_demand_patch(p) - qflx_sfc_irrig_bulk_patch(p)
+          
+          this%n_irrig_steps_left_patch(p) = this%n_irrig_steps_left_patch(p) - 1
+       else
+          qflx_sfc_irrig_bulk_patch(p)    = 0._r8
+          this%qflx_irrig_demand_patch(p) = 0._r8
+          qflx_gw_demand_bulk_patch(p)    = 0._r8
+       end if
+    end do
+
+    call p2c (bounds, num_soilc, filter_soilc, &
+         patcharr = qflx_sfc_irrig_bulk_patch(begp:endp), &
+         colarr = qflx_sfc_irrig_col(begc:endc))
+
+    call p2c (bounds, num_soilc, filter_soilc, &
+         patcharr = qflx_gw_demand_bulk_patch(begp:endp), &
+         colarr = qflx_gw_demand_bulk_col(begc:endc))
+
+    if (this%params%use_groundwater_irrigation) then
+       ! Supply as much of the remaining deficit as possible from groundwater irrigation
+       call this%WrapCalcIrrigWithdrawals(bounds, num_soilc, filter_soilc, &
+            soilhydrology_inst, soilstate_inst, &
+            qflx_gw_demand = qflx_gw_demand_bulk_col(begc:endc), &
+            qflx_gw_uncon_irrig_lyr = qflx_gw_uncon_irrig_lyr_col(begc:endc, :), &
+            qflx_gw_con_irrig = qflx_gw_con_irrig_col(begc:endc))
+    end if
+
+    end associate
+
+  end subroutine CalcBulkWithdrawals
+
+  !-----------------------------------------------------------------------
+  subroutine CalcOneTracerWithdrawals(this, bounds, num_soilc, filter_soilc, &
+       waterstatebulk_inst, waterfluxbulk_inst, &
+       waterstate_tracer_inst, waterflux_tracer_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate irrigation withdrawals for one water tracer
+    !
+    ! Sets the following variables:
+    ! - waterflux_tracer_inst%qflx_sfc_irrig_col
+    ! - waterflux_tracer_inst%qflx_gw_uncon_irrig_lyr_col
+    ! - waterflux_tracer_inst%qflx_gw_con_irrig_col
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type)    , intent(in)    :: this
+    type(bounds_type)         , intent(in)    :: bounds
+    integer                   , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                   , intent(in)    :: filter_soilc(:) ! column filter for soil
+    type(waterstatebulk_type) , intent(in)    :: waterstatebulk_inst
+    type(waterfluxbulk_type)  , intent(in)    :: waterfluxbulk_inst
+    type(waterstate_type)     , intent(in)    :: waterstate_tracer_inst
+    type(waterflux_type)      , intent(inout) :: waterflux_tracer_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: j  ! level index
+
+    character(len=*), parameter :: subname = 'CalcOneTracerWithdrawals'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc &
+         )
+
+    ! BUG(wjs, 2018-12-17, ESCOMP/ctsm#512) Eventually, use actual source ratio for
+    ! qflx_sfc_irrig_col rather than assuming a fixed ratio
+    call CalcTracerFromBulkFixedRatio( &
+         bulk   = waterfluxbulk_inst%qflx_sfc_irrig_col(begc:endc), &
+         ratio  = waterflux_tracer_inst%info%get_ratio(), &
+         tracer = waterflux_tracer_inst%qflx_sfc_irrig_col(begc:endc))
+
+    if (this%params%use_groundwater_irrigation) then
+
+       call CalcTracerFromBulk( &
+            lb            = begc, &
+            num_pts       = num_soilc, &
+            filter_pts    = filter_soilc, &
+            bulk_source   = waterstatebulk_inst%wa_col(begc:endc), &
+            bulk_val      = waterfluxbulk_inst%qflx_gw_con_irrig_col(begc:endc), &
+            tracer_source = waterstate_tracer_inst%wa_col(begc:endc), &
+            tracer_val    = waterflux_tracer_inst%qflx_gw_con_irrig_col(begc:endc))
+       do j = 1, nlevsoi
+          call CalcTracerFromBulk( &
+               lb            = begc, &
+               num_pts       = num_soilc, &
+               filter_pts    = filter_soilc, &
+               bulk_source   = waterstatebulk_inst%h2osoi_liq_col(begc:endc, j), &
+               bulk_val      = waterfluxbulk_inst%qflx_gw_uncon_irrig_lyr_col(begc:endc, j), &
+               tracer_source = waterstate_tracer_inst%h2osoi_liq_col(begc:endc, j), &
+               tracer_val    = waterflux_tracer_inst%qflx_gw_uncon_irrig_lyr_col(begc:endc, j))
+       end do
+
+    end if
+
+    end associate
+
+  end subroutine CalcOneTracerWithdrawals
+
+  !-----------------------------------------------------------------------
+  subroutine CalcTotalGWUnconIrrig(this, num_soilc, filter_soilc, &
+       waterflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate total irrigation withdrawal flux from the unconfined aquifer, for either bulk
+    ! or one water tracer
+    !
+    ! Sets the following variables:
+    ! - waterflux_inst%qflx_gw_uncon_irrig_col
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type)    , intent(in)    :: this
+    integer                   , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                   , intent(in)    :: filter_soilc(:) ! column filter for soil
+    class(waterflux_type)     , intent(inout) :: waterflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c, fc  ! column indices
+    integer :: j      ! level index
+
+    character(len=*), parameter :: subname = 'CalcTotalGWUnconIrrig'
+    !-----------------------------------------------------------------------
+
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       waterflux_inst%qflx_gw_uncon_irrig_col(c) = 0._r8
+    end do
+    do j = 1, nlevsoi
+       do fc = 1, num_soilc
+          c = filter_soilc(fc)
+          waterflux_inst%qflx_gw_uncon_irrig_col(c) = &
+               waterflux_inst%qflx_gw_uncon_irrig_col(c) + &
+               waterflux_inst%qflx_gw_uncon_irrig_lyr_col(c,j)
+       end do
+    end do
+
+  end subroutine CalcTotalGWUnconIrrig
+
+  !-----------------------------------------------------------------------
+  subroutine CalcApplicationFluxes(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       waterflux_inst, is_bulk, &
+       qflx_sfc_irrig_bulk_patch, qflx_sfc_irrig_bulk_col, &
+       qflx_gw_demand_bulk_patch, qflx_gw_demand_bulk_col)
+    !
+    ! !DESCRIPTION:
+    ! Calculate irrigation application fluxes for either bulk water or a single tracer
+    !
+    ! Sets:
+    ! - waterflux_inst%qflx_irrig_drip_patch
+    ! - waterflux_inst%qflx_irrig_sprinkler_patch
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type) , intent(in)    :: this
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                , intent(in)    :: filter_soilc(:) ! column filter for soil
+    integer                , intent(in)    :: num_soilp       ! number of points in filter_soilp
+    integer                , intent(in)    :: filter_soilp(:) ! patch filter for soil
+    class(waterflux_type)  , intent(inout) :: waterflux_inst
+    logical                , intent(in)    :: is_bulk         ! whether this call is being made for bulk water (is_bulk true) or a tracer (is_bulk false)
+    real(r8)               , intent(in)    :: qflx_sfc_irrig_bulk_patch( bounds%begp: ) ! patch surface irrigation flux for bulk water (mm H2O/s)
+    real(r8)               , intent(in)    :: qflx_sfc_irrig_bulk_col( bounds%begc: )   ! col surface irrigation flux for bulk water (mm H2O/s)
+    real(r8)               , intent(in)    :: qflx_gw_demand_bulk_patch( bounds%begp: ) ! patch amount of irrigation groundwater demand for bulk water (mm H2O/s)
+    real(r8)               , intent(in)    :: qflx_gw_demand_bulk_col( bounds%begc: )   ! col amount of irrigation groundwater demand for bulk water (mm H2O/s)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c  ! column indices
+    integer  :: fp, p  ! patch indices
+    real(r8) :: qflx_gw_irrig_withdrawn_col(bounds%begc:bounds%endc) ! col total amount of irrigation withdrawn from groundwater (mm H2O/s)
+    real(r8) :: qflx_sfc_irrig        ! amount of surface irrigation for a single patch (mm H2O/s)
+    real(r8) :: qflx_gw_irrig_applied ! amount of groundwater irrigation for a single patch (mm H2O/s)
+    real(r8) :: qflx_irrig_tot        ! total amount of irrigation for a single patch (mm H2O/s)
+
+    character(len=*), parameter :: subname = 'CalcApplicationFluxes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       ! Note that qflx_gw_uncon_irrig_col and qflx_gw_con_irrig_col will remain at
+       ! their cold start values of 0 if use_groundwater_irrigation is false, so this
+       ! sum is safe to do in all cases.
+       qflx_gw_irrig_withdrawn_col(c) = &
+            waterflux_inst%qflx_gw_uncon_irrig_col(c) + &
+            waterflux_inst%qflx_gw_con_irrig_col(c)
+    end do
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+       c = patch%column(p)
+
+       if (is_bulk) then
+          qflx_sfc_irrig = qflx_sfc_irrig_bulk_patch(p)
+       else
+          if (qflx_sfc_irrig_bulk_col(c) > 0._r8) then
+             ! We have col-level sfc irrig for each water tracer, but only have
+             ! patch-level for the bulk. To get the patch-level tracer flux, we need
+             ! to scale the column-level flux by the ratio of patch-to-column-level
+             ! flux for the bulk.
+             !
+             ! Note that this is similar to the scaling that we do for groundwater
+             ! irrigation below.
+             qflx_sfc_irrig = waterflux_inst%qflx_sfc_irrig_col(c) * &
+                  (qflx_sfc_irrig_bulk_patch(p) / qflx_sfc_irrig_bulk_col(c))
+          else
+             if (qflx_sfc_irrig_bulk_patch(p) > 0._r8 .or. &
+                  waterflux_inst%qflx_sfc_irrig_col(c) > 0._r8) then
+                write(iulog,*) 'If qflx_sfc_irrig_bulk_col <= 0, ' // &
+                     'expect qflx_sfc_irrig_bulk_patch = waterflux_inst%qflx_sfc_irrig_col = 0'
+                write(iulog,*) 'qflx_sfc_irrig_bulk_col = ', qflx_sfc_irrig_bulk_col(c)
+                write(iulog,*) 'qflx_sfc_irrig_bulk_patch = ', qflx_sfc_irrig_bulk_patch(p)
+                write(iulog,*) 'waterflux_inst%qflx_sfc_irrig_col = ', &
+                     waterflux_inst%qflx_sfc_irrig_col(c)
+                call endrun(decomp_index=p, clmlevel=namep, &
+                     msg = 'If qflx_sfc_irrig_bulk_col <= 0, ' // &
+                     'expect qflx_sfc_irrig_bulk_patch = waterflux_inst%qflx_sfc_irrig_col = 0', &
+                     additional_msg = errMsg(sourcefile, __LINE__))
+             end if
+
+             qflx_sfc_irrig = 0._r8
+          end if
+       end if
+
+       if (qflx_gw_demand_bulk_col(c) > 0._r8) then
+          ! Distribute the withdrawn groundwater irrigation to each patch according to
+          ! its demand relative to the total column demand.
+          !
+          ! Note that this expression could be reformulated to:
+          !   qflx_gw_irrig_applied = qflx_gw_demand_bulk_patch(p) * &
+          !        (qflx_gw_irrig_withdrawn_col(c) / qflx_gw_demand_bulk_col(c))
+          !
+          ! It may be more intuitive that the above is correct, at least for bulk water:
+          ! this shows that we're down-weighting each patch's demand evenly, based on the
+          ! ration of withdrawn water to demand in the given column.
+          !
+          ! Note that this is similar to the scaling that we do for surface irrigation
+          ! above.
+          qflx_gw_irrig_applied = qflx_gw_irrig_withdrawn_col(c) * &
+               (qflx_gw_demand_bulk_patch(p) / qflx_gw_demand_bulk_col(c))
+       else
+          if (qflx_gw_demand_bulk_patch(p) > 0._r8 .or. &
+               qflx_gw_irrig_withdrawn_col(c) > 0._r8) then
+             write(iulog,*) 'If qflx_gw_demand_bulk_col <= 0, expect qflx_gw_demand_bulk_patch = qflx_gw_irrig_withdrawn_col = 0'
+             write(iulog,*) 'qflx_gw_demand_bulk_col = ', qflx_gw_demand_bulk_col(c)
+             write(iulog,*) 'qflx_gw_demand_bulk_patch = ', qflx_gw_demand_bulk_patch(p)
+             write(iulog,*) 'qflx_gw_irrig_withdrawn_col = ', qflx_gw_irrig_withdrawn_col(c)
+             call endrun(decomp_index=p, clmlevel=namep, &
+                  msg = 'If qflx_gw_demand_bulk_col <= 0, expect qflx_gw_demand_bulk_patch = qflx_gw_irrig_withdrawn_col = 0', &
+                  additional_msg = errMsg(sourcefile, __LINE__))
+          end if
+
+          qflx_gw_irrig_applied = 0._r8
+       end if
+
+       qflx_irrig_tot = qflx_sfc_irrig + qflx_gw_irrig_applied
+
+       ! Set drip/sprinkler irrigation based on irrigation method from input data
+       waterflux_inst%qflx_irrig_drip_patch(p)      = 0._r8
+       waterflux_inst%qflx_irrig_sprinkler_patch(p) = 0._r8
+
+       if(this%irrig_method_patch(p) == irrig_method_drip) then
+          waterflux_inst%qflx_irrig_drip_patch(p)      = qflx_irrig_tot
+       else if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
+          waterflux_inst%qflx_irrig_sprinkler_patch(p) = qflx_irrig_tot
+       else
+          call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
+               errMsg(sourcefile, __LINE__))
+       endif
+
+    end do
+
+  end subroutine CalcApplicationFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine WrapCalcIrrigWithdrawals(this, bounds, num_soilc, filter_soilc, &
+       soilhydrology_inst, soilstate_inst, &
+       qflx_gw_demand, &
+       qflx_gw_uncon_irrig_lyr, &
+       qflx_gw_con_irrig)
+    !
+    ! !DESCRIPTION:
+    ! Wrap the call to the external subroutine, CalcIrrigWithdrawals
+    !
+    ! The purpose of this wrapping is to allow unit tests to override the behavior
+    !
+    ! !ARGUMENTS:
+    class(irrigation_type)   , intent(in)    :: this
+    type(bounds_type)        , intent(in)    :: bounds
+    integer                  , intent(in)    :: num_soilc       ! number of points in filter_soilc
+    integer                  , intent(in)    :: filter_soilc(:) ! column filter for soil
+    type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
+
+    real(r8) , intent(in)    :: qflx_gw_demand( bounds%begc: )              ! groundwater irrigation demand (mm H2O/s)
+    real(r8) , intent(inout) :: qflx_gw_uncon_irrig_lyr( bounds%begc:, 1: ) ! unconfined aquifer groundwater irrigation withdrawal flux, separated by layer (mm H2O/s)
+    real(r8) , intent(inout) :: qflx_gw_con_irrig( bounds%begc: )           ! total confined aquifer groundwater irrigation withdrawal flux (mm H2O/s)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'WrapCalcIrrigWithdrawals'
+    !-----------------------------------------------------------------------
+
+    call CalcIrrigWithdrawals( &
+         bounds = bounds, &
+         num_soilc = num_soilc, &
+         filter_soilc = filter_soilc, &
+         soilhydrology_inst = soilhydrology_inst, &
+         soilstate_inst = soilstate_inst, &
+         qflx_gw_demand = qflx_gw_demand(bounds%begc:bounds%endc), &
+         qflx_gw_uncon_irrig_lyr = qflx_gw_uncon_irrig_lyr(bounds%begc:bounds%endc, :), &
+         qflx_gw_con_irrig = qflx_gw_con_irrig(bounds%begc:bounds%endc))
+
+  end subroutine WrapCalcIrrigWithdrawals
 
   !-----------------------------------------------------------------------
   subroutine CalcIrrigationNeeded(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       time_prev, elai, t_soisno, eff_porosity, h2osoi_liq, volr, rof_prognostic)
+       elai, t_soisno, eff_porosity, h2osoi_liq, volr, rof_prognostic)
     !
     ! !DESCRIPTION:
     ! Calculate whether and how much irrigation is needed for each column. However, this
@@ -804,9 +1377,6 @@ contains
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-
-    ! time of day (in seconds since 0Z) at start of timestep
-    integer, intent(in) :: time_prev
 
     ! number of points in filter_exposedvegp
     integer, intent(in) :: num_exposedvegp
@@ -904,7 +1474,7 @@ contains
 
        check_for_irrig_patch(p) = this%PointNeedsCheckForIrrig( &
             pft_type=patch%itype(p), elai=elai(p), &
-            time_prev=time_prev, londeg=grc%londeg(g))
+            londeg=grc%londeg(g))
        if (check_for_irrig_patch(p)) then
           c = patch%column(p)
           check_for_irrig_col(c) = .true.
@@ -1011,8 +1581,9 @@ contains
        c = patch%column(p)
 
        if (check_for_irrig_patch(p)) then
+
           ! Convert units from mm to mm/sec
-          this%irrig_rate_patch(p) = deficit_volr_limited(c) / &
+          this%sfc_irrig_rate_patch(p) = deficit_volr_limited(c) / &
                (this%dtime*this%irrig_nsteps_per_day)
           this%irrig_rate_demand_patch(p) = deficit(c) / &
                (this%dtime*this%irrig_nsteps_per_day)
@@ -1026,27 +1597,24 @@ contains
   end subroutine CalcIrrigationNeeded
 
   !-----------------------------------------------------------------------
-  function PointNeedsCheckForIrrig(this, pft_type, elai, time_prev, londeg) &
+  function PointNeedsCheckForIrrig(this, pft_type, elai, londeg) &
        result(check_for_irrig)
     !
     ! !DESCRIPTION:
     ! Determine whether a given patch needs to be checked for irrigation now.
     !
     ! !USES:
-    use pftconMod, only : pftcon
+    use clm_time_manager, only : get_local_time
+    use pftconMod       , only : pftcon
     !
     ! !ARGUMENTS:
     logical :: check_for_irrig  ! function result
     class(irrigation_type), intent(in) :: this
     integer , intent(in) :: pft_type  ! type of pft in this patch
     real(r8), intent(in) :: elai      ! one-sided leaf area index with burying by snow
-    integer , intent(in) :: time_prev ! time of day (in seconds since 0Z) at start of timestep
     real(r8), intent(in) :: londeg    ! longitude (degrees)
     !
     ! !LOCAL VARIABLES:
-    ! local time at start of time step (seconds after solar midnight)
-    integer  :: local_time
-
     ! number of seconds since the prescribed irrigation start time
     integer  :: seconds_since_irrig_start_time
 
@@ -1056,8 +1624,7 @@ contains
     if (pftcon%irrigated(pft_type) == 1._r8 .and. &
          elai > this%params%irrig_min_lai) then
        ! see if it's the right time of day to start irrigating:
-       local_time = modulo(time_prev + nint(londeg/degpsec), isecspday)
-       seconds_since_irrig_start_time = modulo(local_time - this%params%irrig_start_time, isecspday)
+       seconds_since_irrig_start_time = get_local_time( londeg, starttime=this%params%irrig_start_time, offset=-this%dtime )
        if (seconds_since_irrig_start_time < this%dtime) then
           check_for_irrig         = .true.
        else
@@ -1196,4 +1763,21 @@ contains
 
   end function RelsatToH2osoi
 
+  !-----------------------------------------------------------------------
+  function UseGroundwaterIrrigation(this)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if we're using groundwater irrigation in this run
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(irrigation_type), intent(in) :: this
+
+    logical :: UseGroundwaterIrrigation  ! function result
+    !-----------------------------------------------------------------------
+
+    UseGroundwaterIrrigation = this%params%use_groundwater_irrigation
+    
+  end function UseGroundwaterIrrigation
+  
 end module IrrigationMod

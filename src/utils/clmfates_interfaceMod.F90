@@ -38,6 +38,7 @@ module CLMFatesInterfaceMod
    use WaterStateBulkType    , only : waterstatebulk_type
    use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
    use WaterFluxBulkType     , only : waterfluxbulk_type
+   use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
    use CanopyStateType   , only : canopystate_type
    use TemperatureType   , only : temperature_type
    use EnergyFluxType    , only : energyflux_type
@@ -197,7 +198,7 @@ module CLMFatesInterfaceMod
    ! developer will at least question its usage (RGK)
    private :: hlm_bounds_to_fates_bounds
 
-   logical :: DEBUG  = .false.
+   logical :: debug  = .false.
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -225,7 +226,7 @@ contains
       ! ---------------------------------------------------------------------------------
      
       use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : numpft_ed => numpft
+      use FatesInterfaceMod, only : maxveg_ed => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -263,7 +264,7 @@ contains
 
       
       ! Parameter Routines
-      call param_derived%Init( numpft_ed )
+      call param_derived%Init( maxveg_ed )
       
 
       verbose_output = .false.
@@ -366,7 +367,7 @@ contains
       ! Check through FATES parameters to see if all have been set
       call set_fates_ctrlparms('check_allset')
 
-      if(DEBUG)then
+      if(debug)then
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
       end if
 
@@ -401,7 +402,7 @@ contains
                s = s + 1
                collist(s) = c
                this%f2hmap(nc)%hsites(c) = s
-               if(DEBUG)then
+               if(debug)then
                   write(iulog,*) 'clm_fates%init(): thread',nc,': found column',c,'with lu',l
                   write(iulog,*) 'LU type:', lun%itype(l)
                end if
@@ -409,7 +410,7 @@ contains
             
          enddo
 
-         if(DEBUG)then
+         if(debug)then
             write(iulog,*) 'clm_fates%init(): thread',nc,': allocated ',s,' sites'
          end if
 
@@ -535,7 +536,7 @@ contains
 
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, &
-         waterstatebulk_inst, waterdiagnosticbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
          frictionvel_inst )
     
       ! This wrapper is called daily from clm_driver
@@ -552,6 +553,7 @@ contains
       integer                 , intent(in)           :: nc
       type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
       type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
+      type(wateratm2lndbulk_type)   , intent(inout)        :: wateratm2lndbulk_inst
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
@@ -623,10 +625,10 @@ contains
                  temperature_inst%t_veg24_patch(p)
 
             this%fates(nc)%bc_in(s)%precip24_pa(ifp) = &
-                  atm2lnd_inst%prec24_patch(p)
+                  wateratm2lndbulk_inst%prec24_patch(p)
 
             this%fates(nc)%bc_in(s)%relhumid24_pa(ifp) = &
-                  atm2lnd_inst%rh24_patch(p)
+                  wateratm2lndbulk_inst%rh24_patch(p)
 
             this%fates(nc)%bc_in(s)%wind24_pa(ifp) = &
                   atm2lnd_inst%wind24_patch(p)
@@ -2329,7 +2331,7 @@ contains
    use FatesInterfaceMod, only : nlevsclass, nlevage
    use EDtypesMod, only : nfsc, ncwd
    use EDtypesMod, only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : numpft_ed => numpft
+   use FatesInterfaceMod, only : maxveg_ed => numpft
    use clm_varpar, only : nlevgrnd
 
    implicit none
@@ -2350,13 +2352,13 @@ contains
    fates%ground_end = nlevgrnd
    
    fates%sizepft_class_begin = 1
-   fates%sizepft_class_end = nlevsclass * numpft_ed
+   fates%sizepft_class_end = nlevsclass * maxveg_ed
    
    fates%size_class_begin = 1
    fates%size_class_end = nlevsclass
 
    fates%pft_class_begin = 1
-   fates%pft_class_end = numpft_ed
+   fates%pft_class_end = maxveg_ed
 
    fates%age_class_begin = 1
    fates%age_class_end = nlevage
@@ -2377,7 +2379,7 @@ contains
    fates%cnlf_end = nlevleaf * nclmax
    
    fates%cnlfpft_begin = 1
-   fates%cnlfpft_end = nlevleaf * nclmax * numpft_ed
+   fates%cnlfpft_end = nlevleaf * nclmax * maxveg_ed
    
  end subroutine hlm_bounds_to_fates_bounds
 

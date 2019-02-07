@@ -10,7 +10,6 @@ module SoilWaterMovementMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod         , only : shr_sys_flush
-  use clm_instMod    , only : clm_fates
  
   !
   implicit none
@@ -262,7 +261,7 @@ contains
     !------------------------------------------------------------------------------
 
     associate(                                                         &
-      wa                 =>    soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
+      wa                 =>    waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
       dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)    
       h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
       h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
@@ -2057,7 +2056,7 @@ contains
 
     associate(&
          qcharge           =>    soilhydrology_inst%qcharge_col     , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
-         wa                => soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
+         wa                => waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
          zwt               =>    soilhydrology_inst%zwt_col         , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
          sucsat            =>    soilstate_inst%sucsat_col          , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)                       
          watsat            =>    soilstate_inst%watsat_col          , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  

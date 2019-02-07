@@ -21,9 +21,10 @@ module CanopyHydrologyMod
   use AerosolMod      , only : aerosol_type
   use CanopyStateType , only : canopystate_type
   use TemperatureType , only : temperature_type
-  use WaterFluxBulkType   , only : waterfluxbulk_type
-  use WaterStateBulkType  , only : waterstatebulk_type
-  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType       , only : waterfluxbulk_type
+  use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
+  use WaterStateBulkType      , only : waterstatebulk_type
+  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use ColumnType      , only : col                
   use PatchType       , only : patch                
   !
@@ -81,7 +82,6 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'CanopyHydrology_readnl'  ! subroutine name
     !-----------------------------------------------------------------------
-
     namelist /clm_canopyhydrology_inparm/ &
          oldfflag, &
          interception_fraction, &
@@ -142,7 +142,8 @@ contains
    subroutine CanopyHydrology(bounds, &
         num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
         atm2lnd_inst, canopystate_inst, temperature_inst, &
-        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst)
+        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+        waterfluxbulk_inst, wateratm2lndbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculation of
@@ -174,9 +175,10 @@ contains
      type(canopystate_type) , intent(in)    :: canopystate_inst
      type(temperature_type) , intent(inout) :: temperature_inst
      type(aerosol_type)     , intent(inout) :: aerosol_inst
-     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
-     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+     type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
+     type(waterfluxbulk_type)       , intent(inout) :: waterfluxbulk_inst
+     type(wateratm2lndbulk_type)    , intent(inout) :: wateratm2lndbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: f                                            ! filter index
@@ -206,6 +208,7 @@ contains
      real(r8) :: qflx_through_snow(bounds%begp:bounds%endp)   ! direct snow throughfall [mm/s]
      real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp) ! snow precipitation incident on ground [mm/s]
      real(r8) :: qflx_prec_grnd_rain(bounds%begp:bounds%endp) ! rain precipitation incident on ground [mm/s]
+     real(r8) :: qflx_liq_above_canopy(bounds%begp:bounds%endp) ! liquid water input above canopy (rain plus irrigation) [mm/s]
      real(r8) :: z_avg                                        ! grid cell average snow depth
      real(r8) :: rho_avg                                      ! avg density of snow column
      real(r8) :: temp_snow_depth,temp_intsnow                 ! temporary variables
@@ -227,10 +230,10 @@ contains
           dz                   => col%dz                                  , & ! Output: [real(r8) (:,:) ]  layer depth (m)                       
           z                    => col%z                                   , & ! Output: [real(r8) (:,:) ]  layer thickness (m)                   
 
-          forc_rain            => atm2lnd_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
-          forc_snow            => atm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
+          forc_rain            => wateratm2lndbulk_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
+          forc_snow            => wateratm2lndbulk_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
           forc_t               => atm2lnd_inst%forc_t_downscaled_col      , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
-          qflx_floodg          => atm2lnd_inst%forc_flood_grc             , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
+          qflx_floodg          => wateratm2lndbulk_inst%forc_flood_grc             , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
           forc_wind            => atm2lnd_inst%forc_wind_grc              , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
           dewmx                => canopystate_inst%dewmx_patch            , & ! Input:  [real(r8) (:)   ]  Maximum allowed dew [mm]                
           frac_veg_nosno       => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
@@ -264,13 +267,14 @@ contains
           qflx_prec_intr       => waterfluxbulk_inst%qflx_prec_intr_patch     , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
           qflx_prec_grnd       => waterfluxbulk_inst%qflx_prec_grnd_patch     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_rain_grnd       => waterfluxbulk_inst%qflx_rain_grnd_patch     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
-          qflx_irrig           => waterfluxbulk_inst%qflx_irrig_patch         , & ! Input: [real(r8) (:)    ]  irrigation amount (mm/s)           
+          qflx_irrig_drip      => waterfluxbulk_inst%qflx_irrig_drip_patch      , & ! Input: [real(r8) (:)    ]  drip irrigation amount (mm/s)           
+          qflx_irrig_sprinkler => waterfluxbulk_inst%qflx_irrig_sprinkler_patch , & ! Input: [real(r8) (:)    ]  sprinkler irrigation amount (mm/s)
+
           qflx_snowindunload   => waterfluxbulk_inst%qflx_snowindunload_patch , & ! Output: [real(r8) (:)   ]  canopy snow unloading from wind [mm/s]    
           qflx_snotempunload   => waterfluxbulk_inst%qflx_snotempunload_patch   & ! Output: [real(r8) (:)   ]  canopy snow unloading from temp. [mm/s]    
           )
 
        ! Compute time step
-       
        dtime = get_step_size()
 
        ! Set status of snowveg_flag
@@ -284,7 +288,7 @@ contains
           g = patch%gridcell(p)
           l = patch%landunit(p)
           c = patch%column(p)
-
+          
           ! Canopy interception and precipitation onto ground surface
           ! Add precipitation to leaf water
 
@@ -305,12 +309,14 @@ contains
 
 
              if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
+                if (frac_veg_nosno(p) == 1 .and. (forc_rain(c) + forc_snow(c) + qflx_irrig_sprinkler(p)) > 0._r8) then
 
-                if (frac_veg_nosno(p) == 1 .and. (forc_rain(c) + forc_snow(c)) > 0._r8) then
-
+                   ! total liquid water inputs above canopy
+                   qflx_liq_above_canopy(p) = forc_rain(c)+ qflx_irrig_sprinkler(p)
+                   
                    ! determine fraction of input precipitation that is snow and rain
-                   fracsnow(p) = forc_snow(c)/(forc_snow(c) + forc_rain(c))
-                   fracrain(p) = forc_rain(c)/(forc_snow(c) + forc_rain(c))
+                   fracsnow(p) = forc_snow(c)/(forc_snow(c) + qflx_liq_above_canopy(p))
+                   fracrain(p) = qflx_liq_above_canopy(p)/(forc_snow(c) + qflx_liq_above_canopy(p))
 
                    ! The leaf water capacities for solid and liquid are different,
                    ! generally double for snow, but these are of somewhat less
@@ -336,21 +342,20 @@ contains
                       ! Direct throughfall
                       qflx_through_snow(p) = forc_snow(c) * (1._r8-fpi)
                    end if
-
                    ! Direct throughfall
-                   qflx_through_rain(p) = forc_rain(c) * (1._r8-fpi)
+                   qflx_through_rain(p) = qflx_liq_above_canopy(p) * (1._r8-fpi)
 
                    if (snowveg_on .or. snowveg_onrad) then
                       ! Intercepted precipitation [mm/s]
-                      qflx_prec_intr(p) = forc_snow(c)*fpisnow + forc_rain(c)*fpi
+                      qflx_prec_intr(p) = forc_snow(c)*fpisnow + qflx_liq_above_canopy(p)*fpi
                       ! storage of intercepted snowfall, rain, and dew
                       snocan(p) = max(0._r8, snocan(p) + dtime*forc_snow(c)*fpisnow)    
-                      liqcan(p) = max(0._r8, liqcan(p) + dtime*forc_rain(c)*fpi)
+                      liqcan(p) = max(0._r8, liqcan(p) + dtime*qflx_liq_above_canopy(p)*fpi)
                    else
                       ! Intercepted precipitation [mm/s]
-                      qflx_prec_intr(p) = (forc_snow(c) + forc_rain(c)) * fpi
+                      qflx_prec_intr(p) = (forc_snow(c) + qflx_liq_above_canopy(p)) * fpi
                    end if
-
+                   
                    ! Water storage of intercepted precipitation and dew
                    h2ocan(p) = max(0._r8, h2ocan(p) + dtime*qflx_prec_intr(p))
 
@@ -416,7 +421,7 @@ contains
           if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
              if (frac_veg_nosno(p) == 0) then
                 qflx_prec_grnd_snow(p) = forc_snow(c)
-                qflx_prec_grnd_rain(p) = forc_rain(c)
+                qflx_prec_grnd_rain(p) = forc_rain(c) + qflx_irrig_sprinkler(p)
              else
                 if (snowveg_on .or. snowveg_onrad) then
                    qflx_snowindunload(p)=0._r8 
@@ -449,8 +454,8 @@ contains
 
           ! Add irrigation water directly onto ground (bypassing canopy interception)
           ! Note that it's still possible that (some of) this irrigation water will runoff (as runoff is computed later)
-          qflx_prec_grnd_rain(p) = qflx_prec_grnd_rain(p) + qflx_irrig(p)
-
+          qflx_prec_grnd_rain(p) = qflx_prec_grnd_rain(p) + qflx_irrig_drip(p)
+             
           qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 
           qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
@@ -920,5 +925,6 @@ contains
      IsSnowvegFlagOnRad = (trim(snowveg_flag) == 'ON_RAD')
 
    end function IsSnowvegFlagOnRad
+
 
 end module CanopyHydrologyMod

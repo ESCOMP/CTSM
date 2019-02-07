@@ -18,6 +18,7 @@ module BareGroundFluxesMod
   use WaterFluxBulkType        , only : waterfluxbulk_type
   use WaterStateBulkType       , only : waterstatebulk_type
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
   use HumanIndexMod        , only : humanindex_type
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
@@ -37,7 +38,8 @@ contains
   subroutine BareGroundFluxes(bounds, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, soilstate_inst, &
        frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
-       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, photosyns_inst, humanindex_inst)
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst)
     !
     ! !DESCRIPTION:
     ! Compute sensible and latent fluxes and their derivatives with respect
@@ -52,7 +54,8 @@ contains
     use FrictionVelocityMod  , only : FrictionVelocity, MoninObukIni
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
-    use HumanIndexMod        , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+    use HumanIndexMod        , only : all_human_stress_indices, fast_human_stress_indices, &
+                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
     use FrictionVelocityMod  , only : frictionvel_parms_inst
@@ -71,6 +74,7 @@ contains
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)  , intent(inout) :: wateratm2lndbulk_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
     !
@@ -156,7 +160,7 @@ contains
          forc_t                 => atm2lnd_inst%forc_t_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin) 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
          forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
-         forc_q                 => atm2lnd_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
 
          watsat                 => soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)                      
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
@@ -392,37 +396,42 @@ contains
          end if
 
          ! Human Heat Stress
-         if ( calc_human_stress_indices )then
+         if ( all_human_stress_indices .or. fast_human_stress_indices ) then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
-            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
-                            teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
             call Wet_BulbS(tc_ref2m(p),rh_ref2m(p), wbt_ref2m(p))
             call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
             call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
-            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
-            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            if ( all_human_stress_indices ) then
+               call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
+                               teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+               call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+               call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+               call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            end if
   
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-              teq_ref2m_r(p)            = teq_ref2m(p)
-              ept_ref2m_r(p)            = ept_ref2m(p)
-              wb_ref2m_r(p)             = wb_ref2m(p)
               wbt_ref2m_r(p)            = wbt_ref2m(p)
               nws_hi_ref2m_r(p)         = nws_hi_ref2m(p)
               appar_temp_ref2m_r(p)     = appar_temp_ref2m(p)
               swbgt_ref2m_r(p)          = swbgt_ref2m(p)
               humidex_ref2m_r(p)        = humidex_ref2m(p)
-              discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
               discomf_index_ref2mS_r(p) = discomf_index_ref2mS(p)
-              thic_ref2m_r(p)           = thic_ref2m(p)
-              thip_ref2m_r(p)           = thip_ref2m(p)
-              swmp80_ref2m_r(p)         = swmp80_ref2m(p)
-              swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+              if ( all_human_stress_indices ) then
+                 teq_ref2m_r(p)            = teq_ref2m(p)
+                 ept_ref2m_r(p)            = ept_ref2m(p)
+                 wb_ref2m_r(p)             = wb_ref2m(p)
+                 discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
+                 thic_ref2m_r(p)           = thic_ref2m(p)
+                 thip_ref2m_r(p)           = thip_ref2m(p)
+                 swmp80_ref2m_r(p)         = swmp80_ref2m(p)
+                 swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+              end if
             end if
+
          end if
       end do
 

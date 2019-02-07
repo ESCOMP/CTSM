@@ -1,0 +1,10 @@
+!----------------------------------------------------------------------------------
+! Settings from output_sp_highfreq
+!----------------------------------------------------------------------------------
+
+! h5 stream (daily average, gridcell-level)
+hist_fincl6 += 'FPSN'
+
+! h7 stream (3-hourly average, gridcell-level)
+hist_fincl8 += 'FPSN'
+

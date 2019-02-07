@@ -31,6 +31,7 @@ module CNDriverMod
   use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
   use WaterFluxBulkType                   , only : waterfluxbulk_type
+  use Wateratm2lndBulkType                   , only : wateratm2lndbulk_type
   use atm2lndType                     , only : atm2lnd_type
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type 
@@ -90,8 +91,8 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
        soilbiogeochem_state_inst,                                                          &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
-       atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                                      &
-       canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
+       atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,    &
+       wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,                   &
        nutrient_competition_method, cnfire_method)
     !
@@ -104,7 +105,7 @@ contains
     ! !USES:
     use clm_varpar                        , only: nlevgrnd, nlevdecomp_full 
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-    use subgridAveMod                     , only: p2c, p2c_2d
+    use subgridAveMod                     , only: p2c
     use CropType                          , only: crop_type
     use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
     use CNMRespMod                        , only: CNMResp
@@ -170,6 +171,7 @@ contains
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
     type(waterfluxbulk_type)                    , intent(inout)    :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)                    , intent(inout)    :: wateratm2lndbulk_inst
     type(canopystate_type)                  , intent(inout)    :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
@@ -351,7 +353,7 @@ contains
        call t_startf('CNPhenology_phase1')
        call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
             filter_soilp, num_pcropp, filter_pcropp, &
-            doalb, waterdiagnosticbulk_inst, temperature_inst, atm2lnd_inst, &
+            doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
             crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
@@ -446,7 +448,7 @@ contains
     if ( .not. use_fun ) then
        call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
             filter_soilp, num_pcropp, filter_pcropp, &
-            doalb, waterdiagnosticbulk_inst, temperature_inst, atm2lnd_inst, &
+            doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
             crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
             cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
@@ -457,7 +459,7 @@ contains
     end if
     call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
          filter_soilp, num_pcropp, filter_pcropp, &
-         doalb, waterdiagnosticbulk_inst, temperature_inst, atm2lnd_inst, &
+         doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, &
          crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
@@ -746,7 +748,7 @@ contains
 
     call t_startf('CNFire')
     call cnfire_method%CNFireArea(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
+         atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
          cnveg_state_inst, cnveg_carbonstate_inst, &
          totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
          decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &

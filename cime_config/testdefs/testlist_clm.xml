@@ -78,7 +78,7 @@
       <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
     </options>
   </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_musgs" compset="I2000Clm50Sp" testmods="clm/SNICARFRC">
@@ -97,21 +97,9 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERI_Ld9" grid="f19_g16" compset="I2000Clm40SpCruGs" testmods="clm/40default">
+  <test name="ERS_D_Ln9_P480x3" grid="f19_g16" compset="I2000Clm50SpGs" testmods="clm/waccmx_offline">
     <machines>
-      <machine name="edison" compiler="intel" category="prebeta"/>
-      <machine name="hobart" compiler="intel" category="prebeta"/>
-      <machine name="hobart" compiler="pgi" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERI_Ld9" grid="f45_g37" compset="I2000Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
-      <machine name="hobart" compiler="intel" category="prebeta"/>
-      <machine name="hobart" compiler="pgi" category="prebeta"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -278,7 +266,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:60:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Sp" testmods="clm/decStart">
@@ -752,6 +740,16 @@
       <option name="comment"  >Want a multi-year global crop restart test; this was 5 years when we were doing cold start, but 3 years is probably sufficient given that we have spun-up crop initial conditions</option>
     </options>
   </test>
+  <test name="ERP_P72x2_Lm7" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">Want an ERP test covering some non-default irrigation options. Long enough so that we're likely to exercise the various groundwater irrigation code.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
   <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/reseedresetsnow">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -769,6 +767,24 @@
       <option name="comment"  >test transient PFTs (via HIST) in conjunction with changing glacier area</option>
     </options>
   </test>
+  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/collapse_pfts_78_to_16_decStart_f10">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >test transient PFTs (via HIST) with a December start, reading 78-pft data and running with 16 pfts</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCropGs" testmods="clm/collapse_nat_pfts_decStart">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >test n_dom_pfts set to 2 in a transient vegetation case with December start</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld12" grid="f10_f10_musgs" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_spunup_inc_dec_bgc">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -776,14 +792,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Tests updates of BGC variables with increasing and decreasing glacier areas</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld3" grid="f19_f19_mg16" compset="I1850Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f09_g17_gl4" compset="I1850Clm50BgcCrop" testmods="clm/clm50KitchenSink">
@@ -813,14 +821,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld3" grid="f19_f19_mg16" compset="I2000Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="ERS_D_Ld3" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -831,14 +831,6 @@
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/deepsoil_bedrock">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld3" grid="f19_f19_mg16" compset="IHistClm40SpCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -880,31 +872,7 @@
       <option name="comment"  >Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly</option>
     </options>
   </test>
-  <test name="ERS_Ld3" grid="f19_f19_mg16" compset="I1850Clm40SpGswGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="ERS_Ld3" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/rad_hrly_light_res_half">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_Ld3" grid="f19_f19_mg16" compset="I2000Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_Ld3" grid="f19_f19_mg16" compset="IHistClm40SpCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -972,13 +940,13 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/cmip6">
+  <test name="ERS_Ly3" grid="f10_f10_musgs" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
-      <option name="comment"  >Include a long ERS test of the cmip6 configuration, though at coarse resolution</option>
+      <option name="comment"  >Include a long ERS test of the cmip6 configuration, though at coarse resolution. This gives a year+ test covering the output_crop usermod, which is something we want: if this is removed, we should add a test of at least a year duration covering the output_crop usermod. This test needs to use init_interp to work, because of adding virtual Antarctica columns (currently the default out-of-the-box setting uses init_interp for this).</option>
     </options>
   </test>
   <test name="ERS_Ly3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/clm50KSinkMOut">
@@ -1012,7 +980,7 @@
       <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:40:00</option>
+      <option name="wallclock">02:30:00</option>
     </options>
   </test>
   <test name="ERS_Ly5_P144x1" grid="f10_f10_musgs" compset="IHistClm50BgcCrop" testmods="clm/cropMonthOutput">
@@ -1159,14 +1127,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1" grid="5x5_amazon" compset="I2000Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpGs" testmods="clm/default">
     <machines>
       <machine name="hobart" compiler="nag" category="aux_clm"/>
@@ -1222,27 +1182,11 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3" grid="f19_f19_mg16" compset="I1850Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="SMS_D_Ld3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="clm_short"/>
       <machine name="cheyenne" compiler="intel" category="aux_cime_baselines"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld3" grid="f19_f19_mg16" compset="I2000Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1257,14 +1201,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3" grid="f09_g16" compset="I1850Clm40CnGswGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="SMS_N2_D_Lh12" grid="f09_g16" compset="I2000Clm50SpGs" testmods="clm/pauseResume">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1274,14 +1210,6 @@
     </options>
   </test>
   <test name="DAE_N2_D_Lh12" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/DA_multidrv">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld3" grid="f19_f19_mg16" compset="IHistClm40CnCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1353,22 +1281,6 @@
       <option name="comment"  >Want nag _D test with irrigation on</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f09_g16" compset="I1850Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="f19_f19_mg16" compset="I2000Clm40SpCruGs" testmods="clm/40default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="SMS_Ld1" grid="f09_g17" compset="I2000Clm50BgcCruGs" testmods="clm/af_bias_v7">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1387,14 +1299,6 @@
     </options>
   </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I2000Clm50Vic" testmods="clm/default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="f19_f19_mg16" compset="IHistClm40CnCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1436,14 +1340,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld2" grid="T31_g37" compset="IHistClm40CnGswGs">
-    <machines>
-      <machine name="hobart" compiler="intel" category="prealpha"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="SMS_Ld5" grid="f10_f10_musgs" compset="I1850Clm45BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
@@ -1454,22 +1350,6 @@
       <option name="comment"  >include a production gnu test of Clm45</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f45_f45_mg37" compset="I2000Clm40SpCruGs" testmods="clm/40ptsRLB">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f45_f45_mg37" compset="I2000Clm40SpCruGs" testmods="clm/40ptsROA">
-    <machines>
-      <machine name="edison" compiler="intel" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Bgc" testmods="clm/decStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1478,13 +1358,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld5_D" grid="f09_g16" compset="I1850Clm50BgcCrop" testmods="clm/cmip6">
+  <test name="SMS_Ld5_D" grid="f09_g17" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Include a short debug test of the cmip6 configuration at the production resolution</option>
+      <option name="comment"  >This gives a short debug test of the cmip6 configuration as well as a test of the cmip6 configuration at the production resolution, both of which we want. This test needs to use init_interp to work, because of adding virtual Antarctica columns (currently the default out-of-the-box setting uses init_interp for this).</option>
     </options>
   </test>
   <test name="SMS_Ld5_D_P48x1" grid="f10_f10_musgs" compset="IHistClm50Bgc" testmods="clm/monthly">
@@ -1777,6 +1657,28 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="SMS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate">
+    <machines>
+      <machine name="hobart" compiler="nag" category="aux_clm">
+        <options>
+          <option name="wallclock">0:20:00</option>
+          <option name="comment">Debug test covering some non-default irrigation options.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="SMS_D_Ln1" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/tracer_consistency">
+    <machines>
+
+      <machine name="hobart" compiler="nag" category="aux_clm">
+        <options>
+          <option name="wallclock">0:10</option>
+          <option name="comment">Include a short tracer consistency check in debug mode. For now (while we are still working on getting the tracer consistency check to pass across a whole timestep) a single timestep test is sufficient. Eventually we want to expand this test and add some other, similar tests: see https://github.com/ESCOMP/ctsm/issues/495.</option>
+        </options>
+      </machine>
+
+    </machines>
+  </test>
   <test name="ERP_D_Ld3" grid="f19_g16" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
@@ -1911,5 +1813,64 @@
     <options>
       <option name="wallclock">00:40:00</option>
     </options>
+  </test>
+  <test name="SMS_Lm1" grid="f10_f10_musgs" compset="I1850Clm50BgcCropCmip6waccm" testmods="clm/basic">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >The main point of this test is simply to make sure that the CMIP6WACCMDECK moifierd works. (This configuration is basically the same as I1850Clm50BgcCropCmip6, but without cmip6_glaciers_virtual_antarctica - so we don't need huge coverage of this.) Month-long so that we actually get some history output (because this test exercises a usermods directory with only monthly and yearly output).</option>
+    </options>
+  </test>
+  <test name="SMS_Lm1_D" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/output_crop_highfreq">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">00:20:00</option>
+          <option name="comment">Want at least a month-long debug test covering the output_crop usermod, as well as a test covering the output_crop_highfreq usermod. (Note that we already have a year+ test of output_crop via a cmip6 test, so having this test just be a month, rather than a year, seems good enough.)</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="SMS_Ly1_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianGs" testmods="clm/output_bgc_highfreq">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">00:20:00</option>
+          <option name="comment">Want a year-long test covering the output_bgc and output_bgc_highfreq usermods; don't want a highfreq, year-long global test because of the output volume, so this is single-point.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="SMS_Ly1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/output_sp_highfreq">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">00:10:00</option>
+          <option name="comment">Want a year-long test covering the output_sp and output_sp_highfreq usermods; don't want a highfreq, year-long global test because of the output volume, so this is single-point.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="PFS_Ld20" grid="f09_g17" compset="I2000Clm50BgcCrop">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">Can use this test to determine if there are significant throughput changes, at least for this common and important configuration. Note that this deliberately doesn't have any testmods in order to (1) avoid doing history output (because the timing of output can be very variable, and mixing output timing with other aspects of model time can be confusing), and (2) generally keep the test replicating a production configuration as closely as possible (so, for example, we do NOT set BFBFLAG=TRUE for this test).</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="FUNITCTSM_P1x1" grid="f10_f10_musgs" compset="I2000Clm50SpGs">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">This test runs CTSM's Fortran unit tests. We're abusing the system test infrastructure to run these, so that a run of the test suite results in the unit tests being run as well. Grid and compset are irrelevant here, except that compset must be one that includes CTSM in order for CIME to find the test definition.</option>
+        </options>
+      </machine>
+    </machines>
   </test>
 </testlist>

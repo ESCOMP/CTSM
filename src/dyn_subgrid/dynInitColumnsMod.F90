@@ -14,7 +14,7 @@ module dynInitColumnsMod
   use clm_varctl           , only : iulog  
   use clm_varcon           , only : namec
   use TemperatureType      , only : temperature_type
-  use WaterStateBulkType       , only : waterstatebulk_type
+  use WaterType            , only : water_type
   use SoilHydrologyType    , only : soilhydrology_type
   use GridcellType         , only : grc
   use LandunitType         , only : lun
@@ -46,7 +46,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine initialize_new_columns(bounds, cactive_prior, &
-       temperature_inst, waterstatebulk_inst, soilhydrology_inst)
+       temperature_inst, water_inst)
     !
     ! !DESCRIPTION:
     ! Do initialization for all columns that are newly-active in this time step
@@ -57,9 +57,8 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                        ! bounds
     logical                , intent(in)    :: cactive_prior( bounds%begc: ) ! column-level active flags from prior time step
-    type(temperature_type)   , intent(inout) :: temperature_inst
-    type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
-    type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
+    type(temperature_type) , intent(inout) :: temperature_inst
+    type(water_type)       , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c          ! column index
@@ -76,7 +75,7 @@ contains
           c_template = initial_template_col_dispatcher(bounds, c, cactive_prior(bounds%begc:bounds%endc))
           if (c_template /= TEMPLATE_NONE_FOUND) then
              call copy_state(c, c_template, &
-                  temperature_inst, waterstatebulk_inst, soilhydrology_inst)
+                  temperature_inst, water_inst)
           else
              write(iulog,*) subname// ' WARNING: No template column found to initialize newly-active column'
              write(iulog,*) '-- keeping the state that was already in memory, possibly from arbitrary initialization'
@@ -212,7 +211,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine copy_state(c_new, c_template, &
-       temperature_inst, waterstatebulk_inst, soilhydrology_inst)
+       temperature_inst, water_inst)
     !
     ! !DESCRIPTION:
     ! Copy a subset of state variables from a template column (c_template) to a newly-
@@ -224,10 +223,10 @@ contains
     integer, intent(in) :: c_new      ! index of newly-active column
     integer, intent(in) :: c_template ! index of column to use as a template
     type(temperature_type)  , intent(inout) :: temperature_inst
-    type(waterstatebulk_type)   , intent(inout) :: waterstatebulk_inst
-    type(soilhydrology_type), intent(inout) :: soilhydrology_inst
+    type(water_type)        , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: i
     
     character(len=*), parameter :: subname = 'copy_state'
     !-----------------------------------------------------------------------
@@ -244,20 +243,27 @@ contains
 
     temperature_inst%t_soisno_col(c_new,1:) = temperature_inst%t_soisno_col(c_template,1:)
 
-    ! TODO(wjs, 2016-08-31) If we had more general uses of this initial template col
-    ! infrastructure (copying state between very different landunits), then we might need
-    ! to handle bedrock layers - e.g., zeroing out any water that would be added to a
-    ! bedrock layer(?). But for now we just use this initial template col infrastructure
-    ! for nat veg -> crop, for which the bedrock will be the same, so we're not dealing
-    ! with that complexity for now.
-    waterstatebulk_inst%h2osoi_liq_col(c_new,1:) = waterstatebulk_inst%h2osoi_liq_col(c_template,1:)
-    waterstatebulk_inst%h2osoi_ice_col(c_new,1:) = waterstatebulk_inst%h2osoi_ice_col(c_template,1:)
-    waterstatebulk_inst%h2osoi_vol_col(c_new,1:) = waterstatebulk_inst%h2osoi_vol_col(c_template,1:)
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
 
-    soilhydrology_inst%wa_col(c_new) = soilhydrology_inst%wa_col(c_template)
+       associate( &
+            waterstate_inst => water_inst%bulk_and_tracers(i)%waterstate_inst)
+
+       ! TODO(wjs, 2016-08-31) If we had more general uses of this initial template col
+       ! infrastructure (copying state between very different landunits), then we might need
+       ! to handle bedrock layers - e.g., zeroing out any water that would be added to a
+       ! bedrock layer(?). But for now we just use this initial template col infrastructure
+       ! for nat veg -> crop, for which the bedrock will be the same, so we're not dealing
+       ! with that complexity for now.
+       waterstate_inst%h2osoi_liq_col(c_new,1:) = waterstate_inst%h2osoi_liq_col(c_template,1:)
+       waterstate_inst%h2osoi_ice_col(c_new,1:) = waterstate_inst%h2osoi_ice_col(c_template,1:)
+       waterstate_inst%h2osoi_vol_col(c_new,1:) = waterstate_inst%h2osoi_vol_col(c_template,1:)
+
+       waterstate_inst%wa_col(c_new) = waterstate_inst%wa_col(c_template)
+
+       end associate
+
+    end do
 
   end subroutine copy_state
-
-
 
 end module dynInitColumnsMod

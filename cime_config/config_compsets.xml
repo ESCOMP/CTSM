@@ -14,7 +14,7 @@
     Where for the CAM specific compsets below the following is supported
     TIME = Time period (e.g. 2000, HIST, RCP8...)
     ATM  = [CAM40, CAM50, CAM55]
-    LND  = [CLM40, CLM45, CLM50, SLND]
+    LND  = [CLM45, CLM50, SLND]
     ICE  = [CICE, DICE, SICE]
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
@@ -94,6 +94,18 @@
     <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
+  </compset>
+
+  <!-- Primarily for testing the CMIP6DECK compset option -->
+  <compset>
+    <alias>I1850Clm50BgcCropCmip6</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing the CMIP6WACCMDECK compset option -->
+  <compset>
+    <alias>I1850Clm50BgcCropCmip6waccm</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -323,55 +335,6 @@
     <alias>IHistClm50BgcCropG</alias>
     <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
   </compset>
-
-  <!-- CLM 4.0 -->
-  <compset>
-    <alias>I2000Clm40SpCruGs</alias>
-    <lname>2000_DATM%CRUv7_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm40SpCruGs</alias>
-    <lname>1850_DATM%CRUv7_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm40SpGswGs</alias>
-    <lname>1850_DATM%GSWP3v1_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm40CnGswGs</alias>
-    <lname>1850_DATM%GSWP3v1_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>IHistClm40SpCruGs</alias>
-    <lname>HIST_DATM%CRUv7_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>IHistClm40CnGswGs</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>IHistClm40CnCruGs</alias>
-    <lname>HIST_DATM%CRUv7_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  
-
 
   <!-- changes to driver xml variables - in case of a tie in the values matches the last match is taken -->
 

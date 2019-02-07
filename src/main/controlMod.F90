@@ -47,7 +47,7 @@ module controlMod
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use seq_drydep_mod                   , only: drydep_method, DD_XLND, n_drydep
-  use clm_varctl                       
+  use clm_varctl
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -202,8 +202,9 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, soil_layerstruct, subgridflag, &
-         irrigate, run_zero_weight_urban, all_active
-
+         irrigate, run_zero_weight_urban, all_active, &
+         crop_fsat_equals_zero
+    
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
          som_adv_flux, max_depth_cryoturb
@@ -214,7 +215,7 @@ contains
 
     namelist /clm_inparm/ no_frozen_nitrif_denitrif
 
-    namelist /clm_inparm/ use_c13, use_c14
+    namelist /clm_inparm/ use_c13, use_c14, for_testing_allow_interp_non_ciso_to_ciso
 
 
     ! FATES Flags
@@ -247,8 +248,16 @@ contains
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     namelist /clm_inparm/ maxpatch_pft
+
+    ! Number of dominant pfts. Enhance ctsm performance by reducing the
+    ! number of active pfts to n_dom_pfts.
+    namelist /clm_inparm/ n_dom_pfts
+
+    ! flag for SSRE diagnostic
+    namelist /clm_inparm/ use_SSRE
 
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
@@ -347,6 +356,11 @@ contains
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (n_dom_pfts < 0) then
+          call endrun(msg=' ERROR: expecting n_dom_pfts between 0 and 14 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -587,6 +601,7 @@ contains
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_noio, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_SSRE, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! initial file variables
     call mpi_bcast (nrevsn, len(nrevsn), MPI_CHARACTER, 0, mpicom, ier)
@@ -602,6 +617,9 @@ contains
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! Crop saturated excess runoff
+    call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -609,8 +627,14 @@ contains
     call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! max number of plant functional types in naturally vegetated landunit
+    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
+    ! maxpatch_pft will eventually be removed from the perl and the namelist
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    ! Number of dominant pfts. Enhance ctsm performance by reducing the
+    ! number of active pfts to n_dom_pfts.
+    ! slevis: maxpatch_pft is MPI_LOGICAL? Doesn't matter since obsolete.
+    call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
@@ -624,6 +648,7 @@ contains
     ! isotopes
     call mpi_bcast (use_c13, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_c14, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -799,7 +824,7 @@ contains
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity
     write(iulog,*) '    use_noio = ', use_noio
-
+    write(iulog,*) '    use_SSRE = ', use_SSRE
     write(iulog,*) 'input data files:'
     write(iulog,*) '   PFT physiology and parameters file = ',trim(paramfile)
     if (fsurdat == ' ') then
@@ -812,6 +837,7 @@ contains
     else
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
+    write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &
@@ -860,6 +886,7 @@ contains
        write(iulog, *) '  use_c14                                                : ', use_c14
        write(iulog, *) '  use_c14_bombspike                                      : ', use_c14_bombspike
        write(iulog, *) '  atm_c14_filename                                       : ', atm_c14_filename
+       write(iulog, *) '  for_testing_allow_interp_non_ciso_to_ciso              : ', for_testing_allow_interp_non_ciso_to_ciso
     end if
 
     if (fsnowoptics == ' ') then
@@ -925,7 +952,6 @@ contains
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
-    write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   nsegspc              = ',nsegspc
     ! New fields
     write(iulog,*) ' perchroot (plant water stress based on unfrozen layers only) = ',perchroot

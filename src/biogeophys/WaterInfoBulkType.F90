@@ -9,6 +9,7 @@ module WaterInfoBulkType
   !
   ! !USES:
   !
+  use shr_kind_mod     , only : r8 => shr_kind_r8
   use WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
@@ -19,6 +20,8 @@ module WaterInfoBulkType
    contains
      procedure, public :: fname  ! Get a history/restart field name
      procedure, public :: lname  ! Get a history/restart long name
+     procedure, public :: is_communicated_with_coupler
+     procedure, public :: is_included_in_consistency_check
   end type water_info_bulk_type
 
   interface water_info_bulk_type
@@ -34,6 +37,7 @@ contains
     ! Create a water_info_bulk_type object
     type(water_info_bulk_type) :: this  ! function result
 
+    call this%set_metadata(ratio = 1._r8)
     ! nothing to do
   end function constructor
 
@@ -80,5 +84,20 @@ contains
     lname = trim(basename)
 
   end function lname
+
+  !-----------------------------------------------------------------------
+  pure function is_communicated_with_coupler(this) result(coupled)
+    logical :: coupled
+    class(water_info_bulk_type), intent(in) :: this
+
+    coupled = .true.
+  end function is_communicated_with_coupler
+
+  pure function is_included_in_consistency_check(this) result(included)
+    logical :: included
+    class(water_info_bulk_type), intent(in) :: this
+
+    included = .false.
+  end function is_included_in_consistency_check
 
 end module WaterInfoBulkType

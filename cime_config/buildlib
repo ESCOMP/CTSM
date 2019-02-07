@@ -3,7 +3,7 @@
 """
 build clm library
 """
-import sys, os, time, filecmp, shutil, imp
+import sys, os
 
 _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
@@ -33,78 +33,40 @@ def _main_func():
         gmake = case.get_value("GMAKE")
         mach = case.get_value("MACH")
 
-        clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
-        if "clm4_5" in clm_config_opts:
-            clm_phys = "clm4_5"
-        elif "clm5_0" in clm_config_opts:
-            clm_phys = "clm5_0"
-        elif "clm4_0" in clm_config_opts:
-            clm_phys = "clm4_0"
-        else:
-            expect(False, "CLM_CONFIG_OPTS must support either clm4_5, clm5_0, or clm4_0 physics")
+        #-------------------------------------------------------
+        # create Filepath file
+        #-------------------------------------------------------
+        filepath_file = os.path.join(bldroot,"Filepath")
+        if not os.path.isfile(filepath_file):
+            caseroot = case.get_value("CASEROOT")
+            paths = [os.path.join(caseroot,"SourceMods","src.clm"),
+                     os.path.join(lnd_root,"src","main"),
+                     os.path.join(lnd_root,"src","biogeophys"),
+                     os.path.join(lnd_root,"src","biogeochem"),
+                     os.path.join(lnd_root,"src","soilbiogeochem"),
+                     os.path.join(lnd_root,"src","dyn_subgrid"),
+                     os.path.join(lnd_root,"src","init_interp"),
+                     os.path.join(lnd_root,"src","fates"),
+                     os.path.join(lnd_root,"src","fates","main"),
+                     os.path.join(lnd_root,"src","fates","biogeophys"),
+                     os.path.join(lnd_root,"src","fates","biogeochem"),
+                     os.path.join(lnd_root,"src","fates","fire"),
+                     os.path.join(lnd_root,"src","utils"),
+                     os.path.join(lnd_root,"src","cpl")]
+            with open(filepath_file, "w") as filepath:
+                filepath.write("\n".join(paths))
+                filepath.write("\n")
 
-        if clm_phys == "clm4_0":
-            #-------------------------------------------------------
-            # create Filepath file and clm_cppdefs for clm4_0
-            #-------------------------------------------------------
-            # the call to configure here creates BOTH the Filepath file and the clm_cppdefs
-            cmd = os.path.join(os.path.join(lnd_root,"cime_config","buildcpp"))
-            logger.info("     ...calling clm buildcpp to set build time options")
-            try:
-                mod = imp.load_source("buildcpp", cmd)
-                clm_cppdefs = mod.buildcpp(case)
-            except:
-                raise
-
-            # the above call to buildcpp generates the Filepath file
-            if not os.path.isfile(os.path.join(bldroot, "Filepath")):
-                filesrc = os.path.join(caseroot, "Buildconf", "clmconf", "Filepath")
-                filedst = os.path.join(bldroot, "Filepath")
-                shutil.copy(filesrc,filedst)
-
-        else:
-            #-------------------------------------------------------
-            # create Filepath file for clm4_5 or clm5_0
-            #-------------------------------------------------------
-            filepath_file = os.path.join(bldroot,"Filepath")
-            if not os.path.isfile(filepath_file):
-                caseroot = case.get_value("CASEROOT")
-                paths = [os.path.join(caseroot,"SourceMods","src.clm"), 
-                         os.path.join(lnd_root,"src","main"),
-                         os.path.join(lnd_root,"src","biogeophys"),
-                         os.path.join(lnd_root,"src","biogeochem"),
-                         os.path.join(lnd_root,"src","soilbiogeochem"),
-                         os.path.join(lnd_root,"src","dyn_subgrid"),
-                         os.path.join(lnd_root,"src","init_interp"),
-                         os.path.join(lnd_root,"src","fates"),
-                         os.path.join(lnd_root,"src","fates","main"),
-                         os.path.join(lnd_root,"src","fates","biogeophys"),
-                         os.path.join(lnd_root,"src","fates","biogeochem"),
-                         os.path.join(lnd_root,"src","fates","fire"),
-                         os.path.join(lnd_root,"src","utils"),
-                         os.path.join(lnd_root,"src","cpl")]
-                with open(filepath_file, "w") as filepath:
-                    filepath.write("\n".join(paths))
-                    filepath.write("\n")
-                
         #-------------------------------------------------------
         # create the library in libroot
         #-------------------------------------------------------
 
-        clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
-        if clm_phys == "clm4_0":
-            complib = os.path.join(libroot,"liblnd.a")
-        else:
-            complib = os.path.join(libroot,"libclm.a")
+        complib = os.path.join(libroot,"libclm.a")
         makefile = os.path.join(casetools, "Makefile")
         macfile  = os.path.join(caseroot, "Macros.%s" % mach)
 
-        if clm_phys == "clm4_0":
-            cmd = "%s complib -j %d MODEL=clm COMPLIB=%s -f %s MACFILE=%s USER_CPPDEFS='%s'" \
-                  % (gmake, gmake_j, complib, makefile, macfile, clm_cppdefs )
-        else:
-            cmd = "%s complib -j %d MODEL=clm COMPLIB=%s -f %s MACFILE=%s " \
-                  % (gmake, gmake_j, complib, makefile, macfile )
+        cmd = "%s complib -j %d MODEL=clm COMPLIB=%s -f %s MACFILE=%s " \
+              % (gmake, gmake_j, complib, makefile, macfile )
 
         rc, out, err = run_cmd(cmd)
         logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))

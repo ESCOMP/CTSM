@@ -1,0 +1,6 @@
+
+! Settings from irrig_alternate: test some non-default irrigation options
+limit_irrigation_if_rof_enabled = .true.
+use_groundwater_irrigation = .true.
+irrig_method_default = 'sprinkler'
+hist_fincl1 += 'QIRRIG_DEMAND','QIRRIG_DRIP','QIRRIG_SPRINKLER'

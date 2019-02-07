@@ -14,7 +14,7 @@ module CNPhenologyMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
-  use clm_varpar                      , only : numpft, nlevdecomp_full
+  use clm_varpar                      , only : maxveg, nlevdecomp_full
   use clm_varctl                      , only : iulog, use_cndv
   use clm_varcon                      , only : tfrz
   use abortutils                      , only : endrun
@@ -30,6 +30,7 @@ module CNPhenologyMod
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type
   use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType                  , only : wateratm2lndbulk_type
   use ColumnType                      , only : col                
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch   
@@ -240,7 +241,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
        filter_soilp, num_pcropp, filter_pcropp, &
-       doalb, waterdiagnosticbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
+       doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
        canopystate_inst, soilstate_inst, dgvs_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
@@ -263,6 +264,7 @@ contains
     integer                        , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
     logical                        , intent(in)    :: doalb           ! true if time for sfc albedo calc
     type(waterdiagnosticbulk_type)          , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)          , intent(in)    :: wateratm2lndbulk_inst
     type(temperature_type)         , intent(inout) :: temperature_inst
     type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
     type(crop_type)                , intent(inout) :: crop_inst
@@ -300,7 +302,7 @@ contains
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNStressDecidPhenology(num_soilp, filter_soilp,   &
-            soilstate_inst, temperature_inst, atm2lnd_inst, cnveg_state_inst, &
+            soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        if (doalb .and. num_pcropp > 0 ) then
@@ -972,7 +974,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNStressDecidPhenology (num_soilp, filter_soilp , &
-       soilstate_inst, temperature_inst, atm2lnd_inst, cnveg_state_inst, &
+       soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
@@ -1000,6 +1002,7 @@ contains
     type(soilstate_type)           , intent(in)    :: soilstate_inst
     type(temperature_type)         , intent(in)    :: temperature_inst
     type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
+    type(wateratm2lndbulk_type)             , intent(in)    :: wateratm2lndbulk_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
@@ -1022,7 +1025,7 @@ contains
          ivt                                 =>    patch%itype                                                   , & ! Input:  [integer   (:)   ]  patch vegetation type                                
          dayl                                =>    grc%dayl                                                    , & ! Input:  [real(r8)  (:)   ]  daylength (s)
          
-         prec10                              => atm2lnd_inst%prec10_patch                                     , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         prec10                              => wateratm2lndbulk_inst%prec10_patch                                     , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
          leaf_long                           =>    pftcon%leaf_long                                            , & ! Input:  leaf longevity (yrs)                              
          woody                               =>    pftcon%woody                                                , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          stress_decid                        =>    pftcon%stress_decid                                         , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
@@ -2050,8 +2053,8 @@ contains
 
     allocate( inhemi(bounds%begp:bounds%endp) )
 
-    allocate( minplantjday(0:numpft,inSH)) ! minimum planting julian day
-    allocate( maxplantjday(0:numpft,inSH)) ! minimum planting julian day
+    allocate( minplantjday(0:maxveg,inSH)) ! minimum planting julian day
+    allocate( maxplantjday(0:maxveg,inSH)) ! minimum planting julian day
 
     ! Julian day for the start of the year (mid-winter)
     jdayyrstart(inNH) =   1

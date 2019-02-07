@@ -11,14 +11,14 @@ module WaterDiagnosticType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : use_vancouver, use_mexicocity, iulog
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
+  use clm_varctl     , only : use_vancouver, use_mexicocity
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
-  use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use WaterTracerUtils, only : AllocateVar1d
   !
   implicit none
   save
@@ -31,6 +31,12 @@ module WaterDiagnosticType
 
      real(r8), pointer :: snowice_col            (:)   ! col average snow ice lens
      real(r8), pointer :: snowliq_col            (:)   ! col average snow liquid water
+
+     real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
+                                                        ! in most cases, the vegetation scheme does not have a dynamic
+                                                        ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
+                                                        ! When FATES is coupled in with plant hydraulics turned on, this storage
+                                                        ! term is set to non-zero. (kg/m2 H2O)
 
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
      real(r8), pointer :: tws_grc                (:)   ! grc total water storage (mm H2O)
@@ -59,15 +65,16 @@ module WaterDiagnosticType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, info)
+  subroutine Init(this, bounds, info, tracer_vars)
 
-    class(waterdiagnostic_type)            :: this
+    class(waterdiagnostic_type), intent(inout) :: this
     type(bounds_type) , intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
 
     this%info => info
 
-    call this%InitAllocate(bounds) 
+    call this%InitAllocate(bounds, tracer_vars)
 
     call this%InitHistory(bounds)
 
@@ -76,44 +83,54 @@ contains
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tracer_vars)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type) :: this
+    class(waterdiagnostic_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
-    integer :: begc, endc
-    integer :: begl, endl
-    integer :: begg, endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
-    begl = bounds%begl; endl= bounds%endl
-    begg = bounds%begg; endg= bounds%endg
-
-    allocate(this%snowice_col            (begc:endc))                     ; this%snowice_col            (:)   = nan   
-    allocate(this%snowliq_col            (begc:endc))                     ; this%snowliq_col            (:)   = nan   
-    allocate(this%h2osoi_liqice_10cm_col (begc:endc))                     ; this%h2osoi_liqice_10cm_col (:)   = nan   
-    allocate(this%tws_grc                (begg:endg))                     ; this%tws_grc                (:)   = nan
-
-
-
-    allocate(this%qg_snow_col            (begc:endc))                     ; this%qg_snow_col            (:)   = nan   
-    allocate(this%qg_soil_col            (begc:endc))                     ; this%qg_soil_col            (:)   = nan   
-    allocate(this%qg_h2osfc_col          (begc:endc))                     ; this%qg_h2osfc_col          (:)   = nan   
-    allocate(this%qg_col                 (begc:endc))                     ; this%qg_col                 (:)   = nan   
-    allocate(this%qaf_lun                (begl:endl))                     ; this%qaf_lun                (:)   = nan
-    allocate(this%q_ref2m_patch          (begp:endp))                     ; this%q_ref2m_patch          (:)   = nan
-
+    call AllocateVar1d(var = this%snowice_col, name = 'snowice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%snowliq_col, name = 'snowliq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%total_plant_stored_h2o_col, name = 'total_plant_stored_h2o_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%h2osoi_liqice_10cm_col, name = 'h2osoi_liqice_10cm_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%tws_grc, name = 'tws_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+    call AllocateVar1d(var = this%qg_snow_col, name = 'qg_snow_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qg_soil_col, name = 'qg_soil_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qg_h2osfc_col, name = 'qg_h2osfc_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qg_col, name = 'qg_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qaf_lun, name = 'qaf_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
+    call AllocateVar1d(var = this%q_ref2m_patch, name = 'q_ref2m_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
 
   end subroutine InitAllocate
 
@@ -124,22 +141,16 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : use_lch4
-    use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type) :: this
+    class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
@@ -225,58 +236,35 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use shr_const_mod   , only : shr_const_pi
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
-    use shr_spfn_mod    , only : shr_spfn_erf
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon      , only : spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc
-    use clm_varctl      , only : fsurdat, iulog
-    use clm_varctl        , only : use_bedrock
-    use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
-    use fileutils       , only : getfil
-    use ncdio_pio       , only : file_desc_t, ncd_io
+    use ncdio_pio       , only : file_desc_t
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type)                :: this
+    class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
-    logical            :: readvar 
-    type(file_desc_t)  :: ncid        
-    character(len=256) :: locfn       
+    integer            :: l
+    real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
+    ratio = this%info%get_ratio()
+
+    ! Water Stored in plants is almost always a static entity, with the exception
+    ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
+    this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
 
 
     do l = bounds%begl, bounds%endl 
        if (lun%urbpoi(l)) then
           if (use_vancouver) then
-             this%qaf_lun(l) = 0.0111_r8
+             this%qaf_lun(l) = 0.0111_r8 * ratio
           else if (use_mexicocity) then
-             this%qaf_lun(l) = 0.00248_r8
+             this%qaf_lun(l) = 0.00248_r8 * ratio
           else
-             this%qaf_lun(l) = 1.e-4_r8 ! Arbitrary set since forc_q is not yet available
+             this%qaf_lun(l) = 1.e-4_r8 * ratio ! Arbitrary set since forc_q is not yet available
           end if
        end if
     end do
-
-
-    associate(snl => col%snl) 
-
-
-
-    end associate
 
   end subroutine InitCold
 
@@ -287,17 +275,12 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use clm_varcon       , only : nameg
+    use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterdiagnostic_type) :: this
+    class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -328,6 +311,5 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
   end subroutine Restart
-
 
 end module WaterDiagnosticType

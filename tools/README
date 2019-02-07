@@ -176,7 +176,7 @@ III. Process sequence to create input datasets needed to run CLM
     5.) Add mapping file(s) created in step (4) into XML database in CLM (optional)
 
        See notes on doing this in step (3) above. 
-       Edit ../bld/namelist_files/namelist_defaults_clm.xml to incorporate new 
+       Edit ../bld/namelist_files/namelist_defaults_ctsm.xml to incorporate new 
        mapping files.
 
        If you don't do this step, you'll need to specify the grid resolution name

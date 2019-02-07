@@ -13,7 +13,7 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec
+  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
@@ -28,7 +28,7 @@ module clm_initializeMod
   use clm_instMod       
   ! 
   implicit none
-  public   ! By default everything is public 
+  private  ! By default everything is private 
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
@@ -50,7 +50,7 @@ contains
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
     use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data 
+    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
     use controlMod       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
@@ -68,6 +68,8 @@ contains
     type(bounds_type) :: bounds_clump
     integer           :: nclumps                 ! number of clumps on this processor
     integer           :: nc                      ! clump index
+    integer           :: actual_maxsoil_patches  ! value from surface dataset
+    integer           :: actual_numcft           ! numcft from sfc dataset
     integer ,pointer  :: amask(:)                ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
@@ -87,10 +89,11 @@ contains
     endif
 
     call control_init()
-    call clm_varpar_init()
+    call ncd_pio_init()
+    call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
+    call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
-    call ncd_pio_init()
 
     if (masterproc) call control_print()
 
@@ -159,6 +162,7 @@ contains
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
+    allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
     allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
     allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
 
@@ -169,7 +173,7 @@ contains
 
     ! Read surface dataset and set up subgrid weight arrays
     
-    call surfrd_get_data(begg, endg, ldomain, fsurdat)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
     ! ------------------------------------------------------------------------
     ! Ask Fates to evaluate its own dimensioning needs.
@@ -289,6 +293,7 @@ contains
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
+    use BalanceCheckMod       , only : BalanceCheckInit
     !
     ! !ARGUMENTS    
     !
@@ -372,6 +377,9 @@ contains
     call t_stopf('init_orbd')
     
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+
+    ! Initialize Balance checking (after time-manager)
+    call BalanceCheckInit()
              
     ! History file variables
 
@@ -619,7 +627,7 @@ contains
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
-            water_inst%waterstatebulk_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
+            water_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
        call t_stopf('init_map2gc')
     end if
 
@@ -663,7 +671,7 @@ contains
     ! initialize2 because it is used to initialize other variables; now it can be
     ! deallocated
 
-    deallocate(topo_glc_mec, fert_cft)
+    deallocate(topo_glc_mec, fert_cft, irrig_method)
 
     !------------------------------------------------------------       
     ! Write log output for end of initialization
@@ -687,6 +695,15 @@ contains
     call t_stopf('init_wlog')
 
     call t_stopf('clm_init2')
+
+    if (water_inst%DoConsistencyCheck()) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
+       end do
+       !$OMP END PARALLEL DO
+    end if
 
   end subroutine initialize2
 

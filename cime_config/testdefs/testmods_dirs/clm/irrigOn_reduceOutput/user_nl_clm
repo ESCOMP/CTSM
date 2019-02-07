@@ -1,5 +1,4 @@
-hist_fincl1 += 'QIRRIG','QIRRIG_DEMAND'
-hist_fincl2 += 'QIRRIG'
+hist_fincl1 += 'QIRRIG_FROM_SURFACE','QIRRIG_FROM_GW_UNCONFINED','QIRRIG_FROM_GW_CONFINED','QIRRIG_DRIP','QIRRIG_SPRINKLER','QIRRIG_DEMAND'
 hist_dov2xy = .true.,.false.
 hist_nhtfrq = 0, -8760
 hist_mfilt  = 1,1
