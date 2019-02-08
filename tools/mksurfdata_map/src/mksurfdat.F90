@@ -982,11 +982,9 @@ program mksurfdat
        ! Write to netcdf file is done inside mklai routine
        ! ----------------------------------------------------------------------
 
-       if ( numpft == numstdpft )then
-          write(6,*)'calling mklai'
-          call mklai(ldomain, mapfname=map_flai, datfname=mksrf_flai, &
+       write(6,*)'calling mklai'
+       call mklai(ldomain, mapfname=map_flai, datfname=mksrf_flai, &
                ndiag=ndiag, ncido=ncid )
-       end if
 
        ! Close surface dataset
 

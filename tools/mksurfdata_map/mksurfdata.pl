@@ -339,8 +339,6 @@ sub write_namelist_file {
  map_fpeat        = '$map->{'peat'}'
  map_fsoildepth   = '$map->{'soildepth'}'
  map_fabm         = '$map->{'abm'}'
- map_fvic         = '$map->{'vic'}'
- map_fch4         = '$map->{'ch4'}'
  mksrf_fsoitex    = '$datfil->{'tex'}'
  mksrf_forganic   = '$datfil->{'org'}'
  mksrf_flakwat    = '$datfil->{'lak'}'
@@ -354,8 +352,6 @@ sub write_namelist_file {
  mksrf_fpeat      = '$datfil->{'peat'}'
  mksrf_fsoildepth = '$datfil->{'soildepth'}'
  mksrf_fabm       = '$datfil->{'abm'}'
- mksrf_fvic       = '$datfil->{'vic'}'
- mksrf_fch4       = '$datfil->{'ch4'}'
  outnc_double   = $double
  all_urban      = $all_urb
  no_inlandwet   = $no_inlandwet
@@ -364,6 +360,8 @@ sub write_namelist_file {
 EOF
   if ( $opts{'vic'} ) {
     print $fh <<"EOF";
+ map_fvic         = '$map->{'vic'}'
+ mksrf_fvic       = '$datfil->{'vic'}'
  outnc_vic = .true.
 EOF
   }
@@ -458,7 +456,7 @@ EOF
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
         "ssp_rcp=s"    => \$opts{'ssp_rcp'},
-        "vic"          => \$opts{'vic'},
+        "vic!"         => \$opts{'vic'},
         "rundir=s"     => \$opts{'rundir'},
         "soil_col=i"   => \$opts{'soil_col'},
         "soil_fmx=f"   => \$opts{'soil_fmx'},
@@ -628,7 +626,10 @@ EOF
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       my @typlist = ( "lak", "veg", "voc", "tex", "col", "hrv",
                         "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
-		        "gdp", "peat","soildepth","abm", "vic", "ch4");
+		        "gdp", "peat","soildepth","abm");
+      if ( $opts{'vic'} ) {
+         push( @typlist, "vic" );
+      }
       if ( ! $opts{'fast_maps'} ) {
          push( @typlist, "topostats" );
       }
