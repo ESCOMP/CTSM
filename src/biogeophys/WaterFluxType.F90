@@ -841,18 +841,6 @@ contains
 
     ! needed for SNICAR
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('qflx_snofrz_lyr'), &
-         xtype=ncd_double,  &
-         dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
-         long_name=this%info%lname('snow layer ice freezing rate'), &
-         units='kg m-2 s-1', &
-         interpinic_flag='interp', readvar=readvar, data=this%qflx_snofrz_lyr_col)
-    if (flag == 'read' .and. .not. readvar) then
-       ! initial run, not restart: initialize qflx_snofrz_lyr to zero
-       this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:0) = 0._r8
-    endif
-
-    call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('qflx_snow_drain')//':'//this%info%fname('qflx_snow_melt'), &
          xtype=ncd_double,  &
          dim1name='column', &

@@ -737,8 +737,6 @@ contains
 
     call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
-    call this%wateratm2lndbulk_inst%restartBulk (bounds, ncid, flag=flag)
-
     do i = this%tracers_beg, this%tracers_end
 
        call this%bulk_and_tracers(i)%waterflux_inst%Restart(bounds, ncid, flag=flag)
@@ -747,8 +745,6 @@ contains
             watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag)
-
-       call this%bulk_and_tracers(i)%wateratm2lnd_inst%Restart(bounds, ncid, flag=flag)
 
     end do
 
