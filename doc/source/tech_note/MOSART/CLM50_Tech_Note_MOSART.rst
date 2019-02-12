@@ -43,13 +43,14 @@ it into the main channel; 3) main channel routing: the main channel receives wat
 from the sub-network channel and/or inflow, if any, from the upstream spatial units,
 and discharges the water to its downstream spatial unit or the ocean.  
 
+.. Figure 14.1. MOSART conceptual diagram
+
 .. _Figure MOSART conceptual diagram:
 
 .. figure:: mosart_diagram.png
     :width: 800px
     :height: 400px
- 
- 
+
 MOSART only routes positive runoff, although negative runoff can be generated
 occasionally by the land model (e.g., :math:`q_{gwl}`). Negative runoff in any
 runoff component including  :math:`q_{sur}`,  :math:`q_{sub}`,  :math:`q_{gwl}` 
