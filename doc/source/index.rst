@@ -6,7 +6,7 @@
 Welcome to the CLM documentation
 ==================================
 
-This document has two major sections. NOTE THAT THE USER'S GUIDE CURRENTLY PROVIDES INSTRUCTIONS FOR CLM4.5 AND IS A WORK IN PROGRESS.
+This document has two major sections.
 
 .. toctree::
    :maxdepth: 2
