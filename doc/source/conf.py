@@ -172,3 +172,4 @@ numfig_format = {'figure': 'Figure %s',
                  'code-block': 'Code %s',
                  'section': '%s',
                 }
+numfig_secnum_depth = 2
