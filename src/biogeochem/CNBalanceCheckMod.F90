@@ -103,6 +103,7 @@ contains
     
     do fc = 1,num_soilc
        c = filter_soilc(fc)
+!       if(c .eq. 12285)print*,'begcb',totcolc(c)
        col_begcb(c) = totcolc(c)
        col_begnb(c) = totcoln(c)
     end do
@@ -187,11 +188,11 @@ contains
 
          ! check for significant errors
          if(use_matrixcn .or. use_soil_matrixcn)then
-            if (abs(col_errcb(c)) > 1.e-2_r8) then
+            if (abs(col_errcb(c)) > 1.e-1_r8) then
                err_found = .true.
                err_index = c
             end if
-            if (abs(col_errcb(c)) > 1.e-3_r8) then
+            if (abs(col_errcb(c)) > 1.e-2_r8) then
                write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
             end if
          else
@@ -203,17 +204,19 @@ contains
                write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
             end if
          end if
-!         print*,'column cbalance error    = ', col_errcb(c), c
-!         print*,'delta store              = ',col_endcb(c)-col_begcb(c)
-!         print*,'--- Inputs ---'
-!         print*,'gpp                      = ',gpp(c)*dt
-!         print*,'--- Outputs ---'
-!         print*,'er                       = ',er(c)*dt
-!         print*,'col_fire_closs           = ',col_fire_closs(c)*dt
-!         print*,'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
-!         print*,'wood_harvestc            = ',wood_harvestc(c)*dt
-!         print*,'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
-!         print*,'-1*som_c_leached         = ',som_c_leached(c)*dt
+!         if(c .eq. 7066)then
+!            print*,'column cbalance error0   = ', col_errcb(c), c
+!            print*,'delta store              = ',col_endcb(c)-col_begcb(c)
+!            print*,'--- Inputs ---'
+!            print*,'gpp                      = ',gpp(c)*dt
+!            print*,'--- Outputs ---'
+!            print*,'er                       = ',er(c)*dt
+!            print*,'col_fire_closs           = ',col_fire_closs(c)*dt
+!            print*,'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
+!            print*,'wood_harvestc            = ',wood_harvestc(c)*dt
+!            print*,'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
+!            print*,'-1*som_c_leached         = ',som_c_leached(c)*dt
+!         end if
       end do ! end of columns loop
 
       if (err_found) then
@@ -337,14 +340,26 @@ contains
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
-
+        
+!        if(c .eq. 1411 .or. c .eq. 2677)then
+!           write(*,*)'column nbalance error    = ',col_errnb(c), c
+!           write(*,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+!           write(*,*)'begnb                    = ',col_begnb(c)
+!           write(*,*)'endnb                    = ',col_endnb(c)
+!           write(*,*)'delta store              = ',col_endnb(c)-col_begnb(c)
+!           write(*,*)'input mass               = ',col_ninputs(c)*dt
+!           write(*,*)'output mass              = ',col_noutputs(c)*dt
+!           write(*,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
+!           write(*,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+!           write(*,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+!        end if
          
         if(use_matrixcn .or. use_soil_matrixcn)then 
-           if (abs(col_errnb(c)) > 1.e-2_r8) then   !1e-3_r8
+           if (abs(col_errnb(c)) > 1.e-1_r8) then   !1e-3_r8
               err_found = .true.
               err_index = c
            end if
-           if (abs(col_errnb(c)) > 1e-3_r8) then
+           if (abs(col_errnb(c)) > 1e-2_r8) then
               write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
               write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
            end if
