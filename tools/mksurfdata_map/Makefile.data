@@ -114,7 +114,7 @@ DEBUG:
 standard : $(STANDARD)
 
 global-present : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res $(STANDARD_RES) $(BACKGROUND)
+	$(MKSURFDATA) -no-crop -vic -glc_nec 10 -y 2000 -res $(STANDARD_RES) $(BACKGROUND)
 
 global-present-f05 : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850,2000 -res 0.47x0.63 $(BACKGROUND)
