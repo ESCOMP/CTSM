@@ -983,6 +983,7 @@ contains
 !           if(p .eq. 1 .or. p .eq. 15)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
 !           if(p .eq. 5228)print*,'after fire m_leaf_stor',m_leafc_storage_to_litter_fire(p),m_leafc_storage_to_fire(p)
 !           if(p .eq. 5228)print*,'after fire m_deadcroot',m_deadcrootc_to_litter_fire(p),m_deadcrootc_to_fire(p)
+           if(p .eq. 10580)print*,'froot to litter fire',matrix_fitransfer(p,ifroot_to_iout_fic)
         end if	 			 
 
         if (use_cndv) then

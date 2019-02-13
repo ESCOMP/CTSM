@@ -10,7 +10,7 @@ module clm_driver
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : wrtdia, iulog, use_fates
-  use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
+  use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14, use_matrixcn
   use clm_varctl             , only : use_crop, ndep_from_cpl
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
@@ -160,7 +160,6 @@ contains
     !-----------------------------------------------------------------------
 
     ! Determine processor bounds and clumps for this processor
-!    print*,'begin of clmdriver'
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
@@ -291,7 +290,7 @@ contains
           call get_clump_bounds(nc, bounds_clump)
 
           call t_startf('cninit')
-
+           
           call bgc_vegetation_inst%InitEachTimeStep(bounds_clump, &
                filter(nc)%num_soilc, filter(nc)%soilc)
 
@@ -345,10 +344,10 @@ contains
             soilhydrology_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst)
 
+
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
-       !print*,'before init column balance'
        if (use_cn) then
           call bgc_vegetation_inst%InitColumnBalance(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
@@ -399,15 +398,15 @@ contains
 
     ! Get time as of beginning of time step
     call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
-!    print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
 
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
+!       if(bounds_clump%begc .le. 7066 .and. bounds_clump%endc .ge. 7066)print*,'prev_date,yr,mon,day,sec,7856',yr_prev, mon_prev, day_prev, sec_prev,bounds_clump%begc,bounds_clump%endc
+!       if(use_matrixcn .and. bounds_clump%begc .le. 2748 .and. bounds_clump%endc .ge. 2748)print*,'prev_date,yr,mon,day,sec,7697',yr_prev, mon_prev, day_prev, sec_prev,bounds_clump%begc,bounds_clump%endc
 
        call t_startf('drvinit')
 
-!       if(bounds_clump%begc .le. 114236 .and. bounds_clump%endc .ge. 114236)print*,'prev_date,yr,mon,day,sec',yr_prev, mon_prev, day_prev, sec_prev
        call UpdateDaylength(bounds_clump, declin=declin, obliquity=obliqr)
 
        ! Initialze variables needed for new driver time step 
@@ -558,7 +557,6 @@ contains
             bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
        croot_carbon = bgc_vegetation_inst%get_croot_carbon_patch( &
             bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
-
        call CanopyFluxes(bounds_clump,                                                      &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
             clm_fates,nc,                                                                   &
@@ -839,7 +837,6 @@ contains
              ! - CNDV defined: prognostic biogeography; else prescribed
        ! - crop model:  crop algorithms called from within CNDriver
              
-       !print*,'before EcosystemDynamicsPreDrainage'
        if (use_cn) then 
           call t_startf('ecosysdyn')
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
@@ -900,9 +897,7 @@ contains
 
        call t_stopf('hydro2_drainage')     
 
-       !print*,'before EcosystemDynamicsPostDrainage'
        if (use_cn) then
-
           call t_startf('EcosysDynPostDrainage')     
           call bgc_vegetation_inst%EcosystemDynamicsPostDrainage(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
@@ -920,7 +915,6 @@ contains
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
           call t_stopf('EcosysDynPostDrainage')     
        end if
-   
        if ( use_fates  .and. is_beg_curr_day() ) then ! run fates at the start of each day
           
           if ( masterproc ) then
@@ -1073,7 +1067,6 @@ contains
           end if
 
        end if
-       !print*,'end loop'
     end do
     !$OMP END PARALLEL DO
 
@@ -1098,9 +1091,11 @@ contains
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
          lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
+         
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')
 
+      
     ! ============================================================================
     ! Determine gridcell averaged properties to send to glc
     ! ============================================================================
@@ -1197,6 +1192,7 @@ contains
     ! History/Restart output
     ! ============================================================================
 
+    !print*,'before histrest'
     if (.not. use_noio) then
 
        call t_startf('clm_drv_io')
@@ -1216,6 +1212,7 @@ contains
           call bgc_vegetation_inst%WriteHistory(bounds_proc)
        end if
 
+
        ! Write restart/initial files if appropriate
        if (rstwr) then
           call t_startf('clm_drv_io_wrest')
@@ -1228,7 +1225,6 @@ contains
        call t_stopf('clm_drv_io')
 
     end if
-
   end subroutine clm_drv
 
   !-----------------------------------------------------------------------

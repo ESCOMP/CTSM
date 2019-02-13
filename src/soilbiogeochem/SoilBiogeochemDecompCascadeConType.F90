@@ -208,12 +208,12 @@ contains
      num_soilc = 1
      filter_c(1:1) = 1
      call AK%InitSM(ndecomp_pools*nlevdecomp,1,1)
-     call AK%SetValueA(num_soilc,filter_c,SM,decomp_cascade_con%A_i,decomp_cascade_con%A_j,decomp_cascade_con%Ntrans_setup,init_readyAK)
+     call AK%SetValueA(1,1,num_soilc,filter_c,SM,decomp_cascade_con%A_i,decomp_cascade_con%A_j,decomp_cascade_con%Ntrans_setup,init_readyAK)
      allocate(decomp_cascade_con%list_AK_AKVfire(1:AK%NE))
      allocate(decomp_cascade_con%list_AK_AKV    (1:AK%NE))
 
      call AV%InitSM(ndecomp_pools*nlevdecomp,1,1)
-     call AV%SetValueSM(num_soilc,filter_c,TRI,decomp_cascade_con%tri_i,decomp_cascade_con%tri_j,decomp_cascade_con%Ntri_setup)
+     call AV%SetValueSM(1,1,num_soilc,filter_c,TRI,decomp_cascade_con%tri_i,decomp_cascade_con%tri_j,decomp_cascade_con%Ntri_setup)
      allocate(decomp_cascade_con%list_V_AKVfire (1:AV%NE))
      allocate(decomp_cascade_con%list_V_AKV     (1:AV%NE))
      

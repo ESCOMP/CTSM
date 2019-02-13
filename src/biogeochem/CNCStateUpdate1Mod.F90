@@ -76,7 +76,6 @@ contains
 !             if (.not. use_soil_matrixcn) then
                 cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                   cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
-!                if(c .eq. 34208 .and. j .eq. 1)print*,'dwt_froot_to_imet',cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt,cs_soil%decomp_cpools_vr_col(c,j,i_met_lit)
                 cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
                   cf_veg%dwt_frootc_to_litr_cel_c_col(c,j) * dt
                 cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
@@ -84,10 +83,6 @@ contains
                 cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
                   ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
 !             else
-                !print*,'matrix_input',c,j,i_met_lit
-                !print*,'cf_soil%matrix_input_col',cf_soil%matrix_input_col(c,j,i_met_lit)
-                !print*,'cf_veg%dwt_frootc_to_litr_met_c_col(c,j)',cf_veg%dwt_frootc_to_litr_met_c_col(c,j)
-!                if(j .eq. 1)print*,'before matrix input_DynPatch', cf_soil%matrix_input_col(c,j,i_met_lit),cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
 !                cf_soil%matrix_input_col(c,j,i_met_lit) = cf_soil%matrix_input_col(c,j,i_met_lit) + &
 !                     cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
 !                cf_soil%matrix_input_col(c,j,i_cel_lit) = cf_soil%matrix_input_col(c,j,i_cel_lit) + &
@@ -96,7 +91,6 @@ contains
 !                     cf_veg%dwt_frootc_to_litr_lig_c_col(c,j) * dt
 !                cf_soil%matrix_input_col(c,j,i_cwd)     = cf_soil%matrix_input_col(c,j,i_cwd) + &
 !                    (cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
-!                if(j .eq. 1)print*,'after matrix input_DynPatch', cf_soil%matrix_input_col(c,j,i_met_lit)
 !             end if !soil_matrix
           end do
        end do
@@ -213,25 +207,21 @@ contains
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-!            if(j .eq. 1)print*,'before phenology c to lit,source,',c,cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit),cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
             if (.not. use_soil_matrixcn) then
             ! phenology and dynamic land cover fluxes
                cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = &
                     cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
-!                if(c .eq. 34208 .and. j .eq. 1)print*,'soursink,phen_to_imet',cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
                cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = &
                     cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
                cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = &
                     cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
                
 
-!            if(j .eq. 1)print*,'after phenology c to lit,source,',cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit)
             ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
             ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
             ! time step, but to be safe, I'm explicitly setting it to zero here.
                cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
             else
-!               if(j .eq. 1)print*,'matrix_input_col(c,j,i_met_lit)',c,j,cf_soil%matrix_input_col(c,j,i_met_lit),cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
                cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
                     cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
                cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
@@ -240,7 +230,6 @@ contains
                     cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
 !               cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp) = &
 !                    cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp)     + 0._r8
-!               if(j .eq. 1)print*,'after phenology(c,j,i_met_lit)',cf_soil%matrix_input_col(c,j,i_met_lit)
             end if
          end do
       end do
@@ -263,14 +252,12 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-!               if(c .eq. 34208 .and. j .eq. 1 .and. cascade_donor_pool(k) .eq. i_met_lit)print*,'before donor c transfer,source,',c,cascade_receiver_pool(k),cf_soil%decomp_cpools_sourcesink_col(c,1,i_met_lit)
                if (.not. use_soil_matrixcn) then
                   cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
                     - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
 !                else
 !                  cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = 0.0_r8
-!                   if(c .eq. 34208 .and. j .eq. 1 .and. cascade_donor_pool(k) .eq. i_met_lit)print*,'after donor c transfer,source,',c,cascade_receiver_pool(k),cf_soil%decomp_cpools_sourcesink_col(c,1,i_met_lit)
                end if !use soil_matrix 
            end do
          end do
@@ -286,7 +273,6 @@ contains
                        + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
 !                 else 
 !                    cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = 0.0_r8
-!                     if(c .eq. 34208 .and. j .eq. 1)print*,'after receiver c transfer,source,',cf_soil%decomp_cpools_sourcesink_col(c,1,i_met_lit)
                   end if !use soil_matrix
                end do
             end do
@@ -298,16 +284,9 @@ contains
          p = filter_soilp(fp)
          c = patch%column(p)      
          ! phenology: transfer growth fluxes
-        if(abs(grc%londeg(patch%gridcell(p)) - 355._r8) .lt. 1 .and. abs(grc%latdeg(patch%gridcell(p)) - 6._r8) .lt. 1)then
-            !print*,'in Phenology',p,cs_veg%deadcrootc_patch(p),patch%itype(p)
-        end if
-!        if(p .eq. 8)then
-!           print*,'in Phenology',p,cs_veg%leafc_patch(p),cf_veg%leafc_xfer_to_leafc_patch(p)*dt, cf_veg%leafc_to_litter_patch(p)*dt
-!        end if
         if(.not. use_matrixcn)then
            
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)       + cf_veg%leafc_xfer_to_leafc_patch(p)*dt
-!           if(p .eq. 49261)print*,'leafc_xfer_to_leafc_patch',cf_veg%leafc_xfer_to_leafc_patch(p),cs_veg%leafc_patch(p)
            cs_veg%leafc_xfer_patch(p)      = cs_veg%leafc_xfer_patch(p)  - cf_veg%leafc_xfer_to_leafc_patch(p)*dt
            cs_veg%frootc_patch(p)          = cs_veg%frootc_patch(p)      + cf_veg%frootc_xfer_to_frootc_patch(p)*dt
            cs_veg%frootc_xfer_patch(p)     = cs_veg%frootc_xfer_patch(p) - cf_veg%frootc_xfer_to_frootc_patch(p)*dt
@@ -326,6 +305,9 @@ contains
               cs_veg%livestemc_patch(p)       = cs_veg%livestemc_patch(p)      + cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
               cs_veg%livestemc_xfer_patch(p)  = cs_veg%livestemc_xfer_patch(p) - cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
               cs_veg%grainc_patch(p)          = cs_veg%grainc_patch(p)         + cf_veg%grainc_xfer_to_grainc_patch(p)*dt
+!               if (p .eq. 10580)print*,'grainc',cs_veg%grainc_patch(p), cf_veg%grainc_xfer_to_grainc_patch(p)*dt
+!              if(p .eq. 24)print*,'xfer to grain',cs_veg%grainc_patch(p),cf_veg%grainc_xfer_to_grainc_patch(p)*dt
+!              if(p .eq. 24)print*,'xfer to leaf',cs_veg%leafc_patch(p),cf_veg%leafc_xfer_to_leafc_patch(p)*dt
               cs_veg%grainc_xfer_patch(p)     = cs_veg%grainc_xfer_patch(p)    - cf_veg%grainc_xfer_to_grainc_patch(p)*dt
            end if
 
@@ -333,7 +315,6 @@ contains
            cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) - cf_veg%leafc_to_litter_patch(p)*dt
            cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) - cf_veg%frootc_to_litter_patch(p)*dt
          
-!           if(p .eq. 49261)print*,'leafc_to_litter_patch',cf_veg%leafc_to_litter_patch(p),cs_veg%leafc_patch(p)
 
          ! livewood turnover fluxes
            if (woody(ivt(p)) == 1._r8) then
@@ -346,9 +327,12 @@ contains
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
               cs_veg%grainc_patch(p)     = cs_veg%grainc_patch(p) &
                    - (cf_veg%grainc_to_food_patch(p) + cf_veg%grainc_to_seed_patch(p))*dt
+!              if(p .eq. 24)print*,'grain to food and seed',cs_veg%grainc_patch(p),(cf_veg%grainc_to_food_patch(p) + cf_veg%grainc_to_seed_patch(p))*dt
+!              if(p .eq. 24)print*,'grain to litter',cs_veg%leafc_patch(p),(cf_veg%leafc_to_litter_patch(p) )*dt
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt &
                    + cf_veg%grainc_to_seed_patch(p) * dt
+!              if (p .eq. 10580)print*,'grainc',cs_veg%grainc_patch(p), cf_veg%grainc_to_food_patch(p)* dt,cf_veg%grainc_to_seed_patch(p)*dt,cs_veg%cropseedc_deficit_patch(p)
            end if
         else
            if (ivt(p) >= npcropmin) then
@@ -357,9 +341,6 @@ contains
                    + cf_veg%grainc_to_seed_patch(p) * dt
            end if
         end if !not use_matrixcn
-!        if(p .eq. 8)then
-!           print*,'after phenology',cs_veg%leafc_patch(p) 
-!        end if
          check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
          cpool_delta  =  cs_veg%cpool_patch(p) 
          
@@ -393,7 +374,6 @@ contains
          end if
 
          ! allocation fluxes
-!        if(p .eq. 8)print*,'cpool to storage',cs_veg%leafc_storage_patch(p),cf_veg%cpool_to_leafc_storage_patch(p)*dt
          if (carbon_resp_opt == 1) then
             cf_veg%cpool_to_leafc_patch(p) = cf_veg%cpool_to_leafc_patch(p) - cf_veg%cpool_to_leafc_resp_patch(p)
             cf_veg%cpool_to_leafc_storage_patch(p) = cf_veg%cpool_to_leafc_storage_patch(p) - &
@@ -405,7 +385,6 @@ contains
         if(.not. use_matrixcn) then
            cs_veg%cpool_patch(p)           = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_patch(p)*dt
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)          + cf_veg%cpool_to_leafc_patch(p)*dt
-!           if(p .eq. 49261)print*,'cpool_to_leafc',cf_veg%cpool_to_leafc_patch(p),cs_veg%leafc_patch(p)
            cs_veg%cpool_patch(p)           = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_storage_patch(p)*dt
            cs_veg%leafc_storage_patch(p)   = cs_veg%leafc_storage_patch(p)  + cf_veg%cpool_to_leafc_storage_patch(p)*dt
            cs_veg%cpool_patch(p)           = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_patch(p)*dt
@@ -427,9 +406,6 @@ contains
                cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
                  cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
-!            if(p .eq. 8)then
-!               print*,'before Cinput to deadcroot',cs_veg%deadcrootc_patch(p),cf_veg%cpool_to_deadcrootc_patch(p)*dt
-!            end if
             if(.not. use_matrixcn)then
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt
             cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
@@ -471,6 +447,9 @@ contains
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_patch(p)*dt
                cs_veg%grainc_patch(p)             = cs_veg%grainc_patch(p)             + cf_veg%cpool_to_grainc_patch(p)*dt
+!              if (p .eq. 10580)print*,'grainc',cs_veg%grainc_patch(p),cf_veg%cpool_to_grainc_patch(p)*dt
+!               if(p .eq. 24)print*,'Cinput to grain',cs_veg%grainc_patch(p),cf_veg%cpool_to_grainc_patch(p)*dt
+!               if(p .eq. 24)print*,'Cinput to leaf',cs_veg%leafc_patch(p),cf_veg%cpool_to_leafc_patch(p)*dt
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_storage_patch(p)*dt
                cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)     + cf_veg%cpool_to_grainc_storage_patch(p)*dt
             else
@@ -534,7 +513,6 @@ contains
          cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) + cf_veg%cpool_to_gresp_storage_patch(p)*dt
 
          ! move storage pools into transfer pools
-!        if(p .eq. 8)print*,'leafc_storage to transfer',cs_veg%leafc_storage_patch(p),cf_veg%leafc_storage_to_xfer_patch(p)*dt
         if(.not. use_matrixcn)then
           cs_veg%leafc_storage_patch(p)  = cs_veg%leafc_storage_patch(p)  - cf_veg%leafc_storage_to_xfer_patch(p)*dt
           cs_veg%leafc_xfer_patch(p)     = cs_veg%leafc_xfer_patch(p)     + cf_veg%leafc_storage_to_xfer_patch(p)*dt
@@ -579,8 +557,6 @@ contains
                ! isolate, caused C12/C13 ratios to occasionally go out of
                ! bounds. Zeroing out these small pools and putting them into the flux to the
                ! atmosphere solved many of the crop isotope problems
-!               if(p .eq. 16)print*,'xsmrpool before update1',cf_veg%xsmrpool_to_atm_patch(p),cs_veg%xsmrpool_patch(p)/dt, cs_veg%cpool_patch(p)/dt,cs_veg%frootc_patch(p)/dt,cf_veg%livestem_xsmr_patch(p)*dt,cf_veg%grain_xsmr_patch(p)*dt
-!               if(p .eq. 49296)print*,'xsmrpool before update1',cf_veg%xsmrpool_to_atm_patch(p),cs_veg%xsmrpool_patch(p)/dt,cs_veg%cpool_patch(p)/dt,cs_veg%frootc_patch(p)/dt
                cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
                cs_veg%xsmrpool_patch(p)        = 0._r8
                cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
@@ -589,9 +565,11 @@ contains
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
                   cs_veg%frootc_patch(p)          = 0._r8
                else
-                  cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt
+                 if(cs_veg%frootc_patch(p) .ne. 0)then
+                    cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt + cf_veg%cpool_to_frootc_patch(p) / cs_veg%frootc_patch(p)
+                 end if
+!                  cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt
                end if
-!               if(p .eq. 49296)print*,'xsmrpool after update1',cf_veg%xsmrpool_to_atm_patch(p)
             end if
          end if
 

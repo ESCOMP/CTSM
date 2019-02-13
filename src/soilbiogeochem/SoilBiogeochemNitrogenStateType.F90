@@ -457,10 +457,8 @@ contains
        l = col%landunit(c)
 !matrix-spinup
        if(use_soil_matrixcn)then
-!          print*,'init soil cold',c
           this%in_nacc(c,:) = 0._r8
 !          this%tran_nacc(c,:,:) = 0._r8
-!          print*,'init soil cold',c,this%tran_nacc(1,120,120)
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -479,7 +477,7 @@ contains
                    this%vert_up_tran_nacc(c,j,k) = 0._r8
                    this%vert_down_tran_nacc(c,j,k) = 0._r8
                    this%exit_nacc(c,j,k) = 0._r8
-                   this%decomp0_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k)
+                   this%decomp0_npools_vr_col(c,j,k) = amax1(this%decomp_npools_vr_col(c,j,k),1.e-30_r8)
                 end if
             end do
             if(use_soil_matrixcn)then
@@ -585,11 +583,12 @@ contains
 
     !
     ! !LOCAL VARIABLES:
-    integer            :: i,j,k,l,c
+    integer            :: i,j,k,l,c,fc
     logical            :: readvar
     integer            :: idata
     logical            :: exit_spinup = .false.
     logical            :: enter_spinup = .false.
+    logical            :: found = .false.
     real(r8)           :: m          ! multiplier for the exit_spinup code
     real(r8), pointer  :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
     real(r8), pointer  :: ptr1d(:)   ! temp. pointers for slicing larger arrays
@@ -600,6 +599,7 @@ contains
     integer            :: restart_file_spinup_state 
     ! flags for comparing the model and restart decomposition cascades
     integer            :: decomp_cascade_state, restart_file_decomp_cascade_state 
+    integer            :: i_decomp,j_decomp,i_lev,j_lev
     !------------------------------------------------------------------------
 
     ! sminn
@@ -654,10 +654,84 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
     end do
+    if(flag=='write')then
+       do i = 1,ndecomp_pools
+          do j = 1,nlevdecomp
+             this%in_nacc_2d(:,j,i) = this%in_nacc(:,j+(i-1)*nlevdecomp)
+          end do
+       end do
+       do i = 1,decomp_cascade_con%n_all_entries
+          found = .false.
+          j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+          j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+          i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+          i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+!          if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'AKXnacc transferindex,write,2852',j_lev,i_lev,j_decomp,i_decomp
+!          if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'AKXnacc transferindex,write,2856',j_lev,i_lev,j_decomp,i_decomp
+!          if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'AKXnacc transferindex,write,2857',j_lev,i_lev,j_decomp,i_decomp
+!          if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'AKXnacc transferindex,write,2748',j_lev,i_lev,j_decomp,i_decomp
+!          if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'AKXnacc transferindex,write,2770',j_lev,i_lev,j_decomp,i_decomp
+!          if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'AKXnacc transferindex,write,2771',j_lev,i_lev,j_decomp,i_decomp
+          if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+             this%vert_up_tran_nacc(:,i_lev,i_decomp) = this%AKXnacc%M(:,i)
+!             if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,vertup',i,this%AKXnacc%M(2852,i)
+!             if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,vertup',i,this%AKXnacc%M(2856,i)
+!             if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,vertup',i,this%AKXnacc%M(2857,i)
+!             if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,vertup',i,this%AKXnacc%M(2748,i)
+!             if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,vertup',i,this%AKXnacc%M(2770,i)
+!             if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,vertup',i,this%AKXnacc%M(2771,i)
+             found = .true.
+          else
+             if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                this%vert_down_tran_nacc(:,i_lev,i_decomp) =  this%AKXnacc%M(:,i)
+!                if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,vertdown',i,this%AKXnacc%M(2852,i)
+!                if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,vertdown',i,this%AKXnacc%M(2856,i)
+!                if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,vertdown',i,this%AKXnacc%M(2857,i)
+!                if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,vertdown',i,this%AKXnacc%M(2748,i)
+!                if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,vertdown',i,this%AKXnacc%M(2770,i)
+!                if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,vertdown',i,this%AKXnacc%M(2771,i)
+                found = .true.
+             else
+                if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                   this%exit_nacc(:,i_lev,i_decomp) = this%AKXnacc%M(:,i)
+!                   if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,exit',i,this%AKXnacc%M(2852,i)
+!                   if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,exit',i,this%AKXnacc%M(2856,i)
+!                   if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,exit',i,this%AKXnacc%M(2857,i)
+!                   if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,exit',i,this%AKXnacc%M(2748,i)
+!                   if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,exit',i,this%AKXnacc%M(2770,i)
+!                   if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,exit',i,this%AKXnacc%M(2771,i)
+                   found = .true.
+                else
+                   do k=1,ndecomp_cascade_transitions
+                      if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                         i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                         j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                         this%hori_tran_nacc(:,i_lev,k) = this%AKXnacc%M(:,i)
+!                         if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,hori',i,this%AKXnacc%M(2852,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                         if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,hori',i,this%AKXnacc%M(2856,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                         if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,hori',i,this%AKXnacc%M(2857,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                         if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,hori',i,this%AKXnacc%M(2748,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                         if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,hori',i,this%AKXnacc%M(2770,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                         if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,hori',i,this%AKXnacc%M(2771,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+                         found = .true.
+                      end if
+                   end do
+                end if
+             end if
+             if(.not. found)write(*,*),'Error in storing matrix restart variables',i,i_decomp,j_decomp,i_lev,j_lev
+          end if
+       end do
+    end if
     do k = 1, ndecomp_pools
        varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
        if (use_vertsoilc) then
           if(use_soil_matrixcn)then
+!             if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852 .and. flag == 'write' .and. k .eq. 7)print*,'SOIL3NCap,2852,write',this%matrix_cap_decomp_npools_vr_col(2852,1,k),this%decomp0_npools_vr_col(2852,1,k)
+!             if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856 .and. flag == 'write' .and. k .eq. 7)print*,'SOIL3NCap,2856,write',this%matrix_cap_decomp_npools_vr_col(2856,1,k),this%decomp0_npools_vr_col(2856,1,k)
+!             if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857 .and. flag == 'write' .and. k .eq. 7)print*,'SOIL3NCap,2857,write',this%matrix_cap_decomp_npools_vr_col(2857,1,k),this%decomp0_npools_vr_col(2857,1,k)
+!             if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748 .and. flag == 'write' .and. k .eq. 7)print*,'SOIL3NCap,2748,write',this%matrix_cap_decomp_npools_vr_col(2748,1,k),this%decomp0_npools_vr_col(2748,1,k)
+!             if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770 .and. flag == 'write' .and. k .eq. 7)print*,'SOIL3NCap,2770,write',this%matrix_cap_decomp_npools_vr_col(2770,1,k),this%decomp0_npools_vr_col(2770,1,k)
+!             if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771 .and. flag == 'write' .and. k .eq. 7)print*,'SOIL3NCap,2771,write',this%matrix_cap_decomp_npools_vr_col(2771,1,k),this%decomp0_npools_vr_col(2771,1,k)
              ptr2d => this%matrix_cap_decomp_npools_vr_col(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double, &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
@@ -673,6 +747,12 @@ contains
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
                long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)			   
+!             if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852 .and. flag == 'read' .and. k .eq. 7)print*,'SOIL3NCap,2852,read',this%matrix_cap_decomp_npools_vr_col(2852,1,k),this%decomp0_npools_vr_col(2852,1,k)
+!             if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856 .and. flag == 'read' .and. k .eq. 7)print*,'SOIL3NCap,2856,read',this%matrix_cap_decomp_npools_vr_col(2856,1,k),this%decomp0_npools_vr_col(2856,1,k)
+!             if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857 .and. flag == 'read' .and. k .eq. 7)print*,'SOIL3NCap,2857,read',this%matrix_cap_decomp_npools_vr_col(2857,1,k),this%decomp0_npools_vr_col(2857,1,k)
+!             if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748 .and. flag == 'read' .and. k .eq. 7)print*,'SOIL3NCap,2748,read',this%matrix_cap_decomp_npools_vr_col(2748,1,k),this%decomp0_npools_vr_col(2748,1,k)
+!             if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770 .and. flag == 'read' .and. k .eq. 7)print*,'SOIL3NCap,2770,read',this%matrix_cap_decomp_npools_vr_col(2770,1,k),this%decomp0_npools_vr_col(2770,1,k)
+!             if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771 .and. flag == 'read' .and. k .eq. 7)print*,'SOIL3NCap,2771,read',this%matrix_cap_decomp_npools_vr_col(2771,1,k),this%decomp0_npools_vr_col(2771,1,k)
           end if
        else
           if(use_soil_matrixcn)then
@@ -736,27 +816,98 @@ contains
                 dim1name='column', &
                 long_name='',  units='', fill_value=spval,&
                 interpinic_flag='interp', readvar=readvar, data=ptr1d)
-         end if
-      end if
-   end do
+          end if
+       end if
+    end do
 
-   if(use_soil_matrixcn)then
-      do i = 1, ndecomp_cascade_transitions
-         varname=trim(decomp_cascade_con%cascade_step_name(i))//'n'
-         if(use_vertsoilc)then
-            ptr2d => this%hori_tran_nacc(:,:,i)
-            call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc", xtype=ncd_double,  &
+    if(use_soil_matrixcn)then
+       do i = 1, ndecomp_cascade_transitions
+          varname=trim(decomp_cascade_con%cascade_step_name(i))//'n'
+          if(use_vertsoilc)then
+             ptr2d => this%hori_tran_nacc(:,:,i)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc_vr", xtype=ncd_double,  &
                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
                  long_name='',  units='', &
                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
-         else
-            ptr1d => this%hori_tran_nacc(:,1,i)
-            call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc", xtype=ncd_double,  &
+          else
+             ptr1d => this%hori_tran_nacc(:,1,i)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc", xtype=ncd_double,  &
                  dim1name='column', long_name='',  units='', &
                  interpinic_flag='interp', readvar=readvar, data=ptr1d)
-         end if
-      end do
-   end if
+          end if
+       end do
+    end if
+
+    if(use_soil_matrixcn)then
+       if(flag=='read')then
+          do i = 1,ndecomp_pools
+             do j = 1,nlevdecomp
+                this%in_nacc(:,j+(i-1)*nlevdecomp) = this%in_nacc_2d(:,j,i)
+             end do
+          end do
+          do i = 1,decomp_cascade_con%n_all_entries
+             found = .false.
+             j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+             j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+             i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+             i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+ !            if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'AKXnacc transferindex,read,2852',j_lev,i_lev,j_decomp,i_decomp
+ !            if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'AKXnacc transferindex,read,2856',j_lev,i_lev,j_decomp,i_decomp
+ !            if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'AKXnacc transferindex,read,2857',j_lev,i_lev,j_decomp,i_decomp
+ !            if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'AKXnacc transferindex,read,2748',j_lev,i_lev,j_decomp,i_decomp
+ !            if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'AKXnacc transferindex,read,2770',j_lev,i_lev,j_decomp,i_decomp
+ !            if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'AKXnacc transferindex,read,2771',j_lev,i_lev,j_decomp,i_decomp
+             if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                this%AKXnacc%M(:,i) = this%vert_up_tran_nacc(:,i_lev,i_decomp) 
+ !               if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,vertup',i,this%AKXnacc%M(2852,i)
+ !               if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,vertup',i,this%AKXnacc%M(2856,i)
+ !               if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,vertup',i,this%AKXnacc%M(2857,i)
+ !               if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,vertup',i,this%AKXnacc%M(2748,i)
+ !               if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,vertup',i,this%AKXnacc%M(2770,i)
+ !               if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,vertup',i,this%AKXnacc%M(2771,i)
+                found = .true.
+             else
+                if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                   this%AKXnacc%M(:,i) = this%vert_down_tran_nacc(:,i_lev,i_decomp) 
+!                   if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,vertdown',i,this%AKXnacc%M(2852,i)
+!                   if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,vertdown',i,this%AKXnacc%M(2856,i)
+!                   if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,vertdown',i,this%AKXnacc%M(2857,i)
+!                   if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,vertdown',i,this%AKXnacc%M(2748,i)
+!                   if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,vertdown',i,this%AKXnacc%M(2770,i)
+!                   if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,vertdown',i,this%AKXnacc%M(2771,i)
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                      this%AKXnacc%M(:,i) = this%exit_nacc(:,i_lev,i_decomp) 
+!                      if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,exit',i,this%AKXnacc%M(2852,i)
+!                      if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,exit',i,this%AKXnacc%M(2856,i)
+!                      if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,exit',i,this%AKXnacc%M(2857,i)
+!                      if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,exit',i,this%AKXnacc%M(2748,i)
+!                      if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,exit',i,this%AKXnacc%M(2770,i)
+!                      if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,exit',i,this%AKXnacc%M(2771,i)
+                      found = .true.
+                   else
+                      do k=1,ndecomp_cascade_transitions
+                         if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                            i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                            j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                            this%AKXnacc%M(:,i) = this%hori_tran_nacc(:,i_lev,k) 
+!                            if(bounds%begc .le. 2852 .and. bounds%endc .ge. 2852)print*,'readrestarttran,2852,hori',i,this%AKXnacc%M(2852,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                            if(bounds%begc .le. 2856 .and. bounds%endc .ge. 2856)print*,'readrestarttran,2856,hori',i,this%AKXnacc%M(2856,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                            if(bounds%begc .le. 2857 .and. bounds%endc .ge. 2857)print*,'readrestarttran,2857,hori',i,this%AKXnacc%M(2857,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                            if(bounds%begc .le. 2748 .and. bounds%endc .ge. 2748)print*,'readrestarttran,2748,hori',i,this%AKXnacc%M(2748,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                            if(bounds%begc .le. 2770 .and. bounds%endc .ge. 2770)print*,'readrestarttran,2770,hori',i,this%AKXnacc%M(2770,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+!                            if(bounds%begc .le. 2771 .and. bounds%endc .ge. 2771)print*,'readrestarttran,2771,hori',i,this%AKXnacc%M(2771,i),decomp_cascade_con%cascade_donor_pool(k),decomp_cascade_con%cascade_receiver_pool(k),i_lev,k,i
+                            found = .true.
+                         end if
+                      end do
+                   end if
+                end if
+             end if
+             if(.not. found)write(*,*),'Error in storing matrix restart variables',i
+          end do
+       end if
+    end if
           
 !!!!!!!!!!!!!!!!!!matrix-N!!!!!!!!!!!!!!!!!!!!!!!!!!
 !    do k = 1, ndecomp_pools
@@ -1143,7 +1294,10 @@ contains
             this%decomp_npools_col(c,l) = &
                  this%decomp_npools_col(c,l) + &
                  this%decomp_npools_vr_col(c,j,l) * dzsoi_decomp(j)
-
+!            if(decomp_cascade_con%is_litter(l))then
+!               if(c .eq. 1411 .or. c .eq. 2677)print*,'decomp_npools',c,l,j,this%decomp_npools_col(c,l),this%decomp_npools_vr_col(c,j,l) , dzsoi_decomp(j)
+!            end if
+!            if(c .eq. 32397 .and. l .eq. 8)print*,'decomp_npools_col',this%decomp_npools_col(c,l),this%decomp_npools_vr_col(c,j,l),dzsoi_decomp(j)
             if(use_soil_matrixcn)then
                this%matrix_cap_decomp_npools_col(c,l) = &
                     this%matrix_cap_decomp_npools_col(c,l) + &
@@ -1273,6 +1427,7 @@ contains
             c = filter_allc(fc)
             this%totsomn_col(c) = this%totsomn_col(c) + &
                  this%decomp_npools_col(c,l)
+!            if(c .eq. 32397)print*,'this%totsomn_col',c,l,this%totsomn_col(c),this%decomp_npools_col(c,l)
          end do
       end if
    end do

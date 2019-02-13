@@ -29,6 +29,7 @@ module CNVegCarbonFluxType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
+  use GridcellType                       , only : grc                
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
   use abortutils                         , only : endrun
@@ -4555,6 +4556,7 @@ contains
                this%froot_mr_patch(p)    + &
                this%livestem_mr_patch(p) + &
                this%livecroot_mr_patch(p)
+!          if(p .ge. 20038 .and. p .le. 20042)print*,'mr_patch',this%cpool_to_resp_patch(p),this%leaf_mr_patch(p),this%froot_mr_patch(p),this%livestem_mr_patch(p),this%livecroot_mr_patch(p)
        end if
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%mr_patch(p) = &
@@ -4923,10 +4925,12 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          this%ar_patch(bounds%begp:bounds%endp), &
          this%ar_col(bounds%begc:bounds%endc))
-
+    
+!    if(bounds%begp .eq. 20037)print*,'begp,endp,gppp',bounds%begp,bounds%endp,this%npp_patch(bounds%begp:bounds%endp)*1800,this%gpp_patch(bounds%begp:bounds%endp)*1800,this%mr_patch(bounds%begp:bounds%endp)*1800,this%gr_patch(bounds%begp:bounds%endp)*1800
     call p2c(bounds, num_soilc, filter_soilc, &
          this%gpp_patch(bounds%begp:bounds%endp), &
          this%gpp_col(bounds%begc:bounds%endc))
+!    if(bounds%begc .le. 12285 .and. bounds%endc .ge. 12285)print*,'begc,endc,gppc',bounds%begc,bounds%endc,this%gpp_col(bounds%begc:bounds%endc)*1800
 
     ! this code is to calculate an exponentially-relaxed npp value for use in NDynamics code
 
@@ -4998,7 +5002,7 @@ contains
             this%ar_col(c) + &
             soilbiogeochem_hr_col(c)
 !       if(c .eq. 34208)print*,'er_col',soilbiogeochem_hr_col(c),this%ar_col(c) 
-!       print*,'er_col',c,this%er_col(c)*1800,soilbiogeochem_hr_col(c)*1800,this%ar_col(c)*1800
+!       if(c .eq. 12285) print*,'er_col',c,this%er_col(c)*1800,soilbiogeochem_hr_col(c)*1800,this%ar_col(c)*1800
        
        ! coarse woody debris heterotrophic respiration
        this%cwdc_hr_col(c) = 0._r8
@@ -5008,7 +5012,7 @@ contains
        this%nep_col(c) = &
             this%gpp_col(c) - &
             this%er_col(c)
-
+!       if(c .eq. 12285) print*,'gpp_col',c,this%gpp_col(c)*1800,this%gpp_col(c)*1800-this%ar_col(c)*1800
     end do
 
     call c2g( bounds = bounds, &

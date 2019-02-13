@@ -498,6 +498,7 @@ contains
 !                              print*,'matrix_input in Vertical transfer',i_type,c,j,s,matrix_input(c,1,1),source(c,1,1)
 !                           end if
                            matrix_input(c,j+(s-1)*nlevdecomp) = matrix_input(c,j+(s-1)*nlevdecomp) + source(c,j,s)
+!                           if(c .eq. 1411 .and. j .le. 10 .and. s .eq. 2)print*,'after vertlit',c,j,s,matrix_input(c,j+(s-1)*nlevdecomp),source(c,j,s)
                         end do
                      end do
                   end if  !soil_matrix

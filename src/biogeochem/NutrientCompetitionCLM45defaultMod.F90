@@ -300,7 +300,6 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
-!        print *, 'p',  filter_soilp(fp),ivt(p)
 
          ! set some local allocation variables
          f1 = froot_leaf(ivt(p))
@@ -350,15 +349,11 @@ contains
 !         if (.not. use_matrixcn) then
             plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
             plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
-         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-            print*,'plant_calloc(p)',plant_nalloc(p),c_allometry(p),n_allometry(p)
-         end if
          if (use_matrixcn)then 
             matrix_Ninput(p) =  sminn_to_npool(p)! + retransn_to_npool(p) 
 !            matrix_Cinput(p) =  matrix_Ninput(p) * (c_allometry(p)/n_allometry(p))
              matrix_Cinput(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
          end if
-  !        if(p .eq. 60000)print *,'******new00', matrix_Ninput(p), plant_nalloc(p), matrix_Ninput(p)-plant_nalloc(p)
        if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code. 
             excess_cflux(p) = availc(p) - plant_calloc(p)
 	    ! reduce gpp fluxes due to N limitation
@@ -507,7 +502,6 @@ contains
                matrix_nalloc(p,igrain_st)     = (f5 / cng)   / n_allometry(p) *(1._r8 - fcur)
            end if
         end if !end use_matrixcn
-!        if(p .eq. 60000) print*, 'diff of N to livestemn', npool_to_livestemn(p)-matrix_alloc(p,ilivestem)*plant_nalloc(p)
 
          ! Calculate the amount of carbon that needs to go into growth
          ! respiration storage to satisfy all of the storage growth demands.
@@ -518,6 +512,7 @@ contains
          ! but that the storage of C for growth resp during display of transferred
          ! growth is assigned here.
 !        if (.not. use_matrixcn)then
+!        if(p .eq. 10580) print*, 'matrix C alloc',p,matrix_alloc(p,:),matrix_Cinput(p)
          gresp_storage = cpool_to_leafc_storage(p) + cpool_to_frootc_storage(p)
          if (woody(ivt(p)) == 1._r8) then
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
